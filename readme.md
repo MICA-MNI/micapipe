@@ -1,1 +1,4 @@
-hello world
+# BIDS to MICA processing pipeline  
+
+  
+wf: Workflow  
