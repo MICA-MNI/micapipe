@@ -41,24 +41,24 @@ raul.rodriguezcrcues@mcgill.ca
 # *dwi_b0_5PA         | sub-01_ses-pre_acq-PA_dir-5_dwi
 # **_dwi_b2000**      | sub-01_ses-pre_acq-b2000_dir-66_dwi
 
-# Chek MICASOFT_DIR
-if [ -z "${MICASOFT_DIR}" ]; then
+# Chek MICAPIPE
+if [ -z "${MICAPIPE}" ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICASOFT_DIR must be define in your enviroment\033[0m
-           TRY: export MICASOFT_DIR=<github_Directory>/micasoft\n
+[ERROR]... MICAPIPE must be define in your enviroment\033[0m
+           TRY: export MICAPIPE=<github_Directory>/micapipe\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
 
-if [ ! -f ${MICASOFT_DIR}/pipelines/09_bids_micaProcessing/mica_printFunctions.sh ]; then
+if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICASOFT_DIR is defined but the PATH is wrong,
+[ERROR]... MICAPIPE is defined but the PATH is wrong,
            it should match /micasoft directory\033[0m
-           CHECK PATH to MICASOFT_DIR:
-           $MICASOFT_DIR\n
+           CHECK PATH to MICAPIPE:
+           $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
-# Source print functions from MICASOFT_DIR
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/mica_printFunctions.sh
+# Source print functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
 
 #------------------------------------------------------------------------------#
 #			ARGUMENTS

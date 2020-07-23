@@ -17,17 +17,18 @@
 #   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
-TEST=ON
-#
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/utilities.sh
+# TEST=ON
+# source utilities
+source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
 id=$2
 out=$3
 tmp=$4
 here=`pwd`
-# CORES should be defined as GLOBAL variable maybe
-if [[ -z $CORES ]]; then CORES=20; Info "ANTs will use $CORES CORES"; fi
+
+# CORES should be defined as GLOBAL variable
+if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
@@ -38,7 +39,8 @@ bids_variables $BIDS $id $out
 bids_print.variables
 
 # Check tmp dir
-if [ -z "${tmp}" ]; then tmp=/tmp/tmp_proc_struc-vol_${subject}; fi
+random_str=$RANDOM
+if [ -z "${tmp}" ]; then tmp=/tmp/${random_str}_proc_struc-vol_${subject}; fi
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing
@@ -74,14 +76,15 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
       # Loop over each T1
       for ((i=1; i<=$n; i++)); do
       run=`echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
-      t1new=`t1w_str ${id} ${bids_T1ws[i]} orig`
-      Do_cmd flirt -in ${bids_T1ws[i]} \
-              -v \
+      t1ref=run-${ref_run}
+
+      Do_cmd flirt -v -in ${bids_T1ws[i]} \
               -ref $ref \
-              -dof 12 -out ${tmp}/${t1new}_reg-orig${run}-to-orig${ref_run}.nii.gz \
-              -omat ${dir_xfms}/${id}_reg-orig${run}-to-orig${ref_run}.mat
+              -dof 12 -out ${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz \
+              -omat ${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}.mat
       done
-      t1s_reg=$(find ${tmp}/*-to-orig${ref_run}.nii.gz)
+      # Calculate the mean over all T1w registered to the 1st t1w run
+      t1s_reg=$(find ${tmp}/*_to_${t1ref}.nii.gz)
       t1s_add=$(echo "-add $(echo ${t1s_reg} | sed 's: : -add :g')")
       Do_cmd fslmaths $ref $t1s_add -div $N $T1n4 -odt float
 
@@ -102,7 +105,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
     # Intensity Non-uniform correction - N4
     Do_cmd N4BiasFieldCorrection  -d 3 -i $T1n4 -r -o $T1n4 -v
 
-    # Rescale intensity [100,0] minc-itk tools
+    # Rescale intensity [100,0]
     Do_cmd ImageMath 3 $T1nativepro RescaleImage $T1n4 0 100
 
     # If no T1native pro exit_status "something is wrong" exit
@@ -110,8 +113,8 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
 
     # Brainmask
     # REQUEST to change to deepbrain-extractor (python CNN based)
-    Warning "bet might be obsolete for future versions (replaced by deepbrain.extractor)"
-    Do_cmd bet $T1nativepro $T1nativepro_brain  -B -f 0.25
+    Warning "bet might be replaced for future versions (by deepbrain.extractor)"
+    Do_cmd bet $T1nativepro $T1nativepro_brain  -B -f 0.25 -v
 
 else
     Info "Subject ${id} has a t1w_nativepro"
@@ -130,6 +133,8 @@ if [ ! -f ${firstout} ]; then
     Do_cmd run_first_all -v -i $T1nativepro_brain -o $T1nativepro_first -b
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
     for i in ${proc_struct}/first/*pro-*; do mv -v $i ${i/pro-/pro_}; done
+    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz ${proc_struct}/${id}_t1w_1mm_MNI152_brain.nii.gz
+    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.mat ${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat
   else
     Info "Subject ${id} has FSL-first"
 fi
@@ -152,7 +157,7 @@ for mm in 2 0.8; do
       MNI152_mask=${util_MNIvolumes}/MNI152_T1_${mm}mm_brain_mask.nii.gz
 
       # T1 to MNI152 transformation matrix and warp fields
-      mat_MNI152_SyN=${dir_warp}/${id}_t1w_nativepro_brain_to_${mm}mm_MNI152_SyN_brain_
+      mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_${mm}mm_MNI152_SyN_brain_
       T1_MNI152_warp=${mat_MNI152_SyN}1Warp.nii.gz
       T1_MNI152_warped=${mat_MNI152_SyN}Warped.nii.gz
       T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat

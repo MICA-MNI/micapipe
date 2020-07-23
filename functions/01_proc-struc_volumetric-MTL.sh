@@ -4,8 +4,7 @@
 # Written by Reinder Vos de Wael (Oct 2018).
 
 # source ~/.sge_profile
-source $MICASOFT_DIR/pipelines/08_micaProcessing/mica_processingSupportFunctions.sh
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/utilities.sh
+source $MICAPIPE/functions/utilities.sh
 
 Title "Running structural processing: Volumetric-MTL"
 

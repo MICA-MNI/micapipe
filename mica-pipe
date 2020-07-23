@@ -1,0 +1,355 @@
+#!/bin/bash
+#
+# MICA BIDS structural processing
+#---------------- FUNCTION: HELP ----------------#
+help() {
+echo -e "\033[38;5;141m
+Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <FULL_PATH/outputDirectory> \033[38;5;197m-bids\033[0m <FULL_PATH/BIDS-directory>\n
+\t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
+\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <derivatives>.
+\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
+\t\t\033[38;5;197m-force\033[0m 	WARNING this will overwrites the subject directory.
+\t\t\033[38;5;197m-quiet\033[0m 	Does NOT print comments
+\t\t\033[38;5;197m-micaq\033[0m 	ONLY for MICA local processing
+
+Flags for processing:
+    -proc             : Performs ALL first stages of structural processing
+    -post             : Performs ALL Second stages of structural processing
+                        (REQUIRES -proc_volumetric, -proc_freesurfer, -proc_dwi)
+
+Flags for first stages of structural processing:
+    -proc_volumetric  : Volumetric processing
+    -proc_freesurfer  : Freesurfer recon-all processing
+    -proc_dwi         : DWI-Diffusion weighted images processing with MRtrix3
+    -proc_rsfmri      : Resting state Funtional MRI processing
+
+Flags for second stages of structural processing:
+    -post_structural  : Post structural volumetric processing
+                        (REQUIRES -proc_volumetric and -proc_freesurfer)
+    -post_structural  : Post tractography and connectome generation
+                        (REQUIRES -proc_dwi)
+
+Software versions:
+
+  Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)
+  FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+  AFNI        1.10  (https://afni.nimh.nih.gov/download)
+  MRtrix3     3.0.0 (https://www.mrtrix.org)
+  ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
+
+McGill University, MNI, MICA-lab, May 2020
+https://github.com/MICA-MNI
+http://mica-mni.github.io/
+"
+}
+
+# Chek MICAPIPE
+if [ -z "${MICAPIPE}" ]; then
+echo -e "\033[38;5;1m\n---------------------------------------------------------\n
+[ERROR]... MICAPIPE must be define in your enviroment\033[0m
+           TRY: export MICAPIPE=<github_Directory>/micasoft\n
+\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
+fi
+
+if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
+echo -e "\033[38;5;1m\n---------------------------------------------------------\n
+[ERROR]... MICAPIPE is defined but the PATH is wrong,
+           it should match /micasoft directory\033[0m
+           CHECK PATH to MICAPIPE:
+           $MICAPIPE\n
+\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
+fi
+# Source utilities functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
+
+Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id"
+
+# -----------------------------------------------------------------------------------------------#
+#			ARGUMENTS
+# Create VARIABLES
+for arg in "$@"
+do
+  case "$arg" in
+  -h|-help)
+    help
+    exit 1
+  ;;
+  -sub)
+    id=$2
+    shift;shift
+  ;;
+  -out)
+    out=$2
+    shift;shift
+  ;;
+  -bids)
+    BIDS=$2
+    shift;shift
+  ;;
+  -proc)
+    proc=TRUE
+    shift
+  ;;
+  -post)
+    post=TRUE
+    shift
+  ;;
+  -proc_volumetric)
+    procVOL=TRUE
+    shift
+  ;;
+  -proc_freesurfer)
+    procFS=TRUE
+    shift
+  ;;
+  -proc_dwi)
+    procDWI=TRUE
+    shift
+  ;;
+  -post_structural)
+    postVOL=TRUE
+    shift
+  ;;
+  -post_tractography)
+    postDWI=TRUE
+    shift
+  ;;
+  -micaq)
+    micaq=TRUE
+    shift
+  ;;
+  -force)
+    force=TRUE
+    shift
+  ;;
+  -quiet)
+    quiet=TRUE
+    shift
+  ;;
+  -*)
+    Error "Unknown option ${2}"
+    help
+    exit
+  ;;
+    esac
+done
+
+# argument check out & WARNINGS
+arg=($id $out $BIDS)
+if [ "${#arg[@]}" -lt 3 ]; then
+Error "One or more mandatory arguments are missing:"
+Note "-sub " $id
+Note "-out " "$out"
+Note "-bids " "$BIDS"
+help; exit 0; fi
+runs=($proc $procVOL $procFS $procDWI $post $postVOL $postDWI)
+if [ "${#runs[@]}" -lt 1 ]; then
+Error "Processing a flag is missing:
+                    -proc
+                    -proc_volumetric
+                    -proc_freesurfer
+                    -proc_surfpatch
+                    -post
+                    -post_structural
+                    -post_tractography"
+help; exit 0; fi
+
+# Get the real path of the Inputs
+out=`realpath $out`
+BIDS=`realpath $BIDS`
+
+# -----------------------------------------------------------------------------------------------#
+#    PACKAGES DEPENDENCIES print versions
+# others
+if [[ -z `which dcm2niix` ]]; then Error "Check your dcm2niix installation"; exit 0; else Info "dcm2niix was found"; fi
+if [[ -z `which tree` ]]; then Warn "tree function was not found"; fi
+#  MRtrix3 - NOTE dwifslpreproc is from MRtrix 3.0.0, we have 3.0_RC3-178-g32afe60f
+#if [[ -z `which dwifslpreproc` ]]; then Error "MRtrix3 was not found"; exit 0; else Info "MRtrix3 version: `dwifslpreproc -version | awk 'NR==1 {print $3}'`"; fi
+if [[ -z `which mrconvert` ]]; then Error "MRtrix3 was not found"; exit 0; else Info "MRtrix3 version: `mrconvert -version | awk 'NR==1 {print $3}'`"; fi
+# freesurfer
+if [[ -z `which recon-all` ]]; then Error "FreeSurfer was not found"; exit 0; else Info "FreeSurfer version: `recon-all -version`"; fi
+# FSL
+if [[ -z `which flirt` ]]; then Error "FSL was not found"; exit 0; else Info "FSL version: `flirt -version | awk '{print $3}'`"; fi
+# AFNI
+if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; exit 0; else Info "AFNI version: `afni -version | awk -F ':' '{print $1}'`"; fi
+# ANTSx
+if [[ -z "${ANTSPATH}" ]]; then Error "ANTs was not found"; exit 0; else Info "ANTS binaries: $ANTSPATH"; fi
+# Minc tool kit
+# Won't use minc tools in this release
+#if [[ -z `which mincgen` ]]; then Warning "Minc Tool Kit was not found, proceed with caution"; else Info "Minc version: `mincgen -version | awk 'NR==1{print $2}'`"; fi
+
+# LOADS variables with the BIDS format
+bids_variables $BIDS $id $out
+
+# Directories check
+if [[ ${force} == TRUE ]]; then
+  Warning "$id processing directory will be overwritten"
+  rm -rf $out/${subject};
+fi
+if [ -d ${subject_dir} ]; then Warning "Output directory already exist, processing will continue.\n\t\t If you want to re-run everything use -force to overwrite it. \n\t\t ${subject_dir}"; fi
+if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
+
+# -----------------------------------------------------------------------------------------------#
+#			  Timer & Beginning
+aloita=$(date +%s)
+
+# -----------------------------------------------------------------------------------------------#
+#   Define directories
+#
+##  TEMPORAL arguments: utilities should be sourced from an open repository
+scriptDir=${MICAPIPE}/functions
+
+# Directory with the templates for the processing
+# REQUEST: move utilities to an open Directory
+export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
+
+# parcDirectory
+export util_parcelations=${MICAPIPE}/parcellations
+export util_surface=${MICAPIPE}/surfaces          # utilities/resample_fsaverage
+
+# Creates subject directory if it doesn't exist
+if [ ! -d ${subject_dir} ]; then
+    Info "Subject ${id} directory doesn't exist"
+    Do_cmd mkdir -p $subject_dir/{logs,xfms,unassigned,proc_dwi,proc_struct/{first,volumetric,surfpatch,surfaces/{conte69,$subject}}}
+else
+    Info "Subject ${id} directory exist"
+fi
+
+# print directory  organization
+if [[ ! -z `which tree` ]]; then Info "$subject directory structure:\n"; tree -d $subject_dir; fi
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  Structural processing: Volumetric
+if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # mmTemplates="0.8 2" ### MNI152 templates resolutions
+      # t1Scans=$(find $subject_bids/anat/ -name "*ses-pre_run-?_T1w.nii.gz" )
+      # t1ScansCmd=$(echo "-t $(echo $t1Scans | sed 's: : -t :g')")
+      # Info "Setting a warper to run on mica.q"
+      # if [[ -z $(mica_qget names . . "*" | grep ${id}_structuralVolumetric) ]] ; then
+      #     rm -fv $dir_logs/structuralVolumetric.txt
+      #     qsub \
+      #         -q mica.q \
+      #         -l h_vmem=6G \
+      #         -N ${id}_structuralVolumetric \
+      #         -e $dir_logs/structuralVolumetric.txt \
+      #         -o $dir_logs/structuralVolumetric.txt \
+      #         -hold_jid ${id}_dicom2bids \
+      #         $scriptDir/01_proc-struc_volumetric-MTL.sh \
+      #         -n -p SETDEFAULT $t1ScansCmd \
+      #         "0.8 2" \
+      #         $proc_struct \
+      #         $dir_warp \
+      #         $util_MNIvolumes \
+      #         $dir_first \
+      #         $id
+      else
+      #   Structural processing: Volumetric
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee ${dir_logs}/proc_volumetric.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  Structural processing: Freesurfer
+if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
+    Title "Running structural processing: Freesurfer"
+    # SGE -qsub TRUE
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # Info "Setting a warper to run on mica.q"
+      # ...../ missing implementation
+    else
+      #  Structural processing: Freesurfer
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+       ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/proc_freesurfer.txt
+    fi
+fi
+
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  Diffusion processing
+# -----------------------------------------------------------------------------------------------#
+#  Diffusion processing
+if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
+    Title "Running structural processing: Diffusion Weighted Images"
+    # SGE -qsub TRUE
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # Info "Setting a warper to run on mica.q"
+      # ...../ missing implementation
+    else
+      #  POST-Structural processing
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+       ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/proc_dwi.txt  2>&1 | tee ${dir_logs}/proc_dwi.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  Resting state
+# -----------------------------------------------------------------------------------------------#
+#  Resting state
+
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Structural processing mica-02
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  POST Structural processing
+#     REQUIRES -proc_volumetric and -proc_freesurfer
+if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
+    # Check REQUIREMENTS otherwise PASS
+    T1nativepro=${subject_dir}/proc_struc/${id}_t1w_0.8mm_nativepro.nii.gz
+    if [ ! -f ${T1nativepro} ]; then Error "-proc_volumetric outputs are missing"; exit 0; fi
+    # If freesurfer is not here stop
+
+    # RUN post-STRUCTURAL
+    Title "Running POST structural processing: Surfaces and parcellations"
+    # SGE -qsub TRUE
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # Info "Setting a warper to run on mica.q"
+      # ...../ missing implementation
+    else
+      #  POST-Structural processing
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/post_structural.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - WORKSTATION  POST Structural processing
+#   REQUIRES -proc_dwi
+if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
+  T1nativepro_5tt=${subject_dir}/proc_struc/${id}_t1w_0.8mm_nativepro_5TT.nii.gz
+  # Check REQUIREMENTS otherwise PASS
+  if [ ! -f ${T1nativepro} ]; then Error "-proc_volumetric outputs are missing"; exit 0; fi
+  if [ ! -f $T1nativepro_5tt ]; then Error "-proc_volumetric outputs are missing"; exit 0; fi
+  # if DWI processed data is not here stop
+
+    Title "Running POST structural processing: Tractography & Connectome generation"
+    # SGE -qsub TRUE
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # Info "Setting a warper to run on mica.q"
+      # ...../ missing implementation
+    else
+      #  POST-Structural processing
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+       ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/post_tractography.txt
+    fi
+fi
+
+
+# -----------------------------------------------------------------------------------------------#
+#			 Total Running Time
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=`echo print $eri/60 | perl`
+
+Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"

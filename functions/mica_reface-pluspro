@@ -1,0 +1,44 @@
+#!/bin/bash
+# MICA reface
+#
+#
+# Class: Optional pre processing step
+# we strongly recommend to anonymize the BIDS database before running MICAPIPE
+#
+#
+# Rationale: The reface algorithm was applied to the T1w native bids anatomical images to obtain
+#            a T1w_reface-plus NIFTI.
+#            Then a warp filed was calculated from each anatomical image registration (eg. T1w and qT1)
+#            to the T1w_reface-plus. The resulting warp fields were then applied to the original
+#            anatomical images in order to warp the faces AND maintain the original
+#            voxel intensities
+
+source ${MICAPIPE}/functions/utilities.sh
+
+BIDS=$1
+id=$2
+out=$3
+
+# CORES should be defined as GLOBAL variable maybe
+if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
+
+# Assigns variables names
+bids_variables $BIDS $id $out
+
+#------------------------------------------------------------------------------#
+# BIDS T1w processing
+N=${#bids_T1ws[@]} # total number of T1w
+n=$((${N} - 1))
+
+# Loop over T1w (if N>1)
+for ((k=0; k<=$n; k++)); do
+  # Reface algorithm with AFNI
+  @afni_refacer_run -input sub-HC11_ses-pre_T1w.nii.gz -mode_all -anonymize_output -prefix afni-refacedT1w
+  # Generate a deformation wapfield for the FACE
+  Do_cmd antsRegistrationSyN.sh -d 3 -f afni-refacedT1w.reface_plus.nii.gz -m sub-HC11_ses-pre_T1map.nii.gz -o T1map_in_t1w -t s -n 6 -p f
+  # Apply the warpfield to the original T1w and replace by the new ANONYMIZED t1w
+
+done
+
+#------------------------------------------------------------------------------#
+# Non T1w volumes

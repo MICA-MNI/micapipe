@@ -18,12 +18,12 @@
 #
 # ONLY for scripting and debugging
 TEST=ON
-
 # FastSurfer
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer
 
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/utilities.sh
+# source utilities
+source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
 id=$2
@@ -39,7 +39,8 @@ bids_variables $BIDS $id $out
 bids_print.variables
 
 # Check tmp dir, DEFAULT is running in local /tmp
-if [ -z "${tmp}" ]; then tmp=/tmp/tmp_proc_struc-vol_FS_${subject}; fi
+random_str=$RANDOM
+if [ -z "${tmp}" ]; then tmp=/tmp/${random_str}_proc_struc-fs_${subject}; fi
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing

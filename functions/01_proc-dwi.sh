@@ -35,8 +35,7 @@ function usage() {
 }
 
 # Source the support functions.
-source ~/.sge_profile
-source $MICASOFT_DIR/pipelines/08_micaProcessing/mica_processingSupportFunctions.sh
+source ${MICAPIPE}/functions/utilities.sh
 export SUBJECTS_DIR=/
 
 debug=false

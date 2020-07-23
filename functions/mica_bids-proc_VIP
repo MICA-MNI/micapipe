@@ -22,25 +22,24 @@ http://mica-mni.github.io/
 "
 }
 
-# Chek MICASOFT_DIR
-if [ -z "${MICASOFT_DIR}" ]; then
+# Chek MICAPIPE
+if [ -z "${MICAPIPE}" ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICASOFT_DIR must be define in your enviroment\033[0m
-           TRY: export MICASOFT_DIR=<github_Directory>/micasoft\n
+[ERROR]... MICAPIPE must be define in your enviroment\033[0m
+           TRY: export MICAPIPE=<github_Directory>/micapipe\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
 
-if [ ! -f ${MICASOFT_DIR}/pipelines/08_micaProcessing/mica_printFunctions.sh ]; then
+if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICASOFT_DIR is defined but the PATH is wrong,
+[ERROR]... MICAPIPE is defined but the PATH is wrong,
            it should match /micasoft directory\033[0m
-           CHECK PATH to MICASOFT_DIR:
-           $MICASOFT_DIR\n
+           CHECK PATH to MICAPIPE:
+           $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
-# Source print functions from MICASOFT_DIR
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/mica_printFunctions.sh
-source $MICASOFT_DIR/pipelines/08_micaProcessing/mica_processingSupportFunctions.sh
+# Source print functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
 
 Title "BIDS >> MICA processing >> proc_struct"
 
@@ -149,7 +148,7 @@ aloita=$(date +%s)
 #------------------------------------------------------------------------------#
 #       DEFINE VARIABLES
 ## Define directories
-scriptDir=${MICASOFT_DIR}/pipelines/08_micaProcessing
+scriptDir=${MICAPIPE}/functions
 source ${scriptDir}/mica_processingSupportFunctions.sh
 volumeTemplateDirectory=${scriptDir}/utilities/MNI152Volumes
 parcDirectory=$scriptDir/utilities/parcellations/

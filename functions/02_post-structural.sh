@@ -19,8 +19,7 @@
 # ONLY for scripting and debugging
 #TEST=ON
 #
-
-source $MICASOFT_DIR/pipelines/09_bids_micaProcessing/utilities.sh
+source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
 id=$2
@@ -39,8 +38,6 @@ if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject
 #------------------------------------------------------------------------------#
 Title "Running MICA post-structural processing"
 
-source ~/.sge_profile
-source $MICASOFT_DIR/pipelines/08_micaProcessing/mica_processingSupportFunctions.sh
 
 # TO DO: Add conversion of some Freesurfer values such as cortical thickness and curvature.
 export SUBJECTS_DIR=/
