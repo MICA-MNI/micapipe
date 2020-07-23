@@ -133,7 +133,7 @@ if [ ! -f ${firstout} ]; then
     Do_cmd run_first_all -v -i $T1nativepro_brain -o $T1nativepro_first -b
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
     for i in ${proc_struct}/first/*pro-*; do mv -v $i ${i/pro-/pro_}; done
-    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz ${proc_struct}/${id}_t1w_1mm_MNI152_brain.nii.gz
+    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz ${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz
     mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.mat ${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat
   else
     Info "Subject ${id} has FSL-first"

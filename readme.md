@@ -9,6 +9,7 @@ ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
 
 ## Define global Variables
 export MICAPIPE=<github_Directory>/micapipe
+export PATH=$PATH:${MICAPIPE}:${MICAPIPE}/functions
 export CORES=20
 export TMP=<path to temporal directory>
 

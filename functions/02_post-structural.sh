@@ -16,9 +16,9 @@
 #   $3 : Out parcDirectory
 #   $4 : Temporal directory (default /tmp)
 #
-# ONLY for scripting and debugging
+# ONLY for scripting and debugging:
 #TEST=ON
-#
+# source utilities
 source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1

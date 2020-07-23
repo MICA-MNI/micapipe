@@ -11,6 +11,8 @@
 #               > native to native pro
 #               > nativepro to dwi
 #            etc...
+# source print funtions for MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
 
 #---------------- FUNCTION: HELP ----------------#
 help() {

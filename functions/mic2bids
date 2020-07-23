@@ -57,6 +57,7 @@ echo -e "\033[38;5;1m\n---------------------------------------------------------
            $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
+
 # Source print functions from MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
 
@@ -157,11 +158,11 @@ bidsDWI=(acq-b700_dir-NUM_dwi acq-b300_dir-NUM_dwi acq-PA_dir-NUM_dwi acq-b2000_
 
 # Create BIDS/subj_dir
 BIDS=${BIDS_DIR}/sub-${Subj}/ses-pre
-cmd "mkdir -p ${BIDS}/{anat,func,dwi}"
+Do_cmd mkdir -p ${BIDS}/{anat,func,dwi}
 if [ ! -d ${BIDS} ]; then Error "Could not create subject BIDS directory, check permissions \n\t     ${BIDS}\t    "; exit 0; fi
 
 # dicomx to Nifti with BIDS Naming
-cmd "cd $SUBJ_DCM"
+Do_cmd cd $SUBJ_DCM
 # Warning lenght
 n=$((${#orig[@]} - 1))
 for ((k=0; k<=$n; k++)); do
@@ -179,15 +180,15 @@ for ((k=0; k<=$n; k++)); do
        nom=${id}${bids[k]}
        dcm=`echo ${nom##*_}`
        nom=`echo ${nom/$dcm/}run-${i}_${dcm}`
-       cmd "dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}"
+       Do_cmd dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}
     done
   elif [ $N -eq 1 ]; then
-     cmd "dcm2niix -b y -o ${BIDS} -f ${id}${bids[k]} ${orig[k]}"
+     Do_cmd dcm2niix -b y -o ${BIDS} -f ${id}${bids[k]} ${orig[k]}
   fi
 done
 # move files to their corresponding directory
-cmd "mv -v $BIDS/*bold* $BIDS/func"
-cmd "mv -v $BIDS/*T1* $BIDS/anat"
+Do_cmd mv -v $BIDS/*bold* $BIDS/func
+Do_cmd mv -v $BIDS/*T1* $BIDS/anat
 
 # BIDS names of DWI including NUM_dwi: Number of Directions
 n=$((${#origDWI[@]} - 1))
@@ -202,14 +203,14 @@ for ((k=0; k<=$n; k++)); do
        nom=${id}${bidsDWI[k]}
        dcm=`echo ${nom##*_}`
        nom=`echo ${nom/$dcm/}run-${i}_${dcm}`
-       cmd "dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}"
+       Do_cmd dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}
     done
   elif [ $N -eq 1 ]; then
-     cmd "dcm2niix -b y -o ${BIDS} -f ${id}${bidsDWI[k]} ${origDWI[k]}"
+     Do_cmd dcm2niix -b y -o ${BIDS} -f ${id}${bidsDWI[k]} ${origDWI[k]}
   fi
 done
 
-cmd "cd $BIDS"
+Do_cmd cd $BIDS
 for n in `ls *bval`; do Dir=0
   for i in `cat $n`; do if [[ "$i" == 0.00 ]] || [[ "$i" == 0 ]]; then Dir=$((Dir+1)); else Dir=$((Dir+1)); fi; done
   for j in ${n/bval/}*; do mv -v $j dwi/${j/NUM/$Dir}; done

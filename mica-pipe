@@ -1,6 +1,10 @@
 #!/bin/bash
 #
 # MICA BIDS structural processing
+#
+# Source utilities functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
+
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m
@@ -29,14 +33,14 @@ Flags for second stages of structural processing:
     -post_structural  : Post tractography and connectome generation
                         (REQUIRES -proc_dwi)
 
-Software versions:
-
+Software versions requirements:
   Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)
   FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
   AFNI        1.10  (https://afni.nimh.nih.gov/download)
   MRtrix3     3.0.0 (https://www.mrtrix.org)
   ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
 
+RRC
 McGill University, MNI, MICA-lab, May 2020
 https://github.com/MICA-MNI
 http://mica-mni.github.io/
@@ -59,8 +63,6 @@ echo -e "\033[38;5;1m\n---------------------------------------------------------
            $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
-# Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
 
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id"
 

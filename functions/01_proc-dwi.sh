@@ -20,6 +20,9 @@
 #TEST=ON
 #
 
+# Source utilities functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
+
 function usage() {
     echo "MICA Diffusion Processing."
     echo "mica_diffusionProcessing [OPTION] finalDirectory warpDirectory algorithm subject"
@@ -34,8 +37,6 @@ function usage() {
     echo "    -b          debug mode; do not delete temporary directory"
 }
 
-# Source the support functions.
-source ${MICAPIPE}/functions/utilities.sh
 export SUBJECTS_DIR=/
 
 debug=false

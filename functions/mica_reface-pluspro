@@ -12,12 +12,77 @@
 #            to the T1w_reface-plus. The resulting warp fields were then applied to the original
 #            anatomical images in order to warp the faces AND maintain the original
 #            voxel intensities
-
+#
+# ONLY for scripting and debugging
+# TEST=ON
+#
+# source print funtions for MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
 
-BIDS=$1
-id=$2
-out=$3
+help() {
+echo -e "\033[38;5;141m
+Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <FULL_PATH/outputDirectory> \033[38;5;197m-bids\033[0m <FULL_PATH/BIDS-directory>\n
+\t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
+\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <derivatives>.
+\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
+
+Warning: This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
+         a copy of the original will be save in the OUT directory
+         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES
+
+Software versions requirements:
+        AFNI        1.10  (https://afni.nimh.nih.gov/download)
+        ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
+
+RRC
+McGill University, MNI, MICA-lab, May 2020
+https://github.com/MICA-MNI
+http://mica-mni.github.io/
+"
+}
+
+# -----------------------------------------------------------------------------------------------#
+#			ARGUMENTS
+# Create VARIABLES
+for arg in "$@"
+do
+  case "$arg" in
+  -h|-help)
+    help
+    exit 1
+  ;;
+  -sub)
+    id=$2
+    shift;shift
+  ;;
+  -out)
+    out=$2
+    shift;shift
+  ;;
+  -bids)
+    BIDS=$2
+    shift;shift
+  ;;
+  -*)
+    Error "Unknown option ${2}"
+    help
+    exit
+  ;;
+    esac
+done
+
+# argument check out & WARNINGS
+arg=($id $out $BIDS)
+if [ "${#arg[@]}" -lt 3 ]; then
+Error "One or more mandatory arguments are missing:"
+Note "-sub " $id
+Note "-out " "$out"
+Note "-bids " "$BIDS"
+help; exit 0; fi
+
+# Get the real path of the Inputs
+out=`realpath $out`
+BIDS=`realpath $BIDS`
 
 # CORES should be defined as GLOBAL variable maybe
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
@@ -26,19 +91,58 @@ if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 bids_variables $BIDS $id $out
 
 #------------------------------------------------------------------------------#
+Title "Running Reface Plus Pro: MICAPIPE"
+
+# Creates OUT directory if it doesn't exist
+out_warps=${out}/${id}
+if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
+here=`pwd`
+
+# move to out directory to create the warps there
+cd $out_warps
+
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
 n=$((${N} - 1))
 
-# Loop over T1w (if N>1)
-for ((k=0; k<=$n; k++)); do
-  # Reface algorithm with AFNI
-  @afni_refacer_run -input sub-HC11_ses-pre_T1w.nii.gz -mode_all -anonymize_output -prefix afni-refacedT1w
-  # Generate a deformation wapfield for the FACE
-  Do_cmd antsRegistrationSyN.sh -d 3 -f afni-refacedT1w.reface_plus.nii.gz -m sub-HC11_ses-pre_T1map.nii.gz -o T1map_in_t1w -t s -n 6 -p f
-  # Apply the warpfield to the original T1w and replace by the new ANONYMIZED t1w
+# Copy original BIDS to out directory
+Do_cmd cp -v ${bids_T1ws[@]} .
 
-done
+# Reface T1w run-1
+T1str_bids=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
+refaced=${T1str_bids/.nii.gz/}
+# Do_cmd @afni_refacer_run -input ${bids_T1ws[0]} -mode_all -anonymize_output -prefix ${refaced}
+
+# removing unnecessary Outputs
+ref_T1=${refaced}.reface_plus.nii.gz
+rm -R ${refaced}_QC ${refaced}.reface.nii.gz ${refaced}.face_plus.nii.gz ${refaced}.face.nii.gz ${refaced}.deface.nii.gz
+Info "ANFI refaced-plus is done"
+
+# Generate a deformation wapfield for the REFACE-PLUS
+Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${bids_T1ws[0]} -o ${refaced} -t s -n $CORES -p d
+
+# # Loop over all the other structural images (including non T1w volumes) (if N>1)
+# for ((k=0; k<=$n; k++)); do
+#   anat=
+#   # Reface algorithm with AFNI
+#   Do_cmd @afni_refacer_run -input sub-HC11_ses-pre_T1w.nii.gz -mode_all -anonymize_output -prefix afni-refacedT1w
+#
+#   Do_cmd antsRegistrationSyN.sh -d 3 -f afni-refacedT1w.reface_plus.nii.gz -m sub-HC11_ses-pre_T1map.nii.gz -o T1map_in_t1w -t s -n $CORES -p f
+#   # Apply the warpfield to the original T1w and replace by the new ANONYMIZED t1w
+#
+# done
+
 
 #------------------------------------------------------------------------------#
 # Non T1w volumes
+# Linear registration to T1w_reface
+# Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${anat} -o T1map_in_t1w -t s -n $CORES -p d
+
+# Apply Face-warpfield
+# Back to native space
+
+#------------------------------------------------------------------------------#
+# Replace ORIGINAL BIDS/anat with the ANONYMIZED
+
+
+cd $here
