@@ -73,6 +73,20 @@ t1w_str() {
   echo ${id}_t1w_${res}mm_${space}${run}
 }
 
+register_QC() {
+  f=$1 # back
+  m=$2 # red border
+  f_str=${f/"sub-${id}_ses-pre_"/}
+  m_str=${m/"sub-${id}_ses-pre_"/}
+  nom=${m_str/.nii.gz/}_in_${f_str/.nii.gz/}
+  QC=tmp_QCreg-
+  QCpng=${QC}${nom}.png
+  QCjpg=${id}_${nom}.jpg
+  slicer $m $f -a ${QCpng}
+  montage -quality 100 -fill white -label '' ${QCpng} -tile 1x1 -background '#000000' -geometry '640' -title ${QCjpg/.jpg/} ${QCjpg}
+  rm ${QC}*.png
+}
+
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
 # This is optional on the pipelines

@@ -87,62 +87,73 @@ BIDS=`realpath $BIDS`
 # CORES should be defined as GLOBAL variable maybe
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 
-# Assigns variables names
+# Assigns BIDS variables names
 bids_variables $BIDS $id $out
+
+Warning "This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
+         a copy of the original will be save in the OUT directory
+         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
 
 #------------------------------------------------------------------------------#
 Title "Running Reface Plus Pro: MICAPIPE"
 
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
+echo $out_warps
 if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
 here=`pwd`
+
+# Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
+t1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
 
 # move to out directory to create the warps there
 cd $out_warps
 
-# BIDS T1w processing
-N=${#bids_T1ws[@]} # total number of T1w
-n=$((${N} - 1))
-
 # Copy original BIDS to out directory
-Do_cmd cp -v ${bids_T1ws[@]} .
+Do_cmd cp -v ${subject_bids}/anat/*gz .
 
-# Reface T1w run-1
-T1str_bids=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
-refaced=${T1str_bids/.nii.gz/}
-# Do_cmd @afni_refacer_run -input ${bids_T1ws[0]} -mode_all -anonymize_output -prefix ${refaced}
+# Create a list with all anat volumes
+anat=(`ls *gz`)
 
-# removing unnecessary Outputs
-ref_T1=${refaced}.reface_plus.nii.gz
-rm -R ${refaced}_QC ${refaced}.reface.nii.gz ${refaced}.face_plus.nii.gz ${refaced}.face.nii.gz ${refaced}.deface.nii.gz
+# Remove the T1w_run-1 from anat list
+anat=(${anat[@]/$t1w_run1})
+
+# Reface T1w_run-1
+T1wrefaced=${t1w_run1/.nii.gz/}
+Do_cmd @afni_refacer_run -input ${t1w_run1} -mode_all -anonymize_output -prefix ${T1wrefaced}
+
+# Removing unnecessary Outputs from AFNI
+ref_T1=${T1wrefaced}.reface_plus.nii.gz
+rm -R ${T1wrefaced}_QC ${T1wrefaced}.reface.nii.gz ${T1wrefaced}.face_plus.nii.gz ${T1wrefaced}.face.nii.gz ${T1wrefaced}.deface.nii.gz
 Info "ANFI refaced-plus is done"
 
 # Generate a deformation wapfield for the REFACE-PLUS
-Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${bids_T1ws[0]} -o ${refaced} -t s -n $CORES -p d
+Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f
+rm -v ${T1wrefaced}InverseWarped.nii.gz ${T1wrefaced}Warped.nii.gz
+face_warp=${T1wrefaced}1Warp.nii.gz
+face_mat=${T1wrefaced}0GenericAffine.mat
+Info "Face-warpfield was calculated"
 
-# # Loop over all the other structural images (including non T1w volumes) (if N>1)
-# for ((k=0; k<=$n; k++)); do
-#   anat=
-#   # Reface algorithm with AFNI
-#   Do_cmd @afni_refacer_run -input sub-HC11_ses-pre_T1w.nii.gz -mode_all -anonymize_output -prefix afni-refacedT1w
-#
-#   Do_cmd antsRegistrationSyN.sh -d 3 -f afni-refacedT1w.reface_plus.nii.gz -m sub-HC11_ses-pre_T1map.nii.gz -o T1map_in_t1w -t s -n $CORES -p f
-#   # Apply the warpfield to the original T1w and replace by the new ANONYMIZED t1w
-#
-# done
+# Apply Face warpfield to the T1w_run-1
+Do_cmd antsApplyTransforms -d 3 -u int -i $t1w_run1 -r $t1w_run1 -n linear -t ${face_warp} -t ${face_mat} -o ${T1wrefaced}_reface-pluspro.nii.gz
 
-
-#------------------------------------------------------------------------------#
-# Non T1w volumes
-# Linear registration to T1w_reface
-# Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${anat} -o T1map_in_t1w -t s -n $CORES -p d
-
-# Apply Face-warpfield
-# Back to native space
+# # Loop over all the other structural images (including non T1w volumes)
+for nii in ${anat[@]}; do
+  # Linear/Affine registration to T1w_run-1
+  nii_out=${nii/.nii.gz/_}
+  Do_cmd antsRegistrationSyN.sh -d 3 -f ${t1w_run1} -m ${nii} -o ${nii_out} -t a -n $CORES -p d
+  rm -v ${nii_out}InverseWarped.nii.gz ${nii_out}Warped.nii.gz
+  # Apply face-warp, affine mat, inverse mat and return to native Volume space
+  T1w_run1_mat=${nii_out}0GenericAffine.mat
+  antsApplyTransforms -d 3 -u int -i $nii -r $t1w_run1 -n linear -t [${T1w_run1_mat},1] -t [${face_mat},1] -t ${face_warp} -t ${face_mat} -t ${T1w_run1_mat} -o ${nii_out}reface-pluspro.nii.gz
+  register_QC $nii ${nii_out}reface-pluspro.nii.gz
+done
+Info "Face-warpfield was applied to all volumes"
 
 #------------------------------------------------------------------------------#
 # Replace ORIGINAL BIDS/anat with the ANONYMIZED
-
+for nii in *_reface-pluspro.nii.gz; do
+    cp -v $nii ${subject_bids}/anat/${nii/_reface-pluspro/}
+done
 
 cd $here
