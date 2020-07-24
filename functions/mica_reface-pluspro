@@ -23,7 +23,7 @@ help() {
 echo -e "\033[38;5;141m
 Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <FULL_PATH/outputDirectory> \033[38;5;197m-bids\033[0m <FULL_PATH/BIDS-directory>\n
 \t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
-\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <derivatives>.
+\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <anat ORIG and face-warps>.
 \t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
 
 Warning: This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
@@ -91,8 +91,12 @@ if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 bids_variables $BIDS $id $out
 
 Warning "This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
-         a copy of the original will be save in the OUT directory
-         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
+              a copy of the original will be save in the OUT directory
+              We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
+
+# -----------------------------------------------------------------------------------------------#
+#			  Timer & Beginning
+aloita=$(date +%s)
 
 #------------------------------------------------------------------------------#
 Title "Running Reface Plus Pro: MICAPIPE"
@@ -157,3 +161,10 @@ for nii in *_reface-pluspro.nii.gz; do
 done
 
 cd $here
+
+# -----------------------------------------------------------------------------------------------#
+#			 Total Running Time
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=`echo print $eri/60 | perl`
+Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
