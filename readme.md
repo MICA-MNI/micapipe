@@ -14,6 +14,6 @@ export CORES=20
 export TMP=<path to temporal directory>
 
 ## Anonymize your dataset
-We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so, using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html)
+We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html) to anonymize T1w as well as quantitative T1 images. 
 
 ## Run `mica-pipe`
