@@ -138,6 +138,9 @@ ref_T1=${T1wrefaced}.reface_plus.nii.gz
 Do_cmd @afni_refacer_run ${t1w_run1}
 Do_cmd mv -v ${T1wrefaced}.refacer.RESULT.nii ${ref_T1/.gz/}
 Do_cmd fslchfiletype NIFTI_GZ ${ref_T1/.gz/}
+
+# If no T1native pro exit_status "something is wrong" exit
+if [ ! -f ${ref_T1} ]; then Error "$ref_T1 ANFI refaced-plus failed"; cd $here; rm -Rv $out_warps; exit 0; fi
 Info "ANFI refaced-plus is done"
 
 # Generate a deformation wapfield for the REFACE-PLUS
