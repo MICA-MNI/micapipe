@@ -126,11 +126,18 @@ cd $out_warps
 
 # Reface T1w_run-1
 T1wrefaced=${t1w_run1/.nii.gz/}
-Do_cmd @afni_refacer_run -input ${t1w_run1} -mode_all -anonymize_output -prefix ${T1wrefaced}
-
-# Removing unnecessary Outputs from AFNI
 ref_T1=${T1wrefaced}.reface_plus.nii.gz
-Do_cmd rm -R ${T1wrefaced}_QC ${T1wrefaced}.reface.nii.gz ${T1wrefaced}.face_plus.nii.gz ${T1wrefaced}.face.nii.gz ${T1wrefaced}.deface.nii.gz
+
+# AFNI_20.1.12 (Jun  1 2020) afni_refacer_run
+# Do_cmd @afni_refacer_run -input ${t1w_run1} -mode_all -anonymize_output -prefix ${T1wrefaced}
+# Removing unnecessary Outputs from AFNI
+# Do_cmd rm -R ${T1wrefaced}_QC ${T1wrefaced}.reface.nii.gz ${T1wrefaced}.face_plus.nii.gz ${T1wrefaced}.face.nii.gz ${T1wrefaced}.deface.nii.gz
+
+# DOWNGRADED afni_refacer_run version
+# AFNI_19.0.18 (Feb 25 2019) afni_refacer_run
+Do_cmd @afni_refacer_run ${t1w_run1}
+Do_cmd mv -v ${T1wrefaced}.refacer.RESULT.nii ${ref_T1/.gz/}
+Do_cmd fslchfiletype NIFTI_GZ ${ref_T1/.gz/}
 Info "ANFI refaced-plus is done"
 
 # Generate a deformation wapfield for the REFACE-PLUS
