@@ -250,7 +250,7 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
       else
       #   Structural processing: Volumetric
       # the $4 argument is the tmp directory where processes will run default is /tmp
-      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee ${dir_logs}/proc_volumetric.txt
+      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
     fi
 fi
 
@@ -267,7 +267,7 @@ if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     else
       #  Structural processing: Freesurfer
       # the $4 argument is the tmp directory where processes will run default is /tmp
-       ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/proc_freesurfer.txt
+       ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
     fi
 fi
 
@@ -287,7 +287,7 @@ if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     else
       #  POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
-       ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/proc_dwi.txt  2>&1 | tee ${dir_logs}/proc_dwi.txt
+       ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
     fi
 fi
 
@@ -319,7 +319,7 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     else
       #  POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
-      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/post_structural.txt
+      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
     fi
 fi
 
@@ -343,7 +343,7 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
     else
       #  POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
-       ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee ${dir_logs}/post_tractography.txt
+       ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
     fi
 fi
 
