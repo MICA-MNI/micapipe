@@ -128,6 +128,9 @@ cd $out_warps
 T1wrefaced=${t1w_run1/.nii.gz/}
 ref_T1=${T1wrefaced}.reface_plus.nii.gz
 
+# Binary mask over original t1w_run1
+
+
 # AFNI_20.1.12 (Jun  1 2020) afni_refacer_run
 # Do_cmd @afni_refacer_run -input ${t1w_run1} -mode_all -anonymize_output -prefix ${T1wrefaced}
 # Removing unnecessary Outputs from AFNI
@@ -142,6 +145,10 @@ Do_cmd fslchfiletype NIFTI_GZ ${ref_T1/.gz/}
 # If no T1native pro exit_status "something is wrong" exit
 if [ ! -f ${ref_T1} ]; then Error "$ref_T1 ANFI refaced-plus failed"; cd $here; rm -Rv $out_warps; exit 0; fi
 Info "ANFI refaced-plus is done"
+
+# mask the reface and the t1-run1 to obtain the warp-field only of FACE & SKULL
+masked_ref_T1=
+masked_T1wrefaced=
 
 # Generate a deformation wapfield for the REFACE-PLUS
 Do_cmd antsRegistrationSyN.sh -d 3 -f ${ref_T1} -m ${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f
