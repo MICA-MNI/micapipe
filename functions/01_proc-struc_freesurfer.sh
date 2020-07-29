@@ -70,8 +70,11 @@ fs_cmd=$(echo "-i $(echo ${tmp}/nii/*nii | sed 's: : -i :g')")
 # Perform recon-all surface registration
 Do_cmd recon-all -cm -all "$fs_cmd" -s "$id"
 
+# Copy the recon-all log to our MICA-log Directory
+Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
+
 # Copy results to Final directory
-Do_cmd cp -rv ${tmp}/* $dir_surf
+Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
 # Remove temporal directory
 Do_cmd rm -rf $tmp
