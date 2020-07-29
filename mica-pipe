@@ -8,7 +8,7 @@ source ${MICAPIPE}/functions/utilities.sh
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m
-Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <FULL_PATH/outputDirectory> \033[38;5;197m-bids\033[0m <FULL_PATH/BIDS-directory>\n
+Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 \t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
 \t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <derivatives>.
 \t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory

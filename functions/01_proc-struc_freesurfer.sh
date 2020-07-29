@@ -17,7 +17,7 @@
 #   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging
-TEST=ON
+# TEST=ON
 # FastSurfer
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer
