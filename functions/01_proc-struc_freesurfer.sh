@@ -79,5 +79,7 @@ Do_cmd cp -rv ${tmp}/${id} $dir_surf
 # Remove temporal directory
 Do_cmd rm -rf $tmp
 
+Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
+
 # Notification of completition
 Title "Freesurfer recon-all processing ended:\n\t\t\tlogs:${dir_logs}/proc_freesurfer.txt"
