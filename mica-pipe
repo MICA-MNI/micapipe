@@ -2,47 +2,45 @@
 #
 # MICA BIDS structural processing
 #
-# Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
 
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m
-Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
-\t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
-\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <derivatives>.
-\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
-\t\t\033[38;5;197m-force\033[0m 	WARNING this will overwrites the subject directory.
-\t\t\033[38;5;197m-quiet\033[0m 	Does NOT print comments
-\t\t\033[38;5;197m-micaq\033[0m 	ONLY for MICA local processing
+Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+\t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
+\t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
+\t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
+\t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrites the subject directory.
+\t\033[38;5;197m-quiet\033[0m 	         : Does NOT print comments
+\t\033[38;5;197m-micaq\033[0m 	         : ONLY for MICA local processing
 
-Flags for processing:
-    -proc             : Performs ALL first stages of structural processing
-    -post             : Performs ALL Second stages of structural processing
-                        (REQUIRES -proc_volumetric, -proc_freesurfer, -proc_dwi)
+   Flags for processing:\n
+\t\033[38;5;197m-proc\033[0m             : Performs ALL first stages of structural processing
+\t\033[38;5;197m-post\033[0m             : Performs ALL Second stages of structural processing
+\t\t\t    (REQUIRES -proc_volumetric -proc_freesurfer and -proc_dwi)
 
-Flags for first stages of structural processing:
-    -proc_volumetric  : Volumetric processing
-    -proc_freesurfer  : Freesurfer recon-all processing
-    -proc_dwi         : DWI-Diffusion weighted images processing with MRtrix3
-    -proc_rsfmri      : Resting state Funtional MRI processing
+   Flags for first stages of structural processing:\n
+\t\033[38;5;197m-proc_volumetric\033[0m  : Volumetric processing
+\t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
+\t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
+\t\033[38;5;197m-proc_rsfmri\033[0m      : Resting state Funtional MRI processing
 
-Flags for second stages of structural processing:
-    -post_structural  : Post structural volumetric processing
-                        (REQUIRES -proc_volumetric and -proc_freesurfer)
-    -post_structural  : Post tractography and connectome generation
-                        (REQUIRES -proc_dwi)
+   Flags for second stages of structural processing:\n
+\t\033[38;5;197m-post_structural\033[0m  : Post structural volumetric processing
+\t\t\t    (REQUIRES -proc_volumetric and -proc_freesurfer)
+\t\033[38;5;197m-post_dwi\033[0m         : Post tractography and connectome generation
+\t\t\t    (REQUIRES -proc_dwi)
 
-Software versions requirements:
-  Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)
-  FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
-  AFNI        1.10  (https://afni.nimh.nih.gov/download)
-  MRtrix3     3.0.0 (https://www.mrtrix.org)
-  ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
+   Software versions requirements:\n
+   Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
+   FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+   AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
+   MRtrix3     3.0.0   (https://www.mrtrix.org)
+   ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
 
-RRC
-McGill University, MNI, MICA-lab, May 2020
-https://github.com/MICA-MNI
+
+McGill University, MNI, MICA-lab, May-August 2020
+https://github.com/MICA-MNI/micapipe
 http://mica-mni.github.io/
 "
 }
@@ -63,6 +61,10 @@ echo -e "\033[38;5;1m\n---------------------------------------------------------
            $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
+
+# Source utilities functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
+
 
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id"
 
