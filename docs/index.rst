@@ -37,7 +37,6 @@ null models.
 
    pages/install
    pages/getting_started
-   python_doc/index_python
    pages/matlab_doc/index
    pages/references
    pages/funding
