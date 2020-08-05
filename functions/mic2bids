@@ -156,7 +156,7 @@ orig=("*_INV1" "*_INV2" "*_T1_Images" "*UNI_Images") # regex for T1map derivativ
 # https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html
 # bids=(T1w T1map task-rest_acq-AP_bold task-rest_acq-APse_bold task-rest_acq-PAse_bold)
 # bidsDWI=(acq-b700_dir-NUM_dwi acq-b300_dir-NUM_dwi acq-PA_dir-NUM_dwi acq-b2000_dir-NUM_dwi)
-bids=(inv-1_mp2rage inv-2_mp2rage acq-mp2rage_T1map acq-mp2rage_T1w) # BIDS for T1map derivatives
+bids=(acq-inv1_T1map acq-inv2_T1map acq-mp2rage_T1map acq-uni_T1map) # BIDS for T1map derivatives
 
 # -----------------------------------------------------------------------------------------------
 
