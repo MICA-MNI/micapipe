@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plot_hemispheres &mdash; BrainStat 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="References" href="../../references.html" />
+    <link rel="prev" title="MATLAB Package" href="../matlab_index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BrainStat
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../theory.html">(Some) Theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../matlab_index.html">MATLAB Package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../matlab_index.html#tutorials">Tutorials</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../matlab_index.html#visualization">Visualization</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">plot_hemispheres</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#synopsis">Synopsis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../funding.html">Funding</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BrainStat</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../matlab_index.html">MATLAB Package</a> &raquo;</li>
+        
+      <li>plot_hemispheres</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/matlab_doc/visualization/plot_hemispheres.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="plot-hemispheres">
+<span id="plot-hemispheres-matlab"></span><h1>plot_hemispheres<a class="headerlink" href="#plot-hemispheres" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="synopsis">
+<h2>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p>Plots data on the cortical surface (<a class="reference external" href="https://github.com/MICA-MNI/BrainStat/blob/master/matlab/visualization/%40plot_hemispheres/plot_hemispheres.m">source code</a>).</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span> <span class="o">=</span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">surface</span><span class="p">,</span><span class="n">varargin</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><em>data</em>: an n-by-m vector of data to plot where n is the number of vertices or parcels, and m the number of markers to plot.</li>
+<li><em>surface</em>: a surface readable by <span class="xref std std-ref">convert_surface_matlab</span> or a two-element cell array containing left and right hemispheric surfaces in that order.</li>
+<li><em>varargin</em>: Name-Value Pairs (see below).</li>
+<li><em>obj</em>: an object that can be used to further modify the figure.</li>
+</ul>
+</div>
+<div class="section" id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>Plots any data vector onto cortical surfaces. Data is always provided as a
+single vector; if two surfaces are provided then the <em>n</em> vertices of the first
+surface will be assigned datapoints 1:<em>n</em> and the second surface is assigned the
+remainder. If a parcellation scheme is provided, data should have as many
+datapoints as there are parcels.</p>
+<p>BrainStat only provides basic figure building functionality. For more
+information on how to use MATLAB to create publication-ready figures we
+recommend delving into <a class="reference external" href="https://www.mathworks.com/help/matlab/graphics-object-properties.html">graphics object properties</a> (e.g.
+<a class="reference external" href="https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html">figure</a>,
+<a class="reference external" href="https://www.mathworks.com/help/matlab/ref/matlab.graphics.axis.axes-properties.html">axes</a>,
+<a class="reference external" href="https://www.mathworks.com/help/matlab/ref/matlab.graphics.primitive.surface-properties.html">surface</a>).
+Also see the <a class="reference external" href="https://github.com/MICA-MNI/BrainSpace/blob/master/matlab/plot_data/plot_hemispheres.m">source code</a>
+for basic graphic object property modifications.</p>
+<p>Note: This class is a copy of a <a class="reference external" href="https://brainspace.readthedocs.io/">BrainSpace</a> class by the same name.</p>
+<div class="section" id="name-value-pairs">
+<h3>Name-Value Pairs<a class="headerlink" href="#name-value-pairs" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><em>parcellation</em>: an k-by-1 vector containing the parcellation scheme, where k is the number of vertices.</li>
+<li><em>labeltext</em>: A cell array of m elements containing labels for each column of data. These will be printed next to the hemispheres.</li>
+<li><em>views</em>: a character vector containing the angles from which to view the brain. Valid characters are: l(ateral), m(edial), i(nferior), s(uperior), a(nterior), and p(osterior). When supplying a single surface, the lateral/medial designations must be inverted for the right hemisphere. Default is ‘lm’.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<p>The plot_hemispheres class has three public methods that may be used to further
+modify the figure.</p>
+<ul class="simple">
+<li><em>colorlimits</em>: Used as <code class="code matlab docutils literal notranslate"><span class="name"><span class="pre">obj</span></span><span class="punctuation"><span class="pre">.</span></span><span class="name"><span class="pre">colorlimits</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">M</span></span><span class="punctuation"><span class="pre">)</span></span></code> where M is either a 1-by-2 vector containing the lower and upper limit of the colorbar, or a a n-by-2 matrix containing the lower and upper limits of the colorbar for each plotted row.</li>
+<li><em>colormaps</em>: Used as <code class="code matlab docutils literal notranslate"><span class="name"><span class="pre">obj</span></span><span class="punctuation"><span class="pre">.</span></span><span class="name"><span class="pre">colormaps</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">M</span></span><span class="punctuation"><span class="pre">)</span></span></code> where M is either a c-by-3 colormap, where c is the number of different colors, or a n-element cell vector where the ith cell contains the colormap for the ith plotted row.</li>
+<li><em>labels</em>: Used as <code class="code matlab docutils literal notranslate"><span class="name"><span class="pre">obj</span></span><span class="punctuation"><span class="pre">.</span></span><span class="name"><span class="pre">labels</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">varargin</span></span><span class="punctuation"><span class="pre">)</span></span></code> where varargin are name-value pairs containing the new properties of the labeltext e.g. <code class="code matlab docutils literal notranslate"><span class="name"><span class="pre">obj</span></span><span class="punctuation"><span class="pre">.</span></span><span class="name"><span class="pre">labels</span></span><span class="punctuation"><span class="pre">(</span></span><span class="literal string"><span class="pre">‘FontSize’</span></span><span class="punctuation"><span class="pre">,</span></span><span class="literal number integer"><span class="pre">10</span></span><span class="punctuation"><span class="pre">,</span></span><span class="literal string"><span class="pre">’FontName’</span></span><span class="punctuation"><span class="pre">,</span></span><span class="name"><span class="pre">DroidSans</span></span><span class="punctuation"><span class="pre">)</span></span></code>. Any properties left unset will default to the BrainStat defaults i.e. Rotation: 90, Units: Normalized, HorizontalAlignment: ‘Center’, FontName: DroidSans, FontSize 18, otherwise default text() parameters.</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../references.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../matlab_index.html" class="btn btn-neutral float-left" title="MATLAB Package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, MICA Lab, CNG Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
