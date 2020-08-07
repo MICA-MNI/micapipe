@@ -237,3 +237,4 @@ Do_cmd rm -rfv $tmp
 
 # Notification of completition
 Title "Volumetric tructural processing ended:\n\t\t\tlogs:${dir_logs}/proc_volumetric.txt"
+echo "${id}, proc_struc, DONE, $(date)" >> ${out}/brain-proc.csv

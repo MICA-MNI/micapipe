@@ -144,3 +144,4 @@ done
 
 # Notification of completition
 Title "Post-structural processing ended:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
+echo "$"

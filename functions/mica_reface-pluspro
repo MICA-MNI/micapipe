@@ -31,8 +31,11 @@ Warning: This script will replace the ORIGINAL anat volumes for ANONYMIZED in th
          We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES
 
 Software versions requirements:
-        AFNI        1.10  (https://afni.nimh.nih.gov/download)
+        AFNI        19.0.18 or 20.1.12 (https://afni.nimh.nih.gov/download)
         ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
+        python 3
+          -tensorflow 1.13 or 1.15
+          -deep-brain (https://pypi.org/project/deepbrain/)
 
 RRC
 McGill University, MNI, MICA-lab, May 2020
@@ -94,6 +97,9 @@ if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 # Assigns BIDS variables names
 bids_variables $BIDS $id $out
 
+# Check BIDS directory
+if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
+
 Warning "This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
               a copy of the original anat/volumes will be save in the OUT directory
               We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
@@ -104,6 +110,10 @@ aloita=$(date +%s)
 
 #------------------------------------------------------------------------------#
 Title "Running MICA-warpfacer"
+
+# Check if subject was refaced
+DONE=`cat ${BIDS}/CHANGES | grep ${id}-warpfacer`
+if [[ ! -z $DONE ]]; then Error "Subject $id was already refaced"; exit 0; fi
 
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
@@ -119,8 +129,8 @@ for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
 cd ${subject_bids}/anat
 # Create a list with all anat volumes
 anat=(`ls *gz`)
-# Remove the T1w_run-1 from anat list
-anat=(${anat[@]/$t1w_run1})
+# # Remove the T1w_run-1 from anat list
+# anat=(${anat[@]/$t1w_run1})
 Info "T1w to reface: $t1w_run1"
 for i in ${anat[*]}; do echo -e "\t\t$i"; done
 
@@ -134,36 +144,35 @@ Do_cmd cd $out_warps
 T1wrefaced=${t1w_run1/.nii.gz/}
 ref_T1=${T1wrefaced}.reface_plus.nii.gz
 
-# AFNI_20.1.12 (Jun  1 2020) afni_refacer_run
-Do_cmd @afni_refacer_run -input anat/${t1w_run1} -mode_all -prefix ${T1wrefaced}
-
+# >>>>>>>>>> # AFNI_20.1.12 (Jun  1 2020) afni_refacer_run
+# >>>>>>>>>> Do_cmd @afni_refacer_run -input anat/${t1w_run1} -mode_all -prefix ${T1wrefaced}
 # Removing unnecessary Outputs from AFNI
-Do_cmd rm -R ${T1wrefaced}_QC ${T1wrefaced}.reface.nii.gz ${T1wrefaced}.face_plus.nii.gz ${T1wrefaced}.face.nii.gz ${T1wrefaced}.deface.nii.gz
+# >>>>>>>>>> Do_cmd rm -R ${T1wrefaced}_QC ${T1wrefaced}.reface.nii.gz ${T1wrefaced}.face_plus.nii.gz ${T1wrefaced}.face.nii.gz ${T1wrefaced}.deface.nii.gz
 
-# >>>>>>>>>> AFNI_19.0.18 (Feb 25 2019) DOWNGRADED afni_refacer_run version
-# >>>>>>>>>> Warning "AFNI was downgraded to version 19.0.18 (Feb 25 2019), the realse will be with the latest 20.1.12 (Jun  1 2020) version"
-# >>>>>>>>>> Do_cmd @afni_refacer_run ${t1w_run1}
-# >>>>>>>>>> Do_cmd mv -v ${T1wrefaced}.refacer.RESULT.nii ${ref_T1/.gz/}
-# >>>>>>>>>> Do_cmd fslchfiletype NIFTI_GZ ${ref_T1/.gz/}
+# AFNI_19.0.18 (Feb 25 2019) DOWNGRADED afni_refacer_run version
+Warning "AFNI was downgraded to version 19.0.18 (Feb 25 2019), the realse will be with the latest 20.1.12 (Jun  1 2020) version"
+Do_cmd @afni_refacer_run anat/${t1w_run1}
+Do_cmd mv -v ${T1wrefaced}.refacer.RESULT.nii ${ref_T1/.gz/}
+Do_cmd fslchfiletype NIFTI_GZ ${ref_T1/.gz/}
 
 # If no T1native pro exit_status "something is wrong" exit
 if [ ! -f ${ref_T1} ]; then Error "$ref_T1 ANFI refaced-plus failed"; cd $here; exit 0; fi
 Info "ANFI refaced-plus is done"
 
-# Binary mask over original t1w_run1  (https://pypi.org/project/deepbrain/)
+# Binary mask over original t1w_run
 T1w_mask_dil=${t1w_run1/.nii.gz/_mask_dil.nii.gz}
 T1w_mask_inv=${t1w_run1/.nii.gz/_mask_inv.nii.gz}
 Do_cmd deepbrain-extractor -i anat/${t1w_run1} -o mask
 
 # Dilate brain mask
-Do_cmd 3dmask_tool -input mask/brain_mask.nii -prefix $T1w_mask_dil -dilate_input 5
+Do_cmd 3dmask_tool -input mask/brain_mask.nii -prefix $T1w_mask_dil -dilate_input 6
 
 # inverse mask
 Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
 
 # Create a non-linear warpfield of the face
-# Do_cmd antsRegistrationSyN.sh -d 3 -f $ref_T1 -m anat/${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f -x $T1w_mask_inv
-Do_cmd antsRegistrationSyNQuick.sh -d 3 -f $ref_T1 -m anat/${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f -x $T1w_mask_inv
+Do_cmd antsRegistrationSyN.sh -d 3 -x $T1w_mask_inv-f $ref_T1 -m anat/${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f
+# Do_cmd antsRegistrationSyNQuick.sh -d 3 -x $T1w_mask_inv -f $ref_T1 -m anat/${t1w_run1} -o ${T1wrefaced}_ -t s -n $CORES -p f
 Do_cmd rm -v ${T1wrefaced}_InverseWarped.nii.gz ${T1wrefaced}_Warped.nii.gz
 face_warp=${T1wrefaced}_1Warp.nii.gz
 face_mat=${T1wrefaced}_0GenericAffine.mat
@@ -172,7 +181,7 @@ face_mat=${T1wrefaced}_0GenericAffine.mat
 fslmaths $face_warp -mul $T1w_mask_inv $face_warp
 
 # Apply Face warpfield to the T1w_run-1: ANTs version 2.3.3.dev168-g29bdf
-Do_cmd antsApplyTransforms -d 3 -u int -i anat/$t1w_run1 -r anat/$t1w_run1 -n linear -t ${face_warp} -t ${face_mat} -o ${T1wrefaced}_reface-pluspro.nii.gz
+# Do_cmd antsApplyTransforms -d 3 -u int -i anat/$t1w_run1 -r $ref_T1 -n linear -t ${face_warp} -t ${face_mat} -o ${T1wrefaced}_reface-pluspro.nii.gz
 
 # >>>>>>>>>> ANTs version 2.2.0.dev89-g5decc DOWNGRADED antsApplyTransforms version
 # >>>>>>>>>> Warning "ANTs was downgraded to version 2.2.0, the realse will be with the latest 2.3.3 version"
@@ -204,6 +213,7 @@ if [[ ${replace} == TRUE ]]; then
     for nii in *_reface-pluspro.nii.gz; do
         Do_cmd echo "cp -v $nii ${subject_bids}/anat/${nii/_reface-pluspro/}"
     done
+    echo "${id}-warpfacer was refaced with MICA" >> ${BIDS}/CHANGES
 fi
 cd $here
 

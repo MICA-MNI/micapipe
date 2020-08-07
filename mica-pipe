@@ -148,7 +148,7 @@ Note "-bids " "$BIDS"
 help; exit 0; fi
 runs=($proc $procVOL $procFS $procDWI $post $postVOL $postDWI)
 if [ "${#runs[@]}" -lt 1 ]; then
-Error "Processing a flag is missing:
+Error "A processing flag is missing:
                     -proc
                     -proc_volumetric
                     -proc_freesurfer

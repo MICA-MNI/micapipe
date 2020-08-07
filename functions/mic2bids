@@ -96,6 +96,12 @@ do
    esac
 done
 
+# ONLY for local MICA processing, DO NOT MODIFY
+if [[ ${mica} == TRUE ]]; then
+    SUBJ_DCM=/host/fladgate/local_raid/prismaScans/MICA-MTL/${SUBJ_DCM}/scan_session_01/dicoms_sorted/
+    BIDS_DIR=/data_/mica3/BIDS_MIC/rawdata # <<<< Change this!!!
+fi
+
 # argument check out & WARNINGS
 arg=($SUBJ_DCM $Subj $BIDS_DIR)
 if [ "${#arg[@]}" -lt 3 ]; then
@@ -114,11 +120,6 @@ echo -e "\n\033[38;5;141m
 if [ "${#arg[@]}" -eq 0 ]; then help; exit 0; fi
 if [[ -z `which dcm2niix` ]]; then Error "dcm2niix NOT found"; exit 0; else Info "dcm2niix was found and is ready to work."; fi
 
-# ONLY for local MICA processing, DO NOT MODIFY
-if [[ ${mica} == TRUE ]]; then
-    SUBJ_DCM=/host/fladgate/local_raid/prismaScans/MICA-MTL/${Subj}/scan_session_01/dicoms_sorted/
-    BIDS_DIR=/data_/mica3/BIDS_MIC/rawdata # <<<< Change this!!!
-fi
 SUBJ_DCM=`realpath $SUBJ_DCM`
 BIDS_DIR=`realpath $BIDS_DIR`
 
