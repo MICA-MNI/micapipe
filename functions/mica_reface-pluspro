@@ -112,13 +112,8 @@ aloita=$(date +%s)
 Title "Running MICA-warpfacer"
 
 # Check if subject was refaced
-<<<<<<< HEAD
 DONE=`cat ${BIDS}/CHANGES | grep ${id}-warpfacer`
 if [[ ! -z $DONE ]]; then Error "Subject $id was already refaced:\n\t\t${DONE}"; exit 0; fi
-=======
-DONE=`cat ${BIDS}/CHANGES | grep ${id}-warpfaced`
-if [[ ! -z $DONE ]]; then Error "Subject $id was already refaced"; exit 0; fi
->>>>>>> d04b9314ad476958ed70d3331a7abe66a105f7c4
 
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
@@ -192,12 +187,11 @@ fslmaths $face_warp -mul $T1w_mask_inv $face_warp
 # >>>>>>>>>> Warning "ANTs was downgraded to version 2.2.0, the realse will be with the latest 2.3.3 version"
 # >>>>>>>>>> Do_cmd antsApplyTransforms -d 3 --float -i $t1w_run1 -r $t1w_run1 -n linear -t ${face_warp} -t ${face_mat} -o ${T1wrefaced}_warpfaced.nii.gz
 
-<<<<<<< HEAD
+
 if [ ! -f ${face_warp} ]; then Error "$face_warp ants SyN warpfield failed"; cd $here; exit 0; fi
 register_QC anat/$t1w_run1 ${T1wrefaced}_reface-pluspro.nii.gz
-=======
 register_QC anat/$t1w_run1 ${T1wrefaced}_warpfaced.nii.gz
->>>>>>> d04b9314ad476958ed70d3331a7abe66a105f7c4
+
 Info "Face-warpfield was calculated"
 
 # # Loop over all the other structural images (including non T1w volumes)
@@ -221,7 +215,7 @@ Info "Face-warpfield was applied to all volumes"
 # Replace ORIGINAL BIDS/anat with the ANONYMIZED
 if [[ ${replace} == TRUE ]]; then
     for nii in *_warpfaced.nii.gz; do
-        Do_cmd echo "cp -v $nii ${subject_bids}/anat/${nii/_warpfaced/}"
+        Do_cmd cp -v $nii ${subject_bids}/anat/${nii/_warpfaced/}
     done
     echo "${id}-warpfaced $(date)" >> ${BIDS}/CHANGES
 fi
