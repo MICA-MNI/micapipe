@@ -222,7 +222,7 @@ done
 
 # QC, count the number of Niftis (json) per subject
 N=`ls -R */*json | wc -l`
-echo "sub-${Subj} $N" >> ${BIDS_DIR}/participants.tsv
+echo "sub-${Subj} $N $SUBJ_DCM" >> ${BIDS_DIR}/participants.tsv
 
 # Go back to initial directory
 cd $here
