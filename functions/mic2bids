@@ -99,7 +99,7 @@ done
 # ONLY for local MICA processing, DO NOT MODIFY
 if [[ ${mica} == TRUE ]]; then
     SUBJ_DCM=/host/fladgate/local_raid/prismaScans/MICA-MTL/${SUBJ_DCM}/scan_session_01/dicoms_sorted/
-    BIDS_DIR=/data_/mica3/BIDS_MIC/rawdata # <<<< Change this!!!
+    # BIDS_DIR=/data_/mica3/BIDS_MIC/rawdata-raw # <<<< Change this!!!
 fi
 
 # argument check out & WARNINGS
