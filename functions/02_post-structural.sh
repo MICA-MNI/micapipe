@@ -13,7 +13,7 @@
 #   ARGUMENTS order:
 #   $1 : BIDS directory
 #   $2 : participant
-#   $3 : Out parcDirectory
+#   $3 : Out Directory
 #   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
@@ -39,9 +39,10 @@ if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject
 Title "Running MICA post-structural processing"
 
 
-# TO DO: Add conversion of some Freesurfer values such as cortical thickness and curvature.
+# Subjects dir for freesurfer
 export SUBJECTS_DIR=/
-export OMP_NUM_THREADS=1 # Sets wb_command to only use one thread.
+# Sets wb_command to only use one thread
+export OMP_NUM_THREADS=1
 
 # Set basic parameters.
 subject=$1
