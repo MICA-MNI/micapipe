@@ -73,7 +73,7 @@ Do_cmd recon-all -cm -all "$fs_cmd" -s "$id"
 # Copy the recon-all log to our MICA-log Directory
 Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
 
-# Copy results to Final directory
+# Copy results to  freesurfer's SUBJECTS_DIR directory
 Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
 # Remove temporal directory

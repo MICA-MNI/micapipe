@@ -21,15 +21,24 @@ bids_variables() {
   # Structural directories derivatives/
   proc_struct=$subject_dir/proc_struct # structural processing directory
   	 dir_first=$proc_struct/first      # FSL first
-  	 dir_volum=$proc_struct/volumetric # Cortical segmentarion
+  	 dir_volum=$proc_struct/volumetric # Cortical segmentarions
   	 dir_patc=$proc_struct/surfpatch   # Surfpatch
   	 dir_surf=$proc_struct/surfaces    # surfaces
-  			     dir_fs=$dir_surf/$subject     # freesurfer dir
-  			     dir_conte=$dir_surf/conte69   # conte69
+  			     dir_freesurfer=$dir_surf/$id     # freesurfer dir
+  			     dir_conte69=$dir_surf/conte69    # conte69
   proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
   dir_unassigned=$subject_dir/unassigned/ # niftiTemp
   dir_warp=$subject_dir/xfms              # Transformation matrices
   dir_logs=$subject_dir/logs          # directory with log files
+
+  # post structural Files (the resolution might vary depending on the dataset)
+  if [ -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
+    T1nativepro=${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz
+    T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
+    T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
+    res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
+  fi
+
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
@@ -54,6 +63,35 @@ bids_print.variables() {
   Note "proc_struct  =" $proc_struct
   Note "dir_warp     =" $dir_warp
   Note "logs         =" $dir_logs
+
+  Info "Utilities:"
+  Note "util_MNIvolumes   =" $util_MNIvolumes
+  Note "util_parcelations =" $util_parcelations
+  Note "util_surface      =" $util_surface
+}
+
+bids_print.variables-post() {
+  # This functions prints BIDS variables names
+  # IF they exist
+  Info "Inputs:"
+  Note "id   =" $id
+  Note "BIDS =" $BIDS
+  Note "out  =" $out
+
+  Info "mica-pipe variables:"
+  Note "T1 nativepro    =" $T1nativepro
+  Note "T1 5tt          =" $T15ttgen
+  Note "T1 fast_all     =" $T1fast_seg
+  Note "T1 resolution   =" $res
+
+  Info "mica-pipe directories:"
+  Note "subject_dir     =" $subject_dir
+  Note "proc_struct     =" $proc_struct
+  Note "dir_freesurfer  =" $dir_freesurfer
+  Note "dir_conte69     =" $dir_conte69
+  Note "dir_volum       =" $dir_volum
+  Note "dir_warp        =" $dir_warp
+  Note "logs            =" $dir_logs
 
   Info "Utilities:"
   Note "util_MNIvolumes   =" $util_MNIvolumes

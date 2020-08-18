@@ -33,12 +33,15 @@ if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
 
+#	Timer
+aloita=$(date +%s)
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
 
-# Check tmp dir
+# Check tmp dir: temporary directory
 random_str=$RANDOM
 if [ -z "${tmp}" ]; then tmp=/tmp/${random_str}_proc_struc-vol_${subject}; fi
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
@@ -236,5 +239,10 @@ fi
 Do_cmd rm -rfv $tmp
 
 # Notification of completition
-Title "Volumetric tructural processing ended:\n\t\t\tlogs:${dir_logs}/proc_volumetric.txt"
-echo "${id}, proc_struc, DONE, $(date)" >> ${out}/brain-proc.csv
+Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/proc_volumetric.txt"
+
+# QC notification of completition
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=`echo print $eri/60 | perl`
+echo "${id}, proc_struc, DONE, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
