@@ -198,29 +198,34 @@ if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory
 aloita=$(date +%s)
 
 # -----------------------------------------------------------------------------------------------#
-#   Define directories
-#
-##  TEMPORAL arguments: utilities should be sourced from an open repository
+#   Define UTILITIES directories
 scriptDir=${MICAPIPE}/functions
 
 # Directory with the templates for the processing
-# REQUEST: move utilities to an open Directory
 export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
 
-# parcDirectory
+# Directory with all the parcellations
 export util_parcelations=${MICAPIPE}/parcellations
-export util_surface=${MICAPIPE}/surfaces          # utilities/resample_fsaverage
 
+# Directory with the resampled freesurfer surfaces
+export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
+
+# -----------------------------------------------------------------------------------------------#
+#   subject_dir
 # Creates subject directory if it doesn't exist
 if [ ! -d ${subject_dir} ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfms,unassigned,proc_dwi,proc_struct/{first,volumetric,surfpatch,surfaces/{conte69,$subject}}}
+    Do_cmd mkdir -p $subject_dir/{logs,xfms,proc_dwi,proc_struct/{first,volumetric,surfpatch,surfaces/{conte69,$subject}}}
 else
     Info "Subject ${id} directory exist"
 fi
 
 # print directory  organization
 if [[ ! -z `which tree` ]]; then Info "$subject directory structure:\n"; tree -d $subject_dir; fi
+
+# -----------------------------------------------------------------------------------------------#
+#                             Run processing steps
+# -----------------------------------------------------------------------------------------------#
 
 # -----------------------------------------------------------------------------------------------#
 # # # MICA - WORKSTATION  Structural processing: Volumetric
@@ -257,7 +262,7 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  Structural processing: Freesurfer
+# # #        Structural processing: Freesurfer
 if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     Title "Running structural processing: Freesurfer"
     # SGE -qsub TRUE
@@ -275,7 +280,7 @@ fi
 
 
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  Diffusion processing
+# # #        Diffusion processing
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
@@ -294,7 +299,7 @@ if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  Resting state
+# # #        Resting state
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 
@@ -302,14 +307,9 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #                   POST Structural processing mica-02
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  POST Structural processing
+# # #         POST Structural processing
 #     REQUIRES -proc_volumetric and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
-    # Check REQUIREMENTS otherwise PASS
-    T1nativepro=${subject_dir}/proc_struc/${id}_t1w_0.8mm_nativepro.nii.gz
-    if [ ! -f ${T1nativepro} ]; then Error "-proc_volumetric outputs are missing"; exit 0; fi
-    # If freesurfer is not here stop
-
     # RUN post-STRUCTURAL
     Title "Running POST structural processing: Surfaces and parcellations"
     # SGE -qsub TRUE
@@ -326,7 +326,7 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  POST Structural processing
+# # # MICA - WORKSTATION  POST DIFFUSION WEIGHTED IMAGING processing
 #   REQUIRES -proc_dwi
 if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
   T1nativepro_5tt=${subject_dir}/proc_struc/${id}_t1w_0.8mm_nativepro_5TT.nii.gz
