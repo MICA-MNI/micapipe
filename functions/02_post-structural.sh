@@ -4,7 +4,7 @@
 #
 # Preprocessing workflow for diffusion MRI.
 #
-# This workflow makes use of MRtrix3
+# This workflow makes use of freesurfer, FSL and MRtrix3
 #
 # Atlas an templates are avaliable from:
 #
@@ -17,7 +17,7 @@
 #   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
-#TEST=ON
+# TEST=ON
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
@@ -39,15 +39,6 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; 
 
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-
-# Check inputs: freesurfer-orig
-if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have T1_tt5"; exit; fi
-
-# Check inputs: 5TT
-if [ ! -f ${T1fast_all} ]; then Error "Subject $id doesn't have T1_fast segmentation"; exit; fi
-
-# Sets wb_command to only use one thread
-if [[ -z $OMP_NUM_THREADS ]]; then OMP_NUM_THREADS=4; Info "wb_command will use $OMP_NUM_THREADS threads"; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
@@ -82,9 +73,9 @@ Info "Cerebellum parcellation to T1-nativepro Volume"
 T1str_nat=${id}_t1w_${res}mm_nativepro
 T1str_fs=${id}_t1w_${res}mm_fsspace
 atlas_cerebellum=${util_MNIvolumes}/MNI152_T1_0.8mm_cerebellum.nii.gz       # cerebellar lobules atlas
-mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings MNI152_0.8mm to nativepro
-T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz
-T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
+mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
+T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
+T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat                        # Affine matrix - nativepro to MNI152_0.8mm
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz               # Cerebellar output
 
 # Apply inverse transfrom from MNI152-cerebellum to T1-nativepro
@@ -92,6 +83,8 @@ Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
               -r ${T1nativepro} \
               -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
               -o ${T1_seg_cerebellum} -v -u int
+Info "Subcortical parcellation to T1-nativepro Volume"
+Do_cmd cp ${T1fast_all} ${dir_volum}/${T1str_nat}_subcortical.nii.gz
 
 #------------------------------------------------------------------------------#
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
@@ -121,8 +114,7 @@ for parc in lh.*.annot; do
    Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
    # Register parcellation to nativepro
    Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
-
- done
+done
 cd $here
 
 # -----------------------------------------------------------------------------------------------
@@ -136,4 +128,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
-echo "${id}, post_structural, TESTrun, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, post_structural, TEST, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv

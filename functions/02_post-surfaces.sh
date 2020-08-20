@@ -31,13 +31,16 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-post
 
-# Test inputs: Nativepro T1
+# Check inputs: Nativepro T1
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 
-# Test inputs: freesurfer-orig
+# Check inputs: freesurfer space T1
+if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
+# Check inputs: freesurfer-orig
 if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have T1_tt5"; exit; fi
 
-# Test inputs: 5TT
+# Check inputs: 5TT
 if [ ! -f ${T1fast_all} ]; then Error "Subject $id doesn't have T1_fast segmentation"; exit; fi
 
 # Sets wb_command to only use one thread
