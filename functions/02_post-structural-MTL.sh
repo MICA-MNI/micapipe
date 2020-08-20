@@ -61,21 +61,11 @@ export SUBJECTS_DIR=${dir_surf}
 T1_fsspace=${proc_struct}/${id}_t1w_${res}mm_fsspace.nii.gz
 T1natpro_str=$(basename $T1nativepro .nii.gz)
 
-Do_cmd bbregister --mov $T1nativepro --s $id --reg ${dir_warp}/${T1natpro_str}_t1w2fs.lta --init-fsl --t1 --o ${T1_fsspace}
+# BBregister freesurfer space to nativepro
+Do_cmd bbregister --mov $T1nativepro --s $id --reg ${dir_warp}/${T1natpro_str}_t1w2fs.lta --init-coreg --t1 --o ${T1_fsspace}
 Do_cmd lta_convert --inlta ${dir_warp}/${T1natpro_str}_t1w2fs.lta --outlta ${dir_warp}/${T1natpro_str}_fs2t1w.lta --invert
 
-Do_cmd mri_vol2vol --mov ${T15ttgen} --targ ${T1_fsspace} --o ${T15ttgen/nativepro/fsspace} --lta ${dir_warp}/${T1natpro_str}_t1w2fs.lta
-Do_cmd mri_vol2vol --mov ${T1fast_seg} --targ ${T1_fsspace} --o ${tmp}/first_fs.nii.gz --lta ${dir_warp}/${T1natpro_str}_t1w2fs.lta --interp nearest
-
-## Deal with FreeSurfer c_ras offset
-MatrixX=$(mri_info --cras ${dir_freesurfer}/mri/orig.mgz | cut -f1 -d' ')
-MatrixY=$(mri_info --cras ${dir_freesurfer}/mri/orig.mgz | cut -f2 -d' ')
-MatrixZ=$(mri_info --cras ${dir_freesurfer}/mri/orig.mgz | cut -f3 -d' ')
-echo "1 0 0 ""$MatrixX" > ${dir_freesurfer}/mri/c_ras.mat
-echo "0 1 0 ""$MatrixY" >> ${dir_freesurfer}/mri/c_ras.mat
-echo "0 0 1 ""$MatrixZ" >> ${dir_freesurfer}/mri/c_ras.mat
-echo "0 0 0 1" >> ${dir_freesurfer}/mri/c_ras.mat
-
+Info "Native surfaces to conte69-64k vertices (both hemispheres)"
 if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_corrected.surf.gii ]] ; then
     for hemisphere in l r; do
       HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
@@ -98,39 +88,8 @@ if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_correcte
                 BARYCENTRIC \
                 ${dir_conte69}/${id}_${hemisphere}h_${surface}_32k_fs_LR.surf.gii
         done
-        for surface in pial white midthickness; do
-            # Apply affine transformation to pial, white, and midthickness surfaces to bring them in line with native scans.
-            Do_cmd wb_command -surface-apply-affine ${dir_conte69}/${id}_${hemisphere}h_${surface}_32k_fs_LR.surf.gii \
-                ${dir_freesurfer}/mri/c_ras.mat \
-                ${dir_conte69}/${id}_${hemisphere}h_${surface}_32k_fs_LR_fsspace_cras_corrected.surf.gii
-        done
     done
 fi
-
-## Glasser and Vos de Wael areas to volume.
-for area in glasser_360 vosdewael_400 vosdewael_300 vosdewael_200 vosdewael_100 schaefer_100 schaefer_200 schaefer_300 schaefer_400 schaefer_500 schaefer_600 schaefer_800 schaefer_1000 aparc_aseg economo; do
-    if [[ ! -e ${dir_volum}/${id}_${area}_subcortex_${res}_native.nii.gz ]]; then
-        # Fill the ribbon.
-        for side in lh rh; do
-            Do_cmd wb_command -label-to-volume-mapping \
-                ${util_parcelations}/${area}_conte69_${side}.label.gii \
-                ${dir_conte69}/*_${side}_midthickness_32k_fs_LR_fsspace_cras_corrected.surf.gii \
-                ${T1_fsspace} \
-                ${tmp}/${area}_${side}.nii.gz \
-                -ribbon-constrained \
-                ${dir_conte69}/*_${side}_white_32k_fs_LR_fsspace_cras_corrected.surf.gii \
-                ${dir_conte69}/*_${side}_pial_32k_fs_LR_fsspace_cras_corrected.surf.gii
-        done
-        # Combine left and right hemispheres by adding them EXCLUDING any overlapping voxels.
-        [[ $area == glasser_360 ]] && wb_command -volume-math '((r>0)*180+r+l)*!(r>0&&l>0)' ${dir_volum}/${id}_${area}_${res}_native.nii.gz -var l ${tmp}/${area}_lh.nii.gz -var r ${tmp}/${area}_rh.nii.gz \
-            || wb_command -volume-math '(r+l)*!(r>0&&l>0)' ${dir_volum}/${id}_${area}_${res}_native.nii.gz -var l ${tmp}/${area}_lh.nii.gz -var r ${tmp}/${area}_rh.nii.gz
-
-        # Create a subcortical atlas as well. Assign overlap to the cortex.
-        maxval=$(fsl5.0-fslstats ${dir_volum}/${id}_${area}_${res}_native.nii.gz -p 100 | sed 's:\..*::')
-        wb_command -volume-math "(h+(s+${maxval})*(h==0&&s!=0))" ${dir_volum}/${id}_${area}_subcortex_${res}_native.nii.gz -var h ${dir_volum}/${id}_${area}_${res}_native.nii.gz -var s ${tmp}/first_fs.nii.gz
-    fi
-done
-
 
 # Clean temporal directory
 Do_cmd rm -rfv $tmp

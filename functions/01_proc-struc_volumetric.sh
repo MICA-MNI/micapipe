@@ -176,7 +176,7 @@ for mm in 2 0.8; do
       Do_cmd mv $T1_MNI152_warped $T1_MNI152_brain
       #antsApplyTransforms -d 3 -i ${T1nativepro} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${T1_MNI152}
 
-      # Warp the T1 nativepro FAST to MNI152
+      # Warp the T1 nativepro FAST to MNI152 WHAT for???
       T1str_nat_brain=${T1nativepro_brain/.nii.gz/_}
       new_str=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_
       for fst in mixeltype.nii.gz pve_0.nii.gz pve_1.nii.gz pve_2.nii.gz pveseg.nii.gz seg.nii.gz; do
