@@ -26,21 +26,24 @@ id=$2
 out=$3
 tmp=$4
 
+# CORES should be defined as GLOBAL variable
+if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-post
 
-# Test inputs: Nativepro T1
+# Check inputs: Nativepro T1
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 
-# Test inputs: freesurfer space T1
+# Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
-# Test inputs: freesurfer-orig
+# Check inputs: freesurfer-orig
 if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have T1_tt5"; exit; fi
 
-# Test inputs: 5TT
+# Check inputs: 5TT
 if [ ! -f ${T1fast_all} ]; then Error "Subject $id doesn't have T1_fast segmentation"; exit; fi
 
 # Sets wb_command to only use one thread
@@ -67,6 +70,7 @@ T1_in_fs=${tmp}/T1.nii.gz
 T1_fsspace=${proc_struct}/${id}_t1w_${res}mm_fsspace.nii.gz
 mat_fsspace_affine=${dir_warp}/${id}_t1w_${res}mm_fsspace_to_nativepro_
 T1_fsspace_affine=${mat_fsspace_affine}0GenericAffine.mat
+
 Do_cmd mrconvert $T1freesurfr $T1_in_fs
 Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
 Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
@@ -92,9 +96,8 @@ Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
 #------------------------------------------------------------------------------#
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
-
 cd $util_parcelations
-for parc in lh.vosdewael*.annot; do
+for parc in lh.*.annot; do
    parc_annot=${parc/lh./}
    parc_str=`echo ${parc_annot} | awk -F '_fsa5' '{print $1}'`
  	 for hemi in lh rh; do
@@ -110,13 +113,13 @@ for parc in lh.vosdewael*.annot; do
    fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
    labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
 
-   # Register the annot surface parcelation to the T1-freesurfer volume, then to T1-nativepro
+   # Register the annot surface parcelation to the T1-freesurfer volume
    Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
    Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
    Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
    Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
    Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
-   # Register labels to nativepro
+   # Register parcellation to nativepro
    Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
 
  done
@@ -133,17 +136,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
-# echo "${id}, post_structural, DONE, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
-
-#------------------------------------------------------------------------------#
-# Info "Freesurfer Surface parcellations to T1-nativepro Volume"
-# # Crea un niifti a partir del aparc.2009 archivo mgz
-# for aparc in aparc.a2009s+aseg.mgz aparc+aseg.mgz; do
-#    fs_seg=${dir_freesurfer}/mri/${aparc}
-#    fs_nat=${tmp}/${aparc/mgz/}nii.gz
-#    fs_nii=${dir_volum}/${T1str_fs}_${aparc/+aseg.mgz/}.nii.gz
-#    Do_cmd mri_label2vol --seg ${fs_seg} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_nat --regheader ${dir_freesurfer}/mri/aseg.mgz
-#    Do_cmd mrconvert $fs_nat $fs_nii -force      # mgz to nifti_gz
-#    Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
-#    Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
-# done
+echo "${id}, post_structural, TESTrun, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
