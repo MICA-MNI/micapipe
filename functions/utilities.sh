@@ -24,8 +24,8 @@ bids_variables() {
   	 dir_volum=$proc_struct/volumetric # Cortical segmentarions
   	 dir_patc=$proc_struct/surfpatch   # Surfpatch
   	 dir_surf=$proc_struct/surfaces    # surfaces
-  			     dir_freesurfer=$dir_surf/$id     # freesurfer dir
-  			     dir_conte69=$dir_surf/conte69    # conte69
+  			     dir_freesurfer=${dir_surf}/${id}     # freesurfer dir
+  			     dir_conte69=${dir_surf}/conte69    # conte69
   proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
   dir_unassigned=$subject_dir/unassigned/ # niftiTemp
   dir_warp=$subject_dir/xfms              # Transformation matrices
@@ -34,6 +34,7 @@ bids_variables() {
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
     T1nativepro=${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz
+    T1freesurfr=${dir_freesurfer}/mri/T1.mgz
     T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
     T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
     res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
