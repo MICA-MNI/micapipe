@@ -215,7 +215,7 @@ export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
 # Creates subject directory if it doesn't exist
 if [ ! -d ${subject_dir} ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfms,proc_dwi,proc_struct/{first,volumetric,surfpatch,surfaces/{conte69,$subject}}}
+    Do_cmd mkdir -p $subject_dir/{logs,xfms,proc_dwi,proc_struct/{first,volumetric,surfpatch,surfaces/{conte69,$id}}}
 else
     Info "Subject ${id} directory exist"
 fi
@@ -321,7 +321,8 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     else
       #  POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
-      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+      # ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+      ${scriptDir}/02_post-surfaces.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
     fi
 fi
 
