@@ -81,47 +81,53 @@ mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # tr
 T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
 T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat                        # Affine matrix - nativepro to MNI152_0.8mm
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz               # Cerebellar output
+T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 
 # Apply inverse transfrom from MNI152-cerebellum to T1-nativepro
-Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
-              -r ${T1nativepro} \
-              -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
-              -o ${T1_seg_cerebellum} -v -u int
+if [[ ! -f  ${T1_seg_cerebellum} ]] ; then
+    Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
+                -r ${T1nativepro} \
+                -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
+                -o ${T1_seg_cerebellum} -v -u int
+fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
-Do_cmd cp ${T1fast_all} ${dir_volum}/${T1str_nat}_subcortical.nii.gz
+if [[ ! -f ${T1_seg_subcortex} ]] ; then
+    Do_cmd cp ${T1fast_all} ${T1_seg_subcortex}
+fi
 
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
-Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
-cd $util_parcelations
-for parc in lh.*.annot; do
-   parc_annot=${parc/lh./}
-   parc_str=`echo ${parc_annot} | awk -F '_fsa5' '{print $1}'`
- 	 for hemi in lh rh; do
-   		Info "Running surface $hemi $parc_annot to $subject"
-   		Do_cmd mri_surf2surf --hemi $hemi \
-   		  --srcsubject fsaverage5 \
-   		  --trgsubject ${id} \
-   		  --sval-annot ${hemi}.${parc_annot} \
-   		  --tval ${dir_freesurfer}/label/${hemi}.${parc_annot}
- 	 done
-   fs_mgz=${tmp}/${parc_str}.mgz
-   fs_tmp=${tmp}/${parc_str}_in_T1.mgz
-   fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
-   labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
+if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
+    Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
+    cd $util_parcelations
+    for parc in lh.*.annot; do
+       parc_annot=${parc/lh./}
+       parc_str=`echo ${parc_annot} | awk -F '_fsa5' '{print $1}'`
+     	 for hemi in lh rh; do
+       		Info "Running surface $hemi $parc_annot to $subject"
+       		Do_cmd mri_surf2surf --hemi $hemi \
+       		  --srcsubject fsaverage5 \
+       		  --trgsubject ${id} \
+       		  --sval-annot ${hemi}.${parc_annot} \
+       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_annot}
+     	 done
+       fs_mgz=${tmp}/${parc_str}.mgz
+       fs_tmp=${tmp}/${parc_str}_in_T1.mgz
+       fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
+       labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
 
-   # Register the annot surface parcelation to the T1-freesurfer volume
-   Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
-   Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
-   Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
-   Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
-   Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
-   # Register parcellation to nativepro
-   Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
-done
-cd $here
+       # Register the annot surface parcelation to the T1-freesurfer volume
+       Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
+       Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
+       Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
+       Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
+       Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
+       # Register parcellation to nativepro
+       Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
+    done
+fi
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
