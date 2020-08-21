@@ -56,7 +56,7 @@ export SUBJECTS_DIR=${dir_surf}
 
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
 Info "Native surfaces to conte69-64k vertices (both hemispheres)"
-if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_corrected.surf.gii ]] ; then
+if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR.surf.gii ]] ; then
     for hemisphere in l r; do
       HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
         # Build the conte69-32k sphere and midthickness surface
@@ -80,11 +80,6 @@ if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_correcte
         done
     done
 fi
-
-
-# -----------------------------------------------------------------------------------------------
-# Clean temporal directory and temporal fsaverage5
-Do_cmd rm -rfv $tmp  ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
