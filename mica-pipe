@@ -180,7 +180,6 @@ if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; exit 1; else In
 if [[ -z `which antsRegistration` ]]; then Error "ANTs was not found"; exit 1; else Info "ANTS version: `antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"; fi
 # workbench
 if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 1; else Info "workbench version: `wm_command -version | awk 'NR==3{print $2}'`"; fi
-
 # Minc tool kit
 # Won't use minc tools in this release
 #if [[ -z `which mincgen` ]]; then Warning "Minc Tool Kit was not found, proceed with caution"; else Info "Minc version: `mincgen -version | awk 'NR==1{print $2}'`"; fi
@@ -324,8 +323,7 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     else
       #  POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
-      # ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
-      ${scriptDir}/02_post-surfaces.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
     fi
 fi
 
