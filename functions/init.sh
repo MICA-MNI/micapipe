@@ -16,11 +16,6 @@ freesurfer_path=/data/mica1/01_programs/Freesurfer-6.0/bin
 # $NSLOTS if it exists (i.e. when running on SGE). 
 local_threads=4
 
-# Default temporary directory
-tmp_file=$(mktemp)
-default_temp=$(dirname $tmpfile)
-rm -f $tmpfile
-
 # Uncomment this and fill in a temporary directory for a custom temporary directory. 
 # This takes priority over the default.
 global_temp_directory=/data/mica2/temporaryNetworkProcessing/
@@ -38,6 +33,10 @@ host_temp_dirs=(fladgate.bic.mni.mcgill.ca /host/fladgate/local_raid/temporaryLo
 ######################################
 ### Do not make changes below this.###
 ######################################
+# Default temporary directory
+tmp_file=$(mktemp)
+default_temp=$(dirname $tmpfile)
+rm -f $tmpfile
 
 # Set basic global variables.
 export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script. 
