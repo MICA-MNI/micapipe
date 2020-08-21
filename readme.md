@@ -1,7 +1,7 @@
 # BIDS to MICA processing pipeline  
 
 ## Software versions
-dicom2niix
+dicom2niix  
 Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)  
 FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)  
 AFNI        1.10  (https://afni.nimh.nih.gov/download)  
