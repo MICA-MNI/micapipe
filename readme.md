@@ -14,6 +14,7 @@ export PATH=$PATH:${MICAPIPE}:${MICAPIPE}/functions
 export CORES=20  
 export TMP=<path to temporal directory>  
 export OMP_NUM_THREADS=4
+export TMP=/tmp
 ```
 
 ## Anonymize your dataset
