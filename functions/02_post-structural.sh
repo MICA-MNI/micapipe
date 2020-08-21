@@ -4,7 +4,7 @@
 #
 # Preprocessing workflow for diffusion MRI.
 #
-# This workflow makes use of freesurfer, FSL and MRtrix3
+# This workflow makes use of freesurfer, FSL workbench and MRtrix3
 #
 # Atlas an templates are avaliable from:
 #
@@ -29,6 +29,9 @@ tmp=$4
 # CORES should be defined as GLOBAL variable
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 
+# Sets wb_command to only use one thread
+if [[ -z $OMP_NUM_THREADS ]]; then OMP_NUM_THREADS=4; Info "wb_command will use $OMP_NUM_THREADS threads"; fi
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
@@ -39,6 +42,7 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; 
 
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
@@ -67,7 +71,7 @@ Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_
 Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
 
 #------------------------------------------------------------------------------#
-# Cerebellar parcellation in MANI152_0.8mm to T1-Nativepro
+# Cerebellar parcellation from MNI152_0.8mm to T1-Nativepro
 Info "Cerebellum parcellation to T1-nativepro Volume"
 # Variables
 T1str_nat=${id}_t1w_${res}mm_nativepro
@@ -83,10 +87,12 @@ Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
               -r ${T1nativepro} \
               -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
               -o ${T1_seg_cerebellum} -v -u int
+
 Info "Subcortical parcellation to T1-nativepro Volume"
 Do_cmd cp ${T1fast_all} ${dir_volum}/${T1str_nat}_subcortical.nii.gz
 
 #------------------------------------------------------------------------------#
+# Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
 cd $util_parcelations
@@ -116,6 +122,34 @@ for parc in lh.*.annot; do
    Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
 done
 cd $here
+
+#------------------------------------------------------------------------------#
+# Compute warp of native structural to Freesurfer and apply to 5TT and first
+Info "Native surfaces to conte69-64k vertices (both hemispheres)"
+if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR.surf.gii ]] ; then
+    for hemisphere in l r; do
+      HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
+        # Build the conte69-32k sphere and midthickness surface
+        Do_cmd wb_shortcuts -freesurfer-resample-prep \
+            ${dir_freesurfer}/surf/${hemisphere}h.white \
+            ${dir_freesurfer}/surf/${hemisphere}h.pial \
+            ${dir_freesurfer}/surf/${hemisphere}h.sphere.reg \
+            ${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii \
+            ${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii \
+            ${dir_conte69}/${id}_${hemisphere}h_midthickness_32k_fs_LR.surf.gii \
+            ${dir_conte69}/${id}_${hemisphere}h_sphereReg.surf.gii
+        # Resample white and pial surfaces to conte69-32k
+        for surface in pial white; do
+            Do_cmd mris_convert ${dir_freesurfer}/surf/${hemisphere}h.${surface} ${dir_conte69}/${hemisphere}h.${surface}.surf.gii
+            Do_cmd wb_command -surface-resample \
+                ${dir_conte69}/${hemisphere}h.${surface}.surf.gii \
+                ${dir_conte69}/${id}_${hemisphere}h_sphereReg.surf.gii \
+                ${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii \
+                BARYCENTRIC \
+                ${dir_conte69}/${id}_${hemisphere}h_${surface}_32k_fs_LR.surf.gii
+        done
+    done
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory and temporal fsaverage5
