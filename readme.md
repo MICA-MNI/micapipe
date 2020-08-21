@@ -4,8 +4,9 @@
 Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)  
 FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)  
 AFNI        1.10  (https://afni.nimh.nih.gov/download)  
-MRtrix3     3.0.0 (https://www.mrtrix.org)  
+MRtrix3     3.0.1 (https://www.mrtrix.org)  
 ANTs        2.3.3 (https://github.com/ANTsX/ANTs)  
+workbench  
 
 ## Define global Variables
 ```bash
@@ -14,7 +15,7 @@ export PATH=$PATH:${MICAPIPE}:${MICAPIPE}/functions
 export CORES=20  
 export TMP=<path to temporal directory>  
 export OMP_NUM_THREADS=4
-export TMP=/tmp
+export tmp=/tmp
 ```
 
 ## Anonymize your dataset
