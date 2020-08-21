@@ -45,7 +45,28 @@ http://mica-mni.github.io/
 "
 }
 
-# Chek MICAPIPE
+# Launch the init file. (Note to Raul: this may make the next check obsolete - RV)
+script_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+source $script_path/functions/init.sh
+if [[ $? != 0 ]]; then
+  echo -e "\033[38;5;1m\n---------------------------------------------------------\n
+  [ERROR]... Could not find init file. Is this script in the 
+            base directory of the MICAPIPE github and in init
+            file in the functions subdirectory?
+  \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
+fi
+
+# ITS A TRAP! Specifically a trap that will reset the old user path upon exits,
+# interrupts, and termination. We could add a deletion of the temporary directory 
+# here too. 
+function cleanup() {
+  export PATH=$OLD_PATH
+  unset OLD_PATH
+  unset tmp
+}
+trap cleanup EXIT INT TERM
+
+# Check MICAPIPE
 if [ -z "${MICAPIPE}" ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
 [ERROR]... MICAPIPE must be define in your enviroment\033[0m
