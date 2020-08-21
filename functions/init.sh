@@ -35,8 +35,8 @@ host_temp_dirs=(fladgate.bic.mni.mcgill.ca /host/fladgate/local_raid/temporaryLo
 ######################################
 # Default temporary directory
 tmp_file=$(mktemp)
-default_temp=$(dirname $tmpfile)
-rm -f $tmpfile
+default_temp=$(dirname $tmp_file)
+rm -f $tmp_file
 
 # Set basic global variables.
 export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script. 
