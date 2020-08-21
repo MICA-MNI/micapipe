@@ -6,16 +6,15 @@ FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
 AFNI        1.10  (https://afni.nimh.nih.gov/download)  
 MRtrix3     3.0.1 (https://www.mrtrix.org)  
 ANTs        2.3.3 (https://github.com/ANTsX/ANTs)  
-workbench  
+workbench   1.3.2
 
 ## Define global Variables
 ```bash
 export MICAPIPE=<github_Directory>/micapipe  
 export PATH=$PATH:${MICAPIPE}:${MICAPIPE}/functions  
 export CORES=20  
-export TMP=<path to temporal directory>  
+export tmp=<path to temporal directory>  
 export OMP_NUM_THREADS=4
-export tmp=/tmp
 ```
 
 ## Anonymize your dataset
