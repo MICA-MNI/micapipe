@@ -178,6 +178,9 @@ if [[ -z `which flirt` ]]; then Error "FSL was not found"; exit 0; else Info "FS
 if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; exit 0; else Info "AFNI version: `afni -version | awk -F ':' '{print $1}'`"; fi
 # ANTSx
 if [[ -z "${ANTSPATH}" ]]; then Error "ANTs was not found"; exit 0; else Info "ANTS binaries: $ANTSPATH"; fi
+# workbench
+if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 0; else Info "AFNI version: `afni -version | awk -F ':' '{print $1}'`"; fi
+
 # Minc tool kit
 # Won't use minc tools in this release
 #if [[ -z `which mincgen` ]]; then Warning "Minc Tool Kit was not found, proceed with caution"; else Info "Minc version: `mincgen -version | awk 'NR==1{print $2}'`"; fi
