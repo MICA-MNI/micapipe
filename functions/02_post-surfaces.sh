@@ -61,13 +61,6 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 export SUBJECTS_DIR=${dir_surf}
 
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
-T1_fsspace=${proc_struct}/${id}_t1w_${res}mm_fsspace.nii.gz
-T1natpro_str=$(basename $T1nativepro .nii.gz)
-
-# BBregister freesurfer space to nativepro
-Do_cmd bbregister --mov $T1nativepro --s $id --reg ${dir_warp}/${T1natpro_str}_t1w2fs.lta --init-coreg --t1 --o ${T1_fsspace}
-Do_cmd lta_convert --inlta ${dir_warp}/${T1natpro_str}_t1w2fs.lta --outlta ${dir_warp}/${T1natpro_str}_fs2t1w.lta --invert
-
 Info "Native surfaces to conte69-64k vertices (both hemispheres)"
 if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_corrected.surf.gii ]] ; then
     for hemisphere in l r; do
@@ -94,8 +87,10 @@ if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR_fsspace_cras_correcte
     done
 fi
 
-# Clean temporal directory
-Do_cmd rm -rfv $tmp
+
+# -----------------------------------------------------------------------------------------------
+# Clean temporal directory and temporal fsaverage5
+Do_cmd rm -rfv $tmp  ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -104,5 +99,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
-
-# echo "${id}, post_structural, DONE, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, post_structural, CONTE69, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
