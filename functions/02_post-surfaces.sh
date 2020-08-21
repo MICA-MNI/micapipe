@@ -37,12 +37,6 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; 
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
-# Check inputs: freesurfer-orig
-if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have T1_tt5"; exit; fi
-
-# Check inputs: 5TT
-if [ ! -f ${T1fast_all} ]; then Error "Subject $id doesn't have T1_fast segmentation"; exit; fi
-
 # Sets wb_command to only use one thread
 if [[ -z $OMP_NUM_THREADS ]]; then OMP_NUM_THREADS=4; Info "wb_command will use $OMP_NUM_THREADS threads"; fi
 
