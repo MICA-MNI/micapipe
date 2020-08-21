@@ -107,7 +107,7 @@ for parc in lh.*.annot; do
    		  --sval-annot ${hemi}.${parc_annot} \
    		  --tval ${dir_freesurfer}/label/${hemi}.${parc_annot}
  	 done
-   fs_mgz=${dir_freesurfer}/mri/${parc_str}.mgz
+   fs_mgz=${tmp}/${parc_str}.mgz
    fs_tmp=${tmp}/${parc_str}_in_T1.mgz
    fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
    labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
