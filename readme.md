@@ -1,13 +1,15 @@
 # BIDS to MICA processing pipeline  
 
 ## Software versions
-dicom2niix  
-Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)  
-FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)  
-AFNI        20.2.06  (https://afni.nimh.nih.gov/download)  
-MRtrix3     3.0.1 (https://www.mrtrix.org)  
-ANTs        2.3.4 (https://github.com/ANTsX/ANTs)  
-workbench   1.3.2
+- dicom2niix  
+- Freesurfer  6.0   (https://surfer.nmr.mgh.harvard.edu/)  
+- FSL         6.0   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)  
+- AFNI        20.2.06  (https://afni.nimh.nih.gov/download)  
+- MRtrix3     3.0.1 (https://www.mrtrix.org)  
+- ANTs        2.3.4 (https://github.com/ANTsX/ANTs)  
+- workbench   1.3.2
+- Surface tools (https://github.com/kwagstyl/surface_tools) 
+- ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA) 
 
 ## Define global Variables
 ```bash
