@@ -89,11 +89,15 @@ if [[ ! -f  ${T1_seg_cerebellum} ]] ; then
                 -r ${T1nativepro} \
                 -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
                 -o ${T1_seg_cerebellum} -v -u int
+else
+    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"
 fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
 if [[ ! -f ${T1_seg_subcortex} ]] ; then
     Do_cmd cp ${T1fast_all} ${T1_seg_subcortex}
+else
+    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"
 fi
 
 #------------------------------------------------------------------------------#
@@ -127,6 +131,8 @@ if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
        # Register parcellation to nativepro
        Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
     done
+else
+    Info "Subject ${id} has parcellations on T1-nativepro space"
 fi
 
 #------------------------------------------------------------------------------#
@@ -155,6 +161,8 @@ if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR.surf.gii ]] ; then
                 ${dir_conte69}/${id}_${hemisphere}h_${surface}_32k_fs_LR.surf.gii
         done
     done
+else
+    Info "Subject ${id} has surfaces on conte69"
 fi
 
 # -----------------------------------------------------------------------------------------------
