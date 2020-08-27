@@ -111,7 +111,7 @@ if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
        		  --srcsubject fsaverage5 \
        		  --trgsubject ${id} \
        		  --sval-annot ${hemi}.${parc_annot} \
-       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_annot}
+       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_str}
      	 done
        fs_mgz=${tmp}/${parc_str}.mgz
        fs_tmp=${tmp}/${parc_str}_in_T1.mgz

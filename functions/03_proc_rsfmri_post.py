@@ -74,7 +74,6 @@ rh_data = np.squeeze(rh_data.get_fdata())
 data = np.transpose(np.append(lh_data, rh_data, axis=0))
 data = np.append(np.append(data, sctx, axis=1), cereb, axis=1)
 
-
 # native
 lh_data_nat = nib.load(x_lh_nat)
 lh_data_nat = np.squeeze(lh_data_nat.get_fdata())
@@ -116,18 +115,18 @@ else:
 
 # save timeseries in conte69 format
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr)
-
-# Uncommenting this line will save timeseries in native vertexwise format... beware the file will be quite big! (~8G)
-# np.savetxt(funcDir+'/surfaces/' + subject + 'rsfMRI-timeseries_native_clean.txt', dataNative_corr)
-# Instead we will just output the parcellated timeseries ...
+# Native surface space timeseries we will output in parcellated form.
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Start with conte parcellations
-parcellationList = ['glasser_360_conte69', 'vosdewael_100_conte69', 'vosdewael_200_conte69',
+parcellationList = ['glasser_360_conte69', 
+                    'vosdewael_100_conte69', 'vosdewael_200_conte69',
                     'vosdewael_300_conte69', 'vosdewael_400_conte69',
                     'schaefer_100_conte69', 'schaefer_200_conte69', 'schaefer_300_conte69',
                     'schaefer_400_conte69', 'schaefer_500_conte69', 'schaefer_600_conte69',
-                    'schaefer_800_conte69', 'schaefer_1000_conte69', 'aparc_conte69']
+                    'schaefer_700_conte69', 'schaefer_800_conte69', 'schaefer_900_conte69',
+                    'schaefer_1000_conte69', 
+                    'aparc_conte69']
 for parcellation in parcellationList:
     parcOutputName = parcellation.replace('_', "").replace('conte69', "")
 
@@ -201,25 +200,43 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png', dpi=300)
 
+
+
+
 # Now generate native surface connectomes
-# IMPORTANT: before running this code, make sure that native surface space parcellations (.csv) are in the same directory as where the connectomes will be output
-parcellationList = ['glasser_360_native', 'vosdewael_100_native', 'vosdewael_200_native',
-                    'vosdewael_300_native', 'vosdewael_400_native',
-                    'schaefer_100_native', 'schaefer_200_native', 'schaefer_300_native',
-                    'schaefer_400_native']
+# These files are saved directly to the freesurfer directory through micapipe postStruct
+parcellationList = ['glasser-360', 
+                    'vosdewael-100', 'vosdewael-200',
+                    'vosdewael-300', 'vosdewael-400',
+                    'schaefer-100', 'schaefer-200', 'schaefer-300',
+                    'schaefer-400', 'schaefer-500', 'schaefer-600',
+                    'schaefer-700', 'schaefer-800', 'schaefer-900',
+                    'schaefer-1000', 
+                    'aparc', 'aparc-a2009s',
+                    'economo']
 for parcellation in parcellationList:
-    fname = subject + '_' + parcellation + '.csv'
-    ipth = os.path.join(labelDir, fname)
-    labeling = np.loadtxt(ipth, dtype=np.int)
-    parcOutputName = parcellation.replace('_', "")
     
-    # get connectome on specified parcellation
+    # Load left and right annot files
+    fname_lh = 'lh.' + parcellation + '.annot'
+    ipth_lh = os.path.join(labelDir, fname_lh)
+    [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
+    fname_rh = 'rh.' + parcellation + '.annot'
+    ipth_rh = os.path.join(labelDir, fname_rh)
+    [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
+
+    # Join hemispheres
+    nativeLength = len(labels_lh)+len(labels_rh)
+    native_parc = [0] * nativeLength
+    for x in range(len(labels_lh)):
+        native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
+    for x in range(len(labels_rh)):
+        native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
+    
+    # Generate connectome on native space parcellation
     dataNative_corr_ctx = dataNative_corr[:, :-n]
-    ts = surface_to_parcel(dataNative_corr, labeling)
+    ts = surface_to_parcel(dataNative_corr, native_parc)
     ts = np.append(ts, dataNative_corr[:, -n:], axis=1)
     np.savetxt(funcDir+'/surfaces/' + subject + 'rsfMRI-timeseries_' + parcellation + '.txt', ts)
     ts_r = np.corrcoef(np.transpose(ts))
-    # if first row/col of native surface corresponding to mask, uncomment following lines:
-    #ts_r[0, :] = 0
-    #ts_r[:, 0] = 0
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcOutputName + '_clean.txt', ts_r)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r)
+    
