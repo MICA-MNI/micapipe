@@ -59,7 +59,6 @@ ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
 ############
 ### >>>>>> Temporary until fix init file for paths ####  <<<<<<
-equivSurfPath=/data_/mica1/03_projects/jessica/surface_tools-master/equivolumetric_surfaces/
 PYTHON_PATH=/export02/data/jessica/miniconda3/envs/python37/bin/
 
 
@@ -95,7 +94,7 @@ for hemi in lh rh ; do
 
 	unset LD_LIBRARY_PATH
 	tot_surfs=$((num_surfs + 2))
-	${PYTHON_PATH}/python3 ${equivSurfPath}/generate_equivolumetric_surfaces.py \
+	${PYTHON_PATH}/python3 $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.pial \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.white \
         "$tot_surfs" \
