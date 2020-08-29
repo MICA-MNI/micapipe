@@ -10,7 +10,7 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
-\t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrites the subject directory.
+\t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrite the subject directory.
 \t\033[38;5;197m-quiet\033[0m 	         : Does NOT print comments
 \t\033[38;5;197m-micaq\033[0m 	         : ONLY for MICA local processing
 
