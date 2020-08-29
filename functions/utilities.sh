@@ -40,6 +40,11 @@ bids_variables() {
     res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
   fi
 
+  # Check if qT1 exists
+  if [ -f ${subject_bids}/anat/sub-${id}_ses-pre_acq-mp2rage_T1map.nii.gz ]; then
+    qT1=${subject_bids}/anat/sub-${id}_ses-pre_acq-mp2rage_T1map.nii.gz
+    inv1=${subject_bids}/anat/sub-${id}_ses-pre_acq-inv1_T1map.nii.gz
+  fi
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)

@@ -118,6 +118,10 @@ do
     postDWI=TRUE
     shift
   ;;
+  -post_mpc)
+    postMPC=TRUE
+    shift
+  ;;
   -micaq)
     micaq=TRUE
     shift
@@ -146,7 +150,7 @@ Note "-sub " $id
 Note "-out " "$out"
 Note "-bids " "$BIDS"
 help; exit 1; fi
-runs=($proc $procVOL $procFS $procDWI $post $postVOL $postDWI)
+runs=($proc $procVOL $procFS $procDWI $post $postVOL $postDWI $postMPC)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc
@@ -155,7 +159,8 @@ Error "A processing flag is missing:
                     -proc_surfpatch
                     -post
                     -post_structural
-                    -post_tractography"
+                    -post_tractography
+                    -post_mpc"
 help; exit 1; fi
 
 # Get the real path of the Inputs
@@ -179,7 +184,7 @@ if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; exit 1; else In
 # ANTSx
 if [[ -z `which antsRegistration` ]]; then Error "ANTs was not found"; exit 1; else Info "ANTS version: `antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"; fi
 # workbench
-if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 1; else Info "workbench version: `wm_command -version | awk 'NR==3{print $2}'`"; fi
+if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 1; else Info "workbench version: `wb_command -version | awk 'NR==3{print $2}'`"; fi
 # Minc tool kit
 # Won't use minc tools in this release
 #if [[ -z `which mincgen` ]]; then Warning "Minc Tool Kit was not found, proceed with caution"; else Info "Minc version: `mincgen -version | awk 'NR==1{print $2}'`"; fi
@@ -351,6 +356,26 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
     fi
 fi
 
+# -----------------------------------------------------------------------------------------------#
+#                   POST Microstructural profile covariance mica-03
+# -----------------------------------------------------------------------------------------------#
+# # #         Generates microstructural profiles and covariance matrices
+#     REQUIRES -proc_volumetric and -proc_freesurfer
+if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
+    # RUN post-MPC
+    Title "Running POST MPC: Generate microstructural profiles and matrices"
+    # SGE -qsub TRUE
+    if [[ $micaq == "TRUE" ]] ; then
+      Warning "This option only works on the MICA workstations, for now..."
+      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      # Info "Setting a warper to run on mica.q"
+      # ...../ missing implementation
+    else
+      #  POST-Structural processing
+      # the $4 argument is the tmp directory where processes will run default is /tmp
+      ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_mpc.txt
+    fi
+fi
 
 # -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
