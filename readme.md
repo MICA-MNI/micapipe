@@ -8,7 +8,6 @@
 - MRtrix3     3.0.1 (https://www.mrtrix.org)  
 - ANTs        2.3.4 (https://github.com/ANTsX/ANTs)  
 - workbench   1.3.2
-- Surface tools (https://github.com/kwagstyl/surface_tools) 
 - ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA) 
 
 ## Define global Variables
