@@ -108,14 +108,14 @@ if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
     cd $util_parcelations
     for parc in lh.*.annot; do
        parc_annot=${parc/lh./}
-       parc_str=`echo ${parc_annot} | awk -F '_fsa5' '{print $1}'`
+       parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
      	 for hemi in lh rh; do
        		Info "Running surface $hemi $parc_annot to $subject"
        		Do_cmd mri_surf2surf --hemi $hemi \
        		  --srcsubject fsaverage5 \
        		  --trgsubject ${id} \
        		  --sval-annot ${hemi}.${parc_annot} \
-       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_str}.annot
+       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_str}
      	 done
        fs_mgz=${tmp}/${parc_str}.mgz
        fs_tmp=${tmp}/${parc_str}_in_T1.mgz
@@ -123,7 +123,7 @@ if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
        labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
 
        # Register the annot surface parcelation to the T1-freesurfer volume
-       Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_str} --new-ribbon
+       Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
        Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
        Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
        Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
