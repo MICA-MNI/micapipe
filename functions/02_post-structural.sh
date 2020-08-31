@@ -108,7 +108,7 @@ fi
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
-Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
+Do_cmd cp -R ${util_surface}/fsaverage5 ${dir_surf}
 cd $util_parcelations
 for parc in lh.*.annot; do
     parc_annot=${parc/lh./}
@@ -174,7 +174,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory and temporal fsaverage5
-Do_cmd rm -rfv $tmp  ${dir_surf}/fsaverage5
+Do_cmd rm -rf $tmp  ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
