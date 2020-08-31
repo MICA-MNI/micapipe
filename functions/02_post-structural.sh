@@ -108,7 +108,7 @@ else
     ((Nfiles++))
 fi
 
-
+TEST=ON
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
@@ -145,7 +145,7 @@ for parc in lh.*.annot; do
         ((Nfiles++))
     fi
 done
-
+TEST=""
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
@@ -187,7 +187,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nfiles" -eq 20 ]; then fini="DONE"; else fini="ERROR missing parcellations: "; fi
+if [ "$Nfiles" -lt 21 ]; then fini="DONE"; else fini="ERROR missing parcellation or T1-fsspace: "; fi
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tlogs:${dir_logs}/post_structural.txt
 \t\tNumber of parcellations: `printf "%02d" $Nfiles`/20"
