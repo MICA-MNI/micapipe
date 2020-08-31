@@ -52,6 +52,7 @@ aloita=$(date +%s)
 here=`pwd`
 
 # Check tmp dir: temporary directory
+Nfiles=0
 random_str=$RANDOM
 if [ -z ${tmp} ]; then tmp=/tmp/${random_str}_post_structural_${id}; fi
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
@@ -72,6 +73,7 @@ if [[ ! -f ${T1_fsspace} ]] ; then
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
 else
     Info "Subject ${id} has a T1 on FreeSurfer space"
+    ((Nfiles++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -95,6 +97,7 @@ if [[ ! -f  ${T1_seg_cerebellum} ]] ; then
                 -o ${T1_seg_cerebellum} -v -u int
 else
     Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"
+    ((Nfiles++))
 fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
@@ -102,6 +105,7 @@ if [[ ! -f ${T1_seg_subcortex} ]] ; then
     Do_cmd cp ${T1fast_seg} ${T1_seg_subcortex}
 else
     Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"
+    ((Nfiles++))
 fi
 
 
@@ -138,6 +142,7 @@ for parc in lh.*.annot; do
         Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
     else
         Info "Subject ${id} has ${parc_str} on T1-nativepro space"
+        ((Nfiles++))
     fi
 done
 
@@ -182,5 +187,9 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
-echo "${id}, post_structural, RUNS, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+if [ "$Nfiles" -eq 20 ]; then fini="DONE"; else fini="ERROR missing parcellations: "; fi
+Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
+\t\tlogs:${dir_logs}/post_structural.txt
+\t\tNumber of parcellations: `printf "%02d" $Nfiles`/20"
+
+echo "${id}, post_structural, $fini N=`printf "%02d" $Nfiles`/20, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
