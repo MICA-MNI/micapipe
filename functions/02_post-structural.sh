@@ -66,9 +66,13 @@ T1_fsspace=${proc_struct}/${id}_t1w_${res}mm_fsspace.nii.gz
 mat_fsspace_affine=${dir_warp}/${id}_t1w_${res}mm_fsspace_to_nativepro_
 T1_fsspace_affine=${mat_fsspace_affine}0GenericAffine.mat
 
-Do_cmd mrconvert $T1freesurfr $T1_in_fs
-Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
-Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
+if [[ ! -f ${T1_fsspace} ]] ; then
+    Do_cmd mrconvert $T1freesurfr $T1_in_fs
+    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
+    Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
+else
+    Info "Subject ${id} has a T1 on FreeSurfer space"
+fi
 
 #------------------------------------------------------------------------------#
 # Cerebellar parcellation from MNI152_0.8mm to T1-Nativepro
@@ -95,45 +99,48 @@ fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
 if [[ ! -f ${T1_seg_subcortex} ]] ; then
-    Do_cmd cp ${T1fast_all} ${T1_seg_subcortex}
+    Do_cmd cp ${T1fast_seg} ${T1_seg_subcortex}
 else
     Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"
 fi
 
+
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
-if [[ ! -f  ${dir_volum}/${T1str_nat}_vosdewael-400.nii.gz ]] ; then
-    Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
-    cd $util_parcelations
-    for parc in lh.*.annot; do
-       parc_annot=${parc/lh./}
-       parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
-     	 for hemi in lh rh; do
-       		Info "Running surface $hemi $parc_annot to $subject"
-       		Do_cmd mri_surf2surf --hemi $hemi \
-       		  --srcsubject fsaverage5 \
-       		  --trgsubject ${id} \
-       		  --sval-annot ${hemi}.${parc_annot} \
-       		  --tval ${dir_freesurfer}/label/${hemi}.${parc_str}
-     	 done
-       fs_mgz=${tmp}/${parc_str}.mgz
-       fs_tmp=${tmp}/${parc_str}_in_T1.mgz
-       fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
-       labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
+Do_cmd cp -vR ${util_surface}/fsaverage5 ${dir_surf}
+cd $util_parcelations
+for parc in lh.*.annot; do
+    parc_annot=${parc/lh./}
+    parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
+    if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]] ; then
+        for hemi in lh rh; do
+        Info "Running surface $hemi $parc_annot to $subject"
+        Do_cmd mri_surf2surf --hemi $hemi \
+               		  --srcsubject fsaverage5 \
+               		  --trgsubject ${id} \
+               		  --sval-annot ${hemi}.${parc_annot} \
+               		  --tval ${dir_freesurfer}/label/${hemi}.${parc_annot}
+        done
+        fs_mgz=${tmp}/${parc_str}.mgz
+        fs_tmp=${tmp}/${parc_str}_in_T1.mgz
+        fs_nii=${tmp}/${T1str_fs}_${parc_str}.nii.gz                   # labels in fsspace tmp dir
+        labels_nativepro=${dir_volum}/${T1str_nat}_${parc_str}.nii.gz  # lables in nativepro
 
-       # Register the annot surface parcelation to the T1-freesurfer volume
-       Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
-       Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
-       Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
-       Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
-       Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
-       # Register parcellation to nativepro
-       Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
-    done
-else
-    Info "Subject ${id} has parcellations on T1-nativepro space"
-fi
+        # Register the annot surface parcelation to the T1-freesurfer volume
+        Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
+        Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
+        Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
+        Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
+        Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
+
+        # Register parcellation to nativepro
+        Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
+    else
+        Info "Subject ${id} has ${parc_str} on T1-nativepro space"
+    fi
+done
+
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
@@ -176,4 +183,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_structural.txt"
-echo "${id}, post_structural, TEST, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, post_structural, RUNS, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
