@@ -11,9 +11,9 @@ import enigmatoolbox.datasets
 from enigmatoolbox.plotting import plot_cortical
 from enigmatoolbox.utils.parcellation import parcel_to_surface, surface_to_parcel
 
-subject = sys.argv[1]  # subject='HC12'
+subject = sys.argv[1]  # subject='HC012'
 funcDir = sys.argv[2]  # funcDir='/host/fladgate/local_raid/MICA-MTL/HC12/scan_session_01/proc_rsfmri_FIX/'
-labelDir = sys.argv[3] # labelDir='/host/fladgate/local_raid/MICA-MTL/HC12/scan_session_01/proc_struct/surfaces/HC12/label/'
+labelDir = sys.argv[3] # labelDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC012/ses-pre/proc_struct/surfaces/HC012/label/'
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -217,16 +217,15 @@ parcellationList = ['glasser-360',
 for parcellation in parcellationList:
     
     # Load left and right annot files
-    fname_lh = 'lh.' + parcellation + '.annot'
+    fname_lh = 'lh.' + parcellation + '_mics.annot'
     ipth_lh = os.path.join(labelDir, fname_lh)
     [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
-    fname_rh = 'rh.' + parcellation + '.annot'
+    fname_rh = 'rh.' + parcellation + '_mics.annot'
     ipth_rh = os.path.join(labelDir, fname_rh)
     [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
-
     # Join hemispheres
     nativeLength = len(labels_lh)+len(labels_rh)
-    native_parc = [0] * nativeLength
+    native_parc = np.zeros((nativeLength))
     for x in range(len(labels_lh)):
         native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
     for x in range(len(labels_rh)):

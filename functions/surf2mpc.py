@@ -22,7 +22,7 @@
 # dataDir = '/data_/mica3/BIDS_MIC/derivatives/' 
 # sub = 'HC012'
 # num_surf = 14
-# parc_name = 'vosdewael-200.annot'
+# parc_name = 'vosdewael-200_mics.annot'
 ####################################################################################################
 
 # Import packages
@@ -40,7 +40,7 @@ parc_name = sys.argv[4]
 
 # Define default inpute if none given
 if len(sys.argv) < 4:
-    parc_name = 'vosdewael-200'
+    parc_name = 'vosdewael-200_mics.annot'
 
 if len(sys.argv) < 3:
     num_surf = 14

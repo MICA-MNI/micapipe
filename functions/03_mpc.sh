@@ -66,7 +66,7 @@ origImage=${bids_T1ws[0]}
 # Register to Freesurfer space
 
 if [[ ! -f "$dir_warp"/"$id"_T1map2fs_bbr.lta ]] ; then
-	bbregister --s "$id" \
+	Do_cmd bbregister --s "$id" \
         --mov "$invImage" \
         --int "$origImage" \
         --reg "$dir_warp"/"$id"_T1map2fs_bbr.lta \
@@ -85,7 +85,7 @@ for hemi in lh rh ; do
 
 	unset LD_LIBRARY_PATH
 	tot_surfs=$((num_surfs + 2))
-	${PYTHON_PATH}/python3 $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
+	Do_cmd ${PYTHON_PATH}/python3 $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.pial \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.white \
         "$tot_surfs" \
@@ -94,7 +94,7 @@ for hemi in lh rh ; do
         --software freesurfer --subject_id $id
 
 	# remove top and bottom surface
-	rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
+	Do_cmd rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
 
 	# find all equivolumetric surfaces and list by creation time
 	x=$(ls "$outDir"/"$hemi".${num_surfs}surfs* | sort)
@@ -102,7 +102,7 @@ for hemi in lh rh ; do
 		which_surf=$(sed -n "$n"p <<< "$x")
 		cp "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
 		# sample intensity
-		mri_vol2surf \
+		Do_cmd mri_vol2surf \
 			--mov "$microImage" \
 			--reg "$dir_warp"/"$id"_T1map2fs_bbr.lta \
 			--hemi "$hemi" \
@@ -112,7 +112,7 @@ for hemi in lh rh ; do
 			--surf "$n"by"$num_surf"surf
 
         #Remove surfaces used by vol2surf
-        rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
+        Do_cmd rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
 	done
 
 done
@@ -120,7 +120,7 @@ done
 # Register to fsa5
 for hemi in lh rh; do
     for n in $(seq 1 1 $num_surfs); do
-        mri_surf2surf --hemi "$hemi" \
+        Do_cmd mri_surf2surf --hemi "$hemi" \
             --srcsubject "$id" \
             --srcsurfval "$outDir"/"$hemi"."$n".mgh \
             --trgsubject fsaverage5 \
@@ -130,15 +130,15 @@ done
 
 #------------------------------------------------------------------------------#
 # run  mpc on native surface
-cd $util_parcelations
 all_parcellations='vosdewael-100 vosdewael-200 vosdewael-300 vosdewael-400
 schaefer-100 schaefer-200 schaefer-300 schaefer-400 schaefer-500 schaefer-600 schaefer-700 schaefer-800 schaefer-900 schaefer-1000
 glasser-360
 economo
-aparc.a2009s'
+aparc
+aparc-a2009s'
 for parc in ${all_parcellations}; do
-    parc_annot=${parc}.annot
-    ${PYTHON_PATH}/python3 $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot"
+    parc_annot=${parc}_mics.annot
+    Do_cmd ${PYTHON_PATH}/python3 $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot"
     echo completed "$parc"
 done
 
