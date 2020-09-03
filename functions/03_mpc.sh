@@ -47,8 +47,8 @@ aloita=$(date +%s)
 here=`pwd`
 
 # Check tmp dir: temporary directory
-random_str=$RANDOM
-if [ -z ${tmp} ]; then tmp=/tmp/${random_str}_post_MPC_${id}; fi
+if [ -z ${tmp} ]; then tmp=/tmp; fi
+tmp=${tmp}/${RANDOM}_post-MPC_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Freesurface SUBJECTs directory
@@ -57,19 +57,10 @@ export SUBJECTS_DIR=${dir_surf}
 # Temporary fsa5 directory
 ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
-############
-### >>>>>> Temporary until fix init file for paths ####  <<<<<<
-PYTHON_PATH=/export02/data/jessica/miniconda3/envs/python37/bin/
-
-
 #------------------------------------------------------------------------------#
 # Set up parameters
-
 num_surfs=14
-microImage=${qT1}
-invImage=${inv1}
 origImage=${bids_T1ws[0]}
-
 
 #------------------------------------------------------------------------------#
 # Register to Freesurfer space
@@ -119,11 +110,11 @@ for hemi in lh rh ; do
 			--interp trilinear \
 			--out "$outDir"/"$hemi"."$n".mgh \
 			--surf "$n"by"$num_surf"surf
-        
+
         #Remove surfaces used by vol2surf
         rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
 	done
-    
+
 done
 
 # Register to fsa5
@@ -162,8 +153,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-MPC processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_MPC.txt"
-echo "${id}, post_MPC, TEST, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
-
-
-
-
+echo "${id}, post_MPC, TEST, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
