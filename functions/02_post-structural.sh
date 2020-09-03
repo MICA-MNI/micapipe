@@ -26,12 +26,6 @@ id=$2
 out=$3
 tmp=$4
 
-# CORES should be defined as GLOBAL variable
-if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
-
-# Sets wb_command to only use one thread
-if [[ -z $OMP_NUM_THREADS ]]; then OMP_NUM_THREADS=4; Info "wb_command will use $OMP_NUM_THREADS threads"; fi
-
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
@@ -47,14 +41,19 @@ if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesur
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
 
+# GLOBAL variables for this script
+Info "ANTs will use $CORES CORES"; fi
+Info "wb_command will use $OMP_NUM_THREADS threads"; fi
+
 #	Timer
 aloita=$(date +%s)
 here=`pwd`
 
 # Check tmp dir: temporary directory
 Nfiles=0
-random_str=$RANDOM
-if [ -z ${tmp} ]; then tmp=/tmp/${random_str}_post_structural_${id}; fi
+# Check tmp dir: temporary directory
+if [ -z ${tmp} ]; then tmp=/tmp; fi
+tmp=${tmp}/${RANDOM}_post-struct_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Freesurface SUBJECTs directory
@@ -108,7 +107,7 @@ else
     ((Nfiles++))
 fi
 
-TEST=ON
+
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
@@ -145,7 +144,7 @@ for parc in lh.*.annot; do
         ((Nfiles++))
     fi
 done
-TEST=""
+
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first

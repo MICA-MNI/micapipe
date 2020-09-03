@@ -27,11 +27,11 @@ out=$3
 tmp=$4
 here=`pwd`
 
-# CORES should be defined as GLOBAL variable
-if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
-
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
+
+# GLOBAL variables for this script
+Info "ANTs will use $CORES CORES"; fi
 
 #	Timer
 aloita=$(date +%s)
@@ -41,9 +41,12 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
 
-# Check tmp dir: temporary directory
-random_str=$RANDOM
-if [ -z "${tmp}" ]; then tmp=/tmp/${random_str}_proc_struc-vol_${subject}; fi
+# if temporary directory is running on MICA-lab SGE
+if [ "$tmp" = "micaq" ];then source ${MICAPIPE}/functions/init.sh; fi
+# if temporary directory is empty
+if [ -z "${tmp}" ]; then tmp=/tmp; fi
+# Create temporal directory
+tmp=${tmp}/${RANDOM}_proc_struc-vol_${subject}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing
@@ -245,4 +248,4 @@ Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n"
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
-echo "${id}, proc_struc, DONE, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, proc_struc, DONE, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv

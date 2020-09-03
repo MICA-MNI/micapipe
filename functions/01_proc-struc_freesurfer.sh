@@ -38,9 +38,9 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
 
-# Check tmp dir, DEFAULT is running in local /tmp
-random_str=$RANDOM
-if [ -z "${tmp}" ]; then tmp=/tmp/${random_str}_proc_struc-fs_${subject}; fi
+# Check tmp dir: temporary directory
+if [ -z ${tmp} ]; then tmp=/tmp; fi
+tmp=${tmp}/${RANDOM}_proc-freesurfer_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing
