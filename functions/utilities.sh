@@ -21,19 +21,23 @@ bids_variables() {
   # Structural directories derivatives/
   proc_struct=$subject_dir/proc_struct # structural processing directory
   	 dir_first=$proc_struct/first      # FSL first
-  	 dir_volum=$proc_struct/volumetric # Cortical segmentarions
+  	 dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 dir_patc=$proc_struct/surfpatch   # Surfpatch
   	 dir_surf=$proc_struct/surfaces    # surfaces
   			     dir_freesurfer=${dir_surf}/${id}     # freesurfer dir
   			     dir_conte69=${dir_surf}/conte69    # conte69
   proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
-  dir_unassigned=$subject_dir/unassigned/ # niftiTemp
+  proc_rsfmri=$subject_dir/proc_rsfmri
+    rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
+    rsfmri_volum=$proc_rsfmri/volumetric/
+    rsfmri_surf=$proc_rsfmri/surfaces/
   dir_warp=$subject_dir/xfms              # Transformation matrices
   dir_logs=$subject_dir/logs          # directory with log files
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
     T1nativepro=${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz
+    T1nativepro_brain=${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz
     T1freesurfr=${dir_freesurfer}/mri/T1.mgz
     T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
     T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
@@ -41,10 +45,14 @@ bids_variables() {
   fi
 
   # Check if qT1 exists
-  if [ -f ${subject_bids}/anat/sub-${id}_ses-pre_acq-mp2rage_T1map.nii.gz ]; then
-    qT1=${subject_bids}/anat/sub-${id}_ses-pre_acq-mp2rage_T1map.nii.gz
-    inv1=${subject_bids}/anat/sub-${id}_ses-pre_acq-inv1_T1map.nii.gz
+  if [ -f ${subject_bids}/anat/${subject}_ses-pre_acq-mp2rage_T1map.nii.gz ]; then
+    microImage=${subject_bids}/anat/${subject}_ses-pre_acq-mp2rage_T1map.nii.gz
+    invImage=${subject_bids}/anat/${subject}_ses-pre_acq-inv1_T1map.nii.gz
   fi
+  # rsfMRI processing
+  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii.gz #
+  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii.gz # main phase scan
+  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii.gz # Reverse phase scan
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
