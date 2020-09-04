@@ -22,7 +22,6 @@
 # Import packages
 import sys
 import numpy as np
-import pandas as pd
 import scipy
 import enigmatoolbox.datasets
 from enigmatoolbox.utils.parcellation import map_to_labels, reduce_by_labels, relabel_consecutive
