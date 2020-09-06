@@ -7,8 +7,13 @@
 - AFNI        20.2.06  (https://afni.nimh.nih.gov/download)  
 - MRtrix3     3.0.1 (https://www.mrtrix.org)  
 - ANTs        2.3.4 (https://github.com/ANTsX/ANTs)  
-- workbench   1.3.2
-- ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA) 
+- workbench   1.3.2  
+- ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA)  
+
+## Optional software  
+- FIX (FMRIB's ICA-based Xnoiseifier) v1.06
+ > The FIX package requires FSL, R and one of MATLAB Runtime Component, full MATLAB or Octave. We recommend the use of the MATLAB Runtime Component. Additionally, it requires the following R libraries:  'kernlab','ROCR','class','party','e1071','randomForest'
+
 
 ## Define global Variables
 ```bash

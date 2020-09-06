@@ -41,10 +41,10 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
     > MRtrix3     3.0.0   (https://www.mrtrix.org)
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
     > workbench   1.3.2
+    > ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA)
 
    Optional software:
     > FIX (FMRIB's ICA-based Xnoiseifier) v1.06
-    > ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA)
 
 McGill University, MNI, MICA-lab, May-September 2020
 https://github.com/MICA-MNI/micapipe
