@@ -41,8 +41,8 @@ x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
 x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 
 # Grab subcortical and cerebellar timeseries and merge them to conte69 and native timeseries
-sctx = np.loadtxt('firsts.txt')         #  CHANGE ME HERE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-cereb = np.loadtxt('cerebts.txt')       #  CHANGE ME HERE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
+cereb = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
 n = sctx.shape[1] + cereb.shape[1]                 # so we know data.shape[1] - n = num of ctx vertices only
 n_sctx = sctx.shape[1]
 
@@ -93,8 +93,8 @@ else:
 ones = np.ones((spike.shape[0], 1))
 if len(x_spike.split(" ")) == 1:
     mdl = []
-    mdl = np.append(ones, spike, axis=1)   
-    
+    mdl = np.append(ones, spike, axis=1)
+
     # conte
     slm = LinearRegression().fit(data, mdl)
     data_corr = data-np.dot(mdl, slm.coef_)
@@ -111,7 +111,7 @@ else:
 
     # native
     slm = LinearRegression().fit(dataNative, mdl)
-    dataNative_corr = dataNative-np.dot(mdl, slm.coef_)    
+    dataNative_corr = dataNative-np.dot(mdl, slm.coef_)
 
 # save timeseries in conte69 format
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr)
@@ -119,13 +119,13 @@ np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.tx
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Start with conte parcellations
-parcellationList = ['glasser_360_conte69', 
+parcellationList = ['glasser_360_conte69',
                     'vosdewael_100_conte69', 'vosdewael_200_conte69',
                     'vosdewael_300_conte69', 'vosdewael_400_conte69',
                     'schaefer_100_conte69', 'schaefer_200_conte69', 'schaefer_300_conte69',
                     'schaefer_400_conte69', 'schaefer_500_conte69', 'schaefer_600_conte69',
                     'schaefer_700_conte69', 'schaefer_800_conte69', 'schaefer_900_conte69',
-                    'schaefer_1000_conte69', 
+                    'schaefer_1000_conte69',
                     'aparc_conte69']
 for parcellation in parcellationList:
     parcOutputName = parcellation.replace('_', "").replace('conte69', "")
@@ -205,17 +205,17 @@ plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png'
 
 # Now generate native surface connectomes
 # These files are saved directly to the freesurfer directory through micapipe postStruct
-parcellationList = ['glasser-360', 
+parcellationList = ['glasser-360',
                     'vosdewael-100', 'vosdewael-200',
                     'vosdewael-300', 'vosdewael-400',
                     'schaefer-100', 'schaefer-200', 'schaefer-300',
                     'schaefer-400', 'schaefer-500', 'schaefer-600',
                     'schaefer-700', 'schaefer-800', 'schaefer-900',
-                    'schaefer-1000', 
+                    'schaefer-1000',
                     'aparc', 'aparc-a2009s',
                     'economo']
 for parcellation in parcellationList:
-    
+
     # Load left and right annot files
     fname_lh = 'lh.' + parcellation + '_mics.annot'
     ipth_lh = os.path.join(labelDir, fname_lh)
@@ -230,7 +230,7 @@ for parcellation in parcellationList:
         native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
     for x in range(len(labels_rh)):
         native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
-    
+
     # Generate connectome on native space parcellation
     dataNative_corr_ctx = dataNative_corr[:, :-n]
     ts = surface_to_parcel(dataNative_corr, native_parc)
@@ -238,4 +238,3 @@ for parcellation in parcellationList:
     np.savetxt(funcDir+'/surfaces/' + subject + 'rsfMRI-timeseries_' + parcellation + '.txt', ts)
     ts_r = np.corrcoef(np.transpose(ts))
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r)
-    

@@ -169,19 +169,23 @@ Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
 fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean_orig.nii.gz
 fmri_mask=${tmp}/${id}_singleecho_fmrispace_mask.nii.gz
+fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
+
+# IF singleecho_fmrispace_HP skip
 Do_cmd fslmaths ${singleecho} -Tmean ${rsfmri_volum}/tmp.nii.gz
 Do_cmd bet ${rsfmri_volum}/tmp.nii.gz ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 Do_cmd rm -fv ${rsfmri_volum}/tmp.nii.gz
-Do_cmd rm -fv ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
-Do_cmd 3dTproject -input ${singleecho} -prefix ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz -passband 0.01 666
+Do_cmd rm -fv $fmri_HP # <<<<<<<<<<<<<<<<<<<<<<< ERROR line 178: space_HP.nii.gz: command not found
+
+Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
-Do_cmd fslmaths ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz
+Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz
 
 
 # run MELODIC for ICA-FIX
 if [[ ! -f `find ${rsfmri_ICA}/filtered_func_data.ica/ -name "melodic_IC.nii.gz"` ]]; then
-    Do_cmd cp ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz ${rsfmri_ICA}/filtered_func_data.nii.gz
+    Do_cmd cp $fmri_HP ${rsfmri_ICA}/filtered_func_data.nii.gz
     Do_cmd melodic --in=${rsfmri_ICA}/filtered_func_data.nii.gz \
                                     --tr=0.6 \
                                     --nobet \
@@ -250,26 +254,35 @@ fi
 # Change single-echo files for clean ones <<<<<<<<<<<<<<<< NO CLEAN DATA IF NOT ICA-FIX???
 # <<<<<<<<<<<<<<<<<<<<<< THIS FAILS if fix is not avaliable
 yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz ${tmp}/${id}_singleecho_fmrispace_HP.nii.gz
-yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
+yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz $fmri_HP
 Do_cmd fslmaths ${tmp}/${id}_singleecho_fmrispace_HP.nii.gz -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # <<<<<<<<<<<<<<<<<<<<<< THIS FAILS if fix is not avaliable
 
 #------------------------------------------------------------------------------#
 Info "Calculating tissue-specific and global signals changes"
-tissues=(CSF GM WM)
-for idx in {0..2}; do
-     tissue=${tissues[$idx]}
-     tissuemap=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_pve_${idx}.nii.gz
-     Do_cmd antsApplyTransforms -d 3 -i $tissuemap -r $fmri_mean -t [$mat_rsfmri_affine,1] -o ${tmp}/${id}_singleecho_${tissue}.nii.gz -v -u int
-     Do_cmd fslmeants -i ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz -o ${rsfmri_volum}/${id}_singleecho_${tissue}.txt -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
-done
-
-Do_cmd fslmaths ${tmp}/${id}_singleecho_WM.nii.gz -add  ${tmp}/${id}_singleecho_GM.nii.gz -add  ${tmp}/${id}_singleecho_CSF.nii.gz ${tmp}/${id}_singleecho_WB.nii.gz
-Do_cmd fslmeants -i ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz -o ${rsfmri_volum}/${id}_singleecho_global.txt -m ${tmp}/${id}_singleecho_WB.nii.gz -w
+global_signal=${rsfmri_volum}/${id}_singleecho_global.txt
+if [[ ! -f ${global_signal} ]] ; then
+      tissues=(CSF GM WM)
+      for idx in {0..2}; do
+           tissue=${tissues[$idx]}
+           tissuemap=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_pve_${idx}.nii.gz
+           tissue_series=${rsfmri_volum}/${id}_singleecho_${tissue}.txt
+           if [[ ! -f ${tissue_series} ]] ; then
+           Do_cmd antsApplyTransforms -d 3 -i $tissuemap -r $fmri_mean -t [$mat_rsfmri_affine,1] -o ${tmp}/${id}_singleecho_${tissue}.nii.gz -v -u int
+           Do_cmd fslmeants -i $fmri_HP -o ${tissue_series} -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
+         else
+             Info "Subject ${id} has $tissue time-series"
+         fi
+      done
+      Do_cmd fslmaths ${tmp}/${id}_singleecho_WM.nii.gz -add  ${tmp}/${id}_singleecho_GM.nii.gz -add  ${tmp}/${id}_singleecho_CSF.nii.gz ${tmp}/${id}_singleecho_WB.nii.gz
+      Do_cmd fslmeants -i $fmri_HP -o ${global_signal} -m ${tmp}/${id}_singleecho_WB.nii.gz -w
+else
+      Info "Subject ${id} has Globa time-series"
+fi
 
 # Motion confound
 spikeRegressors=${rsfmri_volum}/${id}_singleecho_spikeRegressors_REFRMS.1D
 if [[ ! -f ${spikeRegressors} ]] ; then
-    Do_cmd fsl_motion_outliers -i ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i $fmri_HP -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
 fi
@@ -292,7 +305,7 @@ for x in lh rh; do
 
           # Map high-passed timeseries to surface - this is what will be used to generate the connectomes later
           Do_cmd mri_vol2surf \
-              --mov ${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz \
+              --mov $fmri_HP \
               --reg ${fmri2fs_lta} \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject ${id} \
