@@ -29,8 +29,8 @@ bids_variables() {
   proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
   proc_rsfmri=$subject_dir/proc_rsfmri
     rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
-    rsfmri_volum=$proc_rsfmri/volumetric/
-    rsfmri_surf=$proc_rsfmri/surfaces/
+    rsfmri_volum=$proc_rsfmri/volumetric
+    rsfmri_surf=$proc_rsfmri/surfaces
   dir_warp=$subject_dir/xfms              # Transformation matrices
   dir_logs=$subject_dir/logs          # directory with log files
 
@@ -57,7 +57,6 @@ bids_variables() {
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*dwi.nii*`)
-
 }
 
 bids_print.variables() {
@@ -111,6 +110,21 @@ bids_print.variables-post() {
   Note "util_MNIvolumes   =" $util_MNIvolumes
   Note "util_parcelations =" $util_parcelations
   Note "util_surface      =" $util_surface
+}
+
+bids_print.variables-dwi() {
+  Info "mica-pipe variables for rsfMRI processing:"
+  Note "T1 nativepro    =" $T1nativepro
+  Note "T1 5tt          =" $T15ttgen
+  Note "T1 fast_all     =" $T1fast_seg
+  Note "T1 resolution   =" $res
+}
+bids_print.variables-rsfmri() {
+  Info "mica-pipe variables for DWI processing:"
+  Note "T1 nativepro       =" $T1nativepro
+  Note "Main rsfMRI        =" $mainScan
+  Note "Main phase scan    =" $mainPhaseScan
+  Note "Main reverse phase =" $reversePhaseScan
 }
 
 t1w_str() {
