@@ -1,4 +1,4 @@
-#!/bin/bash
+python#!/bin/bash
 #
 # Microstructural imaging processing:
 #
@@ -85,7 +85,7 @@ for hemi in lh rh ; do
 
 	unset LD_LIBRARY_PATH
 	tot_surfs=$((num_surfs + 2))
-	Do_cmd ${PYTHON_PATH}/python3 $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
+	Do_cmd python $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.pial \
         ${SUBJECTS_DIR}/${id}/surf/${hemi}.white \
         "$tot_surfs" \
@@ -138,7 +138,7 @@ aparc
 aparc-a2009s'
 for parc in ${all_parcellations}; do
     parc_annot=${parc}_mics.annot
-    Do_cmd ${PYTHON_PATH}/python3 $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot"
+    Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot"
     echo completed "$parc"
 done
 
