@@ -224,7 +224,8 @@ else
 fi
 
 # Number of CORES used by ANTs and workbench, default is 6 if not defined in GLOBAL env
-if [[ -z $CORES ]]; then export CORES=6; export OMP_NUM_THREADS=$CORES; fi
+if [[ -z $CORES ]]; then export CORES=6; fi
+export OMP_NUM_THREADS=$CORES
 
 # LOADS variables with the BIDS format
 bids_variables $BIDS $id $out
