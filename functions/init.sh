@@ -4,15 +4,38 @@
 ### Set variables beneath this ###
 ##################################
 
+# Save OLD PATH
+export OLD_PATH=$PATH
+
 # Add your bin paths here.
 afni_path=/data/mica1/01_programs/afni-20.2.06/bin
 ants_path=/data/mica1/01_programs/ants-2.3.4/bin
 mrtrix_path=/data/mica1/01_programs/mrtrix3-micapipe/bin
 workbench_path=/data/mica1/01_programs/workbench/bin_linux64
 freesurfer_path=/data/mica1/01_programs/Freesurfer-6.0/bin
-PYTHON_PATH=/data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7
 FIXPATH=/data_/mica1/01_programs/fix
 
+#------------------------------------------------------------------------------#
+# PYTHON 3.7 configuration
+# REMOVES any other python configuration from the PATH the conda from the PATH  and LD_LIBRARY_PATH variable
+PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
+LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
+unset PYTHONPATH
+unset PYTHONHOME
+
+# Adds the conda3 path to the env PATH variable
+export PATH="/data_/mica1/01_programs/anaconda/anaconda3/bin:${PATH}"
+
+# Creates the necesary env variables to call python3.7
+export PYTHONPATH="/data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7:data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7/bin"
+export PYTHONHOME="/data_/mica1/01_programs/anaconda/anaconda3"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/data_/mica1/01_programs/anaconda/anaconda3/lib"
+
+# Language utilities
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+#------------------------------------------------------------------------------#
 # FSL donfiguration file
 export FSLDIR=/data_/mica1/01_programs/fsl_mica
 . ${FSLDIR}/etc/fslconf/fsl.sh
@@ -42,8 +65,7 @@ rm -f $tmp_file
 
 # Set basic global variables.
 export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
-export OLD_PATH=$PATH
-export PATH=${MICAPIPE}:${script_path}:${afni_path}:${ants_path}:${FIXPATH}:${mrtrix_path}:${workbench_path}:${freesurfer_path}:${PYTHON_PATH}:${PATH}
+export PATH=${MICAPIPE}:${script_path}:${afni_path}:${ants_path}:${FIXPATH}:${mrtrix_path}:${workbench_path}:${freesurfer_path}:${PATH}
 if [[ ! -z $NSLOTS ]]; then
     export CORES=$NSLOTS
 else
