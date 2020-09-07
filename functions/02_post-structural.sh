@@ -26,6 +26,9 @@ id=$2
 out=$3
 tmp=$4
 
+#------------------------------------------------------------------------------#
+Title "Running MICA POST-structural processing"
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
@@ -36,10 +39,6 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; 
 
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-
-
-#------------------------------------------------------------------------------#
-Title "Running MICA POST-structural processing"
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"; fi

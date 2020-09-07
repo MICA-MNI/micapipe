@@ -1,4 +1,4 @@
-python#!/bin/bash
+#!/bin/bash
 #
 # Microstructural imaging processing:
 #
@@ -27,6 +27,9 @@ id=$2
 out=$3
 tmp=$4
 
+#------------------------------------------------------------------------------#
+Title "Running MICA MPC processing"
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
@@ -37,10 +40,6 @@ if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
 
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-
-
-#------------------------------------------------------------------------------#
-Title "Running MICA MPC processing"
 
 #	Timer
 aloita=$(date +%s)

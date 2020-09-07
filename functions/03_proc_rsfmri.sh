@@ -32,13 +32,13 @@ id=$2
 out=$3
 tmp=$4
 
+#------------------------------------------------------------------------------#
+Title "Running MICA rsfMRI processing"
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-rsfmri
-
-#------------------------------------------------------------------------------#
-Title "Running MICA rsfMRI processing"
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"
@@ -133,7 +133,7 @@ else
 fi
 
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
-if [[ ! -f $mainPhaseScan ]] || [[ ! -f $reversePhaseScan]]; then
+if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
     Warning "No AP or PA adquicition was found, TOPUP will be skip!!!!!!!"
     Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
 else

@@ -303,7 +303,6 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #        Structural processing: Freesurfer
 if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
-    Title "Running structural processing: Freesurfer"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
@@ -323,7 +322,6 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
-    Title "Running structural processing: Diffusion Weighted Images"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
@@ -343,8 +341,6 @@ fi
 # # #         POST Structural processing
 #     REQUIRES -proc_volumetric and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
-    # RUN post-STRUCTURAL
-    Title "Running POST structural processing: Surfaces and parcellations"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
@@ -363,7 +359,6 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
-    Title "Running Resting State fMRI processing"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
@@ -386,8 +381,6 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
   if [ ! -f ${T1nativepro} ]; then Error "-proc_volumetric outputs are missing"; exit 1; fi
   if [ ! -f $T1nativepro_5tt ]; then Error "-proc_volumetric outputs are missing"; exit 1; fi
   # if DWI processed data is not here stop
-
-    Title "Running POST structural processing: Tractography & Connectome generation"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
@@ -407,8 +400,6 @@ fi
 # # #         Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_volumetric and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
-    # RUN post-MPC
-    Title "Running POST MPC: Generate microstructural profiles and matrices"
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
       Warning "This option only works on the MICA workstations, for now..."
