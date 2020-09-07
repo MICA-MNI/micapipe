@@ -180,7 +180,7 @@ Do_cmd rm -fv $fmri_HP # <<<<<<<<<<<<<<<<<<<<<<< ERROR line 178: space_HP.nii.gz
 
 Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
-Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz
+Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # CHECK line 258
 
 
 # run MELODIC for ICA-FIX
@@ -368,13 +368,14 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory
-Do_cmd rm -rfv $tmp
-
-#------------------------------------------------------------------------------#
 # run post-rsfmri
+Info "Running rsfMRI post processing"
 labelDirectory=${dir_surf}/${id}/label/
 python $MICAPIPE/functions/03_proc_rsfmri_post.py ${id} ${proc_rsfmri} ${labelDirectory}
+
+#------------------------------------------------------------------------------#
+# Clean temporary directory
+Do_cmd rm -rfv $tmp
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
@@ -383,5 +384,5 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/post_MPC.txt"
-# echo "${id}, proc_rsfmri, RUN, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\tlogs:${dir_logs}/post_MPC.txt"
+echo "${id}, proc_rsfmri, TEST-RC, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
