@@ -14,7 +14,8 @@ PYTHON_PATH=/data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7
 FIXPATH=/data_/mica1/01_programs/fix
 
 # FSL donfiguration file
-. /data_/mica1/01_programs/fsl_mica/etc/fslconf/fsl.sh
+export FSLDIR=/data_/mica1/01_programs/fsl_mica
+. ${FSLDIR}/etc/fslconf/fsl.sh
 
 # Add the number of threads to use here. Note that this is overwritten by
 # $NSLOTS if it exists (i.e. when running on SGE).
