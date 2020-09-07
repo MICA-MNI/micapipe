@@ -1,22 +1,24 @@
 #/bin/bash
 
 ##################################
-### Set variables beneath this.###
+### Set variables beneath this ###
 ##################################
 
 # Add your bin paths here.
-fsl_path=/data_/mica1/01_programs/fsl_mica/bin
 afni_path=/data/mica1/01_programs/afni-20.2.06/bin
 ants_path=/data/mica1/01_programs/ants-2.3.4/bin
 mrtrix_path=/data/mica1/01_programs/mrtrix3-micapipe/bin
 workbench_path=/data/mica1/01_programs/workbench/bin_linux64
 freesurfer_path=/data/mica1/01_programs/Freesurfer-6.0/bin
-PYTHON_PATH=/data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7 #<<<<<<< UPDATE THIS
+PYTHON_PATH=/data_/mica1/01_programs/anaconda/anaconda3/envs/mica_py3.7
 FIXPATH=/data_/mica1/01_programs/fix
+
+# FSL donfiguration file
+. /data_/mica1/01_programs/fsl_mica/etc/fslconf/fsl.sh
 
 # Add the number of threads to use here. Note that this is overwritten by
 # $NSLOTS if it exists (i.e. when running on SGE).
-local_threads=4
+local_threads=10
 
 # Uncomment this and fill in a temporary directory for a custom temporary directory.
 # This takes priority over the default.
@@ -40,7 +42,7 @@ rm -f $tmp_file
 # Set basic global variables.
 export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
 export OLD_PATH=$PATH
-export PATH=${MICAPIPE}:${script_path}:${fsl_path}:${afni_path}:${ants_path}:${FIXPATH}:${mrtrix_path}:${workbench_path}:${freesurfer_path}:${PYTHON_PATH}:${PATH}
+export PATH=${MICAPIPE}:${script_path}:${afni_path}:${ants_path}:${FIXPATH}:${mrtrix_path}:${workbench_path}:${freesurfer_path}:${PYTHON_PATH}:${PATH}
 if [[ ! -z $NSLOTS ]]; then
     export CORES=$NSLOTS
 else
