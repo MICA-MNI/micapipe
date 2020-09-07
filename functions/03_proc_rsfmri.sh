@@ -170,7 +170,7 @@ fi
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
 fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean_orig.nii.gz
-fmri_mask=${tmp}/${id}_singleecho_fmrispace_mask.nii.gz
+fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
 
 # IF singleecho_fmrispace_HP skip
@@ -186,7 +186,8 @@ Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # 
 
 
 # run MELODIC for ICA-FIX
-if [[ ! -f `find ${rsfmri_ICA}/filtered_func_data.ica/ -name "melodic_IC.nii.gz"` ]]; then
+melodic_IC=${rsfmri_ICA}/filtered_func_data.ica/melodic_IC.nii.gz
+if [[ ! -f ${melodic_IC} ]]; then
     Do_cmd cp $fmri_HP ${rsfmri_ICA}/filtered_func_data.nii.gz
     Do_cmd melodic --in=${rsfmri_ICA}/filtered_func_data.nii.gz \
                                     --tr=0.6 \
@@ -243,7 +244,7 @@ Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_fu
 
 #------------------------------------------------------------------------------#
 # run ICA-FIX if melodic has been run and FIX has been installed and on the PATH
-if  [[ -f `find ${rsfmri_ICA}/filtered_func_data.ica/ -name "melodic_IC.nii.gz"` ]] &&  [[ -f `which fix` ]]; then
+if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
     Info "Running ICA-FIX"
     Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 else
@@ -253,7 +254,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Change single-echo files for clean ones <<<<<<<<<<<<<<<< NO CLEAN DATA IF NOT ICA-FIX???
+# Change single-echo files for clean ones <<<<<<<<<<<<<<<< NO CLEAN DATA IF NOT ICA-FIX??? SHALL THIS GO INSIDE ICA-FIX?
 # <<<<<<<<<<<<<<<<<<<<<< THIS FAILS if fix is not avaliable
 yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz ${tmp}/${id}_singleecho_fmrispace_HP.nii.gz
 yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz $fmri_HP
