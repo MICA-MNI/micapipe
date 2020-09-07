@@ -62,7 +62,7 @@ fi
 
 if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined but the PATH is wrong,
+[ERROR]... MICAPIPE is defined, but the PATH is wrong,
            it should match /micasoft directory\033[0m
            CHECK PATH to MICAPIPE:
            $MICAPIPE\n

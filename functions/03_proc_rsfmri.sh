@@ -97,7 +97,7 @@ if [[ ! -f ${singleecho} ]]; then
         Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
         Note "RAWNIFTI:" $rawNifti
 
-        # Drop first five TRs and reorient.
+        # Drop first five TRs and reorient <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< WHY DO YOU REORIENT TO RPI????
         if [ "$tag" == "mainScan" ]; then
             Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
             Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
@@ -133,11 +133,11 @@ else
 fi
 
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
-if [[ $mainPhaseScan == "" ]] || [[ $reversePhaseScan == "" ]]; then
-    Warning "No AP, PA adquicition was found, TOPUP will be skip!!!!!!!"
+if [[ ! -f $mainPhaseScan ]] || [[ ! -f $reversePhaseScan]]; then
+    Warning "No AP or PA adquicition was found, TOPUP will be skip!!!!!!!"
     Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
 else
-    if [[ ! -f ${rsfmri_volum}/TOUPUP.txt ]]; then
+    if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
         mainPhaseScanMean=`find ${tmp}    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz"`
         mainPhaseScan=`find ${tmp}        -maxdepth 1 -name "*mainPhaseScan*_mc.nii.gz"`
         reversePhaseScanMean=`find ${tmp} -maxdepth 1 -name "*reversePhaseScan*_mcMean.nii.gz"`
@@ -158,7 +158,9 @@ else
         Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
         Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0.cnf --out=${tmp}/singleecho_topup
         Do_cmd applytopup --imain=${mainScan} --inindex=1 --datain=${tmp}/singleecho_topupDataIn.txt --topup=${tmp}/singleecho_topup --method=jac --out=${singleecho}
-        echo "${singleecho}, TOPUP, `whoami`, $(date)" >> ${rsfmri_volum}/TOUPUP.txt
+        # Check if it worked
+        if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
+        echo "${singleecho}, TOPUP, `whoami`, $(date)" >> ${rsfmri_volum}/TOPUP.txt
     else
           Info "Subject ${id} has singleecho in fmrispace with TOPUP"
     fi
@@ -384,5 +386,5 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\tlogs:${dir_logs}/post_MPC.txt"
+Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\tlogs:${dir_logs}/proc_rsfmri.txt"
 echo "${id}, proc_rsfmri, TEST-RC, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
