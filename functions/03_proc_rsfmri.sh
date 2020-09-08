@@ -127,7 +127,7 @@ if [[ ! -f ${rsfmri_volum}/${id}_singleecho.1D ]]; then
     Do_cmd fsl_motion_outliers -i ${tmp}/mainScan_sliceCut.nii.gz \
                                -o ${rsfmri_volum}/${id}_singleecho_spikeRegressors_FD.1D \
                                -s ${rsfmri_volum}/${id}_singleecho_metric_FD.1D --fd
-    Do_cmd mv ${rsfmri_volum}/${id}_mainScan.1D ${rsfmri_volum}/${id}_singleecho.1D # <<<<< THIS WILL ONLY RENAME THE FILE
+    Do_cmd mv ${rsfmri_volum}/${id}_mainScan.1D ${rsfmri_volum}/${id}_singleecho.1D
 else
     Info "Subject ${id} has a singleecho.1D with motion outliers"
 fi
@@ -246,13 +246,13 @@ if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
 
     # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
     # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-    antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [HC10_rsfmri_to_nativepro_0GenericAffine.mat,1]
+    Do_cmd antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
 
     # Transform matrix: ANTs (itk binary) to text
-    ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
+    Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
     # Transform matrix: ITK text to matrix (FSL format)
-    lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
+    Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
 
     Info "Running ICA-FIX"
     Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
