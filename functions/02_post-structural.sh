@@ -41,8 +41,8 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; 
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # GLOBAL variables for this script
-Info "ANTs will use $CORES CORES"; fi
-Info "wb_command will use $OMP_NUM_THREADS threads"; fi
+Info "ANTs will use $CORES CORES"
+Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)

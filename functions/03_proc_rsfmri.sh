@@ -71,7 +71,7 @@ export SUBJECTS_DIR=$dir_surf
 # rsfMRI directories
 rsfmri_volum=${proc_rsfmri}/volumetric   # volumetricOutputDirectory
 rsfmri_surf=${proc_rsfmri}/surfaces      # surfaceOutputDirectory
-rsfmri_ICA=$proc_rsfmri/ICA_MELODIC       # ICAOutputDirectory
+rsfmri_ICA=$proc_rsfmri/ICA_MELODIC      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
 for x in $rsfmri_surf $rsfmri_volum $rsfmri_ICA; do
@@ -236,6 +236,7 @@ fi
 # run ICA-FIX if melodic has been run and FIX has been installed and on the PATH <<<<<<<<<< HOW to know if ICA-FIX ran correctly????
 if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
 
+    Info "Getting ICA-FIX requirements"
     # FIX requirements (Mysterious steps...)
     mkdir ${rsfmri_ICA}/mc
     mkdir ${rsfmri_ICA}/reg

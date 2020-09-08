@@ -31,7 +31,7 @@ here=`pwd`
 Title "Running MICA structural processing: Volumetric"
 
 # GLOBAL variables for this script
-Info "ANTs will use $CORES CORES"; fi
+Info "ANTs will use $CORES CORES"
 
 #	Timer
 aloita=$(date +%s)
