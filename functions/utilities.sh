@@ -50,13 +50,14 @@ bids_variables() {
     invImage=${subject_bids}/anat/${subject}_ses-pre_acq-inv1_T1map.nii.gz
   fi
   # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii.gz #
-  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii.gz # main phase scan
+  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii.gz           # Main rsfMRI scan
+  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii.gz    # main phase scan
   reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii.gz # Reverse phase scan
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*dwi.nii*`)
+  dwi_PA=${subject_bids}/dwi/${id}_ses-pre_acq-PA_dir-*_dwi.nii.gz
 }
 
 bids_print.variables() {
