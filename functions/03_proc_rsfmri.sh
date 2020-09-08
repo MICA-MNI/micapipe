@@ -233,18 +233,27 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Mysterious steps
-mkdir ${rsfmri_ICA}/mc
-mkdir ${rsfmri_ICA}/reg
-Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
-Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
-Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz                                 # <<<<<<<<<<<<<<< THIS IS NOT USED LATER
-Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
-
-
-#------------------------------------------------------------------------------#
-# run ICA-FIX if melodic has been run and FIX has been installed and on the PATH
+# run ICA-FIX if melodic has been run and FIX has been installed and on the PATH <<<<<<<<<< HOW to know if ICA-FIX ran correctly????
 if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
+
+    # FIX requirements (Mysterious steps...)
+    mkdir ${rsfmri_ICA}/mc
+    mkdir ${rsfmri_ICA}/reg
+    Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
+    Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
+    Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
+    Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
+
+    # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
+    # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
+    antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [HC10_rsfmri_to_nativepro_0GenericAffine.mat,1]
+
+    # Transform matrix: ANTs (itk binary) to text
+    ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
+
+    # Transform matrix: ITK text to matrix (FSL format)
+    lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
+
     Info "Running ICA-FIX"
     Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 else
