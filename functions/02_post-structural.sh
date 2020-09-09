@@ -69,9 +69,9 @@ if [[ ! -f ${T1_fsspace} ]] ; then
     Do_cmd mrconvert $T1freesurfr $T1_in_fs
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
+    if [[ -f ${T1_fsspace} ]] ; then ((Nfiles++)); fi
 else
-    Info "Subject ${id} has a T1 on FreeSurfer space"
-    ((Nfiles++))
+    Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nfiles++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -93,17 +93,17 @@ if [[ ! -f  ${T1_seg_cerebellum} ]] ; then
                 -r ${T1nativepro} \
                 -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
                 -o ${T1_seg_cerebellum} -v -u int
+    if [[ -f ${T1_seg_cerebellum} ]] ; then ((Nfiles++)); fi
 else
-    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"
-    ((Nfiles++))
+    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nfiles++))
 fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
 if [[ ! -f ${T1_seg_subcortex} ]] ; then
     Do_cmd cp ${T1fast_seg} ${T1_seg_subcortex}
+    if [[ -f ${T1_seg_subcortex} ]] ; then ((Nfiles++)); fi
 else
-    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"
-    ((Nfiles++))
+    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nfiles++))
 fi
 
 
@@ -138,6 +138,7 @@ for parc in lh.*.annot; do
 
         # Register parcellation to nativepro
         Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
+        if [[ -f ${labels_nativepro} ]] ; then ((Nfiles++)); fi
     else
         Info "Subject ${id} has ${parc_str} on T1-nativepro space"
         ((Nfiles++))
