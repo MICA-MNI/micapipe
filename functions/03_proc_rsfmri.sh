@@ -98,12 +98,12 @@ if [[ ! -f ${singleecho} ]]; then
         Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
         Note "RAWNIFTI:" $rawNifti
 
-        # Drop first five TRs and reorient
+        # Drop first five TRs and reorient (same orientation as T1nativepro)
         if [ "$tag" == "mainScan" ]; then
             Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
-            Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
+            Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
         else
-            Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+            Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
         fi
 
 
@@ -124,6 +124,8 @@ else
       Info "Subject ${id} has a singleecho_fmrispace processed"
 fi
 
+# Calculate slice timing if necessary <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 # Calculate motion outliers with FSL
 if [[ ! -f ${rsfmri_volum}/${id}_singleecho.1D ]]; then
     Do_cmd fsl_motion_outliers -i ${tmp}/mainScan_sliceCut.nii.gz \
@@ -137,6 +139,7 @@ fi
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
 if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
     Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
+    status="NO-TOPUP"
     Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
 else
     if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
@@ -163,6 +166,7 @@ else
         # Check if it worked
         if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
         echo "${singleecho}, TOPUP, `whoami`, $(date)" >> ${rsfmri_volum}/TOPUP.txt
+        status="TOPUP"
     else
           Info "Subject ${id} has singleecho in fmrispace with TOPUP"
     fi
@@ -175,18 +179,21 @@ fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
 fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
 
-# IF singleecho_fmrispace_HP skip
+# Creates a mask from the motion corrected time series
 Do_cmd fslmaths ${singleecho} -Tmean ${rsfmri_volum}/tmp.nii.gz
 Do_cmd bet ${rsfmri_volum}/tmp.nii.gz ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 Do_cmd rm -fv ${rsfmri_volum}/tmp.nii.gz
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
+if [[ ! -f ${fmri_HP} ]] ; then
+    Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
+else
+    Info "Subject ${id} has High-pass filter"
+fi
 
 # Calculates the mean rsfMRI volume
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
-
 
 # run MELODIC for ICA-FIX
 melodic_IC=${rsfmri_ICA}/filtered_func_data.ica/melodic_IC.nii.gz
@@ -239,9 +246,9 @@ fi
 #------------------------------------------------------------------------------#
 # run ICA-FIX IF melodic has been run and FIX has been installed and on the PATH
 fix_output=${rsfmri_ICA}/filtered_func_data_clean.nii.gz
-
+rsfmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
 if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
-    if [[ ! -f ${fmri2fs_lta} ]] ; then
+    if [[ ! -f ${fix_output} ]] ; then
           Info "Getting ICA-FIX requirements"
           # FIX requirements
           if [ ! -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
@@ -266,17 +273,18 @@ if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
           # Replace file if melodic ran correctly - Change single-echo files for clean ones
-          yes | Do_cmd cp -rf ${fix_output} $fmri_HP
-
+          yes | Do_cmd cp -rf $fix_output $rsfmri_processed
+          status="${status} FIX"
     else
-        Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
+          Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
     fi
 else
-    Warning "!!!!  NO MELODIC OUTPUT AND/OR NO ICA-FIX software  !!!!
+    Warning "!!!!  ICA-FIX failed, check the software installation !!!!
                    If you've installed FIX try to install required R packages and re-run:
                    'kernlab','ROCR','class','party','e1071','randomForest'"
+    cp -rf $melodic_IC $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE
+    status="${status} NO-FIX"
 fi
-
 
 #------------------------------------------------------------------------------#
 Info "Calculating tissue-specific and global signals changes"
@@ -289,21 +297,21 @@ if [[ ! -f ${global_signal} ]] ; then
            tissue_series=${rsfmri_volum}/${id}_singleecho_${tissue}.txt
            if [[ ! -f ${tissue_series} ]] ; then
            Do_cmd antsApplyTransforms -d 3 -i $tissuemap -r $fmri_mean -t [$mat_rsfmri_affine,1] -o ${tmp}/${id}_singleecho_${tissue}.nii.gz -v -u int
-           Do_cmd fslmeants -i $fmri_HP -o ${tissue_series} -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
+           Do_cmd fslmeants -i $rsfmri_processed -o ${tissue_series} -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
          else
              Info "Subject ${id} has $tissue time-series"
          fi
       done
       Do_cmd fslmaths ${tmp}/${id}_singleecho_WM.nii.gz -add  ${tmp}/${id}_singleecho_GM.nii.gz -add  ${tmp}/${id}_singleecho_CSF.nii.gz ${tmp}/${id}_singleecho_WB.nii.gz
-      Do_cmd fslmeants -i $fmri_HP -o ${global_signal} -m ${tmp}/${id}_singleecho_WB.nii.gz -w
+      Do_cmd fslmeants -i $rsfmri_processed -o ${global_signal} -m ${tmp}/${id}_singleecho_WB.nii.gz -w
 else
-      Info "Subject ${id} has Globa time-series"
+      Info "Subject ${id} has Global time-series"
 fi
 
 # Motion confound
 spikeRegressors=${rsfmri_volum}/${id}_singleecho_spikeRegressors_REFRMS.1D
 if [[ ! -f ${spikeRegressors} ]] ; then
-    Do_cmd fsl_motion_outliers -i $fmri_HP -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i $rsfmri_processed -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
 fi
@@ -326,7 +334,7 @@ for x in lh rh; do
 
           # Map high-passed timeseries to surface - this is what will be used to generate the connectomes later
           Do_cmd mri_vol2surf \
-              --mov $fmri_HP \
+              --mov $rsfmri_processed \
               --reg ${fmri2fs_lta} \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject ${id} \
@@ -368,7 +376,7 @@ if [[ ! -f ${timese_subcortex} ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_subcortex -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_subcortex -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $singleecho --seg $rsfmri_subcortex --exclude 0 --exclude 16 --avgwf $timese_subcortex
+      Do_cmd mri_segstats --i $rsfmri_processed --seg $rsfmri_subcortex --exclude 0 --exclude 16 --avgwf $timese_subcortex
 else
       Info "Subject ${id} has rsfmri subcortical time-series"
 fi
@@ -384,7 +392,7 @@ if [[ ! -f ${timese_cerebellum} ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_cerebellum -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_cerebellum -v -u int
       # Extract subcortical timeseries (mean, one ts per first-segemented structure, exluding the brainstem (ew))
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $singleecho --seg $rsfmri_cerebellum --exclude 0 --avgwf ${timese_cerebellum}
+      Do_cmd mri_segstats --i $rsfmri_processed --seg $rsfmri_cerebellum --exclude 0 --avgwf ${timese_cerebellum}
 else
       Info "Subject ${id} has rsfmri cerebellar time-series"
 fi
