@@ -57,7 +57,6 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 struct2fs=$(find $dir_warp -name "*t1w2fs.lta")
 rsTag="*rsfmri*3mm*bold*AP"
 rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
-mnitemplate3mm=${util_MNIvolumes}/MNI152_T1_3mm.nii.gz
 
 # Check inputs: rsfMRI and phase encoding
 if [ ! -f ${bids_fmri} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
@@ -94,16 +93,19 @@ if [[ ! -f ${singleecho} ]]; then
         # Get basic parameters
         rawNifti=${toProcess[$i]}
         tag=${tags[$i]}
+
+        # IF FILE NOT FOUND DON'T RUN
         Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
         Note "RAWNIFTI:" $rawNifti
 
-        # Drop first five TRs and reorient <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< WHY DO YOU REORIENT TO RPI????
+        # Drop first five TRs and reorient
         if [ "$tag" == "mainScan" ]; then
             Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
             Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
         else
             Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
         fi
+
 
         # Remove slices to make an even number of slices in all directions (requisite for topup).
         dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
@@ -134,8 +136,8 @@ fi
 
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
 if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
-    Warning "No AP or PA adquicition was found, TOPUP will be skip!!!!!!!"
-    Do_cmd mv -v ${tmp}/mainScan_mcMean.nii.gz ${singleecho}
+    Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
+    Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
 else
     if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
         mainPhaseScanMean=`find ${tmp}    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz"`
@@ -169,7 +171,7 @@ fi
 # creating mask for ICA-MELODIC then applying band-pass filtering
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
-fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean_orig.nii.gz
+fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
 fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
 
@@ -179,9 +181,11 @@ Do_cmd bet ${rsfmri_volum}/tmp.nii.gz ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 Do_cmd rm -fv ${rsfmri_volum}/tmp.nii.gz
 
+# High-pass filter - Remove all frequencies EXCEPT those in the range
 Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
+
+# Calculates the mean rsfMRI volume
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
-Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # CHECK line 271
 
 
 # run MELODIC for ICA-FIX
@@ -208,6 +212,8 @@ rsfmri_T1nativepro=${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz
 str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
+
+# mask the mean of the rsfMRI time series
 Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
 
 if [[ ! -f ${rsfmri_T1nativepro} ]] ; then
@@ -217,7 +223,6 @@ if [[ ! -f ${rsfmri_T1nativepro} ]] ; then
     # t1-nativepro to fmri space
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $fmri_brain -t [$mat_rsfmri_affine,1] -o ${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz -v -u int
 
-    # Register to MNI space???????
 else
     Info "Subject ${id} has a rsfMRI in T1nativepro space"
 fi
@@ -232,43 +237,46 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# run ICA-FIX if melodic has been run and FIX has been installed and on the PATH <<<<<<<<<< HOW to know if ICA-FIX ran correctly????
+# run ICA-FIX IF melodic has been run and FIX has been installed and on the PATH
+fix_output=${rsfmri_ICA}/filtered_func_data_clean.nii.gz
+
 if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
+    if [[ ! -f ${fmri2fs_lta} ]] ; then
+          Info "Getting ICA-FIX requirements"
+          # FIX requirements
+          if [ ! -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
+          if [ ! -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
 
-    Info "Getting ICA-FIX requirements"
-    # FIX requirements (Mysterious steps...)
-    if [ -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
-    if [ -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
+          Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
+          Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
+          Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
+          Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
 
-    Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
-    Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
-    Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
-    Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
+          # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
+          # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
+          Do_cmd antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
 
-    # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
-    # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-    Do_cmd antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
+          # Transform matrix: ANTs (itk binary) to text
+          Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
-    # Transform matrix: ANTs (itk binary) to text
-    Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
+          # Transform matrix: ITK text to matrix (FSL format)
+          Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
 
-    # Transform matrix: ITK text to matrix (FSL format)
-    Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
+          Info "Running ICA-FIX"
+          Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
-    Info "Running ICA-FIX"
-    Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
+          # Replace file if melodic ran correctly - Change single-echo files for clean ones
+          yes | Do_cmd cp -rf ${fix_output} $fmri_HP
+
+    else
+        Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
+    fi
 else
-    Warning "!!!!  NO MELODIC OUTPUT AND/OR NO ICA-FIX sorftware  !!!!
+    Warning "!!!!  NO MELODIC OUTPUT AND/OR NO ICA-FIX software  !!!!
                    If you've installed FIX try to install required R packages and re-run:
                    'kernlab','ROCR','class','party','e1071','randomForest'"
 fi
 
-#------------------------------------------------------------------------------#
-# Change single-echo files for clean ones <<<<<<<<<<<<<<<< NO CLEAN DATA IF NOT ICA-FIX??? SHALL THIS GO INSIDE ICA-FIX?
-# <<<<<<<<<<<<<<<<<<<<<< THIS FAILS if fix is not avaliable
-yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz ${tmp}/${id}_singleecho_fmrispace_HP.nii.gz
-yes | Do_cmd cp -rf ${rsfmri_ICA}/filtered_func_data_clean.nii.gz $fmri_HP
-Do_cmd fslmaths ${tmp}/${id}_singleecho_fmrispace_HP.nii.gz -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # <<<<<<<<<<<<<<<<<<<<<< THIS FAILS if fix is not avaliable
 
 #------------------------------------------------------------------------------#
 Info "Calculating tissue-specific and global signals changes"
@@ -367,6 +375,7 @@ fi
 
 #------------------------------------------------------------------------------#
 #                           C E R E B E L L U M
+Info "Getting cerebellar timeseries"
 T1_seg_cerebellum=${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz
 rsfmri_cerebellum=${rsfmri_volum}/${id}_singleecho_fmrispace_cerebellum.nii.gz
 timese_cerebellum=${rsfmri_volum}/${id}_singleecho_timeseries_cerebellum.txt
