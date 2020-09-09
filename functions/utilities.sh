@@ -57,7 +57,7 @@ bids_variables() {
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*dwi.nii*`)
-  dwi_PA=${subject_bids}/dwi/${id}_ses-pre_acq-PA_dir-*_dwi.nii.gz
+  dwi_PAreverse=${subject_bids}/dwi/${id}_ses-pre_acq-PA_dir-*_dwi.nii.gz
 }
 
 bids_print.variables() {
