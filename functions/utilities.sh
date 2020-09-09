@@ -93,9 +93,9 @@ bids_print.variables-post() {
   Note "out  =" $out
 
   Info "mica-pipe variables:"
-  Note "T1 nativepro    =" $T1nativepro
-  Note "T1 5tt          =" $T15ttgen
-  Note "T1 fast_all     =" $T1fast_seg
+  Note "T1 nativepro    =" `find $T1nativepro`
+  Note "T1 5tt          =" `find $T15ttgen`
+  Note "T1 fast_all     =" `find $T1fast_seg`
   Note "T1 resolution   =" $res
 
   Info "mica-pipe directories:"
@@ -115,17 +115,18 @@ bids_print.variables-post() {
 
 bids_print.variables-dwi() {
   Info "mica-pipe variables for rsfMRI processing:"
-  Note "T1 nativepro    =" $T1nativepro
-  Note "T1 5tt          =" $T15ttgen
-  Note "T1 fast_all     =" $T1fast_seg
-  Note "T1 resolution   =" $res
+  Note "T1 nativepro    =" `find $T1nativepro`
+  Note "T1 5tt          =" `find $T15ttgen`
+  Note "T1 fast_all     =" `find $T1fast_seg`
+  Note "T1 resolution   =" `find $res`
 }
+# replace with find find /data_/mica3/BIDS_MIC/rawdata/sub-HC003/ses-pre/func/ -name *_ses-pre_task-rest_acq-AP_bold.nii.gz
 bids_print.variables-rsfmri() {
   Info "mica-pipe variables for DWI processing:"
-  Note "T1 nativepro       =" $T1nativepro
-  Note "Main rsfMRI        =" $mainScan
-  Note "Main phase scan    =" $mainPhaseScan
-  Note "Main reverse phase =" $reversePhaseScan
+  Note "T1 nativepro       =" `find $T1nativepro`
+  Note "Main rsfMRI        =" `find $mainScan`
+  Note "Main phase scan    =" `find $mainPhaseScan`
+  Note "Main reverse phase =" `find $reversePhaseScan`
 }
 
 t1w_str() {
