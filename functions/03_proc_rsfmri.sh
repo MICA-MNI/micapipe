@@ -135,7 +135,7 @@ fi
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
 if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
     Warning "No AP or PA adquicition was found, TOPUP will be skip!!!!!!!"
-    Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
+    Do_cmd mv -v ${tmp}/mainScan_mcMean.nii.gz ${singleecho}
 else
     if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
         mainPhaseScanMean=`find ${tmp}    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz"`
@@ -178,11 +178,10 @@ Do_cmd fslmaths ${singleecho} -Tmean ${rsfmri_volum}/tmp.nii.gz
 Do_cmd bet ${rsfmri_volum}/tmp.nii.gz ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 Do_cmd rm -fv ${rsfmri_volum}/tmp.nii.gz
-Do_cmd rm -fv $fmri_HP # <<<<<<<<<<<<<<<<<<<<<<< ERROR line 178: space_HP.nii.gz: command not found
 
 Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
-Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # CHECK line 258
+Do_cmd fslmaths $fmri_HP -Tmean ${tmp}/${id}_singleecho_fmrispace_mean.nii.gz # CHECK line 271
 
 
 # run MELODIC for ICA-FIX
@@ -238,8 +237,9 @@ if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
 
     Info "Getting ICA-FIX requirements"
     # FIX requirements (Mysterious steps...)
-    mkdir ${rsfmri_ICA}/mc
-    mkdir ${rsfmri_ICA}/reg
+    if [ -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
+    if [ -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
+
     Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
     Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
     Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
