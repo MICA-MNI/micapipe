@@ -415,4 +415,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\tlogs:${dir_logs}/proc_rsfmri.txt"
-echo "${id}, proc_rsfmri, TEST-RC, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, proc_rsfmri, ${status}, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
