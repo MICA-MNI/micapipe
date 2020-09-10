@@ -223,7 +223,6 @@ if  [[ -f `which fix` ]]; then
 fi
 
 #------------------------------------------------------------------------------#
-Info "Registering fmri space to nativepro"
 fmri_in_T1nativepro=${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz
 T1nativepro_in_fmri=${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz
 str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
@@ -234,6 +233,7 @@ fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
 Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
 
 if [[ ! -f ${fmri_in_T1nativepro} ]] ; then
+    Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
     Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
 
@@ -248,6 +248,7 @@ fi
 # Register rsfMRI to Freesurfer space with Freesurfer
 fmri2fs_lta=${dir_warp}/${id}_singleecho_fmri2fs.lta
 if [[ ! -f ${fmri2fs_lta} ]] ; then
+  Info "Registering fmri to FreeSurfer space"
     Do_cmd bbregister --s $id --mov $fmri_mean --reg ${fmri2fs_lta} --o ${dir_warp}/${id}_singleecho_fmri2fs_outbbreg_FIX.nii.gz --init-fsl --bold
 else
     Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"
@@ -293,8 +294,12 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
           # Replace file if melodic ran correctly - Change single-echo files for clean ones
-          yes | Do_cmd cp -rf $fix_output $fmri_processed
-          status="${status}/FIX"
+          if [[ ! -f ${fix_output} ]]; then
+              yes | Do_cmd cp -rf $fix_output $fmri_processed
+              status="${status}/FIX"
+          else
+              Error "melodic ran but ICA-FIX failed check log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+          fi
     else
           Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
     fi
