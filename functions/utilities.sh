@@ -92,9 +92,9 @@ bids_print.variables-post() {
   Note "out  =" $out
 
   Info "mica-pipe variables:"
-  Note "T1 nativepro    =" `find $T1nativepro`
-  Note "T1 5tt          =" `find $T15ttgen`
-  Note "T1 fast_all     =" `find $T1fast_seg`
+  Note "T1 nativepro    =" `ls $T1nativepro`
+  Note "T1 5tt          =" `ls $T15ttgen`
+  Note "T1 fast_all     =" `ls $T1fast_seg`
   Note "T1 resolution   =" $res
 
   Info "mica-pipe directories:"
@@ -118,7 +118,7 @@ bids_print.variables-dwi() {
   Note "T1 nativepro    =" `find $T1nativepro`
   Note "T1 5tt          =" `find $T15ttgen`
   Note "T1 fast_all     =" `find $T1fast_seg`
-  Note "T1 resolution   =" `find $res`
+  Note "T1 resolution   =" $res
 }
 
 bids_print.variables-rsfmri() {
