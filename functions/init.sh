@@ -10,7 +10,7 @@ export OLD_PATH=$PATH
 # Add your bin paths here.
 afni_path=/data/mica1/01_programs/afni-20.2.06/bin
 ants_path=/data/mica1/01_programs/ants-2.3.4/bin
-mrtrix_path=/data/mica1/01_programs/mrtrix3-micapipe/bin
+mrtrix_path=/data/mica1/01_programs/mrtrix3-3.0.1/bin
 workbench_path=/data/mica1/01_programs/workbench/bin_linux64
 freesurfer_path=/data/mica1/01_programs/Freesurfer-6.0/bin
 FIXPATH=/data_/mica1/01_programs/fix
