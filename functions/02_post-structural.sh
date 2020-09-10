@@ -36,7 +36,6 @@ bids_print.variables-post
 
 # Check inputs: Nativepro T1
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
-
 # Check inputs: freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
@@ -50,6 +49,9 @@ here=`pwd`
 
 # Check tmp dir: temporary directory
 Nfiles=0
+
+# if temporary directory is running on MICA-lab SGE
+if [ "$tmp" = "micaq" ];then source ${MICAPIPE}/functions/init.sh; fi
 # Check tmp dir: temporary directory
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_post-struct_${id}
