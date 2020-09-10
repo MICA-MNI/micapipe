@@ -37,8 +37,7 @@ export LANG=en_US.UTF-8
 
 #------------------------------------------------------------------------------#
 # FSL donfiguration file
-export FSLDIR=/data_/mica1/01_programs/fsl_mica
-. ${FSLDIR}/etc/fslconf/fsl.sh
+. /etc/fsl/5.0/fsl.sh
 
 # Add the number of threads to use here. Note that this is overwritten by
 # $NSLOTS if it exists (i.e. when running on SGE).
