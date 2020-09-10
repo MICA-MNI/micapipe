@@ -275,24 +275,23 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
 
           # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
-          if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]] ; then
-          # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-          Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
-          # Transform matrix: ANTs (itk binary) to text
-          Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
+          if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]]; then
+              # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
+              Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
+              # Transform matrix: ANTs (itk binary) to text
+              Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
-        # Fixing the transformations incompatiility between ANTS and FSL <<<<<<<<<<
-          tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
-          # Transform matrix: ITK text to matrix (FSL format)
-          Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
-          # apply transformation with FSL
-          Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
-          # correct transformation matrix
-          Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
-          # concatenate the matrices to fix the transformation matrix
-          Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
-
-          else; Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
+              # Fixing the transformations incompatiility between ANTS and FSL <<<<<<<<<<
+              tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
+              # Transform matrix: ITK text to matrix (FSL format)
+              Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
+              # apply transformation with FSL
+              Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
+              # correct transformation matrix
+              Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
+              # concatenate the matrices to fix the transformation matrix
+              Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
+          else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
           Info "Running ICA-FIX"
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
