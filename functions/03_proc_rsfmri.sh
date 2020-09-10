@@ -102,9 +102,9 @@ if [[ ! -f ${singleecho} ]]; then
               # Drop first five TRs and reorient (same orientation as T1nativepro)
               if [ "$tag" == "mainScan" ]; then
                   Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
-                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
+                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
               else
-                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
               fi
 
 
@@ -181,11 +181,12 @@ fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
 fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
 
+# Calculates the mean rsfMRI volume
+Do_cmd fslmaths $singleecho -Tmean $fmri_mean
+
 # Creates a mask from the motion corrected time series
-Do_cmd fslmaths ${singleecho} -Tmean ${rsfmri_volum}/tmp.nii.gz
-Do_cmd bet ${rsfmri_volum}/tmp.nii.gz ${rsfmri_ICA}/func.nii.gz -m -n
+Do_cmd bet $fmri_mean ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
-Do_cmd rm -fv ${rsfmri_volum}/tmp.nii.gz
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
 if [[ ! -f ${fmri_HP} ]] ; then
@@ -193,9 +194,6 @@ if [[ ! -f ${fmri_HP} ]] ; then
 else
     Info "Subject ${id} has High-pass filter"
 fi
-
-# Calculates the mean rsfMRI volume
-Do_cmd fslmaths $singleecho -Tmean $fmri_mean
 
 #------------------------------------------------------------------------------#
 # run MELODIC for ICA-FIX
@@ -216,7 +214,7 @@ if  [[ -f `which fix` ]]; then
                           --Oall \
                           --outdir=${rsfmri_ICA}/filtered_func_data.ica \
                           --Omean=${rsfmri_ICA}/mean_func.nii.gz
-          if [[ -f ${melodic_IC} ]]; status="${status}/melodic"; fi
+          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; fi
       else
           Info "Subject ${id} has MELODIC outputs"
       fi
