@@ -59,7 +59,7 @@ rsTag="*rsfmri*3mm*bold*AP"
 rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
 
 # Check inputs: rsfMRI and phase encoding
-if [ ! -f ${bids_fmri} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
+if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
 if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
@@ -95,30 +95,32 @@ if [[ ! -f ${singleecho} ]]; then
         tag=${tags[$i]}
 
         # IF FILE NOT FOUND DON'T RUN
-        Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
-        Note "RAWNIFTI:" $rawNifti
+        if [ -f ${rawNifti} ]; then
+              Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
+              Note "RAWNIFTI:" $rawNifti
 
-        # Drop first five TRs and reorient (same orientation as T1nativepro)
-        if [ "$tag" == "mainScan" ]; then
-            Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
-            Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
-        else
-            Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+              # Drop first five TRs and reorient (same orientation as T1nativepro)
+              if [ "$tag" == "mainScan" ]; then
+                  Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
+                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
+              else
+                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+              fi
+
+
+              # Remove slices to make an even number of slices in all directions (requisite for topup).
+              dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
+              newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
+              Do_cmd fslroi ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz `echo $newDimensions | sed 's/ / 0 /g' | sed 's/^/0 /'` # I removed -1 -1
+
+              # Motion correction within scans
+              Do_cmd fslmaths ${tmp}/${tag}_sliceCut.nii.gz -Tmean ${tmp}/${tag}_sliceCutMean.nii.gz
+              Do_cmd 3dvolreg -Fourier -twopass -base ${tmp}/${tag}_sliceCutMean.nii.gz \
+                              -zpad 4 -prefix ${tmp}/${tag}_mc.nii.gz \
+                              -1Dfile ${rsfmri_volum}/${id}_${tag}.1D \
+                              ${tmp}/${tag}_sliceCut.nii.gz
+              Do_cmd fslmaths ${tmp}/${tag}_mc.nii.gz -Tmean ${tmp}/${tag}_mcMean.nii.gz
         fi
-
-
-        # Remove slices to make an even number of slices in all directions (requisite for topup).
-        dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
-        newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
-        Do_cmd fslroi ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz `echo $newDimensions | sed 's/ / 0 /g' | sed 's/^/0 /'` # I removed -1 -1
-
-        # Motion correction within scans
-        Do_cmd fslmaths ${tmp}/${tag}_sliceCut.nii.gz -Tmean ${tmp}/${tag}_sliceCutMean.nii.gz
-        Do_cmd 3dvolreg -Fourier -twopass -base ${tmp}/${tag}_sliceCutMean.nii.gz \
-                        -zpad 4 -prefix ${tmp}/${tag}_mc.nii.gz \
-                        -1Dfile ${rsfmri_volum}/${id}_${tag}.1D \
-                        ${tmp}/${tag}_sliceCut.nii.gz
-        Do_cmd fslmaths ${tmp}/${tag}_mc.nii.gz -Tmean ${tmp}/${tag}_mcMean.nii.gz
     done
 else
       Info "Subject ${id} has a singleecho_fmrispace processed"
@@ -139,7 +141,7 @@ fi
 # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
 if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
     Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
-    status="NO-TOPUP"
+    status="NO-topup"
     Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
 else
     if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
@@ -172,7 +174,7 @@ else
     fi
 fi
 
-# creating mask for ICA-MELODIC then applying band-pass filtering
+#------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
 fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
@@ -195,40 +197,48 @@ fi
 # Calculates the mean rsfMRI volume
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
 
+#------------------------------------------------------------------------------#
 # run MELODIC for ICA-FIX
 melodic_IC=${rsfmri_ICA}/filtered_func_data.ica/melodic_IC.nii.gz
-if [[ ! -f ${melodic_IC} ]]; then
-    Do_cmd cp $fmri_HP ${rsfmri_ICA}/filtered_func_data.nii.gz
-    Do_cmd melodic --in=${rsfmri_ICA}/filtered_func_data.nii.gz \
-                                    --tr=0.6 \
-                                    --nobet \
-                                    --mask=${fmri_mask} \
-                                    --bgthreshold=3 \
-                                    --mmthresh=0.5 \
-                                    --report \
-                                    --Oall \
-                                    --outdir=${rsfmri_ICA}/filtered_func_data.ica \
-                                    --Omean=${rsfmri_ICA}/mean_func.nii.gz
-else
-    Info "Subject ${id} has MELODIC outputs"
+fmri_filtered=${rsfmri_ICA}/filtered_func_data.nii.gz
+
+# melodic will run ONLY if FIX is avaliable
+if  [[ -f `which fix` ]]; then
+      if [[ ! -f ${melodic_IC} ]]; then
+          Do_cmd cp $fmri_HP $fmri_filtered
+          Do_cmd melodic --in=${fmri_filtered} \
+                          --tr=0.6 \
+                          --nobet \
+                          --mask=${fmri_mask} \
+                          --bgthreshold=3 \
+                          --mmthresh=0.5 \
+                          --report \
+                          --Oall \
+                          --outdir=${rsfmri_ICA}/filtered_func_data.ica \
+                          --Omean=${rsfmri_ICA}/mean_func.nii.gz
+          if [[ -f ${melodic_IC} ]]; status="${status}/melodic"; fi
+      else
+          Info "Subject ${id} has MELODIC outputs"
+      fi
 fi
 
 #------------------------------------------------------------------------------#
 Info "Registering fmri space to nativepro"
-rsfmri_T1nativepro=${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz
+fmri_in_T1nativepro=${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz
+T1nativepro_in_fmri=${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz
 str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
 
-# mask the mean of the rsfMRI time series
+# masked mean rsfMRI time series
 Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
 
-if [[ ! -f ${rsfmri_T1nativepro} ]] ; then
+if [[ ! -f ${fmri_in_T1nativepro} ]] ; then
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
-    Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $rsfmri_T1nativepro -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
 
     # t1-nativepro to fmri space
-    Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $fmri_brain -t [$mat_rsfmri_affine,1] -o ${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $fmri_brain -t [$mat_rsfmri_affine,1] -o ${T1nativepro_in_fmri} -v -u int
 
 else
     Info "Subject ${id} has a rsfMRI in T1nativepro space"
@@ -244,10 +254,11 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# run ICA-FIX IF melodic has been run and FIX has been installed and on the PATH
+# run ICA-FIX IF melodic ran succesfully
 fix_output=${rsfmri_ICA}/filtered_func_data_clean.nii.gz
-rsfmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
-if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
+fmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
+
+if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
     if [[ ! -f ${fix_output} ]] ; then
           Info "Getting ICA-FIX requirements"
           # FIX requirements
@@ -255,7 +266,7 @@ if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
           if [ ! -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
 
           Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
-          Do_cmd fslroi ${rsfmri_ICA}/filtered_func_data.nii.gz ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
+          Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
           Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
           Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
 
@@ -266,24 +277,33 @@ if  [[ -f ${melodic_IC} ]] &&  [[ -f `which fix` ]]; then
           # Transform matrix: ANTs (itk binary) to text
           Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
+        # Fixing the transformations incompatiility between ANTS and FSL <<<<<<<<<<
+          tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
           # Transform matrix: ITK text to matrix (FSL format)
-          Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl ${rsfmri_ICA}/reg/highres2example_func.mat --src $T1nativepro --trg $fmri_brain
+          Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
+          # apply transformation with FSL
+          Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
+          # correct transformation matrix
+          Do_cmd flirt -v -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
+          # concatenate the matrices to fix the transformation matrix
+          Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
+
 
           Info "Running ICA-FIX"
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
           # Replace file if melodic ran correctly - Change single-echo files for clean ones
-          yes | Do_cmd cp -rf $fix_output $rsfmri_processed
-          status="${status} FIX"
+          yes | Do_cmd cp -rf $fix_output $fmri_processed
+          status="${status}/FIX"
     else
           Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
     fi
 else
-    Warning "!!!!  ICA-FIX failed, check the software installation !!!!
+    Warning "!!!!  Melodic Failed and/or ICA-FIX was not found, check the software installation !!!!
                    If you've installed FIX try to install required R packages and re-run:
                    'kernlab','ROCR','class','party','e1071','randomForest'"
-    cp -rf $melodic_IC $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE
-    status="${status} NO-FIX"
+    Do_cmd cp -rf $fmri_HP $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
+    status="${status}/NO-fix"
 fi
 
 #------------------------------------------------------------------------------#
@@ -297,13 +317,13 @@ if [[ ! -f ${global_signal} ]] ; then
            tissue_series=${rsfmri_volum}/${id}_singleecho_${tissue}.txt
            if [[ ! -f ${tissue_series} ]] ; then
            Do_cmd antsApplyTransforms -d 3 -i $tissuemap -r $fmri_mean -t [$mat_rsfmri_affine,1] -o ${tmp}/${id}_singleecho_${tissue}.nii.gz -v -u int
-           Do_cmd fslmeants -i $rsfmri_processed -o ${tissue_series} -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
+           Do_cmd fslmeants -i $fmri_processed -o ${tissue_series} -m ${tmp}/${id}_singleecho_${tissue}.nii.gz -w
          else
              Info "Subject ${id} has $tissue time-series"
          fi
       done
       Do_cmd fslmaths ${tmp}/${id}_singleecho_WM.nii.gz -add  ${tmp}/${id}_singleecho_GM.nii.gz -add  ${tmp}/${id}_singleecho_CSF.nii.gz ${tmp}/${id}_singleecho_WB.nii.gz
-      Do_cmd fslmeants -i $rsfmri_processed -o ${global_signal} -m ${tmp}/${id}_singleecho_WB.nii.gz -w
+      Do_cmd fslmeants -i $fmri_processed -o ${global_signal} -m ${tmp}/${id}_singleecho_WB.nii.gz -w
 else
       Info "Subject ${id} has Global time-series"
 fi
@@ -311,10 +331,11 @@ fi
 # Motion confound
 spikeRegressors=${rsfmri_volum}/${id}_singleecho_spikeRegressors_REFRMS.1D
 if [[ ! -f ${spikeRegressors} ]] ; then
-    Do_cmd fsl_motion_outliers -i $rsfmri_processed -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i $fmri_processed -o ${spikeRegressors} -s ${rsfmri_volum}/${id}_singleecho_metric_REFRMS.1D --refmse --nomoco
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
 fi
+
 #------------------------------------------------------------------------------#
 # Register to surface
 for x in lh rh; do
@@ -334,7 +355,7 @@ for x in lh rh; do
 
           # Map high-passed timeseries to surface - this is what will be used to generate the connectomes later
           Do_cmd mri_vol2surf \
-              --mov $rsfmri_processed \
+              --mov $fmri_processed \
               --reg ${fmri2fs_lta} \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject ${id} \
@@ -376,7 +397,7 @@ if [[ ! -f ${timese_subcortex} ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_subcortex -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_subcortex -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $rsfmri_processed --seg $rsfmri_subcortex --exclude 0 --exclude 16 --avgwf $timese_subcortex
+      Do_cmd mri_segstats --i $fmri_processed --seg $rsfmri_subcortex --exclude 0 --exclude 16 --avgwf $timese_subcortex
 else
       Info "Subject ${id} has rsfmri subcortical time-series"
 fi
@@ -392,7 +413,7 @@ if [[ ! -f ${timese_cerebellum} ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_cerebellum -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_cerebellum -v -u int
       # Extract subcortical timeseries (mean, one ts per first-segemented structure, exluding the brainstem (ew))
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $rsfmri_processed --seg $rsfmri_cerebellum --exclude 0 --avgwf ${timese_cerebellum}
+      Do_cmd mri_segstats --i $fmri_processed --seg $rsfmri_cerebellum --exclude 0 --avgwf ${timese_cerebellum}
 else
       Info "Subject ${id} has rsfmri cerebellar time-series"
 fi
