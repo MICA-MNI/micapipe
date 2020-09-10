@@ -312,6 +312,7 @@ else
                    'kernlab','ROCR','class','party','e1071','randomForest'"
     Do_cmd cp -rf $fmri_HP $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
     status="${status}/NO-fix"
+    # regressed out WM and GM 
 fi
 
 #------------------------------------------------------------------------------#
