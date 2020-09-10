@@ -192,7 +192,7 @@ Do_cmd bet $fmri_mean ${rsfmri_ICA}/func.nii.gz -m -n
 Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f ${fmri_HP} ]] ; then
+if [[ ! -f ${fmri_HP} ]]; then
     Info "High pass filter"
     Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
 else
@@ -219,7 +219,7 @@ if  [[ -f `which fix` ]]; then
                           --Oall \
                           --outdir=${rsfmri_ICA}/filtered_func_data.ica \
                           --Omean=${rsfmri_ICA}/mean_func.nii.gz
-          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; else status="${status}/FAILED-melodic" fi
+          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; else status="${status}/FAILED-melodic"; fi
       else
           Info "Subject ${id} has MELODIC outputs"
       fi
