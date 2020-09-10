@@ -275,9 +275,9 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
 
           # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
+          if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]] ; then
           # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
           Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
-
           # Transform matrix: ANTs (itk binary) to text
           Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
@@ -292,6 +292,7 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           # concatenate the matrices to fix the transformation matrix
           Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
 
+          else; Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
           Info "Running ICA-FIX"
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
@@ -312,7 +313,7 @@ else
                    'kernlab','ROCR','class','party','e1071','randomForest'"
     Do_cmd cp -rf $fmri_HP $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
     status="${status}/NO-fix"
-    # regressed out WM and GM 
+    # regressed out WM and GM
 fi
 
 #------------------------------------------------------------------------------#

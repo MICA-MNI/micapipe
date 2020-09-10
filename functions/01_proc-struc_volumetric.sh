@@ -57,7 +57,7 @@ n=$((${N} - 1))
 unset FSLPARALLEL
 
 # Creates the t1w_nativepro for structural processing
-if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
+if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz ]; then
     # Reorient  to LPI with AFNI
     # LPI is the standard 'neuroscience' orientation, where the x-axis is
     # Left-to-Right, the y-axis is Posterior-to-Anterior, and the z-axis is Inferior-to-Superior.
@@ -115,15 +115,18 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
     Do_cmd ImageMath 3 $T1nativepro RescaleImage $T1n4 0 100
 
     # If no T1native pro exit_status "something is wrong" exit
-    if [ ! -f ${T1nativepro} ]; then Error "$T1str_nat was not generated"; exit 0; fi
+    if [ ! -f ${T1nativepro} ]; then Error "$T1str_nat was not generated"; exit; fi
 
     # Brainmask
     # REQUEST to change to deepbrain-extractor (python CNN based)
     Warning "bet might be replaced for future versions (by deepbrain.extractor)"
     Do_cmd bet $T1nativepro $T1nativepro_brain  -B -f 0.25 -v
 
+    # If no T1native pro exit_status "something is wrong" exit
+    if [ ! -f ${T1nativepro_brain} ]; then Error "$T1str_nat masked was not generated"; exit; fi
+
 else
-    Info "Subject ${id} has a t1w_nativepro"
+    Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
     # Output names get the names
     T1str_nat=`t1w_str ${id} ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz nativepro`
     T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
