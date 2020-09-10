@@ -119,14 +119,13 @@ np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.tx
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Start with conte parcellations
-parcellationList = ['glasser_360_conte69',
-                    'vosdewael_100_conte69', 'vosdewael_200_conte69',
-                    'vosdewael_300_conte69', 'vosdewael_400_conte69',
-                    'schaefer_100_conte69', 'schaefer_200_conte69', 'schaefer_300_conte69',
-                    'schaefer_400_conte69', 'schaefer_500_conte69', 'schaefer_600_conte69',
-                    'schaefer_700_conte69', 'schaefer_800_conte69', 'schaefer_900_conte69',
-                    'schaefer_1000_conte69',
-                    'aparc_conte69']
+parcellationList = ['glasser-360_conte69',
+                    'vosdewael-100_conte69', 'vosdewael-200_conte69',
+                    'vosdewael-300_conte69', 'vosdewael-400_conte69',
+                    'schaefer-100_conte69', 'schaefer-200_conte69', 'schaefer-300_conte69',
+                    'schaefer-400_conte69', 'schaefer-500_conte69', 'schaefer-600_conte69',
+                    'schaefer-700_conte69', 'schaefer-800_conte69', 'schaefer-900_conte69',
+                    'schaefer-1000_conte69', 'aparc_conte69']
 for parcellation in parcellationList:
     parcOutputName = parcellation.replace('_', "").replace('conte69', "")
 
