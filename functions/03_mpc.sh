@@ -35,6 +35,9 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-post
 
+# GLOBAL variables for this script
+Info "wb_command will use $OMP_NUM_THREADS threads"
+
 # Check inputs: mp2rage
 if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
 
