@@ -204,6 +204,7 @@ fmri_filtered=${rsfmri_ICA}/filtered_func_data.nii.gz
 
 # melodic will run ONLY if FIX is avaliable
 if  [[ -f `which fix` ]]; then
+      Info "Running melodic"
       if [[ ! -f ${melodic_IC} ]]; then
           Do_cmd cp $fmri_HP $fmri_filtered
           Do_cmd melodic --in=${fmri_filtered} \
@@ -232,7 +233,7 @@ fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
 # masked mean rsfMRI time series
 Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
 
-if [[ ! -f ${fmri_in_T1nativepro} ]] ; then
+if [[ ! -f ${mat_rsfmri_affine} ]] ; then
     Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
     Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
@@ -273,7 +274,7 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
 
           # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
           # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-          Do_cmd antsApplyTransforms  -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
+          Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
 
           # Transform matrix: ANTs (itk binary) to text
           Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
