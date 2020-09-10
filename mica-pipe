@@ -206,7 +206,7 @@ else
     # Dicom to nifti X converter
     if [[ -z `which dcm2niix` ]]; then Error "Check your dcm2niix installation"; exit 1; else Info "dcm2niix was found"; fi
     # tree display
-    if [[ -z `which tree` ]]; then Warn "tree function was not found"; else Info "`tree --version | awk '{print $2}'`"; fi
+    if [[ -z `which tree` ]]; then Warn "tree function was not found"; else Info "tree version: `tree --version | awk '{print $2}'`"; fi
     #  MRtrix3
     if [[ -z `which mrinfo` ]]; then Error "MRtrix3 was not found"; exit 1; else Info "MRtrix3 version: `mrinfo -version | awk 'NR==1 {print $3}'`"; fi
     # freesurfer
