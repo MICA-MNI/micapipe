@@ -102,9 +102,9 @@ if [[ ! -f ${singleecho} ]]; then
               # Drop first five TRs and reorient (same orientation as T1nativepro)
               if [ "$tag" == "mainScan" ]; then
                   Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
-                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
+                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
               else
-                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
               fi
 
 
@@ -181,6 +181,7 @@ fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
 fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
 
+Info "Generating a rsfMRI binary mask"
 # Calculates the mean rsfMRI volume
 Do_cmd fslmaths $singleecho -Tmean $fmri_mean
 
@@ -190,6 +191,7 @@ Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
 if [[ ! -f ${fmri_HP} ]] ; then
+    Info "High pass filter"
     Do_cmd 3dTproject -input ${singleecho} -prefix $fmri_HP -passband 0.01 666
 else
     Info "Subject ${id} has High-pass filter"
@@ -213,7 +215,7 @@ if  [[ -f `which fix` ]]; then
                           --report \
                           --Oall \
                           --outdir=${rsfmri_ICA}/filtered_func_data.ica \
-                          --Omean=${rsfmri_ICA}/mean_func.nii.gz
+                          --Omean=${rsfmri_ICA}/mean_func.nii.gz -v
           if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; fi
       else
           Info "Subject ${id} has MELODIC outputs"
