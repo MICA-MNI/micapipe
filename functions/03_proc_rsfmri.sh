@@ -87,9 +87,9 @@ toProcess=($mainScan $mainPhaseScan $reversePhaseScan)
 tags=(mainScan mainPhaseScan reversePhaseScan)
 singleecho=${rsfmri_volum}/${id}_singleecho_fmrispace.nii.gz
 
-# Loop over all scans for everything before motion correction across scans.
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THINK HOW TO AVOID RE-RUNNING
+# Processing single.
 if [[ ! -f ${singleecho} ]]; then
+    # Loop over all scans for everything before motion correction across scans.
     for i in {0..2}; do
         # Get basic parameters
         rawNifti=${toProcess[$i]}
@@ -108,7 +108,6 @@ if [[ ! -f ${singleecho} ]]; then
                   Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
               fi
 
-
               # Remove slices to make an even number of slices in all directions (requisite for topup).
               dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
               newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
@@ -123,57 +122,59 @@ if [[ ! -f ${singleecho} ]]; then
               Do_cmd fslmaths ${tmp}/${tag}_mc.nii.gz -Tmean ${tmp}/${tag}_mcMean.nii.gz
         fi
     done
+
+    # Calculate slice timing if necessary <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # Calculate motion outliers with FSL
+    if [[ ! -f ${rsfmri_volum}/${id}_singleecho.1D ]]; then
+        Do_cmd fsl_motion_outliers -i ${tmp}/mainScan_sliceCut.nii.gz \
+                                   -o ${rsfmri_volum}/${id}_singleecho_spikeRegressors_FD.1D \
+                                   -s ${rsfmri_volum}/${id}_singleecho_metric_FD.1D --fd
+        Do_cmd mv ${rsfmri_volum}/${id}_mainScan.1D ${rsfmri_volum}/${id}_singleecho.1D
+    else
+        Info "Subject ${id} has a singleecho.1D with motion outliers"
+    fi
+
+    # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
+    if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
+        Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
+        status="NO-topup"
+        Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
+    else
+        if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
+            mainPhaseScanMean=`find ${tmp}    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz"`
+            mainPhaseScan=`find ${tmp}        -maxdepth 1 -name "*mainPhaseScan*_mc.nii.gz"`
+            reversePhaseScanMean=`find ${tmp} -maxdepth 1 -name "*reversePhaseScan*_mcMean.nii.gz"`
+            reversePhaseScan=`find ${tmp}     -maxdepth 1 -name "*reversePhaseScan*_mc.nii.gz"`
+            mainScan=`find ${tmp}             -maxdepth 1 -name "*mainScan*_mc.nii.gz"`
+
+            Do_cmd flirt -in $mainPhaseScanMean -ref ${tmp}/mainScan_mcMean.nii.gz -omat ${tmp}/singleecho_tmpXfmMain.omat
+            Do_cmd flirt -in $reversePhaseScanMean -ref ${tmp}/mainScan_mcMean.nii.gz -omat ${tmp}/singleecho_tmpXfmSecondary.omat
+
+            Do_cmd flirt -in $mainPhaseScan -ref ${tmp}/mainScan_mcMean.nii.gz -applyxfm -init ${tmp}/singleecho_tmpXfmMain.omat -out ${tmp}/singleecho_mainPhaseAligned.nii.gz
+            Do_cmd flirt -in $reversePhaseScan -ref ${tmp}/mainScan_mcMean.nii.gz -applyxfm -init ${tmp}/singleecho_tmpXfmSecondary.omat -out ${tmp}/singleecho_secondaryPhaseAligned.nii.gz
+
+            Do_cmd fslmaths ${tmp}/singleecho_mainPhaseAligned.nii.gz -Tmean ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz
+            Do_cmd fslmaths ${tmp}/singleecho_secondaryPhaseAligned.nii.gz -Tmean ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
+
+            # Distortion correction
+            # Figure out how to set the numbers in this file correctly for any scan. Depends on phase encoding direction!
+            printf "0 1 0 $readoutTime \n0 -1 0 $readoutTime" > ${tmp}/singleecho_topupDataIn.txt
+            Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
+            Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0.cnf --out=${tmp}/singleecho_topup
+            Do_cmd applytopup --imain=${mainScan} --inindex=1 --datain=${tmp}/singleecho_topupDataIn.txt --topup=${tmp}/singleecho_topup --method=jac --out=${singleecho}
+            # Check if it worked
+            if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
+            echo "${singleecho}, TOPUP, `whoami`, $(date)" >> ${rsfmri_volum}/TOPUP.txt
+            status="TOPUP"
+        else
+              Info "Subject ${id} has singleecho in fmrispace with TOPUP"
+        fi
+    fi
 else
       Info "Subject ${id} has a singleecho_fmrispace processed"
 fi
 
-# Calculate slice timing if necessary <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-# Calculate motion outliers with FSL
-if [[ ! -f ${rsfmri_volum}/${id}_singleecho.1D ]]; then
-    Do_cmd fsl_motion_outliers -i ${tmp}/mainScan_sliceCut.nii.gz \
-                               -o ${rsfmri_volum}/${id}_singleecho_spikeRegressors_FD.1D \
-                               -s ${rsfmri_volum}/${id}_singleecho_metric_FD.1D --fd
-    Do_cmd mv ${rsfmri_volum}/${id}_mainScan.1D ${rsfmri_volum}/${id}_singleecho.1D
-else
-    Info "Subject ${id} has a singleecho.1D with motion outliers"
-fi
-
-# Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
-if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
-    Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
-    status="NO-topup"
-    Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
-else
-    if [[ ! -f ${rsfmri_volum}/TOPUP.txt ]] && [[ ! -f ${singleecho} ]]; then
-        mainPhaseScanMean=`find ${tmp}    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz"`
-        mainPhaseScan=`find ${tmp}        -maxdepth 1 -name "*mainPhaseScan*_mc.nii.gz"`
-        reversePhaseScanMean=`find ${tmp} -maxdepth 1 -name "*reversePhaseScan*_mcMean.nii.gz"`
-        reversePhaseScan=`find ${tmp}     -maxdepth 1 -name "*reversePhaseScan*_mc.nii.gz"`
-        mainScan=`find ${tmp}             -maxdepth 1 -name "*mainScan*_mc.nii.gz"`
-
-        Do_cmd flirt -in $mainPhaseScanMean -ref ${tmp}/mainScan_mcMean.nii.gz -omat ${tmp}/singleecho_tmpXfmMain.omat
-        Do_cmd flirt -in $reversePhaseScanMean -ref ${tmp}/mainScan_mcMean.nii.gz -omat ${tmp}/singleecho_tmpXfmSecondary.omat
-
-        Do_cmd flirt -in $mainPhaseScan -ref ${tmp}/mainScan_mcMean.nii.gz -applyxfm -init ${tmp}/singleecho_tmpXfmMain.omat -out ${tmp}/singleecho_mainPhaseAligned.nii.gz
-        Do_cmd flirt -in $reversePhaseScan -ref ${tmp}/mainScan_mcMean.nii.gz -applyxfm -init ${tmp}/singleecho_tmpXfmSecondary.omat -out ${tmp}/singleecho_secondaryPhaseAligned.nii.gz
-
-        Do_cmd fslmaths ${tmp}/singleecho_mainPhaseAligned.nii.gz -Tmean ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz
-        Do_cmd fslmaths ${tmp}/singleecho_secondaryPhaseAligned.nii.gz -Tmean ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
-
-        # Distortion correction
-        printf "0 1 0 $readoutTime \n0 -1 0 $readoutTime" > ${tmp}/singleecho_topupDataIn.txt # Figure out how to set the numbers in this file correctly for any scan. Depends on phase encoding direction!
-        Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
-        Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0.cnf --out=${tmp}/singleecho_topup
-        Do_cmd applytopup --imain=${mainScan} --inindex=1 --datain=${tmp}/singleecho_topupDataIn.txt --topup=${tmp}/singleecho_topup --method=jac --out=${singleecho}
-        # Check if it worked
-        if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
-        echo "${singleecho}, TOPUP, `whoami`, $(date)" >> ${rsfmri_volum}/TOPUP.txt
-        status="TOPUP"
-    else
-          Info "Subject ${id} has singleecho in fmrispace with TOPUP"
-    fi
-fi
 
 #------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
@@ -217,8 +218,8 @@ if  [[ -f `which fix` ]]; then
                           --report \
                           --Oall \
                           --outdir=${rsfmri_ICA}/filtered_func_data.ica \
-                          --Omean=${rsfmri_ICA}/mean_func.nii.gz -v
-          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; fi
+                          --Omean=${rsfmri_ICA}/mean_func.nii.gz
+          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; else status="${status}/FAILED-melodic" fi
       else
           Info "Subject ${id} has MELODIC outputs"
       fi
@@ -287,7 +288,7 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           # apply transformation with FSL
           Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
           # correct transformation matrix
-          Do_cmd flirt -v -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
+          Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
           # concatenate the matrices to fix the transformation matrix
           Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
 
@@ -296,7 +297,7 @@ if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
           Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
           # Replace file if melodic ran correctly - Change single-echo files for clean ones
-          if [[ ! -f ${fix_output} ]]; then
+          if [[ -f ${fix_output} ]]; then
               yes | Do_cmd cp -rf $fix_output $fmri_processed
               status="${status}/FIX"
           else
