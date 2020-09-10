@@ -88,6 +88,7 @@ tags=(mainScan mainPhaseScan reversePhaseScan)
 singleecho=${rsfmri_volum}/${id}_singleecho_fmrispace.nii.gz
 
 # Loop over all scans for everything before motion correction across scans.
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THINK HOW TO AVOID RE-RUNNING
 if [[ ! -f ${singleecho} ]]; then
     for i in {0..2}; do
         # Get basic parameters
