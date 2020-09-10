@@ -85,8 +85,7 @@ bids_print.variables() {
 }
 
 bids_print.variables-post() {
-  # This functions prints BIDS variables names
-  # IF they exist
+  # This functions prints BIDS variables names and files if found
   Info "Inputs:"
   Note "id   =" $id
   Note "BIDS =" $BIDS
@@ -114,14 +113,16 @@ bids_print.variables-post() {
 }
 
 bids_print.variables-dwi() {
+  # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for rsfMRI processing:"
   Note "T1 nativepro    =" `find $T1nativepro`
   Note "T1 5tt          =" `find $T15ttgen`
   Note "T1 fast_all     =" `find $T1fast_seg`
   Note "T1 resolution   =" `find $res`
 }
-# replace with find find /data_/mica3/BIDS_MIC/rawdata/sub-HC003/ses-pre/func/ -name *_ses-pre_task-rest_acq-AP_bold.nii.gz
+
 bids_print.variables-rsfmri() {
+  # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for DWI processing:"
   Note "T1 nativepro       =" `find $T1nativepro`
   Note "Main rsfMRI        =" `find $mainScan`
