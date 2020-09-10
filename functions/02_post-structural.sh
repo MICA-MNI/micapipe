@@ -29,15 +29,15 @@ tmp=$4
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
 
+# Check inputs: Nativepro T1
+if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
+# Check inputs: freesurfer space T1
+if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-post
-
-# Check inputs: Nativepro T1
-if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
-# Check inputs: freesurfer space T1
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"
