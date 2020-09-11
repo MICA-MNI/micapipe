@@ -241,6 +241,7 @@ else
     Info "Subject ${id} has 5TT nifti"
 fi
 
+# -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 Do_cmd rm -rfv $tmp
 
@@ -251,4 +252,4 @@ Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n"
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
-echo "${id}, proc_struc, DONE, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, proc_struc, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

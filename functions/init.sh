@@ -95,6 +95,9 @@ else
 fi
 export OMP_NUM_THREADS=$CORES
 
+# Where processing will run
+export PROC="LOCAL-MICA"
+
 # Set the temporary directory
 hostname=$(uname -n)
 # First try setting from the host specific directories.

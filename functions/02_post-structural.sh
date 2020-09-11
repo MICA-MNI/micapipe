@@ -193,4 +193,4 @@ Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${er
 \t\tlogs:${dir_logs}/post_structural.txt
 \t\tNumber of outputs: `printf "%02d" $Nfiles`/21"
 
-echo "${id}, post_structural, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, $(date), `printf "%0.3f\n" ${eri}`" >> ${out}/brain-proc.csv
+echo "${id}, post_structural, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

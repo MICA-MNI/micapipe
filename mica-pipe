@@ -224,6 +224,9 @@ else
 
 fi
 
+# Processing
+if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
+
 # Number of CORES used by ANTs and workbench, default is 6 if not defined in GLOBAL env
 if [[ -z $CORES ]]; then export CORES=6; fi
 export OMP_NUM_THREADS=$CORES
@@ -282,6 +285,7 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
       Warning "This option only works on the MICA workstations, for now..."
       Warning "This step is NOT implemented yet, mica.q script is not functional"
       tmp="micaq"
+      export PROC="qsub-MICA"
       # mmTemplates="0.8 2" ### MNI152 templates resolutions
       # t1Scans=$(find $subject_bids/anat/ -name "*ses-pre_run-?_T1w.nii.gz" )
       # t1ScansCmd=$(echo "-t $(echo $t1Scans | sed 's: : -t :g')")
@@ -416,6 +420,6 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Return the original PATH if qsub || mica=TRUE
-if [ ! -z ${OLD_PATH+x} ]; then export PATH=$OLD_PATH; unset OLD_PATH; fi
+if [ ! -z ${OLD_PATH+x} ]; then cleanup; fi
 
 Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
