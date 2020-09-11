@@ -265,23 +265,26 @@ fmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
 if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
     if [[ ! -f ${fix_output} ]] ; then
           Info "Getting ICA-FIX requirements"
-          # FIX requirements
+          # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
           if [ ! -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
           if [ ! -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
 
-          Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par
-          Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1
-          Do_cmd cp $T1nativepro ${rsfmri_ICA}/reg/highres.nii.gz
-          Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz
+          # $fmri_filtered                                                                                 preprocessed 4D data
+          # $melodic_IC                                                                                    melodic (command-line program) full output directory
+          Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par   # motion parameters created by mcflirt
+          # $fmri_mask                                                                                     valid mask relating to the 4D data
+          Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz      # temporal mean of 4D data
+          Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1                     # example image from 4D data
+          Do_cmd cp $T1nativepro_brain ${rsfmri_ICA}/reg/highres.nii.gz                                  # brain-extracted structural
 
-          # REQUIRED by FIX ${rsfmri_ICA}/reg/highres2example_func.mat
+          # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
           if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]]; then
               # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
               Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
               # Transform matrix: ANTs (itk binary) to text
               Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
-              # Fixing the transformations incompatiility between ANTS and FSL <<<<<<<<<<
+              # Fixing the transformations incompatibility between ANTS and FSL
               tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
               # Transform matrix: ITK text to matrix (FSL format)
               Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
