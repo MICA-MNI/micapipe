@@ -295,8 +295,7 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
       #      -hold_jid ${id}_dicom2bids \
       #      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $tmp
       else
-      #   Structural processing: Volumetric
-      # the $4 argument is the tmp directory where processes will run default is /tmp
+      # LOCAL Structural processing: Volumetric
       ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
     fi
 fi
@@ -311,8 +310,7 @@ if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
-      #  Structural processing: Freesurfer
-      # the $4 argument is the tmp directory where processes will run default is /tmp
+      #  LOCAL - Structural processing: Freesurfer
        ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
     fi
 fi
@@ -331,7 +329,6 @@ if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
       # ...../ missing implementation
     else
       #  POST-Structural processing
-      # the $4 argument is the tmp directory where processes will run default is /tmp
        ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
     fi
 fi
@@ -349,8 +346,7 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
-      #  POST-Structural processing
-      # the $4 argument is the tmp directory where processes will run default is /tmp
+      # LOCAL post_structural processing
       ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
     fi
 fi
@@ -367,8 +363,7 @@ if [ "$procfMRI" = "TRUE" ]; then
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
-      #  POST-Structural processing
-      # the $4 argument is the tmp directory where processes will run default is /tmp
+      # LOCAL - post_Structural processing
        ${scriptDir}/03_proc_rsfmri.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_rsfmri.txt
     fi
 fi
@@ -389,7 +384,7 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
-      #  POST-Structural processing
+      # LOCAL - POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
        ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
     fi
@@ -408,7 +403,7 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
-      #  POST-Structural processing
+      # LOCAL - POST-Structural processing
       # the $4 argument is the tmp directory where processes will run default is /tmp
       ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_mpc.txt
     fi
@@ -419,5 +414,8 @@ fi
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
+
+# Return the original PATH if qsub || mica=TRUE
+if [ ! -z ${OLD_PATH+x} ]; then export PATH=$OLD_PATH; unset OLD_PATH; fi
 
 Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
