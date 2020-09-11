@@ -63,6 +63,8 @@ ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 # Set up parameters
 num_surfs=14
 origImage=${bids_T1ws[0]}
+microImage=${bids_T1map[0]}
+invImage=${bids_inv1[0]}
 
 #------------------------------------------------------------------------------#
 # Register to Freesurfer space
