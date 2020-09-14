@@ -33,9 +33,9 @@ aloita=$(date +%s)
 bids_variables $BIDS $id $out
 
 # if temporary directory is running on MICA-lab SGE
-if [ "$tmp" = "micaq" ];then source ${MICAPIPE}/functions/init.sh; fi
+if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
-if [ -z "${tmp}" ]; then tmp=/tmp; fi
+if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_${subject}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
@@ -70,7 +70,7 @@ Info "Global variables"
 Note "tmp               =" $tmp
 Note "CORES             =" $CORES
 Note "OMP_NUM_THREADS   =" $OMP_NUM_THREADS
-Note "Processing        =" $PROC
+Note "PROC              =" $PROC
 
 # print the names on the terminal
 bids_print.variables
