@@ -71,6 +71,7 @@ Info "Global variables"
 Note "tmp               =" $tmp
 Note "CORES             =" $CORES
 Note "OMP_NUM_THREADS   =" $OMP_NUM_THREADS
+Note "NSLOTS            =" $NSLOTS
 Note "PROC              =" $PROC
 
 # print the names on the terminal
@@ -78,10 +79,31 @@ bids_print.variables
 bids_print.variables-rsfmri
 bids_print.variables-post
 
+#    PACKAGES DEPENDENCIES print versions
+# Dicom to nifti X converter
+if [[ -z `which dcm2niix` ]]; then Error "Check your dcm2niix installation"; exit 1; else Info "dcm2niix was found"; fi
+# tree display
+if [[ -z `which tree` ]]; then Warn "tree function was not found"; else Info "tree version: `tree --version | awk '{print $2}'`"; fi
+#  MRtrix3
+if [[ -z `which mrinfo` ]]; then Error "MRtrix3 was not found"; exit 1; else Info "MRtrix3 version: `mrinfo -version | awk 'NR==1 {print $3}'`"; fi
+# freesurfer
+if [[ -z `which recon-all` ]]; then Error "FreeSurfer was not found"; exit 1; else Info "FreeSurfer version: `recon-all -version`"; fi
+# FSL
+if [[ -z `which flirt` ]]; then Error "FSL was not found"; exit 1; else Info "FSL version: `flirt -version | awk '{print $3}'`"; fi
+# AFNI
+if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; exit 1; else Info "AFNI version: `afni -version | awk -F ':' '{print $2}'`"; fi
+# ANTSx
+if [[ -z `which antsRegistration` ]]; then Error "ANTs was not found"; exit 1; else Info "ANTS version: `antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"; fi
+# workbench
+if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 1; else Info "workbench version: `wb_command -version | awk 'NR==3{print $2}'`"; fi
+# workbench
+if [[ -z `which fix` ]]; then Warning "fix was not found, ICA-FIX will be skipped"; else Info "ICA-based Xnoiseifier was found here: `which fix`"; fi
+
+
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 Title "Running MICA qsub test ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
-echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+# echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
