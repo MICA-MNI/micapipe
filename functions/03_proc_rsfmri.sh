@@ -20,7 +20,6 @@
 #   $1 : BIDS directory
 #   $2 : participant
 #   $3 : Out Directory
-#   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
 # TEST=ON
@@ -30,7 +29,6 @@ source $MICAPIPE/functions/utilities.sh
 BIDS=$1
 id=$2
 out=$3
-tmp=$4
 
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
@@ -48,9 +46,12 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 aloita=$(date +%s)
 here=`pwd`
 
-# Check tmp dir: temporary directory << processingDirectory
+# if temporary directory is running on MICA-lab SGE
+if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
+# if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
-tmp=${tmp}/${RANDOM}_proc-rsfmri_${id}
+# Create temporal directory
+tmp=${tmp}/${RANDOM}_micapipe_proc-rsfmri_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Set basic parameters.

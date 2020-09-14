@@ -14,7 +14,6 @@
 #   $1 : BIDS directory
 #   $2 : participant
 #   $3 : Out parcDirectory
-#   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging
 # TEST=ON
@@ -28,7 +27,6 @@ source $MICAPIPE/functions/utilities.sh
 BIDS=$1
 id=$2
 out=$3
-tmp=$4
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Freesurfer"
@@ -38,9 +36,15 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
 
-# Check tmp dir: temporary directory
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
+
+#------------------------------------------------------------------------------#
+# if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
-tmp=${tmp}/${RANDOM}_proc-freesurfer_${id}
+# Create temporal directory
+tmp=${tmp}/${RANDOM}_micapipe_proc-freesurfer_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing

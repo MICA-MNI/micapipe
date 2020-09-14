@@ -14,7 +14,6 @@
 #   $1 : BIDS directory
 #   $2 : participant
 #   $3 : Out parcDirectory
-#   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
 # TEST=ON
@@ -24,7 +23,7 @@ source $MICAPIPE/functions/utilities.sh
 BIDS=$1
 id=$2
 out=$3
-tmp=$4
+
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -42,11 +41,11 @@ bids_variables $BIDS $id $out
 bids_print.variables
 
 # if temporary directory is running on MICA-lab SGE
-if [ "$tmp" = "micaq" ];then source ${MICAPIPE}/functions/init.sh; fi
+if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
-if [ -z "${tmp}" ]; then tmp=/tmp; fi
+if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
-tmp=${tmp}/${RANDOM}_proc_struc-vol_${subject}
+tmp=${tmp}/${RANDOM}_micapipe_proc_struc-vol_${subject}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # BIDS T1w processing

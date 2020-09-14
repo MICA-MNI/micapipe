@@ -14,7 +14,6 @@
 #   $1 : BIDS directory
 #   $2 : participant
 #   $3 : Out Directory
-#   $4 : Temporal directory (default /tmp)
 #
 # ONLY for scripting and debugging:
 # TEST=ON
@@ -24,7 +23,6 @@ source $MICAPIPE/functions/utilities.sh
 BIDS=$1
 id=$2
 out=$3
-tmp=$4
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
@@ -51,10 +49,11 @@ here=`pwd`
 Nfiles=0
 
 # if temporary directory is running on MICA-lab SGE
-if [ "$tmp" = "micaq" ];then source ${MICAPIPE}/functions/init.sh; fi
-# Check tmp dir: temporary directory
+if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
+# if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
-tmp=${tmp}/${RANDOM}_post-struct_${id}
+# Create temporal directory
+tmp=${tmp}/${RANDOM}_micapipe_post-struct_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Freesurface SUBJECTs directory
