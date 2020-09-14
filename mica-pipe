@@ -257,19 +257,6 @@ if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory
 aloita=$(date +%s)
 
 # -----------------------------------------------------------------------------------------------#
-#   Define UTILITIES directories
-scriptDir=${MICAPIPE}/functions
-
-# Directory with the templates for the processing
-export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
-
-# Directory with all the parcellations
-export util_parcelations=${MICAPIPE}/parcellations
-
-# Directory with the resampled freesurfer surfaces
-export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
-
-# -----------------------------------------------------------------------------------------------#
 #   subject_dir
 # Creates subject directory if it doesn't exist
 if [ ! -d ${subject_dir} ]; then
