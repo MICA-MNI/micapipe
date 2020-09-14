@@ -23,6 +23,13 @@ here=`pwd`
 # if processing is running on MICA-lab or all.q SGE
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then source ${MICAPIPE}/functions/init.sh; fi
 
+echo -e "
+BIDS     = $BIDS
+id       = $id
+out      = $out
+PROC     = $PROC
+MICAPIPE = $MICAPIPE"
+
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
