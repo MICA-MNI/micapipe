@@ -195,7 +195,7 @@ BIDS=`realpath $BIDS`
 
 # -----------------------------------------------------------------------------------------------#
 # init file for local processing at MICA lab
-if [ "$micaq" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
+if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
     # Launch the init file.
     source ${MICAPIPE}/functions/init.sh
     if [[ $? != 0 ]]; then
