@@ -176,7 +176,7 @@ Note "-sub " $id
 Note "-out " "$out"
 Note "-bids " "$BIDS"
 help; exit 1; fi
-runs=($proc $procVOL $procFS $procDWI $procfMRI $post $postVOL $postDWI $postMPC)
+runs=($proc $procVOL $procFS $procDWI $procfMRI $post $postVOL $postDWI $postMPC $qtest)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc
