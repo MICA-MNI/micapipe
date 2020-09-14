@@ -14,6 +14,7 @@
 # ONLY for scripting and debugging:
 # TEST=ON
 # source utilities
+export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
 source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
