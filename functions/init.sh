@@ -89,7 +89,6 @@ rm -f $tmp_file
 
 # Set basic global variables.
 # export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
-export MICAPIPE=/data_/mica1/01_programs/micapipe
 if [[ ! -z $NSLOTS ]]; then
     export CORES=$NSLOTS
 else
