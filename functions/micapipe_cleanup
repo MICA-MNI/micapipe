@@ -1,0 +1,205 @@
+#!/bin/bash
+#
+# MICA pipe cleanup script
+#
+# Will erase any temporal directory by default
+# If a flag is defined it will erase output files from an specific step
+#
+# https://github.com/MICA-MNI/micaopen/templates
+#
+#   ARGUMENTS order:
+#   $1 : BIDS directory
+#   $2 : participant
+#   $3 : Out parcDirectory
+#
+# ONLY for scripting and debugging:
+# TEST=ON
+
+#---------------- FUNCTION: HELP ----------------#
+help() {
+echo -e "\033[38;5;141m
+Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+\t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
+\t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
+\t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
+
+
+   Flags for eraing specific processing outputs:\n
+\t\033[38;5;197m-all\033[0m             : Performs ALL first stages of structural processing
+\t\033[38;5;197m-proc_volumetric\033[0m  : Volumetric processing
+\t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
+\t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
+\t\033[38;5;197m-proc_rsfmri\033[0m      : Resting state Funtional MRI processing
+\t\033[38;5;197m-post_structural\033[0m  : Post structural volumetric processing
+\t\033[38;5;197m-post_dwi\033[0m         : Post tractography and connectome generation
+\t\033[38;5;197m-post_mpc\033[0m         : Microstructural profiles and covariance analysis
+
+
+McGill University, MNI, MICA-lab, May-September 2020
+https://github.com/MICA-MNI/micapipe
+http://mica-mni.github.io/
+"
+}
+
+# Check MICAPIPE
+if [ -z "${MICAPIPE}" ]; then
+echo -e "\033[38;5;1m\n---------------------------------------------------------\n
+[ERROR]... MICAPIPE must be define in your enviroment\033[0m
+           TRY: export MICAPIPE=<github_Directory>/micasoft\n
+\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
+fi
+
+if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
+echo -e "\033[38;5;1m\n---------------------------------------------------------\n
+[ERROR]... MICAPIPE is defined, but the PATH is wrong,
+           it should match /micasoft directory\033[0m
+           CHECK PATH to MICAPIPE:
+           $MICAPIPE\n
+\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
+fi
+
+# Source utilities functions from MICAPIPE
+source ${MICAPIPE}/functions/utilities.sh
+
+BIDS=$1
+id=$2
+out=$3
+
+Title "MICA pipe cleanup \n\t\tSubject: $id"
+
+# -----------------------------------------------------------------------------------------------#
+#			ARGUMENTS
+# Create VARIABLES
+for arg in "$@"
+do
+  case "$arg" in
+  -h|-help)
+    help
+    exit 1
+  ;;
+  -sub)
+    id=$2
+    shift;shift
+  ;;
+  -out)
+    out=$2
+    shift;shift
+  ;;
+  -bids)
+    BIDS=$2
+    shift;shift
+  ;;
+  -proc_volumetric)
+    procVOL=TRUE
+    shift
+  ;;
+  -proc_freesurfer)
+    procFS=TRUE
+    shift
+  ;;
+  -proc_dwi)
+    procDWI=TRUE
+    shift
+  ;;
+  -proc_rsfmri)
+    procfMRI=TRUE
+    shift
+  ;;
+  -post_structural)
+    postVOL=TRUE
+    shift
+  ;;
+  -post_tractography)
+    postDWI=TRUE
+    shift
+  ;;
+  -post_mpc)
+    postMPC=TRUE
+    shift
+  ;;
+  -mica)
+    mica=TRUE
+    shift
+  -*)
+    Error "Unknown option ${2}"
+    help
+    exit 1
+  ;;
+    esac
+done
+
+# argument check out & WARNINGS
+arg=($id $out $BIDS)
+if [ "${#arg[@]}" -lt 3 ]; then
+Error "One or more mandatory arguments are missing:"
+Note "-sub " $id
+Note "-out " "$out"
+Note "-bids " "$BIDS"
+help; exit 1; fi
+
+
+# Get the real path of the Inputs
+out=`realpath $out`
+BIDS=`realpath $BIDS`
+
+# Assigns variables names
+bids_variables $BIDS $id $out
+
+# if temporary directory is running on MICA-lab SGE
+if [ "$mica" = "TRUE" ];then source ${MICAPIPE}/functions/init.sh; fi
+# if temporary directory is empty
+if [ -z ${tmp} ]; then tmp=/tmp; fi
+
+# Remove temporary directories
+Do_cmd rm -rf ${tmp}/*micapipe* ${tmp}/*proc* ${tmp}/*post*
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -post_mpc
+if [ "$postMPC" = "TRUE" ]; then
+    Warning "Erasing post_mpc output files"
+    Do_cmd rm -rf ${dir_surf}/micro_profiles 2>&1 | tee -a  ${dir_logs}/post_mpc.txt # <<<<<<<<<<<<< INCOMPLETE
+
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_freesurfer
+if [ "$procFS" = "TRUE" ]; then
+    Warning "Erasing proc_freesurfer output files\n IF you re-run this step we highly recomend to re-run all post steps"
+    Do_cmd rm -rf ${dir_freesurfer} 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_volumetric
+if [ "$procVOL" = "TRUE" ]; then
+    Warning "Erasing proc_volumetric output files\n IF you re-run this step we highly recomend to re-run all post steps"
+    Do_cmd rm -rf ${proc_struct}/first/* ${proc_struct}/*MNI* ${proc_struct}/*nativepro_brain* ${dir_warp}/*MNI152* 2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -post_structural
+if [ "$postVOL" = "TRUE" ]; then
+    Warning "Erasing post_structural output files"
+    Do_cmd rm -rf ${dir_volum}/* ${proc_struct}/${id}_t1w_*mm_fsspace.nii.gz 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_rsfmri
+if [ "$procfMRI" = "TRUE" ]; then
+    Warning "Erasing proc_rsfmri output files"
+    Do_cmd rm -rf ${proc_rsfmri}/* ${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz ${dir_warp}/*fmri* 2>&1 | tee -a  ${dir_logs}/proc_rsfmri.txt
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -post_tractography
+if [ "$postDWI" = "TRUE" ]; then
+    Warning "Erasing post_tractography output files"
+    # Do_cmd rm -rf  2>&1 | tee -a  ${dir_logs}/post_tractography.txt <<<<<<<<<<<<< INCOMPLETE
+
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_dwi
+if [ "$procDWI" = "TRUE" ]; then
+    Warning "Erasing proc_dwi output files"
+    # Do_cmd rm ${proc_dwi}/* -rf 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt  <<<<<<<<<<<<< INCOMPLETE
+fi
