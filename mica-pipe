@@ -412,6 +412,7 @@ if [ "$qtest" = "TRUE" ]; then
            -N ${id}_micaqTEST \
            -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
            -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
+           -nthreads $CORES
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 
