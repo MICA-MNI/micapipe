@@ -17,7 +17,9 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 
    Flags for processing:\n
 \t\033[38;5;197m-proc\033[0m             : Performs ALL first stages of structural processing
+\t\t\t    (RUN -proc_volumetric -proc_freesurfer and -proc_dwi)
 \t\033[38;5;197m-post\033[0m             : Performs ALL Second stages of structural processing
+\t\t\t    (RUN -post_structural -post_mpc and -post_dwi)
 \t\t\t    (REQUIRES -proc_volumetric -proc_freesurfer and -proc_dwi)
 
    Flags for first stages of structural processing:\n
@@ -140,6 +142,14 @@ do
   ;;
   -qsub)
     micaq=TRUE
+    shift
+  ;;
+  -qall)
+    qall=TRUE
+    shift
+  ;;
+  -qtest)
+    qtest=TRUE
     shift
   ;;
   -force)
@@ -282,22 +292,18 @@ fi
 # # # MICA - WORKSTATION  Structural processing: Volumetric
 if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
-      tmp="micaq"
+      Info "MICA qsub processing of Structural processing: Volumetric"
+      Warning "This option only works on the MICA workstations"
       export PROC="qsub-MICA"
-      # mmTemplates="0.8 2" ### MNI152 templates resolutions
-      # t1Scans=$(find $subject_bids/anat/ -name "*ses-pre_run-?_T1w.nii.gz" )
-      # t1ScansCmd=$(echo "-t $(echo $t1Scans | sed 's: : -t :g')")
       # Info "Setting a warper to run on mica.q"
-      # qsub \
-      #      -q mica.q \
-      #      -l h_vmem=6G \
-      #      -N ${id}_structuralVolumetric \
-      #      -e $dir_logs/structuralVolumetric.txt \
-      #      -o $dir_logs/structuralVolumetric.txt \
-      #      -hold_jid ${id}_dicom2bids \
-      #      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $tmp
+      qsub \
+           -q mica.q \
+           -l h_vmem=6G \
+           -N ${id}_proc_volumetric \
+           -e $dir_logs/proc_volumetric.txt \
+           -o $dir_logs/proc_volumetric.txt \
+           -hold_jid ${id}_dicom2bids \
+           ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out
       else
       # LOCAL Structural processing: Volumetric
       ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
@@ -309,8 +315,7 @@ fi
 if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -327,8 +332,7 @@ fi
 if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -345,8 +349,7 @@ fi
 if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -362,8 +365,7 @@ fi
 if [ "$procfMRI" = "TRUE" ]; then
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -383,8 +385,7 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
   # if DWI processed data is not here stop
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -402,8 +403,7 @@ fi
 if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     # SGE -qsub TRUE
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations, for now..."
-      Warning "This step is NOT implemented yet, mica.q script is not functional"
+      Warning "This option only works on the MICA workstations"
       # Info "Setting a warper to run on mica.q"
       # ...../ missing implementation
     else
@@ -412,6 +412,22 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
       ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_mpc.txt
     fi
 fi
+
+# -----------------------------------------------------------------------------------------------#
+# # # MICA - qsub test
+if [ "$qtest" = "TRUE" ]; then
+      Info "MICA qsub test"
+      export PROC="qsub-MICA"
+      # Info "Setting a warper to run on mica.q"
+      qsub \
+           -q mica.q \
+           -l h_vmem=6G \
+           -N ${id}_micaqTEST \
+           -e ${id}_micaqTEST.txt \
+           -o ${id}_micaqTEST.txt \
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out
+fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
