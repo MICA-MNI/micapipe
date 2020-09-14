@@ -25,7 +25,6 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 
 
    Flags for eraing specific processing outputs:\n
-\t\033[38;5;197m-all\033[0m             : Performs ALL first stages of structural processing
 \t\033[38;5;197m-proc_volumetric\033[0m  : Volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
