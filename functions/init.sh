@@ -3,6 +3,7 @@
 ##################################
 ### Set variables beneath this ###
 ##################################
+export MICAPIPE=/data_/mica1/01_programs/micapipe
 
 # Save OLD PATH
 export OLD_PATH=$PATH
