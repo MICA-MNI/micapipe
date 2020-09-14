@@ -43,7 +43,7 @@ mrtrixDir=/data_/mica1/01_programs/mrtrix3-3.0.1
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${PATH}:${PATH}"
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${PATH}:${FSL_BIN}:${PATH}"
 
 #------------------------------------------------------------------------------#
 # Set the libraries paths for mrtrx and fsl
