@@ -404,15 +404,15 @@ fi
 # # # MICA - qsub test
 if [ "$qtest" = "TRUE" ]; then
       Info "MICA qsub test"
-      export PROC="qsub-MICA"
+      # export PROC="qsub-MICA"
+      export PROC="qsub-all.q"
       # Info "Setting a warper to run on mica.q"
       qsub \
-           -q mica.q \
+           -q all.q -pe all.pe 40 \
            -l h_vmem=6G \
            -N ${id}_micaqTEST \
            -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
            -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
-           -nthreads $CORES
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 

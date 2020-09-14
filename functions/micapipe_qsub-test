@@ -34,7 +34,7 @@ aloita=$(date +%s)
 bids_variables $BIDS $id $out
 
 # if temporary directory is running on MICA-lab SGE
-if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
+if [ "$PROC" = "qsub-MICA" ] || if [ "$PROC" = "qsub-all.q" ] ;then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
