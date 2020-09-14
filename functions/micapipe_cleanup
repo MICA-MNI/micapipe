@@ -172,7 +172,7 @@ fi
 # CLEAN -proc_volumetric
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_volumetric output files\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf ${proc_struct}/first/* ${proc_struct}/*MNI* ${proc_struct}/*nativepro_brain* ${dir_warp}/*MNI152* 2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
+    Do_cmd rm -rf ${proc_struct}/first/* ${proc_struct}/*MNI* ${proc_struct}/*nativepro_brain* ${dir_warp}/*MNI152* ${proc_struct}/*nativepro_5TT* 2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
 fi
 
 # ---------------------------------------------------------------------------------------
