@@ -31,7 +31,8 @@ export FREESURFER_HOME=/data/mica1/01_programs/Freesurfer-6.0  && source $FREESU
 #------------------------------------------------------------------------------#
 # FSL 6.0 configuration
 export FSLDIR=/data_/mica1/01_programs/fsl_mica
-. /data_/mica1/01_programs/fsl_mica/etc/fslconf/fsl.sh
+export FSL_BIN=${FSL_BIN}/bin
+source /data_/mica1/01_programs/fsl_mica/etc/fslconf/fsl.sh
 export LD_LIBRARY_PATH="${FSLDIR}/lib"
 
 #-----------------------------------------------------------------------------------#
