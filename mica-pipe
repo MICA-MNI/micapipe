@@ -272,42 +272,53 @@ if [[ ! -z `which tree` ]]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-#                             Run processing steps
+#                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
-
-# -----------------------------------------------------------------------------------------------#
-# # # MICA - WORKSTATION  Structural processing: Volumetric
 if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
+    # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]] ; then
-      Info "MICA qsub processing of Structural processing: Volumetric"
-      Warning "This option only works on the MICA workstations"
-      export PROC="qsub-MICA"
-      # Info "Setting a warper to run on mica.q"
-      qsub \
-           -q mica.q \
-           -l h_vmem=6G \
-           -N ${id}_proc_volumetric \
-           -e $dir_logs/proc_volumetric.txt \
-           -o $dir_logs/proc_volumetric.txt \
-           -hold_jid ${id}_dicom2bids \
-           ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out
-      else
-      # LOCAL Structural processing: Volumetric
-      ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
+        Info "MICA qsub - Structural processing: Volumetric"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_proc_volumetric -e $dir_logs/proc_volumetric.txt -o $dir_logs/proc_volumetric.txt \
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC
+    # all.q - Structural processing: Volumetric
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Structural processing: Volumetric"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_proc_volumetric -e $dir_logs/proc_volumetric.txt -o $dir_logs/proc_volumetric.txt \
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC
+    else
+        # LOCAL Structural processing: Volumetric
+        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
     fi
 fi
 
 # -----------------------------------------------------------------------------------------------#
 # # #        Structural processing: Freesurfer
 if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
-    # SGE -qsub TRUE
+    # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - Structural processing: Freesurfer"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_proc_freesurfer -e $dir_logs/proc_freesurfer.txt -o $dir_logs/proc_freesurfer.txt \
+             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC
+             # all.q - Structural processing: Freesurfer
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Structural processing: Freesurfer"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_proc_freesurfer -e $dir_logs/proc_freesurfer.txt -o $dir_logs/proc_freesurfer.txt \
+             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC
     else
-      #  LOCAL - Structural processing: Freesurfer
-       ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
+        #  LOCAL - Structural processing: Freesurfer
+        ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
     fi
 fi
 
@@ -317,14 +328,25 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
-    # SGE -qsub TRUE
+    # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - Diffusion processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_proc_dwi -e $dir_logs/proc_dwi.txt -o $dir_logs/proc_dwi.txt \
+             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC
+    # all.q - Diffusion processing
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Diffusion processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_proc_dwi -e $dir_logs/proc_dwi.txt -o $dir_logs/proc_dwi.txt \
+             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC
     else
-      #  POST-Structural processing
-       ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
+      #  LOCAL - Diffusion processing
+        ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
     fi
 fi
 
@@ -334,14 +356,25 @@ fi
 # # #         POST Structural processing
 #     REQUIRES -proc_volumetric and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
-    # SGE -qsub TRUE
+    # mica.q - POST Structural processing
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - POST Structural processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_post_structural -e $dir_logs/post_structural.txt -o $dir_logs/post_structural.txt \
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC
+    # all.q - POST Structural processing
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - POST Structural processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_post_structural -e $dir_logs/post_structural.txt -o $dir_logs/post_structural.txt \
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC
     else
-      # LOCAL post_structural processing
-      ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+      # LOCAL - post_structural processing
+        ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_structural.txt
     fi
 fi
 
@@ -350,14 +383,25 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
-    # SGE -qsub TRUE
+    # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - Resting state fMRI processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_proc_rsfmri -e $dir_logs/proc_rsfmri.txt -o $dir_logs/proc_rsfmri.txt \
+             ${scriptDir}/03_proc_rsfmri.sh $BIDS $id $out $PROC
+    # all.q - Resting state fMRI processing
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Resting state fMRI processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_proc_rsfmri -e $dir_logs/proc_rsfmri.txt -o $dir_logs/proc_rsfmri.txt \
+             ${scriptDir}/03_proc_rsfmri.sh $BIDS $id $out $PROC
     else
-      # LOCAL - post_Structural processing
-       ${scriptDir}/03_proc_rsfmri.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_rsfmri.txt
+        # LOCAL - Resting state fMRI processing
+        ${scriptDir}/03_proc_rsfmri.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/proc_rsfmri.txt
     fi
 fi
 
@@ -365,53 +409,64 @@ fi
 # # # MICA - WORKSTATION  POST DIFFUSION WEIGHTED IMAGING processing
 #   REQUIRES -proc_dwi
 if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
-  T1nativepro_5tt=${subject_dir}/proc_struc/${id}_t1w_0.8mm_nativepro_5TT.nii.gz
-  # Check REQUIREMENTS otherwise PASS
-  if [ ! -f ${T1nativepro} ]; then Error "-proc_volumetric outputs are missing"; exit 1; fi
-  if [ ! -f $T1nativepro_5tt ]; then Error "-proc_volumetric outputs are missing"; exit 1; fi
-  # if DWI processed data is not here stop
-    # SGE -qsub TRUE
+    # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - POST DWI processing (tractography)"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N ${id}_post_dwi -e $dir_logs/post_tractography.txt -o $dir_logs/post_tractography.txt \
+             ${scriptDir}/02_post-tractography.sh $BIDS $id $out $PROC
+    # all.q - post-DWI processing (tractography)
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - POST DWI processing (tractography)"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N ${id}_post_dwi -e $dir_logs/post_tractography.txt -o $dir_logs/post_tractography.txt \
+             ${scriptDir}/02_post-tractography.sh $BIDS $id $out $PROC
     else
-      # LOCAL - POST-Structural processing
-      # the $4 argument is the tmp directory where processes will run default is /tmp
-       ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
+        # LOCAL - post-DWI processing (tractography)
+        ${scriptDir}/02_post-tractography.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
     fi
 fi
 
 # -----------------------------------------------------------------------------------------------#
 #                   POST Microstructural profile covariance mica-03
 # -----------------------------------------------------------------------------------------------#
-# # #         Generates microstructural profiles and covariance matrices
+#     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_volumetric and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
-    # SGE -qsub TRUE
+    # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]] ; then
-      Warning "This option only works on the MICA workstations"
-      # Info "Setting a warper to run on mica.q"
-      # ...../ missing implementation
+        Info "MICA qsub - Microstructural profile covariance"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_post_mpc -e $dir_logs/post_mpc.txt -o $dir_logs/post_mpc.txt \
+             ${scriptDir}/03_mpc.sh $BIDS $id $out $PROC
+    # all.q - Microstructural profile covariance
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Microstructural profile covariance"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_post_mpc -e $dir_logs/post_mpc.txt -o $dir_logs/post_mpc.txt \
+             ${scriptDir}/03_mpc.sh $BIDS $id $out $PROC
     else
-      # LOCAL - POST-Structural processing
-      # the $4 argument is the tmp directory where processes will run default is /tmp
-      ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_mpc.txt
+        # LOCAL - POST-Structural processing
+        ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post_mpc.txt
     fi
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # # MICA - qsub test
+#                   MICA - qsub test
+# -----------------------------------------------------------------------------------------------#
 if [[ $qtest = "TRUE" ]] && [[ $micaq == "TRUE" ]]; then
       Info "MICA qsub test: mica.q"
       export PROC="qsub-MICA"
       # Info "Setting a warper to run on mica.q"
-      qsub \
-           -q mica.q -pe smp $CORES \
-           -l h_vmem=6G \
-           -N ${id}_micaqTEST \
-           -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
-           -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
+      qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_micaqTEST -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 
@@ -419,13 +474,8 @@ fi
 if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
       Info "MICA qsub test: all.q"
       export PROC="qsub-all.q"
-      # Info "Setting a warper to run on mica.q"
-      qsub \
-           -q all.q -pe all.pe 40 \
-           -l h_vmem=6G \
-           -N ${id}_micaqTEST \
-           -e /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt \
-           -o /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt \
+      # Info "Setting a warper to run on all.q"
+      qsub -q all.q -pe all.pe 40 -l h_vmem=6G -N ${id}_micaqTEST -e /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt -o /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt \
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 

@@ -17,14 +17,22 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-# source utilities
-source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
 id=$2
 out=$3
-
+PROC=$4
 here=`pwd`
+
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
+    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    source ${MICAPIPE}/functions/init.sh;
+fi
+
+# source utilities
+source $MICAPIPE/functions/utilities.sh
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
@@ -40,8 +48,6 @@ bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
 
-# if temporary directory is running on MICA-lab SGE
-if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
@@ -80,13 +86,14 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
       T1n4=${tmp}/${T1str_nat}_n4.nii.gz
       # Loop over each T1
       for ((i=1; i<=$n; i++)); do
-      run=`echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
-      t1ref=run-${ref_run}
+          run=`echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
+          t1ref=run-${ref_run}
+          T1mat_str=${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}_
+          T1mat=${T1mat_str}0GenericAffine.mat
+          T1run_2_T1=${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz
 
-      Do_cmd flirt -v -in ${bids_T1ws[i]} \
-              -ref $ref \
-              -dof 12 -out ${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz \
-              -omat ${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}.mat
+          Do_cmd antsRegistrationSyN.sh -d 3 -m ${bids_T1ws[i]} -f $ref  -o $T1mat_str -t a -n $CORES -p d
+          Do_cmd antsApplyTransforms -d 3 -i ${bids_T1ws[i]} -r $ref -t $T1mat -o $T1run_2_T1 -v -u int
       done
       # Calculate the mean over all T1w registered to the 1st t1w run
       t1s_reg=$(find ${tmp}/*_to_${t1ref}.nii.gz)

@@ -23,12 +23,22 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-# source utilities
-source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
 id=$2
 out=$3
+PROC=$4
+here=`pwd`
+
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
+    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    source ${MICAPIPE}/functions/init.sh;
+fi
+
+# source utilities
+source $MICAPIPE/functions/utilities.sh
 
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
@@ -46,8 +56,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 aloita=$(date +%s)
 here=`pwd`
 
-# if temporary directory is running on MICA-lab SGE
-if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory

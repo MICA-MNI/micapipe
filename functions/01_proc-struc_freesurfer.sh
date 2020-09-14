@@ -21,12 +21,21 @@
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer
 
-# source utilities
-source $MICAPIPE/functions/utilities.sh
-
 BIDS=$1
 id=$2
 out=$3
+PROC=$4
+here=`pwd`
+
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
+    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    source ${MICAPIPE}/functions/init.sh;
+fi
+
+# source utilities
+source $MICAPIPE/functions/utilities.sh
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Freesurfer"
@@ -35,10 +44,6 @@ Title "Running MICA structural processing: Freesurfer"
 bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables
-
-#------------------------------------------------------------------------------#
-# qsub configuration
-if [ "$PROC" = "qsub-MICA" ];then source ${MICAPIPE}/functions/init.sh; fi
 
 #------------------------------------------------------------------------------#
 # if temporary directory is empty
