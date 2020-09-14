@@ -201,7 +201,7 @@ for mm in 2 0.8; do
 done
 
 # Generate a five-tissue-type image for anatomically constrained tractography
-if [[ ! -e $T1nativepro_5tt ]]; then
+if [[ ! -f $T1nativepro_5tt ]]; then
     # Do fast first
     # --------------------------------------------------------------
     # Step by step 5tt
