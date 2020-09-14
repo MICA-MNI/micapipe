@@ -20,6 +20,7 @@ source $MICAPIPE/functions/utilities.sh
 BIDS=$1
 id=$2
 out=$3
+PROC=$4
 
 here=`pwd`
 
