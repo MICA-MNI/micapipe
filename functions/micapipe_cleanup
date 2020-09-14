@@ -203,3 +203,11 @@ if [ "$procDWI" = "TRUE" ]; then
     Warning "Erasing proc_dwi output files"
     # Do_cmd rm ${proc_dwi}/* -rf 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt  <<<<<<<<<<<<< INCOMPLETE
 fi
+
+
+# Return the original PATH if qsub || mica=TRUE
+if [ ! -z ${OLD_PATH+x} ]; then
+      export PATH=$OLD_PATH
+      unset OLD_PATH
+      unset tmp
+fi
