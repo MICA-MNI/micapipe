@@ -120,6 +120,7 @@ do
   -mica)
     mica=TRUE
     shift
+  ;;
   -*)
     Error "Unknown option ${2}"
     help
