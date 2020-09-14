@@ -13,7 +13,8 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrite the subject directory.
 \t\033[38;5;197m-quiet\033[0m 	         : Does NOT print comments
 \t\033[38;5;197m-mica\033[0m 	         : ONLY for MICA local processing
-\t\033[38;5;197m-qsub\033[0m 	         : ONLY for MICA network processing (SGE qsub)
+\t\033[38;5;197m-qsub\033[0m 	         : ONLY for MICA network processing (SGE mica.q)
+\t\033[38;5;197m-qall\033[0m 	         : ONLY for MICA network processing (SGE all.q)
 
    Flags for processing:\n
 \t\033[38;5;197m-proc\033[0m             : Performs ALL first stages of structural processing
