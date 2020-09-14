@@ -14,7 +14,6 @@
 # ONLY for scripting and debugging:
 # TEST=ON
 # source utilities
-export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
 source $MICAPIPE/functions/utilities.sh
 
 BIDS=$1
@@ -106,4 +105,4 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 Title "Running MICA qsub test ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
-# echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" #>> ${out}/brain-proc.csv

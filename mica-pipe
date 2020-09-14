@@ -402,17 +402,30 @@ fi
 
 # -----------------------------------------------------------------------------------------------#
 # # # MICA - qsub test
-if [ "$qtest" = "TRUE" ]; then
-      Info "MICA qsub test"
-      # export PROC="qsub-MICA"
+if [[ $qtest = "TRUE" ]] && [[ $micaq == "TRUE" ]]; then
+      Info "MICA qsub test: mica.q"
+      export PROC="qsub-MICA"
+      # Info "Setting a warper to run on mica.q"
+      qsub \
+           -q mica.q -pe smp $CORES \
+           -l h_vmem=6G \
+           -N ${id}_micaqTEST \
+           -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
+           -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
+fi
+
+# # # MICA - qsub test
+if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
+      Info "MICA qsub test: all.q"
       export PROC="qsub-all.q"
       # Info "Setting a warper to run on mica.q"
       qsub \
            -q all.q -pe all.pe 40 \
            -l h_vmem=6G \
            -N ${id}_micaqTEST \
-           -e /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
-           -o /data_/mica3/BIDS_MIC/qTEST/${id}_micaqTEST.txt \
+           -e /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt \
+           -o /data_/mica3/BIDS_MIC/qTEST/${id}_allqTEST.txt \
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 
