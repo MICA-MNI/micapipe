@@ -48,6 +48,7 @@ if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t 
 if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
+if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
@@ -192,14 +193,22 @@ Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 fmri_mean=${rsfmri_volum}/${id}_singleecho_fmrispace_mean.nii.gz
 fmri_mask=${rsfmri_ICA}/mask.nii.gz
 fmri_HP=${rsfmri_volum}/${id}_singleecho_fmrispace_HP.nii.gz
+fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
 
-Info "Generating a rsfMRI binary mask"
-# Calculates the mean rsfMRI volume
-Do_cmd fslmaths $singleecho -Tmean $fmri_mean
+if [[ ! -f ${fmri_mask} ]]; then
+    Info "Generating a rsfMRI binary mask"
+    # Calculates the mean rsfMRI volume
+    Do_cmd fslmaths $singleecho -Tmean $fmri_mean
 
-# Creates a mask from the motion corrected time series
-Do_cmd bet $fmri_mean ${rsfmri_ICA}/func.nii.gz -m -n
-Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
+    # Creates a mask from the motion corrected time series
+    Do_cmd bet $fmri_mean ${rsfmri_ICA}/func.nii.gz -m -n
+    Do_cmd mv ${rsfmri_ICA}/func_mask.nii.gz ${fmri_mask}
+
+    # masked mean rsfMRI time series
+    Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
+else
+    Info "Subject ${id} has a binary mask of the rsfMRI"
+fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
 if [[ ! -f ${fmri_HP} ]]; then
@@ -240,11 +249,8 @@ fmri_in_T1nativepro=${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz
 T1nativepro_in_fmri=${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz
 str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
-fmri_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
 
-# masked mean rsfMRI time series
-Do_cmd fslmaths $fmri_mean -mul $fmri_mask $fmri_brain
-
+# REgistration to native pro
 if [[ ! -f ${mat_rsfmri_affine} ]] ; then
     Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
@@ -272,60 +278,65 @@ fi
 fix_output=${rsfmri_ICA}/filtered_func_data_clean.nii.gz
 fmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
 
-if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
-    if [[ ! -f ${fix_output} ]] ; then
-          Info "Getting ICA-FIX requirements"
-          # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
-          if [ ! -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
-          if [ ! -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
+# Run if fmri_clean does not exist
+if [[ ! -f ${fmri_processed} ]] ; then
+      if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
+          if [[ ! -f ${fix_output} ]] ; then
+                Info "Getting ICA-FIX requirements"
+                # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
+                if [ ! -d ${rsfmri_ICA}/mc ]; then mkdir ${rsfmri_ICA}/mc; fi
+                if [ ! -d ${rsfmri_ICA}/reg ]; then mkdir ${rsfmri_ICA}/reg; fi
 
-          # $fmri_filtered                                                                                 preprocessed 4D data
-          # $melodic_IC                                                                                    melodic (command-line program) full output directory
-          Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par   # motion parameters created by mcflirt
-          # $fmri_mask                                                                                     valid mask relating to the 4D data
-          Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz      # temporal mean of 4D data
-          Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1                     # example image from 4D data
-          Do_cmd cp $T1nativepro_brain ${rsfmri_ICA}/reg/highres.nii.gz                                  # brain-extracted structural
+                # $fmri_filtered                                                                                 preprocessed 4D data
+                # $melodic_IC                                                                                    melodic (command-line program) full output directory
+                Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par   # motion parameters created by mcflirt
+                # $fmri_mask                                                                                     valid mask relating to the 4D data
+                Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz      # temporal mean of 4D data
+                Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1                     # example image from 4D data
+                Do_cmd cp $T1nativepro_brain ${rsfmri_ICA}/reg/highres.nii.gz                                  # brain-extracted structural
 
-          # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
-          if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]]; then
-              # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-              Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
-              # Transform matrix: ANTs (itk binary) to text
-              Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
+                # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
+                if [[ ! -f ${rsfmri_ICA}/reg/highres2example_func.mat ]]; then
+                    # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
+                    Do_cmd antsApplyTransforms -v 1 -o Linear[${tmp}/highres2example_func.mat,0] -t [$mat_rsfmri_affine,1]
+                    # Transform matrix: ANTs (itk binary) to text
+                    Do_cmd ConvertTransformFile 3 ${tmp}/highres2example_func.mat ${tmp}/highres2example_func.txt
 
-              # Fixing the transformations incompatibility between ANTS and FSL
-              tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
-              # Transform matrix: ITK text to matrix (FSL format)
-              Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
-              # apply transformation with FSL
-              Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
-              # correct transformation matrix
-              Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
-              # concatenate the matrices to fix the transformation matrix
-              Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
-          else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
+                    # Fixing the transformations incompatibility between ANTS and FSL
+                    tmp_ants2fsl_mat=${tmp}/itk2fsl_highres2example_func.mat
+                    # Transform matrix: ITK text to matrix (FSL format)
+                    Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
+                    # apply transformation with FSL
+                    Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
+                    # correct transformation matrix
+                    Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
+                    # concatenate the matrices to fix the transformation matrix
+                    Do_cmd convert_xfm -concat ${tmp}/ants2fsl_fixed.omat -omat ${rsfmri_ICA}/reg/highres2example_func.mat $tmp_ants2fsl_mat
+                else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
-          Info "Running ICA-FIX"
-          Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
+                Info "Running ICA-FIX"
+                Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
-          # Replace file if melodic ran correctly - Change single-echo files for clean ones
-          if [[ -f ${fix_output} ]]; then
-              yes | Do_cmd cp -rf $fix_output $fmri_processed
-              status="${status}/FIX"
+                # Replace file if melodic ran correctly - Change single-echo files for clean ones
+                if [[ -f ${fix_output} ]]; then
+                    yes | Do_cmd cp -rf $fix_output $fmri_processed
+                    status="${status}/FIX"
+                else
+                    Error "melodic ran but ICA-FIX failed check log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                fi
           else
-              Error "melodic ran but ICA-FIX failed check log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
           fi
-    else
-          Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-    fi
+      else
+          Warning "!!!!  Melodic Failed and/or ICA-FIX was not found, check the software installation !!!!
+                         If you've installed FIX try to install required R packages and re-run:
+                         'kernlab','ROCR','class','party','e1071','randomForest'"
+          Do_cmd cp -rf $fmri_HP $fmri_processed # OR cp -rf  $singleecho $fmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
+          status="${status}/NO-fix"
+          # regressed out WM and GM
+      fi
 else
-    Warning "!!!!  Melodic Failed and/or ICA-FIX was not found, check the software installation !!!!
-                   If you've installed FIX try to install required R packages and re-run:
-                   'kernlab','ROCR','class','party','e1071','randomForest'"
-    Do_cmd cp -rf $fmri_HP $rsfmri_processed # OR cp -rf  $singleecho $rsfmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
-    status="${status}/NO-fix"
-    # regressed out WM and GM
+    Info "Subject ${id} has singleecho_fmrispace_clean volume"
 fi
 
 #------------------------------------------------------------------------------#
@@ -442,9 +453,9 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-rsfmri
-Info "Running rsfMRI post processing"
-labelDirectory=${dir_surf}/${id}/label/
-python $MICAPIPE/functions/03_proc_rsfmri_post.py ${id} ${proc_rsfmri} ${labelDirectory}
+# Info "Running rsfMRI post processing"
+# labelDirectory=${dir_surf}/${id}/label/
+# python $MICAPIPE/functions/03_proc_rsfmri_post.py ${id} ${proc_rsfmri} ${labelDirectory}
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
