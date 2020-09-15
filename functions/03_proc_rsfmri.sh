@@ -225,8 +225,8 @@ fmri_filtered=${rsfmri_ICA}/filtered_func_data.nii.gz
 
 # melodic will run ONLY if FIX is avaliable
 if  [[ -f `which fix` ]]; then
-      Info "Running melodic"
       if [[ ! -f ${melodic_IC} ]]; then
+          Info "Running melodic"
           Do_cmd cp $fmri_HP $fmri_filtered
           Do_cmd melodic --in=${fmri_filtered} \
                           --tr=0.6 \
@@ -340,9 +340,9 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-Info "Calculating tissue-specific and global signals changes"
 global_signal=${rsfmri_volum}/${id}_singleecho_global.txt
 if [[ ! -f ${global_signal} ]] ; then
+      Info "Calculating tissue-specific and global signals changes"
       tissues=(CSF GM WM)
       for idx in {0..2}; do
            tissue=${tissues[$idx]}
@@ -427,6 +427,7 @@ rsfmri_subcortex=${rsfmri_volum}/${id}_singleecho_fmrispace_subcortical.nii.gz
 timese_subcortex=${rsfmri_volum}/${id}_singleecho_timeseries_subcortical.txt
 
 if [[ ! -f ${timese_subcortex} ]] ; then
+      Info "Getting subcortical timeseries"
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_subcortex -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_subcortex -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
@@ -437,12 +438,13 @@ fi
 
 #------------------------------------------------------------------------------#
 #                           C E R E B E L L U M
-Info "Getting cerebellar timeseries"
+
 T1_seg_cerebellum=${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz
 rsfmri_cerebellum=${rsfmri_volum}/${id}_singleecho_fmrispace_cerebellum.nii.gz
 timese_cerebellum=${rsfmri_volum}/${id}_singleecho_timeseries_cerebellum.txt
 
 if [[ ! -f ${timese_cerebellum} ]] ; then
+      Info "Getting cerebellar timeseries"
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_cerebellum -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_cerebellum -v -u int
       # Extract subcortical timeseries (mean, one ts per first-segemented structure, exluding the brainstem (ew))
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
