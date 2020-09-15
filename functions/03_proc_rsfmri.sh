@@ -250,7 +250,7 @@ T1nativepro_in_fmri=${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz
 str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 
-# REgistration to native pro
+# Registration to native pro
 if [[ ! -f ${mat_rsfmri_affine} ]] ; then
     Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
