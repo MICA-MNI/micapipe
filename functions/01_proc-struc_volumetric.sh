@@ -34,19 +34,19 @@ fi
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
+# Assigns variables names
+bids_variables $BIDS $id $out
+
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
+# print the names on the terminal
+bids_print.variables
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"
 
 #	Timer
 aloita=$(date +%s)
-
-# Assigns variables names
-bids_variables $BIDS $id $out
-# print the names on the terminal
-bids_print.variables
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi

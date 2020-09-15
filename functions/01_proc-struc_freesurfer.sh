@@ -37,15 +37,23 @@ fi
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
-#------------------------------------------------------------------------------#
-Title "Running MICA structural processing: Freesurfer"
-
 # Assigns variables names
 bids_variables $BIDS $id $out
+
+# Stop if freesurfer has finished without errors
+if grep -q "finished without error" ${dir_freesurfer}/scripts/recon-all.log; then
+Warning "Subject ${id} has Freesurfer
+                    > If you want to re-run for QC purposes try it manually
+                    > If you want to run again this step first erase all the outputs with:
+                      mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
+exit
+fi
+
+#------------------------------------------------------------------------------#
+Title "Running MICA structural processing: Freesurfer"
 # print the names on the terminal
 bids_print.variables
 
-#------------------------------------------------------------------------------#
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory

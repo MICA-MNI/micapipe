@@ -36,22 +36,21 @@ fi
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
-#------------------------------------------------------------------------------#
-Title "Running MICA MPC processing"
-
 # Assigns variables names
 bids_variables $BIDS $id $out
+
+# Check inputs: mp2rage
+if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
+# Check inputs: freesurfer space T1
+if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
+#------------------------------------------------------------------------------#
+Title "Running MICA MPC processing"
 # print the names on the terminal
 bids_print.variables-post
 
 # GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
-
-# Check inputs: mp2rage
-if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
-
-# Check inputs: freesurfer space T1
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #	Timer
 aloita=$(date +%s)

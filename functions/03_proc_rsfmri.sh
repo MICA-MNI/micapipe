@@ -40,11 +40,18 @@ fi
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
+# Assigns variables names
+bids_variables $BIDS $id $out
+
+# Check inputs: rsfMRI and phase encoding
+if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
+if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
+if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
+
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
 
-# Assigns variables names
-bids_variables $BIDS $id $out
 # print the names on the terminal
 bids_print.variables-rsfmri
 
@@ -66,12 +73,6 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 struct2fs=$(find $dir_warp -name "*t1w2fs.lta")
 rsTag="*rsfmri*3mm*bold*AP"
 rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
-
-# Check inputs: rsfMRI and phase encoding
-if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
-if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
-if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
-if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
 
 # Define directories
 export SUBJECTS_DIR=$dir_surf

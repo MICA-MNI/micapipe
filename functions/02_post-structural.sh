@@ -34,16 +34,16 @@ fi
 # source utilities
 source $MICAPIPE/functions/utilities.sh
 
-#------------------------------------------------------------------------------#
-Title "Running MICA POST-structural processing"
+# Assigns variables names
+bids_variables $BIDS $id $out
 
 # Check inputs: Nativepro T1
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 # Check inputs: freesurfer space T1
 if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
-# Assigns variables names
-bids_variables $BIDS $id $out
+#------------------------------------------------------------------------------#
+Title "Running MICA POST-structural processing"
 # print the names on the terminal
 bids_print.variables-post
 
