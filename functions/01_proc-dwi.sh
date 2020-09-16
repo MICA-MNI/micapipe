@@ -38,8 +38,8 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out
 
 # Check inputs: DWI
-# if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
-# ${bids_dwis[@]}
+if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY ls $bids_dwis"; exit; fi
+
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
 # print the names on the terminal
