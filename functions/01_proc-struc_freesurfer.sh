@@ -101,5 +101,7 @@ Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 # Notification of completition
 if [ -f ${dir_freesurfer}/mri/T1.mgz ]; then status="COMPLETED"; else status="ERROR"; fi
 
-Title "Freesurfer recon-all processing ended: ${status}\n\t\t\tlogs:${dir_logs}/proc_freesurfer.txt"
+Title "Freesurfer recon-all processing ended: ${status}\n\tlogs:
+`ls ${dir_logs}/proc-freesurfer*.txt`"
+
 echo "${id}, FREESURFER, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

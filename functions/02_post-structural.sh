@@ -197,7 +197,8 @@ eri=`echo print $eri/60 | perl`
 # Notification of completition
 if [ "$Nfiles" -eq 21 ]; then fini="DONE"; else fini="ERROR missing parcellation or T1-fsspace: "; fi
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\t\tlogs:${dir_logs}/post_structural.txt
-\t\tNumber of outputs: `printf "%02d" $Nfiles`/21"
+\t\tNumber of outputs: `printf "%02d" $Nfiles`/21
+\tlogs:
+`ls ${dir_logs}/post-structural_*.txt`"
 
 echo "${id}, post_structural, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

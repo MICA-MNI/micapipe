@@ -225,8 +225,7 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 status="DWI-proc"
-Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\tlogs:
-`ls ${dir_logs}/proc_dwi*.txt`"
+Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+`ls ${dir_logs}/proc-dwi_*.txt`"
 
 echo "${id}, proc_dwi, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

@@ -252,7 +252,8 @@ fi
 Do_cmd rm -rfv $tmp
 
 # Notification of completition
-Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\t\t\tlogs:${dir_logs}/proc_volumetric.txt"
+Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+`ls ${dir_logs}/proc-volumetric_*.txt`"
 
 # QC notification of completition
 lopuu=$(date +%s)
