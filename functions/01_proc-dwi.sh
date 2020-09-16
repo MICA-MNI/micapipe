@@ -140,7 +140,7 @@ if [[ ! -f $dwi_corr ]]; then
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       Do_cmd dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled" -nthreads $CORES -nocleanup -scratch $tmp
-
+      if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; fi
 else
       Info "Subject ${id} has a DWI processed with dwifslpreproc"
 fi
