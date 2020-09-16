@@ -39,7 +39,7 @@ bids_variables $BIDS $id $out
 
 # Check inputs: DWI
 # if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
-
+# ${bids_dwis[@]}
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
 # print the names on the terminal
@@ -93,87 +93,98 @@ fi
 
 #------------------------------------------------------------------------------#
 # dwifslpreproc and TOPUP preparations
-# Get parameters
-ReadoutTime=`mrinfo $dwi_n4 -property TotalReadoutTime`
-pe_dir=`mrinfo $dwi_n4 -property PhaseEncodingDirection`
-
-# Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-dwi_4proc=${tmp}/dwi_n4_even.mif
-dim=`mrinfo $dwi_n4 -size`
-dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-mrconvert $dwi_n4 $dwi_4proc -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
-
-# Get the mean b-zero (un-corrected)
-dwiextract -nthreads $CORES $dwi_n4 - -bzero | mrmath - mean ${tmp}/b0_meanMainPhase.mif -axis 3
-
-# Processing the reverse encoding b0
-if [ -f $dwi_reverse ]; then
-      b0_pair_tmp=${tmp}/b0_pair_tmp.mif
-      b0_pair=${tmp}/b0_pair.mif
-      dwi_reverse_str=`echo $dwi_reverse | awk -F . '{print $1}'`
-
-      Do_cmd mrconvert $dwi_reverse -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif
-      dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $CORES
-      Do_cmd mrcat ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanReversePhase.mif $b0_pair_tmp -nthreads $CORES
-
-      # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-      dim=`mrinfo $b0_pair_tmp -size`
-      dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-      mrconvert $b0_pair_tmp $b0_pair -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
-
-      opt="-rpe_pair -se_epi ${b0_pair}"
-else
-      opt='-rpe_none'
-fi
-
-Info "dwifslpreproc parameters:"
-Note "DWI main dimensions :" "`mrinfo $dwi_4proc -size`"
-Note "DWI rpe dimensions  :" "`mrinfo $b0_pair -size`"
-Note "pe_dir              :" $pe_dir
-Note "Readout Time        :" $ReadoutTime
-
 dwi_corr=${proc_dwi}/${id}_dwi_corr.mif
 
-# Preprocess each shell <<<<<<<<<<<<<<<<<<<<<<<<<<< ?????
-# DWIs all acquired with a single fixed phase encoding; but additionally a
-# pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-Do_cmd dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -nthreads $CORES -nocleanup -scratch $tmp
+if [[ ! -f $dwi_corr ]]; then
+      # Get parameters
+      ReadoutTime=`mrinfo $dwi_n4 -property TotalReadoutTime`
+      pe_dir=`mrinfo $dwi_n4 -property PhaseEncodingDirection`
+
+      # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
+      dwi_4proc=${tmp}/dwi_n4_even.mif
+      dim=`mrinfo $dwi_n4 -size`
+      dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
+      mrconvert $dwi_n4 $dwi_4proc -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
+
+      # Get the mean b-zero (un-corrected)
+      dwiextract -nthreads $CORES $dwi_n4 - -bzero | mrmath - mean ${tmp}/b0_meanMainPhase.mif -axis 3
+
+      # Processing the reverse encoding b0
+      if [ -f $dwi_reverse ]; then
+            b0_pair_tmp=${tmp}/b0_pair_tmp.mif
+            b0_pair=${tmp}/b0_pair.mif
+            dwi_reverse_str=`echo $dwi_reverse | awk -F . '{print $1}'`
+
+            Do_cmd mrconvert $dwi_reverse -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif
+            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $CORES
+            Do_cmd mrcat ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanReversePhase.mif $b0_pair_tmp -nthreads $CORES
+
+            # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
+            dim=`mrinfo $b0_pair_tmp -size`
+            dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
+            mrconvert $b0_pair_tmp $b0_pair -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
+
+            opt="-rpe_pair -se_epi ${b0_pair}"
+      else
+            opt='-rpe_none'
+      fi
+
+      Info "dwifslpreproc parameters:"
+      Note "Shell values        :" "`mrinfo $dwi_4proc -shell_bvalues`"
+      Note "DWI main dimensions :" "`mrinfo $dwi_4proc -size`"
+      Note "DWI rpe dimensions  :" "`mrinfo $b0_pair -size`"
+      Note "pe_dir              :" $pe_dir
+      Note "Readout Time        :" $ReadoutTime
+
+      # Preprocess each shell
+      # DWIs all acquired with a single fixed phase encoding; but additionally a
+      # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
+      Do_cmd dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled" -nthreads $CORES -nocleanup -scratch $tmp
+
+else
+      Info "Subject ${id} has a DWI processed with dwifslpreproc"
+fi
 
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
-
-# Create a binary mask of the DWI
 dwi_mask=${proc_dwi}/${id}_dwi_mask.mif
-Do_cmd dwi2mask -force -nthreads $CORES $dwi_corr $dwi_mask
-
-# Corrected DWI-b0s mean for registration
-
-
-#------------------------------------------------------------------------------#
-# Compute the alignment between structural and DWI corrected b0
-dwi_in_T1nativepro=${proc_struct}/${id}_dwi_nativepro_brain.nii.gz
-T1nativepro_in_dwi=${proc_dwi}/${id}_filtered_func_data.ica/t1w2fmri_brain.nii.gz # <<<<<<<<<<< IM HERE
+dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz # This should be a NIFTI for compatibility with ANTS
+dwi_in_T1nativepro=${proc_struct}/${id}_dwi_nativepro.nii.gz
+T1nativepro_in_dwi=${proc_dwi}/${id}_t1w_dwi.nii.gz
 str_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_
-mat_dwi_affine=${str_rsfmri_affine}0GenericAffine.mat
-dwi_brain=${rsfmri_volum}/${id}_singleecho_fmrispace_brain.nii.gz
-Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
-Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
+mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
 
+if [[ ! -f $T1nativepro_in_dwi ]]; then
+      # Create a binary mask of the DWI
+      Do_cmd dwi2mask -force -nthreads $CORES $dwi_corr $dwi_mask
 
-#------------------------------------------------------------------------------#
-# Get some basic metrics.
-if [[ ! -f $proc_dwi/${id}_FA.mif ]] || [[ ! -f $proc_dwi/${id}_ADC.mif ]]; then
-    if [[ ! -f $proc_dwi/${id}_FA.mif ]] || [[ ! -f $proc_dwi/${id}_ADC.mif ]]; then
-        Do_cmd dwi2tensor -nthreads $CORES $dwi_corr $tmp/${id}_tensor.mif
-        Do_cmd tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_FA.mif -adc $proc_dwi/${id}_ADC.mif $tmp/${id}_tensor.mif
-    fi
+      # Corrected DWI-b0s mean for registration
+      dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3
+
+      # Register DWI-b0 mean corrected to T1nativepro
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $dwi_b0 -o $str_dwi_affine -t a -n $CORES -p d
+      # Apply transformation DWI-b0 space to T1nativepro
+      Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
+      # Apply inverse transformation T1nativepro to DWI-b0 space
+      Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $dwi_b0 -t [$mat_dwi_affine,1] -o $T1nativepro_in_dwi -v -u int
+else
+      Info "Subject ${id} has a T1nativepro in DWI-b0 space"
 fi
 
 #------------------------------------------------------------------------------#
+# Get some basic metrics.
+if [[ ! -f $proc_dwi/${id}_FA.mif ]]; then
+      Do_cmd dwi2tensor -nthreads $CORES $dwi_corr $tmp/${id}_tensor.mif
+      Do_cmd tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_FA.mif -adc $proc_dwi/${id}_ADC.mif $tmp/${id}_tensor.mif
+else
+      Info "Subject ${id} has DWI tensor metrics"
+fi
+
+
+#------------------------------------------------------------------------------#
 # Prepare tractography
-if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]] && [[ ! -f $proc_dwi/${id}_FOD_norm.mif ]]; then
-    if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]] && [[ ! -f $proc_dwi/${id}_FOD_norm.mif ]]; then
-        if [[ $dwi2fodAlgorithm == msmt_csd ]]; then
+if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]]; then
+      if [[ $dwi2fodAlgorithm == msmt_csd ]]; then
             Do_cmd dwi2response dhollander -nthreads $CORES $dwi_corr \
                 ${proc_dwi}/${id}_dhollander_response_wm.txt \
                 ${proc_dwi}/${id}_dhollander_response_gm.txt \
@@ -185,7 +196,7 @@ if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]] && [[ ! -f $proc_dwi/${id}_FOD_nor
                 -mask $dwi_mask
             Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask \
                 ${tmp}/wmFOD.mif $proc_dwi/${id}_FOD_WM_norm.mif
-        else
+      else
             Do_cmd dwi2response tournier -nthreads $CORES \
                 $dwi_corr \
                 ${proc_dwi}/${id}_tournier_response.txt \
@@ -197,22 +208,11 @@ if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]] && [[ ! -f $proc_dwi/${id}_FOD_nor
                 -mask $dwi_mask
             Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask \
                 ${tmp}/FOD.mif $proc_dwi/${id}_FOD_norm.mif
-
-        fi
-    fi
+      fi
+else
+      Info "Subject ${id} has DWI metrics prepared for tractography"
 fi
 
-# Compress some files.
-for x in $(find $proc_dwi -maxdepth 1 -mindepth 1 -name "*.mif"); do
-    Do_cmd gzip $x
-done
-
-if [[ $networkProcessing == true ]]; then
-    mkdir -p $proc_dwi
-    mkdir -p $dir_warp
-    Do_cmd cp -rv $proc_dwi/* $proc_dwi
-    Do_cmd cp -rv $warpDirectory/* $dir_warp
-fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
@@ -224,8 +224,9 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-status="DWI-proc/TEST"
+status="DWI-proc"
 Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\t\tlogs:${dir_logs}/proc_dwi.txt"
+\tlogs:
+`ls ${dir_logs}/proc_dwi*.txt`"
 
 echo "${id}, proc_dwi, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
