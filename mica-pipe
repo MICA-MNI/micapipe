@@ -193,6 +193,10 @@ help; exit 1; fi
 # Get the real path of the Inputs
 out=`realpath $out`
 BIDS=`realpath $BIDS`
+id=${id/sub-/}
+
+# Check BIDS Directory
+if [ ! -d ${BIDS}/sub-${id}/ses-pre ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
 # init file for local processing at MICA lab
@@ -251,7 +255,6 @@ if [[ ${force} == TRUE ]]; then
   rm -rf $out/${subject};
 fi
 if [ -d ${subject_dir} ]; then Warning "Output directory already exist, processing will continue.\n\t\t If you want to re-run everything use -force to overwrite it. \n\t\t ${subject_dir}"; fi
-if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
 #			  Timer & Beginning
