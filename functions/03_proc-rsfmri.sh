@@ -457,7 +457,7 @@ fi
 # run post-rsfmri
 # Info "Running rsfMRI post processing"
 # labelDirectory=${dir_surf}/${id}/label/
-# python $MICAPIPE/functions/03_proc_rsfmri_post.py ${id} ${proc_rsfmri} ${labelDirectory}
+# python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory}
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
