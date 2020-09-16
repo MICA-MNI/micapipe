@@ -201,7 +201,7 @@ fi
 # CLEAN -proc_dwi
 if [ "$procDWI" = "TRUE" ]; then
     Warning "Erasing proc_dwi output files"
-    # Do_cmd rm ${proc_dwi}/* -rf 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt  <<<<<<<<<<<<< INCOMPLETE
+    Do_cmd rm  -rf ${proc_dwi}/* ${proc_struct}/${id}_dwi_nativepro.nii.gz ${dir_warp}/*_dwi_to_nativepro_* 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
 fi
 
 
