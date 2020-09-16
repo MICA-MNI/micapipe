@@ -70,16 +70,16 @@ local_threads=10
 
 # Uncomment this and fill in a temporary directory for a custom temporary directory.
 # This takes priority over the default. <<<<<< WHY this and not /tmp???
-global_temp_directory=/data/mica2/temporaryNetworkProcessing/
+global_temp_directory=/data/mica2/temporaryNetworkProcessing
 
 # Uncomment this and fill in host host/temporary directories for
 # custom temporary directories for every host. Note that this takes
 # priority over global_temp_directory. hostnames and temporary directories should
 # be separated by spaces (not commas!). When running on an unspecified host,
 # the program will default to the global_temp_directory or default temp directory.
-host_temp_dirs=(fladgate.bic.mni.mcgill.ca /host/fladgate/local_raid/temporaryLocalProcessing/ \
-                yeatman.bic.mni.mcgill.ca /host/yeatman/local_raid/temporaryLocalProcessing/ \
-                cassio.bic.mni.mcgill.ca /host/cassio/export02/data/temporaryLocalProcessing/ \
+host_temp_dirs=(fladgate.bic.mni.mcgill.ca /host/fladgate/local_raid/temporaryLocalProcessing \
+                yeatman.bic.mni.mcgill.ca /host/yeatman/local_raid/temporaryLocalProcessing \
+                cassio.bic.mni.mcgill.ca /host/cassio/export02/data/temporaryLocalProcessing \
                 oncilla.bic.mni.mcgill.ca /host/oncilla/local_raid/temporaryLocalProcessing)
 
 # Default temporary directory
