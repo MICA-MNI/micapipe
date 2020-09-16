@@ -1,4 +1,4 @@
-Welcome to BrainStat's documentation!
+Welcome to MicaPipe documentation!
 ======================================
 
 .. image:: https://img.shields.io/pypi/l/brainspace?label=License
