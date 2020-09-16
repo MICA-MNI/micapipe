@@ -13,7 +13,6 @@ bids_variables() {
   id=$2
   out=$3
 
-  id=${id/sub-/}
   subject=sub-${id}
   subject_dir=$out/${subject}/ses-pre     # Output directory
   subject_bids=${BIDS}/${subject}/ses-pre # Input BIDS directory
@@ -45,16 +44,17 @@ bids_variables() {
   fi
 
   # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii.gz           # Main rsfMRI scan
-  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii.gz    # main phase scan
-  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii.gz # Reverse phase scan
+  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
+  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
+  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
   bids_T1map=(`ls ${subject_bids}/anat/*mp2rage*.nii*`)
   bids_inv1=(`ls ${subject_bids}/anat/*inv1*.nii*`)
-  bids_dwis=(`ls ${subject_bids}/dwi/*dwi.nii*`)
-  dwi_PAreverse=${subject_bids}/dwi/${id}_ses-pre_acq-PA_dir-*_dwi.nii.gz
+  bids_dwis=(`ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii*`)
+  dwi_reverse=${subject_bids}/dwi/*_ses-pre_acq-PA_dir-*_dwi.nii*
+
 
   # Utilities
   # -----------------------------------------------------------------------------------------------#
@@ -123,10 +123,13 @@ bids_print.variables-post() {
 
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for rsfMRI processing:"
+  Info "mica-pipe variables for DWI processing:"
+  Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
+  Note "dwi_reverse     =" `find $dwi_reverse`
+  Note "proc_dwi        =" $proc_dwi
+
   Note "T1 nativepro    =" `find $T1nativepro`
   Note "T1 5tt          =" `find $T15ttgen`
-  Note "T1 fast_all     =" `find $T1fast_seg`
   Note "T1 resolution   =" $res
 }
 
