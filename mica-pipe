@@ -456,7 +456,7 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_mpc.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Microstructural profile covariance"
@@ -464,10 +464,10 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_mpc.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC
     else
         # LOCAL - POST-Structural processing
-        ${scriptDir}/03_mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
+        ${scriptDir}/03_post-mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
     fi
 fi
 
