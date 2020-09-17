@@ -43,6 +43,13 @@ bids_variables() {
     res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
   fi
 
+  # Registration from MNI152 to Native pro
+  T1str_nat=${id}_t1w_${res}mm_nativepro
+  mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
+  T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
+  T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
+  MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
+
   # rsfMRI processing
   mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
   mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
