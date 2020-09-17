@@ -136,19 +136,6 @@ if [[ ! -f $dwi_corr ]]; then
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-
-      # [ERROR] eddy* --imain=eddy_in.nii --mask=eddy_mask.nii --acqp=eddy_config.txt --index=eddy_indices.txt --bvecs=bvecs --bvals=bvals --topup=field " --data_is_shelled" --out=dwi_post_eddy --verbose (app.py:197)
-      #   eddy_openmp --imain=eddy_in.nii --mask=eddy_mask.nii --acqp=eddy_config.txt --index=eddy_indices.txt --bvecs=bvecs --bvals=bvals --topup=field " --data_is_shelled" --out=dwi_post_eddy --verbose
-      # --data_is_shelled:  is an unrecognised token!
-      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options '" --data_is_shelled"' -nthreads $CORES -nocleanup -scratch $tmp
-
-      # Error: argument -eddy_options: expected one argument
-      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options --data_is_shelled -nthreads $CORES -nocleanup -scratch $tmp
-
-      # HC002 -test
-      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options ' --data_is_shelled' -nthreads $CORES -nocleanup -scratch $tmp
-
-      # HC001 TEST
       echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
       dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
 
@@ -199,7 +186,7 @@ fi
 # 5TT file in dwi space
 if [[ ! -f $dwi_5tt ]]; then
       Info "Registering 5TT file to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -i $T15ttgen -r ${dwi_b0} -n GenericLabel -t [$mat_dwi_affine,1] -o ${dwi_5tt} -v
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r ${dwi_b0} -n linear -t [$mat_dwi_affine,1] -o ${dwi_5tt} -v
 else
       Info "Subject ${id} has a 5TT segmentation in DWI space"
 fi
@@ -217,8 +204,9 @@ fi
 #------------------------------------------------------------------------------#
 # Response function and Fiber Orientation Distribution
 shells=(`mrinfo ${dwi_corr} -shell_bvalues`)
-Nfod=(`ls $proc_dwi/${id}*_fod_norm.mif`)
-if [ "${#Nfod[@]}" -lt 1 ]; then
+fod=$proc_dwi/${id}_wm_fod_norm.mif
+
+if [[ ! -f $fod ]]; then
       Info "Calculating Response function and Fiber Orientation Distribution"
       if [ "${#shells[@]}" -ge 3 ]; then rf=dhollander
             # Response function
@@ -236,8 +224,7 @@ if [ "${#Nfod[@]}" -lt 1 ]; then
                 ${rf_gm} $fod_gm \
                 ${rf_csf} $fod_csf \
                 -mask $dwi_mask
-            fod=${fod_csf/.mif/_norm.mif}
-            Do_cmd mtnormalise $fod_wm ${FOD} $fod_gm ${fod_gm/.mif/_norm.mif} $fod_csf ${fod_csf/.mif/_norm.mif} -nthreads $CORES -mask $dwi_mask
+            Do_cmd mtnormalise $fod_wm ${fod} $fod_gm ${fod_gm/.mif/_norm.mif} $fod_csf ${fod_csf/.mif/_norm.mif} -nthreads $CORES -mask $dwi_mask
 
       else
             Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
@@ -248,8 +235,8 @@ if [ "${#Nfod[@]}" -lt 1 ]; then
                 ${proc_dwi}/${id}_tournier_response.txt  \
                 ${tmp}/FOD.mif \
                 -mask $dwi_mask
-            fod=$proc_dwi/${id}_fod_norm.mif
-            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask ${tmp}/FOD.mif $FOD
+
+            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask ${tmp}/FOD.mif $fod
       fi
 else
       Info "Subject ${id} has Fiber Orientation Distribution files"
@@ -260,7 +247,7 @@ fi
 tdi=${proc_dwi}/${id}_tdi.mif
 if [[ ! -f $tdi ]]; then
       tract=${tmp}/${id}_QC_tractogram_1000000.tck
-      do_cmd tckgen -nthreads "$NSLOTS" \
+      Do_cmd tckgen -nthreads $CORES \
           $fod \
           $tract \
           -act $dwi_5tt \
@@ -271,7 +258,7 @@ if [[ ! -f $tdi ]]; then
           -step .5 \
           -cutoff 0.06 \
           -algorithm SD_STREAM
-      tckmap $tract $tdi -vox 1,1,1
+      Do_cmd tckmap $tract $tdi -vox 1,1,1
 else
       Info "Subject ${id} has a Tract Density Image for QC"
 fi
