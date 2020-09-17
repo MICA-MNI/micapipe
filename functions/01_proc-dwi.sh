@@ -58,9 +58,6 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_proc-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-# Set basic parameters.
-dwi2fodAlgorithm=msmt_csd  # msmt_csd or csd
-
 #------------------------------------------------------------------------------#
 # DWI processing
 # Image denoising must be performed as the first step of the image-processing pipeline.
@@ -162,21 +159,16 @@ fi
 
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
-dwi_mask=${proc_dwi}/${id}_dwi_mask.mif
+dwi_mask=${proc_dwi}/${id}_dwi_mask.nii.gz
+dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz # This should be a NIFTI for compatibility with ANTS
 dwi_in_T1nativepro=${proc_struct}/${id}_dwi_nativepro.nii.gz
 T1nativepro_in_dwi=${proc_dwi}/${id}_t1w_dwi.nii.gz
 str_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_
 mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
 
-if [[ ! -f $dwi_mask ]]; then
-      # Create a binary mask of the DWI
-      dwi2mask -force -nthreads $CORES $dwi_corr - | maskfilter - erode -npass 1 $dwi_mask
-else
-      Info "Subject ${id} has a DWI-preproc binary mask"
-fi
-
 if [[ ! -f $T1nativepro_in_dwi ]]; then
+      Info "Registering DWI b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3
 
@@ -191,8 +183,31 @@ else
 fi
 
 #------------------------------------------------------------------------------#
+if [[ ! -f $dwi_mask ]]; then
+      Info "Creating DWI binary mask of processed volumes"
+      # Create a binary mask of the DWI
+      Do_cmd antsApplyTransforms -d 3 -i $MNI152_mask \
+                  -r ${dwi_b0} \
+                  -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
+                  -o ${tmp}/dwi_mask.nii.gz -v
+      maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
+else
+      Info "Subject ${id} has a DWI-preproc binary mask"
+fi
+
+#------------------------------------------------------------------------------#
+# 5TT file in dwi space
+if [[ ! -f $dwi_5tt ]]; then
+      Info "Registering 5TT file to DWI-b0 space"
+      Do_cmd antsApplyTransforms -d 3 -i $T15ttgen -r ${dwi_b0} -n GenericLabel -t [$mat_dwi_affine,1] -o ${dwi_5tt} -v
+else
+      Info "Subject ${id} has a 5TT segmentation in DWI space"
+fi
+
+#------------------------------------------------------------------------------#
 # Get some basic metrics.
 if [[ ! -f $proc_dwi/${id}_dti_FA.mif ]]; then
+      Info "Calculating basic DTI metrics"
       dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr ${tmp}/${id}_dti.mif
       tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
 else
@@ -200,38 +215,66 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Calculate response function
-if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]]; then
-      if [[ $dwi2fodAlgorithm == msmt_csd ]]; then
-            Do_cmd dwi2response dhollander -nthreads $CORES $dwi_corr \
-                ${proc_dwi}/${id}_dhollander_response_wm.txt \
-                ${proc_dwi}/${id}_dhollander_response_gm.txt \
-                ${proc_dwi}/${id}_dhollander_response_csf.txt \
+# Response function and Fiber Orientation Distribution
+shells=(`mrinfo ${dwi_corr} -shell_bvalues`)
+Nfod=(`ls $proc_dwi/${id}*_fod_norm.mif`)
+if [ "${#Nfod[@]}" -lt 1 ]; then
+      Info "Calculating Response function and Fiber Orientation Distribution"
+      if [ "${#shells[@]}" -ge 3 ]; then rf=dhollander
+            # Response function
+            rf_wm=${proc_dwi}/${id}_response_wm_${rf}.txt
+            rf_gm=${proc_dwi}/${id}_response_gm_${rf}.txt
+            rf_csf=${proc_dwi}/${id}_response_csf_${rf}.txt
+            # Fiber Orientation Distriution
+            fod_wm=${proc_dwi}/${id}_wm_fod.mif
+            fod_gm=${proc_dwi}/${id}_gm_fod.mif
+            fod_csf=${proc_dwi}/${id}_csf_fod.mif
+
+            Do_cmd dwi2response $rf -nthreads $CORES $dwi_corr ${rf_wm} ${rf_gm} ${rf_csf} -mask $dwi_mask
+            Do_cmd dwi2fod -nthreads $CORES msmt_csd $dwi_corr \
+                ${rf_wm} $fod_wm \
+                ${rf_gm} $fod_gm \
+                ${rf_csf} $fod_csf \
                 -mask $dwi_mask
-            Do_cmd dwi2fod -nthreads $CORES $dwi2fodAlgorithm $dwi_corr \
-                ${proc_dwi}/${id}_dhollander_response_wm.txt \
-                ${tmp}/wmFOD.mif \
-                -mask $dwi_mask
-            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask \
-                ${tmp}/wmFOD.mif $proc_dwi/${id}_FOD_WM_norm.mif
+            fod=${fod_csf/.mif/_norm.mif}
+            Do_cmd mtnormalise $fod_wm ${FOD} $fod_gm ${fod_gm/.mif/_norm.mif} $fod_csf ${fod_csf/.mif/_norm.mif} -nthreads $CORES -mask $dwi_mask
+
       else
-            Do_cmd dwi2response tournier -nthreads $CORES \
-                $dwi_corr \
-                ${proc_dwi}/${id}_tournier_response.txt \
+            Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
+                ${proc_dwi}/${id}_response_tournier.txt \
                 -mask $dwi_mask
-            Do_cmd dwi2fod -nthreads $CORES $dwi2fodAlgorithm \
+            Do_cmd dwi2fod -nthreads $CORES msmt_csd \
                 $dwi_corr \
                 ${proc_dwi}/${id}_tournier_response.txt  \
                 ${tmp}/FOD.mif \
                 -mask $dwi_mask
-            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask \
-                ${tmp}/FOD.mif $proc_dwi/${id}_FOD_norm.mif
+            fod=$proc_dwi/${id}_fod_norm.mif
+            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask ${tmp}/FOD.mif $FOD
       fi
 else
-      Info "Subject ${id} has DWI metrics prepared for tractography"
+      Info "Subject ${id} has Fiber Orientation Distribution files"
 fi
 
-
+#------------------------------------------------------------------------------#
+# QC of the tractography
+tdi=${proc_dwi}/${id}_tdi.mif
+if [[ ! -f $tdi ]]; then
+      tract=${tmp}/${id}_QC_tractogram_1000000.tck
+      do_cmd tckgen -nthreads "$NSLOTS" \
+          $fod \
+          $tract \
+          -act $dwi_5tt \
+          -crop_at_gmwmi \
+          -seed_dynamic $fod \
+          -maxlength 400 \
+          -select 1000000 \
+          -step .5 \
+          -cutoff 0.06 \
+          -algorithm SD_STREAM
+      tckmap $tract $tdi -vox 1,1,1
+else
+      Info "Subject ${id} has a Tract Density Image for QC"
+fi
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 Do_cmd rm -rf $tmp
