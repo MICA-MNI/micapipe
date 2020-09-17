@@ -70,7 +70,7 @@ dwi_n4=${proc_dwi}/${id}_dwi_dnsN4.mif
 dwi_cat=${tmp}/dwi_concatenate.mif
 dwi_dns=${tmp}/dwi_concatenate_denoised.mif
 
-if [[ ! -f ${dwi_n4} ]] ; then
+if [[ ! -f ${dwi_n4} ]]; then
 # Concatenate shells -if only one shell then just convert to mif and rename.
       for dwi in ${bids_dwis[@]}; do
             dwi_nom=`echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}'`
@@ -139,7 +139,22 @@ if [[ ! -f $dwi_corr ]]; then
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options '" --data_is_shelled"' -nthreads $CORES -nocleanup -scratch $tmp
+
+      # [ERROR] eddy* --imain=eddy_in.nii --mask=eddy_mask.nii --acqp=eddy_config.txt --index=eddy_indices.txt --bvecs=bvecs --bvals=bvals --topup=field " --data_is_shelled" --out=dwi_post_eddy --verbose (app.py:197)
+      #   eddy_openmp --imain=eddy_in.nii --mask=eddy_mask.nii --acqp=eddy_config.txt --index=eddy_indices.txt --bvecs=bvecs --bvals=bvals --topup=field " --data_is_shelled" --out=dwi_post_eddy --verbose
+      # --data_is_shelled:  is an unrecognised token!
+      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options '" --data_is_shelled"' -nthreads $CORES -nocleanup -scratch $tmp
+
+      # Error: argument -eddy_options: expected one argument
+      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options --data_is_shelled -nthreads $CORES -nocleanup -scratch $tmp
+
+      # HC002 -test
+      # dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options ' --data_is_shelled' -nthreads $CORES -nocleanup -scratch $tmp
+
+      # HC001 TEST
+      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
+      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
+
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; fi
 else
       Info "Subject ${id} has a DWI processed with dwifslpreproc"
@@ -154,10 +169,14 @@ T1nativepro_in_dwi=${proc_dwi}/${id}_t1w_dwi.nii.gz
 str_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_
 mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
 
-if [[ ! -f $T1nativepro_in_dwi ]]; then
+if [[ ! -f $dwi_mask ]]; then
       # Create a binary mask of the DWI
-      Do_cmd dwi2mask -force -nthreads $CORES $dwi_corr $dwi_mask
+      dwi2mask -force -nthreads $CORES $dwi_corr - | maskfilter - erode -npass 1 $dwi_mask
+else
+      Info "Subject ${id} has a DWI-preproc binary mask"
+fi
 
+if [[ ! -f $T1nativepro_in_dwi ]]; then
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3
 
@@ -173,16 +192,15 @@ fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
-if [[ ! -f $proc_dwi/${id}_FA.mif ]]; then
-      Do_cmd dwi2tensor -nthreads $CORES $dwi_corr $tmp/${id}_tensor.mif
-      Do_cmd tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_FA.mif -adc $proc_dwi/${id}_ADC.mif $tmp/${id}_tensor.mif
+if [[ ! -f $proc_dwi/${id}_dti_FA.mif ]]; then
+      dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr ${tmp}/${id}_dti.mif
+      tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
 else
       Info "Subject ${id} has DWI tensor metrics"
 fi
 
-
 #------------------------------------------------------------------------------#
-# Prepare tractography
+# Calculate response function
 if [[ ! -f $proc_dwi/${id}_FOD_WM_norm.mif ]]; then
       if [[ $dwi2fodAlgorithm == msmt_csd ]]; then
             Do_cmd dwi2response dhollander -nthreads $CORES $dwi_corr \
