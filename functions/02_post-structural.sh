@@ -72,11 +72,11 @@ T1_fsspace=${proc_struct}/${id}_t1w_${res}mm_fsspace.nii.gz
 mat_fsspace_affine=${dir_warp}/${id}_t1w_${res}mm_fsspace_to_nativepro_
 T1_fsspace_affine=${mat_fsspace_affine}0GenericAffine.mat
 
-if [[ ! -f ${T1_fsspace} ]] ; then
+if [[ ! -f ${T1_fsspace} ]]; then
     Do_cmd mrconvert $T1freesurfr $T1_in_fs
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
-    if [[ -f ${T1_fsspace} ]] ; then ((Nfiles++)); fi
+    if [[ -f ${T1_fsspace} ]]; then ((Nfiles++)); fi
 else
     Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nfiles++))
 fi
@@ -95,20 +95,20 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz               # Ce
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 
 # Apply inverse transfrom from MNI152-cerebellum to T1-nativepro
-if [[ ! -f  ${T1_seg_cerebellum} ]] ; then
+if [[ ! -f  ${T1_seg_cerebellum} ]]; then
     Do_cmd antsApplyTransforms -d 3 -i $atlas_cerebellum \
                 -r ${T1nativepro} \
                 -n GenericLabel -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
                 -o ${T1_seg_cerebellum} -v -u int
-    if [[ -f ${T1_seg_cerebellum} ]] ; then ((Nfiles++)); fi
+    if [[ -f ${T1_seg_cerebellum} ]]; then ((Nfiles++)); fi
 else
     Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nfiles++))
 fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
-if [[ ! -f ${T1_seg_subcortex} ]] ; then
+if [[ ! -f ${T1_seg_subcortex} ]]; then
     Do_cmd cp ${T1fast_seg} ${T1_seg_subcortex}
-    if [[ -f ${T1_seg_subcortex} ]] ; then ((Nfiles++)); fi
+    if [[ -f ${T1_seg_subcortex} ]]; then ((Nfiles++)); fi
 else
     Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nfiles++))
 fi
@@ -122,7 +122,7 @@ cd $util_parcelations
 for parc in lh.*.annot; do
     parc_annot=${parc/lh./}
     parc_str=${parc_annot/.annot/}
-    if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]] ; then
+    if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]]; then
         for hemi in lh rh; do
         Info "Running surface $hemi $parc_annot to $subject"
         Do_cmd mri_surf2surf --hemi $hemi \
@@ -145,7 +145,7 @@ for parc in lh.*.annot; do
 
         # Register parcellation to nativepro
         Do_cmd antsApplyTransforms -d 3 -i $fs_nii -r $T1nativepro -n GenericLabel -t $T1_fsspace_affine -o $labels_nativepro -v -u int
-        if [[ -f ${labels_nativepro} ]] ; then ((Nfiles++)); fi
+        if [[ -f ${labels_nativepro} ]]; then ((Nfiles++)); fi
     else
         Info "Subject ${id} has ${parc_str} on T1-nativepro space"
         ((Nfiles++))
@@ -156,7 +156,7 @@ done
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
 Info "Native surfaces to conte69-64k vertices (both hemispheres)"
-if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR.surf.gii ]] ; then
+if [[ ! -f  ${dir_conte69}/${id}_rh_midthickness_32k_fs_LR.surf.gii ]]; then
     for hemisphere in l r; do
       HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
         # Build the conte69-32k sphere and midthickness surface
@@ -193,10 +193,11 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nfiles" -eq 21 ]; then status="DONE"; else status="ERROR missing parcellation or T1-fsspace: "; fi
+if [ "$Nfiles" -eq 21 ]; then status="COMPLETED"; else status="ERROR missing parcellation or T1-fsspace: "; fi
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of outputs: `printf "%02d" $Nfiles`/21
-\tlogs:
+\tStatus            : $status
+\tCheck logs:
 `ls ${dir_logs}/post-structural_*.txt`"
 # Print QC stamp
 echo "${id}, post_structural, $status N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
