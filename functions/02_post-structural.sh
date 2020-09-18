@@ -54,8 +54,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 #	Timer
 aloita=$(date +%s)
 here=`pwd`
-
-# Check tmp dir: temporary directory
 Nfiles=0
 
 # if temporary directory is empty
@@ -123,7 +121,7 @@ Do_cmd cp -R ${util_surface}/fsaverage5 ${dir_surf}
 cd $util_parcelations
 for parc in lh.*.annot; do
     parc_annot=${parc/lh./}
-    parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
+    parc_str=${parc_annot/.annot/}
     if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]] ; then
         for hemi in lh rh; do
         Info "Running surface $hemi $parc_annot to $subject"
@@ -195,10 +193,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nfiles" -eq 21 ]; then fini="DONE"; else fini="ERROR missing parcellation or T1-fsspace: "; fi
+if [ "$Nfiles" -eq 21 ]; then status="DONE"; else status="ERROR missing parcellation or T1-fsspace: "; fi
 Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of outputs: `printf "%02d" $Nfiles`/21
 \tlogs:
 `ls ${dir_logs}/post-structural_*.txt`"
-
-echo "${id}, post_structural, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+# Print QC stamp
+echo "${id}, post_structural, $status N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
