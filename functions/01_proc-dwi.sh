@@ -51,6 +51,7 @@ Info "ANTs will use $CORES CORES"
 #	Timer
 aloita=$(date +%s)
 here=`pwd`
+Nsteps=0
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -66,8 +67,10 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 dwi_n4=${proc_dwi}/${id}_dwi_dnsN4.mif
 dwi_cat=${tmp}/dwi_concatenate.mif
 dwi_dns=${tmp}/dwi_concatenate_denoised.mif
+dwi_corr=${proc_dwi}/${id}_dwi_corr.mif
 
-if [[ ! -f ${dwi_n4} ]]; then
+if [[ ! -f $dwi_corr ]] && [[ ! -f ${dwi_n4} ]]; then
+Info "DWI denoise, bias filed correction and concatenation"
 # Concatenate shells -if only one shell then just convert to mif and rename.
       for dwi in ${bids_dwis[@]}; do
             dwi_nom=`echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}'`
@@ -84,15 +87,16 @@ if [[ ! -f ${dwi_n4} ]]; then
 
       # Bias field correction DWI
       Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $CORES
+      # Step QC
+      if [[ -f ${dwi_n4} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has DWI in mif, denoised and concatenaded"
+      Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
 # dwifslpreproc and TOPUP preparations
-dwi_corr=${proc_dwi}/${id}_dwi_corr.mif
-
 if [[ ! -f $dwi_corr ]]; then
+      Info "DWI dwifslpreproc"
       # Get parameters
       ReadoutTime=`mrinfo $dwi_n4 -property TotalReadoutTime`
       pe_dir=`mrinfo $dwi_n4 -property PhaseEncodingDirection`
@@ -138,10 +142,10 @@ if [[ ! -f $dwi_corr ]]; then
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
       dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
-
-      if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; fi
+      # Step QC
+      if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; else Do_cmd rm $dwi_n4; ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a DWI processed with dwifslpreproc"
+      Info "Subject ${id} has a DWI processed with dwifslpreproc"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -165,8 +169,10 @@ if [[ ! -f $T1nativepro_in_dwi ]]; then
       Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $dwi_b0 -t [$mat_dwi_affine,1] -o $T1nativepro_in_dwi -v -u int
+      # Step QC
+      if [[ -f ${T1nativepro_in_dwi} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a T1nativepro in DWI-b0 space"
+      Info "Subject ${id} has a T1nativepro in DWI-b0 space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -178,8 +184,10 @@ if [[ ! -f $dwi_mask ]]; then
                   -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
                   -o ${tmp}/dwi_mask.nii.gz -v
       maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
+      # Step QC
+      if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a DWI-preproc binary mask"
+      Info "Subject ${id} has a DWI-preproc binary mask"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -187,18 +195,23 @@ fi
 if [[ ! -f $dwi_5tt ]]; then
       Info "Registering 5TT file to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r ${dwi_b0} -n linear -t [$mat_dwi_affine,1] -o ${dwi_5tt} -v
+      # Step QC
+      if [[ -f ${dwi_5tt} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a 5TT segmentation in DWI space"
+      Info "Subject ${id} has a 5TT segmentation in DWI space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
-if [[ ! -f $proc_dwi/${id}_dti_FA.mif ]]; then
+dwi_FA=$proc_dwi/${id}_dti_FA.mif
+if [[ ! -f $dwi_FA ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr ${tmp}/${id}_dti.mif
       tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
+      # Step QC
+      if [[ -f ${dwi_FA} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has DWI tensor metrics"
+      Info "Subject ${id} has DWI tensor metrics"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -238,30 +251,38 @@ if [[ ! -f $fod ]]; then
 
             Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask ${tmp}/FOD.mif $fod
       fi
+      # Step QC
+      if [[ -f ${fod} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has Fiber Orientation Distribution files"
+      Info "Subject ${id} has Fiber Orientation Distribution files"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
 # QC of the tractography
-tdi=${proc_dwi}/${id}_tdi.mif
+tdi=${proc_dwi}/${id}_tdi_iFOD1-1M.mif
 if [[ ! -f $tdi ]]; then
-      tract=${tmp}/${id}_QC_tractogram_1000000.tck
+      tract=${tmp}/${id}_QC_iFOD1_1M.tck
       Do_cmd tckgen -nthreads $CORES \
           $fod \
           $tract \
           -act $dwi_5tt \
           -crop_at_gmwmi \
+          -backtrack \
           -seed_dynamic $fod \
           -maxlength 400 \
-          -select 1000000 \
+          -angle 22.5 \
+          -power 1.0 \
+          -select 1M \
           -step .5 \
           -cutoff 0.06 \
-          -algorithm SD_STREAM
-      Do_cmd tckmap $tract $tdi -vox 1,1,1
+          -algorithm iFOD1
+      Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tract $tdi
+      # Step QC
+      if [[ -f ${tdi} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a Tract Density Image for QC"
+      Info "Subject ${id} has a Tract Density Image for QC 1M streamlines"; ((Nsteps++))
 fi
+
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 Do_cmd rm -rf $tmp
@@ -272,8 +293,11 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-status="DWI-proc"
-Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step: "; fi
+Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
+\t\tSteps completed: `printf "%02d" $Nsteps`/08
+\tStatus          : $status
+\tCheck logs:
 `ls ${dir_logs}/proc-dwi_*.txt`"
-
-echo "${id}, proc_dwi, $fini N=`printf "%02d" $Nfiles`/21, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+# Print QC stamp
+echo "${id}, proc_dwi, $status N=`printf "%02d" $Nsteps`/08, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
