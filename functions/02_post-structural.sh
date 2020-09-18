@@ -121,7 +121,7 @@ Do_cmd cp -R ${util_surface}/fsaverage5 ${dir_surf}
 cd $util_parcelations
 for parc in lh.*.annot; do
     parc_annot=${parc/lh./}
-    parc_str=${parc_annot/.annot/}
+    parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
     if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]]; then
         for hemi in lh rh; do
         Info "Running surface $hemi $parc_annot to $subject"
