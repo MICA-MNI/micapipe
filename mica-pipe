@@ -18,25 +18,25 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 
    Flags for processing:\n
 \t\033[38;5;197m-proc\033[0m             : Performs ALL first stages of structural processing
-\t\t\t    (RUN -proc_volumetric -proc_freesurfer and -proc_dwi)
+\t\t\t    (RUN -proc_structural -proc_freesurfer and -proc_dwi)
 \t\033[38;5;197m-post\033[0m             : Performs ALL Second stages of structural processing
 \t\t\t    (RUN -post_structural -post_mpc and -post_dwi)
-\t\t\t    (REQUIRES -proc_volumetric -proc_freesurfer and -proc_dwi)
+\t\t\t    (REQUIRES -proc_structural -proc_freesurfer and -proc_dwi)
 
    Flags for first stages of structural processing:\n
-\t\033[38;5;197m-proc_volumetric\033[0m  : Volumetric processing
+\t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_rsfmri\033[0m      : Resting state Funtional MRI processing
-\t\t\t    (REQUIRES -proc_volumetric and -proc_freesurfer)
+\t\t\t    (REQUIRES -proc_structural and -proc_freesurfer)
 
    Flags for second stages of structural processing:\n
 \t\033[38;5;197m-post_structural\033[0m  : Post structural volumetric processing
-\t\t\t    (REQUIRES -proc_volumetric and -proc_freesurfer)
+\t\t\t    (REQUIRES -proc_structural and -proc_freesurfer)
 \t\033[38;5;197m-post_dwi\033[0m         : Post tractography and connectome generation
 \t\t\t    (REQUIRES -proc_dwi)
 \t\033[38;5;197m-post_mpc\033[0m         : Microstructural profiles and covariance analysis
-\t\t\t    (REQUIRES -proc_volumetric; -proc_freesurfer and -post_structural)
+\t\t\t    (REQUIRES -proc_structural; -proc_freesurfer and -post_structural)
 
    Software versions requirements:
     > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
@@ -109,7 +109,7 @@ do
     post=TRUE
     shift
   ;;
-  -proc_volumetric)
+  -proc_structural)
     procVOL=TRUE
     shift
   ;;
@@ -129,7 +129,7 @@ do
     postVOL=TRUE
     shift
   ;;
-  -post_tractography)
+  -post_dwi)
     postDWI=TRUE
     shift
   ;;
@@ -181,7 +181,7 @@ runs=($proc $procVOL $procFS $procDWI $procfMRI $post $postVOL $postDWI $postMPC
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc
-                    -proc_volumetric
+                    -proc_structural
                     -proc_freesurfer
                     -proc_rsfmri
                     -post
@@ -361,7 +361,7 @@ fi
 #                   POST Structural processing mica-02
 # -----------------------------------------------------------------------------------------------#
 # # #         POST Structural processing
-#     REQUIRES -proc_volumetric and -proc_freesurfer
+#     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/post-structural_$(date +'%d-%m-%Y')
     # mica.q - POST Structural processing
@@ -446,7 +446,7 @@ fi
 #                   POST Microstructural profile covariance mica-03
 # -----------------------------------------------------------------------------------------------#
 #     Generates microstructural profiles and covariance matrices
-#     REQUIRES -proc_volumetric and -proc_freesurfer
+#     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/post-mpc_$(date +'%d-%m-%Y')
     # mica.q - Microstructural profile covariance
