@@ -22,6 +22,7 @@ BIDS=$1
 id=$2
 out=$3
 PROC=$4
+nocleanup=$5
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -249,7 +250,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-Do_cmd rm -rfv $tmp
+if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp; fi
 
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:

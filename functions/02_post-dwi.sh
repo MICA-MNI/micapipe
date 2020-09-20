@@ -22,6 +22,7 @@ BIDS=$1
 id=$2
 out=$3
 PROC=$4
+nocleanup=$5
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -175,7 +176,7 @@ done
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-Do_cmd rm -rf $tmp
+if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp; fi
 cd $here
 
 # QC notification of completition

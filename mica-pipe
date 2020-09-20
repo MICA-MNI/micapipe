@@ -11,7 +11,9 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
 \t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrite the subject directory.
-\t\033[38;5;197m-quiet\033[0m 	         : Does NOT print comments
+\t\033[38;5;197m-quiet\033[0m 	         : Do NOT print comments
+\t\033[38;5;197m-nocleanup\033[0m 	     : Do NOT delete temporal directory at script completion.
+
 \t\033[38;5;197m-mica\033[0m 	         : ONLY for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	         : ONLY for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	         : ONLY for MICA network processing (SGE all.q)
@@ -153,6 +155,10 @@ do
     qtest=TRUE
     shift
   ;;
+  -nocleanup)
+    nocleanup=TRUE
+    shift
+  ;;
   -force)
     force=TRUE
     shift
@@ -287,7 +293,7 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC $nocleanup
     # all.q - Structural processing: Volumetric
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Structural processing: Volumetric"
@@ -295,10 +301,10 @@ if [ "$proc" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC $nocleanup
     else
         # LOCAL Structural processing: Volumetric
-        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out  2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -313,7 +319,7 @@ if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC $nocleanup
              # all.q - Structural processing: Freesurfer
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Structural processing: Freesurfer"
@@ -321,10 +327,10 @@ if [ "$proc" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC $nocleanup
     else
         #  LOCAL - Structural processing: Freesurfer
-        ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -342,7 +348,7 @@ if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC $nocleanup
     # all.q - Diffusion processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Diffusion processing"
@@ -350,10 +356,10 @@ if [ "$proc" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC
+             ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC $nocleanup
     else
       #  LOCAL - Diffusion processing
-        ${scriptDir}/01_proc-dwi.sh $BIDS $id $out 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/01_proc-dwi.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -371,7 +377,7 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC $nocleanup
     # all.q - POST Structural processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - POST Structural processing"
@@ -379,10 +385,10 @@ if [ "$post" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC $nocleanup
     else
       # LOCAL - post_structural processing
-        ${scriptDir}/02_post-structural.sh $BIDS $id $out 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/02_post-structural.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -399,7 +405,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $PROC $nocleanup
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Resting state fMRI processing"
@@ -407,10 +413,10 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $PROC $nocleanup
     else
         # LOCAL - Resting state fMRI processing
-        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -427,7 +433,7 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N ${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-dwi.sh $BIDS $id $out $PROC
+             ${scriptDir}/02_post-dwi.sh $BIDS $id $out $PROC $nocleanup
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - POST DWI processing (tractography)"
@@ -435,10 +441,10 @@ if [ "$post" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N ${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-dwi.sh $BIDS $id $out $PROC
+             ${scriptDir}/02_post-dwi.sh $BIDS $id $out $PROC $nocleanup
     else
         # LOCAL - post-DWI processing (tractography)
-        ${scriptDir}/02_post-dwi.sh $BIDS $id $out 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/02_post-dwi.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -456,7 +462,7 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC $nocleanup
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Microstructural profile covariance"
@@ -464,10 +470,10 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC $nocleanup
     else
         # LOCAL - POST-Structural processing
-        ${scriptDir}/03_post-mpc.sh $BIDS $id $out 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
+        ${scriptDir}/03_post-mpc.sh $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
     fi
 fi
 
@@ -480,7 +486,7 @@ if [[ $qtest = "TRUE" ]] && [[ $micaq == "TRUE" ]]; then
       export PROC="qsub-MICA"
       # Info "Setting a warper to run on mica.q"
       qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC $nocleanup
 fi
 # # # MICA - qsub test
 if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
@@ -488,7 +494,7 @@ if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
       export PROC="qsub-all.q"
       # Info "Setting a warper to run on all.q"
       qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N ${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC $nocleanup
 fi
 
 

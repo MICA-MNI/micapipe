@@ -22,6 +22,7 @@ BIDS=$1
 id=$2
 out=$3
 PROC=$4
+nocleanup=$5
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -185,7 +186,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory and temporal fsaverage5
-Do_cmd rm -rf $tmp  ${dir_surf}/fsaverage5
+if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
 
 # QC notification of completition
 lopuu=$(date +%s)

@@ -25,6 +25,7 @@ BIDS=$1
 id=$2
 out=$3
 PROC=$4
+nocleanup=$5
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -94,7 +95,7 @@ Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
 Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
 # Remove temporal directory
-Do_cmd rm -rf $tmp
+if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp; fi
 
 Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 
