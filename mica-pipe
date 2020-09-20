@@ -487,7 +487,7 @@ if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
       Info "MICA qsub test: all.q"
       export PROC="qsub-all.q"
       # Info "Setting a warper to run on all.q"
-      qsub -q all.q -pe all.pe 40 -l h_vmem=6G -N ${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
+      qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N ${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC
 fi
 
