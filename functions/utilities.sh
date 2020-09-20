@@ -26,6 +26,7 @@ bids_variables() {
   			     dir_freesurfer=${dir_surf}/${id}     # freesurfer dir
   			     dir_conte69=${dir_surf}/conte69    # conte69
   proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
+    dwi_cnntm=$proc_dwi/connectomes
   proc_rsfmri=$subject_dir/proc_rsfmri
     rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
     rsfmri_volum=$proc_rsfmri/volumetric
