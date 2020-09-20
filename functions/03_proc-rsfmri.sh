@@ -462,7 +462,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
-if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

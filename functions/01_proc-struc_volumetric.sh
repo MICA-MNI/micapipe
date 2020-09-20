@@ -250,7 +250,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [ ! $nocleanup = "TRUE" ]; then Do_cmd rm -rf $tmp; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
 
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
