@@ -300,4 +300,4 @@ Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes 
 \tCheck logs:
 `ls ${dir_logs}/proc-dwi_*.txt`"
 # Print QC stamp
-echo "${id}, proc_dwi, $status N=`printf "%02d" $Nsteps`/08, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, proc_dwi, $status N=`printf "%02d" $Nsteps`/08, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
