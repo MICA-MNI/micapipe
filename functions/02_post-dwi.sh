@@ -65,40 +65,38 @@ Nparc=0
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
+tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Create Connectomes directory for the outpust
 [[ ! -d ${dwi_cnntm} ]] && Do_cmd mkdir -p ${dwi_cnntm}
-
 cd ${tmp}
 
 # -----------------------------------------------------------------------------------------------
 # Generate and optimize probabilistic tracts
 Info "Building the 100 million streamlines connectome!!!"
-tmp=/Users/rcruces/tmp/tck2connectome
 tck=${tmp}/DWI_tractogram_100M.tck
 weights=${tmp}/SIFT2_100M.txt
-# tck=$tmp/DWI_tractogram_100M.tck
-# Do_cmd tckgen -nthreads $CORES \
-#     $fod \
-#     $tck \
-#     -act $dwi_5tt \
-#     -crop_at_gmwmi \
-#     -seed_dynamic $fod \
-#     -maxlength 300 \
-#     -minlength 10 \
-#     -angle 22.5 \
-#     -power 1.0 \
-#     -backtrack \
-#     -select 100M \
-#     -step .5 \
-#     -cutoff 0.06 \
-#     -algorithm iFOD2
-#
-# # SIFT2
+Do_cmd tckgen -nthreads $CORES \
+    $fod \
+    $tck \
+    -act $dwi_5tt \
+    -crop_at_gmwmi \
+    -seed_dynamic $fod \
+    -maxlength 300 \
+    -minlength 10 \
+    -angle 22.5 \
+    -power 1.0 \
+    -backtrack \
+    -select 100M \
+    -step .5 \
+    -cutoff 0.06 \
+    -algorithm iFOD2
+
+# SIFT2
 Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
-# # TDI for QC
-# Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-100M.mif
+# TDI for QC
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-100M.mif
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -162,7 +160,7 @@ for seg in $parcellations; do
 
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all ${nom}-all.txt \
-        -tck_weights_in $weights -out_assignments ${nom}-all_assignments.txt \
+        -tck_weights_in $weights -out_assignments ${nom}-sub_assignments.txt \
 
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all ${nom}-all_edgeLengths.txt \
@@ -192,4 +190,4 @@ Title "TEST-DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
 # Print QC stamp
-echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/21, `whoami`, ``,$(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
