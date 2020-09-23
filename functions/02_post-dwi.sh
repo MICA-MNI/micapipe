@@ -62,6 +62,7 @@ Title "Running MICA POST-DWI processing (Tractography)"
 aloita=$(date +%s)
 here=`pwd`
 Nparc=0
+tracts=40M # <<<<<<<<<<<<<<<<<< Number of stremalines
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -76,8 +77,8 @@ cd ${tmp}
 # -----------------------------------------------------------------------------------------------
 # Generate and optimize probabilistic tracts
 Info "Building the 100 million streamlines connectome!!!"
-tck=${tmp}/DWI_tractogram_100M.tck
-weights=${tmp}/SIFT2_100M.txt
+tck=${tmp}/DWI_tractogram_${tracts}.tck
+weights=${tmp}/SIFT2_${tracts}.txt
 Do_cmd tckgen -nthreads $CORES \
     $fod \
     $tck \
@@ -89,7 +90,7 @@ Do_cmd tckgen -nthreads $CORES \
     -angle 22.5 \
     -power 1.0 \
     -backtrack \
-    -select 100M \
+    -select ${tracts} \
     -step .5 \
     -cutoff 0.06 \
     -algorithm iFOD2
@@ -97,7 +98,7 @@ Do_cmd tckgen -nthreads $CORES \
 # SIFT2
 Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
 # TDI for QC
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-100M.mif
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -121,7 +122,7 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps+
 # Build the Connectomes
 for seg in $parcellations; do
     parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
-    nom=${dwi_cnntm}/${id}_100M_${parc_name}
+    nom=${dwi_cnntm}/${id}_${tracts}_${parc_name}
     dwi_cortex=$tmp/${id}_${parc_name}_dwi.nii.gz # Segmentation in dwi space
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes
