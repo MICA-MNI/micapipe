@@ -2,7 +2,7 @@
 #
 # MICA BIDS structural processing
 #
-
+# <<<<<<<<<<<< PRINT A WARNING WITH THE WRONG FLAG
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m

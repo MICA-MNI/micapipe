@@ -18,14 +18,18 @@ BIDS=$1
 id=$2
 out=$3
 PROC=$4
+nocleanup=$5
 here=`pwd`
 
-# if processing is running on MICA-lab or all.q SGE
+#------------------------------------------------------------------------------#
+# qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     export MICAPIPE=/data_/mica1/01_programs/micapipe
     source ${MICAPIPE}/functions/init.sh;
 fi
 
+# Assigns variables names
+bids_variables $BIDS $id $out
 echo -e "
 BIDS     = $BIDS
 id       = $id
