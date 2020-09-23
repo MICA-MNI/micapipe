@@ -161,7 +161,7 @@ for seg in $parcellations; do
 
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all ${nom}-all.txt \
-        -tck_weights_in $weights -out_assignments ${nom}-sub_assignments.txt \
+        -tck_weights_in $weights -out_assignments ${nom}-all_assignments.txt \
 
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all ${nom}-all_edgeLengths.txt \
@@ -185,10 +185,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nparc" -eq 60 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
+if [ "$Nparc" -eq 36 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
 Title "TEST-DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/60
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
 # Print QC stamp
-echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/36, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
