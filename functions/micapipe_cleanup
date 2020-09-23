@@ -193,15 +193,14 @@ fi
 # CLEAN -post_tractography
 if [ "$postDWI" = "TRUE" ]; then
     Warning "Erasing post_tractography output files"
-    # Do_cmd rm -rf  2>&1 | tee -a  ${dir_logs}/post_tractography.txt <<<<<<<<<<<<< INCOMPLETE
-
+    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/${id}_tdi_iFOD2-100M.mif  2>&1 | tee -a  ${dir_logs}/post_tractography.txt
 fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_dwi
 if [ "$procDWI" = "TRUE" ]; then
     Warning "Erasing proc_dwi output files"
-    Do_cmd rm  -rf ${proc_dwi}/* ${proc_struct}/${id}_dwi_nativepro.nii.gz ${dir_warp}/*_dwi_to_nativepro_* 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
+    Do_cmd rm -rf ${proc_dwi}/* ${proc_struct}/${id}_dwi_nativepro.nii.gz ${dir_warp}/*_dwi_to_nativepro_* 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
 fi
 
 
