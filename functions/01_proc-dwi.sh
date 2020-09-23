@@ -51,7 +51,6 @@ Info "ANTs will use $CORES CORES"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nsteps=0
 
 # if temporary directory is empty
@@ -60,6 +59,7 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_proc-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
+cd $tmp
 #------------------------------------------------------------------------------#
 # DWI processing
 # Image denoising must be performed as the first step of the image-processing pipeline.
@@ -87,7 +87,7 @@ Info "DWI denoise, bias filed correction and concatenation"
       Do_cmd mrcalc $dwi_cat $dwi_dns -subtract ${proc_dwi}/${id}_dwi_residuals.mif -nthreads $CORES
 
       # Bias field correction DWI
-      Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $CORES
+      Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $CORES -scratch $tmp
       # Step QC
       if [[ -f ${dwi_n4} ]]; then ((Nsteps++)); fi
 else
@@ -286,6 +286,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
+cd $here
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
 
 # QC notification of completition
