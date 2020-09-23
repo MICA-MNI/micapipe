@@ -28,6 +28,9 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     source ${MICAPIPE}/functions/init.sh;
 fi
 
+# source utilities
+source $MICAPIPE/functions/utilities.sh
+
 # Assigns variables names
 bids_variables $BIDS $id $out
 echo -e "
@@ -36,9 +39,6 @@ id       = $id
 out      = $out
 PROC     = $PROC
 MICAPIPE = $MICAPIPE"
-
-# source utilities
-source $MICAPIPE/functions/utilities.sh
 
 #------------------------------------------------------------------------------#
 Title "Running MICA qsub test"
@@ -113,6 +113,33 @@ if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; else Info 
 # workbench
 if [[ -z `which fix` ]]; then Warning "fix was not found, ICA-FIX will be skipped"; else Info "ICA-based Xnoiseifier was found here: `which fix`"; fi
 
+
+# print the names on the terminal
+Info "BIDS variables for DWI, test get info"
+bids_print.variables-dwi
+
+# Concatenate shells -if only one shell then just convert to mif and rename.
+for dwi in ${bids_dwis[@]}; do
+      dwi_nom=`echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}'`
+      bids_dwi_str=`echo $dwi | awk -F . '{print $1}'`
+      Do_cmd mrconvert $dwi -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}.mif
+done
+# Concatenate shells and convert to mif.
+dwi_cat=${tmp}/dwi_concatenate.mif
+Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $CORES
+
+# Get parameters
+ReadoutTime=`mrinfo $dwi_cat -property TotalReadoutTime`
+pe_dir=`mrinfo $dwi_cat -property PhaseEncodingDirection`
+
+Info "dwifslpreproc parameters:"
+Note "Shell values        :" "`mrinfo $dwi_cat -shell_bvalues`"
+Note "DWI main dimensions :" "`mrinfo $dwi_cat -size`"
+Note "DWI shell values    :" "`mrinfo $dwi_cat -shell_bvalues`"
+Note "pe_dir              :" $pe_dir
+Note "Readout Time        :" $ReadoutTime
+
+Do_cmd rm -rf $tmp
 
 # QC notification of completition
 lopuu=$(date +%s)
