@@ -503,7 +503,10 @@ if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
       qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N ${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
            ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC $nocleanup
 fi
-
+if [[ $qtest = "TRUE" ]]; then
+      Info "LOCAL setup test"
+      ${scriptDir}/micapipe_qsub-test $BIDS $id $out $PROC $nocleanup 2>&1 | tee -a ${id}_$(date +'%d-%m-%Y')_${PROC}.txt
+fi
 
 # -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
