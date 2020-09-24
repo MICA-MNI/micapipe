@@ -88,7 +88,7 @@ do
     BIDS=$2
     shift;shift
   ;;
-  -proc_volumetric)
+  -proc_structural)
     procVOL=TRUE
     shift
   ;;
@@ -108,7 +108,7 @@ do
     postVOL=TRUE
     shift
   ;;
-  -post_tractography)
+  -post_dwi)
     postDWI=TRUE
     shift
   ;;
