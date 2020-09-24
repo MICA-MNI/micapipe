@@ -62,6 +62,7 @@ bids_variables() {
 
   # rsfMRI processing
   mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
+  mainScanJson=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.json       # Main rsfMRI scan
   mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
   reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
 
@@ -145,6 +146,7 @@ bids_print.variables-rsfmri() {
   Note "Main rsfMRI        =" `find $mainScan`
   Note "Main phase scan    =" `find $mainPhaseScan`
   Note "Main reverse phase =" `find $reversePhaseScan`
+  Note "Main rsfMRI json   =" `find $mainScanJson`
 }
 
 t1w_str() {

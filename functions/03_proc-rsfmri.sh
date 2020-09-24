@@ -46,6 +46,7 @@ bids_variables $BIDS $id $out
 
 # Check inputs: rsfMRI and phase encoding
 if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
+if [ ! -f ${mainScanJson} ]; then Error "Subject $id doesn't have acq-AP_bold json file: \n\t ${subject_bids}/func/"; exit; fi
 if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
@@ -91,8 +92,8 @@ done
 
 #------------------------------------------------------------------------------#
 # Begining of the REAL processing
-# gettin dat readout time
-readoutTime=`cat ${mainScan/.nii.gz/}.json | grep "TotalReadoutTime" | grep -Eo [0-9].[0-9]+`
+# gettin dat readout time mainScanJson
+readoutTime=`cat ${mainScanJson} | grep "TotalReadoutTime" | grep -Eo [0-9].[0-9]+`
 
 # Scans to process
 toProcess=($mainScan $mainPhaseScan $reversePhaseScan)
