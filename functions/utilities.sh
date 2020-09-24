@@ -13,6 +13,15 @@ bids_variables() {
   id=$2
   out=$3
 
+  #   Define UTILITIES directories
+  scriptDir=${MICAPIPE}/functions
+  # Directory with the templates for the processing
+  export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
+  # Directory with all the parcellations
+  export util_parcelations=${MICAPIPE}/parcellations
+  # Directory with the resampled freesurfer surfaces
+  export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
+
   subject=sub-${id}
   subject_dir=$out/${subject}/ses-pre     # Output directory
   subject_bids=${BIDS}/${subject}/ses-pre # Input BIDS directory
@@ -62,19 +71,6 @@ bids_variables() {
   bids_inv1=(`ls ${subject_bids}/anat/*inv1*.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii*`)
   dwi_reverse=${subject_bids}/dwi/*_ses-pre_acq-PA_dir-*_dwi.nii*
-
-
-  # Utilities
-  # -----------------------------------------------------------------------------------------------#
-  #   Define UTILITIES directories
-  scriptDir=${MICAPIPE}/functions
-  # Directory with the templates for the processing
-  export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
-  # Directory with all the parcellations
-  export util_parcelations=${MICAPIPE}/parcellations
-  # Directory with the resampled freesurfer surfaces
-  export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
-
 }
 
 bids_print.variables() {
@@ -139,6 +135,7 @@ bids_print.variables-dwi() {
   Note "T1 nativepro    =" `find $T1nativepro`
   Note "T1 5tt          =" `find $T15ttgen`
   Note "T1 resolution   =" $res
+  Note "MNI152_mask     =" $MNI152_mask
 }
 
 bids_print.variables-rsfmri() {
