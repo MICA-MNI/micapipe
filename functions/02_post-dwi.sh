@@ -46,6 +46,7 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
+tracts=40M # <<<<<<<<<<<<<<<<<< Number of stremalines
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -55,6 +56,9 @@ if [ ! -f $dwi_5tt ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t
 if [ ! -f $T1_seg_cerebellum ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f $T1_seg_subcortex ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
 
+# Check IF output exits then EXIT
+if [ -f $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
+
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
 
@@ -62,7 +66,6 @@ Title "Running MICA POST-DWI processing (Tractography)"
 aloita=$(date +%s)
 here=`pwd`
 Nparc=0
-tracts=40M # <<<<<<<<<<<<<<<<<< Number of stremalines
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -97,8 +100,6 @@ Do_cmd tckgen -nthreads $CORES \
 
 # SIFT2
 Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
-# TDI for QC
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -170,6 +171,9 @@ for seg in $parcellations; do
     if [[ -f ${nom}-all.txt ]]; then ((Nparc++)); fi
 
 done
+
+# TDI for QC
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # -----------------------------------------------------------------------------------------------
 # Compute Auto-Tractography (Future Release version)
