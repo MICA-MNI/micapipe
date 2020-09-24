@@ -184,7 +184,7 @@ if [[ ! -f $dwi_mask ]]; then
                   -r ${dwi_b0} \
                   -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
                   -o ${tmp}/dwi_mask.nii.gz -v
-      maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
+      Do_cmd maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
       # Step QC
       if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
 else
