@@ -10,6 +10,7 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
+\t\033[38;5;197m-ses\033[0m 	         : Number of session (Default is ses-01)
 \t\033[38;5;197m-force\033[0m 	         : WARNING this will overwrite the subject directory.
 \t\033[38;5;197m-quiet\033[0m 	         : Do NOT print comments
 \t\033[38;5;197m-nocleanup\033[0m 	     : Do NOT delete temporal directory at script completion.
@@ -111,6 +112,10 @@ do
     post=TRUE
     shift
   ;;
+  -ses)
+    post=$2
+    shift
+  ;;
   -proc_structural)
     procVOL=TRUE
     shift
@@ -201,7 +206,7 @@ out=`realpath $out`
 BIDS=`realpath $BIDS`
 id=${id/sub-/}
 
-# Check BIDS Directory
+# Check BIDS Directory <<<<<<<<<<<< RENAME to ses-01
 if [ ! -d ${BIDS}/sub-${id}/ses-pre ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
@@ -242,7 +247,6 @@ else
     if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; exit 1; else Info "workbench version: `wb_command -version | awk 'NR==3{print $2}'`"; fi
     # workbench
     if [[ -z `which fix` ]]; then Warning "fix was not found, ICA-FIX will be skipped"; else Info "ICA-based Xnoiseifier was found here: `which fix`"; fi
-
 fi
 
 # Processing
@@ -251,6 +255,9 @@ if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 # Number of CORES used by ANTs and workbench, default is 6 if not defined in GLOBAL env
 if [[ -z $CORES ]]; then export CORES=6; fi
 export OMP_NUM_THREADS=$CORES
+
+# Number of session (Default is ses-01) <<<<<<<<<<<< NEED TO IMPLEMENT
+if [[ -z $ses ]]; then export ses="ses-01"; fi
 
 # LOADS variables with the BIDS format
 bids_variables $BIDS $id $out
