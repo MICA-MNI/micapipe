@@ -253,7 +253,7 @@ str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 
 # Registration to native pro
-if [[ ! -f ${mat_rsfmri_affine} ]] ; then
+if [[ ! -f ${mat_rsfmri_affine} ]] && [[ ! -f ${T1nativepro_in_fmri} ]]; then
     Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
     Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
@@ -262,7 +262,7 @@ if [[ ! -f ${mat_rsfmri_affine} ]] ; then
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $fmri_brain -t [$mat_rsfmri_affine,1] -o ${T1nativepro_in_fmri} -v -u int
 
 else
-    Info "Subject ${id} has a rsfMRI in T1nativepro space"
+    Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"
 fi
 
 #------------------------------------------------------------------------------#
@@ -309,7 +309,7 @@ if [[ ! -f ${fmri_processed} ]] ; then
                     # Transform matrix: ITK text to matrix (FSL format)
                     Do_cmd lta_convert --initk ${tmp}/highres2example_func.txt --outfsl $tmp_ants2fsl_mat --src $T1nativepro --trg $fmri_brain
                     # apply transformation with FSL
-                    Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz  -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
+                    Do_cmd flirt -in $T1nativepro -out ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $fmri_brain -applyxfm -init $tmp_ants2fsl_mat
                     # correct transformation matrix
                     Do_cmd flirt -in ${tmp}/t1w2fmri_brain_ants2fsl.nii.gz -ref $T1nativepro_in_fmri -omat ${tmp}/ants2fsl_fixed.omat -cost mutualinfo -searchcost mutualinfo -dof 6
                     # concatenate the matrices to fix the transformation matrix
