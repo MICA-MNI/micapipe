@@ -287,7 +287,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 cd $here
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
