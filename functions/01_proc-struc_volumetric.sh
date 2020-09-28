@@ -59,8 +59,8 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 N=${#bids_T1ws[@]} # total number of T1w
 n=$((${N} - 1))
 
-# FSL tries to submit to SGE. We don't want that. ??
-unset FSLPARALLEL
+# FSL tries to submit to SGE
+unset FSLPARALLEL #         <<<<<<<<<<<<< This is not working
 
 # Creates the t1w_nativepro for structural processing
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz ]; then
@@ -147,6 +147,9 @@ firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f ${firstout} ]; then
     Info "FSL first is running, output file:\n\t\t\t ${firstout}"
     Do_cmd run_first_all -v -i $T1nativepro_brain -o $T1nativepro_first -b
+    # Wait until $firstout exists, IF it was sent to SGE
+    until [ -f $firstout ]; do sleep 5; done
+
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
     for i in ${proc_struct}/first/*pro-*; do mv -v $i ${i/pro-/pro_}; done
     mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz ${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz
@@ -189,7 +192,7 @@ for mm in 2 0.8; do
       Do_cmd mv $T1_MNI152_warped $T1_MNI152_brain
       #antsApplyTransforms -d 3 -i ${T1nativepro} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${T1_MNI152}
 
-      # Warp the T1 nativepro FAST to MNI152 WHAT for???
+      # Warp the T1 nativepro FAST to MNI152 WHAT for??? <<<<<<<<<< still don't know what for
       T1str_nat_brain=${T1nativepro_brain/.nii.gz/_}
       new_str=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_
       for fst in mixeltype.nii.gz pve_0.nii.gz pve_1.nii.gz pve_2.nii.gz pveseg.nii.gz seg.nii.gz; do
