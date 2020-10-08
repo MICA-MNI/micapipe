@@ -10,7 +10,7 @@
 #
 # Preprocessing workflow for rsfmri.
 #
-# This workflow makes use of AFNI, FSL, ANTs, FIX, enigmatoolbox
+# This workflow makes use of AFNI, FSL, ANTs, FIX
 #
 # Atlas an templates are avaliable from:
 #
@@ -116,15 +116,18 @@ if [[ ! -f ${singleecho} ]]; then
               # Drop first five TRs and reorient (same orientation as T1nativepro)
               if [ "$tag" == "mainScan" ]; then
                   Do_cmd nifti_tool -cbl -prefix ${tmp}/${tag}_trDrop.nii.gz -infiles "$rawNifti"'[5..$]'
-                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
+                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset ${tmp}/${tag}_trDrop.nii.gz
               else
-                  Do_cmd 3dresample -orient LPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
+                  Do_cmd 3dresample -orient RPI -prefix ${tmp}/${tag}_reorient.nii.gz -inset $rawNifti
               fi
 
               # Remove slices to make an even number of slices in all directions (requisite for topup).
-              dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
-              newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
-              Do_cmd fslroi ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz `echo $newDimensions | sed 's/ / 0 /g' | sed 's/^/0 /'` # I removed -1 -1
+              #dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
+              #newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
+              #Do_cmd fslroi ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz `echo $newDimensions | sed 's/ / 0 /g' | sed 's/^/0 /'` # I removed -1 -1
+
+              # Skipping fslroi step. Rename files for simplicity
+              mv ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz
 
               # Motion correction within scans
               Do_cmd fslmaths ${tmp}/${tag}_sliceCut.nii.gz -Tmean ${tmp}/${tag}_sliceCutMean.nii.gz
@@ -174,7 +177,7 @@ if [[ ! -f ${singleecho} ]]; then
             # Figure out how to set the numbers in this file correctly for any scan. Depends on phase encoding direction!
             printf "0 1 0 $readoutTime \n0 -1 0 $readoutTime" > ${tmp}/singleecho_topupDataIn.txt
             Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
-            Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0.cnf --out=${tmp}/singleecho_topup
+            Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0_1.cnf --out=${tmp}/singleecho_topup
             Do_cmd applytopup --imain=${mainScan} --inindex=1 --datain=${tmp}/singleecho_topupDataIn.txt --topup=${tmp}/singleecho_topup --method=jac --out=${singleecho}
             # Check if it worked
             if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
@@ -317,7 +320,7 @@ if [[ ! -f ${fmri_processed} ]] ; then
                 else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
                 Info "Running ICA-FIX"
-                Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
+                Do_cmd /data_/mica1/01_programs/fix/fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
                 # Replace file if melodic ran correctly - Change single-echo files for clean ones
                 if [[ -f ${fix_output} ]]; then
@@ -457,9 +460,9 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-rsfmri
-# Info "Running rsfMRI post processing"
-# labelDirectory=${dir_surf}/${id}/label/
-# python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory}
+Info "Running rsfMRI post processing"
+labelDirectory=${dir_surf}/${id}/label/
+python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
