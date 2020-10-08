@@ -7,13 +7,14 @@ from sklearn.linear_model import LinearRegression
 import warnings
 
 warnings.simplefilter('ignore')
-import enigmatoolbox.datasets
-from enigmatoolbox.plotting import plot_cortical
-from enigmatoolbox.utils.parcellation import parcel_to_surface, surface_to_parcel
+#import enigmatoolbox.datasets
+#from enigmatoolbox.plotting import plot_cortical
+#from enigmatoolbox.utils.parcellation import parcel_to_surface, surface_to_parcel
 
-subject = sys.argv[1]  # subject='HC012'
-funcDir = sys.argv[2]  # funcDir='/host/fladgate/local_raid/MICA-MTL/HC12/scan_session_01/proc_rsfmri_FIX/'
-labelDir = sys.argv[3] # labelDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC012/ses-pre/proc_struct/surfaces/HC012/label/'
+subject = sys.argv[1]  # subject='HC001'
+funcDir = sys.argv[2]  # funcDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC001/ses-pre/proc_rsfmri/'
+labelDir = sys.argv[3] # labelDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC001/ses-pre/proc_struct/surfaces/HC001/label/'
+parcDir = sys.argv[4] # parcDir='/data_/mica1/03_projects/jessica/micapipe/parcellations/'
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -41,8 +42,8 @@ x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
 x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 
 # Grab subcortical and cerebellar timeseries and merge them to conte69 and native timeseries
-sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
-cereb = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
+sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
+cereb = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
 n = sctx.shape[1] + cereb.shape[1]                 # so we know data.shape[1] - n = num of ctx vertices only
 n_sctx = sctx.shape[1]
 
@@ -83,15 +84,11 @@ dataNative = np.transpose(np.append(lh_data_nat, rh_data_nat, axis=0))
 dataNative = np.append(np.append(dataNative, sctx, axis=1), cereb, axis=1)
 
 # load confound files
-if len(x_spike.split(" ")) == 0:
-    del spike
-    print('no spikey, no spikey, will skippy')
-else:
+if x_spike:
     spike = np.loadtxt(x_spike)
-
-# regress out spikes from individual timeseries
-ones = np.ones((spike.shape[0], 1))
-if len(x_spike.split(" ")) == 1:
+    
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
     mdl = []
     mdl = np.append(ones, spike, axis=1)
 
@@ -102,89 +99,105 @@ if len(x_spike.split(" ")) == 1:
     # native
     slm = LinearRegression().fit(dataNative, mdl)
     dataNative_corr = dataNative-np.dot(mdl, slm.coef_)
+    
 else:
-    mdl = []
-
+    del spike
+    print('no spikey, no spikey, will skippy')
+    
     # conte
-    slm = LinearRegression().fit(data, mdl)
-    data_corr = data-np.dot(mdl, slm.coef_)
+    data_corr = data
 
     # native
-    slm = LinearRegression().fit(dataNative, mdl)
-    dataNative_corr = dataNative-np.dot(mdl, slm.coef_)
+    dataNative_corr = dataNative
+
 
 # save timeseries in conte69 format
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr)
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Start with conte parcellations
-parcellationList = ['glasser_360_conte69',
-                    'vosdewael_100_conte69', 'vosdewael_200_conte69',
-                    'vosdewael_300_conte69', 'vosdewael_400_conte69',
-                    'schaefer_100_conte69', 'schaefer_200_conte69', 'schaefer_300_conte69',
-                    'schaefer_400_conte69', 'schaefer_500_conte69', 'schaefer_600_conte69',
-                    'schaefer_700_conte69', 'schaefer_800_conte69', 'schaefer_900_conte69',
-                    'schaefer_1000_conte69', 'aparc_conte69']
+parcellationList = ['glasser-360_conte69',
+                    'vosdewael-100_conte69', 'vosdewael-200_conte69',
+                    'vosdewael-300_conte69', 'vosdewael-400_conte69',
+                    'schaefer-100_conte69', 'schaefer-200_conte69', 'schaefer-300_conte69',
+                    'schaefer-400_conte69', 'schaefer-500_conte69', 'schaefer-600_conte69',
+                    'schaefer-700_conte69', 'schaefer-800_conte69', 'schaefer-900_conte69',
+                    'schaefer-1000_conte69', 'aparc_conte69']
 for parcellation in parcellationList:
-    parcOutputName = parcellation.replace('_', "").replace('conte69', "")
+    parcPath = os.path.join(parcDir, parcellation) + '.csv'
+    thisparc = np.loadtxt(parcPath)
+    
+    print('')
+    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+    print('------------ skipping QC figure for now! ------------')
+    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+    print('')
 
     # QC file generated on schaefer400
-    if parcellation is "schaefer_400_conte69":
-        # map the ctx timeseries to the parcels
-        data_corr_ctx = data_corr[:, :-n]
-        ts = surface_to_parcel(data_corr_ctx, parcellation)
-        ts = np.append(ts, data_corr[:, -n:], axis=1)
-        ts_r = np.corrcoef(np.transpose(ts))
-        ts_r[0, :] = 0
-        ts_r[:, 0] = 0
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcOutputName + '_conte69_clean.txt',
-                   ts_r)
+    #if parcellation is "schaefer-400_conte69":
+        
+        # # map the ctx timeseries to the parcels
+        # data_corr_ctx = data_corr[:, :-n]
+        # ts = surface_to_parcel(data_corr_ctx, parcellation)
+        # ts = np.append(ts, data_corr[:, -n:], axis=1)
+        # ts_r = np.corrcoef(np.transpose(ts))
+        # ts_r[0, :] = 0
+        # ts_r[:, 0] = 0
+        # np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcOutputName + '_conte69_clean.txt',
+                   # ts_r)
 
-        # seed-based correlation and save figure | C O R T I C A L
-        seeds = (19, 57, 82, 98, 120, 137, 152)
-        seed_conn = [None] * len(seeds)
-        for ii in range(len(seeds)):
-            seed_conn[ii] = parcel_to_surface(ts_r[seeds[ii], :-n], parcellation, fill=np.nan)
-        # save cortical figure
-        plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
-                         cmap=['Purples', 'Blues', 'Greens', 'PuRd', 'YlOrBr', 'Oranges', 'Reds'],
-                         color_bar=True, label_text=['VN', 'SMN', 'DAN', 'SN', 'LMBC', 'FPN', 'DMN'],
-                         transparent_bg=False, screenshot=True, color_range=(0.35, 1), filename=funcDir+'/surfaces/' +
-                         subject + 'rsfMRI-QC_' + parcOutputName + '.png')
+        # # seed-based correlation and save figure | C O R T I C A L
+        # seeds = (19, 57, 82, 98, 120, 137, 152)
+        # seed_conn = [None] * len(seeds)
+        # for ii in range(len(seeds)):
+            # seed_conn[ii] = parcel_to_surface(ts_r[seeds[ii], :-n], parcellation, fill=np.nan)
+        # # save cortical figure
+        # plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
+                         # cmap=['Purples', 'Blues', 'Greens', 'PuRd', 'YlOrBr', 'Oranges', 'Reds'],
+                         # color_bar=True, label_text=['VN', 'SMN', 'DAN', 'SN', 'LMBC', 'FPN', 'DMN'],
+                         # transparent_bg=False, screenshot=True, color_range=(0.35, 1), filename=funcDir+'/surfaces/' +
+                         # subject + 'rsfMRI-QC_' + parcOutputName + '.png')
 
-        # seed-based correlation and save figure | S U B C O R T I C A L
-        seeds = range(7)
-        seed_conn = [None] * len(seeds)
-        for ii in seeds:
-            seed_conn[ii] = parcel_to_surface(ts_r[-n + ii, :-n], parcellation, fill=np.nan)
-        # save cortical figure
-        plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
-                      cmap=['Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds'],
-                      color_bar=True, label_text=['L-', 'L-Amy', 'L-Caud', 'L-Hip', 'L-Pal', 'L-Put', 'L-Thal'],
-                      transparent_bg=False, screenshot=True, color_range=(0, .5), filename=funcDir + '/surfaces/' +
-                      subject + 'rsfMRI-QC_' + parcOutputName + '_left_sctx.png')
+        # # seed-based correlation and save figure | S U B C O R T I C A L
+        # seeds = range(7)
+        # seed_conn = [None] * len(seeds)
+        # for ii in seeds:
+            # seed_conn[ii] = parcel_to_surface(ts_r[-n + ii, :-n], parcellation, fill=np.nan)
+        # # save cortical figure
+        # plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
+                      # cmap=['Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds'],
+                      # color_bar=True, label_text=['L-', 'L-Amy', 'L-Caud', 'L-Hip', 'L-Pal', 'L-Put', 'L-Thal'],
+                      # transparent_bg=False, screenshot=True, color_range=(0, .5), filename=funcDir + '/surfaces/' +
+                      # subject + 'rsfMRI-QC_' + parcOutputName + '_left_sctx.png')
 
-        # seed-based correlation and save figure | C E R E B E L L A R
-        seeds = range(0, 14, 2)
-        seed_conn = [None] * len(seeds)
-        for ii in range(len(seeds)):
-            seed_conn[ii] = parcel_to_surface(ts_r[-n + n_sctx + ii, :-n], parcellation, fill=np.nan)
-        # save cortical figure
-        plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
-                      cmap=['Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds'],
-                      color_bar=True, label_text=['', '', '', '', '', '', ''],
-                      transparent_bg=False, screenshot=True, color_range=(0, .5), filename=funcDir + '/surfaces/' +
-                      subject + 'rsfMRI-QC_' + parcOutputName + '_cereb.png')
+        # # seed-based correlation and save figure | C E R E B E L L A R
+        # seeds = range(0, 14, 2)
+        # seed_conn = [None] * len(seeds)
+        # for ii in range(len(seeds)):
+            # seed_conn[ii] = parcel_to_surface(ts_r[-n + n_sctx + ii, :-n], parcellation, fill=np.nan)
+        # # save cortical figure
+        # plot_cortical(array_name=seed_conn, surface_name="conte69", size=(1200, 1200),
+                      # cmap=['Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds', 'Reds'],
+                      # color_bar=True, label_text=['', '', '', '', '', '', ''],
+                      # transparent_bg=False, screenshot=True, color_range=(0, .5), filename=funcDir + '/surfaces/' +
+                      # subject + 'rsfMRI-QC_' + parcOutputName + '_cereb.png')
 
-    else:
-        data_corr_ctx = data_corr[:, :-n]
-        ts = surface_to_parcel(data_corr_ctx, parcellation)
-        ts = np.append(ts, data_corr[:, -n:], axis=1)
-        ts_r = np.corrcoef(np.transpose(ts))
-        ts_r[0, :] = 0
-        ts_r[:, 0] = 0
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcOutputName + '_conte69_clean.txt',
-                   ts_r)
+    #else:
+    
+    # Parcellate cortical timeseries
+    data_corr_ctx = data_corr[:, :-n]
+    uparcel = np.unique(thisparc)
+    ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
+    for lab in range(len(uparcel)):
+        tmpData = data_corr_ctx[:, thisparc == lab]
+        ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+    
+    ts = np.append(ts_ctx, data_corr[:, -n:], axis=1)
+    ts_r = np.corrcoef(np.transpose(ts))
+    ts_r[0, :] = 0
+    ts_r[:, 0] = 0
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
+               ts_r)
 
 # mean framewise displacement + save plot
 fd = np.loadtxt(x_fd)
@@ -230,8 +243,15 @@ for parcellation in parcellationList:
         native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
 
     # Generate connectome on native space parcellation
+    # Parcellate cortical timeseries
     dataNative_corr_ctx = dataNative_corr[:, :-n]
-    ts = surface_to_parcel(dataNative_corr_ctx, native_parc)
-    ts = np.append(ts, dataNative_corr[:, -n:], axis=1)
+    uparcel = np.unique(native_parc)
+    ts_native_ctx = np.zeros([dataNative_corr_ctx.shape[0], len(uparcel)])
+    for lab in range(len(uparcel)):
+        tmpData = dataNative_corr_ctx[:, native_parc == lab]
+        ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
+
+    ts = np.append(ts_native_ctx, dataNative_corr[:, -n:], axis=1)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts)
     ts_r = np.corrcoef(np.transpose(ts))
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r)
