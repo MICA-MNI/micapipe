@@ -167,6 +167,6 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Post-MPC processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
-`ls ${dir_logs}/post-mpc_*.txt`"
+`ls ${dir_logs}/post-mpc.txt`"
 
 echo "${id}, post_MPC, TEST, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

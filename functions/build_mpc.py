@@ -101,8 +101,11 @@ def build_mpc(data, parc=None):
     else:
         problemNodes = 0
         
-        # Calculate mean across columns
-        I_M = np.mean(I, axis = 1)
+        # Calculate mean across columns, excluding mask
+        I_mask = I
+        I_mask[:,0] = np.nan
+        I_mask[:,int(len(uparcel)/2)] = np.nan
+        I_M = np.nanmean(I_mask, axis = 1)
         
         # Get residuals of all columns (controlling for mean)
         I_resid = np.zeros(I.shape)
@@ -119,6 +122,10 @@ def build_mpc(data, parc=None):
         MPC = 0.5 * np.log( np.divide(1 + R, 1 - R) )
         MPC[np.isnan(MPC)] = 0
         MPC[np.isinf(MPC)] = 0
+        
+        # Replace all values in diagonal by zeros to account for floating point error
+        for i in range(0,MPC.shape[0]):
+                MPC[i,i] = 0
 
     # Output MPC, microstructural profiles, and problem nodes
     return (MPC, I, problemNodes)
