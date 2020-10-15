@@ -47,9 +47,9 @@ cereb = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebe
 n = sctx.shape[1] + cereb.shape[1]                 # so we know data.shape[1] - n = num of ctx vertices only
 n_sctx = sctx.shape[1]
 
-# We want to clean up the unsmoothed native timeseries too!
-x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh.mgh'))
-x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh.mgh'))
+# We want to clean up native timeseries too!
+x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_10mm.mgh'))
+x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_10mm.mgh'))
 
 # exit if more than one scan exists
 if len(x_lh.split(" ")) == 1:
@@ -86,6 +86,11 @@ dataNative = np.append(np.append(dataNative, sctx, axis=1), cereb, axis=1)
 # load confound files
 if x_spike:
     spike = np.loadtxt(x_spike)
+    
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
     
     # regress out spikes from individual timeseries
     ones = np.ones((spike.shape[0], 1))

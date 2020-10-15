@@ -320,7 +320,7 @@ if [[ ! -f ${fmri_processed} ]] ; then
                 else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
                 Info "Running ICA-FIX"
-                Do_cmd /data_/mica1/01_programs/fix/fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
+                Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
 
                 # Replace file if melodic ran correctly - Change single-echo files for clean ones
                 if [[ -f ${fix_output} ]]; then
@@ -379,6 +379,7 @@ fi
 for x in lh rh; do
     [[ $x == lh ]] && hemisphere=l || hemisphere=r
     HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
+    out_surf_native=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_10mm.mgh
     out_surf=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.mgh
     if [[ ! -f ${out_surf} ]] ; then
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
@@ -391,7 +392,7 @@ for x in lh rh; do
               --hemi ${x} \
               --out ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_NoHP.mgh
 
-          # Map high-passed timeseries to surface - this is what will be used to generate the connectomes later
+          # Map high-passed timeseries to surface and apply smooth
           Do_cmd mri_vol2surf \
               --mov $fmri_processed \
               --reg ${fmri2fs_lta} \
@@ -401,7 +402,14 @@ for x in lh rh; do
               --hemi ${x} \
               --out ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh
           Do_cmd mri_convert ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii
-
+          
+          Do_cmd wb_command -metric-smoothing \
+              ${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii  \
+              ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii \
+              10 \
+              ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii
+          Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii ${out_surf_native}
+          
           # Register to conte69 and apply smooth
           Do_cmd wb_command -metric-resample \
               ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii \
@@ -417,8 +425,10 @@ for x in lh rh; do
               ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k.func.gii \
               10 \
               ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.func.gii
+          
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k.func.gii ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_c69-32k.mgh
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.func.gii ${out_surf}
+          
     else
           Info "Subject ${id} has a singleecho fmri2fs ${x}_conte69-32 10mm surface"
     fi
