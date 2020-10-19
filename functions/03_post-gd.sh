@@ -43,7 +43,7 @@ bids_variables $BIDS $id $out
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 # Check inputs: Native midsurface in gifti (generated in post-structural)
 if [ ! -f ${lh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
-if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
+if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
 
 #------------------------------------------------------------------------------#
@@ -60,10 +60,6 @@ here=`pwd`
 
 #------------------------------------------------------------------------------#
 # Set up parameters
-
-# Midsurfaces gifti
-lh_surf=${dir_surf}/${id}/surf/lh.midthickness.surf.gii
-rh_surf=${dir_surf}/${id}/surf/rh.midthickness.surf.gii
 
 # Define output directory
 outPath=${dir_surf}/geo_dist/
@@ -84,7 +80,7 @@ for parc in ${all_parcellations}; do
     lh_annot=${dir_surf}/${id}/label/lh.${parc}_mics.annot
     rh_annot=${dir_surf}/${id}/label/rh.${parc}_mics.annot
     outName=${outPath}/${id}_${parc}
-    Do_cmd python $MICAPIPE/functions/geoDistMapper.py "$lh_surf" "$rh_surf" "$outName" "$lh_annot" "$rh_annot" "$workbench_path"
+    Do_cmd python $MICAPIPE/functions/geoDistMapper.py "$lh_midsurf" "$rh_midsurf" "$outName" "$lh_annot" "$rh_annot" "$workbench_path"
     echo completed "$parc"
 done
 
