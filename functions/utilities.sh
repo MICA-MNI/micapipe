@@ -53,6 +53,10 @@ bids_variables() {
     res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
   fi
 
+  # Native midsurface in gifti format
+  lh_midsurf=${dir_freesurfer}/surf/lh.midthickness.surf.gii
+  rh_midsurf=${dir_freesurfer}/surf/rh.midthickness.surf.gii
+
   # Registration from MNI152 to Native pro
   T1str_nat=${id}_t1w_${res}mm_nativepro
   mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
