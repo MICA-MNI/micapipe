@@ -60,10 +60,6 @@ fi
 # Source utilities functions from MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
 
-BIDS=$1
-id=$2
-out=$3
-
 Title "MICA pipe cleanup \n\t\tSubject: $id"
 
 # -----------------------------------------------------------------------------------------------#
@@ -143,6 +139,7 @@ help; exit 1; fi
 
 
 # Get the real path of the Inputs
+id=${id/sub-/}
 out=`realpath $out`
 BIDS=`realpath $BIDS`
 

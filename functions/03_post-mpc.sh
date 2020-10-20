@@ -23,8 +23,9 @@
 BIDS=$1
 id=$2
 out=$3
-PROC=$4
-nocleanup=$5
+SES=$4
+PROC=$5
+nocleanup=$6
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -38,7 +39,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out
+bids_variables $BIDS $id $out $SES
 
 # Check inputs: mp2rage
 if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
