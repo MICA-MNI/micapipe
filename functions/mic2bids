@@ -89,6 +89,10 @@ do
    BIDS_DIR=$2
    shift;shift
   ;;
+  -ses)
+   SES=$2
+   shift;shift
+  ;;
   -mica)
    mica=TRUE
    shift;shift
@@ -145,7 +149,9 @@ if [ -d ${BIDS_DIR}/sub-${Subj} ]; then Error "Output directory already exist, u
 here=`pwd`
 
 # Sequence names and variables
-id=sub-${Subj}_ses-pre_
+# ses is for default "ses-pre"
+if [ -z ${ses} ]; then SES="ses-pre"; fi
+id=sub-${Subj}_${SES}_
 
 # -----------------------------------------------------------------------------------------------
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
@@ -160,7 +166,7 @@ bidsDWI=(acq-b700_dir-NUM_dwi acq-b300_dir-NUM_dwi acq-PA_dir-NUM_dwi acq-b2000_
 # -----------------------------------------------------------------------------------------------
 
 # Create BIDS/subj_dir
-BIDS=${BIDS_DIR}/sub-${Subj}/ses-pre
+BIDS=${BIDS_DIR}/sub-${Subj}/${SES}
 Do_cmd mkdir -p ${BIDS}/{anat,func,dwi}
 if [ ! -d ${BIDS} ]; then Error "Could not create subject BIDS directory, check permissions \n\t     ${BIDS}\t    "; exit 0; fi
 
