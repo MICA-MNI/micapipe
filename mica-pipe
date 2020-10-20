@@ -493,7 +493,7 @@ if [ "$post" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
              ${scriptDir}/03_post-gd.sh $BIDS $id $out $SES $PROC $nocleanup
     # all.q - Geodesic distance
     elif [[ $qall == "TRUE" ]] ; then
@@ -501,7 +501,7 @@ if [ "$post" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
              ${scriptDir}/03_post-gd.sh $BIDS $id $out $SES $PROC $nocleanup
     else
         # LOCAL - Geodesic distance processing
