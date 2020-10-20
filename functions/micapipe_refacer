@@ -66,6 +66,10 @@ do
     BIDS=$2
     shift;shift
   ;;
+  -ses)
+    SES=$2
+    shift
+  ;;
   -replace)
     replace=TRUE
     shift;shift
@@ -91,11 +95,14 @@ help; exit 0; fi
 out=`realpath $out`
 BIDS=`realpath $BIDS`
 
+# Number of session (Default is "ses-pre")
+if [ -z ${SES} ]; then export SES="ses-pre"; fi
+
 # CORES should be defined as GLOBAL variable maybe
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
 
 # Assigns BIDS variables names
-bids_variables $BIDS $id $out
+bids_variables $BIDS $id $out $SES
 
 # Check BIDS directory
 if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi

@@ -31,15 +31,15 @@ raul.rodriguezcrcues@mcgill.ca
 }
 
 # Name changes example: T1, qT1, DWI and rfMRI
-# *_ORIG              | sub-01_ses-pre_run-2_T1w
-# *_T1_Images         | sub-01_ses-pre_T1map
-# *rsfmri-3mm-bold_AP | sub-01_ses-pre_acq-AP_task-resting_bold
-# *rsfmri-3mm_se_AP   | sub-01_ses-pre_acq-AP_task-se_bold
-# *rsfmri-3mm_se_PA   | sub-01_ses-pre_acq-PA_task-se_bold
-# *dwi_b700_40        | sub-01_ses-pre_acq-b700_dir-40_dwi
-# *dwi_b300_10        | sub-01_ses-pre_acq-b300_dir-10_dwi
-# *dwi_b0_5PA         | sub-01_ses-pre_acq-PA_dir-5_dwi
-# **_dwi_b2000**      | sub-01_ses-pre_acq-b2000_dir-66_dwi
+# *_ORIG              | sub-01_${SES}_run-2_T1w
+# *_T1_Images         | sub-01_${SES}_T1map
+# *rsfmri-3mm-bold_AP | sub-01_${SES}_acq-AP_task-resting_bold
+# *rsfmri-3mm_se_AP   | sub-01_${SES}_acq-AP_task-se_bold
+# *rsfmri-3mm_se_PA   | sub-01_${SES}_acq-PA_task-se_bold
+# *dwi_b700_40        | sub-01_${SES}_acq-b700_dir-40_dwi
+# *dwi_b300_10        | sub-01_${SES}_acq-b300_dir-10_dwi
+# *dwi_b0_5PA         | sub-01_${SES}_acq-PA_dir-5_dwi
+# **_dwi_b2000**      | sub-01_${SES}_acq-b2000_dir-66_dwi
 
 # Chek MICAPIPE
 if [ -z "${MICAPIPE}" ]; then
@@ -150,7 +150,7 @@ here=`pwd`
 
 # Sequence names and variables
 # ses is for default "ses-pre"
-if [ -z ${ses} ]; then SES="ses-pre"; fi
+if [ -z ${SES} ]; then SES="ses-pre"; fi
 id=sub-${Subj}_${SES}_
 
 # -----------------------------------------------------------------------------------------------

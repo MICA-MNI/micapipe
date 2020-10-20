@@ -9,9 +9,11 @@ bids_variables() {
   #     BIDS directory = $1
   #     participant ID = $2
   #     Out directory  = $3
+  #     session        = $4
   BIDS=$1
   id=$2
   out=$3
+  SES=$4
 
   #   Define UTILITIES directories
   scriptDir=${MICAPIPE}/functions
@@ -23,8 +25,8 @@ bids_variables() {
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
 
   subject=sub-${id}
-  subject_dir=$out/${subject}/ses-pre     # Output directory
-  subject_bids=${BIDS}/${subject}/ses-pre # Input BIDS directory
+  subject_dir=$out/${subject}/${SES}     # Output directory
+  subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
 
   # Structural directories derivatives/
   proc_struct=$subject_dir/proc_struct # structural processing directory
@@ -65,17 +67,17 @@ bids_variables() {
   MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
-  mainScanJson=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.json       # Main rsfMRI scan
-  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
-  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
+  mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
+  mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.json       # Main rsfMRI scan
+  mainPhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse_bold.nii*    # main phase scan
+  reversePhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse_bold.nii* # Reverse phase scan
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
   bids_T1map=(`ls ${subject_bids}/anat/*mp2rage*.nii*`)
   bids_inv1=(`ls ${subject_bids}/anat/*inv1*.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii*`)
-  dwi_reverse=${subject_bids}/dwi/*_ses-pre_acq-PA_dir-*_dwi.nii*
+  dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
 }
 
 bids_print.variables() {
@@ -168,8 +170,8 @@ t1w_str() {
 register_QC() {
   f=$1 # back
   m=$2 # red border
-  f_str=${f/"sub-${id}_ses-pre_"/}
-  m_str=${m/"sub-${id}_ses-pre_"/}
+  f_str=${f/"sub-${id}_${SES}_"/}
+  m_str=${m/"sub-${id}_${SES}_"/}
   nom=${m_str/.nii.gz/}_in_${f_str/.nii.gz/}
   QC=tmp_QCreg-
   QCpng=${QC}${nom}.png

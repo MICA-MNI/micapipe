@@ -88,6 +88,10 @@ do
     BIDS=$2
     shift;shift
   ;;
+  -ses)
+    SES=$2
+    shift
+  ;;
   -proc_structural)
     procVOL=TRUE
     shift
@@ -142,8 +146,11 @@ help; exit 1; fi
 out=`realpath $out`
 BIDS=`realpath $BIDS`
 
+# Number of session (Default is "ses-pre")
+if [ -z ${SES} ]; then export SES="ses-pre"; fi
+
 # Assigns variables names
-bids_variables $BIDS $id $out
+bids_variables $BIDS $id $out $SES
 
 # if temporary directory is running on MICA-lab SGE
 if [ "$mica" = "TRUE" ];then source ${MICAPIPE}/functions/init.sh; fi
