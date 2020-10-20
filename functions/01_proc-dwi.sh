@@ -41,6 +41,9 @@ bids_variables $BIDS $id $out $SES
 
 # Check inputs: DWI
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY <ls -l ${subject_bids}/dwi/>"; exit; fi
+if [ ! -f ${T1_MNI152_InvWarp} ]; then Error "Subject $id doesn't have T1_nativepro warp to MNI152.\n\t\tRun -proc_structural"; exit; fi
+if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
+if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
@@ -145,6 +148,7 @@ if [[ ! -f $dwi_corr ]]; then
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
       dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
+      Do_cmd cp -rf ${tmp}/dwifslpreproc*/*eddy.eddy* ${proc_dwi}/eddy
       # Step QC
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; else Do_cmd rm $dwi_n4; ((Nsteps++)); fi
 else
