@@ -29,7 +29,9 @@ id=$2
 out=$3
 SES=$4
 PROC=$5
-nocleanup=$6
+changeTopupConfig=$6
+changeIcaFixTraining=$7
+nocleanup=$8
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -52,6 +54,23 @@ if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bo
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
 if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
+# Check topup input
+if [[ ${changeTopupConfig} == "DEFAULT" ]]; then 
+    Warning "Will use default config file for TOPUP: ${topupConfigFile}"
+else
+    topupConfigFile=${changeTopupConfig}
+    Warning "Will use specified config file for TOPUP: ${topupConfigFile}"
+fi
+
+# Check ICA-FIX Training input
+if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then 
+    Warning "Will use default training file for ICA-FIX: ${icafixTraining}"
+else
+    icafixTraining=${changeIcaFixTraining}
+    Warning "Will use specified training file for ICA-FIX: ${icafixTraining}"
+fi
+
 
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
@@ -178,7 +197,7 @@ if [[ ! -f ${singleecho} ]]; then
             # Figure out how to set the numbers in this file correctly for any scan. Depends on phase encoding direction!
             printf "0 1 0 $readoutTime \n0 -1 0 $readoutTime" > ${tmp}/singleecho_topupDataIn.txt
             Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
-            Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=b02b0_1.cnf --out=${tmp}/singleecho_topup
+            Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=${topupConfigFile} --out=${tmp}/singleecho_topup
             Do_cmd applytopup --imain=${mainScan} --inindex=1 --datain=${tmp}/singleecho_topupDataIn.txt --topup=${tmp}/singleecho_topup --method=jac --out=${singleecho}
             # Check if it worked
             if [[ ! -f ${singleecho} ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
@@ -321,7 +340,7 @@ if [[ ! -f ${fmri_processed} ]] ; then
                 else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
                 Info "Running ICA-FIX"
-                Do_cmd fix ${rsfmri_ICA}/ ${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData 20 -m -h 100
+                Do_cmd fix ${rsfmri_ICA}/ ${icafixTraining} 20 -m -h 100
 
                 # Replace file if melodic ran correctly - Change single-echo files for clean ones
                 if [[ -f ${fix_output} ]]; then
@@ -471,9 +490,14 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-rsfmri
-Info "Running rsfMRI post processing"
-labelDirectory=${dir_surf}/${id}/label/
-python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
+cleanTS=${rsfmri_surf}/${id}_rsfMRI-timeseries_conte69_clean.txt
+if [[ ! -f ${cleanTS} ]] ; then
+    Info "Running rsfMRI post processing"
+    labelDirectory=${dir_surf}/${id}/label/
+    python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
+else
+    Info "Subject ${id} has post-processed conte69 time-series"
+fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory

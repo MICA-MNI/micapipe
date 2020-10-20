@@ -67,10 +67,12 @@ bids_variables() {
   MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
-  mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.json       # Main rsfMRI scan
-  mainPhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse_bold.nii*    # main phase scan
-  reversePhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse_bold.nii* # Reverse phase scan
+  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
+  mainScanJson=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.json       # Main rsfMRI scan
+  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
+  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
+  topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                              # TOPUP config file default
+  icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
@@ -147,12 +149,14 @@ bids_print.variables-dwi() {
 
 bids_print.variables-rsfmri() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for DWI processing:"
+  Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" `find $T1nativepro`
   Note "Main rsfMRI        =" `find $mainScan`
   Note "Main phase scan    =" `find $mainPhaseScan`
   Note "Main reverse phase =" `find $reversePhaseScan`
   Note "Main rsfMRI json   =" `find $mainScanJson`
+  Note "TOPUP config file  =" `find $topupConfigFile`
+  Note "ICA-FIX training   =" `find $icafixTraining`
 }
 
 t1w_str() {

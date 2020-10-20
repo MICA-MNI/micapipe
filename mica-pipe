@@ -132,6 +132,16 @@ do
     procfMRI=TRUE
     shift
   ;;
+  -topupConfig)
+    configFileInput=TRUE
+    configFile=$2
+    shift;shift
+  ;;
+  -icafixTraining)
+    icaFileInput=TRUE
+    trainingFile=$2
+    shift;shift
+  ;;
   -post_structural)
     postVOL=TRUE
     shift
@@ -202,8 +212,18 @@ Error "A processing flag is missing:
                     -post
                     -post_structural
                     -post_tractography
-                    -post_mpc"
+                    -post_mpc
+                    -post_gd"
 help; exit 1; fi
+
+# Optional arguments rs-fmri
+optarg_rsfmri=($configFile $trainingFile)
+if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile
+else optarg_rsfmri[0]=DEFAULT
+fi
+if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile
+else optarg_rsfmri[1]=DEFAULT
+fi
 
 # Get the real path of the Inputs
 out=`realpath $out`
@@ -409,25 +429,26 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-rsfmri_$(date +'%d-%m-%Y')
+        
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]] ; then
         Info "MICA qsub - Resting state fMRI processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Resting state fMRI processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup 
     else
         # LOCAL - Resting state fMRI processing
-        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 

@@ -119,6 +119,42 @@ else:
 # save timeseries in conte69 format
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr)
 
+
+# mean framewise displacement + save plot
+fd = np.loadtxt(x_fd)
+title = 'mean FD: ' + str(np.mean(fd))
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(16, 6))
+plt.plot(fd, color="#2171b5")
+plt.title(title, fontsize=16)
+ax.set(xlabel='')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png', dpi=300)
+
+
+# tSNR
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_NoHP.mgh'))
+lh_nat_noHP_data = nib.load(lh_nat_noHP)
+lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_NoHP.mgh'))
+rh_nat_noHP_data = nib.load(rh_nat_noHP)
+rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
+
+lhM = np.mean(lh_nat_noHP_data, axis = 1)
+lhSD = np.std(lh_nat_noHP_data, axis = 1)
+lh_tSNR = np.divide(lhM, lhSD)
+
+rhM = np.mean(rh_nat_noHP_data, axis = 1)
+rhSD = np.std(rh_nat_noHP_data, axis = 1)
+rh_tSNR = np.divide(rhM, rhSD)
+
+tSNR = np.append(lh_tSNR, rh_tSNR)
+tSNR = np.expand_dims(tSNR, axis=1)
+
+np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR)
+
+
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Start with conte parcellations
 parcellationList = ['glasser-360_conte69',
@@ -203,20 +239,6 @@ for parcellation in parcellationList:
     ts_r[:, 0] = 0
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
                ts_r)
-
-# mean framewise displacement + save plot
-fd = np.loadtxt(x_fd)
-title = 'mean FD: ' + str(np.mean(fd))
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(figsize=(16, 6))
-plt.plot(fd, color="#2171b5")
-plt.title(title, fontsize=16)
-ax.set(xlabel='')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png', dpi=300)
-
-
 
 
 # Now generate native surface connectomes
