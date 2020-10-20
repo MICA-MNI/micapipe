@@ -179,6 +179,19 @@ register_QC() {
   rm ${QC}*.png
 }
 
+micapipe_software() {
+  Info "MICA pipe - Software versions"
+  Note "MRtrix3    =" "`mrinfo -version | awk 'NR==1 {print $3}'`"
+  Note "FSL        =" "`flirt -version | awk '{print $3}'`"
+  Note "ANFI       =" "`afni -version | awk -F ':' '{print $2}'`"
+  Note "ANTS       =" "`antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"
+  Note "WorkBench  =" "`wb_command -version | awk 'NR==3{print $2}'`"
+  Note "FreeSurfer =" "`recon-all -version`"
+  Note "fix        =" "`which fix`"
+  Note "python     =" "`python --version`"
+  Note "R          =" "`R --version | awk 'NR==1{print $3}'`"
+}
+
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
 # This is optional on the pipelines

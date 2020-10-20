@@ -54,7 +54,7 @@ if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a
 
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
-
+micapipe_software
 # print the names on the terminal
 bids_print.variables-rsfmri
 
@@ -402,14 +402,14 @@ for x in lh rh; do
               --hemi ${x} \
               --out ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh
           Do_cmd mri_convert ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii
-          
+
           Do_cmd wb_command -metric-smoothing \
               ${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii  \
               ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii \
               10 \
               ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii ${out_surf_native}
-          
+
           # Register to conte69 and apply smooth
           Do_cmd wb_command -metric-resample \
               ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii \
@@ -425,10 +425,10 @@ for x in lh rh; do
               ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k.func.gii \
               10 \
               ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.func.gii
-          
+
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k.func.gii ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_c69-32k.mgh
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.func.gii ${out_surf}
-          
+
     else
           Info "Subject ${id} has a singleecho fmri2fs ${x}_conte69-32 10mm surface"
     fi

@@ -110,8 +110,10 @@ if [[ -z `which 3dresample` ]]; then Error "AFNI was not found"; else Info "AFNI
 if [[ -z `which antsRegistration` ]]; then Error "ANTs was not found"; else Info "ANTS version: `antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"; fi
 # workbench
 if [[ -z `which wb_command` ]]; then Error "WorkBench was not found"; else Info "workbench version: `wb_command -version | awk 'NR==3{print $2}'`"; fi
-# workbench
+# fix
 if [[ -z `which fix` ]]; then Warning "fix was not found, ICA-FIX will be skipped"; else Info "ICA-based Xnoiseifier was found here: `which fix`"; fi
+# R
+if [[ -z `which R` ]]; then Warning "R was not found"; else Info "R was found here: `which R`, version `R --version | awk 'NR==1{print $3}'`"; fi
 
 
 # print the names on the terminal

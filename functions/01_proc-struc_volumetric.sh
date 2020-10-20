@@ -40,6 +40,7 @@ bids_variables $BIDS $id $out
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
+micapipe_software
 # print the names on the terminal
 bids_print.variables
 

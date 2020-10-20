@@ -47,6 +47,7 @@ if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesur
 
 #------------------------------------------------------------------------------#
 Title "Running MICA MPC processing"
+micapipe_software
 # print the names on the terminal
 bids_print.variables-post
 

@@ -48,6 +48,7 @@ if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere
 
 #------------------------------------------------------------------------------#
 Title "Running MICA Geodesic distance processing"
+micapipe_software
 # print the names on the terminal
 bids_print.variables-post
 
@@ -99,4 +100,3 @@ Title "Post-GD processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minu
 `ls ${dir_logs}/post-gd.txt`"
 
 echo "${id}, post_GD, TEST, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-

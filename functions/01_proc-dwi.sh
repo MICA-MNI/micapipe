@@ -43,6 +43,7 @@ if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\
 
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
+micapipe_software
 # print the names on the terminal
 bids_print.variables-dwi
 

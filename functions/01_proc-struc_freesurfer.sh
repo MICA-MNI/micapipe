@@ -52,6 +52,7 @@ fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Freesurfer"
+micapipe_software
 # print the names on the terminal
 bids_print.variables
 

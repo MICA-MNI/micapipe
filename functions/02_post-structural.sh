@@ -45,6 +45,7 @@ if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
+micapipe_software
 # print the names on the terminal
 bids_print.variables-post
 

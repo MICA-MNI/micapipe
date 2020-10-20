@@ -61,6 +61,7 @@ if [ -f $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif ]; then Error "Subject $id has a
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
+micapipe_software
 
 #	Timer
 aloita=$(date +%s)
