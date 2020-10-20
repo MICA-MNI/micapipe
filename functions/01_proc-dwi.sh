@@ -148,9 +148,15 @@ if [[ ! -f $dwi_corr ]]; then
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
       dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
-      Do_cmd cp -rf ${tmp}/dwifslpreproc*/*eddy.eddy* ${proc_dwi}/eddy
       # Step QC
-      if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit; else Do_cmd rm $dwi_n4; ((Nsteps++)); fi
+      if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit;
+      else
+          Do_cmd rm $dwi_n4; ((Nsteps++))
+          # Copy eddy parameters
+          eddy_DIR=${proc_dwi}/eddy
+          if [ ! -d ${eddy_DIR} ]; then Do_cmd mkdir ${eddy_DIR}; fi
+          Do_cmd cp -rf ${tmp}/dwifslpreproc*/*eddy.eddy* ${eddy_DIR}
+      fi
 else
       Info "Subject ${id} has a DWI processed with dwifslpreproc"; ((Nsteps++))
 fi
