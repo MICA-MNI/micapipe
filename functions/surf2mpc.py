@@ -37,6 +37,7 @@ dataDir = sys.argv[1]
 sub = sys.argv[2]
 num_surf = sys.argv[3]
 parc_name = sys.argv[4]
+ses_num = sys.argv[5]
 
 # Define default inpute if none given
 if len(sys.argv) < 4:
@@ -46,7 +47,7 @@ if len(sys.argv) < 3:
     num_surf = 14
 
 # setting output directory
-OPATH = "{dataDir}/sub-{sub}/ses-pre/proc_struct/surfaces/micro_profiles/".format(dataDir=dataDir, sub=sub)
+OPATH = "{dataDir}/sub-{sub}/ses-{ses}/proc_struct/surfaces/micro_profiles/".format(dataDir=dataDir, sub=sub, ses=ses_num)
 
 if os.path.exists(OPATH):
     try:
@@ -71,7 +72,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
         
         # Load parcellation in native surface space
-        pathToParc = "{dataDir}/sub-{sub}/ses-pre/proc_struct/surfaces/{sub}/label/".format(dataDir=dataDir, sub=sub)
+        pathToParc = "{dataDir}/sub-{sub}/ses-{ses}/proc_struct/surfaces/{sub}/label/".format(dataDir=dataDir, sub=sub, ses=ses_num)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)

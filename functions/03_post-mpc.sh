@@ -154,7 +154,7 @@ aparc
 aparc-a2009s'
 for parc in ${all_parcellations}; do
     parc_annot=${parc}_mics.annot
-    Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot"
+    Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$num_surfs" "$parc_annot" "$SES"
     echo completed "$parc"
 done
 
