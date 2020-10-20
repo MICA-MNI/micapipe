@@ -62,7 +62,7 @@ N=${#bids_T1ws[@]} # total number of T1w
 n=$((${N} - 1))
 
 # FSL tries to submit to SGE
-unset FSLPARALLEL #         <<<<<<<<<<<<< This is not working
+# unset FSLPARALLEL #unset SGE_ROOT         <<<<<<<<<<<<< This is not working
 
 # Creates the t1w_nativepro for structural processing
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz ]; then
@@ -257,12 +257,12 @@ fi
 # Clean temporal directory
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
 
-# Notification of completition
-Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
-`ls ${dir_logs}/proc-volumetric_*.txt`"
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
+
+# Notification of completition
+Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+`ls ${dir_logs}/proc-volumetric_*.txt`"
 echo "${id}, proc_struc, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
