@@ -40,6 +40,8 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\t\t    (REQUIRES -proc_dwi)
 \t\033[38;5;197m-post_mpc\033[0m         : Microstructural profiles and covariance analysis
 \t\t\t    (REQUIRES -proc_structural; -proc_freesurfer and -post_structural)
+\t\033[38;5;197m-post_mpc\033[0m         : Geodesic distance analysis
+\t\t\t    (REQUIRES -proc_structural; -proc_freesurfer and -post_structural)
 
    Software versions requirements:
     > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
