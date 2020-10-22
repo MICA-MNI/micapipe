@@ -12,7 +12,8 @@ Usage:    `basename $0`\033[0m  \033[38;5;197m-in\033[0m <DICOMS_directory> \033
 \t\t\t  -id CAN be different than -in DICOMS directory
 \t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory ( . or FULL PATH)
 \t\t\033[38;5;197m-force\033[0m 	flag that will overwrite the directory
-\t\t\033[38;5;197m-mica\033[0m 	flag only for MICA local.
+\t\t\033[38;5;197m-ses\033[0m 	flag to specify the session number (DEFAULT is 'ses-pre')
+\t\t\033[38;5;197m-mica\033[0m 	ALWAYS use this flag in mica workstations
 
 Check output with:
 http://bids-standard.github.io/bids-validator/
@@ -52,7 +53,7 @@ fi
 if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
 [ERROR]... MICAPIPE is defined but the PATH is wrong,
-           it should match /micasoft directory\033[0m
+           it should match /micapipe directory\033[0m
            CHECK PATH to MICAPIPE:
            $MICAPIPE\n
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
@@ -100,12 +101,6 @@ do
    esac
 done
 
-# ONLY for local MICA processing, DO NOT MODIFY
-if [[ ${mica} == TRUE ]]; then
-    SUBJ_DCM=/host/fladgate/local_raid/prismaScans/MICA-MTL/${SUBJ_DCM}/scan_session_01/dicoms_sorted/
-    # BIDS_DIR=/data_/mica3/BIDS_MIC/rawdata-raw # <<<< Change this!!!
-fi
-
 # argument check out & WARNINGS
 arg=($SUBJ_DCM $Subj $BIDS_DIR)
 if [ "${#arg[@]}" -lt 3 ]; then
@@ -148,9 +143,8 @@ if [ -d ${BIDS_DIR}/sub-${Subj} ]; then Error "Output directory already exist, u
 # Save actual path
 here=`pwd`
 
-# Sequence names and variables
-# ses is for default "ses-pre"
-if [ -z ${SES} ]; then SES="ses-pre"; fi
+# Sequence names and variables (ses is for default "ses-pre")
+if [ -z ${SES} ]; then SES="ses-pre"; else SES=ses-${SES/ses-/}; fi
 id=sub-${Subj}_${SES}_
 
 # -----------------------------------------------------------------------------------------------
