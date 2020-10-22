@@ -81,9 +81,6 @@ fi
 # Source utilities functions from MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
 
-
-Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id"
-
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
 # Create VARIABLES
@@ -232,11 +229,14 @@ out=`realpath $out`
 BIDS=`realpath $BIDS`
 id=${id/sub-/}
 
-# Number of session (Default is "ses-pre") <<<<<<<<<<<< RENAME to ses-01 ????
-if [ -z ${SES} ]; then export SES="ses-pre"; fi
+# Number of session (Default is "ses-pre")
+if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 
 # Check BIDS Directory
 if [ ! -d ${BIDS}/sub-${id}/${SES} ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${BIDS}/sub-${id}/${SES}"; exit 1; fi
+
+# -----------------------------------------------------------------------------------------------#
+Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
 
 # -----------------------------------------------------------------------------------------------#
 # init file for local processing at MICA lab
@@ -431,7 +431,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-rsfmri_$(date +'%d-%m-%Y')
-        
+
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]] ; then
         Info "MICA qsub - Resting state fMRI processing"
@@ -447,7 +447,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup 
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup
     else
         # LOCAL - Resting state fMRI processing
         ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
