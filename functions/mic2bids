@@ -122,6 +122,10 @@ if [[ -z `which dcm2niix` ]]; then Error "dcm2niix NOT found"; exit 0; else Info
 SUBJ_DCM=`realpath $SUBJ_DCM`
 BIDS_DIR=`realpath $BIDS_DIR`
 
+# Sequence names and variables (ses is for default "ses-pre")
+if [ -z ${SES} ]; then SES="ses-pre"; else SES=ses-${SES/ses-/}; fi
+id=sub-${Subj}_${SES}_
+
 # Check mandatory inputs: -id Is $SUBJ_DCM found?
 arg=($Subj)
 if [ "${#arg[@]}" -lt 1 ]; then Error "Subject id is missing: $Subj"; help; exit 0; fi
@@ -137,15 +141,11 @@ if [ ! -d ${SUBJ_DCM} ]; then Error "Subject DICOMS directory doesn't exist: \n\
 fi
 
 # overwrite BIDS-SUBJECT
-if [[ ${force} == TRUE ]]; then rm -rf ${BIDS_DIR}/sub-${Subj}; fi
-if [ -d ${BIDS_DIR}/sub-${Subj} ]; then Error "Output directory already exist, use -force to overwrite it. \n\t     ${BIDS_DIR}/sub-${Subj}\t    "; exit 0; fi
+if [[ ${force} == TRUE ]]; then rm -rf ${BIDS_DIR}/sub-${Subj}/${SES}; fi
+if [ -d ${BIDS_DIR}/sub-${Subj}/${SES} ]; then Error "Output directory already exist, use -force to overwrite it. \n\t     ${BIDS_DIR}/sub-${Subj}/${SES}\t    "; exit 0; fi
 
 # Save actual path
 here=`pwd`
-
-# Sequence names and variables (ses is for default "ses-pre")
-if [ -z ${SES} ]; then SES="ses-pre"; else SES=ses-${SES/ses-/}; fi
-id=sub-${Subj}_${SES}_
 
 # -----------------------------------------------------------------------------------------------
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
