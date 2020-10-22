@@ -110,9 +110,13 @@ Note "-id " "$Subj"
 Note "-bids " "$BIDS_DIR"
 help; exit 0; fi
 
+# Sequence names and variables (ses is for default "ses-pre")
+if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
+id=sub-${Subj}_${SES}_
+
 echo -e "\n\033[38;5;141m
 -------------------------------------------------------------
-        DICOM to BIDS - Subject $Subj
+        DICOM to BIDS - Subject $Subj - Session $SES
 -------------------------------------------------------------\033[0m"
 
 # argument check out & WARNINGS
@@ -121,10 +125,6 @@ if [[ -z `which dcm2niix` ]]; then Error "dcm2niix NOT found"; exit 0; else Info
 
 SUBJ_DCM=`realpath $SUBJ_DCM`
 BIDS_DIR=`realpath $BIDS_DIR`
-
-# Sequence names and variables (ses is for default "ses-pre")
-if [ -z ${SES} ]; then SES="ses-pre"; else SES=ses-${SES/ses-/}; fi
-id=sub-${Subj}_${SES}_
 
 # Check mandatory inputs: -id Is $SUBJ_DCM found?
 arg=($Subj)
