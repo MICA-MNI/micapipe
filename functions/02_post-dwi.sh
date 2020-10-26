@@ -47,7 +47,7 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tracts=40M # <<<<<<<<<<<<<<<<<< Number of stremalines
+tracts=10M # <<<<<<<<<<<<<<<<<< Number of stremalines
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -112,12 +112,12 @@ dwi_cere=${proc_dwi}/${id}_dwi_cerebellum.nii.gz
 dwi_subc=${proc_dwi}/${id}_dwi_subcortical.nii.gz
 
 if [[ ! -f $dwi_cere ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_cerebellum -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_cere -v -u int
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_cerebellum -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cere -v -u int
       if [[ -f $dwi_cere ]]; then ((Nparc++)); fi
 else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
 
 if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_subcortex -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_subc -v -u int
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_subcortex -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_subc -v -u int
       if [[ -f $dwi_subc ]]; then ((Nparc++)); fi
 else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
 
@@ -131,7 +131,7 @@ for seg in $parcellations; do
     # Build the Cortical-Subcortical connectomes
     Info "Building $parc_name cortical connectome"
     # Take parcellation into DWI space
-    Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
+    Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
     # Build the Cortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex ${nom}.txt \
