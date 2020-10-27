@@ -187,24 +187,24 @@ register_QC() {
 
 micapipe_software() {
   Info "MICA pipe - Software versions"
-  Note "MRtrix3    =" "`mrinfo -version | awk 'NR==1 {print $3}'`"
-  Note "      PATH =" "`which mrinfo`"
-  Note "FSL        =" "`flirt -version | awk '{print $3}'`"
-  Note "      PATH =" $FSLDIR
-  Note "ANFI       =" "`afni -version | awk -F ':' '{print $2}'`"
-  Note "      PATH =" "`which 3dresample`"
-  Note "ANTS       =" "`antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"
-  Note "      PATH =" $ANTSPATH
-  Note "WorkBench  =" "`wb_command -version | awk 'NR==3{print $2}'`"
-  Note "      PATH =" "`which wb_command`"
-  Note "FreeSurfer =" "`recon-all -version`"
-  Note "      PATH =" $FREESURFER_HOME
-  Note "fix        =" "`which fix`"
-  Note "      PATH =" $FIXPATH
-  Note "python     =" "`python --version`"
-  Note "      PATH =" "`which python`"
-  Note "R          =" "`R --version | awk 'NR==1{print $3}'`"
-  Note "      PATH =" "`which R`"
+  Note "MRtrix3....." "`mrinfo -version | awk 'NR==1 {print $3}'`"
+  Note "            " "`which mrinfo`"
+  Note "FSL........." "`flirt -version | awk '{print $3}'`"
+  Note "            " $FSLDIR
+  Note "ANFI........" "`afni -version | awk -F ':' '{print $2}'`"
+  Note "            " "`which 3dresample`"
+  Note "ANTS........" "`antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"
+  Note "            " $ANTSPATH
+  Note "WorkBench..." "`wb_command -version | awk 'NR==3{print $2}'`"
+  Note "            " "`which wb_command`"
+  Note "FreeSurfer.." "`recon-all -version`"
+  Note "            " $FREESURFER_HOME
+  Note "fix........." "`which fix`"
+  Note "            " $FIXPATH
+  Note "python......" "`python --version`"
+  Note "            " "`which python`"
+  Note "R..........." "`R --version | awk 'NR==1{print $3}'`"
+  Note "            " "`which R`"
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
