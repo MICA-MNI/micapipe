@@ -137,7 +137,6 @@ if [[ ! -f $dwi_corr ]]; then
             dim=`mrinfo $b0_pair_tmp -size`
             dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
             mrconvert $b0_pair_tmp $b0_pair -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
-
             opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
       else
             opt='-rpe_none'
@@ -237,39 +236,41 @@ fi
 #------------------------------------------------------------------------------#
 # Response function and Fiber Orientation Distribution
 fod=$proc_dwi/${id}_wm_fod_norm.mif
-
+fod_gmN=$proc_dwi/${id}_gm_fod_norm.mif
+fod_csfN=$proc_dwi/${id}_csf_fod_norm.mif
 if [[ ! -f $fod ]]; then
       Info "Calculating Multi-Shell Multi-Tissue, Response function and Fiber Orientation Distribution"
-      if [ "${#shells[@]}" -ge 2 ]; then rf=dhollander
+      # if [ "${#shells[@]}" -ge 2 ]; then
+            rf=dhollander
             # Response function
-            rf_wm=${proc_dwi}/${id}_response_wm_${rf}.txt
-            rf_gm=${proc_dwi}/${id}_response_gm_${rf}.txt
-            rf_csf=${proc_dwi}/${id}_response_csf_${rf}.txt
+            rf_wm=${tmp}/${id}_response_wm_${rf}.txt
+            rf_gm=${tmp}/${id}_response_gm_${rf}.txt
+            rf_csf=${tmp}/${id}_response_csf_${rf}.txt
             # Fiber Orientation Distriution
-            fod_wm=${proc_dwi}/${id}_wm_fod.mif
-            fod_gm=${proc_dwi}/${id}_gm_fod.mif
-            fod_csf=${proc_dwi}/${id}_csf_fod.mif
+            fod_wm=${tmp}/${id}_wm_fod.mif
+            fod_gm=${tmp}/${id}_gm_fod.mif
+            fod_csf=${tmp}/${id}_csf_fod.mif
 
-            Do_cmd dwi2response $rf -nthreads $CORES $dwi_corr ${rf_wm} ${rf_gm} ${rf_csf} -mask $dwi_mask
+            Do_cmd dwi2response $rf -nthreads $CORES $dwi_corr $rf_wm $rf_gm $rf_csf -mask $dwi_mask
             Do_cmd dwi2fod -nthreads $CORES msmt_csd $dwi_corr \
-                ${rf_wm} $fod_wm \
-                ${rf_gm} $fod_gm \
-                ${rf_csf} $fod_csf \
+                $rf_wm $fod_wm \
+                $rf_gm $fod_gm \
+                $rf_csf $fod_csf \
                 -mask $dwi_mask
-            Do_cmd mtnormalise $fod_wm ${fod} $fod_gm ${fod_gm/.mif/_norm.mif} $fod_csf ${fod_csf/.mif/_norm.mif} -nthreads $CORES -mask $dwi_mask
-
+      if [ "${#shells[@]}" -ge 2 ]; then
+            Do_cmd mtnormalise $fod_wm $fod $fod_gm $fod_gmN $fod_csf $fod_csfN -nthreads $CORES -mask $dwi_mask
       else
-          Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
-            Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
-                ${proc_dwi}/${id}_response_tournier.txt \
-                -mask $dwi_mask
-            Do_cmd dwi2fod -nthreads $CORES csd \
-                $dwi_corr \
-                ${proc_dwi}/${id}_response_tournier.txt  \
-                ${tmp}/FOD.mif \
-                -mask $dwi_mask
-
-            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask ${tmp}/FOD.mif $fod
+      #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
+      #
+      #       Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
+      #           ${proc_dwi}/${id}_response_tournier.txt \
+      #           -mask $dwi_mask
+      #       Do_cmd dwi2fod -nthreads $CORES csd \
+      #           $dwi_corr \
+      #           ${proc_dwi}/${id}_response_tournier.txt  \
+      #           ${tmp}/FOD.mif \
+      #           -mask $dwi_mask
+            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask $fod_wm $fod
       fi
       # Step QC
       if [[ -f ${fod} ]]; then ((Nsteps++)); fi
@@ -289,7 +290,7 @@ if [[ ! -f $tdi ]]; then
           -crop_at_gmwmi \
           -backtrack \
           -seed_dynamic $fod \
-          -maxlength 400 \
+          -maxlength 300 \
           -angle 22.5 \
           -power 1.0 \
           -select 1M \
