@@ -47,7 +47,8 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tracts=10M # <<<<<<<<<<<<<<<<<< Number of stremalines
+tracts=2M # <<<<<<<<<<<<<<<<<< Number of stremalines
+tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -56,9 +57,6 @@ if [ ! -f $mat_dwi_affine ]; then Error "Subject $id doesn't have an affine mat 
 if [ ! -f $dwi_5tt ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $T1_seg_cerebellum ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f $T1_seg_subcortex ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
-
-# Check IF output exits then EXIT
-if [ -f $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
@@ -77,31 +75,8 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Create Connectomes directory for the outpust
 [[ ! -d ${dwi_cnntm} ]] && Do_cmd mkdir -p ${dwi_cnntm}
+[[ ! -d ${dwi_QC} ]] && Do_cmd mkdir -p ${dwi_QC}
 cd ${tmp}
-
-# -----------------------------------------------------------------------------------------------
-# Generate and optimize probabilistic tracts
-Info "Building the 100 million streamlines connectome!!!"
-tck=${tmp}/DWI_tractogram_${tracts}.tck
-weights=${tmp}/SIFT2_${tracts}.txt
-Do_cmd tckgen -nthreads $CORES \
-    $fod \
-    $tck \
-    -act $dwi_5tt \
-    -crop_at_gmwmi \
-    -seed_dynamic $fod \
-    -maxlength 300 \
-    -minlength 10 \
-    -angle 22.5 \
-    -power 1.0 \
-    -backtrack \
-    -select ${tracts} \
-    -step .5 \
-    -cutoff 0.06 \
-    -algorithm iFOD2
-
-# SIFT2
-Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -114,68 +89,114 @@ dwi_subc=${proc_dwi}/${id}_dwi_subcortical.nii.gz
 if [[ ! -f $dwi_cere ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_cerebellum -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cere -v -u int
       if [[ -f $dwi_cere ]]; then ((Nparc++)); fi
+      # Threshold cerebellar nuclei (29,30,31,32,33,34,35)
+      Do_cmd fslmaths $dwi_cere -uthr 28 -add 100 $dwi_cere
 else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
 
 if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_subcortex -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_subc -v -u int
+      # Remove brain-stem (label 16)
+      Do_cmd fslmaths $dwi_subc -thr 16 -uthr 16 -binv -mul $dwi_subc $dwi_subc
       if [[ -f $dwi_subc ]]; then ((Nparc++)); fi
 else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
+
+# -----------------------------------------------------------------------------------------------
+# Check IF output exits then EXIT
+if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
+
+# Generate probabilistic tracts
+Info "Building the ${tracts} streamlines connectome!!!"
+tck=${tmp}/DWI_tractogram_${tracts}.tck
+weights=${tmp}/SIFT2_${tracts}.txt
+Do_cmd tckgen -nthreads $CORES \
+    $fod \
+    $tck \
+    -act $dwi_5tt \
+    -crop_at_gmwmi \
+    -seed_dynamic $fod \
+    -maxlength 300 \
+    -minlength 10 \
+    -angle 22.5 \
+    -backtrack \
+    -select ${tracts} \
+    -step .5 \
+    -cutoff 0.06 \
+    -algorithm iFOD2
+
+# SIFT2
+Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
+
+# TDI for QC
+Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
 for seg in $parcellations; do
     parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
     nom=${dwi_cnntm}/${id}_${tracts}_${parc_name}
-    dwi_cortex=$tmp/${id}_${parc_name}_dwi.nii.gz # Segmentation in dwi space
+    dwi_cortex=$tmp/${id}_${parc_name}-cor_dwi.nii.gz # Segmentation in dwi space
+
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes
     Info "Building $parc_name cortical connectome"
     # Take parcellation into DWI space
     Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
+    # QC of the tractogram and labels
+    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortex -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
+    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_cor.png
     # Build the Cortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_cortex ${nom}.txt \
-        -tck_weights_in $weights -out_assignments ${nom}_assignments.txt \
-
+        $tck $dwi_cortex "${nom}_cor-connectome.txt" \
+        -tck_weights_in $weights -quiet
+    # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_cortex ${nom}_edgeLengths.txt \
-        -tck_weights_in $weights -scale_length -stat_edge mean
-    if [[ -f ${nom}.txt ]]; then ((Nparc++)); fi
+        $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
+        -tck_weights_in $weights -scale_length -stat_edge mean -quiet
+    # Slice connectome based on cortical LUT
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+    if [[ -f "${nom}_cor-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes (-sub)
     Info "Building $parc_name cortical-subcortical connectome"
     dwi_cortexSub=$tmp/${id}_${parc_name}-sub_dwi.nii.gz
     Do_cmd fslmaths $dwi_cortex -add $dwi_subc $dwi_cortexSub -odt int # added the subcortical parcellation
-
+    # QC of the tractogram and labels
+    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortexSub -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
+    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_sub.png
+    # Build the Cortical-Subcortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_cortexSub ${nom}-sub.txt \
-        -tck_weights_in $weights -out_assignments ${nom}-sub_assignments.txt \
-
+        $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
+        -tck_weights_in $weights -quiet
+    # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_cortexSub ${nom}-sub_edgeLengths.txt \
-        -tck_weights_in $weights -scale_length -stat_edge mean
-    if [[ -f ${nom}-sub.txt ]]; then ((Nparc++)); fi
+        $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
+        -tck_weights_in $weights -scale_length -stat_edge mean -quiet
+    # Slice connectome based on cortical + subcortical LUT
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+    if [[ -f "${nom}_sub-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical-Cerebellar connectomes (-sub-cereb)
     Info "Building $parc_name cortical-subcortical-cerebellum connectome"
-    dwi_all=$tmp/${id}_${parc_name}-all_dwi.nii.gz
-    Do_cmd fslmaths $dwi_cere -add 100 -add $dwi_cortexSub $dwi_all -odt int # added the subcortical parcellation
-
+    dwi_all=$tmp/${id}_${parc_name}-full_dwi.nii.gz
+    Do_cmd fslmaths $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
+    # QC of the tractogram and labels
+    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_all -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
+    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_full.png
+    # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_all ${nom}-all.txt \
-        -tck_weights_in $weights -out_assignments ${nom}-all_assignments.txt \
-
+        $tck $dwi_all "${nom}_full-connectome.txt" \
+        -tck_weights_in $weights -quiet\
+    # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
-        $tck $dwi_all ${nom}-all_edgeLengths.txt \
-        -tck_weights_in $weights -scale_length -stat_edge mean
-    if [[ -f ${nom}-all.txt ]]; then ((Nparc++)); fi
-
+        $tck $dwi_all "${nom}_full-edgeLengths.txt" \
+        -tck_weights_in $weights -scale_length -stat_edge mean -quiet
+    # Slice connectome based on cortical + subcortical + cerebellum LUT
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+    if [[ -f "${nom}_full-connectome.txt" ]]; then ((Nparc++)); fi
 done
-
-# TDI for QC
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # -----------------------------------------------------------------------------------------------
 # Compute Auto-Tractography (Future Release version)
@@ -183,7 +204,7 @@ Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $proc_dwi/${id}_tdi_iFOD2-${
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 cd $here
 
 # QC notification of completition
