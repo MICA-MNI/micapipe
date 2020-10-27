@@ -195,11 +195,11 @@ for mm in 2 0.8; do
       #antsApplyTransforms -d 3 -i ${T1nativepro} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${T1_MNI152}
 
       # Warp the T1 nativepro FAST to MNI152 WHAT for??? <<<<<<<<<< still don't know what for
-      T1str_nat_brain=${T1nativepro_brain/.nii.gz/_}
-      new_str=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_
-      for fst in mixeltype.nii.gz pve_0.nii.gz pve_1.nii.gz pve_2.nii.gz pveseg.nii.gz seg.nii.gz; do
-          Do_cmd antsApplyTransforms -d 3 -i ${T1str_nat_brain}${fst} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${new_str}${fst}
-      done
+      # T1str_nat_brain=${T1nativepro_brain/.nii.gz/_}
+      # new_str=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_
+      # for fst in mixeltype.nii.gz pve_0.nii.gz pve_1.nii.gz pve_2.nii.gz pveseg.nii.gz seg.nii.gz; do
+      #     Do_cmd antsApplyTransforms -d 3 -i ${T1str_nat_brain}${fst} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${new_str}${fst}
+      # done
 
   else
       Info "Subject ${id} has t1w_${mm}mm_nativepro on MNI152 space and FSL-fast "
