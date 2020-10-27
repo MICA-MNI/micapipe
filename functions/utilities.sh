@@ -192,7 +192,7 @@ micapipe_software() {
   Note "FSL        =" "`flirt -version | awk '{print $3}'`"
   Note "      PATH =" $FSLDIR
   Note "ANFI       =" "`afni -version | awk -F ':' '{print $2}'`"
-  Note "      PATH =" $AFNIDIR
+  Note "      PATH =" "`which 3dresample`"
   Note "ANTS       =" "`antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"
   Note "      PATH =" $ANTSPATH
   Note "WorkBench  =" "`wb_command -version | awk 'NR==3{print $2}'`"
@@ -202,7 +202,7 @@ micapipe_software() {
   Note "fix        =" "`which fix`"
   Note "      PATH =" $FIXPATH
   Note "python     =" "`python --version`"
-  Note "      PATH =" $PYTHONPATH
+  Note "      PATH =" "`which python`"
   Note "R          =" "`R --version | awk 'NR==1{print $3}'`"
   Note "      PATH =" "`which R`"
 }
