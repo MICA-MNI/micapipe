@@ -85,7 +85,11 @@ Info "DWI denoise, bias filed correction and concatenation"
       done
 
       # Concatenate shells and convert to mif.
-      Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $CORES
+      if [ "${#bids_dwis[@]}" -eq 1 ]; then
+        cp ${tmp}/*.mif $dwi_cat
+      else
+        Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $CORES
+      fi
 
       # Denoise DWI and calculate residuals
       Do_cmd dwidenoise $dwi_cat $dwi_dns -nthreads $CORES
@@ -106,6 +110,9 @@ if [[ ! -f $dwi_corr ]]; then
       # Get parameters
       ReadoutTime=`mrinfo $dwi_n4 -property TotalReadoutTime`
       pe_dir=`mrinfo $dwi_n4 -property PhaseEncodingDirection`
+      shells=(`mrinfo $dwi_n4 -shell_bvalues`)
+      # Exclude shells with 0 value
+      for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
       dwi_4proc=${tmp}/dwi_n4_even.mif
@@ -131,13 +138,13 @@ if [[ ! -f $dwi_corr ]]; then
             dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
             mrconvert $b0_pair_tmp $b0_pair -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
 
-            opt="-rpe_pair -se_epi ${b0_pair}"
+            opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
       else
             opt='-rpe_none'
       fi
 
       Info "dwifslpreproc parameters:"
-      Note "Shell values        :" "`mrinfo $dwi_4proc -shell_bvalues`"
+      Note "Shell values        :" ${shells[@]}
       Note "DWI main dimensions :" "`mrinfo $dwi_4proc -size`"
       Note "DWI rpe dimensions  :" "`mrinfo $b0_pair -size`"
       Note "pe_dir              :" $pe_dir
@@ -146,8 +153,8 @@ if [[ ! -f $dwi_corr ]]; then
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp"
-      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -align_seepi -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
+      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force"
+      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
       # Step QC
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
@@ -229,12 +236,11 @@ fi
 
 #------------------------------------------------------------------------------#
 # Response function and Fiber Orientation Distribution
-shells=(`mrinfo ${dwi_corr} -shell_bvalues`)
 fod=$proc_dwi/${id}_wm_fod_norm.mif
 
 if [[ ! -f $fod ]]; then
-      Info "Calculating Response function and Fiber Orientation Distribution"
-      if [ "${#shells[@]}" -ge 3 ]; then rf=dhollander
+      Info "Calculating Multi-Shell Multi-Tissue, Response function and Fiber Orientation Distribution"
+      if [ "${#shells[@]}" -ge 2 ]; then rf=dhollander
             # Response function
             rf_wm=${proc_dwi}/${id}_response_wm_${rf}.txt
             rf_gm=${proc_dwi}/${id}_response_gm_${rf}.txt
@@ -253,12 +259,13 @@ if [[ ! -f $fod ]]; then
             Do_cmd mtnormalise $fod_wm ${fod} $fod_gm ${fod_gm/.mif/_norm.mif} $fod_csf ${fod_csf/.mif/_norm.mif} -nthreads $CORES -mask $dwi_mask
 
       else
+          Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
             Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
                 ${proc_dwi}/${id}_response_tournier.txt \
                 -mask $dwi_mask
-            Do_cmd dwi2fod -nthreads $CORES msmt_csd \
+            Do_cmd dwi2fod -nthreads $CORES csd \
                 $dwi_corr \
-                ${proc_dwi}/${id}_tournier_response.txt  \
+                ${proc_dwi}/${id}_response_tournier.txt  \
                 ${tmp}/FOD.mif \
                 -mask $dwi_mask
 
