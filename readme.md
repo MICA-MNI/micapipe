@@ -35,6 +35,14 @@ export CORES=20
 export OMP_NUM_THREADS=4  
 export tmp=<path to temporal directory>  
 ```
+  
+## Anonymize your dataset
+We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html) to anonymize T1w as well as quantitative T1 images.
+
+# `mica-pipe` command and modules  
+
+## fMRI processing (`-proc_rsfmri`)  
+proc_rsfmri does not run time slicing correction.
 
 ## DWI processing (`-proc_dwi`)  
 This step requires the `json` files in the BIDS database to contain the following variables:  
@@ -42,9 +50,3 @@ This step requires the `json` files in the BIDS database to contain the followin
 "PhaseEncodingDirection": "j-",
 "TotalReadoutTime": 0.047,
 ```
-
-## Anonymize your dataset
-We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html) to anonymize T1w as well as quantitative T1 images.
-
-## Run `mica-pipe`
-proc_rsfmri does not run time slicing correction because our scans where acquired with multiband accelerated fmri.
