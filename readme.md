@@ -19,7 +19,7 @@
 ### python packages
 - ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA)  
 
-## R libraries  
+### R libraries  
 - 'kernlab'
 - 'ROCR'  
 - 'class'  
@@ -37,7 +37,7 @@ export tmp=<path to temporal directory>
 ```
   
 ## Anonymize your dataset
-We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html) to anonymize T1w as well as quantitative T1 images.
+We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes a script to anonymize the T1w as well as quantitative T1 images.
 
 # `mica-pipe` command and modules  
 
