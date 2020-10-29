@@ -23,6 +23,7 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
 
+\t\033[38;5;197m-ses\033[0m 	         : OPTIONAL flag that indicates the session number (DEFAULT is ses-pre)
 
    Flags for eraing specific processing outputs:\n
 \t\033[38;5;197m-proc_volumetric\033[0m  : DELETES volumetric processing
