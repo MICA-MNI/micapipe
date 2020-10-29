@@ -47,7 +47,7 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tracts=2M # <<<<<<<<<<<<<<<<<< Number of stremalines
+tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
 tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 
 # Check inputs
@@ -89,8 +89,9 @@ dwi_subc=${proc_dwi}/${id}_dwi_subcortical.nii.gz
 if [[ ! -f $dwi_cere ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_cerebellum -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cere -v -u int
       if [[ -f $dwi_cere ]]; then ((Nparc++)); fi
-      # Threshold cerebellar nuclei (29,30,31,32,33,34,35)
-      Do_cmd fslmaths $dwi_cere -uthr 28 -add 100 $dwi_cere
+      # Threshold cerebellar nuclei (29,30,31,32,33,34,35) and add 100
+      Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
+      Do_cmd fslmaths $dwi_cere -bin -mul 100 -add $dwi_cere $dwi_cere
 else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
 
 if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
@@ -101,35 +102,36 @@ if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-
 else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
 
 # -----------------------------------------------------------------------------------------------
-# Check IF output exits then EXIT
-if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
-
-# Generate probabilistic tracts
-Info "Building the ${tracts} streamlines connectome!!!"
-tck=${tmp}/DWI_tractogram_${tracts}.tck
-weights=${tmp}/SIFT2_${tracts}.txt
-Do_cmd tckgen -nthreads $CORES \
-    $fod \
-    $tck \
-    -act $dwi_5tt \
-    -crop_at_gmwmi \
-    -seed_dynamic $fod \
-    -maxlength 300 \
-    -minlength 10 \
-    -angle 22.5 \
-    -backtrack \
-    -select ${tracts} \
-    -step .5 \
-    -cutoff 0.06 \
-    -algorithm iFOD2
-
-# SIFT2
-Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
-
-# TDI for QC
-Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
-
+# # Check IF output exits then EXIT
+# if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
+#
+# # Generate probabilistic tracts
+# Info "Building the ${tracts} streamlines connectome!!!"
+# tck=${tmp}/DWI_tractogram_${tracts}.tck
+# weights=${tmp}/SIFT2_${tracts}.txt
+# Do_cmd tckgen -nthreads $CORES \
+#     $fod \
+#     $tck \
+#     -act $dwi_5tt \
+#     -crop_at_gmwmi \
+#     -seed_dynamic $fod \
+#     -maxlength 300 \
+#     -minlength 10 \
+#     -angle 22.5 \
+#     -backtrack \
+#     -select ${tracts} \
+#     -step .5 \
+#     -cutoff 0.06 \
+#     -algorithm iFOD2
+#
+# # SIFT2
+# Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
+#
+# # TDI for QC
+# Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
+# Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
+tck=/tmp/11700_micapipe_post-dwi_HC10/DWI_tractogram_10M.tck
+weights=/tmp/11700_micapipe_post-dwi_HC10/SIFT2_10M.txt
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
 for seg in $parcellations; do
@@ -161,7 +163,7 @@ for seg in $parcellations; do
     # Build the Cortical-Subcortical connectomes (-sub)
     Info "Building $parc_name cortical-subcortical connectome"
     dwi_cortexSub=$tmp/${id}_${parc_name}-sub_dwi.nii.gz
-    Do_cmd fslmaths $dwi_cortex -add $dwi_subc $dwi_cortexSub -odt int # added the subcortical parcellation
+    Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_subc -add $dwi_cortex $dwi_cortexSub -odt int # added the subcortical parcellation
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortexSub -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_sub.png
@@ -181,7 +183,7 @@ for seg in $parcellations; do
     # Build the Cortical-Subcortical-Cerebellar connectomes (-sub-cereb)
     Info "Building $parc_name cortical-subcortical-cerebellum connectome"
     dwi_all=$tmp/${id}_${parc_name}-full_dwi.nii.gz
-    Do_cmd fslmaths $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
+    Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_all -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_full.png
@@ -213,7 +215,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nparc" -eq 56 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
+if [ "$Nparc" -eq 54 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
 Title "TEST-DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/56
 \tlogs:
