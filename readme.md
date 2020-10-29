@@ -24,6 +24,13 @@ export OMP_NUM_THREADS=4
 export tmp=<path to temporal directory>  
 ```
 
+## DWI processing (`-proc_dwi`)  
+This step requires the `json` files in the BIDS database to contain the following variables:  
+```bash
+"PhaseEncodingDirection": "j-",
+"TotalReadoutTime": 0.047,
+```
+
 ## Anonymize your dataset
 We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes scripts to do so using AFNI's reface plus tool (https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/tutorials/refacer/refacer_run.html) to anonymize T1w as well as quantitative T1 images.
 
