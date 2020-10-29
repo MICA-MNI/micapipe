@@ -41,6 +41,8 @@ We strongly recommend to anonymize the dataset before running the pipelines. Thi
 
 # `mica-pipe` command and modules  
 
+## MRI structural processing (`-proc_structural`)  
+
 ## fMRI processing (`-proc_rsfmri`)  
 proc_rsfmri does not run time slicing correction.
 
