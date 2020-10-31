@@ -144,6 +144,8 @@ for seg in $parcellations; do
     Info "Building $parc_name cortical connectome"
     # Take parcellation into DWI space
     Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
+    # Remove the medial wall
+    for i in 1000 2000; do Do_cmd fslmaths $dwi_cortex -thr $i -uthr $i -binv -mul $dwi_cortex  $dwi_cortex; done
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortex -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_cor.png
