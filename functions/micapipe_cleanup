@@ -61,8 +61,6 @@ fi
 # Source utilities functions from MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
 
-Title "MICA pipe cleanup \n\t\tSubject: $id"
-
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
 # Create VARIABLES
@@ -146,6 +144,8 @@ BIDS=`realpath $BIDS`
 
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
+# Exit if subject is not found
+if [ ! -d ${out}/sub-${id}/${SES} ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}/${SES}"; exit 1; fi
 
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
@@ -159,6 +159,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Do_cmd rm -rf ${tmp}/*micapipe* ${tmp}/*proc* ${tmp}/*post*
 
 # ---------------------------------------------------------------------------------------
+Title "MICA pipe cleanup \n\t\tSubject: $id"
+
+
 # CLEAN -post_mpc
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files"
