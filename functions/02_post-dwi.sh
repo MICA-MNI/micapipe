@@ -103,36 +103,35 @@ if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-
 else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
 
 # -----------------------------------------------------------------------------------------------
-# # Check IF output exits then EXIT
-# if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
-#
-# # Generate probabilistic tracts
-# Info "Building the ${tracts} streamlines connectome!!!"
-# tck=${tmp}/DWI_tractogram_${tracts}.tck
-# weights=${tmp}/SIFT2_${tracts}.txt
-# Do_cmd tckgen -nthreads $CORES \
-#     $fod \
-#     $tck \
-#     -act $dwi_5tt \
-#     -crop_at_gmwmi \
-#     -seed_dynamic $fod \
-#     -maxlength 300 \
-#     -minlength 10 \
-#     -angle 22.5 \
-#     -backtrack \
-#     -select ${tracts} \
-#     -step .5 \
-#     -cutoff 0.06 \
-#     -algorithm iFOD2
-#
-# # SIFT2
-# Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
-#
-# # TDI for QC
-# Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-# Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
-tck=/tmp/11700_micapipe_post-dwi_HC10/DWI_tractogram_10M.tck
-weights=/tmp/11700_micapipe_post-dwi_HC10/SIFT2_10M.txt
+# Check IF output exits then EXIT
+if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
+
+# Generate probabilistic tracts
+Info "Building the ${tracts} streamlines connectome!!!"
+tck=${tmp}/DWI_tractogram_${tracts}.tck
+weights=${tmp}/SIFT2_${tracts}.txt
+Do_cmd tckgen -nthreads $CORES \
+    $fod \
+    $tck \
+    -act $dwi_5tt \
+    -crop_at_gmwmi \
+    -seed_dynamic $fod \
+    -maxlength 300 \
+    -minlength 10 \
+    -angle 22.5 \
+    -backtrack \
+    -select ${tracts} \
+    -step .5 \
+    -cutoff 0.06 \
+    -algorithm iFOD2
+
+# SIFT2
+Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
+
+# TDI for QC
+Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
+
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
 for seg in $parcellations; do

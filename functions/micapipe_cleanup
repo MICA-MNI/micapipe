@@ -198,7 +198,7 @@ fi
 # CLEAN -post_dwi TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     Warning "Erasing post_tractography output files"
-    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/${id}_tdi_iFOD2-*.mif ${proc_dwi}/${id}_dwi_subcortical.nii.gz ${proc_dwi}/${id}_dwi_cerebellum.nii.gz  2>&1 | tee -a  ${dir_logs}/post_tractography.txt
+    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/QC ${proc_dwi}/${id}_tdi_iFOD2-*.mif ${proc_dwi}/${id}_dwi_subcortical.nii.gz ${proc_dwi}/${id}_dwi_cerebellum.nii.gz  2>&1 | tee -a  ${dir_logs}/post_tractography.txt
 fi
 
 # ---------------------------------------------------------------------------------------
