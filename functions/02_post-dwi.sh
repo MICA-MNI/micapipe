@@ -137,6 +137,7 @@ weights=/tmp/11700_micapipe_post-dwi_HC10/SIFT2_10M.txt
 for seg in $parcellations; do
     parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
     nom=${dwi_cnntm}/${id}_${tracts}_${parc_name}
+    lut=$util_lut/lut_${parc_name}_mics.csv
     dwi_cortex=$tmp/${id}_${parc_name}-cor_dwi.nii.gz # Segmentation in dwi space
 
     # -----------------------------------------------------------------------------------------------

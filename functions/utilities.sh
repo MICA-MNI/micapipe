@@ -21,6 +21,7 @@ bids_variables() {
   export util_MNIvolumes=${MICAPIPE}/MNI152Volumes
   # Directory with all the parcellations
   export util_parcelations=${MICAPIPE}/parcellations
+  export util_lut=${MICAPIPE}/parcellations/lut
   # Directory with the resampled freesurfer surfaces
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
 
