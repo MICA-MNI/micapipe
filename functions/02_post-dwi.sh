@@ -154,12 +154,12 @@ for seg in $parcellations; do
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
         -tck_weights_in $weights -quiet
-        Rscript connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-        Rscript connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_cor-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -174,12 +174,12 @@ for seg in $parcellations; do
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
         -tck_weights_in $weights -quiet
-    Rscript connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    Rscript connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_sub-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -194,12 +194,12 @@ for seg in $parcellations; do
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-connectome.txt" \
         -tck_weights_in $weights -quiet
-    Rscript connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    Rscript connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_full-connectome.txt" ]]; then ((Nparc++)); fi
 done
 
@@ -218,8 +218,8 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nparc" -eq 54 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
-Title "TEST-DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
+if [ "$Nparc" -eq 56 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
+Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/56
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
