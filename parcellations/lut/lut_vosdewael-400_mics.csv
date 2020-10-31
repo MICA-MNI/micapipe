@@ -1,5 +1,5 @@
 roi,mics,label,R,G,B,A,side, coor.x, coor.y, coor.z
-1,1000,L_VosdeWael_Area_0,0,255,255,0,left,,,
+1,1000,L_medial_wall,255,255,255,0,left,,,
 2,1001,L_VosdeWael_Area_1,1,1,1,0,left,,,
 3,1002,L_VosdeWael_Area_2,2,2,2,0,left,,,
 4,1003,L_VosdeWael_Area_3,3,3,3,0,left,,,
@@ -200,7 +200,7 @@ roi,mics,label,R,G,B,A,side, coor.x, coor.y, coor.z
 199,1198,L_VosdeWael_Area_198,198,198,198,0,left,,,
 200,1199,L_VosdeWael_Area_199,199,199,199,0,left,,,
 201,1200,L_VosdeWael_Area_200,200,200,200,0,left,,,
-202,2000,R_VosdeWael_Area_0,255,255,0,0,right,,,
+202,2000,R_medial_wall,255,255,255,0,right,,,
 203,2001,R_VosdeWael_Area_1,0,1,1,0,right,,,
 204,2002,R_VosdeWael_Area_2,0,2,2,0,right,,,
 205,2003,R_VosdeWael_Area_3,0,3,3,0,right,,,

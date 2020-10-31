@@ -1,5 +1,5 @@
 roi,mics,label,R,G,B,A,coor.x,coor.y,coor.z
-1,1000,,,,,,,,
+1,1000,medial_wall,,,,,,,
 2,1001,7Networks_LH_Vis_1,120,18,129,0,-24,-53,-9
 3,1002,7Networks_LH_Vis_2,120,18,130,0,-26,-77,-14
 4,1003,7Networks_LH_Vis_3,120,18,131,0,-45,-69,-8
@@ -100,7 +100,7 @@ roi,mics,label,R,G,B,A,coor.x,coor.y,coor.z
 99,1098,7Networks_LH_Default_pCunPCC_3,205,64,80,0,-4,-31,36
 100,1099,7Networks_LH_Default_pCunPCC_4,205,64,81,0,-6,-54,42
 101,1100,7Networks_LH_Default_PHC_1,206,62,79,0,-26,-32,-18
-102,2000,,,,,,,,
+102,2000,medial_wall,,,,,,,
 103,2001,7Networks_RH_Vis_1,124,18,129,0,39,-35,-23
 104,2002,7Networks_RH_Vis_2,124,18,130,0,28,-36,-14
 105,2003,7Networks_RH_Vis_3,124,18,131,0,29,-69,-12
