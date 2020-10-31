@@ -47,8 +47,9 @@ T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
 tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
+lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
+tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -137,7 +138,7 @@ weights=/tmp/11700_micapipe_post-dwi_HC10/SIFT2_10M.txt
 for seg in $parcellations; do
     parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
     nom=${dwi_cnntm}/${id}_${tracts}_${parc_name}
-    lut=$util_lut/lut_${parc_name}_mics.csv
+    lut="${util_lut}/lut_${parc_name}_mics.csv"
     dwi_cortex=$tmp/${id}_${parc_name}-cor_dwi.nii.gz # Segmentation in dwi space
 
     # -----------------------------------------------------------------------------------------------
@@ -154,12 +155,12 @@ for seg in $parcellations; do
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
         -tck_weights_in $weights -quiet
+        Rscript connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    # Slice connectome based on cortical LUT
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+        Rscript connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_cor-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -174,12 +175,12 @@ for seg in $parcellations; do
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
         -tck_weights_in $weights -quiet
+    Rscript connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    # Slice connectome based on cortical + subcortical LUT
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+    Rscript connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_sub-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -193,13 +194,13 @@ for seg in $parcellations; do
     # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-connectome.txt" \
-        -tck_weights_in $weights -quiet\
+        -tck_weights_in $weights -quiet
+    Rscript connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    # Slice connectome based on cortical + subcortical + cerebellum LUT
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MUST DO
+    Rscript connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
     if [[ -f "${nom}_full-connectome.txt" ]]; then ((Nparc++)); fi
 done
 
