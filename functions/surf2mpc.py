@@ -30,6 +30,7 @@ import sys
 import os
 import numpy as np
 import nibabel as nib
+import pandas as pd
 from build_mpc import build_mpc
 
 # Define input arguments
@@ -47,7 +48,7 @@ if len(sys.argv) < 3:
     num_surf = 14
 
 # setting output directory
-OPATH = "{dataDir}/sub-{sub}/ses-{ses}/proc_struct/surfaces/micro_profiles/".format(dataDir=dataDir, sub=sub, ses=ses_num)
+OPATH = "{dataDir}/sub-{sub}/{ses}/proc_struct/surfaces/micro_profiles/".format(dataDir=dataDir, sub=sub, ses=ses_num)
 
 if os.path.exists(OPATH):
     try:
@@ -72,7 +73,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
         
         # Load parcellation in native surface space
-        pathToParc = "{dataDir}/sub-{sub}/ses-{ses}/proc_struct/surfaces/{sub}/label/".format(dataDir=dataDir, sub=sub, ses=ses_num)
+        pathToParc = "{dataDir}/sub-{sub}/{ses}/proc_struct/surfaces/{sub}/label/".format(dataDir=dataDir, sub=sub, ses=ses_num)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)
@@ -87,6 +88,32 @@ if os.path.exists(OPATH):
             parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
         for x in range(len(labels_rh)):
             parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
+        uparcel = np.unique(parc)
+        
+        # Exclude medial wall and corpus callosum
+        # Some hardcoded things to deal with label naming specific to aparc and aparc-a2009s...
+        # Glasser, vosdewael, and Schaefer all have medial wall at same place
+        parcShortName = parc_name.replace("_mics.annot", "")
+        if parcShortName == 'aparc': 
+            exclude_labels = []
+            for i in range(len(names_lh)):
+                # Exclude corpus callosum plus medial wall ("unknown")
+                if (names_lh[i].decode() == 'corpuscallosum' or names_lh[i].decode() == 'unknown'):
+                    reg = [i, i + int(len(uparcel)/2)]
+                    exclude_labels = np.append(exclude_labels, reg, axis = 0)
+        elif parcShortName == 'aparc-a2009s': 
+            exclude_labels = []
+            for i in range(len(names_lh)):
+                # Exclude pericallosal plus medial wall. 
+                # The label "unknown" is not represented in the parcellation. 
+                # For this reason we have to adjust the label numbers by subtracting 1 (line 111)
+                if (names_lh[i].decode() == 'S_pericallosal' or names_lh[i].decode() == 'G_subcallosal' or names_lh[i].decode() == 'Medial_wall'):
+                    reg = [i-1, i + int(len(uparcel)/2)-1]
+                    exclude_labels = np.append(exclude_labels, reg, axis = 0)
+        else:
+            exclude_labels = np.asarray([0, int(len(uparcel)/2)])
+        # Convert type to int for indexing
+        exclude_labels = exclude_labels.astype(int)
         
         # Create MPC matrix (and nodal intensity profiles if parcellating)
         print("")
@@ -94,7 +121,7 @@ if os.path.exists(OPATH):
         print("Ello! Let's build the MPC!")
         print("--------------------------")
         print("")
-        (MPC, I, problemNodes) = build_mpc(BB, parc)
+        (MPC, I, problemNodes) = build_mpc(BB, parc, exclude_labels)
         
         # Check success of MPC and save output
         if np.isnan(np.sum(MPC)):
@@ -106,8 +133,8 @@ if os.path.exists(OPATH):
             sys.exit(1)
         else:
             parc_str = parc_name.replace('.annot', "")
-            np.savetxt("{output}/mpc_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), MPC)
-            np.savetxt("{output}/intensity_profiles_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), I)
+            np.savetxt("{output}/mpc_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), MPC, fmt='%.6f')
+            np.savetxt("{output}/intensity_profiles_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), I, fmt='%.12f')  
             print("")
             print("-------------------------------------")
             print("MPC building successful for subject {sub}".format(sub=sub))

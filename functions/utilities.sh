@@ -73,15 +73,16 @@ bids_variables() {
   mainScanJson=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.json       # Main rsfMRI scan
   mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
   reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
-  topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                              # TOPUP config file default
+  topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
   # BIDS Files
   bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
-  bids_T1map=(`ls ${subject_bids}/anat/*mp2rage*.nii*`)
-  bids_inv1=(`ls ${subject_bids}/anat/*inv1*.nii*`)
   bids_dwis=(`ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii*`)
+  bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
+  bids_inv1=${subject_bids}/anat/*inv1*.nii*
   dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
+  
 }
 
 bids_print.variables() {

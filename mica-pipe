@@ -22,11 +22,11 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
    Flags for processing:\n
 \t\033[38;5;197m-proc\033[0m             : Performs ALL first stages of structural processing
 \t\t\t    (RUN -proc_structural -proc_freesurfer and -proc_dwi)
-\t\033[38;5;197m-post\033[0m             : Performs ALL Second stages of structural processing
-\t\t\t    (RUN -post_structural -post_mpc and -post_dwi)
+\t\033[38;5;197m-post\033[0m             : Performs ALL second stages of structural processing
+\t\t\t    (RUN -post_structural -post_mpc -post_gd and -post_dwi)
 \t\t\t    (REQUIRES -proc_structural -proc_freesurfer and -proc_dwi)
 
-   Flags for first stages of structural processing:\n
+   Flags for first stages of processing:\n
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
@@ -39,9 +39,23 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-post_dwi\033[0m         : Post tractography and connectome generation
 \t\t\t    (REQUIRES -proc_dwi)
 \t\033[38;5;197m-post_mpc\033[0m         : Microstructural profiles and covariance analysis
-\t\t\t    (REQUIRES -proc_structural; -proc_freesurfer and -post_structural)
-\t\033[38;5;197m-post_mpc\033[0m         : Geodesic distance analysis
-\t\t\t    (REQUIRES -proc_structural; -proc_freesurfer and -post_structural)
+\t\t\t    (REQUIRES -proc_freesurfer and -post_structural)
+\t\033[38;5;197m-post_gd\033[0m          : Geodesic distance analysis
+\t\t\t    (REQUIRES -proc_freesurfer and -post_structural)
+
+   Optional flags for submodules
+\t\033[38;5;197m-proc-rsfmri\033[0m  : 
+\t\t\t    \033[38;5;120m-topupConfig /path/to/file.cnf\033[0m : will use specified config file for topup (distorsion correction)
+\t\t\t    \033[38;5;120m-icafixTraining /path/to/file.RData\033[0m : will use specified ICA-FIX training file for nuisance signal regression
+\t\t\t     To use DEFAULT settings, omit flags or leave blank
+\t\033[38;5;197m-post-mpc\033[0m  : 
+\t\t\t    \033[38;5;120m-microstructural_img /path/to/img.nii.gz\033[0m : Scan on which MPC will be performed. 
+\t\t\t    If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
+\t\t\t    \033[38;5;120m-microstructural_lta /path/to/file.lta\033[0m : Transformation from microstructural scan space to native freesurfer space.
+\t\t\t    If left blank or omitted, registration will be computed in the script.
+\t\t\t    Note that there is currently no built-in mechanism to verify the accuracy of this registration!
+
+
 
    Software versions requirements:
     > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
@@ -50,7 +64,6 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
     > MRtrix3     3.0.0   (https://www.mrtrix.org)
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
     > workbench   1.3.2
-    > ENIGMA toolbox (https://github.com/MICA-MNI/ENIGMA)
 
    Optional software:
     > FIX (FMRIB's ICA-based Xnoiseifier) v1.06
@@ -113,7 +126,7 @@ do
   ;;
   -ses)
     SES=$2
-    shift
+    shift;shift
   ;;
   -proc_structural)
     procVOL=TRUE
@@ -156,6 +169,16 @@ do
   -post_mpc)
     postMPC=TRUE
     shift
+  ;;
+  -microstructural_img)
+    input_im_spec=TRUE
+    input_im=$2
+    shift;shift
+  ;;
+  -microstructural_lta)
+    transform_spec=TRUE
+    input_lta=$2
+    shift;shift
   ;;
   -mica)
     mica=TRUE
@@ -222,6 +245,15 @@ else optarg_rsfmri[0]=DEFAULT
 fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile
 else optarg_rsfmri[1]=DEFAULT
+fi
+
+# Optional arguments mpc
+optarg_mpc=($input_im $input_lta)
+if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$input_im
+else optarg_mpc[0]=DEFAULT
+fi
+if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_lta
+else optarg_mpc[1]=DEFAULT
 fi
 
 # Get the real path of the Inputs
@@ -525,7 +557,7 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC $nocleanup
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Microstructural profile covariance"
@@ -533,10 +565,10 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC $nocleanup
+             ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup
     else
         # LOCAL - POST-Structural processing
-        ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
+        ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
     fi
 fi
 

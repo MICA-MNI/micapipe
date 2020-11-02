@@ -25,7 +25,9 @@ id=$2
 out=$3
 SES=$4
 PROC=$5
-nocleanup=$6
+input_im=$6
+input_lta=$7
+nocleanup=$8
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -41,10 +43,28 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
 
-# Check inputs: mp2rage
-if [ ! -f ${qT1} ]; then Error "Subject $id doesn't have qT1"; exit; fi
-# Check inputs: freesurfer space T1
+# Check inputs: Freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
+# Check microstructural image input flag and set parameters accordingly
+if [[ ${input_im} == "DEFAULT" ]]; then 
+    Warning "MPC processing will be performed from default input image: qT1"
+    Note "qT1 =" ${bids_T1map}
+    microImage=${bids_T1map}
+    regImage=${bids_inv1}
+else
+    Warning "MPC processing will be performed from provided input file"
+    Note "Microstructural image =" ${input_im}
+    microImage=${input_im}
+fi
+
+# Check .lta file input flag and set parameters accordingly
+if [[ ${input_lta} == "DEFAULT" ]]; then 
+    Warning "Registration to freesurfer space will be performed within script"
+else
+    Warning "Applying provided .lta file to perform registration to native freesurfer space"
+    Note "micro2fs transform =" ${input_lta}
+fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA MPC processing"
@@ -61,7 +81,7 @@ here=`pwd`
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
+# Create temporary directory
 tmp=${tmp}/${RANDOM}_micapipe_post-MPC_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
@@ -71,78 +91,91 @@ export SUBJECTS_DIR=${dir_surf}
 # Temporary fsa5 directory
 ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
+
 #------------------------------------------------------------------------------#
-# Set up parameters
-num_surfs=14
+# If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
+
 origImage=${bids_T1ws[0]}
-microImage=${bids_T1map[0]}
-invImage=${bids_inv1[0]}
-
-#------------------------------------------------------------------------------#
-# Register to Freesurfer space
-
-if [[ ! -f "$dir_warp"/"$id"_T1map2fs_bbr.lta ]] ; then
-	Do_cmd bbregister --s "$id" \
-        --mov "$invImage" \
-        --int "$origImage" \
-        --reg "$dir_warp"/"$id"_T1map2fs_bbr.lta \
-        --o "$subject_dir"/proc_struct/"$id"_inv1_T1map_fsspace.nii \
-        --init-header --t1
+if [[ ${input_lta} == "DEFAULT" ]]; then
+    fs_transform="$dir_warp"/"$id"_micro2fs_bbr.lta
+    if [[ ! -f "$dir_warp"/"$id"_micro2fs_bbr.lta ]]; then
+        Info "Running microstructural -> freesurfer registration for Subject ${id}"
+        Do_cmd bbregister --s "$id" \
+            --mov "$regImage" \
+            --int "$origImage" \
+            --reg "$fs_transform" \
+            --o "$subject_dir"/proc_struct/"$id"_micro2fsspace.nii.gz \
+            --init-header --t1
+    else
+        Info "Subject ${id} already has a microstructural -> freesurfer transformation"
+    fi
+else
+    Info "Using provided input .lta for vol2surf"
+    fs_transform=${input_lta}
 fi
 
 
-#------------------------------------------------------------------------------#
-# Register qT1 intensity to surface
+##------------------------------------------------------------------------------#
+## Register qT1 intensity to surface
 
+num_surfs=14
 outDir="$subject_dir"/proc_struct/surfaces/micro_profiles/
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir"
 
-for hemi in lh rh ; do
-
-	unset LD_LIBRARY_PATH
-	tot_surfs=$((num_surfs + 2))
-	Do_cmd python $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
-        ${SUBJECTS_DIR}/${id}/surf/${hemi}.pial \
-        ${SUBJECTS_DIR}/${id}/surf/${hemi}.white \
-        "$tot_surfs" \
-        $outDir/${hemi}.${num_surfs}surfs \
-        ${tmp} \
-        --software freesurfer --subject_id $id
-
-	# remove top and bottom surface
-	Do_cmd rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
-
-	# find all equivolumetric surfaces and list by creation time
-	x=$(ls "$outDir"/"$hemi".${num_surfs}surfs* | sort)
-	for n in $(seq 1 1 $num_surfs) ; do
-		which_surf=$(sed -n "$n"p <<< "$x")
-		cp "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
-		# sample intensity
-		Do_cmd mri_vol2surf \
-			--mov "$microImage" \
-			--reg "$dir_warp"/"$id"_T1map2fs_bbr.lta \
-			--hemi "$hemi" \
-			--out_type mgh \
-			--interp trilinear \
-			--out "$outDir"/"$hemi"."$n".mgh \
-			--surf "$n"by"$num_surf"surf
-
-        #Remove surfaces used by vol2surf
-        Do_cmd rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
-	done
-
-done
+if [[ ! -f ${outDir}/rh.14.mgh ]]; then
+    for hemi in lh rh ; do
+    
+        unset LD_LIBRARY_PATH
+        tot_surfs=$((num_surfs + 2))
+        Do_cmd python $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
+            ${SUBJECTS_DIR}/${id}/surf/${hemi}.pial \
+            ${SUBJECTS_DIR}/${id}/surf/${hemi}.white \
+            "$tot_surfs" \
+            $outDir/${hemi}.${num_surfs}surfs \
+            ${tmp} \
+            --software freesurfer --subject_id $id
+    
+        # remove top and bottom surface
+        Do_cmd rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
+    
+        # find all equivolumetric surfaces and list by creation time
+        x=$(ls "$outDir"/"$hemi".${num_surfs}surfs* | sort)
+        for n in $(seq 1 1 $num_surfs) ; do
+            which_surf=$(sed -n "$n"p <<< "$x")
+            cp "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
+            # sample intensity
+            Do_cmd mri_vol2surf \
+                --mov "$microImage" \
+                --reg "$fs_transform" \
+                --hemi "$hemi" \
+                --out_type mgh \
+                --interp trilinear \
+                --out "$outDir"/"$hemi"."$n".mgh \
+                --surf "$n"by"$num_surf"surf
+    
+            #Remove surfaces used by vol2surf
+            Do_cmd rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
+        done
+    
+    done
+else
+    Info "Subject ${id} has microstructural intensities mapped to native surface"
+fi
 
 # Register to fsa5
-for hemi in lh rh; do
-    for n in $(seq 1 1 $num_surfs); do
-        Do_cmd mri_surf2surf --hemi "$hemi" \
-            --srcsubject "$id" \
-            --srcsurfval "$outDir"/"$hemi"."$n".mgh \
-            --trgsubject fsaverage5 \
-            --trgsurfval "$outDir"/"$hemi"."$n"_fsa5.mgh
+if [[ ! -f ${outDir}/rh.14_fsa5.mgh ]]; then
+    for hemi in lh rh; do
+        for n in $(seq 1 1 $num_surfs); do
+            Do_cmd mri_surf2surf --hemi "$hemi" \
+                --srcsubject "$id" \
+                --srcsurfval "$outDir"/"$hemi"."$n".mgh \
+                --trgsubject fsaverage5 \
+                --trgsurfval "$outDir"/"$hemi"."$n"_fsa5.mgh
+        done
     done
-done
+else
+    Info "Subject ${id} microstructural intensities are registered to fsa5"
+fi
 
 #------------------------------------------------------------------------------#
 # run  mpc on native surface

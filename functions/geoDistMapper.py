@@ -32,18 +32,12 @@ from scipy import spatial
 
 
 # Set up arguments
-lh_surf = sys.argv[1] # e.g. '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/surf/lh.midthickness.surf.gii'
-rh_surf = sys.argv[2] # e.g. '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/surf/rh.midthickness.surf.gii'
-outPath = sys.argv[3] # e.g. '/data_/mica1/03_projects/jessica/tmp_GD/HC010_schaefer-100'
-lh_annot = sys.argv[4] # e.g. '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/label/lh.schaefer-100_mics.annot'
-rh_annot = sys.argv[5] # e.g. '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/label/rh.schaefer-100_mics.annot'
-wbPath = sys.argv[6] # e.g. '/data_/mica1/01_programs/workbench/bin_linux64'
-#lh_surf = '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/surf/lh.midthickness.surf.gii'
-#rh_surf = '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/surf/rh.midthickness.surf.gii'
-#outPath = '/data_/mica1/03_projects/jessica/tmp_GD/HC010_schaefer-100'
-#lh_annot = '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/label/lh.schaefer-100_mics.annot'
-#rh_annot = '/data_/mica3/BIDS_MIC/derivatives/sub-HC010/ses-pre/proc_struct/surfaces/HC010/label/rh.schaefer-100_mics.annot'
-#wbPath = '/data_/mica1/01_programs/workbench/bin_linux64'
+lh_surf = sys.argv[1]
+rh_surf = sys.argv[2]
+outPath = sys.argv[3]
+lh_annot = sys.argv[4] 
+rh_annot = sys.argv[5] 
+wbPath = sys.argv[6]
 
 # Load surface
 lh = nib.load(lh_surf)
@@ -73,10 +67,10 @@ for x in range(len(labels_rh)):
 uparcel = np.unique(parc)
 voi = np.zeros([1, len(uparcel)])
 
+print("Finings centre vertex for each parcel")
 for n in range(len(uparcel)):
-    print("Finding centre vertex for parcel {n} / {n_uparcel}".format(n=n, n_uparcel=len(uparcel)))
     this_parc = np.where(parc == uparcel[n])[0]
-    distances = sp.spatial.distance.pdist(np.squeeze(vertices[this_parc,:]), 'euclidean') # Returns condensec matrix of distances
+    distances = sp.spatial.distance.pdist(np.squeeze(vertices[this_parc,:]), 'euclidean') # Returns condensed matrix of distances
     distancesSq = sp.spatial.distance.squareform(distances) # convert to square form
     sumDist = np.sum(distancesSq, axis = 1) # sum distance across columns
     index = np.where(sumDist == np.min(sumDist)) # minimum sum distance index
@@ -93,8 +87,6 @@ print("Running geodesic distance in the left hemisphere")
 for ii in range(len(np.unique(labels_lh))):
     vertex = int(voi[0,ii])
     voiStr = str(vertex)
-
-    print("Computing distances for vertex {vertex}".format(vertex=vertex))
     
     cmdStr = "{wbPath} -surface-geodesic-distance {lh_surf} {voiStr} {outPath}_this_voi.func.gii".format(wbPath=wbPath, lh_surf=lh_surf, voiStr=voiStr, outPath=outPath)
     subprocess.run(cmdStr.split())
@@ -117,9 +109,7 @@ for ii in range(len(np.unique(labels_rh))):
     ii_rh = int(ii + len(uparcel)/2)
     vertex = int(voi[0,ii_rh] - len(vertices_lh))
     voiStr = str(vertex)
-    
-    print("Computing distances for vertex {vertex}".format(vertex=vertex))
-    
+        
     cmdStr = "{wbPath} -surface-geodesic-distance {rh_surf} {voiStr} {outPath}_this_voi.func.gii".format(wbPath=wbPath, rh_surf=rh_surf, voiStr=voiStr, outPath=outPath)
     subprocess.run(cmdStr.split())
     
@@ -134,6 +124,6 @@ for ii in range(len(np.unique(labels_rh))):
     
     GD[ii_rh,:] = np.append(np.zeros((parcGD.shape[0], parcGD.shape[1])), parcGD, axis = 1)
 
-np.savetxt(outPath + '_GD.txt', GD)
+np.savetxt(outPath + '_GD.txt', GD, fmt='%.12f')
 
 
