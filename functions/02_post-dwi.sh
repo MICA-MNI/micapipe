@@ -49,7 +49,7 @@ dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
 tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
-tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
+tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -76,7 +76,7 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Create Connectomes directory for the outpust
 [[ ! -d ${dwi_cnntm} ]] && Do_cmd mkdir -p ${dwi_cnntm}
-[[ ! -d ${dwi_QC} ]] && Do_cmd mkdir -p ${dwi_QC}
+[[ ! -d ${dir_QC} ]] && Do_cmd mkdir -p ${dir_QC}
 cd ${tmp}
 
 # -----------------------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ for seg in $parcellations; do
     for i in 1000 2000; do Do_cmd fslmaths $dwi_cortex -thr $i -uthr $i -binv -mul $dwi_cortex  $dwi_cortex; done
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortex -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_cor.png
+    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_cor.png
     # Build the Cortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
@@ -169,7 +169,7 @@ for seg in $parcellations; do
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_subc -add $dwi_cortex $dwi_cortexSub -odt int # added the subcortical parcellation
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortexSub -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_sub.png
+    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_sub.png
     # Build the Cortical-Subcortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
@@ -189,7 +189,7 @@ for seg in $parcellations; do
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
     # QC of the tractogram and labels
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_all -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dwi_QC}/${id}_${tracts}_${parc_name}_full.png
+    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_full.png
     # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-connectome.txt" \
