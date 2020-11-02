@@ -25,7 +25,7 @@ import numpy as np
 import scipy.special
 import scipy.stats
 
-def build_mpc(data, parc=None):
+def build_mpc(data, parc=None, idxExclude=None):
     
     
     # If no parcellation is provided, MPC will be computed vertexwise
@@ -101,10 +101,10 @@ def build_mpc(data, parc=None):
     else:
         problemNodes = 0
         
-        # Calculate mean across columns, excluding mask
+        # Calculate mean across columns, excluding mask and any excluded labels input
         I_mask = I
-        I_mask[:,0] = np.nan
-        I_mask[:,int(len(uparcel)/2)] = np.nan
+        for i in idxExclude:
+            I_mask[:, i] = np.nan
         I_M = np.nanmean(I_mask, axis = 1)
         
         # Get residuals of all columns (controlling for mean)
@@ -123,9 +123,12 @@ def build_mpc(data, parc=None):
         MPC[np.isnan(MPC)] = 0
         MPC[np.isinf(MPC)] = 0
         
+        # CLEANUP: correct diagonal and round values to reduce file size
         # Replace all values in diagonal by zeros to account for floating point error
         for i in range(0,MPC.shape[0]):
                 MPC[i,i] = 0
+        # Replace lower triangle by zeros        
+        MPC = np.triu(MPC)
 
     # Output MPC, microstructural profiles, and problem nodes
     return (MPC, I, problemNodes)

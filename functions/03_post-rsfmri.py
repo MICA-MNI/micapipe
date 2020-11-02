@@ -11,10 +11,10 @@ warnings.simplefilter('ignore')
 #from enigmatoolbox.plotting import plot_cortical
 #from enigmatoolbox.utils.parcellation import parcel_to_surface, surface_to_parcel
 
-subject = sys.argv[1]  # subject='HC001'
-funcDir = sys.argv[2]  # funcDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC001/ses-pre/proc_rsfmri/'
-labelDir = sys.argv[3] # labelDir='/data_/mica3/BIDS_MIC/derivatives/sub-HC001/ses-pre/proc_struct/surfaces/HC001/label/'
-parcDir = sys.argv[4] # parcDir='/data_/mica1/03_projects/jessica/micapipe/parcellations/'
+subject = sys.argv[1]
+funcDir = sys.argv[2]
+labelDir = sys.argv[3]
+parcDir = sys.argv[4]
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -117,7 +117,7 @@ else:
 
 
 # save timeseries in conte69 format
-np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr)
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr, fmt='%.6f')
 
 
 # mean framewise displacement + save plot
@@ -152,7 +152,7 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR)
+np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR, fmt='%.12f')
 
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
@@ -238,7 +238,7 @@ for parcellation in parcellationList:
     ts_r[0, :] = 0
     ts_r[:, 0] = 0
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
-               ts_r)
+               ts_r, fmt='%.6f')
 
 
 # Now generate native surface connectomes
@@ -279,6 +279,6 @@ for parcellation in parcellationList:
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
     ts = np.append(ts_native_ctx, dataNative_corr[:, -n:], axis=1)
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
     ts_r = np.corrcoef(np.transpose(ts))
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
