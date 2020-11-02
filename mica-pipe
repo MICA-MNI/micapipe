@@ -304,7 +304,7 @@ aloita=$(date +%s)
 # Creates subject directory if it doesn't exist
 if [ ! -d ${subject_dir} ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfms,proc_dwi,proc_rsfmri,proc_struct/{first,volumetric,surfaces/{conte69,$id}}}
+    Do_cmd mkdir -p $subject_dir/{logs,xfms,QC,proc_dwi,proc_rsfmri,proc_struct/{first,volumetric,surfaces/{conte69,$id}}}
 else
     Info "Subject ${id} directory exist"
 fi
