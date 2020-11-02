@@ -107,3 +107,133 @@ if [ ! -d ${out}/sub-${id}/${SES} ]; then Error "$id was not found on the OUTPUT
 
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
+
+# Variables
+parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort`
+tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
+QC_html=${dir_QC}/${id}_micapipe_qc.html
+
+#------------------------------------------------------------------------------#
+Title "MICAPIPE: Creating a QC html file for $id"
+micapipe_software
+
+#	Timer
+aloita=$(date +%s)
+here=`pwd`
+
+echo "<!DOCTYPE html>
+<html>
+<head>
+  <title> MICAPIPE QC</title>
+  <style>
+    h1 {color:#343434;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;text-align:center;}
+    h2 {color:#656565;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
+    h3 {color:#343434;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
+    p {color:#656565;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
+    a {color:#343434;font-family:\"Trebuchet MS\";}
+  </style>
+</head>
+<br>
+<img src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:1400px\">
+<h1> Subject ${id}_${SES}</h1>
+" >  $QC_html
+
+#------------------------------------------------------------------------------#
+# Table of content
+echo -e "<h2>Table of Contents</h2>
+<a href=\"#Structural processing\">1. Structural processing</a><br>
+<a href=\"#Freesurfer processing\">2. Freesurfer processing</a><br>
+<a href=\"#Diffusion MRI processing\">3. Diffusion MRI processing</a><br>
+<a style=\"margin-left: 2rem;\" href=\"#Motion parameters\">3.1. Motion parameters</a><br>
+<a style=\"margin-left: 2rem;\" href=\"#Noise estimation\">3.1. Noise estimation</a><br>
+<a style=\"margin-left: 2rem;\" href=\"#Connectomes\">3.2. Connectomes</a><br>
+<a href=\"#Resting state fMRI\">4. Resting state fMRI</a><br>
+<a href=\"#Micro structural profiles\">5. Micro structural profiles</a><br>
+<body>" >> $QC_html
+
+#------------------------------------------------------------------------------#
+# MICAPIPE processing flowchart
+echo "<h2>Processing modules completed</h2>" >> $QC_html
+
+#------------------------------------------------------------------------------#
+# MICAPIPE Processing Modules QC
+# QC rsfMRI
+# /data_/mica3/BIDS_MIC/derivatives/sub-HC011/ses-01/proc_rsfmri/surfaces
+echo "
+<h2>Structural processing</h2>
+
+<h2>Freesurfer processing</h2>
+
+<h2>Resting state fMRI processing</h2>
+
+<h2>Micro structural profiles processing</h2>" >> $QC_html
+
+
+#------------------------------------------------------------------------------#
+# Diffusion processing MRI
+echo "<h2>Diffusion MRI processing</h2>" >> $QC_html
+
+echo -e "<h3>Connectomes</h3>
+<style type=\"text/css\">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-rkbl{background-color:#ecf4ff;border-color:#ffffff;color:#000000;
+  font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;text-align:center;vertical-align:middle}
+.tg .tg-wk8r{background-color:#ffffff;border-color:#ffffff;text-align:center;vertical-align:center}
+.tg .tg-droi{background-color:#ecf4ff;border-color:#ffffff;color:#656565;
+  font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;text-align:center;vertical-align:middle}
+</style>
+<table class=\"tg\">
+<thead>
+  <tr>
+    <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
+    <th class=\"tg-droi\">Cortical <br>connectome</th>
+    <th class=\"tg-droi\">Cortical-Subcortical <br>Connectome</th>
+    <th class=\"tg-droi\">Full <br>Connectome</th>
+    <th class=\"tg-droi\">Cortical <br>Edge lengths</th>
+    <th class=\"tg-droi\"><span style=\"font-style:normal\">Cortical-Subcortical </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
+    <th class=\"tg-droi\"><span style=\"font-style:normal\">Full </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
+  </tr>
+</thead>
+<tbody>" >> $QC_html
+
+# Iterate over all the parcellation
+Nconn=`ls ${dir_QC}/*connectome.png | wc -l`
+px=200px
+if [ ! "$Nconn" -eq 0 ]; then
+  for seg in $parcellations; do
+      parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+      nom=${dir_QC}/${id}_${tracts}_${parc_name}
+  echo -e "<tr>
+      <td class=\"tg-droi\">${parc_name}</td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_cor-connectome.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_sub-connectome.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_full-connectome.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_cor-edgeLengths.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_sub-edgeLengths.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+      <td class=\"tg-wk8r\"><img src=\"${nom}_full-edgeLengths.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
+    </tr>" >> $QC_html
+  done
+fi
+# Close connectome QC table
+echo -e "</tbody>
+</table>
+"  >> $QC_html
+
+#------------------------------------------------------------------------------#
+# closes html document
+echo "
+</body>
+</html>"										>> $QC_html
+
+# -----------------------------------------------------------------------------------------------
+# QC notification of completition
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=`echo print $eri/60 | perl`
+
+Title "QC html creation ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
+\t\tOutput file path: $QC_html"
