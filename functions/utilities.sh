@@ -35,17 +35,17 @@ bids_variables() {
   	 dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 dir_patc=$proc_struct/surfpatch   # Surfpatch
   	 dir_surf=$proc_struct/surfaces    # surfaces
-  			     dir_freesurfer=${dir_surf}/${id}     # freesurfer dir
-  			     dir_conte69=${dir_surf}/conte69    # conte69
-  proc_dwi=$subject_dir/proc_dwi      # DWI processing directory
+  			     dir_freesurfer=${dir_surf}/${id}  # freesurfer dir
+  			     dir_conte69=${dir_surf}/conte69   # conte69
+  proc_dwi=$subject_dir/proc_dwi               # DWI processing directory
     dwi_cnntm=$proc_dwi/connectomes
-    dwi_QC=$proc_dwi/QC
   proc_rsfmri=$subject_dir/proc_rsfmri
     rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
     rsfmri_volum=$proc_rsfmri/volumetric
     rsfmri_surf=$proc_rsfmri/surfaces
   dir_warp=$subject_dir/xfms              # Transformation matrices
-  dir_logs=$subject_dir/logs          # directory with log files
+  dir_logs=$subject_dir/logs              # directory with log files
+  dir_QC=$subject_dir/QC                  # directory with QC files
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
