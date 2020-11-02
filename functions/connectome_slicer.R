@@ -13,16 +13,16 @@ if(length(args) < 1) {
 if("--help" %in% args) {
   cat("
       micapipe connectome slicer
- 
+
       Arguments:
       --conn=<path to connectivty matrix>   - character
-      --lut1=<path to LUT>                  - character 
+      --lut1=<path to LUT>                  - character
       --lut2=<path to LUT>                  - character
       --help                                - print this text
- 
+
       Example:
       connectome_slicer.R --conn='HC10_10M_glasser-360_full-connectome.txt' --lut1='lut_subcortical-cerebellum_mics.csv' --lut2='lut_glasser-360_mics.csv' \n\n")
-  
+
   q(save="no")
 }
 
@@ -34,7 +34,7 @@ names(argsL) <- argsDF$V1
 
 exit <- function() {
   .Internal(.invokeRestart(list(NULL, NULL), NULL))
-}  
+}
 arg.miss <- function() {
   cat("---------------------------------------------------------
     ERROR ... A mandatory argument is missing
@@ -64,7 +64,7 @@ if(is.null(argsL$lut2)) {
 # Subcortical LUT
 lut1 <- read.csv(argsL$lut1)
 
-# Cortical LUT 
+# Cortical LUT
 lut2 <- read.csv(argsL$lut2)
 indx <- sort(c(lut1$mics, lut2$mics))
 
@@ -81,13 +81,9 @@ write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
 
 # Save png for QC purposes
 nom <-  gsub(".txt","",strsplit(conn, split = "connectomes/")[[1]][2])
-qc <- paste0(strsplit(conn, split = "connectomes/")[[1]][1],"QC/")
-png(paste0(qc, nom, ".png")) 
+qc <- paste0(strsplit(conn, split = "proc_dwi/")[[1]][1],"QC/")
+png(paste0(qc, nom, ".png"))
 # Mirror matrix completes inferior triangle
 M[lower.tri(M)] <- t(M)[lower.tri(M)]
 image(log(M), axes=FALSE, main=nom)
 dev.off()
-
-
- 
-  
