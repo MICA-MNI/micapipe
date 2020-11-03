@@ -69,10 +69,10 @@ bids_variables() {
   MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
-  mainScanJson=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-AP_bold.json       # Main rsfMRI scan
-  mainPhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-APse_bold.nii*    # main phase scan
-  reversePhaseScan=${subject_bids}/func/${subject}_ses-pre_task-rest_acq-PAse_bold.nii* # Reverse phase scan
+  mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
+  mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.json       # Main rsfMRI scan
+  mainPhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse_bold.nii*    # main phase scan
+  reversePhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse_bold.nii* # Reverse phase scan
   topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 

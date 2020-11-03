@@ -177,6 +177,31 @@ else
     Info "Subject ${id} microstructural intensities are registered to fsa5"
 fi
 
+# Register to conte69
+if [[ ! -f ${outDir}/rh_14_c69-32k.mgh ]]; then
+    for hemi in lh rh; do
+        [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
+        for n in $(seq 1 1 $num_surfs); do
+            Do_cmd mri_convert "$outDir"/"$hemi"."$n".mgh "$tmp"/"$hemi"_"$n".func.gii
+            
+            Do_cmd wb_command -metric-resample \
+                ${tmp}/${hemi}_"$n".func.gii \
+                ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
+                ${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii \
+                ADAP_BARY_AREA \
+                ${tmp}/${hemi}_"$n"_c69-32k.func.gii \
+                -area-surfs \
+                ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
+                ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
+                
+            Do_cmd mri_convert ${tmp}/${hemi}_"$n"_c69-32k.func.gii "$outDir"/${hemi}_"$n"_c69-32k.mgh
+         done       
+    done
+else
+    Info "Subject ${id} microstructural intensities are registered to conte69"
+fi
+
 #------------------------------------------------------------------------------#
 # run  mpc on native surface
 all_parcellations='vosdewael-100 vosdewael-200 vosdewael-300 vosdewael-400
