@@ -110,7 +110,7 @@ bids_variables $BIDS $id $out $SES
 
 # Variables
 parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort`
-tracts=10M # <<<<<<<<<<<<<<<<<< Number of streamlines
+tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
 QC_html=${dir_QC}/${id}_micapipe_qc.html
 
 #------------------------------------------------------------------------------#
@@ -124,7 +124,7 @@ here=`pwd`
 echo "<!DOCTYPE html>
 <html>
 <head>
-  <title> MICAPIPE QC</title>
+  <title> MICAPIPE QC - ${id}_${SES}</title>
   <style>
     h1 {color:#343434;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;text-align:center;}
     h2 {color:#656565;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
@@ -135,7 +135,7 @@ echo "<!DOCTYPE html>
 </head>
 <br>
 <img src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:1400px\">
-<h1> Subject ${id}_${SES}</h1>
+<h1> Quality Check - Subject ${id}_${SES}</h1>
 " >  $QC_html
 
 #------------------------------------------------------------------------------#
@@ -159,14 +159,15 @@ echo "<h2>Processing modules completed</h2>" >> $QC_html
 # MICAPIPE Processing Modules QC
 # QC rsfMRI
 # /data_/mica3/BIDS_MIC/derivatives/sub-HC011/ses-01/proc_rsfmri/surfaces
-echo "
-<h2>Structural processing</h2>
+echo "<h2>Structural processing</h2>"  >> $QC_html
 
-<h2>Freesurfer processing</h2>
+echo "<h2>Freesurfer processing</h2>"  >> $QC_html
 
-<h2>Resting state fMRI processing</h2>
+echo "<h2>Resting state fMRI processing</h2>"  >> $QC_html
 
-<h2>Micro structural profiles processing</h2>" >> $QC_html
+echo "<h2>Micro structural profiles processing</h2>" >> $QC_html
+
+echo "<h2>Geocentric distance</h2>" >> $QC_html
 
 
 #------------------------------------------------------------------------------#
@@ -217,6 +218,8 @@ if [ ! "$Nconn" -eq 0 ]; then
       <td class=\"tg-wk8r\"><img src=\"${nom}_full-edgeLengths.png\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>
     </tr>" >> $QC_html
   done
+else
+  echo "Not processed yet." >>  $QC_html
 fi
 # Close connectome QC table
 echo -e "</tbody>
