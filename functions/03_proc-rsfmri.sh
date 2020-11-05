@@ -100,6 +100,9 @@ rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
 # Define directories
 export SUBJECTS_DIR=$dir_surf
 
+# Temporary fsa5 directory
+ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
+
 # rsfMRI directories
 rsfmri_volum=${proc_rsfmri}/volumetric   # volumetricOutputDirectory
 rsfmri_surf=${proc_rsfmri}/surfaces      # surfaceOutputDirectory
@@ -429,6 +432,15 @@ for x in lh rh; do
               10 \
               ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii ${out_surf_native}
+          
+          # Register to fsa5 and apply smooth
+          Do_cmd mri_surf2surf \
+            --hemi ${x} \
+            --srcsubject ${id}\
+            --sval ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh \
+            --trgsubject fsaverage5 \
+            --tval ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_fsa5.mgh \
+            --nsmooth-out 10
 
           # Register to conte69 and apply smooth
           Do_cmd wb_command -metric-resample \
@@ -501,7 +513,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

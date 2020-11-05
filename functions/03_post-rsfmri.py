@@ -167,12 +167,6 @@ parcellationList = ['glasser-360_conte69',
 for parcellation in parcellationList:
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
     thisparc = np.loadtxt(parcPath)
-    
-    print('')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('------------ skipping QC figure for now! ------------')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('')
 
     # QC file generated on schaefer400
     #if parcellation is "schaefer-400_conte69":
@@ -237,6 +231,7 @@ for parcellation in parcellationList:
     ts_r = np.corrcoef(np.transpose(ts))
     ts_r[0, :] = 0
     ts_r[:, 0] = 0
+    ts_r = np.triu(ts_r)
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
                ts_r, fmt='%.6f')
 
@@ -281,4 +276,5 @@ for parcellation in parcellationList:
     ts = np.append(ts_native_ctx, dataNative_corr[:, -n:], axis=1)
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
     ts_r = np.corrcoef(np.transpose(ts))
+    ts_r = np.triu(ts_r)
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
