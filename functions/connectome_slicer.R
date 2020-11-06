@@ -18,6 +18,7 @@ if("--help" %in% args) {
       --conn=<path to connectivty matrix>   - character
       --lut1=<path to LUT>                  - character
       --lut2=<path to LUT>                  - character
+      --mica=<MICAPIPE path>                - character
       --help                                - print this text
 
       Example:
@@ -59,6 +60,12 @@ if(is.null(argsL$lut2)) {
   exit()
 }
 
+## Arg3 default
+if(is.null(argsL$mica)) {
+  arg.miss()
+  exit()
+}
+
 # -----------------------------------------------------
 
 # Subcortical LUT
@@ -72,18 +79,23 @@ indx <- sort(c(lut1$mics, lut2$mics))
 # Read the matrix
 conn <- argsL$conn
 M <- as.matrix(read.table(conn, sep = " ",header = FALSE))
-if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); exit() }
-# slicing the connectome
-M <- M[indx, indx]
+if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit() 
+} else {
+  # slicing the connectome
+  # M <- M[indx, indx]
+  # # Overwrites the connectome sliced
+  # write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
+   }
 
-# Overwrites the connectome sliced
-write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
+# Loads the MICs colormaps
+mica.dir <- paste0(argsL$mica,"/functions/")
+load(file=paste0(mica.dir,"cmap_MICs.Rdata"))
 
 # Save png for QC purposes
-nom <-  gsub(".txt","",strsplit(conn, split = "connectomes/")[[1]][2])
+nom <-  gsub(".txt","", strsplit(conn, split = "connectomes/")[[1]][2])
 qc <- paste0(strsplit(conn, split = "proc_dwi/")[[1]][1],"QC/")
 png(paste0(qc, nom, ".png"))
 # Mirror matrix completes inferior triangle
 M[lower.tri(M)] <- t(M)[lower.tri(M)]
-image(log(M), axes=FALSE, main=nom)
+image(log(M), axes=FALSE, main=nom, col=cmap.SC(256))
 dev.off()

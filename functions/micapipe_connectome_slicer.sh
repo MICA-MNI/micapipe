@@ -26,6 +26,11 @@ PROC=$5
 nocleanup=$6
 here=`pwd`
 
+# Get the real path of the Inputs
+out=`realpath $out`
+BIDS=`realpath $BIDS`
+id=${id/sub-/}
+
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
@@ -83,23 +88,23 @@ for seg in $parcellations; do
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes
     Info "Slicing $parc_name cortical connectome"
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     # Calculate the edge lenghts
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes (-sub)
     Info "Slicing $parc_name cortical-subcortical connectome"
     dwi_cortexSub=$tmp/${id}_${parc_name}-sub_dwi.nii.gz
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     # Calculate the edge lenghts
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical-Cerebellar connectomes (-sub-cereb)
     Info "Slicing $parc_name cortical-subcortical-cerebellum connectome"
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 done
 
 # -----------------------------------------------------------------------------------------------
