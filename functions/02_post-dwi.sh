@@ -147,19 +147,19 @@ for seg in $parcellations; do
     Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
     # Remove the medial wall
     for i in 1000 2000; do Do_cmd fslmaths $dwi_cortex -thr $i -uthr $i -binv -mul $dwi_cortex  $dwi_cortex; done
-    # QC of the tractogram and labels
+    # QC of the tractogram and labels (this option doesn'r work on the Q)
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortex -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_cor.png
     # Build the Cortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
         -tck_weights_in $weights -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     if [[ -f "${nom}_cor-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -167,19 +167,19 @@ for seg in $parcellations; do
     Info "Building $parc_name cortical-subcortical connectome"
     dwi_cortexSub=$tmp/${id}_${parc_name}-sub_dwi.nii.gz
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_subc -add $dwi_cortex $dwi_cortexSub -odt int # added the subcortical parcellation
-    # QC of the tractogram and labels
+    # QC of the tractogram and labels (this option doesn'r work on the Q)
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortexSub -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_sub.png
     # Build the Cortical-Subcortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
         -tck_weights_in $weights -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     if [[ -f "${nom}_sub-connectome.txt" ]]; then ((Nparc++)); fi
 
     # -----------------------------------------------------------------------------------------------
@@ -187,19 +187,19 @@ for seg in $parcellations; do
     Info "Building $parc_name cortical-subcortical-cerebellum connectome"
     dwi_all=$tmp/${id}_${parc_name}-full_dwi.nii.gz
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
-    # QC of the tractogram and labels
+    # QC of the tractogram and labels (this option doesn'r work on the Q)
     mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_all -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
     mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_full.png
     # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-connectome.txt" \
         -tck_weights_in $weights -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
-    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut}
+    Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
     if [[ -f "${nom}_full-connectome.txt" ]]; then ((Nparc++)); fi
 done
 
