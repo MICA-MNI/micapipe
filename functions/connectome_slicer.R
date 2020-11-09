@@ -79,9 +79,10 @@ indx <- sort(c(lut1$mics, lut2$mics))
 # Read the matrix
 conn <- argsL$conn
 M <- as.matrix(read.table(conn, sep = " ",header = FALSE))
+print(paste0("INFO.... Connectome dimensions: ",dim(M)[1]," x ",dim(M)[2]))
 if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit()
 } else {
-  print(paste("[INFO].... slicing the connectome")
+  print(paste0("INFO.... Connectome new dimensions: ",length(indx)," x ",length(indx)))
   M <- M[indx, indx]
   # Overwrites the connectome sliced
   write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
@@ -94,6 +95,7 @@ load(file=paste0(mica.dir,"cmap_MICs.Rdata"))
 # Save png for QC purposes
 nom <-  gsub(".txt","", strsplit(conn, split = "connectomes/")[[1]][2])
 qc <- paste0(strsplit(conn, split = "proc_dwi/")[[1]][1],"QC/")
+print(paste0("INFO.... Saving Connectome as png for QC"))
 png(paste0(qc, nom, ".png"))
   # Mirror matrix completes inferior triangle
   M[lower.tri(M)] <- t(M)[lower.tri(M)]

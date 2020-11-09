@@ -106,6 +106,9 @@ BIDS=`realpath $BIDS`
 id=${id/sub-/}
 here=`pwd`
 
+# Number of session (Default is "ses-pre")
+if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
+
 #------------------------------------------------------------------------------#
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
