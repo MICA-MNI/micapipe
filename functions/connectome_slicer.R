@@ -38,7 +38,7 @@ exit <- function() {
 }
 arg.miss <- function() {
   cat("---------------------------------------------------------
-    ERROR ... A mandatory argument is missing
+    ERROR ... Connectome slicer: A mandatory argument is missing
       ---------------------------------------------------------")
 }
 
@@ -79,7 +79,7 @@ indx <- sort(c(lut1$mics, lut2$mics))
 # Read the matrix
 conn <- argsL$conn
 M <- as.matrix(read.table(conn, sep = " ",header = FALSE))
-if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit() 
+if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit()
 } else {
   # slicing the connectome
   # M <- M[indx, indx]
