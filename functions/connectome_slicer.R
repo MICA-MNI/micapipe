@@ -81,10 +81,10 @@ conn <- argsL$conn
 M <- as.matrix(read.table(conn, sep = " ",header = FALSE))
 if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit()
 } else {
-  # slicing the connectome
-  # M <- M[indx, indx]
-  # # Overwrites the connectome sliced
-  # write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
+  print(paste("[INFO].... slicing the connectome")
+  M <- M[indx, indx]
+  # Overwrites the connectome sliced
+  write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
    }
 
 # Loads the MICs colormaps
@@ -95,7 +95,7 @@ load(file=paste0(mica.dir,"cmap_MICs.Rdata"))
 nom <-  gsub(".txt","", strsplit(conn, split = "connectomes/")[[1]][2])
 qc <- paste0(strsplit(conn, split = "proc_dwi/")[[1]][1],"QC/")
 png(paste0(qc, nom, ".png"))
-# Mirror matrix completes inferior triangle
-M[lower.tri(M)] <- t(M)[lower.tri(M)]
-image(log(M), axes=FALSE, main=nom, col=cmap.SC(256))
+  # Mirror matrix completes inferior triangle
+  M[lower.tri(M)] <- t(M)[lower.tri(M)]
+  image(log(M), axes=FALSE, main=nom, col=cmap.SC(256))
 dev.off()
