@@ -85,7 +85,7 @@ do
   ;;
   -ses)
     SES=$2
-    shift
+    shift;shift
   ;;
   -proc_structural)
     procVOL=TRUE

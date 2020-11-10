@@ -75,7 +75,7 @@ do
   ;;
   -ses)
     SES=$2
-    shift
+    shift;shift
   ;;
   -*)
     Error "Unknown option ${2}"
@@ -159,6 +159,7 @@ echo "<h2>Processing modules completed</h2>" >> $QC_html
 # MICAPIPE Processing Modules QC
 # QC rsfMRI
 # /data_/mica3/BIDS_MIC/derivatives/sub-HC011/ses-01/proc_rsfmri/surfaces
+# Include html into html: https://stackoverflow.com/questions/8988855/include-another-html-file-in-a-html-file
 echo "<h2>Structural processing</h2>"  >> $QC_html
 
 echo "<h2>Freesurfer processing</h2>"  >> $QC_html
