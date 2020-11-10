@@ -40,6 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: DWI post TRACTOGRAPHY
+tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
 fod=$proc_dwi/${id}_wm_fod_norm.mif
 dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
 T1str_nat=${id}_t1w_${res}mm_nativepro
@@ -49,7 +50,7 @@ dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
 tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
-tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
+
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
