@@ -131,7 +131,7 @@ Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
 
 # TDI for QC
 Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi -force
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
