@@ -114,10 +114,18 @@ if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: DWI post TRACTOGRAPHY
-lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
+fod=$proc_dwi/${id}_wm_fod_norm.mif
+dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
+mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
+dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
+T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
+T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
+tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
+lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 
 # Check inputs
+if [ ! -f $tdi ]; then Error "Subject $id doesn't have ${tracts} TDI volume:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $dwi_b0 ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $mat_dwi_affine ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit; fi
