@@ -127,6 +127,8 @@ lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # Check inputs
 if [ ! -f $tdi ]; then Error "Subject $id doesn't have ${tracts} TDI volume:\n\t\tRUN -post_dwi"; exit; fi
 if [ ! -d ${dwi_cnntm} ]; then Error "Subject $id doesn't have connectomes directory:\n\t\tRUN -post_dwi"; exit; fi
+Ncnn=`ls ${dwi_cnntm} | wc -l`
+if [ "$Ncnn" -lt 3 ]; then Error "Subject $id have some connectomes missing:\n\t\tRUN -post_dwi"; exit; fi
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $dwi_b0 ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $mat_dwi_affine ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit; fi
