@@ -24,6 +24,7 @@ bids_variables() {
   export util_lut=${MICAPIPE}/parcellations/lut
   # Directory with the resampled freesurfer surfaces
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
+  export util_mics=${MICAPIPE}/MICs60_T1-atlas/
 
   subject=sub-${id}
   subject_dir=$out/${subject}/${SES}     # Output directory
@@ -33,7 +34,6 @@ bids_variables() {
   proc_struct=$subject_dir/proc_struct # structural processing directory
   	 dir_first=$proc_struct/first      # FSL first
   	 dir_volum=$proc_struct/volumetric # Cortical segmentations
-  	 dir_patc=$proc_struct/surfpatch   # Surfpatch
   	 dir_surf=$proc_struct/surfaces    # surfaces
   			     dir_freesurfer=${dir_surf}/${id}  # freesurfer dir
   			     dir_conte69=${dir_surf}/conte69   # conte69
@@ -82,7 +82,7 @@ bids_variables() {
   bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
   bids_inv1=${subject_bids}/anat/*inv1*.nii*
   dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
-  
+
 }
 
 bids_print.variables() {
