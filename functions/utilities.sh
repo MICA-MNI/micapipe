@@ -24,7 +24,7 @@ bids_variables() {
   export util_lut=${MICAPIPE}/parcellations/lut
   # Directory with the resampled freesurfer surfaces
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
-  export util_mics=${MICAPIPE}/MICs60_T1-atlas/
+  export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
   subject=sub-${id}
   subject_dir=$out/${subject}/${SES}     # Output directory
@@ -177,15 +177,17 @@ t1w_str() {
 register_QC() {
   f=$1 # back
   m=$2 # red border
-  f_str=${f/"sub-${id}_${SES}_"/}
-  m_str=${m/"sub-${id}_${SES}_"/}
+  tmp_qc=$3
+  f_nom=`echo $f | awk -F '/' '{print $(NF-0)}'`
+  m_nom=`echo $m | awk -F '/' '{print $(NF-0)}'`
+  f_str=${f_nom/"sub-${id}_${SES}_"/}
+  m_str=${m_nom/"sub-${id}_${SES}_"/}
   nom=${m_str/.nii.gz/}_in_${f_str/.nii.gz/}
-  QC=tmp_QCreg-
-  QCpng=${QC}${nom}.png
-  QCjpg=${id}_${nom}.jpg
+  QCpng=${tmp_qc}/${nom}.png
+  QCjpg=${tmp_qc}/${id}_${nom}.jpg
+  Title=${id}_${nom}.jpg
   slicer $m $f -a ${QCpng}
-  montage -quality 100 -fill white -label '' ${QCpng} -tile 1x1 -background '#000000' -geometry '640' -title ${QCjpg/.jpg/} ${QCjpg}
-  rm ${QC}*.png
+  montage -quality 100 -fill white -label '' ${QCpng} -tile 1x1 -background '#000000' -geometry '640' -title ${Title} ${QCjpg}
 }
 
 micapipe_software() {
