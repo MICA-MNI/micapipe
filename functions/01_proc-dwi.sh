@@ -158,6 +158,8 @@ if [[ ! -f $dwi_corr ]]; then
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
           Do_cmd rm $dwi_n4; ((Nsteps++))
+          # eddy_quad Quality Check
+          eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${proc_dwi}/eddy_QC
           # Copy eddy parameters
           eddy_DIR=${proc_dwi}/eddy
           if [ ! -d ${eddy_DIR} ]; then Do_cmd mkdir ${eddy_DIR}; fi
