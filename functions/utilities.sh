@@ -174,22 +174,6 @@ t1w_str() {
   echo ${id}_t1w_${res}mm_${space}${run}
 }
 
-register_QC() {
-  f=$1 # back
-  m=$2 # red border
-  tmp_qc=$3
-  f_nom=`echo $f | awk -F '/' '{print $(NF-0)}'`
-  m_nom=`echo $m | awk -F '/' '{print $(NF-0)}'`
-  f_str=${f_nom/"sub-${id}_${SES}_"/}
-  m_str=${m_nom/"sub-${id}_${SES}_"/}
-  nom=${m_str/.nii.gz/}_in_${f_str/.nii.gz/}
-  QCpng=${tmp_qc}/${nom}.png
-  QCjpg=${tmp_qc}/${id}_${nom}.jpg
-  Title=${id}_${nom}.jpg
-  slicer $m $f -a ${QCpng}
-  montage -quality 100 -fill white -label '' ${QCpng} -tile 1x1 -background '#000000' -geometry '640' -title ${Title} ${QCjpg}
-}
-
 micapipe_software() {
   Info "MICA pipe - Software versions"
   Note "MRtrix3....." "`mrinfo -version | awk 'NR==1 {print $3}'`"
