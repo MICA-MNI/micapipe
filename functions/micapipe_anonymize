@@ -80,6 +80,10 @@ do
     METHOD="reface-pro"
     shift
   ;;
+  -all)
+    METHOD="all"
+    shift
+  ;;
   -deface)
     METHOD="deface"
     shift
@@ -133,15 +137,21 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #			  Timer & Beginning
 aloita=$(date +%s)
+
+# if temporary directory is empty
+if [ -z ${tmp} ]; then tmp=/tmp; fi
+# Create temporal directory
+tmp=${tmp}/${RANDOM}_micapipe_anonymize_${id}
+if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+
+# Assign variables
 mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
 mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz
-mics_t1_face=$util_mics/MICs60_T1_0.8mm_skull.nii.gz
+mics_t1_face=$util_mics/MICs60_T1_0.8mm_face.nii.gz
 mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
-mics_t1_mask=$util_mics/MICs60_T1_0.8mm_mask.nii.gz
-mics_brainNeck_inv=$util_mics/MICs60_T1_0.8mm_mask-brainNeck-inv.nii.gz
 
 #------------------------------------------------------------------------------#
-Title "Running MICA-anonymize: $METHOD"
+Title "Running MICA-anonymize by $METHOD method(s)"
 
 # Check if subject was refaced
 DONE=`cat ${BIDS}/CHANGES | grep ${id}-anonymized`
@@ -158,104 +168,139 @@ t1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
 for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
 
 # Go to BIDS/anat to create a list of all the Volumes
-Do_cmd cd ${subject_bids}/anat
+cd ${subject_bids}/anat
 # Create a list with all anat volumes
 anat=(`ls *gz`)
 # # Remove the T1w_run-1 from anat list
 # anat=(${anat[@]/$t1w_run1})
-Info "T1w to reface: $t1w_run1"
+Info "T1w to register: $t1w_run1\n\t\tOther anatomical volumes:"
 for i in ${anat[*]}; do echo -e "\t\t$i"; done
 
 # Copy original BIDS to out directory
 Do_cmd cp -v *gz ${out_warps}/anat
 
-# move to out directory to create the warps there
-Do_cmd cd $out_warps
+# move to tmp directory
+Do_cmd cd $tmp
 
-# Reface T1w_run-1
-T1w_run1_str=${t1w_run1/.nii.gz/}
-ref_T1=${T1w_run1_str}_${METHOD}.nii.gz
-
+T1_orig=${out_warps}/anat/${t1w_run1}
 # -----------------------------------------------------------------------------------------------
 # Affine registration to MICs60_T1w-atlas
-T1w_2_mics_mat=${T1w_run1_str}0GenericAffine.mat
-Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m anat/${t1w_run1} -o ${T1w_run1_str}_ -t a -n $CORES -p f
+T1w_run1_str=${t1w_run1/.nii.gz/}
+T1w_2_MICs=${tmp}/T1w_2_MICs60
+T1w_2_mics_mat=${T1w_2_MICs}_0GenericAffine.mat
+Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $CORES -p f
+if [ ! -f ${T1w_2_mics_mat} ]; then Error "Affine registration failed"; cd $here; #exit 0;
+fi
 
 # -----------------------------------------------------------------------------------------------
 # DEFACE
-if [ "$METHOD" == "deface" ]; then
-    Info "MICA pipe - Anonymize by $METHOD"
+if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
+    Info "DEFACING $t1w_run1"
+    roi_deface_t1w=${T1w_2_MICs}_defaceROI.nii.gz
+    defaced=${out_warps}/${T1w_run1_str}_defaced.nii.gz
+
     # Apply face ROI to native T1w volume
-    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_ROI -r anat/${t1w_run1} -n GenericLabel -t [${T1w_2_mics_mat},1] -o ${T1w_run1_str}_defaceROI.nii.gz
-    Do_cmd fslmaths ${T1w_run1_str}_defaceROI.nii.gz -binv -mul anat/${t1w_run1} ${T1w_run1_str}_defaced.nii.gz
+    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_ROI -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $roi_deface_t1w
+    Do_cmd fslmaths $roi_deface_t1w -binv -mul $T1_orig $defaced
 fi
 
 # -----------------------------------------------------------------------------------------------
 # REFACE
-if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ]; then
-    Info "MICA pipe - Anonymize by $METHOD"
+if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "all" ]; then
+    Info "REFACING $t1w_run1"
     # Apply NEW face to native T1w volume
-    ROI=tmp_brainNeck-ROI.nii.gz
-    face=tmp_face.nii.gz
-    refaced=${T1w_run1_str}_refaced.nii.gz
-    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_brainNeck -r anat/${t1w_run1} -n GenericLabel -t [${T1w_2_mics_mat},1] -o $ROI
-    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_face -r anat/${t1w_run1} -n linear -t [${T1w_2_mics_mat},1] -o $face
+    T1w_mask_brain=${tmp}/mask-brainNeck.nii.gz
+    face=${tmp}/face.nii.gz
+    refaced=${out_warps}/${T1w_run1_str}_refaced.nii.gz
+
+    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_brainNeck -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $T1w_mask_brain
+    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_face -r $T1_orig -n linear -t [${T1w_2_mics_mat},1] -o $face
 
     # Reescale the new face
-    MaxI=`fslstats anat/${t1w_run1} -R | awk '{print $2}'`
-    Do_cmd ImageMath 3 ${tmp}_face.nii.gz RescaleImage $face 0 $MaxI
+    MaxI=`fslstats $T1_orig -R | awk '{print $2}'`
+    Do_cmd ImageMath 3 $face RescaleImage $face 0 $MaxI
+
     # Apply face to native T1w volume
-    Do_cmd fslmaths ${ROI} -mul anat/${t1w_run1} -add $face $refaced
+    Do_cmd fslmaths ${T1w_mask_brain} -mul $T1_orig -add $face $refaced
+    if [ ! -f ${refaced} ]; then Error "$refaced refaced failed"; cd $here; exit 0;
+    fi
+
+    # # -----------------------------------------------------------------------------------------------
+    # # WARPFACE
+    if [ "$METHOD" == "reface-pro" ] || [ "$METHOD" = "all" ]; then
+        Info "WARP-FACING $t1w_run1"
+        # Binary mask over original t1w_run
+        T1w_mask_dil=${tmp}/mask_dil.nii.gz
+        T1w_mask_inv=${tmp}/mask_inv.nii.gz
+        warpfaced=${out_warps}/${T1w_run1_str}_T1w-warpfaced.nii.gz
+
+        # Dilate brain mask
+        Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input 6
+
+        # Inverse the brain mask dilated
+        Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
+
+        # Create a non-linear warpfield of the face  <<<<<<<<<<< DEFORMABLE Only
+        T1wrefaced=${tmp}/refaceSyN
+        face_warp=${T1wrefaced}_1Warp.nii.gz
+        # face_mat=${T1wrefaced}_0GenericAffine.mat
+
+        Do_cmd antsRegistrationSyN.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t so -n $CORES -p f
+        # Do_cmd antsRegistrationSyNQuick.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t so -n $CORES -p f
+
+        # Face-mask the warpfield
+        Do_cmd fslmaths $face_warp -mul $T1w_mask_inv $face_warp
+        # QC
+        if [ ! -f ${face_warp} ]; then Error "$face_warp warpfield calculation failed"; cd $here; #exit 0;
+        fi
+        # Apply warpfield to T1w
+        Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t ${face_warp} -o ${warpfaced}
+        # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t [${face_mat},1] -t ${face_warp} -t $face_mat -o ${warpfaced}
+    fi
 fi
-
-# -----------------------------------------------------------------------------------------------
-# REFACE-PRO
-if [ "$METHOD" == "reface-pro" ]; then
-    T1w_mask_inv=tmp_brainNeck-ROInv.nii.gz
-    T1w_warp=T1w_2_T1wface
-    # inverse mask
-    Do_cmd fslmaths $ROI -sub 1 -mul -1 $T1w_mask_inv
-
-    # Create a non-linear warpfield of the face
-    Do_cmd antsRegistrationSyN.sh -d 3 -f $refaced -m anat/${t1w_run1} -x $T1w_mask_inv -o ${T1w_warp}_ -t so -n $CORES -p f
-    # Do_cmd antsRegistrationSyNQuick.sh -d 3 -x $T1w_mask_inv -f $ref_T1 -m anat/${t1w_run1} -o ${T1w_warp}_ -t s -n $CORES -p f
-    Do_cmd rm -v ${T1w_warp}_InverseWarped.nii.gz ${T1w_warp}_Warped.nii.gz
-    face_warp=${T1w_warp}_1Warp.nii.gz
-
-    # Face-mask the warpfield
-    fslmaths $face_warp -mul $T1w_mask_inv $face_warp
-
-    # Apply Face warpfield to the T1w_run-1
-    Do_cmd antsApplyTransforms -d 3 -u int -i anat/$t1w_run1 -r $refaced -n linear -t ${face_warp} -t ${face_mat} -o ${T1w_warp}_warpfaced.nii.gz
-fi
-
-if [ ! -f ${refaced} ]; then Error "$refaced refaced failed"; cd $here; exit 0; fi
-Info "ANFI refaced-plus is done"
-
-
-if [ ! -f ${face_warp} ]; then Error "$face_warp ants SyN warpfield failed"; cd $here; exit 0; fi
-register_QC anat/$t1w_run1 ${T1w_warp}_reface-pluspro.nii.gz
-register_QC anat/$t1w_run1 ${T1w_warp}_warpfaced.nii.gz
-
-Info "Face-warpfield was calculated"
 
 # -----------------------------------------------------------------------------------------------
 # Loop over all the other structural images (including non T1w volumes)
-for nii in ${anat[@]}; do
-  # Linear/Affine registration to T1w_run-1
-  nii_out=${nii/.nii.gz/_}
-  # Do_cmd antsRegistrationSyN.sh -d 3 -f anat/${t1w_run1} -m anat/${nii} -o ${nii_out} -t a -n $CORES -p d
-  Do_cmd antsRegistrationSyNQuick.sh  -d 3 -f anat/${t1w_run1} -m anat/${nii} -o ${nii_out} -t a -n $CORES -p d
+for nii in ${anat[*]}; do
 
-  # Apply face-warp, affine mat, inverse mat and return to native Volume space
-  T1w_run1_mat=${nii_out}0GenericAffine.mat
-  Do_cmd antsApplyTransforms -d 3 -u int -i anat/$nii -r anat/${t1w_run1} -n linear -t [${T1w_run1_mat},1] -t [${face_mat},1] -t ${face_warp} -t ${face_mat} -t ${T1w_run1_mat} -o ${nii_out}warpfaced.nii.gz
-  # >>>>>>>>>> ANTs version 2.2.0.dev89-g5decc DOWNGRADED antsApplyTransforms version
- #Do_cmd antsApplyTransforms -d 3 --float -i $nii -r $t1w_run1 -n linear -t [${T1w_run1_mat},1] -t [${face_mat},1] -t ${face_warp} -t ${face_mat} -t ${T1w_run1_mat} -o ${nii_out}warpfaced.nii.gz
+  # -----------------------------------------------------------------------------------------------
+  if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
+      Info "Applying DEFACING method to $nii"
+  fi
 
-  register_QC anat/$nii ${nii_out}warpfaced.nii.gz
+  # -----------------------------------------------------------------------------------------------
+  if [ "$METHOD" == "reface" ] || [ "$METHOD" = "all" ]; then
+      Info "Applying REFACING method to $nii"
+  fi
+
+  # -----------------------------------------------------------------------------------------------
+  if [ "$METHOD" == "reface-pro" ] || [ "$METHOD" = "all" ]; then
+      Info "Applying Warp-Facing method to $nii"
+      # Linear/Affine registration to T1w_run-1
+      nii_pwd=${out_warps}/anat/${nii}
+      nii_out=${tmp}/${nii/.nii.gz/_}
+      nii_2_T1_mat=${nii_out}0GenericAffine.mat
+      nii_warped=${out_warps}/${nii/.nii.gz/_}warpfaced.nii.gz
+      # rigid + affine registration 2 steps
+      # Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m anat/${nii} -o ${nii_out} -t a -n $CORES -p d
+      Do_cmd antsRegistrationSyNQuick.sh  -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $CORES -p d
+      # Apply the warpflied
+      Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $T1_orig -n linear \
+              -t [${nii_2_T1_mat},1] -t ${face_warp} -t ${nii_2_T1_mat} -o $nii_warped
+
+      # rigid + affine + deformable syn (3 stages) <<<<<<<<<<<<<<<<< TRY THIS
+      # Do_cmd antsRegistrationSyNQuick.sh -d 3 -f $T1_orig -m anat/${nii} -o ${nii_out} -t s -n $CORES -p d
+      # nii_2_T1_warp=${nii_out}1Warp.nii.gz
+      # Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $T1_orig -n linear \
+      #                 -t [${nii_2_T1_mat},1] -t [${nii_2_T1_warp},1] -t ${face_warp} -t ${nii_2_T1_warp} -t ${nii_2_T1_mat} -o $nii_warped
+
+      # # Moving the warpfield to the native anat/nii space
+      # warp_in_nii=${tmp}/${nii/.nii.gz/}_warpfield.nii.gz
+      # Do_cmd antsApplyTransforms -d 3 -u float -i $face_warp -r $nii_pwd -n linear -t [${nii_2_T1_mat},1] -o $warp_in_nii
+      # # Apply face-warp, affine mat, inverse mat and return to native Volume space
+      # Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n linear -t $warp_in_nii -o $nii_warped
+  fi
 done
-Info "Face-warpfield was applied to all volumes"
 
 #------------------------------------------------------------------------------#
 # Replace ORIGINAL BIDS/anat with the ANONYMIZED
@@ -265,8 +310,14 @@ if [[ ${replace} == TRUE ]]; then
     done
     echo "${id}-anonymized $(date)" >> ${BIDS}/CHANGES
 fi
-cd $here
 
+# -----------------------------------------------------------------------------------------------
+# Clean temporal directory
+cd $here
+# if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+
+Note "Temporal directory:  " $tmp
+Note "Output directory:    " $out_warps
 # -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
 lopuu=$(date +%s)
