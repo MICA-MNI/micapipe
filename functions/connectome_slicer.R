@@ -40,6 +40,10 @@ arg.miss <- function() {
   cat("---------------------------------------------------------
     ERROR ... Connectome slicer: A mandatory argument is missing
       ---------------------------------------------------------")
+  print(paste0("Connectome     : ",argsL$conn))
+  print(paste0("LUT-1          : ",argsL$lut1))
+  print(paste0("LUT-2          : ",argsL$lut2))
+  print(paste0("MICAPIPE-path  : ",argsL$mica))
 }
 
 ## Arg1 default
