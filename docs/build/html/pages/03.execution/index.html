@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>How execute the micapipe &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="What’s new?" href="../09.whatsnew/index.html" />
+    <link rel="prev" title="Usages Notes" href="../02.whatyouneed/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> micapipe
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Download micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Execution of micapipe</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-arguments">Command-Line Arguments</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#some-essential-flags">Some essential flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flags-for-processing">Flags for processing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Stages of processing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../04.volumetric/index.html">Volumetric processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.freesurfer/index.html">Freesurfer processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.dwi/index.html">Diffusion weighted images processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.restingstate/index.html">Resting state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.postmpc/index.html">Microstructural profiles and covariance analysis</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Optional commands</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../14.micapipe_anonymize/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../15.micapipe_cleanup/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../16.mic2bids/index.html">How to write it down?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../13.writeitdown/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../11.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>How execute the micapipe</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/pages/03.execution/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="execution-of-micapipe">
+<span id="execution"></span><h1>Execution of micapipe<a class="headerlink" href="#execution-of-micapipe" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-line-arguments">
+<h2>Command-Line Arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ mica-pipe  -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt;
+</pre></div>
+</div>
+<div class="section" id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>↪ <strong>&lt;subject_id&gt;</strong> : the subject identification (without the “sub-“)</p>
+<p>↪ <strong>&lt;outputDirectory&gt;</strong> : the output path for the outcomes files of the preprocessing</p>
+<p>↪ <strong>&lt;BIDS-directory&gt;</strong> : the input path, where the folder of your BIDS valid dataset is</p>
+</div></blockquote>
+</div>
+<div class="section" id="some-essential-flags">
+<h3>Some essential flags<a class="headerlink" href="#some-essential-flags" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>↪ <strong>-ses</strong> : Number of session (Default is ses-01)</p>
+<p>↪ <strong>-force</strong> : To overwrite the subject directory (WARNING! This will suppress your subject directory)</p>
+<p>↪ <strong>-quiet</strong> : Do NOT print comments</p>
+<p>↪ <strong>-nocleanup</strong> : Do NOT delete temporal directory at script completion</p>
+</div></blockquote>
+</div>
+<div class="section" id="flags-for-processing">
+<h3>Flags for processing<a class="headerlink" href="#flags-for-processing" title="Permalink to this headline">¶</a></h3>
+<p>🚩 Flags for first stages of structural processing:</p>
+<blockquote>
+<div><p>↪ <strong>-proc_structural</strong> : Volumetric processing</p>
+<p>↪ <strong>-proc_freesurfer</strong> : Freesurfer recon-all processing</p>
+<p>↪ <strong>-proc_dwi</strong> : DWI-Diffusion weighted images processing with MRtrix3</p>
+<p>↪ <strong>-proc_rsfmri</strong> : Resting state Functional MRI processing</p>
+</div></blockquote>
+<div class="admonition-important-to-know admonition">
+<p class="admonition-title">Important to know ☝🏼</p>
+<dl class="simple">
+<dt>You can use 🚩 -proc to run all the first stages of micapipe</dt><dd><p>The first stages of structural processing correspond to all the -proc stages of micapipe. These steps are used to preprocess the images in order to make them usable for the -post stages.</p>
+</dd>
+</dl>
+</div>
+<p>🚩 Flags for second stages of structural processing:</p>
+<blockquote>
+<div><p>↪ <strong>-post_structural</strong> : Post structural volumetric processing</p>
+<p>↪ <strong>-post_dwi</strong> : Post tractography and connectome generation</p>
+<p>↪ <strong>-post_mpc</strong> : Microstructural profiles and covariance analysis</p>
+</div></blockquote>
+<div class="admonition-important-to-know admonition">
+<p class="admonition-title">Important to know ☝🏼</p>
+<dl class="simple">
+<dt>You can use 🚩 -post to run all the second stages of micapipe</dt><dd><p>The second stages of structural processing correspond to all the -post stages of micapipe. These steps generate connectomes, correlations and matrices.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../09.whatsnew/index.html" class="btn btn-neutral float-right" title="What’s new?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../02.whatyouneed/index.html" class="btn btn-neutral float-left" title="Usages Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL 🤠 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

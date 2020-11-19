@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Freesurfer processing &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Diffusion weighted images processing" href="../06.dwi/index.html" />
+    <link rel="prev" title="Volumetric processing" href="../04.volumetric/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> micapipe
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Download micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.execution/index.html">Execution of micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Stages of processing</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../04.volumetric/index.html">Volumetric processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Freesurfer processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Freesurfer processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quality-control">Quality control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../06.dwi/index.html">Diffusion weighted images processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.restingstate/index.html">Resting state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.postmpc/index.html">Microstructural profiles and covariance analysis</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Optional commands</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../14.micapipe_anonymize/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../15.micapipe_cleanup/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../16.mic2bids/index.html">How to write it down?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../13.writeitdown/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../11.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Freesurfer processing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/pages/05.freesurfer/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="freesurfer-processing">
+<span id="freesurfer"></span><h1>Freesurfer processing<a class="headerlink" href="#freesurfer-processing" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>Freesurfer</strong> will allow you to generate the cortical surface segmentation of your data. Cortical surface segmentations were generated from native T1w scans using Freesurfer 6.0. A series of equivolumetric surfaces were also constructed for each participant between the pial and white matter boundaries. These surfaces were used for systematic sampling of qT1 image intensities, to compute individual microstructural profile similarity matrices (see next section). Here, qT1 images were co-registered to native FreeSurfer space of each participant using boundary-based registration.</p>
+<div class="section" id="id1">
+<h2>Freesurfer processing<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>What is it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>How to use it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>What are the outcomes?</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<p><strong>Freesurfer</strong> processing description :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Recon-all processing</p></li>
+<li><p>Segmentation of skull stripping, B1 bias field correction and gray-white matter</p></li>
+<li><p>Reconstruction of cortical surface models</p></li>
+<li><p>Nonlinear registration of the cortical surface</p></li>
+<li><p>Statistical analysis of group morphometry differences</p></li>
+</ul>
+</div></blockquote>
+<p>For more informations about Freesurfer, see the <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferWiki">Freesurfer web site</a></p>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p><strong>Freesurfer</strong> command line :</p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong></pre>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<p><strong>Freesurfer</strong> processing outputs :</p>
+<pre class="literal-block"><strong>proc-freesurfer directories</strong>
+   - /proc_struct/surfaces --&gt; individual subject surfaces or surface-mapped structural features
+   - /proc_struct/surfaces/sub-&lt;subject_id&gt; --&gt; native Freesurfer space derivatives
+<strong>proc-freesurfer output files</strong>
+   - native surfaces
+   - subject-specific parcellation annotation files
+   - native midsurface for each hemispheres</pre>
+<p>All files in the /surfaces subdirectory consist of individual subject surfaces or surface-mapped structural features. These features are organized in four distinct subdirectories
+First, subject-specific outputs from Freesurfer (/surfaces/sub-HC#) include native Freesurfer space derivatives such as native surfaces and subject-specific parcellation annotation files, as well as native midsurface files for each hemispheres generated using workbench command tools.</p>
+<p>Second, we provide pial, white matter and midsurfaces mapped to the Conte69 template space (/surfaces/conte69). This directory includes each subject’s native surface models mapped to the 32,000-vertex Conte69 surface template deformed to fsaverage space (indicated by “conte69-32k_fs_LR”), as well as the corresponding subject sphere resampled to the Conte69 template. All Conte69 template-mapped subject surfaces are made available as surface-type gifti files (.surf.gii).</p>
+</div>
+</div>
+</div>
+<div class="section" id="quality-control">
+<h2>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this headline">¶</a></h2>
+<p>After the freesurfer processing, you will need to complete the quality control (QC) to corrected for any segmentation errors.</p>
+<blockquote>
+<div><pre class="literal-block"><strong>What you need for QC?</strong>
+- Freesurfer
+- Files path
+     /proc_struct/surfaces/sub-&lt;subject_id&gt;/mri --&gt; <strong>brainmask.mgz</strong>
+    - /proc_struct/surfaces/sub-&lt;subject_id&gt;/surf --&gt; <strong>lh.pial lh.white rh.pial rh.white</strong>
+- Add control point + manuel edits</pre>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../06.dwi/index.html" class="btn btn-neutral float-right" title="Diffusion weighted images processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../04.volumetric/index.html" class="btn btn-neutral float-left" title="Volumetric processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL 🤠 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>
