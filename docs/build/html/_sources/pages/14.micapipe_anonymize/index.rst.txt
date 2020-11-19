@@ -2,33 +2,8 @@
 
 .. title:: Micapipe Anonymize
 
-How to write it down?
+Micapipe Anonymize
 ================================================
-
-Bla bla
-
-Volumetric processing
---------------------------
-
-blablab
-
-
-Freesurfer processing
---------------------------
-
-
-DWI processing
---------------------------
-
-
-
-Resting-state processing
---------------------------
-
-
-
-MPC processing
---------------------------
 
 
 

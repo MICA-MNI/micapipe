@@ -2,33 +2,8 @@
 
 .. title:: Micapipe Cleanup
 
-How to write it down?
+Micapipe Cleanup
 ================================================
-
-Bla bla
-
-Volumetric processing
---------------------------
-
-blablab
-
-
-Freesurfer processing
---------------------------
-
-
-DWI processing
---------------------------
-
-
-
-Resting-state processing
---------------------------
-
-
-
-MPC processing
---------------------------
 
 
 

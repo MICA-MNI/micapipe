@@ -2,33 +2,8 @@
 
 .. title:: Mic2bids
 
-How to write it down?
+mic2bids
 ================================================
-
-Bla bla
-
-Volumetric processing
---------------------------
-
-blablab
-
-
-Freesurfer processing
---------------------------
-
-
-DWI processing
---------------------------
-
-
-
-Resting-state processing
---------------------------
-
-
-
-MPC processing
---------------------------
 
 
 
