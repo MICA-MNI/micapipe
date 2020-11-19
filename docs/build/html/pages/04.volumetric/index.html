@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Volumetric processing &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Freesurfer processing" href="../05.freesurfer/index.html" />
+    <link rel="prev" title="What’s new?" href="../09.whatsnew/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> micapipe
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Download micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.execution/index.html">Execution of micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Stages of processing</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Volumetric processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#proc-structural-processing">Proc-structural processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-structural-processing">Post-structural processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../05.freesurfer/index.html">Freesurfer processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.dwi/index.html">Diffusion weighted images processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.restingstate/index.html">Resting state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.postmpc/index.html">Microstructural profiles and covariance analysis</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Optional commands</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../14.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../15.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../16.mic2bids/index.html">mic2bids</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../13.writeitdown/index.html">How to write it down?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../11.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Volumetric processing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/pages/04.volumetric/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="volumetric-processing">
+<span id="volumetric"></span><h1>Volumetric processing<a class="headerlink" href="#volumetric-processing" title="Permalink to this headline">¶</a></h1>
+<p>Native structural images were anonymized and de-identified using AFNI’s reface plus tool. This tool aligns an input volume, in this case each participant’s first T1w scan, to a reference dataset, on which an average-face mask is applied. All other structural scans included in this release (e.g., additional T1w and qT1 images, and pre-processed T1w images) were non-linearly registered to the refaced T1w scan, and the resulting warp-field was subsequently applied to all structural images. This procedure allowed warping of the face mask to each structural scan while maintaining original image intensities and positioning of the brain in native space. The additional use of a brain mask applied to each structural scan during this procedure ensured that brain tissues were unaffected by the warp-field.</p>
+<p>Each T1w scan was deobliqued and reoriented. Both scans were then linearly co-registered and averaged, automatically corrected for intensity nonuniformity, and intensity normalized. Resulting images were skull-stripped, and subcortical structures were segmented using FSL FIRST. Different tissue types (cortical and subcortical grey matter, white matter, cerebrospinal fluid) were segmented to perform anatomically constrained tractography. Pre-processed T1w images as well as segmented tissue types were co-registered to MNI152 using symmetric image normalization (SyN) implemented in Advanced Neuroimaging Tools (ANTs).</p>
+<div class="section" id="proc-structural-processing">
+<h2>Proc-structural processing<a class="headerlink" href="#proc-structural-processing" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>What is it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>How to use it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>What are the outcomes?</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<p><strong>Proc-structural</strong> processing description :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Create the t1w_nativepro for structural processing (Reorient to LPI with AFNI, If multiple T1w were provided –&gt; Register and average to the first T1w, Coregistrer)</p></li>
+<li><p>Intensity non-uniform correction (N4)</p></li>
+<li><p>Rescale intensity [100,0]</p></li>
+<li><p>Brain mask (Brain extraction)</p></li>
+<li><p>FSL first on the t1w_nativepro –&gt; Subcortical</p></li>
+<li><p>FSL fast on the t1w_natipro –&gt; Tissue types (Gray, White, CSF)</p></li>
+<li><p>Registration to MNI space (No linear, 0.8 and 2mm)</p></li>
+<li><p>Generate a five-tissue-type image for anatomically constrained tractography (5 Tissues Type (5TT))</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p><strong>Proc-structural</strong> command line :</p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong></pre>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<p><strong>Proc-structural</strong> processing outputs :</p>
+<pre class="literal-block"><strong>proc-structural directories</strong>
+   - /proc_struct
+   - /proc_struct/first --&gt; subcortical structure segmentations (FSL FIRST 51)
+   - /xfms
+<strong>proc-structural output files</strong>
+   - This directory contains two data spaces, <strong>nativepro</strong> and <strong>MNI152</strong>, indicated accordingly in all filenames.
+       - T1nativepro
+       - T1nativepro_brain
+       - T1nativepro_first
+       - T1nativepro_5TT
+       - T1_MNI152
+       - T1_MNI152_brain
+       - T1_nativepro_brain_to_0.8mm_MNI152
+       - T1_nativepro_brain_to_2mm_MNI152</pre>
+</div>
+</div>
+</div>
+<div class="section" id="post-structural-processing">
+<h2>Post-structural processing<a class="headerlink" href="#post-structural-processing" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-prerequisites admonition">
+<p class="admonition-title">Prerequisites 🖐🏼</p>
+<p>You need to run the <em>proc-structural</em> and <em>proc-freesurfer</em> before this stage</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-1-0 docutils container">
+<div class="docutils container">
+<p>What is it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1-1 docutils container">
+<div class="docutils container">
+<p>How to use it?</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1-2 docutils container">
+<div class="docutils container">
+<p>What are the outcomes?</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-0 active docutils container">
+<p><strong>Post-structural</strong> processing description :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Registration (Compute affine matrix from Freesurfer space to nativepro)</p></li>
+<li><p>Cerebellar parcellation from MNI152_0.8mm to T1_Nativepro (inverse transformation)</p></li>
+<li><p>Create parcellation on nativepro space + Register the annot surface parcellation to the T1-freesurfer volume + Register parcellation (native freesurfer) to nativepro</p></li>
+<li><p>Compute warp of native structural to Freesurfer and apply to 5TT and first (build the conte69-32k sphere + resample white and pial surfaces to conte69-32k)</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
+<p><strong>Post-structural</strong> command line :</p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-post_structural</strong></pre>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
+<p><strong>Post-structural</strong> processing outputs :</p>
+<pre class="literal-block"><strong>post-structural directories</strong>
+   - /proc_struct
+   - /proc_struct/volumetric --&gt; parcellation schemes in volumetric nativepro space
+<strong>post-structural output files</strong>
+   - This directory contains two data spaces, <strong>nativepro</strong> and <strong>MNI152</strong>, indicated accordingly in all filenames.
+       - T1_nativepro_glasser-360
+       - T1_nativepro_schaefer
+       - T1_nativepro_subcortical
+       - T1_nativepro_vosdewael
+   - Skull-stripped equivalent ?
+   - Brain mask ?</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../05.freesurfer/index.html" class="btn btn-neutral float-right" title="Freesurfer processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../09.whatsnew/index.html" class="btn btn-neutral float-left" title="What’s new?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL 🤠 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>
