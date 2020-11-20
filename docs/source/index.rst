@@ -7,7 +7,7 @@
    ============================
    *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
-.. title:: Introducing the micapipe 
+.. title:: Introducing the micapipe
 
 .. raw:: html
 
@@ -20,42 +20,18 @@
       }
    </style>
 
-.. .. image:: ./pages/extrafigs/wmap.png
-   :align: left
-   :target: http://enigma.ini.usc.edu/
-   :alt: micapipe
+.. image:: ../figures/micapipe_long.png
+    :alt: alternate text
+    :align: right
 
-
-**Welcome to the micapipe**
+**Welcome to the MICA lab pipeline**
 ==========================================
 
-.. raw:: html
-
-      <img src="https://raw.githubusercontent.com/janiedp/micapipe-extra/main/micapipe.png"
-         width=400px>
-   </a>
 
 
-.. raw:: html
-
-   <hr>
-
-|
-
-Data archiving and data sharing 💌
-----------------------------------
-The **ENIGMA TOOLBOX** provides a platform for archiving meta- and mega-analytical :ref:`case-control 
-comparisons<load_sumstats>` across a wide range of disorders. As part of the **ENIGMA TOOLBOX**, we are a
-lso making several data matrices openly available! As of now, these include :ref:`functional and structural 
-connectivity data<hcp_connectivity>` as well as :ref:`transcriptomic data<gene_maps>`.
-
-.. raw:: html
-
-   <br>
-
-Harmonization of analytical methods 👯‍♀️
+Getting started
 --------------------------------------------------------
-One key goal of the **ENIGMA TOOLBOX** is
+One key goal of the **MICAPIPE** is
 to harmonize analytical methods both *within* and *across* ENIGMA Working Groups, ultimately facilitating
 comparisons of imaging and genetic findings across diseases.
 
@@ -63,39 +39,66 @@ comparisons of imaging and genetic findings across diseases.
 
    <br>
 
-Visualization tools 🎨
+Main workflow 👣
 -------------------------------------
-Tired of displaying your surface findings in tables? Look no further! The **ENIGMA TOOLBOX** has got you 
-covered! Check out our :ref:`visualization tools<surf_visualization>` and project your cortical and subcortical data to the surface!
+Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
+covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
 
 .. raw:: html
 
    <br>
 
-Step-by-step tutorials 👣
+Processing steps 👣
+-------------------------------------
+Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
+covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
+
+.. raw:: html
+
+   <br>
+
+Quality Check
 ------------------------------------
-The **ENIGMA TOOLBOX** has a *No data, No problem* policy! To make things easier, we provide :ref:`example data<load_ct>` from an individual site
-that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived 
+The **MICAPIPE** has a *No data, No problem* policy! To make things easier, we provide from an individual site
+that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived
 datasets, you can easily complete all of the tutorials!
 
 .. raw:: html
 
    <br>
 
+
+Additional tools
+-------------------------------------------
+
+.. raw:: html
+
+   <br>
+
+
 Development and getting involved ⚙️
 -------------------------------------------
-Should you have any problems, questions, or suggestions about the **ENIGMA TOOLBOX**, please do not
-hesitate to post them to our Github `issues <https://github.com/MICA-MNI/ENIGMA/issues>`_! Or are you interested in collaborating 
-or sharing your ENIGMA-related codes/tools? `Noice <https://www.urbandictionary.com/define.php?term=noice>`_! 
-Make sure you familiarize yourself with our `contributing guidelines <https://github.com/MICA-MNI/ENIGMA/blob/master/CONTRIBUTING.md>`_ 
-first and then discuss your ideas on our Github `issues <https://github.com/MICA-MNI/ENIGMA/issues>`_ and 
+Should you have any problems, questions, or suggestions about the **MICAPIPE**, please do not
+hesitate to post them to our Github `issues <https://github.com/MICA-MNI/ENIGMA/issues>`_! Or are you interested in collaborating
+or sharing your ENIGMA-related codes/tools? `Noice <https://www.urbandictionary.com/define.php?term=noice>`_!
+Make sure you familiarize yourself with our `contributing guidelines <https://github.com/MICA-MNI/ENIGMA/blob/master/CONTRIBUTING.md>`_
+first and then discuss your ideas on our Github `issues <https://github.com/MICA-MNI/ENIGMA/issues>`_ and
 `pull request <https://github.com/MICA-MNI/ENIGMA/pulls>`_.
+
+
+.. raw:: html
+
+   <br>
+
+References
+-------------------------------------------
+Detailed information regarding the software and tools used in this pipeline
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Getting started
-   
+
    pages/01.install/index
    pages/02.whatyouneed/index
    pages/03.execution/index
@@ -104,19 +107,20 @@ first and then discuss your ideas on our Github `issues <https://github.com/MICA
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Stages of processing
-   
+   :caption: Processing steps
+
    pages/04.volumetric/index
    pages/05.freesurfer/index
    pages/06.dwi/index
    pages/07.restingstate/index
-   pages/08.postmpc/index   
+   pages/08.postmpc/index
+   pages/17.geodesic/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Optional commands
-   
+   :caption: Additional tools
+
    pages/14.micapipe_anonymize/index
    pages/15.micapipe_cleanup/index
    pages/16.mic2bids/index
@@ -125,14 +129,18 @@ first and then discuss your ideas on our Github `issues <https://github.com/MICA
    :maxdepth: 1
    :hidden:
    :caption: References & Acknowledgements
-   
+
    pages/13.writeitdown/index
    pages/10.citingmicapipe/index
    pages/11.references/index
-   pages/12.acknowledge/index 
-|
+   pages/12.acknowledge/index
 
 ___________________________________________________________________________________________________
+
+.. image:: ../figures/micapipe.png
+   :scale: 50 %
+   :alt: alternate text
+   :align: center
 
 Creators 🧠
 -------------------------
@@ -140,7 +148,8 @@ Creators 🧠
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
+- **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
+- **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
+- **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
 - **Oualid Benkarim**, *MICA Lab - Montreal Neurological Institute*
-- **Janie Degré-Pelletier**, *MICA Lab - Montreal Neurological Institute*
 - **Boris Bernhardt**, *MICA Lab - Montreal Neurological Institute*
-

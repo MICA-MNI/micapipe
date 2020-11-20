@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 project = 'micapipe'
 copyright = '2020, micapipe'
-author = 'Raul-Rodriguez-Cruces, Jessica Royer, Sara Larivière, Janie Degré-Pelletier, Boris Bernhardt'
+author = 'Raul-Rodriguez-Cruces, Jessica Royer, Janie Degré-Pelletier, Sara Larivière, Bo-yong Park, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Reinder Vos de Wael, Boris Bernhardt'
 
 
 # -- General configuration ---------------------------------------------------
