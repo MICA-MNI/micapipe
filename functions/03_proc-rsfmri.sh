@@ -56,7 +56,7 @@ if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: r
 if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check topup input
-if [[ ${changeTopupConfig} == "DEFAULT" ]]; then 
+if [[ ${changeTopupConfig} == "DEFAULT" ]]; then
     Warning "Will use default config file for TOPUP: ${topupConfigFile}"
 else
     topupConfigFile=${changeTopupConfig}
@@ -64,7 +64,7 @@ else
 fi
 
 # Check ICA-FIX Training input
-if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then 
+if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then
     Warning "Will use default training file for ICA-FIX: ${icafixTraining}"
 else
     icafixTraining=${changeIcaFixTraining}
@@ -197,7 +197,6 @@ if [[ ! -f ${singleecho} ]]; then
             Do_cmd fslmaths ${tmp}/singleecho_secondaryPhaseAligned.nii.gz -Tmean ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
 
             # Distortion correction
-            # Figure out how to set the numbers in this file correctly for any scan. Depends on phase encoding direction!
             printf "0 1 0 $readoutTime \n0 -1 0 $readoutTime" > ${tmp}/singleecho_topupDataIn.txt
             Do_cmd fslmerge -t ${tmp}/singleecho_mergeForTopUp.nii.gz ${tmp}/singleecho_mainPhaseAlignedMean.nii.gz ${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz
             Do_cmd topup --imain=${tmp}/singleecho_mergeForTopUp.nii.gz --datain=${tmp}/singleecho_topupDataIn.txt --config=${topupConfigFile} --out=${tmp}/singleecho_topup
@@ -432,7 +431,7 @@ for x in lh rh; do
               10 \
               ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii
           Do_cmd mri_convert ${tmp}/${id}_singleecho_fmri2fs_${x}_10mm.func.gii ${out_surf_native}
-          
+
           # Register to fsa5 and apply smooth
           Do_cmd mri_surf2surf \
             --hemi ${x} \
