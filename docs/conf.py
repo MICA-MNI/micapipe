@@ -27,7 +27,17 @@ author = 'Raul-Rodriguez-Cruces, Jessica Royer, Janie Degré-Pelletier, Sara Lar
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx_tabs.tabs']
+extensions = ['sphinx_tabs.tabs',
+              'sphinx.ext.autodoc',
+              'sphinx.ext.autosectionlabel',
+              'sphinx.ext.autosummary',
+              #'sphinx.ext.doctest',
+              #'sphinx.ext.intersphinx',
+              #sphinx.ext.mathjax',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.viewcode',
+              #'sphinxarg.ext',
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
