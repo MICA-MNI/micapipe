@@ -4,6 +4,7 @@
 # and a tiny bit from Sara (Feb 2019)...
 # and a whole lot from Sara (August 2019)
 # and incorporation to mica-pipe by Raul (August-September 2020)
+# and addition of a bunch of fancy flags by Jessica (October-November 2020)
 # ... YOLO
 #
 # Resting state fMRI processing with bash:
