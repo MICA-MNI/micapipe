@@ -31,8 +31,12 @@ SES=$4
 PROC=$5
 changeTopupConfig=$6
 changeIcaFixTraining=$7
-nocleanup=$8
+thisMainScan=$8
+thisPhase=$9
+nocleanup=$10
 here=`pwd`
+
+echo $thisMainScan $thisPhase
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -47,28 +51,95 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
 
-# Check inputs: rsfMRI and phase encoding
-if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi
-if [ ! -f ${mainScanJson} ]; then Error "Subject $id doesn't have acq-AP_bold json file: \n\t ${subject_bids}/func/"; exit; fi
-if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
+### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
+
+# Main scan
+N_mainScan=${#bids_mainScan[@]}
+if [ $N_mainScan -gt 1 ]; then
+    if [[ ${thisMainScan} == "DEFAULT" ]]; then 
+        Error "Multiple rsfMRI runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit; 
+    elif [ $thisMainScan -gt $N_mainScan ]; then 
+        Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI scans scans found ($N_mainScan). Using first filename in list as default";
+        mainScan=${bids_mainScan[0]}
+    else 
+        Info "Found $N_mainScan rsfMRI scans, processing specified scan # $thisMainScan"
+        mainScan=${bids_mainScan[$thisMainScan-1]}
+    fi
+else
+    mainScan=${bids_mainScan[0]}
+    if [[ "$thisMainScan" == "DEFAULT" ]]; then
+        Info "No run number specified for rsfMRI scan and did not find more than one run for main scan - all good!"
+    else
+        if [ $thisMainScan -gt $N_mainScan ]; then
+            Warning "Found one or less rsfMRI scan, but specified run number = $thisMainScan). Using first filename in list as default"; 
+        fi
+    fi    
+fi 
+if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi #Last check to make sure file exists
+
+# Main scan json
+N_mainScanJson=${#bids_mainScanJson[@]}
+if [ $N_mainScanJson -gt 1 ]; then
+    if [[ ${thisMainScan} == "DEFAULT" ]]; then 
+        Error "Found multiple .json files for main rsfMRI scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit; 
+    elif [ $thisMainScan -gt $N_mainScanJson ]; then 
+        Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI json files found for main scan ($N_mainScan). Using first filename in list as default";
+        mainScanJson=${bids_mainScan[0]}
+    else 
+        Info "Found $N_mainScanJson rsfMRI scan json files, using specified run # $thisMainScan"
+        mainScanJson=${bids_mainScanJson[$thisMainScan-1]}
+    fi
+else
+    mainScanJson=${bids_mainScanJson[0]}
+fi
+if [ ! -f ${mainScanJson} ]; then Error "Subject $id doesn't have acq-AP_bold json file: \n\t ${subject_bids}/func/"; exit; fi #Last check to make sure file exists
+
+# Phase encoding
+N_mainPhase=${#bids_mainPhase[@]}
+N_revPhase=${#bids_reversePhase[@]}
+if [ $N_mainPhase -gt 1 ] || [ $N_revPhase -gt 1 ]; then
+    if [[ ${thisPhase} == "DEFAULT" ]]; then 
+        Error "Found multiple phase reversal runs in BIDS rawdata directory! Please specify which run should be processed using flag -phaseReversalRun"; exit; 
+    elif [ $thisPhase -gt $N_mainPhase ] || [ $thisPhase -gt $N_revPhase ]; then
+        Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default";
+        mainPhaseScan=${bids_mainPhase[$thisPhase-1]}
+        reversePhaseScan=${bids_reversePhase[$thisPhase-1]}
+    else 
+        Info "Found $N_mainPhase and $N_revPhase phase reversal scans, processing specified scan # $thisPhase"
+        mainPhaseScan=${bids_mainPhase[$thisPhase-1]}
+        reversePhaseScan=${bids_reversePhase[$thisPhase-1]}
+    fi
+else
+    mainPhaseScan=${bids_mainPhase[0]}
+    reversePhaseScan=${bids_reversePhase[0]}
+    if [[ "$thisPhase" == "DEFAULT" ]]; then
+        Info "No run number specified for phase reversals and did not find more than one phase reversal scan - all good!"
+    else
+        if [ $thisPhase -gt $N_mainPhase ] || [ $thisPhase -gt $N_revPhase ]; then
+            Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default"; fi
+    fi
+fi
+if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+
+# Structural nativepro scan and freesurfer 
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
 if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check topup input
 if [[ ${changeTopupConfig} == "DEFAULT" ]]; then
-    Warning "Will use default config file for TOPUP: ${topupConfigFile}"
+    Info "Will use default config file for TOPUP: ${topupConfigFile}"
 else
     topupConfigFile=${changeTopupConfig}
-    Warning "Will use specified config file for TOPUP: ${topupConfigFile}"
+    Info "Will use specified config file for TOPUP: ${topupConfigFile}"
 fi
 
 # Check ICA-FIX Training input
 if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then
-    Warning "Will use default training file for ICA-FIX: ${icafixTraining}"
+    Info "Will use default training file for ICA-FIX: ${icafixTraining}"
 else
     icafixTraining=${changeIcaFixTraining}
-    Warning "Will use specified training file for ICA-FIX: ${icafixTraining}"
+    Info "Will use specified training file for ICA-FIX: ${icafixTraining}"
 fi
 
 
