@@ -1,27 +1,27 @@
 .. _what_need:
 
-.. title:: How to get started? 
+.. title:: How to get started?
 
 Usages Notes
 ======================================
 
-Data format 
+Data format
 -----------
-To use the micapipe, we recommand to used Brain Imaging Data Structure (BIDS) format. Before the execution of the micapipe, 
+To use the micapipe, we recommand to used Brain Imaging Data Structure (BIDS) format. Before the execution of the micapipe,
 you will need to convert your dataset in valid BIDS format. You can find the information about the BIDS specification `here <https://bids-specification.readthedocs.io/en/stable/>`_.
-We recommend you to validate your dataset after the conversion online, `BIDS Validator <https://bids-standard.github.io/bids-validator/>`_. 
+We recommend you to validate your dataset after the conversion online, `BIDS Validator <https://bids-standard.github.io/bids-validator/>`_.
 
 .. admonition:: Essentials to have ☝🏼
 
      You will need to download `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`_ to complete the conversion of your dataset.
-|
-Set the environment 
+
+Set the environment
 --------------------
 
-|
+
 Software versions requirements
 -------------------------------
-micapipe written using... 
+micapipe written using...
 
    micapipe requires software toolx before to start:
 

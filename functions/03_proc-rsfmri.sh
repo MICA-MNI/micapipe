@@ -565,16 +565,7 @@ if [[ ! -f ${timese_cerebellum} ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_cerebellum -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_cerebellum -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $fmri_processed \
-        --seg $rsfmri_cerebellum \
-        --exclude 0 \
-        --exclude 29 \
-        --exclude 30 \
-        --exclude 31 \
-        --exclude 32 \
-        --exclude 33 \
-        --exclude 34 \
-        --avgwf ${timese_cerebellum}
+      Do_cmd mri_segstats --i $fmri_processed --seg $rsfmri_cerebellum --avgwf ${timese_cerebellum}
 else
       Info "Subject ${id} has rsfmri cerebellar time-series"
 fi

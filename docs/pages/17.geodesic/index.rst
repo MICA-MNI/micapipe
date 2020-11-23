@@ -1,6 +1,6 @@
 .. _geodesic:
 
-.. title:: geodesic
+.. title:: Geodesic distance
 
 Geodesic distance
 ================================================
