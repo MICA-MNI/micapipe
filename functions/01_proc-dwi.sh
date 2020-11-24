@@ -45,6 +45,15 @@ if [ ! -f ${T1_MNI152_InvWarp} ]; then Error "Subject $id doesn't have T1_native
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
 if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
 
+# CHECK if PhaseEncodingDirection and TotalReadoutTime exist
+for i in ${bids_dwis[*]}; do
+  json=`echo $i awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1 ".json"}'`;
+  ped=`cat $json | grep PhaseEncodingDirection\": | awk -F "\"" '{print $4}'`
+  trt=`cat $json | grep TotalReadoutTime | awk -F " " '{print $2}'`
+  if [ -z ${ped} ]; then Error "PhaseEncodingDirection is missing in $json"; exit; fi
+  if [ -z ${trt} ]; then Error "TotalReadoutTime is missing in $json"; exit; fi
+done
+
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
 micapipe_software
