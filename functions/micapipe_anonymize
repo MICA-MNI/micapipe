@@ -236,7 +236,6 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         # Binary mask over original t1w_run
         T1w_mask_dil=${tmp}/mask_dil.nii.gz
         T1w_mask_inv=${tmp}/mask_inv.nii.gz
-        warpfaced=${out_warps}/${T1w_run1_str}_T1w-warpfaced.nii.gz
 
         # Dilate brain mask
         Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input 6
@@ -259,9 +258,10 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         Do_cmd fslmaths $face_warp -mul $T1w_mask_inv $face_warp
         # QC
         if [ ! -f ${face_warp} ]; then Error "$face_warp warpfield calculation failed"; cd $here;  Do_cmd exit 0; fi
-        # Apply warpfield to T1w
+        # Apply warpfield to T1w (deprecated, this step is perform in the for loop)
+        # warpfaced=${out_warps}/${T1w_run1_str}_T1w-warpfaced.nii.gz
         # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t ${face_warp} -o ${warpfaced}
-        Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t [${face_mat},1] -t ${face_warp} -t $face_mat -o ${warpfaced}
+        # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t [${face_mat},1] -t ${face_warp} -t $face_mat -o ${warpfaced}
     fi
 fi
 
@@ -343,7 +343,7 @@ done
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 cd $here
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${out_warps}/anat; else Info "tmp directory was not erased: ${tmp}"; fi
 
 Note "Temporal directory:  " $tmp
 Note "Output directory:    " $out_warps
