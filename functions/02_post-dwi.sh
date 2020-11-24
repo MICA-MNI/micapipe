@@ -91,8 +91,8 @@ dwi_subc=${proc_dwi}/${id}_dwi_subcortical.nii.gz
 if [[ ! -f $dwi_cere ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_cerebellum -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cere -v -u int
       if [[ -f $dwi_cere ]]; then ((Nparc++)); fi
-      # Threshold cerebellar nuclei (29,30,31,32,33,34,35) and add 100
-      Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
+      # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
+      # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
       Do_cmd fslmaths $dwi_cere -bin -mul 100 -add $dwi_cere $dwi_cere
 else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
 
