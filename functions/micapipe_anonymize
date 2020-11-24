@@ -6,12 +6,10 @@
 # we strongly recommend to anonymize the BIDS database before running MICAPIPE
 #
 #
-# Rationale: AFNI's reface algorithm was applied to the T1w native bids anatomical images to obtain
-#            a T1w_reface-plus NIFTI.
-#            Then a warp filed was calculated from the T1w anatomical image registration (eg. T1w and qT1)
-#            to the T1w_reface-plus. The resulting warp fields were then applied to each original
-#            anatomical images in order to warp the faces AND maintain the original
-#            voxel intensities.
+# Rationale: This script applies a defacing/refacing/warp-refacing to anonymioze the anatomical images in a BIDS dataset.
+#            A warp field is calculated from the anatomical image (eg. T1w, qT1, FLAIR...) to the refaced T1w.
+#            The resulting warp fields are then applied to each anamical image to anonymize the face
+#
 #
 # ONLY for scripting and debugging
 # TEST=ON
@@ -32,16 +30,15 @@ Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5
 
 
 
-Warning: This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
-         a copy of the original will be save in the OUT directory
+Warning: ANONYMIZEs the anatomical images from the BIDS directory
+         The anonimized images will be saved in the OUT directory
+         Is up to the user to replace the BIDS anatomical by the outputs of this script
          We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES
 
 Software versions requirements:
-        FSL        19.0.18 or 20.1.12 (https://afni.nimh.nih.gov/download)
         ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
-        python 3
-          -tensorflow 1.13 or 1.15
-          -deep-brain (https://pypi.org/project/deepbrain/)
+        FSL        19.0.18 or 20.1.12 (https://afni.nimh.nih.gov/download)
+
 
 RRC
 McGill University, MNI, MICA-lab, Novemeber 2020
@@ -247,7 +244,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         # Inverse the brain mask dilated
         Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
 
-        # Create a non-linear warpfield of the face  <<<<<<<<<<< DEFORMABLE Only
+        # Create a non-linear warpfield of the face  <<<<<<<<<<< DEFORMABLE Only NOT so good
         T1wrefaced=${tmp}/refaceSyN
         face_warp=${T1wrefaced}_1Warp.nii.gz
         face_mat=${T1wrefaced}_0GenericAffine.mat
@@ -336,20 +333,21 @@ done
 
 #------------------------------------------------------------------------------#
 # Replace ORIGINAL BIDS/anat with the ANONYMIZED
-if [[ ${replace} == TRUE ]]; then
-    for nii in *_warpfaced.nii.gz; do
-        Do_cmd cp -v $nii ${subject_bids}/anat/${nii/_warpfaced/}
-    done
-    echo "${id}-anonymized $(date)" >> ${BIDS}/CHANGES
-fi
+# if [[ ${replace} == TRUE ]]; then
+#     for nii in *_warpfaced.nii.gz; do
+#         Do_cmd cp -v $nii ${subject_bids}/anat/${nii/_warpfaced/}
+#     done
+#     echo "${id}-anonymized $(date)" >> ${BIDS}/CHANGES
+# fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 cd $here
-# if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 
 Note "Temporal directory:  " $tmp
 Note "Output directory:    " $out_warps
+
 # -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
 lopuu=$(date +%s)
