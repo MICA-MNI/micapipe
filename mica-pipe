@@ -48,6 +48,8 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\t\t    \033[38;5;120m-topupConfig /path/to/file.cnf\033[0m : will use specified config file for topup (distorsion correction)
 \t\t\t    \033[38;5;120m-icafixTraining /path/to/file.RData\033[0m : will use specified ICA-FIX training file for nuisance signal regression
 \t\t\t     To use DEFAULT settings, omit flags or leave blank
+\t\t\t    \033[38;5;120m-mainScanRun RUN NUMBER\033[0m : If multiple resting-state scans exist in the BIDS rawdata, you must specify which scan to process (e.g. '1')
+\t\t\t    \033[38;5;120m-phaseReversalRun RUN NUMBER\033[0m : If multiple phase encoding files exist in the BIDS rawdata (main phase), you must specify which one to process (e.g. '1')
 \t\033[38;5;197m-post-mpc\033[0m  : 
 \t\t\t    \033[38;5;120m-microstructural_img /path/to/img.nii.gz\033[0m : Scan on which MPC will be performed. 
 \t\t\t    If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
@@ -154,6 +156,16 @@ do
     trainingFile=$2
     shift;shift
   ;;
+  -mainScanRun)
+    specMainScan=TRUE
+    thisMainScan=$2
+    shift;shift
+  ;;
+  -phaseReversalRun)
+    specPhase=TRUE
+    thisPhase=$2
+    shift;shift
+  ;;
   -post_structural)
     postVOL=TRUE
     shift
@@ -239,12 +251,18 @@ Error "A processing flag is missing:
 help; exit 1; fi
 
 # Optional arguments rs-fmri
-optarg_rsfmri=($configFile $trainingFile)
+optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisMainPhase $thisRevPhase)
 if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile
 else optarg_rsfmri[0]=DEFAULT
 fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile
 else optarg_rsfmri[1]=DEFAULT
+fi
+if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan
+else optarg_rsfmri[2]=DEFAULT
+fi
+if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase
+else optarg_rsfmri[3]=DEFAULT
 fi
 
 # Optional arguments mpc
@@ -471,7 +489,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Resting state fMRI processing"
@@ -479,10 +497,11 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup
+             ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup
     else
         # LOCAL - Resting state fMRI processing
-        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        echo ${optarg_rsfmri[@]}
+        ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 

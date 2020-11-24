@@ -68,11 +68,13 @@ bids_variables() {
   T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
   MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
-  # rsfMRI processing
-  mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.nii*           # Main rsfMRI scan
-  mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_bold.json       # Main rsfMRI scan
-  mainPhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse_bold.nii*    # main phase scan
-  reversePhaseScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse_bold.nii* # Reverse phase scan
+  # BIDS Files: resting state
+  bids_mainScan=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.nii*`)       # main rsfMRI scan
+  bids_mainScanJson=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.json`)   # main rsfMRI scan json
+  bids_mainPhase=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse*.nii*`)     # main phase scan
+  bids_reversePhase=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse*.nii*`)  # reverse phase scan
+
+  # Resting state proc files
   topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
