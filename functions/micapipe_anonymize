@@ -196,7 +196,7 @@ T1map_inv1=`find . -name "*inv1_T1map.nii.gz"`; T1map_inv1=${T1map_inv1/.\//}
 Info "T1w to register: $t1w_run1\n\t\tOther anatomical volumes:"
 for i in ${anat[*]}; do echo -e "\t\t$i"; done
 if [ "${#anatT1map[@]}" -gt 0 ]; then
-  Info "T1map to register: $T1_inv1\n\t\tOther T1map volumes:"
+  Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
   for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
 fi
 
@@ -287,10 +287,11 @@ fi
 niiT1map_pwd=${subject_bids}/anat/${T1map_inv1}
 if [ -f $niiT1map_pwd ]; then
     Info "REGISTERING $T1map_inv1 to $T1w_run1_str"
-    niiT1map_out=${T1map_inv1}/${nii/.nii.gz/_}
-    niiT1map_2_T1_mat=${nii_out}0GenericAffine.mat
+    niiT1map_out=${T1map_inv1/.nii.gz/_}
+    niiT1map_2_T1_mat=${niiT1map_out}0GenericAffine.mat
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $niiT1map_pwd -o $niiT1map_out -t a -n $CORES -p d
 fi
+
 # Loop over all the other structural images (including non T1w volumes)
 for nii in ${anat[*]}; do nii=${nii/.\//}
   # path to volume
