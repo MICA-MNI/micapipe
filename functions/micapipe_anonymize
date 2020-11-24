@@ -23,12 +23,15 @@ Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5
 \t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
 \t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <anat ORIG and face-warps>.
 \t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
+
+\tMethods:
 \t\t\033[38;5;197m-refacePro\033[0m 	Method to anonymize the anat images by creating a new Warped-face
 \t\t\033[38;5;197m-reface\033[0m 	Method to anonymize the anat images by creating a new face
 \t\t\033[38;5;197m-deface\033[0m 	Method to anonymize the anat images by erasing the face
-\t\t\033[38;5;197m-all\033[0m 	        Runs all the previous methods
+\t\t\033[38;5;197m-all\033[0m 	        Runs all the previous algorithms
 
-
+\t\t\033[38;5;197m-dilate\033[0m 	Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
+\t\t\033[38;5;197m-robust\033[0m 	If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
 
 Warning: ANONYMIZEs the anatomical images from the BIDS directory
          The anonimized images will be saved in the OUT directory
@@ -38,6 +41,7 @@ Warning: ANONYMIZEs the anatomical images from the BIDS directory
 Software versions requirements:
         ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
         FSL        19.0.18 or 20.1.12 (https://afni.nimh.nih.gov/download)
+        AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
 
 
 RRC
@@ -89,13 +93,17 @@ do
     METHOD="deface"
     shift
   ;;
+  -dilate)
+    dil=$2
+    shift;shift
+  ;;
   -robust)
     robust=TRUE
-    shift;shift
+    shift
   ;;
   -replace)
     replace=TRUE
-    shift;shift
+    shift
   ;;
   -*)
     Error "Unknown option ${2}"
@@ -124,6 +132,9 @@ id=${id/sub-/}
 
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
+
+# Dilate (Default is 6)
+if [ -z ${dil} ]; then dil=6; fi
 
 # CORES should be defined as GLOBAL variable maybe
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
@@ -178,18 +189,23 @@ for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
 cd ${subject_bids}/anat
 # Create a list with all anat volumes
 anat=(`ls *gz`)
-# # Remove the T1w_run-1 from anat list
-# anat=(${anat[@]/$t1w_run1})
+# anat=`find . -name "*.nii.gz" ! -name "*T1map.nii.gz"`
+anatT1map=`find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz"`
+T1map_inv1=`find . -name "*inv1_T1map.nii.gz"`; T1map_inv1=${T1map_inv1/.\//}
+
 Info "T1w to register: $t1w_run1\n\t\tOther anatomical volumes:"
 for i in ${anat[*]}; do echo -e "\t\t$i"; done
+if [ "${#anatT1map[@]}" -gt 0 ]; then
+  Info "T1map to register: $T1_inv1\n\t\tOther T1map volumes:"
+  for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
+fi
 
-# Copy original BIDS to out directory
-Do_cmd cp -v *gz ${out_warps}/anat
+# T1w for registrations
+T1_orig=${subject_bids}/anat/${t1w_run1}
 
 # move to tmp directory
 Do_cmd cd $tmp
 
-T1_orig=${out_warps}/anat/${t1w_run1}
 # -----------------------------------------------------------------------------------------------
 # Affine registration to MICs60_T1w-atlas
 T1w_run1_str=${t1w_run1/.nii.gz/}
@@ -239,7 +255,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         T1w_mask_inv=${tmp}/mask_inv.nii.gz
 
         # Dilate brain mask
-        Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input 6
+        Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input $dil
 
         # Inverse the brain mask dilated
         Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
@@ -267,16 +283,28 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
 fi
 
 # -----------------------------------------------------------------------------------------------
+# ONLY for T1map will generate a SINGLE registration matrix
+niiT1map_pwd=${subject_bids}/anat/${T1map_inv1}
+if [ -f $niiT1map_pwd ]; then
+    Info "REGISTERING $T1map_inv1 to $T1w_run1_str"
+    niiT1map_out=${T1map_inv1}/${nii/.nii.gz/_}
+    niiT1map_2_T1_mat=${nii_out}0GenericAffine.mat
+    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $niiT1map_pwd -o $niiT1map_out -t a -n $CORES -p d
+fi
 # Loop over all the other structural images (including non T1w volumes)
-for nii in ${anat[*]}; do
-
+for nii in ${anat[*]}; do nii=${nii/.\//}
+  # path to volume
+  nii_pwd=${subject_bids}/anat/${nii}
   # rigid + affine registration 2 steps
-  nii_pwd=${out_warps}/anat/${nii}
-  nii_out=${tmp}/${nii/.nii.gz/_}
-  nii_2_T1_mat=${nii_out}0GenericAffine.mat
-
-  # Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m anat/${nii} -o ${nii_out} -t a -n $CORES -p d
-  Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $CORES -p d
+  if [[ $nii == *"_T1map.nii.gz"* ]]; then
+      Info "REGISTRATION matrix was calculated using ${T1map_inv1}"
+      nii_out=$niiT1map_out
+      nii_2_T1_mat=$niiT1map_2_T1_mat
+  else
+      nii_out=${tmp}/${nii/.nii.gz/_}
+      nii_2_T1_mat=${nii_out}0GenericAffine.mat
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $CORES -p d
+  fi
 
   # -----------------------------------------------------------------------------------------------
   if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
