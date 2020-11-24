@@ -123,7 +123,7 @@ BIDS=`realpath $BIDS`
 id=${id/sub-/}
 
 # Number of session (Default is "ses-pre")
-if [ -z ${SES} ]; then export SES="ses-pre"; fi
+if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 
 # CORES should be defined as GLOBAL variable maybe
 if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
