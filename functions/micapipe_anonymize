@@ -135,9 +135,10 @@ bids_variables $BIDS $id $out $SES
 if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
 
 if [[ ${replace} == TRUE ]]; then
-Warning "This script will replace the ORIGINAL anat volumes for ANONYMIZED in the BIDS directory
-              a copy of the original anat/volumes will be save in the OUT directory
-              We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
+Warning "ANONYMIZEs the anatomical images from the BIDS directory
+         The anonimized images will be saved in the OUT directory
+         Is up to the user to replace the BIDS anatomical by the outputs of this script
+         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
 fi
 
 # -----------------------------------------------------------------------------------------------#
