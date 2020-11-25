@@ -1,6 +1,15 @@
+![micapipe logo](/docs/figures/micapipe_long.png)
 # micapipe  
 
-## Requirements
+## About  
+[`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)). 
+The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready-to use multi-modal connectomes.  
+The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
+
+## Documentation    
+You can find the documentation in [micapipe.readthedocs.io](micapipe.readthedocs.io)
+
+## Dependencies
 | Software   |     Version   | Further info |
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
@@ -16,7 +25,7 @@
 
  > The FIX package (FMRIB's ICA-based Xnoiseifier) requires FSL, R and one of MATLAB Runtime Component, full MATLAB or Octave. We recommend the use of the MATLAB Runtime Component. Additionally, it requires the following R libraries:  'kernlab','ROCR','class','party','e1071','randomForest'
 
-### python packages
+### `python` packages
 |     Package     |  Version  |
 |:---------------:|:---------:|
 | brainspace      | 0.1.1     |
@@ -40,36 +49,16 @@
 | threadpoolctl   | 2.1.0     |
 | vtk             | 9.0.1     |
 
-### R libraries  
+### `R` libraries  
 - 'kernlab'
 - 'ROCR'  
 - 'class'  
 - 'party'  
 - 'e1071'  
-- 'randomForest'
+- 'randomForest'  
 
-## Define global Variables
-```bash
-export MICAPIPE=<github_Directory>/micapipe  
-export PATH=$PATH:${MICAPIPE}:${MICAPIPE}/functions  
-export CORES=20  
-export OMP_NUM_THREADS=4  
-export tmp=<path to temporal directory>  
 ```
-  
-## Anonymize your dataset
-We strongly recommend to anonymize the dataset before running the pipelines. This pipeline includes a script to anonymize the T1w as well as quantitative T1 images.
 
-# `mica-pipe` command and modules  
+## Acknowledgements 
 
-## MRI structural processing (`-proc_structural`)  
-
-## fMRI processing (`-proc_rsfmri`)  
-proc_rsfmri does not run time slicing correction.
-
-## DWI processing (`-proc_dwi`)  
-This step requires the `json` files in the BIDS database to contain the following variables:  
-```bash
-"PhaseEncodingDirection": "j-",
-"TotalReadoutTime": 0.047,
-```
+## License information 
