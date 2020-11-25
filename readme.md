@@ -10,7 +10,7 @@ The basic cutting edge processing of our pipelines aims the *T1 weighted images*
 You can find the documentation in [micapipe.readthedocs.io](micapipe.readthedocs.io) 
   
 ## Advantages  
-- Microstructure Profile Covariance. 
+- Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)). 
 - Multiple parcellations (18 x 3). 
 - Includes cerebellum and subcortical areas. 
 - Surface based analysis. 
