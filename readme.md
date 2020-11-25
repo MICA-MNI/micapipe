@@ -1,5 +1,4 @@
 ![micapipe logo](/docs/figures/micapipe_long.png)
-# micapipe  
 
 ## About  
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)). 
