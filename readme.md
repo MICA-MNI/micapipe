@@ -56,9 +56,8 @@ You can find the documentation in [micapipe.readthedocs.io](micapipe.readthedocs
 - 'party'  
 - 'e1071'  
 - 'randomForest'  
-
-```
-
-## Acknowledgements  
   
+## Acknowledgements  
+
+
 ## License information  
