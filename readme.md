@@ -17,7 +17,7 @@ You can find the documentation in [micapipe.readthedocs.io](micapipe.readthedocs
 - Latest version of software dependencies. 
 - Ready to use outputs. 
 - Easy to use. 
-- Standarized format (BIDS). 
+- Standardized format (BIDS). 
 
 
 ## Dependencies
