@@ -3,11 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. **micapipe**
-   ============================
-   *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
+**micapipe**
+============================
+*An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
-<<<<<<< HEAD
 .. title:: micapipe
 
 .. raw:: html
@@ -19,97 +18,7 @@
       background-color: #261F4A;
       margin-top: 24px;
       }
-<<<<<<< HEAD
    </style>  
-=======
->>>>>>> parent of 303c3c5... Update index.rst
-   
-=======
-   </style>
-
-.. image:: ./figures/micapipe_long.png
-    :alt: alternate text
-    :align: right
-<<<<<<< HEAD
-    
->>>>>>> parent of 08da98d... Update index.rst
-.. image:: ./figures/micapipe.png
-   :scale: 50 %
-   :alt: alternate text
-   :align: center
-    
-=======
->>>>>>> parent of c9304d2... Update index.rst
-
-**Welcome to the MICA lab pipeline**
-==========================================
-
-
-
-Getting started
---------------------------------------------------------
-One key goal of the **MICAPIPE** is
-to harmonize analytical methods both *within* and *across* ENIGMA Working Groups, ultimately facilitating
-comparisons of imaging and genetic findings across diseases.
-
-.. raw:: html
-
-   <br>
-
-Main workflow ⚙️
--------------------------------------
-Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
-covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
-
-.. raw:: html
-
-   <br>
-
-Processing steps 👣
--------------------------------------
-Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
-covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
-
-.. raw:: html
-
-   <br>
-
-Quality Check
-------------------------------------
-The **MICAPIPE** has a *No data, No problem* policy! To make things easier, we provide from an individual site
-that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived
-datasets, you can easily complete all of the tutorials!
-
-.. raw:: html
-
-   <br>
-
-
-Additional tools
--------------------------------------------
-
-.. raw:: html
-
-   <br>
-
-
-Development and getting involved ⚙️
--------------------------------------------
-Should you have any problems, questions, or suggestions about the **MICAPIPE**, please do not
-hesitate to post them to our Github `issues <https://github.com/MICA-MNI/micapipe/issues>`_! Or are you interested in collaborating
-or sharing your codes/tools? `Noice <https://www.urbandictionary.com/define.php?term=noice>`_!
-Make sure you familiarize yourself with our `contributing guidelines <https://github.com/MICA-MNI/micapipe/blob/master/CONTRIBUTING.md>`_
-first and then discuss your ideas on our Github `issues <https://github.com/MICA-MNI/micapipe/issues>`_ and
-`pull request <https://github.com/MICA-MNI/micapipe/pulls>`_.
-
-
-.. raw:: html
-
-   <br>
-
-References
--------------------------------------------
-Detailed information regarding the software and tools used in this pipeline
 
 .. toctree::
    :maxdepth: 1
@@ -152,14 +61,27 @@ Detailed information regarding the software and tools used in this pipeline
    pages/11.references/index
    pages/12.acknowledge/index
 
-___________________________________________________________________________________________________
 
 .. image:: ./figures/micapipe.png
    :scale: 50 %
    :alt: alternate text
    :align: center
 
-Creators 🧠
+
+**Welcome to the MICA lab pipeline**
+==========================================
+
+Getting started
+--------------------------------------------------------
+[`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  The main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases. 
+The pipelines integrates *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
+
+.. raw:: html
+
+   <br>
+
+
+Core development team 🧠
 -------------------------
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
