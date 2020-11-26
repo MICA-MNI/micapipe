@@ -7,6 +7,18 @@
 ============================
 *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
+.. title:: micapipe
+
+.. raw:: html
+
+   <style type="text/css">
+      hr {
+      width: 100%;
+      height: 1px;
+      background-color: #261F4A;
+      margin-top: 24px;
+      }
+   </style>  
    
 .. image:: ./figures/micapipe.png
    :scale: 50 %
