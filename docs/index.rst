@@ -7,32 +7,18 @@
 ============================
 *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
-.. title:: micapipe
-
-.. raw:: html
-
-   <style type="text/css">
-      hr {
-      width: 100%;
-      height: 1px;
-      background-color: #261F4A;
-      margin-top: 24px;
-      }
-   </style>
-
-.. image:: ./figures/micapipe_long.png
-    :alt: alternate text
-    :align: right
-    
+   
 .. image:: ./figures/micapipe.png
    :scale: 50 %
    :alt: alternate text
    :align: center
     
 
-**Welcome to the MICA lab pipeline**
-==========================================
+Command-Line Arguments
+----------------------
+.. code-block:: text
 
+        $ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory>
 
 
 Advantages
