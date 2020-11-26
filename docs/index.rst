@@ -68,12 +68,10 @@
    :align: center
 
 
-**Welcome to the MICA lab pipeline**
-==========================================
-
 Getting started
 --------------------------------------------------------
-[`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  The main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases. 
+This pipeline is developed by the MICA-lab (https://mica-mni.github.io) at the McConnell Brain Imaging Center of the Montreal Neurological Institute.  Our main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases. 
+
 The pipelines integrates *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
 .. raw:: html
