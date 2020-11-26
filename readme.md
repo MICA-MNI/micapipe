@@ -7,7 +7,7 @@ The `micapipe` utilizes a set of known software dependencies, different brain at
 The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
 ## Documentation    
-You can find the documentation in [micapipe.readthedocs.io](micapipe.readthedocs.io) 
+You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/) 
   
 ## Advantages  
 - Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)). 
