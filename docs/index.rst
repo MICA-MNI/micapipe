@@ -43,17 +43,47 @@
 
 
 
-Advantages
+Getting started
 --------------------------------------------------------
-Volume and surface based processing.
-Ready to use outputs.
-Generation of diffusion MRI structural connectomes. 
-Generation of resting state functional connectomes. 
-Generation of microstructure profile covariance networks. 
-Use of multiple parcellations and scales.
-Including cerebellum and subcortical areas.
-Easy to use and relying on BIDS.
-Dependencies on widely used software. 
+One key goal of the **MICAPIPE** is
+to harmonize analytical methods both *within* and *across* ENIGMA Working Groups, ultimately facilitating
+comparisons of imaging and genetic findings across diseases.
+
+.. raw:: html
+
+   <br>
+
+Main workflow ⚙️
+-------------------------------------
+Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
+covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
+
+.. raw:: html
+
+   <br>
+
+Processing steps 👣
+-------------------------------------
+Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
+covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
+
+.. raw:: html
+
+   <br>
+
+Quality Check
+------------------------------------
+The **MICAPIPE** has a *No data, No problem* policy! To make things easier, we provide from an individual site
+that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived
+datasets, you can easily complete all of the tutorials!
+
+.. raw:: html
+
+   <br>
+
+
+Additional tools
+-------------------------------------------
 
 .. raw:: html
 
@@ -75,7 +105,7 @@ first and then discuss your ideas on our Github `issues <https://github.com/MICA
    <br>
 
 
-Development team 🧠
+Creators 🧠
 -------------------------
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
