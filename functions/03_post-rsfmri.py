@@ -38,11 +38,43 @@ x_dof = " ".join(glob.glob(funcDir+'/volumetric/'+'*singleecho.1D'))
 x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
 x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 
-# Grab subcortical and cerebellar timeseries and merge them to conte69 and native timeseries
+# Grab subcortical timeseries
 sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
-cereb = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
-n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx vertices only
 n_sctx = sctx.shape[1]
+
+# Grab cerebellar timeseries
+# A little hacky because the co-registration to fMRI space make some cerebellar ROIs disappear
+# Missing label indices are replaced by zeros in timeseries and FC matrix
+cereb_tmp = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
+f = open(funcDir+'/volumetric/'+subject+'_singleecho_fmrispace_cerebellum_roi_stats.txt', "rt")
+cerebLabels = f.read()
+s1 = cerebLabels.find("nii.gz")
+startROIs = s1 + len("nii.gz") + 6
+values = cerebLabels[startROIs:].split("\t")
+roiLabels = values[0::2]
+
+def missing_elements(roiList):
+    start, end = 0, 33
+    return sorted(set(range(start, end + 1)).difference(roiList))
+
+if len(roiLabels) == 34: # no labels disappeared in the co-registration
+    print('All cerebellar labels found in parcellation!')
+    cereb = cereb_tmp 
+    exclude_labels = [np.nan]
+else:
+    print('Some cerebellar ROIs were lost in co-registration to fMRI space')
+    cereb = np.zeros((cereb_tmp.shape[0], 34), dtype=np.int8)
+    roiLabelsInt = np.zeros((1,len(roiLabels)), dtype=np.int8)
+    for ii in range(len(roiLabels)):
+        roiLabelsInt[0,ii] = int(float(roiLabels[ii]))
+    roiLabelsInt = roiLabelsInt - 1
+    for ii in range(len(roiLabels)):
+        cereb[:,roiLabelsInt[0,ii]] = cereb_tmp[:,ii]
+    exclude_labels = missing_elements(roiLabelsInt[0])
+    print('Matrix entries for following ROIs will be zero: ', exclude_labels)
+
+# calculate number of non cortical rows/colunms in matrix
+n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx vertices only
 
 # We want to clean up native timeseries too!
 x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_10mm.mgh'))
@@ -173,9 +205,15 @@ for parcellation in parcellationList:
     
     ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
     ts_r = np.corrcoef(np.transpose(ts))
-    ts_r[0, :] = 0
-    ts_r[:, 0] = 0
-    ts_r = np.triu(ts_r)
+    
+    if np.isnan(exclude_labels[0]) == False:
+        for i in exclude_labels:
+            ts_r[:, i + n_sctx] = 0
+            ts_r[i + n_sctx, :] = 0
+        ts_r = np.triu(ts_r)    
+    else:
+        ts_r = np.triu(ts_r)
+    
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
                ts_r, fmt='%.6f')
 
@@ -220,5 +258,13 @@ for parcellation in parcellationList:
     ts = np.append(dataNative_corr[:, :n], ts_native_ctx, axis=1)
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
     ts_r = np.corrcoef(np.transpose(ts))
-    ts_r = np.triu(ts_r)
+    
+    if np.isnan(exclude_labels[0]) == False:
+        for i in exclude_labels:
+            ts_r[:, i + n_sctx] = 0
+            ts_r[i + n_sctx, :] = 0
+        ts_r = np.triu(ts_r)    
+    else:
+        ts_r = np.triu(ts_r)
+    
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')

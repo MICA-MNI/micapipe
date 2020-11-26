@@ -42,6 +42,8 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\t\t    (REQUIRES -proc_freesurfer and -post_structural)
 \t\033[38;5;197m-post_gd\033[0m          : Geodesic distance analysis
 \t\t\t    (REQUIRES -proc_freesurfer and -post_structural)
+\t\033[38;5;197m-post_morph\033[0m       : Cortical morphology analysis
+\t\t\t    (REQUIRES -proc_freesurfer and -post_structural)
 
    Optional flags for submodules
 \t\033[38;5;197m-proc-rsfmri\033[0m  : 
@@ -176,6 +178,10 @@ do
   ;;
   -post_gd)
     postGD=TRUE
+    shift
+  ;;
+  -post_morph)
+    postMorph=TRUE
     shift
   ;;
   -post_mpc)
@@ -500,7 +506,6 @@ if [ "$procfMRI" = "TRUE" ]; then
              ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup
     else
         # LOCAL - Resting state fMRI processing
-        echo ${optarg_rsfmri[@]}
         ${scriptDir}/03_proc-rsfmri.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
@@ -536,8 +541,8 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #                   POST Geodesic distance mica-03
 # -----------------------------------------------------------------------------------------------#
-#     Generates microstructural profiles and covariance matrices
-#     REQUIRES -post-structural
+#     Generates geodesic distance matrices calculated along cortical surface mesh
+#     REQUIRES -post-structural and -proc_freesurfer
 if [ "$post" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
     log_file_str=$dir_logs/post-gd_$(date +'%d-%m-%Y')
     # mica.q - Geodesic distance
@@ -558,7 +563,36 @@ if [ "$post" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
              ${scriptDir}/03_post-gd.sh $BIDS $id $out $SES $PROC $nocleanup
     else
         # LOCAL - Geodesic distance processing
-        ${scriptDir}/03_post-gd.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${dir_logs}/post-gd.txt
+        ${scriptDir}/03_post-gd.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Cortical morphology analyses mica-03
+# -----------------------------------------------------------------------------------------------#
+#     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
+#     REQUIRES -post-structural, -proc_freesurfer, and -postMPC
+if [ "$post" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
+    log_file_str=$dir_logs/post-morph_$(date +'%d-%m-%Y')
+    # mica.q - Morphology
+    if [[ $micaq == "TRUE" ]] ; then
+        Info "MICA qsub - Cortical Morphology"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup
+    # all.q - Morphology
+    elif [[ $qall == "TRUE" ]] ; then
+        Info "all.q qsub - Cortical Morphoogy"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup
+    else
+        # LOCAL - Morphology
+        ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -587,7 +621,7 @@ if [ "$post" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
              ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup
     else
         # LOCAL - POST-Structural processing
-        ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup 2>&1 | tee -a  ${dir_logs}/post-mpc.txt
+        ${scriptDir}/03_post-mpc.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 

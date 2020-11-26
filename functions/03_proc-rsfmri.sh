@@ -37,8 +37,6 @@ thisPhase=$9
 nocleanup=$10
 here=`pwd`
 
-echo $thisMainScan $thisPhase
-
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
@@ -560,13 +558,15 @@ fi
 T1_seg_cerebellum=${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz
 rsfmri_cerebellum=${rsfmri_volum}/${id}_singleecho_fmrispace_cerebellum.nii.gz
 timese_cerebellum=${rsfmri_volum}/${id}_singleecho_timeseries_cerebellum.txt
+stats_cerebellum=${rsfmri_volum}/${id}_singleecho_fmrispace_cerebellum_roi_stats.txt
 
 if [[ ! -f ${timese_cerebellum} ]] ; then
       Info "Getting cerebellar timeseries"
       Do_cmd antsApplyTransforms -d 3 -i $T1_seg_cerebellum -r $fmri_mean -n GenericLabel -t [$mat_rsfmri_affine,1] -o $rsfmri_cerebellum -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i $fmri_processed --seg $rsfmri_cerebellum --avgwf ${timese_cerebellum}
+      Do_cmd mri_segstats --i $fmri_processed --seg $rsfmri_cerebellum --exclude 0 --avgwf ${timese_cerebellum}
+      3dROIstats -mask ${rsfmri_cerebellum} -nzsum ${rsfmri_cerebellum} > ${stats_cerebellum}
 else
       Info "Subject ${id} has rsfmri cerebellar time-series"
 fi
