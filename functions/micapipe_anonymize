@@ -32,6 +32,8 @@ Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5
 
 \t\t\033[38;5;197m-dilate\033[0m 	Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
 \t\t\033[38;5;197m-robust\033[0m 	If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
+\t\033[38;5;197m-nocleanup\033[0m 	 : Do NOT DELETE temporal directory at script completion.
+
 
 Warning: ANONYMIZEs the anatomical images from the BIDS directory
          The anonimized images will be saved in the OUT directory
@@ -101,8 +103,8 @@ do
     robust=TRUE
     shift
   ;;
-  -replace)
-    replace=TRUE
+  -nocleanup)
+    nocleanup=TRUE
     shift
   ;;
   -*)
@@ -178,7 +180,7 @@ if [[ ! -z $DONE ]]; then Error "Subject $id was already refaced:\n\t\t${DONE}";
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
 Info "Output directory: $out_warps"
-if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}/anat; fi
+if [ ! -d ${out_warps} ]; then Do_cmd mkdir ${out_warps}; fi
 here=`pwd`
 
 # Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
@@ -277,7 +279,6 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         if [ ! -f ${face_warp} ]; then Error "$face_warp warpfield calculation failed"; cd $here;  Do_cmd exit 0; fi
         # Apply warpfield to T1w (deprecated, this step is perform in the for loop)
         # warpfaced=${out_warps}/${T1w_run1_str}_T1w-warpfaced.nii.gz
-        # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t ${face_warp} -o ${warpfaced}
         # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t [${face_mat},1] -t ${face_warp} -t $face_mat -o ${warpfaced}
     fi
 fi
@@ -302,6 +303,7 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
       nii_out=$niiT1map_out
       nii_2_T1_mat=$niiT1map_2_T1_mat
   else
+      Info "REGISTERING $nii_pwd to $T1w_run1_str"
       nii_out=${tmp}/${nii/.nii.gz/_}
       nii_2_T1_mat=${nii_out}0GenericAffine.mat
       Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $CORES -p d
@@ -341,34 +343,11 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
       Info "Applying Warp-Facing method to $nii"
       nii_warped=${out_warps}/${nii/.nii.gz/_}warpfaced.nii.gz
 
-      # Apply the warpflied
-      Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n linear \
-              -t [${nii_2_T1_mat},1] -t ${face_warp} -t ${nii_2_T1_mat} -o $nii_warped
+      # Apply the warpflied <<<<<<< NearestNeighbor?
       Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n linear \
               -t [${nii_2_T1_mat},1] -t [${face_mat},1] -t ${face_warp} -t $face_mat -t ${nii_2_T1_mat} -o $nii_warped
-
-      # rigid + affine + deformable syn (3 stages) <<<<<<<<<<<<<<<<< TRY THIS
-      # Do_cmd antsRegistrationSyNQuick.sh -d 3 -f $T1_orig -m anat/${nii} -o ${nii_out} -t s -n $CORES -p d
-      # nii_2_T1_warp=${nii_out}1Warp.nii.gz
-      # Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $T1_orig -n linear \
-      #                 -t [${nii_2_T1_mat},1] -t [${nii_2_T1_warp},1] -t ${face_warp} -t ${nii_2_T1_warp} -t ${nii_2_T1_mat} -o $nii_warped
-
-      # # Moving the warpfield to the native anat/nii space
-      # warp_in_nii=${tmp}/${nii/.nii.gz/}_warpfield.nii.gz
-      # Do_cmd antsApplyTransforms -d 3 -u float -i $face_warp -r $nii_pwd -n linear -t [${nii_2_T1_mat},1] -o $warp_in_nii
-      # # Apply face-warp, affine mat, inverse mat and return to native Volume space
-      # Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n linear -t $warp_in_nii -o $nii_warped
   fi
 done
-
-#------------------------------------------------------------------------------#
-# Replace ORIGINAL BIDS/anat with the ANONYMIZED
-# if [[ ${replace} == TRUE ]]; then
-#     for nii in *_warpfaced.nii.gz; do
-#         Do_cmd cp -v $nii ${subject_bids}/anat/${nii/_warpfaced/}
-#     done
-#     echo "${id}-anonymized $(date)" >> ${BIDS}/CHANGES
-# fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
