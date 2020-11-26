@@ -18,19 +18,26 @@
       background-color: #261F4A;
       margin-top: 24px;
       }
+<<<<<<< HEAD
    </style>  
    
+=======
+   </style>
+
+.. image:: ./figures/micapipe_long.png
+    :alt: alternate text
+    :align: right
+    
+>>>>>>> parent of 08da98d... Update index.rst
 .. image:: ./figures/micapipe.png
    :scale: 50 %
    :alt: alternate text
    :align: center
     
 
-Command-Line Arguments
-----------------------
-.. code-block:: text
+**Welcome to the MICA lab pipeline**
+==========================================
 
-        $ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory>
 
 
 Advantages
