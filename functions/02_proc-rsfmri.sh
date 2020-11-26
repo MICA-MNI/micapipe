@@ -55,12 +55,12 @@ bids_variables $BIDS $id $out $SES
 # Main scan
 N_mainScan=${#bids_mainScan[@]}
 if [ $N_mainScan -gt 1 ]; then
-    if [[ ${thisMainScan} == "DEFAULT" ]]; then 
-        Error "Multiple rsfMRI runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit; 
-    elif [ $thisMainScan -gt $N_mainScan ]; then 
+    if [[ ${thisMainScan} == "DEFAULT" ]]; then
+        Error "Multiple rsfMRI runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
+    elif [ $thisMainScan -gt $N_mainScan ]; then
         Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI scans scans found ($N_mainScan). Using first filename in list as default";
         mainScan=${bids_mainScan[0]}
-    else 
+    else
         Info "Found $N_mainScan rsfMRI scans, processing specified scan # $thisMainScan"
         mainScan=${bids_mainScan[$thisMainScan-1]}
     fi
@@ -70,21 +70,21 @@ else
         Info "No run number specified for rsfMRI scan and did not find more than one run for main scan - all good!"
     else
         if [ $thisMainScan -gt $N_mainScan ]; then
-            Warning "Found one or less rsfMRI scan, but specified run number = $thisMainScan). Using first filename in list as default"; 
+            Warning "Found one or less rsfMRI scan, but specified run number = $thisMainScan). Using first filename in list as default";
         fi
-    fi    
-fi 
+    fi
+fi
 if [ ! -f ${mainScan} ]; then Error "Subject $id doesn't have acq-AP_bold: \n\t ${subject_bids}/func/"; exit; fi #Last check to make sure file exists
 
 # Main scan json
 N_mainScanJson=${#bids_mainScanJson[@]}
 if [ $N_mainScanJson -gt 1 ]; then
-    if [[ ${thisMainScan} == "DEFAULT" ]]; then 
-        Error "Found multiple .json files for main rsfMRI scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit; 
-    elif [ $thisMainScan -gt $N_mainScanJson ]; then 
+    if [[ ${thisMainScan} == "DEFAULT" ]]; then
+        Error "Found multiple .json files for main rsfMRI scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
+    elif [ $thisMainScan -gt $N_mainScanJson ]; then
         Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI json files found for main scan ($N_mainScan). Using first filename in list as default";
         mainScanJson=${bids_mainScan[0]}
-    else 
+    else
         Info "Found $N_mainScanJson rsfMRI scan json files, using specified run # $thisMainScan"
         mainScanJson=${bids_mainScanJson[$thisMainScan-1]}
     fi
@@ -97,13 +97,13 @@ if [ ! -f ${mainScanJson} ]; then Error "Subject $id doesn't have acq-AP_bold js
 N_mainPhase=${#bids_mainPhase[@]}
 N_revPhase=${#bids_reversePhase[@]}
 if [ $N_mainPhase -gt 1 ] || [ $N_revPhase -gt 1 ]; then
-    if [[ ${thisPhase} == "DEFAULT" ]]; then 
-        Error "Found multiple phase reversal runs in BIDS rawdata directory! Please specify which run should be processed using flag -phaseReversalRun"; exit; 
+    if [[ ${thisPhase} == "DEFAULT" ]]; then
+        Error "Found multiple phase reversal runs in BIDS rawdata directory! Please specify which run should be processed using flag -phaseReversalRun"; exit;
     elif [ $thisPhase -gt $N_mainPhase ] || [ $thisPhase -gt $N_revPhase ]; then
         Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default";
         mainPhaseScan=${bids_mainPhase[$thisPhase-1]}
         reversePhaseScan=${bids_reversePhase[$thisPhase-1]}
-    else 
+    else
         Info "Found $N_mainPhase and $N_revPhase phase reversal scans, processing specified scan # $thisPhase"
         mainPhaseScan=${bids_mainPhase[$thisPhase-1]}
         reversePhaseScan=${bids_reversePhase[$thisPhase-1]}
@@ -121,7 +121,7 @@ fi
 if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
-# Structural nativepro scan and freesurfer 
+# Structural nativepro scan and freesurfer
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
 if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
@@ -577,7 +577,7 @@ cleanTS=${rsfmri_surf}/${id}_rsfMRI-timeseries_conte69_clean.txt
 if [[ ! -f ${cleanTS} ]] ; then
     Info "Running rsfMRI post processing"
     labelDirectory=${dir_surf}/${id}/label/
-    python $MICAPIPE/functions/03_post-rsfmri.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
+    python $MICAPIPE/functions/03_FC.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
 else
     Info "Subject ${id} has post-processed conte69 time-series"
 fi

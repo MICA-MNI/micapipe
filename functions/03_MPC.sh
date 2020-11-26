@@ -47,7 +47,7 @@ bids_variables $BIDS $id $out $SES
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check microstructural image input flag and set parameters accordingly
-if [[ ${input_im} == "DEFAULT" ]]; then 
+if [[ ${input_im} == "DEFAULT" ]]; then
     Warning "MPC processing will be performed from default input image: qT1"
     Note "qT1 =" ${bids_T1map}
     microImage=${bids_T1map}
@@ -59,7 +59,7 @@ else
 fi
 
 # Check .lta file input flag and set parameters accordingly
-if [[ ${input_lta} == "DEFAULT" ]]; then 
+if [[ ${input_lta} == "DEFAULT" ]]; then
     Warning "Registration to freesurfer space will be performed within script"
 else
     Warning "Applying provided .lta file to perform registration to native freesurfer space"
@@ -124,7 +124,7 @@ outDir="$subject_dir"/proc_struct/surfaces/micro_profiles/
 
 if [[ ! -f ${outDir}/rh.14.mgh ]]; then
     for hemi in lh rh ; do
-    
+
         unset LD_LIBRARY_PATH
         tot_surfs=$((num_surfs + 2))
         Do_cmd python $MICAPIPE/functions/generate_equivolumetric_surfaces.py \
@@ -134,10 +134,10 @@ if [[ ! -f ${outDir}/rh.14.mgh ]]; then
             $outDir/${hemi}.${num_surfs}surfs \
             ${tmp} \
             --software freesurfer --subject_id $id
-    
+
         # remove top and bottom surface
         Do_cmd rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
-    
+
         # find all equivolumetric surfaces and list by creation time
         x=$(ls "$outDir"/"$hemi".${num_surfs}surfs* | sort)
         for n in $(seq 1 1 $num_surfs) ; do
@@ -152,11 +152,11 @@ if [[ ! -f ${outDir}/rh.14.mgh ]]; then
                 --interp trilinear \
                 --out "$outDir"/"$hemi"."$n".mgh \
                 --surf "$n"by"$num_surf"surf
-    
+
             #Remove surfaces used by vol2surf
             Do_cmd rm -rfv "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
         done
-    
+
     done
 else
     Info "Subject ${id} has microstructural intensities mapped to native surface"
@@ -184,7 +184,7 @@ if [[ ! -f ${outDir}/rh_14_c69-32k.mgh ]]; then
         HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
         for n in $(seq 1 1 $num_surfs); do
             Do_cmd mri_convert "$outDir"/"$hemi"."$n".mgh "$tmp"/"$hemi"_"$n".func.gii
-            
+
             Do_cmd wb_command -metric-resample \
                 ${tmp}/${hemi}_"$n".func.gii \
                 ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
@@ -194,9 +194,9 @@ if [[ ! -f ${outDir}/rh_14_c69-32k.mgh ]]; then
                 -area-surfs \
                 ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
                 ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
-                
+
             Do_cmd mri_convert ${tmp}/${hemi}_"$n"_c69-32k.func.gii "$outDir"/${hemi}_"$n"_c69-32k.mgh
-         done       
+         done
     done
 else
     Info "Subject ${id} microstructural intensities are registered to conte69"
