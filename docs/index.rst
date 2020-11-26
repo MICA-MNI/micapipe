@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**micapipe**
-============================
-*An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
+.. **micapipe**
+   ============================
+   *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
 <<<<<<< HEAD
 .. title:: micapipe
@@ -30,6 +30,7 @@
 .. image:: ./figures/micapipe_long.png
     :alt: alternate text
     :align: right
+<<<<<<< HEAD
     
 >>>>>>> parent of 08da98d... Update index.rst
 .. image:: ./figures/micapipe.png
@@ -37,6 +38,8 @@
    :alt: alternate text
    :align: center
     
+=======
+>>>>>>> parent of c9304d2... Update index.rst
 
 **Welcome to the MICA lab pipeline**
 ==========================================
@@ -104,6 +107,57 @@ first and then discuss your ideas on our Github `issues <https://github.com/MICA
 
    <br>
 
+References
+-------------------------------------------
+Detailed information regarding the software and tools used in this pipeline
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Getting started
+
+   pages/01.install/index
+   pages/02.whatyouneed/index
+   pages/03.execution/index
+   pages/09.whatsnew/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Processing steps
+
+   pages/04.volumetric/index
+   pages/05.freesurfer/index
+   pages/06.dwi/index
+   pages/07.restingstate/index
+   pages/08.postmpc/index
+   pages/17.geodesic/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Additional tools
+
+   pages/14.micapipe_anonymize/index
+   pages/15.micapipe_cleanup/index
+   pages/16.mic2bids/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: References & Acknowledgements
+
+   pages/13.writeitdown/index
+   pages/10.citingmicapipe/index
+   pages/11.references/index
+   pages/12.acknowledge/index
+
+___________________________________________________________________________________________________
+
+.. image:: ./figures/micapipe.png
+   :scale: 50 %
+   :alt: alternate text
+   :align: center
 
 Creators 🧠
 -------------------------
