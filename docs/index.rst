@@ -7,6 +7,7 @@
 ============================
 *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
+<<<<<<< HEAD
 .. title:: micapipe
 
 .. raw:: html
@@ -20,6 +21,8 @@
       }
 <<<<<<< HEAD
    </style>  
+=======
+>>>>>>> parent of 303c3c5... Update index.rst
    
 =======
    </style>
