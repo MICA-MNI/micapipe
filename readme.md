@@ -21,7 +21,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 
 
 ## Dependencies
-| Software   |     Version   | Further info |
+| *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
 | Freesurfer | 6.0.0         | https://surfer.nmr.mgh.harvard.edu/ |
@@ -37,7 +37,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
  > The FIX package (FMRIB's ICA-based Xnoiseifier) requires FSL, R and one of MATLAB Runtime Component, full MATLAB or Octave. We recommend the use of the MATLAB Runtime Component. Additionally, it requires the following R libraries:  'kernlab','ROCR','class','party','e1071','randomForest'
 
 ### `python` packages
-|     Package     |  Version  |
+|     *Package*     |  *Version*  |
 |:---------------:|:---------:|
 | brainspace      | 0.1.1     |
 | certifi         | 2020.6.20 |
@@ -61,12 +61,29 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | vtk             | 9.0.1     |
 
 ### `R` libraries  
-- 'kernlab'
-- 'ROCR'  
-- 'class'  
-- 'party'  
-- 'e1071'  
-- 'randomForest'  
+| *Core   library* |  *version* | *Dependency library* |  *version* | *Dependency library* |   *version* |
+|:--------------:|:--------:|:------------------:|:--------:|:------------------:|:---------:|
+|         plotly |  4.9.2.1 |         tidyselect |  1.1.0   |           parallel |  3.6.3    |
+|        viridis |  0.5.1   |               coin |  1.3-1   |            TH.data |  1.0-10   |
+|    viridisLite |  0.3.0   |              purrr |  0.3.4   |               Rcpp |  1.0.5    |
+|          tidyr |  1.1.2   |            splines |  3.6.3   |           jsonlite |  1.6.1    |
+|        ggplot2 |  3.3.2   |            lattice |  0.20-41 |          gridExtra | 2.3       |
+|         scales |  1.1.1   |         colorspace |  1.4-1   |             digest |  0.6.27   |
+|   randomForest |  4.6-14  |              vctrs |  0.3.5   |              dplyr |  1.0.2    |
+|          e1071 |  1.7-4   |           generics |  0.0.2   |              tools |  3.6.3    |
+|          party |  1.3-5   |          htmltools |  0.4.0   |           magrittr |  2.0.1    |
+|    strucchange |  1.5-2   |           survival |  3.1-12  |           lazyeval |  0.2.2    |
+|       sandwich |  2.5-1   |              rlang |  0.4.9   |             tibble |  3.0.4    |
+|            zoo |  1.8-7   |             pillar |  1.4.3   |             crayon |  1.3.4    |
+|     modeltools |  0.2-23  |               glue |  1.4.2   |          pkgconfig |  2.0.3    |
+|        mvtnorm |  1.1-1   |              withr |  2.3.0   |               MASS |  7.3-51.5 |
+|          class |  7.3-17  |        matrixStats |  0.56.0  |           ellipsis |  0.3.0    |
+|           ROCR |  1.0-11  |           multcomp |  1.4-13  |            libcoin |  1.0-6    |
+|        kernlab |  0.9-29  |          lifecycle |  0.2.0   |             Matrix |  1.2-18   |
+|                |          |            munsell |  0.5.0   |         data.table |  1.12.8   |
+|                |          |             gtable |  0.3.0   |               httr |  1.4.1    |
+|                |          |        htmlwidgets |  1.5.1   |                 R6 |  2.4.1    |
+|                |          |          codetools |  0.2-16  |           compiler |  3.6.3    |
   
 ## Acknowledgements  
 
