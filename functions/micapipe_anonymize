@@ -147,12 +147,10 @@ bids_variables $BIDS $id $out $SES
 # Check BIDS directory
 if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
 
-if [[ ${replace} == TRUE ]]; then
-Warning "ANONYMIZEs the anatomical images from the BIDS directory
+Warning "This cript ANONYMIZEs the anatomical images from the BIDS directory
          The anonimized images will be saved in the OUT directory
          Is up to the user to replace the BIDS anatomical by the outputs of this script
          We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
-fi
 
 # -----------------------------------------------------------------------------------------------#
 #			  Timer & Beginning
@@ -173,10 +171,6 @@ mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
 #------------------------------------------------------------------------------#
 Title "Running MICA-anonymize by $METHOD method(s)"
 
-# Check if subject was refaced
-DONE=`cat ${BIDS}/CHANGES | grep ${id}-anonymized`
-if [[ ! -z $DONE ]]; then Error "Subject $id was already refaced:\n\t\t${DONE}"; exit 0; fi
-
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
 Info "Output directory: $out_warps"
@@ -191,7 +185,6 @@ for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
 cd ${subject_bids}/anat
 # Create a list with all anat volumes
 anat=(`ls *gz`)
-# anat=`find . -name "*.nii.gz" ! -name "*T1map.nii.gz"`
 anatT1map=`find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz"`
 T1map_inv1=`find . -name "*inv1_T1map.nii.gz"`; T1map_inv1=${T1map_inv1/.\//}
 
@@ -262,7 +255,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         # Inverse the brain mask dilated
         Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
 
-        # Create a non-linear warpfield of the face  <<<<<<<<<<< DEFORMABLE Only NOT so good
+        # Create a non-linear warpfield of the face
         T1wrefaced=${tmp}/refaceSyN
         face_warp=${T1wrefaced}_1Warp.nii.gz
         face_mat=${T1wrefaced}_0GenericAffine.mat
@@ -277,9 +270,6 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         Do_cmd fslmaths $face_warp -mul $T1w_mask_inv $face_warp
         # QC
         if [ ! -f ${face_warp} ]; then Error "$face_warp warpfield calculation failed"; cd $here;  Do_cmd exit 0; fi
-        # Apply warpfield to T1w (deprecated, this step is perform in the for loop)
-        # warpfaced=${out_warps}/${T1w_run1_str}_T1w-warpfaced.nii.gz
-        # Do_cmd antsApplyTransforms -d 3 -u int -i $T1_orig -r $T1_orig -n linear -t [${face_mat},1] -t ${face_warp} -t $face_mat -o ${warpfaced}
     fi
 fi
 
@@ -343,8 +333,8 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
       Info "Applying Warp-Facing method to $nii"
       nii_warped=${out_warps}/${nii/.nii.gz/_}warpfaced.nii.gz
 
-      # Apply the warpflied <<<<<<< NearestNeighbor?
-      Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n linear \
+      # Apply the warpflied
+      Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n NearestNeighbor \
               -t [${nii_2_T1_mat},1] -t [${face_mat},1] -t ${face_warp} -t $face_mat -t ${nii_2_T1_mat} -o $nii_warped
   fi
 done
