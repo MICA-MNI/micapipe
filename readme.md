@@ -100,7 +100,7 @@ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc
 
 #### Freesurfer recon-all processing
 ``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural
+mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_freesurfer
 ```
 
 
