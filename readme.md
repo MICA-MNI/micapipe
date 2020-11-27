@@ -152,7 +152,7 @@ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -all
 ```
 ### Quality check (under development):  
-This module can be use at any stage of processing
+This module can be used at any stage of processing
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -QC
 ```  
