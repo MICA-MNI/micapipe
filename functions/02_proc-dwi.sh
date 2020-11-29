@@ -168,7 +168,7 @@ if [[ ! -f $dwi_corr ]]; then
       else
           Do_cmd rm $dwi_n4; ((Nsteps++))
           # eddy_quad Quality Check
-          Do_cmd eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${proc_dwi}/eddy_QC
+          Do_cmd eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${dir_QC}/eddy_QC
           # Copy eddy parameters
           eddy_DIR=${proc_dwi}/eddy
           if [ ! -d ${eddy_DIR} ]; then Do_cmd mkdir ${eddy_DIR}; fi
@@ -343,7 +343,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 cd $here
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
