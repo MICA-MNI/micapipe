@@ -5,6 +5,10 @@
 
 **micapipe**
 ============================
+.. image:: https://readthedocs.org/projects/micapipe/badge/?version=latest
+  :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
+
 *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
 .. title:: micapipe
@@ -18,7 +22,7 @@
       background-color: #261F4A;
       margin-top: 24px;
       }
-   </style>  
+   </style>
 
 .. toctree::
    :maxdepth: 1
@@ -70,7 +74,7 @@
 
 Getting started
 --------------------------------------------------------
-This pipeline is developed by the MICA-lab (https://mica-mni.github.io) at the McConnell Brain Imaging Center of the Montreal Neurological Institute.  Our main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases. 
+This pipeline is developed by the MICA-lab (https://mica-mni.github.io) at the McConnell Brain Imaging Center of the Montreal Neurological Institute.  Our main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases.
 
 The pipelines integrates *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
