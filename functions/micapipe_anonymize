@@ -6,7 +6,7 @@
 # we strongly recommend to anonymize the BIDS database before running MICAPIPE
 #
 #
-# Rationale: This script applies a defacing/refacing/warp-refacing to anonymioze the anatomical images in a BIDS dataset.
+# Rationale: This script applies a defacing/refacing/warp-refacing to anonymize the anatomical images in a BIDS dataset.
 #            A warp field is calculated from the anatomical image (eg. T1w, qT1, FLAIR...) to the refaced T1w.
 #            The resulting warp fields are then applied to each anamical image to anonymize the face
 #
@@ -249,8 +249,12 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         T1w_mask_dil=${tmp}/mask_dil.nii.gz
         T1w_mask_inv=${tmp}/mask_inv.nii.gz
 
-        # Dilate brain mask
-        Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input $dil
+        if [ ! ${dil} -eq 0 ]; then
+            # Dilate brain mask
+            Do_cmd 3dmask_tool -input $T1w_mask_brain -prefix $T1w_mask_dil -dilate_input $dil
+        else
+            T1w_mask_dil=$T1w_mask_brain
+        fi
 
         # Inverse the brain mask dilated
         Do_cmd fslmaths $T1w_mask_dil -sub 1 -mul -1 $T1w_mask_inv
