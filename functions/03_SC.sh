@@ -209,6 +209,9 @@ done
 # >>>>>> https://github.com/lconcha/auto_tracto
 
 # -----------------------------------------------------------------------------------------------
+# Change connectome permissions
+Do_cmd chmod 770 -R ${dwi_cnntm}/*
+
 # Clean temporal directory
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 cd $here
