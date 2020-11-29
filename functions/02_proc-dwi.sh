@@ -168,7 +168,7 @@ if [[ ! -f $dwi_corr ]]; then
       else
           Do_cmd rm $dwi_n4; ((Nsteps++))
           # eddy_quad Quality Check
-          eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${proc_dwi}/eddy_QC
+          Do_cmd eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${proc_dwi}/eddy_QC
           # Copy eddy parameters
           eddy_DIR=${proc_dwi}/eddy
           if [ ! -d ${eddy_DIR} ]; then Do_cmd mkdir ${eddy_DIR}; fi
@@ -191,7 +191,7 @@ mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
 if [[ ! -f $T1nativepro_in_dwi ]]; then
       Info "Registering DWI b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
-      dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3
+      dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3 -force
 
       # Register DWI-b0 mean corrected to T1nativepro
       Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $dwi_b0 -o $str_dwi_affine -t a -n $CORES -p d
@@ -224,12 +224,37 @@ fi
 # 5TT file in dwi space
 if [[ ! -f $dwi_5tt ]]; then
       Info "Registering 5TT file to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r ${dwi_b0} -n linear -t [$mat_dwi_affine,1] -o ${dwi_5tt} -v
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_5tt -v
       # Step QC
-      if [[ -f ${dwi_5tt} ]]; then ((Nsteps++)); fi
+      if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has a 5TT segmentation in DWI space"; ((Nsteps++))
 fi
+
+
+#------------------------------------------------------------------------------#
+# Non-linear registration between masked T1w and b0-dwi
+# str_dwiT1_2_b0=${dir_warp}/${id}_dwiT1_to_b0_
+# dwiT1_2_b0_warp=${str_dwiT1_2_b0}1Warp.nii.gz
+#
+# if [[ ! -f $dwiT1_2_b0_warp ]]; then
+#     dwi_T1_masked=$tmp/dwi_T1_masked.nii.gz
+#     dwi_b0_masked=$tmp/dwi_b0_masked.nii.gz
+#     tmp_mask=${tmp}/dwi_mask_eroded.nii.gz
+#
+#     Do_cmd maskfilter $dwi_mask erode -npass 5 $tmp_mask
+#     Do_cmd ImageMath 3 dwi_b0_scaled.nii.gz RescaleImage $dwi_b0 0 100
+#     Do_cmd fslmaths dwi_b0_scaled.nii.gz -mul -1 -add 99 -mul $tmp_mask dwi_b0_inv.nii.gz
+#
+#     Do_cmd fslmaths $T1nativepro_in_dwi -mul $tmp_mask $dwi_T1_masked
+#     Do_cmd ImageMath 3 dwi_b0_matched.nii.gz HistogramMatch dwi_b0_inv.nii.gz $dwi_T1_masked
+#
+#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz  -o $str_dwiT1_2_b0 -t so -n $CORES -p d
+#     Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1nativepro_in_dwi -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $T1nativepro_in_dwi -v
+#     Do_cmd antsApplyTransforms -d 3 -e 3 -i $dwi_5tt -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $dwi_5tt -v
+# else
+#       Info "Subject ${id} has a non-linear registration from dwi-T1w to dwi-b0"; ((Nsteps++))
+# fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
