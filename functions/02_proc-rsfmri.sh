@@ -584,7 +584,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

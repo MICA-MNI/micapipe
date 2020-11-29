@@ -97,7 +97,7 @@ Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
 Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
 # Remove temporal directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; fi
 
 Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 

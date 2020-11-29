@@ -255,7 +255,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; fi
 
 # QC notification of completition
 lopuu=$(date +%s)

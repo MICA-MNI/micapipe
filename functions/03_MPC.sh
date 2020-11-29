@@ -218,7 +218,7 @@ done
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory and fsaverage5
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
