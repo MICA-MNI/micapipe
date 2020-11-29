@@ -91,6 +91,10 @@ do
     tmpDir=$2
     shift;shift;
   ;;
+  -keep_tmp)
+    keep_tmp=1
+    shift
+  ;;
   -robust)
     robust=TRUE
     shift
@@ -109,10 +113,19 @@ done
 
 # -----------------------------------------------------------------------------------------------
 ## Argument checks
-if [ -z $tckIN ];   then Error "Please supply -tck"    ;help;exit 2;fi
-if [ -z $mask ];    then Error "Please supply -mask"   ;help;exit 2;fi
-if [ -z $outbase ]; then Error "Please supply -outbase";help;exit 2;fi
-if [ -z $fa ];      then Error "Please supply -fa"     ;help;exit 2;fi
+arg=($tckIN $mask $outbase $fa)
+if [ "${#arg[@]}" -lt 4 ]; then
+  Error "One or more mandatory arguments are missing:"
+  Note "-tck     :" $tckIN
+  Note "-mask    :" "$mask"
+  Note "-outbase :" "$outbase"
+  Note "-fa      :" "$fa"
+help; exit 1; fi
+
+if [ ! -f $tckIN ]; then Error "File not found -tck:\n\t\t $tckIN"; help; exit 2; fi
+if [ ! -f $mask ]; then Error "File not found -mask:\n\t\t $mask"; help; exit 2; fi
+if [ ! -f $fa ]; then Error "File not found  -fa:\n\t\t $fa"; help; exit 2; fi
+if [[ $fa != *".nii"* ]]; then Error "-fa is not NIFTI or NIFTI_GZ"; help; exit 2; fi
 
 # Inputs and variables
 autoPtx=$MICAPIPE/MNI152Volumes/protocols

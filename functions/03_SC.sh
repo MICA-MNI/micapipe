@@ -16,7 +16,7 @@
 #   $3 : Out parcDirectory
 #
 # ONLY for scripting and debugging
-# TEST=ON
+TEST=ON
 
 BIDS=$1
 id=$2
@@ -213,9 +213,13 @@ Do_cmd chmod 770 -R ${dwi_cnntm}/*
 # -----------------------------------------------------------------------------------------------
 # Compute Auto-Tractography
 if [ $autoTract == "TRUE" ]; then
+    Info "Running Auto-tract"
     autoTract_dir=$proc_dwi/auto_tract
     [[ ! -d $autoTract_dir ]] && Do_cmd mkdir -p $autoTract_dir
-    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa -tmpDir $tmp -keep_tmp
+    fa_niigz=$tmp/${id}_dti_FA.nii.gz
+    Do_cmd mrconvert $fa $fa_niigz
+    echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp  \033[0m"
+    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp
 fi
 
 # -----------------------------------------------------------------------------------------------
