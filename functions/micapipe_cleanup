@@ -107,11 +107,11 @@ do
     postVOL=TRUE
     shift
   ;;
-  -post_dwi)
+  -SC)
     postDWI=TRUE
     shift
   ;;
-  -post_mpc)
+  -MPC)
     postMPC=TRUE
     shift
   ;;
@@ -155,14 +155,13 @@ if [ "$mica" = "TRUE" ];then source ${MICAPIPE}/functions/init.sh; fi
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 
-# Remove temporary directories
+# Remove temporary directories <<<<<< Will replace for cleanup tramp
 # Do_cmd rm -rf ${tmp}/*micapipe* ${tmp}/*proc* ${tmp}/*post*
 
 # ---------------------------------------------------------------------------------------
 Title "MICA pipe cleanup \n\t\tSubject: $id"
 
-
-# CLEAN -post_mpc
+# CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files"
     Do_cmd rm -rf ${dir_surf}/micro_profiles 2>&1 | tee -a  ${dir_logs}/post_mpc.txt # <<<<<<<<<<<<< INCOMPLETE
@@ -198,10 +197,10 @@ if [ "$procfMRI" = "TRUE" ]; then
 fi
 
 # ---------------------------------------------------------------------------------------
-# CLEAN -post_dwi TRACTOGRAPHY
+# CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     Warning "Erasing post_tractography output files"
-    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/QC ${proc_dwi}/${id}_tdi_iFOD2-*.mif ${proc_dwi}/${id}_dwi_subcortical.nii.gz ${proc_dwi}/${id}_dwi_cerebellum.nii.gz  2>&1 | tee -a  ${dir_logs}/post_tractography.txt
+    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/QC/png/${id}_*connectome.png ${proc_dwi}/QC/png/${id}_*edgeLengths.png ${proc_dwi}/${id}_tdi_iFOD2-*.mif ${proc_dwi}/${id}_dwi_subcortical.nii.gz ${proc_dwi}/${id}_dwi_cerebellum.nii.gz $proc_dwi/auto_tract 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
 fi
 
 # ---------------------------------------------------------------------------------------
