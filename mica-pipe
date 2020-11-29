@@ -71,6 +71,9 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
 
+   \033[38;5;197m-SC\033[0m
+\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
+\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
 
 
    Software versions requirements:
@@ -215,6 +218,14 @@ do
     mica=TRUE
     shift
   ;;
+  -tracts)
+    tracts=$2
+    shift;shift
+  ;;
+  -autoTract)
+    autoTract=TRUE
+    shift
+  ;;
   -qsub)
     micaq=TRUE
     shift
@@ -271,27 +282,21 @@ help; exit 1; fi
 
 # Optional arguments rs-fmri
 optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisMainPhase $thisRevPhase)
-if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile
-else optarg_rsfmri[0]=DEFAULT
-fi
-if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile
-else optarg_rsfmri[1]=DEFAULT
-fi
-if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan
-else optarg_rsfmri[2]=DEFAULT
-fi
-if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase
-else optarg_rsfmri[3]=DEFAULT
-fi
+if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile; else optarg_rsfmri[0]=DEFAULT; fi
+if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else optarg_rsfmri[1]=DEFAULT; fi
+if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
+if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase; else optarg_rsfmri[3]=DEFAULT; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_lta)
 if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$input_im
-else optarg_mpc[0]=DEFAULT
-fi
+else optarg_mpc[0]=DEFAULT; fi
 if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_lta
-else optarg_mpc[1]=DEFAULT
-fi
+else optarg_mpc[1]=DEFAULT; fi
+
+# Optional arguments SC
+if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 
 # Get the real path of the Inputs
 out=`realpath $out`
@@ -303,6 +308,9 @@ if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 
 # Check BIDS Directory
 if [ ! -d ${BIDS}/sub-${id}/${SES} ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${BIDS}/sub-${id}/${SES}"; exit 1; fi
+
+# Erase temporal files by default
+if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
@@ -536,7 +544,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup
+             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - POST DWI processing (tractography)"
@@ -544,10 +552,10 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup
+             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract
     else
         # LOCAL - post-DWI processing (tractography)
-        ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 

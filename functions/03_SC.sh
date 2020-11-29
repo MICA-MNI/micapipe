@@ -24,6 +24,8 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+tracts=$7
+autoTract=$8
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -40,17 +42,17 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: DWI post TRACTOGRAPHY
-tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
 fod=$proc_dwi/${id}_wm_fod_norm.mif
-dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
+dwi_5tt=$proc_dwi/${id}_dwi_5tt.nii.gz
 T1str_nat=${id}_t1w_${res}mm_nativepro
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
-dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
+dwi_b0=$proc_dwi/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
 tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
-lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
-
+lut_sc="$util_lut/lut_subcortical-cerebellum_mics.csv"
+dwi_mask=$proc_dwi/${id}_dwi_mask.nii.gz
+fa=$proc_dwi/${id}_dti_FA.mif
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -59,10 +61,14 @@ if [ ! -f $mat_dwi_affine ]; then Error "Subject $id doesn't have an affine mat 
 if [ ! -f $dwi_5tt ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $T1_seg_cerebellum ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f $T1_seg_subcortex ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
+if [ ! -f $dwi_mask ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
 micapipe_software
+Info "Number of streamlines: $tracts"
+Info "Auto-tractograms: $autoTract"
 
 #	Timer
 aloita=$(date +%s)
@@ -73,11 +79,11 @@ Nparc=0
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+[[ ! -d $tmp ]] && Do_cmd mkdir -p $tmp
 
 # Create Connectomes directory for the outpust
-[[ ! -d ${dwi_cnntm} ]] && Do_cmd mkdir -p ${dwi_cnntm}
-[[ ! -d ${dir_QC} ]] && Do_cmd mkdir -p ${dir_QC}
+[[ ! -d $dwi_cnntm ]] && Do_cmd mkdir -p $dwi_cnntm
+[[ ! -d $dir_QC_png ]] && Do_cmd mkdir -p $dir_QC_png
 cd ${tmp}
 
 # -----------------------------------------------------------------------------------------------
@@ -148,14 +154,13 @@ for seg in $parcellations; do
     Do_cmd antsApplyTransforms -d 3 -e 3 -i $seg -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_cortex -v -u int
     # Remove the medial wall
     for i in 1000 2000; do Do_cmd fslmaths $dwi_cortex -thr $i -uthr $i -binv -mul $dwi_cortex  $dwi_cortex; done
-    # QC of the tractogram and labels (this option doesn'r work on the Q)
-    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortex -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_cor.png
+
     # Build the Cortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
+
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
@@ -168,14 +173,13 @@ for seg in $parcellations; do
     Info "Building $parc_name cortical-subcortical connectome"
     dwi_cortexSub=$tmp/${id}_${parc_name}-sub_dwi.nii.gz
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_subc -add $dwi_cortex $dwi_cortexSub -odt int # added the subcortical parcellation
-    # QC of the tractogram and labels (this option doesn'r work on the Q)
-    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_cortexSub -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_sub.png
+
     # Build the Cortical-Subcortical connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
+
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
@@ -188,14 +192,13 @@ for seg in $parcellations; do
     Info "Building $parc_name cortical-subcortical-cerebellum connectome"
     dwi_all=$tmp/${id}_${parc_name}-full_dwi.nii.gz
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
-    # QC of the tractogram and labels (this option doesn'r work on the Q)
-    mrview $tdi -interpolation 0 -mode 2 -colourmap 3 -overlay.load $dwi_all -overlay.opacity 0.45 -overlay.intensity 0,10 -overlay.interpolation 0 -overlay.colourmap 0 -comments 0 -voxelinfo 1 -orientationlabel 1 -colourbar 0 -capture.grab -exit
-    mv screenshot0000.png ${dir_QC}/${id}_${tracts}_${parc_name}_full.png
+
     # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
+
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads $CORES \
         $tck $dwi_all "${nom}_full-edgeLengths.txt" \
@@ -204,16 +207,20 @@ for seg in $parcellations; do
     if [[ -f "${nom}_full-connectome.txt" ]]; then ((Nparc++)); fi
 done
 
-# -----------------------------------------------------------------------------------------------
-# Compute Auto-Tractography (Future Release version)
-# >>>>>> https://github.com/lconcha/auto_tracto
-
-# -----------------------------------------------------------------------------------------------
 # Change connectome permissions
 Do_cmd chmod 770 -R ${dwi_cnntm}/*
 
+# -----------------------------------------------------------------------------------------------
+# Compute Auto-Tractography
+if [ $autoTract == "TRUE" ]; then
+    autoTract_dir=$proc_dwi/auto_tract
+    [[ ! -d $autoTract_dir ]] && Do_cmd mkdir -p $autoTract_dir
+    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa -tmpDir $tmp -keep_tmp
+fi
+
+# -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
 cd $here
 
 # QC notification of completition
