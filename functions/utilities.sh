@@ -46,6 +46,7 @@ bids_variables() {
   dir_warp=$subject_dir/xfms              # Transformation matrices
   dir_logs=$subject_dir/logs              # directory with log files
   dir_QC=$subject_dir/QC                  # directory with QC files
+  dir_QC_png=$subject_dir/QC/png                  # directory with QC files
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then
