@@ -64,6 +64,14 @@ if [ ! -f $T1_seg_subcortex ]; then Error "Subject $id doesn't have subcortical 
 if [ ! -f $dwi_mask ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
 
+# -----------------------------------------------------------------------------------------------
+# Check IF output exits then EXIT
+N=`ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l`
+if [ $N -gt 3 ]; then Error "Subject $id already have some connectomes. If you want to re-run -FC first clean the outpus:
+        micapipe_cleanup -FC -sub $id -out $out -bids $BIDS"; Do_cmd rm -rf $tmp; exit; fi
+if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
+
+
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
 micapipe_software
@@ -100,19 +108,16 @@ if [[ ! -f $dwi_cere ]]; then Info "Registering Cerebellar parcellation to DWI-b
       # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
       # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
       Do_cmd fslmaths $dwi_cere -bin -mul 100 -add $dwi_cere $dwi_cere
-else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
+else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nparc++)); fi
 
 if [[ ! -f $dwi_subc ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1_seg_subcortex -r $dwi_b0 -n GenericLabel -t [$mat_dwi_affine,1] -o $dwi_subc -v -u int
       # Remove brain-stem (label 16)
       Do_cmd fslmaths $dwi_subc -thr 16 -uthr 16 -binv -mul $dwi_subc $dwi_subc
       if [[ -f $dwi_subc ]]; then ((Nparc++)); fi
-else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
+else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++)); fi
 
 # -----------------------------------------------------------------------------------------------
-# Check IF output exits then EXIT
-if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
-
 # Generate probabilistic tracts
 Info "Building the ${tracts} streamlines connectome!!!"
 tck=${tmp}/DWI_tractogram_${tracts}.tck
@@ -219,7 +224,7 @@ if [ $autoTract == "TRUE" ]; then
     fa_niigz=$tmp/${id}_dti_FA.nii.gz
     Do_cmd mrconvert $fa $fa_niigz
     echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp  \033[0m"
-    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp
+    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id}_${tracts} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp
 fi
 
 # -----------------------------------------------------------------------------------------------
