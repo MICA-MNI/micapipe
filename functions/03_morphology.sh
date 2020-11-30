@@ -185,7 +185,7 @@ if [[ ! -f ${outDir}/rh_curv_c69-32k.mgh ]]; then
         
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
-            ${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii \
+            ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
             ${tmp}/${hemi}_curv_c69-32k.func.gii \
             10 \
             ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii
