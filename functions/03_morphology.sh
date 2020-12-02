@@ -125,7 +125,7 @@ if [[ ! -f ${outDir}/rh_thickness_10mm_c69-32k.mgh ]]; then
         
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
-            ${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii \
+            ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
             ${tmp}/${hemi}_thickness_c69-32k.func.gii \
             10 \
             ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii
@@ -140,8 +140,8 @@ fi
 #------------------------------------------------------------------------------#
 ### Curvature ###
 
-# Register to fsa5 an apply 10mm smooth
-if [[ ! -f ${outDir}/rh.curv_fsa5.mgh ]]; then
+# Register to fsa5 and apply 10mm smooth
+if [[ ! -f ${outDir}/rh.curv_10mm_fsa5.mgh ]]; then
     for hemi in lh rh; do
         # Convert native file to mgh and save in output directory
         Do_cmd mri_convert ${dataDir}/${hemi}.curv ${outDir}/${hemi}_curv.mgh
@@ -163,8 +163,8 @@ else
     Info "Subject ${id} curvature is registered to fsa5"
 fi
 
-# Register to conte69 an apply 10mm smooth
-if [[ ! -f ${outDir}/rh_curv_c69-32k.mgh ]]; then
+# Register to conte69 and apply 10mm smooth
+if [[ ! -f ${outDir}/rh_curv_10mm_c69-32k.mgh ]]; then
     for hemi in lh rh; do
         [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
         HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
