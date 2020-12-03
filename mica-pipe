@@ -323,7 +323,7 @@ if [ ! -d ${BIDS}/sub-${id}/${SES} ]; then Error "$id was not found on the BIDS 
 # Erase temporal files by default
 if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 
-if [ $quiet == "TRUE" ]; then export quiet=TRUE; fi
+if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
 
