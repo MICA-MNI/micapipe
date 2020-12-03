@@ -31,8 +31,8 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES Resting state Funtional MRI processing
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
-\t\033[38;5;197m-post_dwi\033[0m         : DELETES Post tractography and connectome generation
-\t\033[38;5;197m-post_mpc\033[0m         : DELETES Microstructural profiles and covariance analysis
+\t\033[38;5;197m-SC\033[0m         : DELETES Post tractography and connectome generation
+\t\033[38;5;197m-MPC\033[0m         : DELETES Microstructural profiles and covariance analysis
 
 
 McGill University, MNI, MICA-lab, May-September 2020
