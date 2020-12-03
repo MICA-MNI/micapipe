@@ -71,6 +71,7 @@ Title "Running MICA MPC processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables-post
+Info "Not erasing temporal dir: $nocleanup"
 
 # GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
@@ -218,7 +219,7 @@ done
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory and fsaverage5
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)

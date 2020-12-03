@@ -48,7 +48,7 @@ Warning "Subject ${id} has Freesurfer
                     > If you want to re-run for QC purposes try it manually
                     > If you want to run again this step first erase all the outputs with:
                       mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
-exit
+Do_cmd exit
 fi
 
 #------------------------------------------------------------------------------#
@@ -56,6 +56,7 @@ Title "Running MICA structural processing: Freesurfer"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
+Info "Not erasing temporal dir: $nocleanup"
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -72,7 +73,7 @@ if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject
 # Define SUBJECTS_DIR for freesurfer processing as a global variable
 # Will work on a temporal directory
 export SUBJECTS_DIR=${tmp}
-if [ ! -d ${tmp}/nii ]; then mkdir ${tmp}/nii; fi
+if [ ! -d ${tmp}/nii ]; then Do_cmd mkdir ${tmp}/nii; fi
 
 # Copy all the T1 from the BIDS directory to the TMP
 # transform to NIFTI (if == NIFTI_GZ)
@@ -97,7 +98,7 @@ Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
 Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
 # Remove temporal directory
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 

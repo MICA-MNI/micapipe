@@ -68,8 +68,8 @@ if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi";
 # Check IF output exits then EXIT
 N=`ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l`
 if [ $N -gt 3 ]; then Error "Subject $id already have some connectomes. If you want to re-run -FC first clean the outpus:
-        micapipe_cleanup -FC -sub $id -out $out -bids $BIDS"; Do_cmd rm -rf $tmp; exit; fi
-if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; exit; fi
+        micapipe_cleanup -FC -sub $id -out $out -bids $BIDS"; Do_cmd rm -rf $tmp; Do_cmd exit; fi
+if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd rm -rf $tmp; Do_cmd exit; fi
 
 
 #------------------------------------------------------------------------------#
@@ -77,6 +77,7 @@ Title "Running MICA POST-DWI processing (Tractography)"
 micapipe_software
 Info "Number of streamlines: $tracts"
 Info "Auto-tractograms: $autoTract"
+Info "Not erasing temporal dir: $nocleanup"
 
 #	Timer
 aloita=$(date +%s)
@@ -92,7 +93,7 @@ tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 # Create Connectomes directory for the outpust
 [[ ! -d $dwi_cnntm ]] && Do_cmd mkdir -p $dwi_cnntm
 [[ ! -d $dir_QC_png ]] && Do_cmd mkdir -p $dir_QC_png
-cd ${tmp}
+Do_cmd cd ${tmp}
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -229,7 +230,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 cd $here
 
 # QC notification of completition

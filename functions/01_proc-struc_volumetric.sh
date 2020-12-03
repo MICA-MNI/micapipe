@@ -44,6 +44,7 @@ Title "Running MICA structural processing: Volumetric"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
+Info "Not erasing temporal dir: $nocleanup"
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"
@@ -124,15 +125,13 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
     Do_cmd ImageMath 3 $T1nativepro RescaleImage $T1n4 0 100
 
     # If no T1native pro exit_status "something is wrong" exit
-    if [ ! -f ${T1nativepro} ]; then Error "$T1str_nat was not generated"; exit; fi
+    if [ ! -f ${T1nativepro} ]; then Error "$T1str_nat was not generated"; Do_cmd exit; fi
 
     # Brainmask
-    # REQUEST to change to deepbrain-extractor (python CNN based)
-    Warning "bet might be replaced for future versions (by deepbrain.extractor)"
     Do_cmd bet $T1nativepro $T1nativepro_brain  -B -f 0.25 -v
 
     # If no T1native pro exit_status "something is wrong" exit
-    if [ ! -f ${T1nativepro_brain} ]; then Error "$T1str_nat masked was not generated"; exit; fi
+    if [ ! -f ${T1nativepro_brain} ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; fi
 
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
@@ -255,7 +254,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)

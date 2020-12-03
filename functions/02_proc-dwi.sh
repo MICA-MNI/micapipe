@@ -61,6 +61,7 @@ micapipe_software
 bids_print.variables-dwi
 
 # GLOBAL variables for this script
+Info "Not erasing temporal dir: $nocleanup"
 Info "ANTs will use $CORES CORES"
 
 #	Timer
@@ -73,7 +74,7 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_proc-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-cd $tmp
+Do_cmd cd $tmp
 #------------------------------------------------------------------------------#
 # DWI processing
 # Image denoising must be performed as the first step of the image-processing pipeline.
@@ -343,7 +344,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 cd $here
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)

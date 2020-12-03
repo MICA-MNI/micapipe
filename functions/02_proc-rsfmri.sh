@@ -30,11 +30,12 @@ id=$2
 out=$3
 SES=$4
 PROC=$5
-changeTopupConfig=$6
-changeIcaFixTraining=$7
-thisMainScan=$8
-thisPhase=$9
-nocleanup=$10
+nocleanup=$6
+changeTopupConfig=$7
+changeIcaFixTraining=$8
+thisMainScan=$9
+thisPhase=$10
+
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -51,6 +52,10 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 ### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
+Note "Topup Config     :" $changeTopupConfig
+Note "ICA fix training :" $changeIcaFixTraining
+Note "Main scan        :" $thisMainScan
+Note "Phase scan       :" $thisPhase
 
 # Main scan
 N_mainScan=${#bids_mainScan[@]}
@@ -147,6 +152,7 @@ Title "Running MICA rsfMRI processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables-rsfmri
+Info "Not erasing temporal dir: $nocleanup"
 
 # GLOBAL variables for this script
 Info "ANTs will use $CORES CORES"
@@ -171,7 +177,7 @@ rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
 export SUBJECTS_DIR=$dir_surf
 
 # Temporary fsa5 directory
-ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
+Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
 # rsfMRI directories
 rsfmri_volum=${proc_rsfmri}/volumetric   # volumetricOutputDirectory
@@ -584,7 +590,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

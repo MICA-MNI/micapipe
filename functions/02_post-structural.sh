@@ -51,6 +51,7 @@ micapipe_software
 bids_print.variables-post
 
 # GLOBAL variables for this script
+Info "Not erasing temporal dir: $nocleanup"
 Info "ANTs will use $CORES CORES"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
@@ -188,7 +189,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory and temporal fsaverage5
-if [[ $nocleanup == "TRUE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
