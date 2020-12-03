@@ -31,31 +31,15 @@ echo -e "
 
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
-\t\t\t      ( Requires: -proc_dwi)
+\t\t\t      ( Requires: -proc_dwi, -post_structural)
 \t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
-\t\033[38;5;197m-post_morph\033[0m       : Cortical morphology analysis
+\t\033[38;5;197m-Morphology\033[0m       : Cortical morphology analysis
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
-   \033[38;5;197m-proc-rsfmri\033[0m
-\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
-\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
-\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
-\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
-\t\t\t         you must specify which scan to process ( e.g. '1' )
-\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
-\t\t\t         you must specify which one to process ( e.g. '1' )
-
-   \033[38;5;197m-post-mpc\033[0m
-\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
-\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t\033[38;5;120m-microstructural_lta\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
-\t\t\t        If left blank or omitted, registration will be computed in the script.
-\t\t\t        Note that there is currently no built-in mechanism to verify the accuracy of this registration!
-
    \033[38;5;197m-proc_freesurfer\033[0m
 \t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to <out>/sub-<sub>/<ses>/proc_struct/surfaces/<sub>
 
@@ -65,9 +49,25 @@ echo -e "
 \t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
 
+   \033[38;5;197m-proc_rsfmri\033[0m
+\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
+\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
+\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
+\t\t\t         you must specify which scan to process ( e.g. '1' )
+\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
+\t\t\t         you must specify which one to process ( e.g. '1' )
+
    \033[38;5;197m-SC\033[0m
 \t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
 \t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+
+   \033[38;5;197m-MPC\033[0m
+\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
+\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
+\t\033[38;5;120m-microstructural_lta\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
+\t\t\t        If left blank or omitted, registration will be computed in the script.
+\t\t\t        Note that there is currently no built-in mechanism to verify the accuracy of this registration!
 
 
 \033[38;5;141mOPTIONS:\033[0m
@@ -206,7 +206,7 @@ do
     postGD=TRUE
     shift
   ;;
-  -post_morph)
+  -Morphology)
     postMorph=TRUE
     shift
   ;;
@@ -276,18 +276,19 @@ Error "One or more mandatory arguments are missing:
                -out  : $out
                -bids : $BIDS"
 help; exit 1; fi
-runs=($ALL $procVOL $procFS $procDWI $procfMRI $post $postVOL $postDWI $postGD $postMPC $qtest)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
                     -proc_structural
                     -proc_freesurfer
-                    -proc_rsfmri
-                    -post
                     -post_structural
-                    -post_tractography
-                    -post_mpc
-                    -post_gd"
+                    -proc_dwi
+                    -proc_rsfmri
+                    -SC
+                    -MPC
+                    -GD
+                    -Morphology"
 help; exit 1; fi
 
 # Optional arguments rs-fmri
@@ -322,6 +323,7 @@ if [ ! -d ${BIDS}/sub-${id}/${SES} ]; then Error "$id was not found on the BIDS 
 # Erase temporal files by default
 if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 
+if [ $quiet == "TRUE" ]; then export quiet=TRUE; fi
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
 
@@ -526,7 +528,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-rsfrmi.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup
+             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}"
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Resting state fMRI processing"
@@ -534,10 +536,10 @@ if [ "$procfMRI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-rsfrmi.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup
+             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}"
     else
         # LOCAL - Resting state fMRI processing
-        ${scriptDir}/02_proc-rsfrmi.sh $BIDS $id $out $SES $PROC "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
