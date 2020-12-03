@@ -255,10 +255,10 @@ done
 # -----------------------------------------------------------------------------------------------
 ## Clean up
 if [ $keep_tmp -eq 0 ]; then
-    Info "Deleting tmpDir $tmpDir"
+    Info "Auto-tract: Deleting tmpDir $tmpDir"
     Do_cmd rm -fR $tmpDir
 else
-    Info "Not deleting tmpDir $tmpDir"
+    Info "Auto-tract: Not deleting tmpDir $tmpDir"
 fi
 
 # -----------------------------------------------------------------------------------------------
