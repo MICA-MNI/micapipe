@@ -26,7 +26,7 @@ id=$2
 out=$3
 SES=$4
 PROC=$5
-nocleanup=$8
+nocleanup=$6
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -53,6 +53,7 @@ bids_print.variables-post
 
 # GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
+Info "Not erasing temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)
@@ -62,7 +63,7 @@ here=`pwd`
 export SUBJECTS_DIR=${dir_surf}
 
 # Temporary fsa5 directory
-ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
+Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -72,7 +73,7 @@ if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # Make output directory
 outDir="$dir_surf"/morphology/
-[[ ! -d "$outDir" ]] && mkdir -p "$outDir"
+[[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
 dataDir=${dir_freesurfer}/surf/
@@ -85,19 +86,19 @@ if [[ ! -f ${outDir}/rh.thickness_10mm_fsa5.mgh ]]; then
     for hemi in lh rh; do
         # Convert native file to mgh and save in output directory
         Do_cmd mri_convert ${dataDir}/${hemi}.thickness ${outDir}/${hemi}_thickness.mgh
-    
+
         Do_cmd mri_surf2surf --hemi ${hemi} \
             --srcsubject ${id} \
             --srcsurfval ${outDir}/${hemi}_thickness.mgh \
             --trgsubject fsaverage5 \
             --trgsurfval ${outDir}/${hemi}.thickness_fsa5.mgh
-            
+
         Do_cmd mri_surf2surf --hemi ${hemi} \
             --fwhm-trg 10 \
             --srcsubject ${id} \
             --srcsurfval ${outDir}/${hemi}_thickness.mgh \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.thickness_10mm_fsa5.mgh 
+            --trgsurfval ${outDir}/${hemi}.thickness_10mm_fsa5.mgh
     done
 else
     Info "Subject ${id} cortical thickness is registered to fsa5"
@@ -108,9 +109,9 @@ if [[ ! -f ${outDir}/rh_thickness_10mm_c69-32k.mgh ]]; then
     for hemi in lh rh; do
         [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
         HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
-        
+
         Do_cmd mri_convert ${outDir}/${hemi}_thickness.mgh ${tmp}/${hemi}_thickness.func.gii
-        
+
         Do_cmd wb_command -metric-resample \
             ${tmp}/${hemi}_thickness.func.gii \
             ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
@@ -120,17 +121,17 @@ if [[ ! -f ${outDir}/rh_thickness_10mm_c69-32k.mgh ]]; then
             -area-surfs \
             ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
             ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
-            
+
         Do_cmd mri_convert ${tmp}/${hemi}_thickness.func.gii ${outDir}/${hemi}_thickness_c69-32k.mgh
-        
+
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
             ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
             ${tmp}/${hemi}_thickness_c69-32k.func.gii \
             10 \
             ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii
-            
-        Do_cmd mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii ${outDir}/${hemi}_thickness_10mm_c69-32k.mgh    
+
+        Do_cmd mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii ${outDir}/${hemi}_thickness_10mm_c69-32k.mgh
     done
 else
     Info "Subject ${id} cortical thickness is registered to conte69"
@@ -145,19 +146,19 @@ if [[ ! -f ${outDir}/rh.curv_10mm_fsa5.mgh ]]; then
     for hemi in lh rh; do
         # Convert native file to mgh and save in output directory
         Do_cmd mri_convert ${dataDir}/${hemi}.curv ${outDir}/${hemi}_curv.mgh
-    
+
         Do_cmd mri_surf2surf --hemi ${hemi} \
             --srcsubject ${id} \
             --srcsurfval ${outDir}/${hemi}_curv.mgh \
             --trgsubject fsaverage5 \
             --trgsurfval ${outDir}/${hemi}.curv_fsa5.mgh
-            
+
         Do_cmd mri_surf2surf --hemi ${hemi} \
             --fwhm-trg 10 \
             --srcsubject ${id} \
             --srcsurfval ${outDir}/${hemi}_curv.mgh \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.curv_10mm_fsa5.mgh 
+            --trgsurfval ${outDir}/${hemi}.curv_10mm_fsa5.mgh
     done
 else
     Info "Subject ${id} curvature is registered to fsa5"
@@ -168,9 +169,9 @@ if [[ ! -f ${outDir}/rh_curv_10mm_c69-32k.mgh ]]; then
     for hemi in lh rh; do
         [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
         HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
-        
+
         Do_cmd mri_convert ${outDir}/${hemi}_curv.mgh ${tmp}/${hemi}_curv.func.gii
-        
+
         Do_cmd wb_command -metric-resample \
             ${tmp}/${hemi}_thickness.func.gii \
             ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
@@ -180,17 +181,17 @@ if [[ ! -f ${outDir}/rh_curv_10mm_c69-32k.mgh ]]; then
             -area-surfs \
             ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
             ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
-            
+
         Do_cmd mri_convert ${tmp}/${hemi}_curv.func.gii ${outDir}/${hemi}_curv_c69-32k.mgh
-        
+
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
             ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
             ${tmp}/${hemi}_curv_c69-32k.func.gii \
             10 \
             ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii
-            
-        Do_cmd mri_convert ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii ${outDir}/${hemi}_curv_10mm_c69-32k.mgh         
+
+        Do_cmd mri_convert ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii ${outDir}/${hemi}_curv_10mm_c69-32k.mgh
     done
 else
     Info "Subject ${id} curvature is registered to conte69"
@@ -198,7 +199,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory and fsaverage5
-if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; fi
+if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
