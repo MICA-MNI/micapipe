@@ -22,7 +22,7 @@
 #   $3 : Out Directory
 #
 # ONLY for scripting and debugging:
-TEST=ON
+# TEST=ON
 
 BIDS=$1
 id=$2
