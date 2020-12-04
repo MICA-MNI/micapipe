@@ -87,6 +87,10 @@ do
     fa=$2
     shift;shift
   ;;
+  -weights)
+    tck_weights=$2
+    shift;shift
+  ;;
   -tmpDir)
     tmpDir=$2
     shift;shift;
@@ -143,6 +147,7 @@ mask=`realpath $mask`
 outbase=`realpath $outbase`_
 fa=`realpath $fa`
 if [ -z ${minStreamlinesPerVoxel} ]; then minStreamlinesPerVoxel=1; fi
+if [ -z ${tck_weights} ]; then tck_weights=""; else tck_weights="-tck_weights_in $tck_weights"; fi
 structures=`ls -1 $autoPtx`
 
 #------------------------------------------------------------------------------#
@@ -222,7 +227,7 @@ filter(){
           Do_cmd mrcalc -force $fa 0 -gt $nat_mask
      fi
 
-     Do_cmd tckedit -force \
+     Do_cmd tckedit -force $tck_weights\
                 $tckIN \
                 ${outbase}${st}.tck \
                 -include $inc_seed\
@@ -234,7 +239,7 @@ filter(){
           Info "Truncating streamlines if streamlines in voxel is less than $minStreamlinesPerVoxel"
           Do_cmd tckmap -force -quiet -template $fa ${outbase}${st}.tck ${tmpDir}/${st}_n.nii
           Do_cmd mrcalc ${tmpDir}/${st}_n.nii.gz $minStreamlinesPerVoxel -ge ${tmpDir}/${st}_streamlinesMask.nii
-          Do_cmd tckedit -force \
+          Do_cmd tckedit -force $tck_weights\
                     -mask ${tmpDir}/${st}_streamlinesMask.nii.gz \
                     ${outbase}${st}.tck \
                     ${outbase}${st}_masked.tck
