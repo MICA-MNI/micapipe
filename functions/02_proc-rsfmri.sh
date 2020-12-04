@@ -22,7 +22,7 @@
 #   $3 : Out Directory
 #
 # ONLY for scripting and debugging:
-# TEST=ON
+TEST=ON
 
 BIDS=$1
 id=$2
@@ -33,7 +33,7 @@ nocleanup=$6
 changeTopupConfig=$7
 changeIcaFixTraining=$8
 thisMainScan=$9
-thisPhase=$10
+thisPhase=${10}
 
 here=`pwd`
 

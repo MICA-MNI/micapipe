@@ -292,7 +292,7 @@ Error "A processing flag is missing:
 help; exit 1; fi
 
 # Optional arguments rs-fmri
-optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisMainPhase $thisRevPhase)
+optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisPhase)
 if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile; else optarg_rsfmri[0]=DEFAULT; fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else optarg_rsfmri[1]=DEFAULT; fi
 if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
