@@ -86,7 +86,7 @@ for parc in ${all_parcellations}; do
     echo completed "$parc"
 done
 
-rm -rf ${outPath}/*.func.gii
+Do_cmd rm -rf ${outPath}/*.func.gii
 
 #------------------------------------------------------------------------------#
 # Clean temporary directory and fsaverage5

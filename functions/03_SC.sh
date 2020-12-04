@@ -67,8 +67,8 @@ if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi";
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits then EXIT
 N=`ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l`
-if [ $N -gt 3 ]; then Error "Subject $id already have some connectomes. If you want to re-run -FC first clean the outpus:
-        micapipe_cleanup -FC -sub $id -out $out -bids $BIDS"; Do_cmd exit; fi
+if [ $N -gt 3 ]; then Error "Subject $id already have some connectomes. If you want to re-run -SC first clean the outpus:
+        micapipe_cleanup -SC -sub $id -out $out -bids $BIDS"; Do_cmd exit; fi
 if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd exit; fi
 
 
