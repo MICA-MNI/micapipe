@@ -15,8 +15,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-# ONLY for scripting and debugging
-# TEST=ON
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m

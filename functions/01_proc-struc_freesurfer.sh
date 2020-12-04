@@ -15,8 +15,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-# ONLY for scripting and debugging
-# TEST=ON
 # FastSurfer
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer

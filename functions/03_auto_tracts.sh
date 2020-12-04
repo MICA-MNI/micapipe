@@ -1,5 +1,5 @@
 #!/bin/bash
-# TEST=ON
+#
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=`dirname $(realpath $0)`
 MICAPIPE=`dirname $(realpath $dir_functions)`

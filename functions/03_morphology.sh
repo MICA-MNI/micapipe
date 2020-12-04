@@ -17,9 +17,6 @@
 #   $2 : participant
 #   $3 : Out Directory
 #
-# ONLY for scripting and debugging:
-# TEST=ON
-# source utilities
 
 BIDS=$1
 id=$2

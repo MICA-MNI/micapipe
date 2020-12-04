@@ -15,8 +15,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-# ONLY for scripting and debugging:
-# TEST=ON
 
 BIDS=$1
 id=$2

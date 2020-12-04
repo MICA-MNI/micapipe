@@ -11,8 +11,6 @@
 #            The resulting warp fields are then applied to each anamical image to anonymize the face
 #
 #
-# ONLY for scripting and debugging
-# TEST=ON
 #
 # source print funtions for MICAPIPE
 source ${MICAPIPE}/functions/utilities.sh
