@@ -248,7 +248,7 @@ fi
 #     Do_cmd fslmaths $T1nativepro_in_dwi -mul $tmp_mask $dwi_T1_masked
 #     Do_cmd ImageMath 3 dwi_b0_matched.nii.gz HistogramMatch dwi_b0_inv.nii.gz $dwi_T1_masked
 #
-#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz  -o $str_dwiT1_2_b0 -t so -n $CORES -p d
+#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz -o $str_dwiT1_2_b0 -t bo -n $CORES -p d
 #     Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1nativepro_in_dwi -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $T1nativepro_in_dwi -v
 #     Do_cmd antsApplyTransforms -d 3 -e 3 -i $dwi_5tt -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $dwi_5tt -v
 # else
@@ -260,7 +260,7 @@ fi
 dwi_FA=$proc_dwi/${id}_dti_FA.mif
 if [[ ! -f $dwi_FA ]]; then
       Info "Calculating basic DTI metrics"
-      dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr ${tmp}/${id}_dti.mif
+      dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr $proc_dwi/${id}_dti.mif
       tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
       # Step QC
       if [[ -f ${dwi_FA} ]]; then ((Nsteps++)); fi
