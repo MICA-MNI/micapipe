@@ -24,7 +24,9 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+threads=$7
 here=`pwd`
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -45,10 +47,7 @@ if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesur
 #------------------------------------------------------------------------------#
 Title "Running MICA Morphology processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-post
-
-# GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
 Info "Not erasing temporal dir: $nocleanup"
 

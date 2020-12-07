@@ -50,8 +50,10 @@ OPTIONS:
       -minStreamlinesPerVoxel <int>  Streamlines are truncated if voxel contains
                                      less than this number of streamlines.
                                      Default is $minStreamlinesPerVoxel
-      -robust           : This option to runs a more ROBUST SyN registration (More computation time)
-      -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2 
+      -robust           : This option to runs a more ROBUST SyN registration ( More computation time )
+      -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2
+      -threads <int>    : Number of threads (Default is 6)
+
 
 
 USAGE:
@@ -103,6 +105,10 @@ do
   -robust)
     robust=TRUE
     shift
+  ;;
+  -threads)
+    threads=$2
+    shift;shift
   ;;
   -minStreamlinesPerVoxel)
     minStreamlinesPerVoxel=$2

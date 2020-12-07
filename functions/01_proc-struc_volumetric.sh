@@ -22,6 +22,7 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+threads=$7
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -45,7 +46,7 @@ bids_print.variables
 Info "Not erasing temporal dir: $nocleanup"
 
 # GLOBAL variables for this script
-Info "ANTs will use $CORES CORES"
+Info "ANTs will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
@@ -94,7 +95,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
           T1mat=${T1mat_str}0GenericAffine.mat
           T1run_2_T1=${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz
 
-          Do_cmd antsRegistrationSyN.sh -d 3 -m ${bids_T1ws[i]} -f $ref  -o $T1mat_str -t a -n $CORES -p d
+          Do_cmd antsRegistrationSyN.sh -d 3 -m ${bids_T1ws[i]} -f $ref  -o $T1mat_str -t a -n $threads -p d
           Do_cmd antsApplyTransforms -d 3 -i ${bids_T1ws[i]} -r $ref -t $T1mat -o $T1run_2_T1 -v -u int
       done
       # Calculate the mean over all T1w registered to the 1st t1w run
@@ -184,19 +185,10 @@ for mm in 2 0.8; do
       T1_MNI152_brain=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain.nii.gz
 
       # ANTs - 3 steps registration: rigid, affine and SyN
-        # NOTE: define the numbers of cores somehow
-      Do_cmd antsRegistrationSyN.sh -d 3 -f $MNI152_brain -m $T1nativepro_brain -o ${mat_MNI152_SyN} -t s -n $CORES
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $MNI152_brain -m $T1nativepro_brain -o ${mat_MNI152_SyN} -t s -n $threads
 
       # Nativepro to MNI152, first the brain then the full volume
       Do_cmd mv $T1_MNI152_warped $T1_MNI152_brain
-      #antsApplyTransforms -d 3 -i ${T1nativepro} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${T1_MNI152}
-
-      # Warp the T1 nativepro FAST to MNI152 WHAT for??? <<<<<<<<<< still don't know what for
-      # T1str_nat_brain=${T1nativepro_brain/.nii.gz/_}
-      # new_str=${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_
-      # for fst in mixeltype.nii.gz pve_0.nii.gz pve_1.nii.gz pve_2.nii.gz pveseg.nii.gz seg.nii.gz; do
-      #     Do_cmd antsApplyTransforms -d 3 -i ${T1str_nat_brain}${fst} -r $MNI152_brain -n linear -t ${T1_MNI152_warp} -t ${T1_MNI152_affine} -o ${new_str}${fst}
-      # done
 
   else
       Info "Subject ${id} has t1w_${mm}mm_nativepro on MNI152 space and FSL-fast "
@@ -205,7 +197,6 @@ done
 
 # Generate a five-tissue-type image for anatomically constrained tractography
 if [[ ! -f $T1nativepro_5tt ]]; then
-    # Do fast first
     # --------------------------------------------------------------
     # Step by step 5tt
     # Process data in tmp directory
@@ -262,4 +253,4 @@ eri=`echo print $eri/60 | perl`
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-volumetric_*.txt`"
-echo "${id}, proc_struc, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, proc_struc, COMPLETED, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv

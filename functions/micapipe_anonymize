@@ -16,32 +16,39 @@
 source ${MICAPIPE}/functions/utilities.sh
 
 help() {
-echo -e "\033[38;5;141m
-Usage:    `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <FULL_PATH/outputDirectory> \033[38;5;197m-bids\033[0m <FULL_PATH/BIDS-directory>\n
-\t\t\033[38;5;197m-sub\033[0m 	Subject identification (no 'sub-')
-\t\t\033[38;5;197m-out\033[0m 	Output directory for the processed files <anat ORIG and face-warps>.
-\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory
+echo -e "
+\033[38;5;141mCOMMAND:\033[0m
+   `basename $0`
 
-\tMethods:
-\t\t\033[38;5;197m-refacePro\033[0m 	Method to anonymize the anat images by creating a new Warped-face
-\t\t\033[38;5;197m-reface\033[0m 	Method to anonymize the anat images by creating a new face
-\t\t\033[38;5;197m-deface\033[0m 	Method to anonymize the anat images by erasing the face
-\t\t\033[38;5;197m-all\033[0m 	        Runs all the previous algorithms
+\033[38;5;141mARGUMENTS:\033[0m
+\t\033[38;5;197m-sub\033[0m 	        : Subject identification (no 'sub-')
+\t\033[38;5;197m-out\033[0m      	: Output directory for the processed files <anat ORIG and face-warps>.
+\t\033[38;5;197m-bids\033[0m      	: Path to BIDS directory
 
-\t\t\033[38;5;197m-dilate\033[0m 	Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
-\t\t\033[38;5;197m-robust\033[0m 	If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
-\t\033[38;5;197m-nocleanup\033[0m 	 : Do NOT DELETE temporal directory at script completion.
+   Methods:
+\t\033[38;5;197m-refacePro\033[0m 	: Method to anonymize the anat images by creating a new Warped-face
+\t\033[38;5;197m-reface\033[0m 	: Method to anonymize the anat images by creating a new face
+\t\033[38;5;197m-deface\033[0m 	: Method to anonymize the anat images by erasing the face
+\t\033[38;5;197m-all\033[0m 	        : Runs all the previous algorithms
 
+\033[38;5;141mOPTIONAL ARGUMENTS:\033[0m
+\t\033[38;5;197m-dilate\033[0m 	: Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
+\t\033[38;5;197m-robust\033[0m 	: If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
+\t\033[38;5;197m-nocleanup\033[0m 	: Do NOT DELETE temporal directory at script completion.
+\t\033[38;5;197m-threads\033[0m        : Number of threads (Default is 6)
 
-Warning: ANONYMIZEs the anatomical images from the BIDS directory
-         The anonimized images will be saved in the OUT directory
-         Is up to the user to replace the BIDS anatomical by the outputs of this script
-         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES
+\033[38;5;141mUSAGE:\033[0m
+\033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
-Software versions requirements:
-        ANTs        2.3.3 (https://github.com/ANTsX/ANTs)
-        FSL        19.0.18 or 20.1.12 (https://afni.nimh.nih.gov/download)
-        AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
+\033[38;5;141mDEPENDENCIES:\033[0m
+    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
+    > FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+    > AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
+
+\033[38;5;141mWARNING:\033[0m ANONYMIZEs the anatomical images from the BIDS directory
+             The anonimized images will be saved in the OUT directory
+             Is up to the user to replace the BIDS anatomical by the outputs of this script
+             We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES
 
 
 RRC
@@ -101,6 +108,10 @@ do
     robust=TRUE
     shift
   ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
   -nocleanup)
     nocleanup=TRUE
     shift
@@ -116,11 +127,11 @@ done
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
 if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:"
-Note "-sub " $id
-Note "-out " "$out"
-Note "-bids " "$BIDS"
-help; exit 0; fi
+Error "One or more mandatory arguments are missing:
+               -sub  : $id
+               -out  : $out
+               -bids : $BIDS"
+help; exit 1; fi
 
 # Number of session (Default is "ses-pre")
 if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -refacePro or -all"; help; exit; fi
@@ -136,8 +147,8 @@ if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 # Dilate (Default is 6)
 if [ -z ${dil} ]; then dil=6; fi
 
-# CORES should be defined as GLOBAL variable maybe
-if [[ -z $CORES ]]; then CORES=6; Info "ANTs will use $CORES CORES"; fi
+# THREADS should be defined as GLOBAL variable maybe
+if [[ -z $threads ]]; then export threads=6; Info "ANTs will use $threads threads"; fi
 
 # Assigns BIDS variables names
 bids_variables $BIDS $id $out $SES
@@ -168,6 +179,7 @@ mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
 
 #------------------------------------------------------------------------------#
 Title "Running MICA-anonymize by $METHOD method(s)"
+Info "micapipe will use $threads threads for multicore processing"
 
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${id}
@@ -204,7 +216,7 @@ Do_cmd cd $tmp
 T1w_run1_str=${t1w_run1/.nii.gz/}
 T1w_2_MICs=${tmp}/T1w_2_MICs60
 T1w_2_mics_mat=${T1w_2_MICs}_0GenericAffine.mat
-Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $CORES -p f
+Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $threads -p f
 if [ ! -f ${T1w_2_mics_mat} ]; then Error "Affine registration failed"; cd $here;  Do_cmd exit 0; fi
 
 # -----------------------------------------------------------------------------------------------
@@ -263,9 +275,9 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
         face_mat=${T1wrefaced}_0GenericAffine.mat
 
         if [[ ${robust} == TRUE ]]; then
-            Do_cmd antsRegistrationSyN.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t s -n $CORES -p f
+            Do_cmd antsRegistrationSyN.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t s -n $threads -p f
         else
-            Do_cmd antsRegistrationSyNQuick.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t s -n $CORES -p f
+            Do_cmd antsRegistrationSyNQuick.sh -d 3 -x $T1w_mask_inv -f $refaced -m $T1_orig -o ${T1wrefaced}_ -t s -n $threads -p f
         fi
 
         # Face-mask the warpfield
@@ -282,7 +294,7 @@ if [ -f $niiT1map_pwd ]; then
     Info "REGISTERING $T1map_inv1 to $T1w_run1_str"
     niiT1map_out=${T1map_inv1/.nii.gz/_}
     niiT1map_2_T1_mat=${niiT1map_out}0GenericAffine.mat
-    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $niiT1map_pwd -o $niiT1map_out -t a -n $CORES -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $niiT1map_pwd -o $niiT1map_out -t a -n $threads -p d
 fi
 
 # Loop over all the other structural images (including non T1w volumes)
@@ -298,7 +310,7 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
       Info "REGISTERING $nii_pwd to $T1w_run1_str"
       nii_out=${tmp}/${nii/.nii.gz/_}
       nii_2_T1_mat=${nii_out}0GenericAffine.mat
-      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $CORES -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
   fi
 
   # -----------------------------------------------------------------------------------------------

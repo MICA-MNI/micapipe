@@ -25,7 +25,9 @@ PROC=$5
 input_im=$6
 input_lta=$7
 nocleanup=$8
+threads=$9
 here=`pwd`
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -66,11 +68,8 @@ fi
 #------------------------------------------------------------------------------#
 Title "Running MICA MPC processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-post
 Info "Not erasing temporal dir: $nocleanup"
-
-# GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer

@@ -22,7 +22,9 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+threads=$7
 here=`pwd`
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -47,10 +49,7 @@ if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere
 #------------------------------------------------------------------------------#
 Title "Running MICA Geodesic distance processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-post
-
-# GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
@@ -86,8 +85,6 @@ done
 Do_cmd rm -rf ${outPath}/*.func.gii
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory and fsaverage5
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)

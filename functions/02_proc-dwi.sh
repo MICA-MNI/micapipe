@@ -22,6 +22,7 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+threads=$7
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -55,12 +56,9 @@ done
 #------------------------------------------------------------------------------#
 Title "Running MICA Diffusion Weighted Imaging processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-dwi
-
-# GLOBAL variables for this script
 Info "Not erasing temporal dir: $nocleanup"
-Info "ANTs will use $CORES CORES"
+Info "ANTs and MRtrix will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
@@ -96,15 +94,15 @@ Info "DWI denoise, bias filed correction and concatenation"
       if [ "${#bids_dwis[@]}" -eq 1 ]; then
         cp ${tmp}/*.mif $dwi_cat
       else
-        Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $CORES
+        Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $threads
       fi
 
       # Denoise DWI and calculate residuals
-      Do_cmd dwidenoise $dwi_cat $dwi_dns -nthreads $CORES
-      Do_cmd mrcalc $dwi_cat $dwi_dns -subtract ${proc_dwi}/${id}_dwi_residuals.mif -nthreads $CORES
+      Do_cmd dwidenoise $dwi_cat $dwi_dns -nthreads $threads
+      Do_cmd mrcalc $dwi_cat $dwi_dns -subtract ${proc_dwi}/${id}_dwi_residuals.mif -nthreads $threads
 
       # Bias field correction DWI
-      Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $CORES -scratch $tmp
+      Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $threads -scratch $tmp
       # Step QC
       if [[ -f ${dwi_n4} ]]; then ((Nsteps++)); fi
 else
@@ -129,7 +127,7 @@ if [[ ! -f $dwi_corr ]]; then
       mrconvert $dwi_n4 $dwi_4proc -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
 
       # Get the mean b-zero (un-corrected)
-      dwiextract -nthreads $CORES $dwi_n4 - -bzero | mrmath - mean ${tmp}/b0_meanMainPhase.mif -axis 3
+      dwiextract -nthreads $threads $dwi_n4 - -bzero | mrmath - mean ${tmp}/b0_meanMainPhase.mif -axis 3
 
       # Processing the reverse encoding b0
       if [ -f $dwi_reverse ]; then
@@ -138,8 +136,8 @@ if [[ ! -f $dwi_corr ]]; then
             dwi_reverse_str=`echo $dwi_reverse | awk -F . '{print $1}'`
 
             Do_cmd mrconvert $dwi_reverse -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif
-            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $CORES
-            Do_cmd mrcat ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanReversePhase.mif $b0_pair_tmp -nthreads $CORES
+            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $threads
+            Do_cmd mrcat ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanReversePhase.mif $b0_pair_tmp -nthreads $threads
 
             # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
             dim=`mrinfo $b0_pair_tmp -size`
@@ -160,8 +158,8 @@ if [[ ! -f $dwi_corr ]]; then
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force"
-      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $CORES -nocleanup -scratch $tmp -force
+      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $threads -nocleanup -scratch $tmp -force"
+      dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $threads -nocleanup -scratch $tmp -force
       # Step QC
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
@@ -190,10 +188,10 @@ mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
 if [[ ! -f $T1nativepro_in_dwi ]]; then
       Info "Registering DWI b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
-      dwiextract -force -nthreads $CORES $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3 -force
+      dwiextract -force -nthreads $threads $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3 -force
 
       # Register DWI-b0 mean corrected to T1nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $dwi_b0 -o $str_dwi_affine -t a -n $CORES -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $dwi_b0 -o $str_dwi_affine -t a -n $threads -p d
       # Apply transformation DWI-b0 space to T1nativepro
       Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
       # Apply inverse transformation T1nativepro to DWI-b0 space
@@ -248,7 +246,7 @@ fi
 #     Do_cmd fslmaths $T1nativepro_in_dwi -mul $tmp_mask $dwi_T1_masked
 #     Do_cmd ImageMath 3 dwi_b0_matched.nii.gz HistogramMatch dwi_b0_inv.nii.gz $dwi_T1_masked
 #
-#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz -o $str_dwiT1_2_b0 -t bo -n $CORES -p d
+#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz -o $str_dwiT1_2_b0 -t bo -n $threads -p d
 #     Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1nativepro_in_dwi -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $T1nativepro_in_dwi -v
 #     Do_cmd antsApplyTransforms -d 3 -e 3 -i $dwi_5tt -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $dwi_5tt -v
 # else
@@ -260,8 +258,8 @@ fi
 dwi_FA=$proc_dwi/${id}_dti_FA.mif
 if [[ ! -f $dwi_FA ]]; then
       Info "Calculating basic DTI metrics"
-      dwi2tensor -mask $dwi_mask -nthreads $CORES $dwi_corr $proc_dwi/${id}_dti.mif
-      tensor2metric -nthreads $CORES -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
+      dwi2tensor -mask $dwi_mask -nthreads $threads $dwi_corr $proc_dwi/${id}_dti.mif
+      tensor2metric -nthreads $threads -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
       # Step QC
       if [[ -f ${dwi_FA} ]]; then ((Nsteps++)); fi
 else
@@ -286,26 +284,26 @@ if [[ ! -f $fod ]]; then
             fod_gm=${tmp}/${id}_gm_fod.mif
             fod_csf=${tmp}/${id}_csf_fod.mif
 
-            Do_cmd dwi2response $rf -nthreads $CORES $dwi_corr $rf_wm $rf_gm $rf_csf -mask $dwi_mask
-            Do_cmd dwi2fod -nthreads $CORES msmt_csd $dwi_corr \
+            Do_cmd dwi2response $rf -nthreads $threads $dwi_corr $rf_wm $rf_gm $rf_csf -mask $dwi_mask
+            Do_cmd dwi2fod -nthreads $threads msmt_csd $dwi_corr \
                 $rf_wm $fod_wm \
                 $rf_gm $fod_gm \
                 $rf_csf $fod_csf \
                 -mask $dwi_mask
       if [ "${#shells[@]}" -ge 2 ]; then
-            Do_cmd mtnormalise $fod_wm $fod $fod_gm $fod_gmN $fod_csf $fod_csfN -nthreads $CORES -mask $dwi_mask
+            Do_cmd mtnormalise $fod_wm $fod $fod_gm $fod_gmN $fod_csf $fod_csfN -nthreads $threads -mask $dwi_mask
       else
       #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
       #
-      #       Do_cmd dwi2response tournier -nthreads $CORES $dwi_corr \
+      #       Do_cmd dwi2response tournier -nthreads $threads $dwi_corr \
       #           ${proc_dwi}/${id}_response_tournier.txt \
       #           -mask $dwi_mask
-      #       Do_cmd dwi2fod -nthreads $CORES csd \
+      #       Do_cmd dwi2fod -nthreads $threads csd \
       #           $dwi_corr \
       #           ${proc_dwi}/${id}_response_tournier.txt  \
       #           ${tmp}/FOD.mif \
       #           -mask $dwi_mask
-            Do_cmd mtnormalise -nthreads $CORES -mask $dwi_mask $fod_wm $fod
+            Do_cmd mtnormalise -nthreads $threads -mask $dwi_mask $fod_wm $fod
       fi
       # Step QC
       if [[ -f ${fod} ]]; then ((Nsteps++)); fi
@@ -318,7 +316,7 @@ fi
 tdi=${proc_dwi}/${id}_tdi_iFOD1-1M.mif
 if [[ ! -f $tdi ]]; then
       tract=${tmp}/${id}_QC_iFOD1_1M.tck
-      Do_cmd tckgen -nthreads $CORES \
+      Do_cmd tckgen -nthreads $threads \
           $fod \
           $tract \
           -act $dwi_5tt \
@@ -332,7 +330,7 @@ if [[ ! -f $tdi ]]; then
           -step .5 \
           -cutoff 0.06 \
           -algorithm iFOD1
-      Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tract $tdi
+      Do_cmd tckmap -vox 1,1,1 -dec -nthreads $threads $tract $tdi
       # Step QC
       if [[ -f ${tdi} ]]; then ((Nsteps++)); fi
 else
