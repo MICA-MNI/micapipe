@@ -51,6 +51,7 @@ OPTIONS:
                                      less than this number of streamlines.
                                      Default is $minStreamlinesPerVoxel
       -robust           : This option to runs a more ROBUST SyN registration (More computation time)
+      -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2 
 
 
 USAGE:
