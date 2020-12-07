@@ -171,6 +171,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_anonymize_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
+# TRAP in case the script fails
+trap CLEANUP EXIT INT TERM
+
 # Assign variables
 mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
 mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz

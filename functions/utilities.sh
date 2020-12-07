@@ -273,3 +273,10 @@ text=$1
 if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118mCOMMAND -->  \033[38;5;122m${text}  \033[0m"; fi
 eval $text
 }
+
+function CLEANUP() {
+  Error "something went wrong, check the logs"
+  rm -rf $tmp
+  unset tmp
+  cd $here
+}
