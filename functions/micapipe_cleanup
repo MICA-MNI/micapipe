@@ -12,8 +12,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-# ONLY for scripting and debugging:
-# TEST=ON
 
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -111,6 +109,10 @@ do
     postDWI=TRUE
     shift
   ;;
+  -tracts)
+    tracts=$2
+    shift;shift
+  ;;
   -MPC)
     postMPC=TRUE
     shift
@@ -158,6 +160,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Remove temporary directories <<<<<< Will replace for cleanup tramp
 # Do_cmd rm -rf ${tmp}/*micapipe* ${tmp}/*proc* ${tmp}/*post*
 
+# Optional arguments SC
+if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+
 # ---------------------------------------------------------------------------------------
 Title "MICA pipe cleanup \n\t\tSubject: $id"
 
@@ -200,7 +205,13 @@ fi
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     Warning "Erasing post_tractography output files"
-    Do_cmd rm -rf ${proc_dwi}/connectomes ${proc_dwi}/QC/png/${id}_*connectome.png ${proc_dwi}/QC/png/${id}_*edgeLengths.png ${proc_dwi}/${id}_tdi_iFOD2-*.mif ${proc_dwi}/${id}_dwi_subcortical.nii.gz ${proc_dwi}/${id}_dwi_cerebellum.nii.gz $proc_dwi/auto_tract 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
+    Do_cmd rm -rf ${proc_dwi}/connectomes/${id}_${tracts}* \
+                  ${proc_dwi}/QC/png/${id}_${tracts}_*connectome.png \
+                  ${proc_dwi}/QC/png/${id}_${tracts}_*edgeLengths.png \
+                  ${proc_dwi}/${id}_${tracts}_tdi_iFOD2-*.mif \
+                  ${proc_dwi}/${id}_dwi_subcortical.nii.gz \
+                  ${proc_dwi}/${id}_dwi_cerebellum.nii.gz \
+                  $proc_dwi/auto_tract/${id}_${tracts}* 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
 fi
 
 # ---------------------------------------------------------------------------------------
