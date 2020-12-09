@@ -1,25 +1,24 @@
 ![micapipe logo](/docs/figures/micapipe_long.png)
 
-## Multimodal connectome processing with the `micapipe`  
+## Multimodal connectome processing with the `micapipe` ##
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    
-The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. 
-The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
+> The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. 
+> The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
-## Documentation    
+## Documentation ##
 You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/) 
   
-## Advantages  
-- Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)). 
-- Multiple parcellations (18 x 3). 
-- Includes cerebellum and subcortical areas. 
-- Surface based analysis. 
-- Latest version of software dependencies. 
-- Ready to use outputs. 
-- Easy to use. 
-- Standardized format (BIDS). 
-
-
+## Advantages ##
+- Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)).  
+- Multiple parcellations (18 x 3).  
+- Includes cerebellum and subcortical areas.  
+- Surface based analysis.  
+- Latest version of software dependencies.  
+- Ready to use outputs.  
+- Easy to use.  
+- Standardized format (BIDS).  
+ 
 ## Dependencies
 | *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
@@ -86,13 +85,13 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 |                |          |          codetools |  0.2-16  |           compiler |  3.6.3    |
 
 ## `micapipe` usage examples  
-### Optional Flags:  
+### Optional Flags  
 Will keep the temporal directory, and the session name is defined as "ses-01"
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -ses 01 -nocleanup -proc_structural
 ```
 
-### First stage basic processing:
+### First stage basic processing
 #### Volumetric processing
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural
@@ -103,13 +102,12 @@ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_freesurfer
 ```
 
-
 #### Runs both modules of first stage: *volumetric* and *freesurfer*
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural -proc_freesurfer
 ```
 
-### Second stage processing (requires stage 1 completed):  
+### Second stage processing (requires stage 1 completed)  
 #### Post structural volumetric processing  
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_structural
@@ -120,7 +118,7 @@ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_dwi
 ```
 
-### Third stage processing (requires stage 1 and 2 completed):
+### Third stage processing (requires stage 1 and 2 completed)
 #### Resting state Funtional MRI processing and functional connectome
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_rsfmri
@@ -141,23 +139,22 @@ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -MPC
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -GD
 ```
 
-### Further analysis (requires stages 1,2 and 3 completed):
+### Further analysis (requires stages 1,2 and 3 completed)
 #### Cortical morphology analysis
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_morph
 ```
 
-### Run all processing stages:
+### Run all processing stages
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -all
 ```
-### Quality check (under development):  
+### Quality check (under development)  
 This module can be used at any stage of processing
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -QC
 ```  
 
 ## Acknowledgements  
-
 
 ## License information  
