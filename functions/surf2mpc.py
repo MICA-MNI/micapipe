@@ -12,15 +12,21 @@
 # profiles and MPC matrices as a text files in the subject's BIDS folder, 
 # alongside the preconstructed equivolumetric surfaces."
 
+# Note that non cortical parcels should be excluded from the MPC computation.
+# This script excludes nodes at index = 0 and = nUniqueParcels/2, as it assumes that these entries are the position of the left and right medial wall.
+# We thus recommend to format any annotation labels accordingly, i.e. with the medial wall in the first position.
+
 # INPUT
 # dataDir 		BIDS derivatives directory
 # sub 			subject id
+# ses_num       session designation
 # num_surf		surface solution number (default is 14)
 # parc_name		name of parcellation in annotation file (default is vosdewael 200)
 
 # EXAMPLE INPUTS FOR MICS
 # dataDir = '/data_/mica3/BIDS_MIC/derivatives/' 
 # sub = 'HC012'
+# ses_num = '01'
 # num_surf = 14
 # parc_name = 'vosdewael-200_mics.annot'
 ####################################################################################################
@@ -36,15 +42,15 @@ from build_mpc import build_mpc
 # Define input arguments
 dataDir = sys.argv[1] 
 sub = sys.argv[2]
-num_surf = sys.argv[3]
-parc_name = sys.argv[4]
-ses_num = sys.argv[5]
+ses_num = sys.argv[3]
+num_surf = sys.argv[4]
+parc_name = sys.argv[5]
 
-# Define default inpute if none given
-if len(sys.argv) < 4:
+# Define default input if none given
+if len(sys.argv) < 5:
     parc_name = 'vosdewael-200_mics.annot'
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 4:
     num_surf = 14
 
 # setting output directory
