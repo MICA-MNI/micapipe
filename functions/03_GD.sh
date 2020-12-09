@@ -23,7 +23,6 @@ SES=$4
 PROC=$5
 nocleanup=$6
 threads=$7
-here=`pwd`
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -53,7 +52,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 #------------------------------------------------------------------------------#
 # Set up parameters
@@ -93,3 +91,4 @@ eri=`echo print $eri/60 | perl`
 Title "Post-GD processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-gd_*.txt"
 echo "${id}, post_gd, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

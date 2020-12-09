@@ -33,7 +33,6 @@ changeIcaFixTraining=$8
 thisMainScan=$9
 thisPhase=${10}
 threads=${11}
-here=`pwd`
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -155,7 +154,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -600,3 +598,4 @@ eri=`echo print $eri/60 | perl`
 Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-rsfmri_*.txt`"
 echo "${id}, proc_rsfmri, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

@@ -358,9 +358,8 @@ done
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-cd $here
+Do_cmd cd $here
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp ${out_warps}/anat; else Info "tmp directory was not erased: ${tmp}"; fi
-
 Note "Temporal directory:  " $tmp
 Note "Output directory:    " $out_warps
 
@@ -370,3 +369,4 @@ lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
+bids_variables_unset

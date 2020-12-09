@@ -225,6 +225,7 @@ N=`ls -R */*json | wc -l`
 echo "sub-${Subj} $N $SUBJ_DCM" >> ${BIDS_DIR}/participants.tsv
 
 # Go back to initial directory
-cd $here
+Do_cmd cd $here
 
 Info "Remember to validate your BIDS directory:\nhttp://bids-standard.github.io/bids-validator/"
+bids_variables_unset

@@ -140,7 +140,6 @@ micapipe_software
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nparc=0
 
 # if temporary directory is empty
@@ -149,7 +148,7 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-cd ${tmp}
+cd $tmp
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -187,8 +186,8 @@ done
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
+Do_cmd cd $here
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
-cd $here
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -201,3 +200,4 @@ Title "CONNECTOME SLICER processing ended in \033[38;5;220m `printf "%0.3f\n" ${
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/56
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
+bids_variables_unset

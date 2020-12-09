@@ -25,7 +25,6 @@ SES=$4
 PROC=$5
 nocleanup=$6
 threads=$7
-here=`pwd`
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -53,7 +52,6 @@ Info "Not erasing temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -209,3 +207,4 @@ eri=`echo print $eri/60 | perl`
 Title "Post-Morphology processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-morph_*.txt"
 echo "${id}, post_morpho, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

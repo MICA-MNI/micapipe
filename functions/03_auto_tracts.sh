@@ -164,7 +164,6 @@ Title "Running Auto-Tractography segmentation"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # Create temp directory
 if [ -z ${tmp} ]; then tmp=tmp_autotract_$$; else tmp=$tmp/autotract_$$; fi
@@ -280,7 +279,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-cd $here
+Do_cmd cd $here
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -289,3 +288,4 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 Title "Auto-Tracto ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
+bids_variables_unset

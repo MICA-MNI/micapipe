@@ -239,7 +239,7 @@ if [[ ! -f $T1nativepro_5tt ]]; then
     mrcat cgm.mif sgm.mif wm.mif csf.mif path.mif - -axis 3 | mrconvert - combined_precrop.mif -strides +2,+3,+4,+1
     Do_cmd mv combined_precrop.mif result.mif
     Do_cmd mrconvert result.mif $T1nativepro_5tt
-    cd $here
+    Do_cmd cd $here
 else
     Info "Subject ${id} has 5TT nifti"
 fi
@@ -257,3 +257,4 @@ eri=`echo print $eri/60 | perl`
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-volumetric_*.txt`"
 echo "${id}, proc_struc, COMPLETED, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

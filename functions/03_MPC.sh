@@ -26,7 +26,6 @@ input_im=$6
 input_lta=$7
 nocleanup=$8
 threads=$9
-here=`pwd`
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -74,7 +73,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
@@ -229,3 +227,4 @@ eri=`echo print $eri/60 | perl`
 Title "Post-MPC processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-mpc_*.txt"
 echo "${id}, post_mpc, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

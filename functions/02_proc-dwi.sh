@@ -342,7 +342,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
-cd $here
+Do_cmd cd $here
 if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
@@ -359,3 +359,4 @@ Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes 
 `ls ${dir_logs}/proc-dwi_*.txt`"
 # Print QC stamp
 echo "${id}, proc_dwi, $status N=`printf "%02d" $Nsteps`/08, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

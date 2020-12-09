@@ -23,7 +23,6 @@ SES=$4
 PROC=$5
 nocleanup=$6
 threads=$7
-here=`pwd`
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -57,7 +56,6 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nfiles=0
 
 # if temporary directory is empty
@@ -208,3 +206,4 @@ Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${er
 `ls ${dir_logs}/post-structural_*.txt`"
 # Print QC stamp
 echo "${id}, post_structural, $status N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset
