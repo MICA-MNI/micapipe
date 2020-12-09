@@ -10,14 +10,14 @@
 You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/) 
   
 ## Advantages ##
-- Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)).  
-- Multiple parcellations (18 x 3).  
-- Includes cerebellum and subcortical areas.  
-- Surface based analysis.  
-- Latest version of software dependencies.  
-- Ready to use outputs.  
-- Easy to use.  
-- Standardized format (BIDS).  
+-   Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)).  
+-   Multiple parcellations (18 x 3).  
+-   Includes cerebellum and subcortical areas.  
+-   Surface based analysis.  
+-   Latest version of software dependencies.  
+-   Ready to use outputs.  
+-   Easy to use.  
+-   Standardized format (BIDS).  
  
 ## Dependencies ##
 | *Software*   |     *Version*   | *Further info* |
@@ -59,7 +59,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | threadpoolctl   | 2.1.0     |
 | vtk             | 9.0.1     |
 
-### `R` libraries ### 
+### `R` libraries ###
 | *Core   library* |  *version* | *Dependency library* |  *version* | *Dependency library* |   *version* |
 |:--------------:|:--------:|:------------------:|:--------:|:------------------:|:---------:|
 |         plotly |  4.9.2.1 |         tidyselect |  1.1.0   |           parallel |  3.6.3    |
@@ -155,6 +155,6 @@ This module can be used at any stage of processing
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -QC
 ```  
 
-## Acknowledgements ## 
+## Acknowledgements ##
 
 ## License information ##
