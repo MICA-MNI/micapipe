@@ -168,55 +168,55 @@ bids_print.variables-rsfmri() {
 bids_variables_unset() {
   # This function unsets all the enviromentalk variables defined by
   # bids_variables
-  unset $scriptDir
-  unset $util_MNIvolumes
-  unset $util_parcelations
-  unset $util_lut
-  unset $util_surface
-  unset $util_mics
-  unset $subject
-  unset $subject_dir
-  unset $subject_bids
-  unset $proc_struct
-  unset $dir_first
-  unset $dir_volum
-  unset $dir_surf
-  unset $dir_freesurfer
-  unset $dir_conte69
-  unset $proc_dwi
-  unset $dwi_cnntm
-  unset $proc_rsfmri
-  unset $rsfmri_ICA
-  unset $rsfmri_volum
-  unset $rsfmri_surf
-  unset $dir_warp
-  unset $dir_logs
-  unset $dir_QC
-  unset $dir_QC_png
-  unset $T1nativepro
-  unset $T1nativepro_brain
-  unset $T1freesurfr
-  unset $T15ttgen
-  unset $T1fast_seg
-  unset $res
-  unset $lh_midsurf
-  unset $rh_midsurf
-  unset $T1str_nat
-  unset $mat_MNI152_SyN
-  unset $T1_MNI152_InvWarp
-  unset $T1_MNI152_affine
-  unset $MNI152_mask
-  unset $bids_mainScan
-  unset $bids_mainScanJson
-  unset $bids_mainPhase
-  unset $bids_reversePhase
-  unset $topupConfigFile
-  unset $icafixTraining
-  unset $bids_T1ws
-  unset $bids_dwis
-  unset $bids_T1map
-  unset $bids_inv1
-  unset $dwi_reverse
+  unset scriptDir
+  unset util_MNIvolumes
+  unset util_parcelations
+  unset util_lut
+  unset util_surface
+  unset util_mics
+  unset subject
+  unset subject_dir
+  unset subject_bids
+  unset proc_struct
+  unset dir_first
+  unset dir_volum
+  unset dir_surf
+  unset dir_freesurfer
+  unset dir_conte69
+  unset proc_dwi
+  unset dwi_cnntm
+  unset proc_rsfmri
+  unset rsfmri_ICA
+  unset rsfmri_volum
+  unset rsfmri_surf
+  unset dir_warp
+  unset dir_logs
+  unset dir_QC
+  unset dir_QC_png
+  unset T1nativepro
+  unset T1nativepro_brain
+  unset T1freesurfr
+  unset T15ttgen
+  unset T1fast_seg
+  unset res
+  unset lh_midsurf
+  unset rh_midsurf
+  unset T1str_nat
+  unset mat_MNI152_SyN
+  unset T1_MNI152_InvWarp
+  unset T1_MNI152_affine
+  unset MNI152_mask
+  unset bids_mainScan
+  unset bids_mainScanJson
+  unset bids_mainPhase
+  unset bids_reversePhase
+  unset topupConfigFile
+  unset icafixTraining
+  unset bids_T1ws
+  unset bids_dwis
+  unset bids_T1map
+  unset bids_inv1
+  unset dwi_reverse
 }
 
 t1w_str() {
@@ -336,6 +336,6 @@ function cleanup() {
   export PATH=$OLD_PATH
   unset OLD_PATH
   rm -rf $tmp
+  if [ ! -z "$here" ]; then cd $here; fi
   bids_variables_unset
-  cd $here
 }
