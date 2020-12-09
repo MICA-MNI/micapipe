@@ -164,7 +164,7 @@ tmp=${tmp}/${RANDOM}_micapipe_proc-rsfmri_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 # Set basic parameters.
 struct2fs=$(find $dir_warp -name "*t1w2fs.lta")

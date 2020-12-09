@@ -68,7 +68,7 @@ tmp=${tmp}/${RANDOM}_micapipe_post-morpho_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 # Make output directory
 outDir="$dir_surf"/morphology/

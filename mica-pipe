@@ -341,14 +341,6 @@ if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
     if [[ $? != 0 ]]; then
       Error "Could not find init file. Is this script in the\n base directory of the MICAPIPE github and in init \nfile in the functions subdirectory?"; exit 1
     fi
-    # ITS A TRAP! Specifically a trap that will reset the old user path upon exits,
-    # interrupts, and termination.
-    function cleanup() {
-      export PATH=$OLD_PATH
-      unset OLD_PATH
-      unset tmp
-    }
-    trap cleanup EXIT INT TERM
 else
     # -----------------------------------------------------------------------------------------------#
     #    PACKAGES DEPENDENCIES print versions

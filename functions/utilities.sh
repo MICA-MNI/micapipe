@@ -274,9 +274,13 @@ if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118mCOMMAND -->  \033[38;5;12
 eval $text
 }
 
-function CLEANUP() {
+function cleanup() {
+  # ITS A TRAP! Specifically a trap that will clean the temporal directory
+  # and reset the old user path upon,
+  # interrupts, and termination.
   Error "something went wrong, check the logs"
+  export PATH=$OLD_PATH
+  unset OLD_PATH
   rm -rf $tmp
-  unset tmp
   cd $here
 }

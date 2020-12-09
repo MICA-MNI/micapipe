@@ -83,7 +83,7 @@ tmp=${tmp}/${RANDOM}_micapipe_post-MPC_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}

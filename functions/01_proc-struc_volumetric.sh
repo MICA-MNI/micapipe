@@ -58,7 +58,7 @@ tmp=${tmp}/${RANDOM}_micapipe_proc_struc-vol_${subject}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w

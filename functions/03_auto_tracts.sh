@@ -171,7 +171,7 @@ if [ -z ${tmp} ]; then tmp=tmp_autotract_$$; else tmp=$tmp/autotract_$$; fi
 Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 cd $tmp
 

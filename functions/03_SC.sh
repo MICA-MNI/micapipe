@@ -91,7 +91,7 @@ tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 [[ ! -d $tmp ]] && Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
+trap cleanup INT TERM
 
 # Create Connectomes directory for the outpust
 [[ ! -d $dwi_cnntm ]] && Do_cmd mkdir -p $dwi_cnntm
