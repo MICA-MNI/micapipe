@@ -19,7 +19,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 - Easy to use.  
 - Standardized format (BIDS).  
  
-## Dependencies
+## Dependencies ##
 | *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
@@ -35,7 +35,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 
  > The FIX package (FMRIB's ICA-based Xnoiseifier) requires FSL, R and one of MATLAB Runtime Component, full MATLAB or Octave. We recommend the use of the MATLAB Runtime Component. Additionally, it requires the following R libraries:  'kernlab','ROCR','class','party','e1071','randomForest'
 
-### `python` packages
+### `python` packages ###
 |     *Package*     |  *Version*  |
 |:---------------:|:---------:|
 | brainspace      | 0.1.1     |
@@ -59,7 +59,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | threadpoolctl   | 2.1.0     |
 | vtk             | 9.0.1     |
 
-### `R` libraries  
+### `R` libraries ### 
 | *Core   library* |  *version* | *Dependency library* |  *version* | *Dependency library* |   *version* |
 |:--------------:|:--------:|:------------------:|:--------:|:------------------:|:---------:|
 |         plotly |  4.9.2.1 |         tidyselect |  1.1.0   |           parallel |  3.6.3    |
@@ -84,77 +84,77 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 |                |          |        htmlwidgets |  1.5.1   |                 R6 |  2.4.1    |
 |                |          |          codetools |  0.2-16  |           compiler |  3.6.3    |
 
-## `micapipe` usage examples  
-### Optional Flags  
+## `micapipe` usage examples ##
+### Optional Flags ###
 Will keep the temporal directory, and the session name is defined as "ses-01"
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -ses 01 -nocleanup -proc_structural
 ```
 
-### First stage basic processing
-#### Volumetric processing
+### First stage basic processing ###
+#### Volumetric processing ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural
 ```
 
-#### Freesurfer recon-all processing
+#### Freesurfer recon-all processing ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_freesurfer
 ```
 
-#### Runs both modules of first stage: *volumetric* and *freesurfer*
+#### Runs both modules of first stage: *volumetric* and *freesurfer* ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural -proc_freesurfer
 ```
 
-### Second stage processing (requires stage 1 completed)  
-#### Post structural volumetric processing  
+### Second stage processing (requires stage 1 completed) ###
+#### Post structural volumetric processing ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_structural
 ```
 
-#### DWI-Diffusion weighted images processing with MRtrix3
+#### DWI-Diffusion weighted images processing with MRtrix3 ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_dwi
 ```
 
-### Third stage processing (requires stage 1 and 2 completed)
-#### Resting state Funtional MRI processing and functional connectome
+### Third stage processing (requires stage 1 and 2 completed) ###
+#### Resting state Funtional MRI processing and functional connectome ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_rsfmri
 ```
 
-#### Structural connectome generation 
+#### Structural connectome generation ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -SC
 ```
 
-#### Microstructural profiles and covariance analysis
+#### Microstructural profiles and covariance analysis ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -MPC
 ```
 
-#### Geodesic distance analysis  
+#### Geodesic distance analysis ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -GD
 ```
 
-### Further analysis (requires stages 1,2 and 3 completed)
-#### Cortical morphology analysis
+### Further analysis (requires stages 1,2 and 3 completed) ###
+#### Cortical morphology analysis ####
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_morph
 ```
 
-### Run all processing stages
+### Run all processing stages ###
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -all
 ```
-### Quality check (under development)  
+### Quality check (under development) ###
 This module can be used at any stage of processing
 ``` bash
 mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -QC
 ```  
 
-## Acknowledgements  
+## Acknowledgements ## 
 
-## License information  
+## License information ##
