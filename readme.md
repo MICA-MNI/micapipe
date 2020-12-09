@@ -1,6 +1,9 @@
 ![micapipe logo](/docs/figures/micapipe_long.png)
 
 ## Multimodal connectome processing with the `micapipe` ##
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
+
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    
 > The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. 
