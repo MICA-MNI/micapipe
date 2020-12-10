@@ -55,7 +55,7 @@ bids_variables() {
     export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
     export T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
     export T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
-    export res=`mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}'`
+    export res=$(mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}')
   fi
 
   # Native midsurface in gifti format
@@ -70,18 +70,18 @@ bids_variables() {
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  export bids_mainScan=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.nii*`)       # main rsfMRI scan
-  export bids_mainScanJson=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.json`)   # main rsfMRI scan json
-  export bids_mainPhase=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse*.nii*`)     # main phase scan
-  export bids_reversePhase=(`ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse*.nii*`)  # reverse phase scan
+  export bids_mainScan=($(ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
+  export bids_mainScanJson=($(ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
+  export bids_mainPhase=($(ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
+  export bids_reversePhase=($(ls ${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
   # BIDS Files
-  export bids_T1ws=(`ls ${subject_bids}/anat/*T1w.nii*`)
-  export bids_dwis=(`ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii*`)
+  export bids_T1ws=($(ls ${subject_bids}/anat/*T1w.nii* 2>/dev/null))
+  export bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
   export bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
   export bids_inv1=${subject_bids}/anat/*inv1*.nii*
   export dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
@@ -120,9 +120,9 @@ bids_print.variables-post() {
   Note "out  =" $out
 
   Info "mica-pipe variables:"
-  Note "T1 nativepro    =" `ls $T1nativepro`
-  Note "T1 5tt          =" `ls $T15ttgen`
-  Note "T1 fast_all     =" `ls $T1fast_seg`
+  Note "T1 nativepro    =" $(ls $T1nativepro 2>/dev/null)
+  Note "T1 5tt          =" $(ls $T15ttgen 2>/dev/null)
+  Note "T1 fast_all     =" $(ls $T1fast_seg 2>/dev/null)
   Note "T1 resolution   =" $res
 
   Info "mica-pipe directories:"
@@ -144,11 +144,11 @@ bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for DWI processing:"
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  Note "dwi_reverse     =" `find $dwi_reverse`
+  Note "dwi_reverse     =" $(find $dwi_reverse 2>/dev/null)
   Note "proc_dwi        =" $proc_dwi
 
-  Note "T1 nativepro    =" `find $T1nativepro`
-  Note "T1 5tt          =" `find $T15ttgen`
+  Note "T1 nativepro    =" $(find $T1nativepro 2>/dev/null)
+  Note "T1 5tt          =" $(find $T15ttgen 2>/dev/null)
   Note "T1 resolution   =" $res
   Note "MNI152_mask     =" $MNI152_mask
 }
@@ -156,13 +156,13 @@ bids_print.variables-dwi() {
 bids_print.variables-rsfmri() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for rs-fMRI processing:"
-  Note "T1 nativepro       =" `find $T1nativepro`
-  Note "Main rsfMRI        =" `find $mainScan`
-  Note "Main phase scan    =" `find $mainPhaseScan`
-  Note "Main reverse phase =" `find $reversePhaseScan`
-  Note "Main rsfMRI json   =" `find $mainScanJson`
-  Note "TOPUP config file  =" `find $topupConfigFile`
-  Note "ICA-FIX training   =" `find $icafixTraining`
+  Note "T1 nativepro       =" $(find $T1nativepro 2>/dev/null)
+  Note "Main rsfMRI        =" $(find $mainScan 2>/dev/null)
+  Note "Main phase scan    =" $(find $mainPhaseScan 2>/dev/null)
+  Note "Main reverse phase =" $(find $reversePhaseScan 2>/dev/null)
+  Note "Main rsfMRI json   =" $(find $mainScanJson 2>/dev/null)
+  Note "TOPUP config file  =" $(find $topupConfigFile 2>/dev/null)
+  Note "ICA-FIX training   =" $(find $icafixTraining 2>/dev/null)
 }
 
 bids_variables_unset() {
@@ -227,30 +227,30 @@ t1w_str() {
   id=$1
   t1w_full=$2
   space=$3
-  res=`mrinfo ${bids_T1ws[i]} -spacing | awk '{printf "%.1f\n", $2}'`
+  res=$(mrinfo ${bids_T1ws[i]} -spacing | awk '{printf "%.1f\n", $2}')
   echo ${id}_t1w_${res}mm_${space}${run}
 }
 
 micapipe_software() {
   Info "MICA pipe - Software versions"
-  Note "MRtrix3....." "`mrinfo -version | awk 'NR==1 {print $3}'`"
-  Note "            " "`which mrinfo`"
-  Note "FSL........." "`flirt -version | awk '{print $3}'`"
+  Note "MRtrix3....." "$(mrinfo -version | awk 'NR==1 {print $3}')"
+  Note "            " "$(which mrinfo)"
+  Note "FSL........." "$(flirt -version | awk '{print $3}')"
   Note "            " $FSLDIR
-  Note "ANFI........" "`afni -version | awk -F ':' '{print $2}'`"
-  Note "            " "`which 3dresample`"
-  Note "ANTS........" "`antsRegistration --version | awk -F ':' 'NR==1{print $2}'`"
+  Note "ANFI........" "$(afni -version | awk -F ':' '{print $2}')"
+  Note "            " "$(which 3dresample)"
+  Note "ANTS........" "$(antsRegistration --version | awk -F ':' 'NR==1{print $2}')"
   Note "            " $ANTSPATH
-  Note "WorkBench..." "`wb_command -version | awk 'NR==3{print $2}'`"
-  Note "            " "`which wb_command`"
-  Note "FreeSurfer.." "`recon-all -version`"
+  Note "WorkBench..." "$(wb_command -version | awk 'NR==3{print $2}')"
+  Note "            " "$(which wb_command)"
+  Note "FreeSurfer.." "$(recon-all -version)"
   Note "            " $FREESURFER_HOME
-  Note "fix........." "`which fix`"
+  Note "fix........." "$(which fix)"
   Note "            " $FIXPATH
-  Note "python......" "`python --version`"
-  Note "            " "`which python`"
-  Note "R..........." "`R --version | awk 'NR==1{print $3}'`"
-  Note "            " "`which R`"
+  Note "python......" "$(python --version)"
+  Note "            " "$(which python)"
+  Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
+  Note "            " "$(which R)"
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
@@ -294,7 +294,7 @@ if [[ ${quiet} != TRUE ]]; then echo -e "\n\033[38;5;141m
 #---------------- FUNCTION: PRINT COLOR COMMAND ----------------#
 function Do_cmd() {
 # do_cmd sends command to stdout before executing it.
-str="`whoami` @ `uname -n` `date`"
+str="$(whoami) @ $(uname -n) $(date)"
 local l_command=""
 local l_sep=" "
 local l_index=1
@@ -309,7 +309,7 @@ while [ ${l_index} -le $# ]; do
       arg=""
     fi
     if [ "$arg" == "-log" ]; then
-      nextarg=`expr ${l_index} + 1`
+      nextarg=$(expr ${l_index} + 1)
       eval logfile=\${${nextarg}}
       arg=""
       l_index=$[${l_index}+1]
