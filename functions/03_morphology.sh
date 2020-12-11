@@ -40,7 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: Freesurfer space T1
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA Morphology processing"

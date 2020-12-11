@@ -38,7 +38,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: freesurfer space T1 (to make sure freesurfer was run)
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 # Check inputs: Native midsurface in gifti (generated in post-structural)
 if [ ! -f ${lh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
 if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi

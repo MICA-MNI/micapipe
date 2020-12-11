@@ -41,7 +41,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: Freesurfer space T1
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check microstructural image input flag and set parameters accordingly
 if [[ ${input_im} == "DEFAULT" ]]; then
@@ -137,7 +137,7 @@ if [[ ! -f ${outDir}/rh.14.mgh ]]; then
         Do_cmd rm -rfv ${outDir}/${hemi}.${num_surfs}surfs0.0.pial ${outDir}/${hemi}.${num_surfs}surfs1.0.pial
 
         # find all equivolumetric surfaces and list by creation time
-        x=$(ls "$outDir"/"$hemi".${num_surfs}surfs* | sort)
+        x=$(ls -t "$outDir"/"$hemi".${num_surfs}surfs*)
         for n in $(seq 1 1 $num_surfs) ; do
             which_surf=$(sed -n "$n"p <<< "$x")
             cp "$which_surf" "$SUBJECTS_DIR"/"$id"/surf/"$hemi"."$n"by"$num_surf"surf
