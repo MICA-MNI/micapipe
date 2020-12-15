@@ -155,8 +155,8 @@ bids_print.variables-rsfmri() {
   Note "Main phase scan    =" "$(find $mainPhaseScan 2>/dev/null)"
   Note "Main reverse phase =" "$(find $reversePhaseScan 2>/dev/null)"
   Note "Main rsfMRI json   =" "$(find $mainScanJson 2>/dev/null)"
-  Note "TOPUP config file  =" "$(find $topupConfigFile 2>/dev/null)"
-  Note "ICA-FIX training   =" "$(find $icafixTraining 2>/dev/null)"
+  Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
+  Note "ICA-FIX training   =" "$(find "$icafixTraining" 2>/dev/null)"
 }
 
 bids_variables_unset() {
@@ -221,7 +221,7 @@ t1w_str() {
   id=$1
   t1w_full=$2
   space=$3
-  res="$(mrinfo ${t1w_full} -spacing | awk '{printf "%.1f\n", $2}')"
+  res=$(mrinfo "${t1w_full}" -spacing | awk '{printf "%.1f\n", $2}')
   echo "${id}_t1w_${res}mm_${space}${run}"
 }
 
@@ -303,8 +303,8 @@ while [ ${l_index} -le $# ]; do
       arg=""
     fi
     if [ "$arg" == "-log" ]; then
-      nextarg=$(expr ${l_index} + 1)
-      eval logfile=\${${nextarg}}
+      nextarg=$(expr "${l_index}" + 1)
+      eval logfile=\${"${nextarg}"}
       arg=""
       l_index=$[${l_index}+1]
     fi
@@ -313,13 +313,13 @@ while [ ${l_index} -le $# ]; do
     l_index=$[${l_index}+1]
    done
 if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118m\n${str}:\nCOMMAND -->  \033[38;5;122m${l_command}  \033[0m"; fi
-if [ -z $TEST ]; then $l_command; fi
+if [ -z "$TEST" ]; then $l_command; fi
 }
 
 cmd() {
 text=$1
 if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118mCOMMAND -->  \033[38;5;122m${text}  \033[0m"; fi
-eval $text
+eval "$text"
 }
 
 function cleanup() {
@@ -329,7 +329,7 @@ function cleanup() {
   Error "something went wrong, check the logs"
   export PATH=$OLD_PATH
   unset OLD_PATH
-  rm -rf $tmp
-  if [ ! -z "$here" ]; then cd $here; fi
+  rm -rf "$tmp"
+  if [ ! -z "$here" ]; then cd "$here"; fi
   bids_variables_unset
 }
