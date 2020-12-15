@@ -258,11 +258,12 @@ fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
+dwi_dti=$proc_dwi/${id}_dti.mif
 dwi_FA=$proc_dwi/${id}_dti_FA.mif
 if [[ ! -f $dwi_FA ]]; then
       Info "Calculating basic DTI metrics"
-      dwi2tensor -mask $dwi_mask -nthreads $threads $dwi_corr $proc_dwi/${id}_dti.mif
-      tensor2metric -nthreads $threads -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif ${tmp}/${id}_dti.mif
+      dwi2tensor -mask $dwi_mask -nthreads $threads $dwi_corr $dwi_dti
+      tensor2metric -nthreads $threads -fa $proc_dwi/${id}_dti_FA.mif -adc $proc_dwi/${id}_dti_ADC.mif $dwi_dti
       # Step QC
       if [[ -f ${dwi_FA} ]]; then ((Nsteps++)); fi
 else
