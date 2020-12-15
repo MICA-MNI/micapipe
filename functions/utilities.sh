@@ -39,6 +39,7 @@ bids_variables() {
   			     export dir_conte69=${dir_surf}/conte69   # conte69
   export proc_dwi=$subject_dir/proc_dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
+    export autoTract_dir=$proc_dwi/auto_tract
   export proc_rsfmri=$subject_dir/proc_rsfmri
     export rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
     export rsfmri_volum=$proc_rsfmri/volumetric
@@ -80,64 +81,58 @@ bids_variables() {
   export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
   # BIDS Files
-  export bids_T1ws=($(ls ${subject_bids}/anat/*T1w.nii* 2>/dev/null))
-  export bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
+  bids_T1ws=($(ls ${subject_bids}/anat/*T1w.nii* 2>/dev/null))
+  bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
   export bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
   export bids_inv1=${subject_bids}/anat/*inv1*.nii*
   export dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
-
 }
 
 bids_print.variables() {
   # This functions prints BIDS variables names
   # IF they exist
-  Info "Inputs:"
+  Info "mica-pipe inputs:"
   Note "id   =" $id
   Note "BIDS =" $BIDS
   Note "out  =" $out
+  Note "ses  =" $SES
 
   Info "BIDS naming:"
   Note "subject_bids =" $subject_bids
-  Note "bids_T1ws    =" "N-${#bids_T1ws[@]}, $bids_T1ws"
-  Note "bids_dwis    =" "N-${#bids_dwis[@]}, $bids_dwis"
+  Note "bids_T1ws    =" "N-${#bids_T1ws[@]}, e.g. ${bids_T1ws[0]}"
+  Note "bids_dwis    =" "N-${#bids_dwis[@]}, e.g. ${bids_dwis[0]}"
   Note "subject      =" $subject
   Note "subject_dir  =" $subject_dir
   Note "proc_struct  =" $proc_struct
   Note "dir_warp     =" $dir_warp
   Note "logs         =" $dir_logs
 
-  Info "Utilities:"
-  Note "util_MNIvolumes   =" $util_MNIvolumes
-  Note "util_parcelations =" $util_parcelations
-  Note "util_surface      =" $util_surface
-}
-
-bids_print.variables-post() {
-  # This functions prints BIDS variables names and files if found
-  Info "Inputs:"
-  Note "id   =" $id
-  Note "BIDS =" $BIDS
-  Note "out  =" $out
-
-  Info "mica-pipe variables:"
-  Note "T1 nativepro    =" $(ls $T1nativepro 2>/dev/null)
-  Note "T1 5tt          =" $(ls $T15ttgen 2>/dev/null)
-  Note "T1 fast_all     =" $(ls $T1fast_seg 2>/dev/null)
-  Note "T1 resolution   =" $res
-
-  Info "mica-pipe directories:"
+  Info "Processing directories:"
   Note "subject_dir     =" $subject_dir
   Note "proc_struct     =" $proc_struct
   Note "dir_freesurfer  =" $dir_freesurfer
   Note "dir_conte69     =" $dir_conte69
   Note "dir_volum       =" $dir_volum
   Note "dir_warp        =" $dir_warp
-  Note "logs            =" $dir_logs
+  Note "dir_logs        =" $dir_logs
+  Note "dir_QC          =" $dir_QC
 
-  Info "Utilities:"
+  Info "Utilities directories:"
+  Note "scriptDir         =" $scriptDir
   Note "util_MNIvolumes   =" $util_MNIvolumes
+  Note "util_lut          =" $util_lut
   Note "util_parcelations =" $util_parcelations
   Note "util_surface      =" $util_surface
+  Note "util_mics         =" $util_mics
+}
+
+bids_print.variables-post() {
+  # This functions prints BIDS variables names and files if found
+  Info "Structural processing output variables:"
+  Note "T1 nativepro    =" $(ls $T1nativepro 2>/dev/null)
+  Note "T1 5tt          =" $(ls $T15ttgen 2>/dev/null)
+  Note "T1 fast_all     =" $(ls $T1fast_seg 2>/dev/null)
+  Note "T1 resolution   =" $res
 }
 
 bids_print.variables-dwi() {
@@ -149,7 +144,6 @@ bids_print.variables-dwi() {
 
   Note "T1 nativepro    =" $(find $T1nativepro 2>/dev/null)
   Note "T1 5tt          =" $(find $T15ttgen 2>/dev/null)
-  Note "T1 resolution   =" $res
   Note "MNI152_mask     =" $MNI152_mask
 }
 
