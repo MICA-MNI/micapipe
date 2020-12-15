@@ -19,7 +19,7 @@ export ANTSPATH="/data/mica1/01_programs/ants-2.3.4/bin"
 
 # Workbench binaries
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*workbench*});IFS=':';echo "${p[*]}";unset IFS)
-workbench_path=/data/mica1/01_programs/workbench/bin_linux64
+workbench_path=/data/mica1/01_programs/workbench-1.4.2/bin_linux64
 
 # ICA-FIX
 FIXPATH=/data_/mica1/01_programs/fix

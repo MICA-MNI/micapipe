@@ -43,7 +43,7 @@ echo -e "
 \033[38;5;141mDEPENDENCIES:\033[0m
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
     > FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
-    > AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
+    > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
 
 \033[38;5;141mWARNING:\033[0m ANONYMIZEs the anatomical images from the BIDS directory
              The anonimized images will be saved in the OUT directory
