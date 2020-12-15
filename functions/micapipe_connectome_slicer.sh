@@ -17,17 +17,29 @@
 #
 #---------------- FUNCTION: HELP ----------------#
 help() {
-echo -e "\033[38;5;141m
-Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
-\t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
-\t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
-\t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
+echo -e "
+\033[38;5;141mCOMMAND:\033[0m `basename $0`
 
-\t\033[38;5;197m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (DEFAULT is ses-pre)
+\033[38;5;141mARGUMENTS:\033[0m
+\t\033[38;5;197m-sub\033[0m 	          : Subject identification
+\t\033[38;5;197m-out\033[0m 	          : Output directory for the processed files <derivatives>.
+\t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
+\t\033[38;5;120m-ses <str>\033[0m 	  : OPTIONAL flag that indicates the session name (default = ses-pre)
+\t\033[38;5;120m-tracts <int>\033[0m     : OPTIONAL Number of streamlines, where 'M' stands for millions (default=40M)
 
-WARNING: This script is not optimized for SGE, it runs locally only.
+\033[38;5;141mOPTIONS:\033[0m
+\t\033[38;5;197m-h|-help\033[0m          : Print help
+\t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
 
-McGill University, MNI, MICA-lab, November 2020
+\033[38;5;141mUSAGE:\033[0m
+    \033[38;5;141m`basename $0`\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
+
+\033[38;5;141mDEPENDENCIES:\033[0m
+
+\033[38;5;141mWARNING:\033[0m
+\tThis script is not optimized for SGE, it runs locally only.
+
+McGill University, MNI, MICA-lab, November-December 2020
 https://github.com/MICA-MNI/micapipe
 http://mica-mni.github.io/
 "
@@ -77,6 +89,10 @@ do
     SES=$2
     shift;shift
   ;;
+  -tracts)
+    tracts=$2
+    shift;shift
+  ;;
   -nocleanup)
     nocleanup=TRUE
     shift
@@ -92,10 +108,10 @@ done
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
 if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:"
-Note "-sub " $id
-Note "-out " "$out"
-Note "-bids " "$BIDS"
+Error "One or more mandatory arguments are missing:
+               -sub  : $id
+               -out  : $out
+               -bids : $BIDS"
 help; exit 1; fi
 
 # Get the real path of the Inputs
@@ -107,12 +123,14 @@ here=`pwd`
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
 
+# Optional arguments number of tracts
+if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+
 #------------------------------------------------------------------------------#
 # Assigns variables names
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: DWI post TRACTOGRAPHY
-tracts=40M # <<<<<<<<<<<<<<<<<< Number of streamlines
 fod=$proc_dwi/${id}_wm_fod_norm.mif
 dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
@@ -140,7 +158,6 @@ micapipe_software
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nparc=0
 
 # if temporary directory is empty
@@ -149,7 +166,7 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-cd ${tmp}
+cd $tmp
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -187,8 +204,8 @@ done
 
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
+Do_cmd cd $here
 if [[ -z $nocleanup ]]; then Do_cmd rm -rf $tmp; else Info "tmp directory was not erased: ${tmp}"; fi
-cd $here
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -201,3 +218,4 @@ Title "CONNECTOME SLICER processing ended in \033[38;5;220m `printf "%0.3f\n" ${
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/56
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
+bids_variables_unset

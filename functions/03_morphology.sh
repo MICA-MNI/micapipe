@@ -24,7 +24,8 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
-here=`pwd`
+threads=$7
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -45,16 +46,12 @@ if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Sub
 #------------------------------------------------------------------------------#
 Title "Running MICA Morphology processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-post
-
-# GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
 Info "Not erasing temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -67,6 +64,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporary directory
 tmp=${tmp}/${RANDOM}_micapipe_post-morpho_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+
+# TRAP in case the script fails
+trap cleanup INT TERM
 
 # Make output directory
 outDir="$dir_surf"/morphology/
@@ -207,3 +207,4 @@ eri=`echo print $eri/60 | perl`
 Title "Post-Morphology processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-morph_*.txt"
 echo "${id}, post_morpho, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

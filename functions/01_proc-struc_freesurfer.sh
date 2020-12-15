@@ -25,7 +25,6 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
-here=`pwd`
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -61,6 +60,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_proc-freesurfer_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+
+# TRAP in case the script fails
+trap cleanup INT TERM
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
@@ -107,3 +109,4 @@ Title "Freesurfer recon-all processing ended: ${status}\n\tlogs:
 `ls ${dir_logs}/proc-freesurfer*.txt`"
 
 echo "${id}, FREESURFER, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

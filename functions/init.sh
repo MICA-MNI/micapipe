@@ -19,7 +19,7 @@ export ANTSPATH="/data/mica1/01_programs/ants-2.3.4/bin"
 
 # Workbench binaries
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*workbench*});IFS=':';echo "${p[*]}";unset IFS)
-workbench_path=/data/mica1/01_programs/workbench/bin_linux64
+workbench_path=/data/mica1/01_programs/workbench-1.4.2/bin_linux64
 
 # ICA-FIX
 FIXPATH=/data_/mica1/01_programs/fix
@@ -90,11 +90,11 @@ rm -f $tmp_file
 # Set basic global variables.
 # export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
 if [[ ! -z $NSLOTS ]]; then
-    export CORES=$NSLOTS
+    export threads=$NSLOTS
 else
-    export CORES=$local_threads
+    export threads=$local_threads
 fi
-export OMP_NUM_THREADS=$CORES
+export OMP_NUM_THREADS=$threads
 
 # Where processing will run
 if [[ -z $PROC ]]; then export PROC="LOCAL-MICA"; fi

@@ -31,10 +31,10 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
 | Freesurfer | 6.0.0         | https://surfer.nmr.mgh.harvard.edu/ |
 | FSl        | 6.0           | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
-| AFNI       | 20.2.06       | https://afni.nimh.nih.gov/download |
+| AFNI       | 20.3.03       | https://afni.nimh.nih.gov/download |
 | MRtrix3    | 3.0.1         | https://www.mrtrix.org |
 | ANTs       | 2.3.4         | https://github.com/ANTsX/ANTs |
-| workbench  | 1.3.2         | https://www.humanconnectome.org/software/connectome-workbench |
+| workbench  | 1.4.2         | https://www.humanconnectome.org/software/connectome-workbench |
 | FIX        | 1.06          | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX |
 | R          | 3.6.3         | https://www.r-project.org |
 | python     | 3.7.6         | https://www.python.org/downloads/ |

@@ -32,8 +32,8 @@ changeTopupConfig=$7
 changeIcaFixTraining=$8
 thisMainScan=$9
 thisPhase=${10}
-
-here=`pwd`
+threads=${11}
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -147,23 +147,22 @@ fi
 #------------------------------------------------------------------------------#
 Title "Running MICA rsfMRI processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-rsfmri
 Info "Not erasing temporal dir: $nocleanup"
-
-# GLOBAL variables for this script
-Info "ANTs will use $CORES CORES"
+Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_proc-rsfmri_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+
+# TRAP in case the script fails
+trap cleanup INT TERM
 
 # Set basic parameters.
 struct2fs=$(find $dir_warp -name "*t1w2fs.lta")
@@ -353,7 +352,7 @@ mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 # Registration to native pro
 if [[ ! -f ${mat_rsfmri_affine} ]] | [[ ! -f ${T1nativepro_in_fmri} ]]; then
     Info "Registering fmri space to nativepro"
-    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $CORES -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $threads -p d
     Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
 
     # t1-nativepro to fmri space
@@ -599,3 +598,4 @@ eri=`echo print $eri/60 | perl`
 Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-rsfmri_*.txt`"
 echo "${id}, proc_rsfmri, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

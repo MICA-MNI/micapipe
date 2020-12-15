@@ -22,7 +22,8 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
-here=`pwd`
+threads=$7
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -50,12 +51,11 @@ bids_print.variables-post
 
 # GLOBAL variables for this script
 Info "Not erasing temporal dir: $nocleanup"
-Info "ANTs will use $CORES CORES"
+Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nfiles=0
 
 # if temporary directory is empty
@@ -63,6 +63,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_post-struct_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+
+# TRAP in case the script fails
+trap cleanup INT TERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -76,7 +79,7 @@ T1_fsspace_affine=${mat_fsspace_affine}0GenericAffine.mat
 
 if [[ ! -f ${T1_fsspace} ]]; then
     Do_cmd mrconvert $T1freesurfr $T1_in_fs
-    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $CORES -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $T1_in_fs -o $mat_fsspace_affine -t a -n $threads -p d
     Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $T1_in_fs -t [${T1_fsspace_affine},1] -o $T1_fsspace -v -u int
     if [[ -f ${T1_fsspace} ]]; then ((Nfiles++)); fi
 else
@@ -203,3 +206,4 @@ Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${er
 `ls ${dir_logs}/post-structural_*.txt`"
 # Print QC stamp
 echo "${id}, post_structural, $status N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

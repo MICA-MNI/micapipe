@@ -24,6 +24,7 @@ PROC=$5
 nocleanup=$6
 tracts=$7
 autoTract=$8
+threads=$9
 here=`pwd`
 
 #------------------------------------------------------------------------------#
@@ -76,6 +77,7 @@ micapipe_software
 Info "Number of streamlines: $tracts"
 Info "Auto-tractograms: $autoTract"
 Info "Not erasing temporal dir: $nocleanup"
+Info "MRtrix will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
@@ -87,6 +89,9 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
 tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
 [[ ! -d $tmp ]] && Do_cmd mkdir -p $tmp
+
+# TRAP in case the script fails
+trap cleanup INT TERM
 
 # Create Connectomes directory for the outpust
 [[ ! -d $dwi_cnntm ]] && Do_cmd mkdir -p $dwi_cnntm
@@ -121,7 +126,7 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++
 Info "Building the ${tracts} streamlines connectome!!!"
 tck=${tmp}/DWI_tractogram_${tracts}.tck
 weights=${tmp}/SIFT2_${tracts}.txt
-Do_cmd tckgen -nthreads $CORES \
+Do_cmd tckgen -nthreads $threads \
     $fod \
     $tck \
     -act $dwi_5tt \
@@ -137,11 +142,11 @@ Do_cmd tckgen -nthreads $CORES \
     -algorithm iFOD2
 
 # SIFT2
-Do_cmd tcksift2 -nthreads $CORES $tck $fod $weights
+Do_cmd tcksift2 -nthreads $threads $tck $fod $weights
 
 # TDI for QC
 Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $CORES $tck $tdi -force
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads $threads $tck $tdi -force
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
@@ -160,13 +165,13 @@ for seg in $parcellations; do
     for i in 1000 2000; do Do_cmd fslmaths $dwi_cortex -thr $i -uthr $i -binv -mul $dwi_cortex  $dwi_cortex; done
 
     # Build the Cortical connectomes
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_cortex "${nom}_cor-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 
     # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_cortex "${nom}_cor-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_cor-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
@@ -179,13 +184,13 @@ for seg in $parcellations; do
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_subc -add $dwi_cortex $dwi_cortexSub -odt int # added the subcortical parcellation
 
     # Build the Cortical-Subcortical connectomes
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_cortexSub "${nom}_sub-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 
     # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_cortexSub "${nom}_sub-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_sub-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
@@ -198,13 +203,13 @@ for seg in $parcellations; do
     Do_cmd fslmaths $dwi_cortex -binv -mul $dwi_cere -add $dwi_cortexSub $dwi_all -odt int # added the cerebellar parcellation
 
     # Build the Cortical-Subcortical-Cerebellum connectomes
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_all "${nom}_full-connectome.txt" \
         -tck_weights_in $weights -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-connectome.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
 
     # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads $CORES \
+    Do_cmd tck2connectome -nthreads $threads \
         $tck $dwi_all "${nom}_full-edgeLengths.txt" \
         -tck_weights_in $weights -scale_length -stat_edge mean -quiet
     Do_cmd Rscript ${MICAPIPE}/functions/connectome_slicer.R --conn="${nom}_full-edgeLengths.txt" --lut1=${lut_sc} --lut2=${lut} --mica=${MICAPIPE}
@@ -229,7 +234,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Clean temporal directory
 if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
-cd $here
+Do_cmd cd $here
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -237,10 +242,11 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
 
 # Notification of completition
-if [ "$Nparc" -eq 56 ]; then status="DONE"; else status="ERROR missing a connectome: "; fi
+if [ "$Nparc" -eq 56 ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
 Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
 \t\tNumber of connectomes: `printf "%02d" $Nparc`/56
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
 # Print QC stamp
 echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/56, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

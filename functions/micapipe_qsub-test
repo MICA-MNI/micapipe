@@ -18,7 +18,8 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
-here=`pwd`
+threads=$7
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -82,7 +83,7 @@ Note "LD_LIBRARY_PATH   =" $LD_LIBRARY_PATH
 
 Info "Global variables"
 Note "tmp               =" $tmp
-Note "CORES             =" $CORES
+Note "threads           =" $threads
 Note "OMP_NUM_THREADS   =" $OMP_NUM_THREADS
 Note "NSLOTS            =" $NSLOTS
 Note "PROC              =" $PROC
@@ -127,7 +128,7 @@ for dwi in ${bids_dwis[@]}; do
 done
 # Concatenate shells and convert to mif.
 dwi_cat=${tmp}/dwi_concatenate.mif
-Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $CORES
+Do_cmd mrcat ${tmp}/*.mif $dwi_cat -nthreads $threads
 
 # Get parameters
 ReadoutTime=`mrinfo $dwi_cat -property TotalReadoutTime`
@@ -149,3 +150,4 @@ eri=`echo print $eri/60 | perl`
 
 Title "Running MICA qsub test ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
 echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" #>> ${out}/brain-proc.csv
+bids_variables_unset

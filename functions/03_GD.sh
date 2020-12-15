@@ -22,7 +22,8 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
-here=`pwd`
+threads=$7
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -38,8 +39,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables $BIDS $id $out $SES
 
 # Check inputs: freesurfer space T1 (to make sure freesurfer was run)
-if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-# Check inputs: Native midsurface in gifti (generated in post-structural)
+if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 if [ ! -f ${lh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
 if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
@@ -47,15 +47,11 @@ if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere
 #------------------------------------------------------------------------------#
 Title "Running MICA Geodesic distance processing"
 micapipe_software
-# print the names on the terminal
 bids_print.variables-post
-
-# GLOBAL variables for this script
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 
 #------------------------------------------------------------------------------#
 # Set up parameters
@@ -86,8 +82,6 @@ done
 Do_cmd rm -rf ${outPath}/*.func.gii
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory and fsaverage5
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
@@ -97,3 +91,4 @@ eri=`echo print $eri/60 | perl`
 Title "Post-GD processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-gd_*.txt"
 echo "${id}, post_gd, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+bids_variables_unset

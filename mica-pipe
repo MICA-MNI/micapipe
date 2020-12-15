@@ -2,7 +2,6 @@
 #
 # MICA BIDS structural processing
 #
-# <<<<<<<<<<<< PRINT A WARNING WITH THE WRONG FLAG
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "
@@ -75,6 +74,7 @@ echo -e "
 \t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory.
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion.
+\t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
@@ -89,10 +89,10 @@ echo -e "
 \033[38;5;141mDEPENDENCIES:\033[0m
     > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
     > FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
-    > AFNI        20.2.06 (https://afni.nimh.nih.gov/download)
+    > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
     > MRtrix3     3.0.0   (https://www.mrtrix.org)
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
-    > workbench   1.3.2
+    > workbench   1.4.2
     > python      3.7.6
     > R           3.6.3
     > FIX (FMRIB's ICA-based Xnoiseifier) v1.06
@@ -252,6 +252,10 @@ do
     nocleanup=TRUE
     shift
   ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
   -force)
     force=TRUE
     shift
@@ -323,7 +327,9 @@ if [ ! -d ${BIDS}/sub-${id}/${SES} ]; then Error "$id was not found on the BIDS 
 # Erase temporal files by default
 if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 
+# No print Do_cmd
 if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
+
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
 
@@ -335,15 +341,6 @@ if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
     if [[ $? != 0 ]]; then
       Error "Could not find init file. Is this script in the\n base directory of the MICAPIPE github and in init \nfile in the functions subdirectory?"; exit 1
     fi
-    # ITS A TRAP! Specifically a trap that will reset the old user path upon exits,
-    # interrupts, and termination. We could add a deletion of the temporary directory
-    # here too.
-    function cleanup() {
-      export PATH=$OLD_PATH
-      unset OLD_PATH
-      unset tmp
-    }
-    trap cleanup EXIT INT TERM
 else
     # -----------------------------------------------------------------------------------------------#
     #    PACKAGES DEPENDENCIES print versions
@@ -370,9 +367,9 @@ fi
 # Processing
 if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 
-# Number of CORES used by ANTs and workbench, default is 6 if not defined in GLOBAL env
-if [[ -z $CORES ]]; then export CORES=6; fi
-export OMP_NUM_THREADS=$CORES
+# Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
+if [[ -z $threads ]]; then export threads=6; fi
+Info "micapipe will use $threads threads for multicore processing"
 
 # LOADS variables with the BIDS format
 bids_variables $BIDS $id $out $SES
@@ -414,19 +411,19 @@ if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     # all.q - Structural processing: Volumetric
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Structural processing: Volumetric"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     else
         # LOCAL Structural processing: Volumetric
-        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -440,7 +437,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
              ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup
              # all.q - Structural processing: Freesurfer
     elif [[ $qall == "TRUE" ]] ; then
@@ -448,7 +445,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
              ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup
     else
         #  LOCAL - Structural processing: Freesurfer
@@ -469,19 +466,19 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     # all.q - Diffusion processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Diffusion processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     else
       #  LOCAL - Diffusion processing
-        ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -498,19 +495,19 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     # all.q - POST Structural processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - POST Structural processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     else
       # LOCAL - post_structural processing
-        ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -527,19 +524,19 @@ if [ "$procfMRI" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $threads
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Resting state fMRI processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" $threads
     else
         # LOCAL - Resting state fMRI processing
-        ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}" 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $PROC $nocleanup "${optarg_rsfmri[0]}" "${optarg_rsfmri[1]}" "${optarg_rsfmri[2]}" "${optarg_rsfmri[3]}"  $threads 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -556,7 +553,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract
+             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract $threads
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - POST DWI processing (tractography)"
@@ -564,10 +561,10 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract
+             ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract $threads
     else
         # LOCAL - post-DWI processing (tractography)
-        ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract 2>&1 | tee -a ${log_file_str}.txt
+        ${scriptDir}/03_SC.sh $BIDS $id $out $SES $PROC $nocleanup $tracts $autoTract $threads 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -584,19 +581,19 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     # all.q - Geodesic distance
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Geodesic distance"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     else
         # LOCAL - Geodesic distance processing
-        ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/03_GD.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -613,19 +610,19 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     # all.q - Morphology
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Cortical Morphoogy"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup $threads
     else
         # LOCAL - Morphology
-        ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/03_morphology.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -642,19 +639,19 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup $threads
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Microstructural profile covariance"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $CORES -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup $threads
     else
         # LOCAL - POST-Structural processing
-        ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup 2>&1 | tee -a  ${log_file_str}.txt
+        ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup $threads 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
 
@@ -667,8 +664,8 @@ if [[ $qtest = "TRUE" ]] && [[ $micaq == "TRUE" ]]; then
       Info "MICA qsub test: mica.q"
       export PROC="qsub-MICA"
       # Info "Setting a warper to run on mica.q"
-      qsub -q mica.q -pe smp $CORES -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup
+      qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads
 fi
 # # # MICA - qsub test
 if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
@@ -676,11 +673,11 @@ if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
       export PROC="qsub-all.q"
       # Info "Setting a warper to run on all.q"
       qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $SES $PROC $nocleanup
+           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads
 fi
 if [[ $qtest = "TRUE" ]]; then
       Info "LOCAL setup test"
-      ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${id}_$(date +'%d-%m-%Y')_${PROC}.txt
+      ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${id}_$(date +'%d-%m-%Y')_${PROC}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#
