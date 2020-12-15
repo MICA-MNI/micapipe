@@ -132,6 +132,10 @@ parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name
 #------------------------------------------------------------------------------#
 Title "MICAPIPE: Creating a QC html file for $id"
 micapipe_software
+bids_print.variables
+bids_print.variables-post
+bids_print.variables-dwi
+bids_print.variables-rsfmri
 
 # Individual QC html file
 QC_html=${dir_QC}/${id}_micapipe_qc.html
@@ -151,6 +155,8 @@ table_style=" <style type=\"text/css\">
     text-align:center;vertical-align:top}
   .tg .tg-dp6t{border-color:inherit;font-family:\"Courier New\", Courier, monospace !important;;font-size:16px;text-align:center;
     vertical-align:top}
+  .tg .tg-8pnm{background-color:#ffffff;border-color:#ffffff;color:#333333;font-family:\"Courier New\", Courier, monospace !important;;
+    font-size:16px;text-align:left;vertical-align:top}
   </style>"
 
 #	Timer
@@ -191,18 +197,20 @@ echo "<!doctype html>
 echo -e "
   <h2>Table of Contents</h2>
     <a href=\"#Completed workflow\">Completed workflow</a><br>
-    <a href=\"#Structural processing (-proc_structural)\">First stage: Structural processing</a><br>
-    <a href=\"#Freesurfer processing (-proc_freesurfer)\">First stage: Freesurfer processing</a><br>
-    <a href=\"#Post-structural processing (-post_structural)\">Second stage: Post-structural processing</a><br>
-    <a href=\"#Diffusion MRI processing (-proc_dwi)\">Second stage: Diffusion MRI processing</a><br>
+    <a href=\"#Structural processing -proc_structural\">First stage: Structural processing</a><br>
+    <a href=\"#Freesurfer processing -proc_freesurfer\">First stage: Freesurfer processing</a><br>
+    <a href=\"#Post-structural processing -post_structural\">Second stage: Post-structural processing</a><br>
+    <a href=\"#Diffusion MRI processing -proc_dwi\">Second stage: Diffusion MRI processing</a><br>
     <a style=\"margin-left: 2rem;\" href=\"#Motion parameters\">Motion parameters</a><br>
     <a style=\"margin-left: 2rem;\" href=\"#Noise estimation\">Noise estimation</a><br>
-    <a href=\"#Resting state fMRI (-proc_rsfmri)\">Second stage: Resting state fMRI</a><br>
+    <a href=\"#Resting state fMRI -proc_rsfmri\">Second stage: Resting state fMRI</a><br>
     <a style=\"margin-left: 2rem;\" href=\"#Functional connectomes\">Functional connectomes</a><br>
-    <a href=\"#Structural Connectomes (-SC)\">Third stage: Structural Connectomes</a><br>
-    <a href=\"#Micro structural profiles (-MPC) and Geodesic distance (-GD)\">Third stage: Micro structural profiles and Geodesic distance</a><br>
-    <a href=\"#Cortical morphology (-Morphology)\">Third stage: Cortical morphology analysis</a><br>
-" >> $QC_html
+    <a href=\"#Structural Connectomes -SC\">Third stage: Structural Connectomes</a><br>
+    <a href=\"#Micro structural profiles -MPC and Geodesic distance (-GD)\">Third stage: Micro structural profiles and Geodesic distance</a><br>
+    <a href=\"#Cortical morphology -Morphology\">Third stage: Cortical morphology analysis</a><br>" >> $QC_html
+if [ -d "$autoTract_dir" ]; then
+echo -e "    <a href=\"#Auto tractography -autoTract\">Third stage: Auto tractography</a><br>" >> $QC_html
+fi
 
 #------------------------------------------------------------------------------#
 # MICAPIPE processing flowchart
@@ -218,37 +226,122 @@ echo "
 # QC rsfMRI
 # /data_/mica3/BIDS_MIC/derivatives/sub-HC011/ses-01/proc_rsfmri/surfaces
 # Include html into html: https://stackoverflow.com/questions/8988855/include-another-html-file-in-a-html-file
-echo "  <h2>Structural processing (-proc_structural)</h2>
+echo "  <h2>Structural processing -proc_structural</h2>
   <div>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
-
+    <h3>Input files</h3>" >> $QC_html
+    echo -e $table_style >> $QC_html
+    echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Variable name</th>
+              <th class=\"tg-droi\">Origin</th>
+              <th class=\"tg-droi\">Path to file</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\$t1ref</span></td>
+              <td class=\"tg-8pnm\">BIDS anat<br><br></td>
+              <td class=\"tg-8pnm\">${bids_T1ws[0]}</td>
+            </tr>
+            " >> $QC_html
+N=${#bids_T1ws[@]}
+n=$((${N} - 1))
+if [ "$N" -gt 1 ]; then
+  for ((i=1; i<=$n; i++)); do
+    echo "
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\$T1run_$((${i}+1))</span></td>
+              <td class=\"tg-8pnm\">BIDS anat<br><br></td>
+              <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
+            </tr>" >> $QC_html
+  done
+fi
+    echo -e "
+          </tbody>
+          </table>
+      </div>"  >> $QC_html
 #------------------------------------------------------------------------------#
-echo "  <h2>Freesurfer processing (-proc_freesurfer)</h2>
+echo "  <h2>Freesurfer processing -proc_freesurfer</h2>
   <div>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
+    <h3>Input files</h3>" >> $QC_html
+    echo -e $table_style >> $QC_html
+    echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Variable name</th>
+              <th class=\"tg-droi\">Origin</th>
+              <th class=\"tg-droi\">Path to file</th>
+            </tr>
+          </thead>
+          <tbody>" >> $QC_html
+N=${#bids_T1ws[@]}
+n=$((${N} - 1))
+if [ "$N" -gt 1 ]; then
+  for ((i=0; i<=$n; i++)); do
+    echo "
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\${bids_T1ws[${i}]}</span></td>
+              <td class=\"tg-8pnm\">BIDS anat<br><br></td>
+              <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
+            </tr>" >> $QC_html
+  done
+fi
+    echo -e "
+          </tbody>
+          </table>
+      </div>"  >> $QC_html
 # $QA_TOOLS/recon_checker -help
 # https://surfer.nmr.mgh.harvard.edu/fswiki/QATools
 
 #------------------------------------------------------------------------------#
-echo "  <h2>Post-structural processing (-post_structural)</h2>
+echo "  <h2>Post-structural processing -post_structural</h2>
   <div>
+    <h3>Input files</h3>
     <p>... work in progress ...</p>
   </div>" >> $QC_html
 
 #------------------------------------------------------------------------------#
-echo "  <h2>Diffusion MRI processing (-proc_dwi)</h2>
+echo "  <h2>Diffusion MRI processing -proc_dwi</h2>
   <div>
-    <h3>Motion parameters</h3>
-    <h3>Noise estimation</h3>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
+    <h3>Input files</h3>" >> $QC_html
+    echo -e $table_style >> $QC_html
+    echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Variable name</th>
+              <th class=\"tg-droi\">Origin</th>
+              <th class=\"tg-droi\">Path to file</th>
+            </tr>
+          </thead>
+          <tbody>" >> $QC_html
+    N=${#bids_dwis[@]}
+    n=$((${N} - 1))
+    if [ "$N" -gt 1 ]; then
+    for ((i=0; i<=$n; i++)); do
+    echo "
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\${bids_dwis[${i}]}</span></td>
+              <td class=\"tg-8pnm\">BIDS anat<br><br></td>
+              <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
+            </tr>" >> $QC_html
+    done
+    fi
+    echo -e "
+          </tbody>
+          </table>"  >> $QC_html
+echo "    <h3>Motion parameters</h3>" >> $QC_html
+echo "    <h3>Noise estimation</h3>" >> $QC_html
+echo "  </div>" >> $QC_html
 
 #------------------------------------------------------------------------------#
 echo "
-  <h2>Resting state fMRI (-proc_rsfmri)</h2>
+  <h2>Resting state fMRI -proc_rsfmri</h2>
   <div>
+    <h3>Input files</h3>
     <h3>Functional connectomes</h3>" >> $QC_html
 echo -e $table_style >> $QC_html
 echo -e "
@@ -291,8 +384,9 @@ echo -e "
 
 #------------------------------------------------------------------------------#
 echo "
-  <h2>Micro structural profiles (-MPC) and Geodesic distance (-GD)</h2>
-  <div>" >> $QC_html
+  <h2>Micro structural profiles -MPC and Geodesic distance -GD</h2>
+  <div>
+    <h3>Input files</h3>" >> $QC_html
 echo -e $table_style >> $QC_html
 echo -e " <table class=\"tg\">
   <thead>
@@ -338,8 +432,9 @@ echo -e "
 #------------------------------------------------------------------------------#
 # Diffusion processing MRI
 echo -e "
-  <h2>Structural Connectomes (-SC)</h2>
-  <div>" >> $QC_html
+  <h2>Structural Connectomes -SC</h2>
+  <div>
+    <h3>Input files</h3>" >> $QC_html
 echo -e $table_style >> $QC_html
 echo -e "
       <table class=\"tg\">
@@ -386,11 +481,22 @@ echo -e "
 
 #------------------------------------------------------------------------------#
 echo "
-  <h2>Cortical morphology (-Morphology)</h2>
+  <h2>Cortical morphology -Morphology</h2>
   <div>
+    <h3>Input files</h3>
     <p>... work in progress ...</p>
   </div>" >> $QC_html
 
+#------------------------------------------------------------------------------#
+# Do autotract only if dir exists
+if [ -d "$autoTract_dir" ]; then
+  echo "
+    <h2>Auto tractography -autoTract</h2>
+    <div>
+      <h3>Input files</h3>
+      <p>... work in progress ...</p>
+    </div>" >> $QC_html
+fi
 #------------------------------------------------------------------------------#
 # closes html document
 echo "

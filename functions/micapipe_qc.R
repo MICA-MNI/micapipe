@@ -41,7 +41,7 @@ load(file=paste0(mica.dir,"/cmap_MICs.Rdata"))
 
 # Load the connectomes
 load.conn <- function(PATH.txt, sym=TRUE) {
-  M <- as.matrix(read.table(PATH.txt, sep = " ",header = FALSE))
+  M <- as.matrix(read.csv(PATH.txt, sep = " ",header = FALSE,))
   if (sym==TRUE) {
     # Mirror matrix completes inferior triangle
     M[lower.tri(M)] <- t(M)[lower.tri(M)]
@@ -86,7 +86,7 @@ for (seg in parc) { subj_id <- paste0(id,"_",seg)
 
     # Intensity profiles
     conn.int <- paste0(dir_surf,"/micro_profiles/intensity_profiles_",seg,"_mics.txt")
-      if (file.exists(conn.int)==TRUE) { conn.int <- load.conn(conn.int); File <- ""; ColMap <- cmap.MPC(256)
+      if (file.exists(conn.int)==TRUE) { conn.int <- load.conn(conn.int, sym=FALSE); File <- ""; ColMap <- cmap.MPC(256)
           } else { conn.int <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30" }
       png(paste0(dir_QC_png,"/", subj_id, "_MPC-intensity.png"), height = 250)
       image(t(conn.int), axes=FALSE, main=paste0(subj_id,"_Intensity"), col=ColMap ); dev.off()
