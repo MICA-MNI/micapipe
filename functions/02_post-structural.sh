@@ -41,7 +41,7 @@ bids_variables $BIDS $id $out $SES
 # Check inputs: Nativepro T1
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 # Check inputs: freesurfer space T1
-if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-structural processing"
@@ -143,7 +143,7 @@ for parc in lh.*.annot; do
 
         # Register the annot surface parcelation to the T1-freesurfer volume
         Do_cmd mri_aparc2aseg --s ${id} --o ${fs_mgz} --annot ${parc_annot/.annot/} --new-ribbon
-        Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${dir_freesurfer}/mri/T1.mgz --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
+        Do_cmd mri_label2vol --seg ${fs_mgz} --temp ${T1freesurfr} --o $fs_tmp --regheader ${dir_freesurfer}/mri/aseg.mgz
         Do_cmd mrconvert $fs_tmp $fs_nii -force      # mgz to nifti_gz
         Do_cmd fslreorient2std $fs_nii $fs_nii       # reorient to standard
         Do_cmd fslmaths $fs_nii -thr 1000 $fs_nii    # threshold the labels
