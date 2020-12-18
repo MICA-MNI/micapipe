@@ -75,6 +75,8 @@ echo -e "
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion.
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
+\t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp).
+\t\033[38;5;197m-atlas\033[0m          : Specify the parcellations separated by a blank space and double quotes (Default is /tmp).
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
@@ -236,6 +238,14 @@ do
     autoTract=TRUE
     shift
   ;;
+  -tmpDir)
+    tmp=$2
+    shift;shift;
+  ;;
+  -atlas)
+    atlas=$2
+    shift;shift;
+  ;;
   -qsub)
     micaq=TRUE
     shift
@@ -329,6 +339,9 @@ if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 
 # No print Do_cmd
 if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
+
+# Temporal directory
+if [ -z ${tmp} ]; then export tmp=/tmp; else tmp=$tmp; fi
 
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
@@ -452,7 +465,6 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
-
 
 # -----------------------------------------------------------------------------------------------#
 # # #        Diffusion processing
@@ -654,7 +666,6 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         ${scriptDir}/03_MPC.sh $BIDS $id $out $SES $PROC "${optarg_mpc[0]}" "${optarg_mpc[1]}" $nocleanup $threads 2>&1 | tee -a  ${log_file_str}.txt
     fi
 fi
-
 
 # -----------------------------------------------------------------------------------------------#
 #                   MICA - qsub test
