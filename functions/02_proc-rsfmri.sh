@@ -125,7 +125,7 @@ if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse
 
 # Structural nativepro scan and freesurfer
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
-if [ ! -f ${dir_freesurfer}/mri/T1.mgz ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check topup input
 if [[ ${changeTopupConfig} == "DEFAULT" ]]; then
