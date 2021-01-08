@@ -241,7 +241,7 @@ echo "  <h2>Structural processing -proc_structural</h2>
           </thead>
           <tbody>
             <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\$t1ref</span></td>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">t1ref</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[0]}</td>
             </tr>
@@ -252,7 +252,7 @@ if [ "$N" -gt 1 ]; then
   for ((i=1; i<=$n; i++)); do
     echo "
             <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\$T1run_$((${i}+1))</span></td>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1run_$((${i}+1))</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
             </tr>" >> $QC_html
@@ -261,7 +261,8 @@ fi
     echo -e "
           </tbody>
           </table>
-      </div>"  >> $QC_html
+  </div>"  >> $QC_html
+
 #------------------------------------------------------------------------------#
 echo "  <h2>Freesurfer processing -proc_freesurfer</h2>
   <div>
@@ -283,7 +284,7 @@ if [ "$N" -gt 1 ]; then
   for ((i=0; i<=$n; i++)); do
     echo "
             <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\${bids_T1ws[${i}]}</span></td>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_T1ws[${i}]</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
             </tr>" >> $QC_html
@@ -292,19 +293,81 @@ fi
     echo -e "
           </tbody>
           </table>
-      </div>"  >> $QC_html
+  </div>"  >> $QC_html
 # $QA_TOOLS/recon_checker -help
 # https://surfer.nmr.mgh.harvard.edu/fswiki/QATools
 
 #------------------------------------------------------------------------------#
+# POST-STRUCTRURAL QC
+mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
+T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
+T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
+
 echo "  <h2>Post-structural processing -post_structural</h2>
   <div>
-    <h3>Input files</h3>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
+  <h3>Input files</h3>" >> $QC_html
+  echo -e $table_style >> $QC_html
+  echo -e "      <table class=\"tg\">
+        <thead>
+          <tr>
+            <th class=\"tg-rkbl\">Variable name</th>
+            <th class=\"tg-droi\">Origin</th>
+            <th class=\"tg-droi\">Path to file</th>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
+            <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
+            <td class=\"tg-8pnm\">${T1freesurfr}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
+            <td class=\"tg-8pnm\">proc_structural<br><br></td>
+            <td class=\"tg-8pnm\">${proc_struct}/${id}_t1w_${res}mm_nativepro.nii.gz</td>
+          </tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1fast_seg</span></td>
+            <td class=\"tg-8pnm\">proc_structural<br><br></td>
+            <td class=\"tg-8pnm\">$(find $T1fast_seg 2>/dev/null)</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_InvWarp</span></td>
+            <td class=\"tg-8pnm\">proc_structural<br><br></td>
+            <td class=\"tg-8pnm\">$(find $T1_MNI152_InvWarp 2>/dev/null)</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_affine</span></td>
+            <td class=\"tg-8pnm\">proc_structural<br><br></td>
+            <td class=\"tg-8pnm\">$(find $T1_MNI152_affine 2>/dev/null)</td>
+          </tr>" >> $QC_html
+          echo -e "
+                </tbody>
+                </table>"  >> $QC_html
+#------------------------------------------------------------------------------#
+echo -e "<h3>Output volumetric parcellations</h3>" >> $QC_html
+echo -e $table_style >> $QC_html
+echo -e "      <table class=\"tg\">
+      <thead>
+        <tr>
+          <th class=\"tg-rkbl\">Parcellation</th>
+          <th class=\"tg-droi\">Path to file</th>
+        </tr>" >> $QC_html
+# Prepare the segmentatons
+parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"`
+for seg in $parcellations; do
+    parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+    echo -e "
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${parc_name}</span></td>
+                <td class=\"tg-8pnm\">${seg}</td>
+              </tr>"  >> $QC_html
+done
+echo -e "
+      </tbody>
+      </table>
+    </div>" >> $QC_html
 
 #------------------------------------------------------------------------------#
-echo "  <h2>Diffusion MRI processing -proc_dwi</h2>
+echo "
+<h2>Diffusion MRI processing -proc_dwi</h2>
   <div>
     <h3>Input files</h3>" >> $QC_html
     echo -e $table_style >> $QC_html
@@ -321,16 +384,44 @@ echo "  <h2>Diffusion MRI processing -proc_dwi</h2>
     N=${#bids_dwis[@]}
     n=$((${N} - 1))
     if [ "$N" -gt 1 ]; then
-    for ((i=0; i<=$n; i++)); do
-    echo "
+      for ((i=0; i<=$n; i++)); do
+      echo "
             <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">\${bids_dwis[${i}]}</span></td>
-              <td class=\"tg-8pnm\">BIDS anat<br><br></td>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
+              <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
               <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
             </tr>" >> $QC_html
-    done
+      done
+    fi
+    if [ -f $dwi_reverse ]; then
+      echo -e "
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
+                <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
+              </tr>"  >> $QC_html
     fi
     echo -e "
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
+              <td class=\"tg-8pnm\">proc_structural<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_InvWarp</span></td>
+              <td class=\"tg-8pnm\">proc_structural<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T1_MNI152_InvWarp 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_affine</span></td>
+              <td class=\"tg-8pnm\">proc_structural<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T1_MNI152_affine 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T15ttgen</span></td>
+              <td class=\"tg-8pnm\">proc_structural<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T15ttgen 2>/dev/null)</td>
+            </tr>
           </tbody>
           </table>"  >> $QC_html
 echo "    <h3>Motion parameters</h3>" >> $QC_html
@@ -338,6 +429,7 @@ echo "    <h3>Noise estimation</h3>" >> $QC_html
 echo "  </div>" >> $QC_html
 
 #------------------------------------------------------------------------------#
+# RESTING STATE
 echo "
   <h2>Resting state fMRI -proc_rsfmri</h2>
   <div>
