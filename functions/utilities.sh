@@ -151,6 +151,7 @@ bids_print.variables-rsfmri() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find $T1nativepro 2>/dev/null)"
+  Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
   Note "Main rsfMRI        =" "$(find ${bids_mainScan} 2>/dev/null)"
   Note "Main rsfMRI json   =" "$(find ${bids_mainScanJson} 2>/dev/null)"
   Note "Main phase scan    =" "$(find ${bids_mainPhase} 2>/dev/null)"
@@ -326,7 +327,7 @@ function cleanup() {
   # ITS A TRAP! Specifically a trap that will clean the temporal directory
   # and reset the old user path upon,
   # interrupts, and termination.
-  Error "something went wrong, check the logs"
+  Error "TRAP: something went wrong, check the logs"
   export PATH=$OLD_PATH
   unset OLD_PATH
   rm -rf "$tmp"
