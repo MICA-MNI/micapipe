@@ -69,7 +69,7 @@ export LANG=en_US.UTF-8
 local_threads=10
 
 # Uncomment this and fill in a temporary directory for a custom temporary directory.
-# This takes priority over the default. <<<<<< WHY this and not /tmp???
+# This takes priority over the default. 
 global_temp_directory=/data/mica2/temporaryNetworkProcessing
 
 # Uncomment this and fill in host host/temporary directories for
