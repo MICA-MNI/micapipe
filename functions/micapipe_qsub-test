@@ -37,6 +37,7 @@ echo -e "
 BIDS     = $BIDS
 id       = $id
 out      = $out
+ses      = $SES
 PROC     = $PROC
 MICAPIPE = $MICAPIPE"
 
@@ -46,14 +47,12 @@ Title "Running MICA qsub test"
 #	Timer
 aloita=$(date +%s)
 
-# Assigns variables names
-bids_variables $BIDS $id $out
-
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
 # Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_${subject}
+tmp=${tmp}/${RANDOM}_micapipe-test_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+Info "Temporary directory: $tmp"
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}

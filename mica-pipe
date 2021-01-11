@@ -97,7 +97,7 @@ echo -e "
     > workbench   1.4.2
     > python      3.7.6
     > R           3.6.3
-    > FIX (FMRIB's ICA-based Xnoiseifier) v1.06
+    > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
 
 
 McGill University, MNI, MICA-lab, May-September 2020
@@ -344,7 +344,7 @@ if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
 if [ -z ${tmp} ]; then export tmp=/tmp; else tmp=$tmp; fi
 
 # -----------------------------------------------------------------------------------------------#
-Title "BIDS >> MICA processing >> proc_struct \n\t\tSubject: $id Session: $SES"
+Title "BIDS >> MICA processing >> \n\t\tSubject: $id Session: $SES"
 
 # -----------------------------------------------------------------------------------------------#
 # init file for local processing at MICA lab
@@ -670,25 +670,21 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #                   MICA - qsub test
 # -----------------------------------------------------------------------------------------------#
-if [[ $qtest = "TRUE" ]] && [[ $micaq == "TRUE" ]]; then
-      log_file_str=/data_/mica3/BIDS_MIC/qTEST/${id}_$(date +'%d-%m-%Y')
-      Info "MICA qsub test: mica.q"
-      export PROC="qsub-MICA"
-      # Info "Setting a warper to run on mica.q"
-      qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads
-fi
-# # # MICA - qsub test
-if [[ $qtest = "TRUE" ]] && [[ $qall == "TRUE" ]]; then
-      Info "MICA qsub test: all.q"
-      export PROC="qsub-all.q"
-      # Info "Setting a warper to run on all.q"
-      qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt \
-           ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads
-fi
 if [[ $qtest = "TRUE" ]]; then
-      Info "LOCAL setup test"
-      ${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${id}_$(date +'%d-%m-%Y')_${PROC}.txt
+    log_file_str=${out}/${id}_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads"
+    if [[ $micaq == "TRUE" ]]; then
+        export PROC="qsub-MICA"
+        Info "MICA qsub test: mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND
+    elif [[ $qall == "TRUE" ]]; then
+        export PROC="qsub-all.q"
+        Info "MICA qsub test: $PROC"
+        qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND
+    else
+        Info "LOCAL setup test"
+        $COMMAND 2>&1 | tee -a ${log_file_str}_${PROC}.txt
+    fi
 fi
 
 # -----------------------------------------------------------------------------------------------#
