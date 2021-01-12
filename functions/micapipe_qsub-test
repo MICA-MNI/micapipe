@@ -19,6 +19,8 @@ SES=$4
 PROC=$5
 nocleanup=$6
 threads=$7
+tmpDir=$8
+here=$(pwd)
 export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
@@ -47,20 +49,25 @@ Title "Running MICA qsub test"
 #	Timer
 aloita=$(date +%s)
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe-test_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe-test_${id}
+Do_cmd mkdir -p $tmp
 Info "Temporary directory: $tmp"
+
+# TRAP in case the script fails
+trap 'cleanup $tmp $here $nocleanup' SIGINT EXIT
+
+# GLOBAL variables for this script
+Info "Not erasing temporal dir: $nocleanup"
+Info "ANTs will use $threads threads"
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
-
+cd $tmp
 Title ">>> PATHS and Global variables <<<"
 Info "Software paths"
-Note "User              =" "`whoami`"
-Note "Workstation       =" "`uname -n`"
+Note "User              =" "$(whoami)"
+Note "Workstation       =" "$(uname -n)"
 Note "SHELL             =" $SHELL
 Note "MICAPIPE          =" $MICAPIPE
 Note "AFNIDIR           =" $AFNIDIR
@@ -140,8 +147,6 @@ Note "DWI shell values    :" "`mrinfo $dwi_cat -shell_bvalues`"
 Note "pe_dir              :" $pe_dir
 Note "Readout Time        :" $ReadoutTime
 
-Do_cmd rm -rf $tmp
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
@@ -149,4 +154,3 @@ eri=`echo print $eri/60 | perl`
 
 Title "Running MICA qsub test ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
 echo "${id}, MICAq-TEST, DONE, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" #>> ${out}/brain-proc.csv
-bids_variables_unset

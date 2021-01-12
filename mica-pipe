@@ -71,12 +71,12 @@ echo -e "
 
 \033[38;5;141mOPTIONS:\033[0m
 \t\033[38;5;197m-h|-help\033[0m          : Print help
-\t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory.
+\t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
-\t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion.
+\t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
-\t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp).
-\t\033[38;5;197m-atlas\033[0m          : Specify the parcellations separated by a blank space and double quotes (Default is /tmp).
+\t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
+\t\033[38;5;197m-atlas\033[0m            : Specify the parcellations separated by a blank space and double quotes (eg \"economo,aparc\")
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
@@ -239,7 +239,7 @@ do
     shift
   ;;
   -tmpDir)
-    tmp=$2
+    tmpDir=$2
     shift;shift;
   ;;
   -atlas)
@@ -324,8 +324,8 @@ if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 
 # Get the real path of the Inputs
-out=`realpath $out`
-BIDS=`realpath $BIDS`
+out=$(realpath $out)
+BIDS=$(realpath $BIDS)
 id=${id/sub-/}
 
 # Number of session (Default is "ses-pre")
@@ -341,7 +341,7 @@ if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
 if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
 
 # Temporal directory
-if [ -z ${tmp} ]; then export tmp=/tmp; else tmp=$tmp; fi
+if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); fi
 
 # -----------------------------------------------------------------------------------------------#
 Title "BIDS >> MICA processing >> \n\t\tSubject: $id Session: $SES"
@@ -409,7 +409,7 @@ else
 fi
 
 # print directory  organization
-if [[ ! -z `which tree` ]]; then
+if [[ ! -z $(which tree) ]]; then
     if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then Info "$subject directory structure:\n"; tree -d $subject_dir; fi
 fi
 
@@ -418,25 +418,24 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-volumetric_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads $tmpDir"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]] ; then
         Info "MICA qsub - Structural processing: Volumetric"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND
     # all.q - Structural processing: Volumetric
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Structural processing: Volumetric"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND
     else
         # LOCAL Structural processing: Volumetric
-        ${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $PROC $nocleanup $threads 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -444,25 +443,24 @@ fi
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-freesurfer$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup $tmpDir"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]] ; then
         Info "MICA qsub - Structural processing: Freesurfer"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND
              # all.q - Structural processing: Freesurfer
     elif [[ $qall == "TRUE" ]] ; then
         Info "all.q qsub - Structural processing: Freesurfer"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt \
-             ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND
     else
         #  LOCAL - Structural processing: Freesurfer
-        ${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $PROC $nocleanup 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -672,7 +670,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [[ $qtest = "TRUE" ]]; then
     log_file_str=${out}/${id}_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads"
+    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $PROC $nocleanup $threads $tmpDir"
     if [[ $micaq == "TRUE" ]]; then
         export PROC="qsub-MICA"
         Info "MICA qsub test: mica.q"

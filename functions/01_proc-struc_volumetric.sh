@@ -23,7 +23,8 @@ SES=$4
 PROC=$5
 nocleanup=$6
 threads=$7
-here=`pwd`
+tmpDir=$8
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -51,14 +52,13 @@ Info "ANTs will use $threads threads"
 #	Timer
 aloita=$(date +%s)
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_proc_struc-vol_${subject}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}
+Do_cmd mkdir -p $tmp
+Info "Temporary directory: $tmp"
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $here $nocleanup' SIGINT EXIT
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
@@ -245,8 +245,6 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# Clean temporal directory
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -257,4 +255,3 @@ eri=`echo print $eri/60 | perl`
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-volumetric_*.txt`"
 echo "${id}, proc_struc, COMPLETED, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset

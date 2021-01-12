@@ -25,6 +25,7 @@ out=$3
 SES=$4
 PROC=$5
 nocleanup=$6
+$tmpDir=$7
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -55,14 +56,13 @@ micapipe_software
 bids_print.variables
 Info "Not erasing temporal dir: $nocleanup"
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_proc-freesurfer_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# # Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_proc-freesurfer_${id}
+Do_cmd mkdir -p $tmp
+Info "Temporary directory: $tmp"
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $here $nocleanup' SIGINT EXIT
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
@@ -97,9 +97,6 @@ Do_cmd cp -v ${tmp}/${id}/scripts/recon-all.log ${dir_logs}/recon-all.log
 # Copy results to  freesurfer's SUBJECTS_DIR directory
 Do_cmd cp -rv ${tmp}/${id} $dir_surf
 
-# Remove temporal directory
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
-
 Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 
 # Notification of completition
@@ -109,4 +106,3 @@ Title "Freesurfer recon-all processing ended: ${status}\n\tlogs:
 `ls ${dir_logs}/proc-freesurfer*.txt`"
 
 echo "${id}, FREESURFER, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
