@@ -137,8 +137,8 @@ help; exit 1; fi
 if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -refacePro or -all"; help; exit; fi
 
 # Get the real path of the Inputs
-out=`realpath $out`
-BIDS=`realpath $BIDS`
+out=$(realpath $out)
+BIDS=$(realpath $BIDS)
 id=${id/sub-/}
 
 # Number of session (Default is "ses-pre")
@@ -171,14 +171,12 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_anonymize_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-# TRAP in case the script fails
-trap CLEANUP EXIT INT TERM
-
 # Assign variables
 mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
 mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz
 mics_t1_face=$util_mics/MICs60_T1_0.8mm_face.nii.gz
 mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 Title "Running MICA-anonymize by $METHOD method(s)"
@@ -188,7 +186,6 @@ Info "micapipe will use $threads threads for multicore processing"
 out_warps=${out}/${id}
 Info "Output directory: $out_warps"
 if [ ! -d ${out_warps} ]; then Do_cmd mkdir ${out_warps}; fi
-here=`pwd`
 
 # Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
 t1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
@@ -368,5 +365,5 @@ Note "Output directory:    " $out_warps
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=`echo print $eri/60 | perl`
-Title "TOTAL running time:\033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
+Title "TOTAL running time:\033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
 bids_variables_unset
