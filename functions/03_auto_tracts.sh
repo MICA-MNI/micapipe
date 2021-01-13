@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 export FSLOUTPUTTYPE=NIFTI_GZ
-dir_functions=`dirname $(realpath $0)`
-MICAPIPE=`dirname $(realpath $dir_functions)`
+dir_functions=$(dirname $(realpath $0))
+MICAPIPE=$(dirname $(realpath $dir_functions))
 source ${MICAPIPE}/functions/utilities.sh
 
 help() {
@@ -146,14 +146,14 @@ Note "-tck      :" $tckIN
 Note "-outbase  :" $outbase
 Note "-mask     :" $mask
 Note "-fa       :" $fa
-Note "Protocols :" $fa
-Note "FA atlas  :" $fa
+Note "Protocols :" $autoPtx
+Note "FA atlas  :" $atlas
 
-tckIN=`realpath $tckIN`
-mask=`realpath $mask`
-outbase=`realpath $outbase`_
-fa=`realpath $fa`
-here=`pwd`
+tckIN=$(realpath $tckIN)
+mask=$(realpath $mask)
+outbase="$(realpath $outbase)_"
+fa=$(realpath $fa)
+here=$(pwd)
 
 if [ -z ${minStreamlinesPerVoxel} ]; then minStreamlinesPerVoxel=1; fi
 if [ -z ${tck_weights} ]; then tck_weights=""; else tck_weights="-tck_weights_in $tck_weights"; fi
@@ -170,7 +170,7 @@ if [ -z ${tmp} ]; then tmp=tmp_autotract_$$; else tmp=$tmp/autotract_$$; fi
 Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'rm -fR $tmp; cd $here' SIGINT SIGTERM
 
 cd $tmp
 
@@ -284,8 +284,8 @@ Do_cmd cd $here
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-Title "Auto-Tracto ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m"
+Title "Auto-Tracto ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
 bids_variables_unset
