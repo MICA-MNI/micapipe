@@ -22,10 +22,12 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-threads=$7
+nocleanup=$5
+threads=$6
+tmpDir=$7
+PROC=$8
 export OMP_NUM_THREADS=$threads
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -59,14 +61,12 @@ export SUBJECTS_DIR=${dir_surf}
 # Temporary fsa5 directory
 Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporary directory
-tmp=${tmp}/${RANDOM}_micapipe_post-morpho_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_post-morpho_${id}
+Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Make output directory
 outDir="$dir_surf"/morphology/
@@ -195,8 +195,8 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory and fsaverage5
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
+# Clean fsaverage5 directory
+Do_cmd rm -rf ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -206,5 +206,5 @@ eri=`echo print $eri/60 | perl`
 # Notification of completition
 Title "Post-Morphology processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-morph_*.txt"
-echo "${id}, post_morpho, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
+echo "${id}, post_morpho, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here

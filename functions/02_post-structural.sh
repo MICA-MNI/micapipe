@@ -20,10 +20,12 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-threads=$7
+nocleanup=$5
+threads=$6
+tmpDir=$7
+PROC=$8
 export OMP_NUM_THREADS=$threads
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -58,14 +60,12 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 aloita=$(date +%s)
 Nfiles=0
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_post-struct_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_post-struct_${id}
+Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -189,8 +189,8 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# Clean temporal directory and temporal fsaverage5
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
+# Clean fsaverage5 direvtory
+Do_cmd rm -rf ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -205,5 +205,5 @@ Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${er
 \tCheck logs:
 `ls ${dir_logs}/post-structural_*.txt`"
 # Print QC stamp
-echo "${id}, post_structural, $status N=`printf "%02d" $Nfiles`/21, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
+echo "${id}, post_structural, $status N=$(printf "%02d" $Nfiles)/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here

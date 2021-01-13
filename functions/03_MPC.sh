@@ -21,12 +21,14 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-input_im=$6
-input_lta=$7
-nocleanup=$8
-threads=$9
+nocleanup=$5
+threads=$6
+tmpDir=$7
+input_im=$8
+input_lta=$9
+PROC=${10}
 export OMP_NUM_THREADS=$threads
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -74,14 +76,12 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 #	Timer
 aloita=$(date +%s)
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporary directory
-tmp=${tmp}/${RANDOM}_micapipe_post-MPC_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_post-MPC_${id}
+Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -215,16 +215,16 @@ for parc in ${all_parcellations}; do
 done
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory and fsaverage5
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
+# Clean fsaverage5 directory
+Do_cmd rm -rf ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
 Title "Post-MPC processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-mpc_*.txt"
-echo "${id}, post_mpc, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
+echo "${id}, post_mpc, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here

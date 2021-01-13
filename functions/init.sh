@@ -69,7 +69,7 @@ export LANG=en_US.UTF-8
 local_threads=10
 
 # Uncomment this and fill in a temporary directory for a custom temporary directory.
-# This takes priority over the default. 
+# This takes priority over the default.
 global_temp_directory=/data/mica2/temporaryNetworkProcessing
 
 # Uncomment this and fill in host host/temporary directories for
@@ -105,16 +105,16 @@ hostname=$(uname -n)
 for idx in $(seq 0 2 ${#host_temp_dirs[@]}); do
     idx2=$(echo "$idx + 1" | bc)
     if [[ $hostname == ${host_temp_dirs[$idx]} ]]; then
-        export tmp=${host_temp_dirs[$idx2]}
+        export tmpDir=${host_temp_dirs[$idx2]}
         break
     fi
 done
 
 # If that didn't work, try setting from the global/default instead.
-if [[ -z $tmp ]]; then
+if [[ -z $tmpDir ]]; then
     if [[ ! -z $global_temp_directory ]]; then
-        export tmp=$global_temp_directory
+        export tmpDir=$global_temp_directory
     else
-        export tmp=$default_temp
+        export tmpDir=$default_temp
     fi
 fi

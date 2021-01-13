@@ -26,14 +26,16 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-changeTopupConfig=$7
-changeIcaFixTraining=$8
-thisMainScan=$9
-thisPhase=${10}
-threads=${11}
+nocleanup=$5
+threads=$6
+tmpDir=$7
+changeTopupConfig=$8
+changeIcaFixTraining=$9
+thisMainScan=${10}
+thisPhase=${11}
+PROC=${12}
 export OMP_NUM_THREADS=$threads
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -155,14 +157,12 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 #	Timer
 aloita=$(date +%s)
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_proc-rsfmri_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_proc-rsfmri_${id}
+Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Set basic parameters.
 struct2fs=$(find $dir_warp -name "*t1w2fs.lta")
@@ -585,17 +585,17 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Clean temporary directory
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp ${dir_surf}/fsaverage5; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
+# Clean fsaverage5 directory
+Do_cmd rm -rf ${dir_surf}/fsaverage5
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-Title "rsfMRI processing and post processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-rsfmri_*.txt`"
-echo "${id}, proc_rsfmri, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
+echo "${id}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here

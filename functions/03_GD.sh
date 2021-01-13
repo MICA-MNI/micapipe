@@ -20,10 +20,12 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-threads=$7
+# nocleanup=$5
+threads=$6
+# tmpDir=$7
+PROC=$8
 export OMP_NUM_THREADS=$threads
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -43,7 +45,6 @@ if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesur
 if [ ! -f ${lh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
 if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
-
 #------------------------------------------------------------------------------#
 Title "Running MICA Geodesic distance processing"
 micapipe_software
@@ -61,7 +62,7 @@ outPath=${dir_surf}/geo_dist/
 [[ ! -d "$outPath" ]] && mkdir -p "$outPath"
 
 # wb_command
-workbench_path=`which wb_command`
+workbench_path=$(which wb_command)
 
 #------------------------------------------------------------------------------#
 # Compute geodesic distance on all parcellations
@@ -90,5 +91,5 @@ eri=`echo print $eri/60 | perl`
 # Notification of completition
 Title "Post-GD processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-gd_*.txt"
-echo "${id}, post_gd, ${status}, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, post_gd, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 bids_variables_unset

@@ -20,12 +20,13 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-tracts=$7
-autoTract=$8
-threads=$9
-here=`pwd`
+nocleanup=$5
+threads=$6
+tmpDir=$7
+tracts=$8
+autoTract=$9
+PROC=${10}
+here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -81,17 +82,14 @@ Info "MRtrix will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
-here=`pwd`
 Nparc=0
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_post-dwi_${id}
-[[ ! -d $tmp ]] && Do_cmd mkdir -p $tmp
+# Create script specific temp directory
+tmp=${tmpDir}/${RANDOM}_micapipe_post-dwi_${id}
+Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
-trap cleanup INT TERM
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Create Connectomes directory for the outpust
 [[ ! -d $dwi_cnntm ]] && Do_cmd mkdir -p $dwi_cnntm
@@ -232,10 +230,6 @@ if [ $autoTract == "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------
-# Clean temporal directory
-if [[ $nocleanup == "FALSE" ]]; then Do_cmd rm -rf $tmp; else Info "Mica-pipe tmp directory was not erased: \n\t\t\t${tmp}"; fi
-Do_cmd cd $here
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
@@ -248,5 +242,5 @@ Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n
 \tlogs:
 `ls ${dir_logs}/post-dwi_*.txt`"
 # Print QC stamp
-echo "${id}, post_dwi, $status N=`printf "%02d" $Nparc`/56, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
-bids_variables_unset
+echo "${id}, post_dwi, $status N=$(printf "%02d" $Nparc)/56, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here

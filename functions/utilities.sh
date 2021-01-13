@@ -324,21 +324,23 @@ eval "$text"
 }
 
 function cleanup() {
-  # ITS A TRAP! Specifically a trap that will clean the temporal directory
+  # This script will clean the temporal directory
   # and reset the old user path upon,
   # interrupts, and termination.
   tmp=$1
-  here=$2
-  nocleanup=$3
+  nocleanup=$2
+  here=$3
+  # Title "TRAP is activated"
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
-      Info "Erasing $tmp directory"
-      rm -Rfv $tmp
+      echo -e "Erasing temporal directory: $tmp"
+      rm -Rf $tmp
   else
-      Info "Mica-pipe tmp directory was not erased: \n\t\t\033[0m${tmp}";
+      echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
   fi
-  if [ ! -z "${here+x}" ]; then cd "$here"; fi
+  cd "$here"
   bids_variables_unset
   export PATH=$OLD_PATH
   unset OLD_PATH
+  # exit
 }

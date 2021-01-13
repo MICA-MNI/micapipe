@@ -20,10 +20,10 @@ BIDS=$1
 id=$2
 out=$3
 SES=$4
-PROC=$5
-nocleanup=$6
-threads=$7
-tmpDir=$8
+nocleanup=$5
+threads=$6
+tmpDir=$7
+PROC=$8
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -55,10 +55,9 @@ aloita=$(date +%s)
 # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}
 Do_cmd mkdir -p $tmp
-Info "Temporary directory: $tmp"
 
 # TRAP in case the script fails
-trap 'cleanup $tmp $here $nocleanup' SIGINT EXIT
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
@@ -254,4 +253,5 @@ eri=`echo print $eri/60 | perl`
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
 `ls ${dir_logs}/proc-volumetric_*.txt`"
-echo "${id}, proc_struc, COMPLETED, `whoami`, `uname -n`, $(date), `printf "%0.3f\n" ${eri}`, $PROC" >> ${out}/brain-proc.csv
+echo "${id}, proc_struc, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+cleanup $tmp $nocleanup $here
