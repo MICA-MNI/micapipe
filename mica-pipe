@@ -6,7 +6,7 @@
 help() {
 echo -e "
 \033[38;5;141mCOMMAND:\033[0m
-   `basename $0`
+   $(basename $0)
 
 
 \033[38;5;141mARGUMENTS:\033[0m
@@ -83,9 +83,9 @@ echo -e "
 
 
 \033[38;5;141mUSAGE:\033[0m
-    \033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m
-    \033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_freesurfer\033[0m
-    \033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_freesurfer\033[0m \033[38;5;197m-proc_structural\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_freesurfer\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_freesurfer\033[0m \033[38;5;197m-proc_structural\033[0m
 
 
 \033[38;5;141mDEPENDENCIES:\033[0m
@@ -690,7 +690,7 @@ if [[ $qtest = "TRUE" ]]; then
     elif [[ $qall == "TRUE" ]]; then
         export PROC="qsub-all.q"
         Info "MICA qsub test: $PROC"
-        qsub -q all.q -pe all.pe 30 -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
     else
         Info "LOCAL setup test"
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}_${PROC}.txt
@@ -701,7 +701,7 @@ fi
 #			 Total Running Time
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Cleanup if processing was local
 if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
