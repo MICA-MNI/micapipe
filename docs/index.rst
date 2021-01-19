@@ -9,7 +9,7 @@
   :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-*An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
+*An open source repository about micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
 
 .. title:: micapipe
 
