@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>micapipe &mdash; micapipe  documentation</title>
   
@@ -22,7 +22,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -35,7 +38,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -56,7 +58,7 @@
           
 
           
-            <a href="#" class="icon icon-home" alt="Documentation Home"> micapipe
+            <a href="#" class="icon icon-home"> micapipe
           
 
           
@@ -155,6 +157,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -166,7 +170,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,53 +184,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <style type="text/css">
+  <div class="section" id="micapipe">
+<h1><strong>micapipe</strong><a class="headerlink" href="#micapipe" title="Permalink to this headline">¶</a></h1>
+<style type="text/css">
    hr {
    width: 100%;
    height: 1px;
    background-color: #261F4A;
    margin-top: 24px;
    }
-</style><img alt="alternate text" class="align-right" src="_images/micapipe_long.png" />
-<div class="section" id="welcome-to-the-mica-lab-pipeline">
-<h1><strong>Welcome to the MICA lab pipeline</strong><a class="headerlink" href="#welcome-to-the-mica-lab-pipeline" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="getting-started">
-<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
-<p>One key goal of the <strong>MICAPIPE</strong> is
-to harmonize analytical methods both <em>within</em> and <em>across</em> ENIGMA Working Groups, ultimately facilitating
-comparisons of imaging and genetic findings across diseases.</p>
+</style></div>
+<div class="section" id="welcome-to-micapipe-s-documentation">
+<h1><strong>Welcome to micapipe’s documentation!</strong><a class="headerlink" href="#welcome-to-micapipe-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p><em>Micapipe</em> is a processing pipeline providing a robust framework to analyze multimodal MRI data. Our pipeline integrates processing streamlines for <em>T1-weighted</em>, <em>microstructure-sensitive</em>, <em>diffusion-weighted</em>, and <em>resting-state functional imaging</em> to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several neuroimaging software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based connectivity matrices.</p>
+<p>Micapipe is developed by MICA-lab (<a class="reference external" href="https://mica-mni.github.io">https://mica-mni.github.io</a>) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute.</p>
+<a class="reference internal image-reference" href="_images/micapipe.png"><img alt="alternate text" class="align-center" src="_images/micapipe.png" style="width: 580.0px; height: 703.5px;" /></a>
+<br><div class="section" id="reproducibility">
+<h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Permalink to this headline">¶</a></h2>
+<p>To encourage reproducibility and robustness of investigations, we provide a fully containerized version of Micapipe in the form of a Docker container. Step-by-step tutorials are provided so users can run micapipe through this container. For flexibility, we also provide guidance on bare metal installations.</p>
 <br></div>
-<div class="section" id="main-workflow">
-<h2>Main workflow ⚙️<a class="headerlink" href="#main-workflow" title="Permalink to this headline">¶</a></h2>
-<p>Tired of displaying your surface findings in tables? Look no further! The <strong>MICAPIPE</strong> has got you
-covered! Check out our <a class="reference internal" href="pages/03.execution/index.html#execution"><span class="std std-ref">visualization tools</span></a> and project your cortical and subcortical data to the surface!</p>
-<br></div>
-<div class="section" id="processing-steps">
-<h2>Processing steps 👣<a class="headerlink" href="#processing-steps" title="Permalink to this headline">¶</a></h2>
-<p>Tired of displaying your surface findings in tables? Look no further! The <strong>MICAPIPE</strong> has got you
-covered! Check out our <a class="reference internal" href="pages/03.execution/index.html#execution"><span class="std std-ref">visualization tools</span></a> and project your cortical and subcortical data to the surface!</p>
-<br></div>
-<div class="section" id="quality-check">
-<h2>Quality Check<a class="headerlink" href="#quality-check" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>MICAPIPE</strong> has a <em>No data, No problem</em> policy! To make things easier, we provide from an individual site
-that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived
-datasets, you can easily complete all of the tutorials!</p>
-<br></div>
-<div class="section" id="additional-tools">
-<h2>Additional tools<a class="headerlink" href="#additional-tools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="datasets">
+<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<p>Micapipe has been tested on several openly available datasets, such as CamCAN, […]. The pipeline was optimized for the MICs dataset (DOI: ), which includes all data modalities that can be processed in micapipe.</p>
 <br></div>
 <div class="section" id="development-and-getting-involved">
-<h2>Development and getting involved ⚙️<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>
-<p>Should you have any problems, questions, or suggestions about the <strong>MICAPIPE</strong>, please do not
-hesitate to post them to our Github <a class="reference external" href="https://github.com/MICA-MNI/micapipe/issues">issues</a>! Or are you interested in collaborating
-or sharing your codes/tools? <a class="reference external" href="https://www.urbandictionary.com/define.php?term=noice">Noice</a>!
-Make sure you familiarize yourself with our <a class="reference external" href="https://github.com/MICA-MNI/micapipe/blob/master/CONTRIBUTING.md">contributing guidelines</a>
-first and then discuss your ideas on our Github <a class="reference external" href="https://github.com/MICA-MNI/micapipe/issues">issues</a> and
-<a class="reference external" href="https://github.com/MICA-MNI/micapipe/pulls">pull request</a>.</p>
-<br></div>
-<div class="section" id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<p>Detailed information regarding the software and tools used in this pipeline</p>
+<h2>Development and getting involved<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>
+<p>GitHub issues, pull requests, mailing list</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -236,14 +219,14 @@ first and then discuss your ideas on our Github <a class="reference external" hr
 <div class="toctree-wrapper compound">
 </div>
 <hr class="docutils" />
-<a class="reference internal image-reference" href="_images/micapipe.png"><img alt="alternate text" class="align-center" src="_images/micapipe.png" style="width: 580.0px; height: 703.5px;" /></a>
-</div>
-<div class="section" id="creators">
-<h2>Creators 🧠<a class="headerlink" href="#creators" title="Permalink to this headline">¶</a></h2>
+<br></div>
+<div class="section" id="core-development-team">
+<h2>Core development team 🧠<a class="headerlink" href="#core-development-team" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Raúl Rodríguez-Cruces</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Jessica Royer</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Sara Larivière</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
+<li><p><strong>Peer Herholz</strong>, McConnell Brain Imaging Centre - Montreal Neurological Institute*</p></li>
 <li><p><strong>Bo-yong Park</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Reinder Vos de Wael</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Casey Paquola</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
