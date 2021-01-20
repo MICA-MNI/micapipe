@@ -27,8 +27,17 @@ bids_variables() {
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
   export subject=sub-${id}
-  export subject_dir=$out/${subject}/${SES}     # Output directory
-  export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
+
+  # Handle Single Session
+  if [ $SES == "SINGLE" ]; then
+      export subject_dir=$out/${subject}     # Output directory
+      export subject_bids=${BIDS}/${subject} # Input BIDS directory
+      ses=""
+  else
+      export subject_dir=$out/${subject}/${SES}     # Output directory
+      export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
+      ses="_${SES}"
+  fi
 
   # Structural directories derivatives/
   export proc_struct=$subject_dir/proc_struct # structural processing directory
@@ -71,10 +80,10 @@ bids_variables() {
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  export bids_mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.nii*       # main rsfMRI scan
-  export bids_mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.json   # main rsfMRI scan json
-  export bids_mainPhase=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse*.nii*     # main phase scan
-  export bids_reversePhase=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse*.nii*  # reverse phase scan
+  export bids_mainScan=${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii*       # main rsfMRI scan
+  export bids_mainScanJson=${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json   # main rsfMRI scan json
+  export bids_mainPhase=${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii*     # main phase scan
+  export bids_reversePhase=${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii*  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
@@ -85,7 +94,7 @@ bids_variables() {
   bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
   export bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
   export bids_inv1=${subject_bids}/anat/*inv1*.nii*
-  export dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
+  export dwi_reverse=${subject_bids}/dwi/*${ses}_acq-PA_dir-*_dwi.nii*
 }
 
 bids_print.variables() {

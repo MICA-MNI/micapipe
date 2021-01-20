@@ -171,7 +171,7 @@ fi
 # mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
 for mm in 2 0.8; do
   # Only runs if the output doesn't exist
-  if [ ! -f ${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_pve_0.nii.gz ]; then
+  if [ ! -f ${dir_warp}/${id}_t1w_${res}mm_nativepro_brain_to_${mm}mm_MNI152_SyN_brain_1Warp.nii.gz ]; then
       # ---------------------------------------------------------
       # MNI152 templates
       MNI152_brain=${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz
