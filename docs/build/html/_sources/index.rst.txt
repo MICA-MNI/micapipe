@@ -3,9 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. **micapipe**
-   ============================
-   *An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
+**micapipe**
+============================================================
 
 .. title:: micapipe
 
@@ -20,79 +19,45 @@
       }
    </style>
 
-.. image:: ./figures/micapipe_long.png
-    :alt: alternate text
-    :align: right
+.. .. image:: https://readthedocs.org/projects/micapipe/badge/?version=latest
+  :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
-**Welcome to the MICA lab pipeline**
-==========================================
+**Welcome to micapipe's documentation!**
+============================================================
 
+*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. Our pipeline integrates processing streamlines for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several neuroimaging software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based connectivity matrices.
 
+Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute. 
 
-Getting started
+.. image:: ./figures/micapipe.png
+   :scale: 50 %
+   :alt: alternate text
+   :align: center
+
+.. raw:: html
+
+   <br>
+
+Reproducibility
 --------------------------------------------------------
-One key goal of the **MICAPIPE** is
-to harmonize analytical methods both *within* and *across* ENIGMA Working Groups, ultimately facilitating
-comparisons of imaging and genetic findings across diseases.
+To encourage reproducibility and robustness of investigations, we provide a fully containerized version of Micapipe in the form of a Docker container. Step-by-step tutorials are provided so users can run micapipe through this container. For flexibility, we also provide guidance on bare metal installations. 
 
 .. raw:: html
 
    <br>
 
-Main workflow ⚙️
--------------------------------------
-Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
-covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
+Datasets
+--------------------------------------------------------
+Micapipe has been tested on several openly available datasets, such as CamCAN, [...]. The pipeline was optimized for the MICs dataset (DOI: ), which includes all data modalities that can be processed in micapipe.
 
 .. raw:: html
 
    <br>
 
-Processing steps 👣
--------------------------------------
-Tired of displaying your surface findings in tables? Look no further! The **MICAPIPE** has got you
-covered! Check out our :ref:`visualization tools<execution>` and project your cortical and subcortical data to the surface!
-
-.. raw:: html
-
-   <br>
-
-Quality Check
-------------------------------------
-The **MICAPIPE** has a *No data, No problem* policy! To make things easier, we provide from an individual site
-that have been processed according to ENIGMA protocols. Using our example data, previously published summary statistics, or any other ENIGMA-derived
-datasets, you can easily complete all of the tutorials!
-
-.. raw:: html
-
-   <br>
-
-
-Additional tools
--------------------------------------------
-
-.. raw:: html
-
-   <br>
-
-
-Development and getting involved ⚙️
--------------------------------------------
-Should you have any problems, questions, or suggestions about the **MICAPIPE**, please do not
-hesitate to post them to our Github `issues <https://github.com/MICA-MNI/micapipe/issues>`_! Or are you interested in collaborating
-or sharing your codes/tools? `Noice <https://www.urbandictionary.com/define.php?term=noice>`_!
-Make sure you familiarize yourself with our `contributing guidelines <https://github.com/MICA-MNI/micapipe/blob/master/CONTRIBUTING.md>`_
-first and then discuss your ideas on our Github `issues <https://github.com/MICA-MNI/micapipe/issues>`_ and
-`pull request <https://github.com/MICA-MNI/micapipe/pulls>`_.
-
-
-.. raw:: html
-
-   <br>
-
-References
--------------------------------------------
-Detailed information regarding the software and tools used in this pipeline
+Development and getting involved
+--------------------------------------------------------
+GitHub issues, pull requests, mailing list
 
 .. toctree::
    :maxdepth: 1
@@ -135,19 +100,20 @@ Detailed information regarding the software and tools used in this pipeline
    pages/11.references/index
    pages/12.acknowledge/index
 
-___________________________________________________________________________________________________
 
-.. image:: ./figures/micapipe.png
-   :scale: 50 %
-   :alt: alternate text
-   :align: center
+--------------------------------------------------------
 
-Creators 🧠
--------------------------
+.. raw:: html
+
+   <br>
+
+Core development team 🧠
+--------------------------------------------------------
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
+- **Peer Herholz**, McConnell Brain Imaging Centre - Montreal Neurological Institute*
 - **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
 - **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
