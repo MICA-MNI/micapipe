@@ -41,7 +41,8 @@ id       = $id
 out      = $out
 ses      = $SES
 PROC     = $PROC
-MICAPIPE = $MICAPIPE"
+MICAPIPE = $MICAPIPE
+subject_bids = $subject_bids"
 
 #------------------------------------------------------------------------------#
 Title "Running MICA qsub test"
