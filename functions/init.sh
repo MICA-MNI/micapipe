@@ -84,37 +84,37 @@ host_temp_dirs=(fladgate.bic.mni.mcgill.ca /host/fladgate/local_raid/temporaryLo
 
 # Default temporary directory
 tmp_file=$(mktemp)
-default_temp=$(dirname $tmp_file)
-rm -f $tmp_file
+default_temp=$(dirname "$tmp_file")
+rm -f "$tmp_file"
 
 # Set basic global variables.
 # export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
-if [[ ! -z $NSLOTS ]]; then
-    export threads=$NSLOTS
+if [[ ! -z "$NSLOTS" ]]; then
+    export threads="$NSLOTS"
 else
-    export threads=$local_threads
+    export threads="$local_threads"
 fi
-export OMP_NUM_THREADS=$threads
+export OMP_NUM_THREADS="$threads"
 
 # Where processing will run
-if [[ -z $PROC ]]; then export PROC="LOCAL-MICA"; fi
+if [[ -z "$PROC" ]]; then export PROC="LOCAL-MICA"; fi
 
 # Set the temporary directory
 hostname=$(uname -n)
 # First try setting from the host specific directories.
-for idx in $(seq 0 2 ${#host_temp_dirs[@]}); do
+for idx in $(seq 0 2 "${#host_temp_dirs[@]}"); do
     idx2=$(echo "$idx + 1" | bc)
-    if [[ $hostname == ${host_temp_dirs[$idx]} ]]; then
-        export tmpDir=${host_temp_dirs[$idx2]}
+    if [[ "$hostname" == "${host_temp_dirs[$idx]}" ]]; then
+        export tmpDir="${host_temp_dirs[$idx2]}"
         break
     fi
 done
 
 # If that didn't work, try setting from the global/default instead.
-if [[ -z $tmpDir ]]; then
-    if [[ ! -z $global_temp_directory ]]; then
-        export tmpDir=$global_temp_directory
+if [[ -z "$tmpDir" ]]; then
+    if [[ ! -z "$global_temp_directory" ]]; then
+        export tmpDir="$global_temp_directory"
     else
-        export tmpDir=$default_temp
+        export tmpDir="$default_temp"
     fi
 fi
