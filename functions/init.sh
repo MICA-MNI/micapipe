@@ -9,58 +9,61 @@ export OLD_PATH=$PATH
 
 #------------------------------------------------------------------------------#
 # SOFTWARE CONFIGURATION for MICAPIPE
-# Afni binaries
-PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*afni*});IFS=':';echo "${p[*]}";unset IFS)
+#------------------------------------------------------------------------------#
+# User defined PATHS
+# AFNI
 export AFNIDIR="/data/mica1/01_programs/afni-20.2.06"
-
-# ANTS binaries
-PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*ants*});IFS=':';echo "${p[*]}";unset IFS)
+# ANTS
 export ANTSPATH="/data/mica1/01_programs/ants-2.3.4/bin"
+# Workbench
+export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
+# ICA-FIX
+export FIXPATH="/data_/mica1/01_programs/fix"
+# FreeSurfer
+export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0 "
+# FSL 6.0
+export FSLDIR="/data_/mica1/01_programs/fsl_mica"
+export FSL_BIN="${FSLDIR}/bin"
+# MRtrix3 3.0.1
+export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
+# Python 3.7
+export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
 
+#------------------------------------------------------------------------------#
+# Remove any other instance from the PATH
+# AFNI
+PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*afni*});IFS=':';echo "${p[*]}";unset IFS)
+# ANTS
+PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*ants*});IFS=':';echo "${p[*]}";unset IFS)
 # Workbench binaries
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*workbench*});IFS=':';echo "${p[*]}";unset IFS)
-workbench_path=/data/mica1/01_programs/workbench-1.4.2/bin_linux64
-
-# ICA-FIX
-FIXPATH=/data_/mica1/01_programs/fix
-
-#------------------------------------------------------------------------------#
-# FreeSurfer 6.0 configuration
-export FREESURFER_HOME=/data/mica1/01_programs/Freesurfer-6.0  && source $FREESURFER_HOME/FreeSurferEnv.sh
-
-#------------------------------------------------------------------------------#
-# FSL 6.0 configuration
-export FSLDIR=/data_/mica1/01_programs/fsl_mica
-export FSL_BIN=${FSLDIR}/bin
-source ${FSLDIR}/etc/fslconf/fsl.sh
-export LD_LIBRARY_PATH="${FSLDIR}/lib"
-
-#-----------------------------------------------------------------------------------#
-# MRtrix3 3.0.1
+# FSL
+PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*fsl*});IFS=':';echo "${p[*]}";unset IFS)
 # revome any other MRtrix3 version from path
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*mrtrix*});IFS=':';echo "${p[*]}";unset IFS)
-mrtrixDir=/data_/mica1/01_programs/mrtrix3-3.0.1
-
-#-----------------------------------------------------------------------------------#
-# Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${PATH}:${FSL_BIN}:${PATH}"
-
-#------------------------------------------------------------------------------#
-# Set the libraries paths for mrtrx and fsl
-export LD_LIBRARY_PATH="${FSLDIR}/bin:${mrtrixDir}/lib"
-
-#------------------------------------------------------------------------------#
-# PYTHON 3.7 configuration
 # REMOVES any other python configuration from the PATH the conda from the PATH and LD_LIBRARY_PATH variable
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
 LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
+
+#------------------------------------------------------------------------------#
+# Software configuration
+# FreeSurfer 6.0 configuration
+source ${FREESURFER_HOME}/FreeSurferEnv.sh
+# FSL 6.0 configuration
+source ${FSLDIR}/etc/fslconf/fsl.sh
+# PYTHON 3.7 configuration
 unset PYTHONPATH
 unset PYTHONHOME
-# Adds the conda3 path to the env PATH variable
-export PATH="/data_/mica1/01_programs/anaconda/anaconda3/bin:${PATH}"
-# Language utilities
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
+
+#------------------------------------------------------------------------------#
+# Set the libraries paths for mrtrx and fsl
+export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
+
+#-----------------------------------------------------------------------------------#
+# Export new PATH with al the necessary binaries
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${PATH}"
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
