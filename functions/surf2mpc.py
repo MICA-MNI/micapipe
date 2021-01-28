@@ -54,10 +54,10 @@ if len(sys.argv) < 4:
     num_surf = 14
 
 # Manage single session
-if ses_num = "SINGLE":
+if ses_num=="SINGLE":
     ses_str="{dataDir}/sub-{sub}".format(dataDir=dataDir, sub=sub)
-else
-    ses_str="{dataDir}/sub-{sub}/{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
+else:
+    ses_str="{dataDir}/sub-{sub}/ses-{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
 
 # setting output directory
 OPATH = "{subject_dir}/proc_struct/surfaces/micro_profiles/".format(subject_dir=ses_str)
@@ -85,7 +85,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
 
         # Load parcellation in native surface space
-        pathToParc = "{subject_dir}/proc_struct/surfaces/{sub}/label/".format(subject_dir=ses_str)
+        pathToParc = "{subject_dir}/proc_struct/surfaces/{sub}/label/".format(subject_dir=ses_str, sub=sub)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)
