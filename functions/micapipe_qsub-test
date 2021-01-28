@@ -34,7 +34,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 echo -e "
 BIDS     = $BIDS
 id       = $id
