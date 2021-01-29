@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>How execute the micapipe &mdash; micapipe  documentation</title>
+  <title>Running micapipe: overview &mdash; micapipe  documentation</title>
   
 
   
@@ -92,15 +92,12 @@
             
               <p class="caption"><span class="caption-text">Getting started</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Download micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.whatyouneed/index.html">Usages Notes</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Execution of micapipe</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#command-line-arguments">Command-Line Arguments</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#some-essential-flags">Some essential flags</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flags-for-processing">Flags for processing</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Micapipe usage overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-micapipe">Running micapipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-flags">Module flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-options">More options</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
@@ -174,7 +171,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>How execute the micapipe</li>
+      <li>Running micapipe: overview</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -193,59 +190,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="execution-of-micapipe">
-<span id="execution"></span><h1>Execution of micapipe<a class="headerlink" href="#execution-of-micapipe" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="command-line-arguments">
-<h2>Command-Line Arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ mica-pipe  -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt;
+  <div class="section" id="micapipe-usage-overview">
+<span id="execution"></span><h1>Micapipe usage overview<a class="headerlink" href="#micapipe-usage-overview" title="Permalink to this headline">¶</a></h1>
+<p>But how exactly does one run micapipe?</p>
+<div class="admonition-help admonition">
+<p class="admonition-title">Help! 🥺</p>
+<p>A list and brief descripton of each argument and flag can be displayed using the command : <code class="docutils literal notranslate"><span class="pre">mica-pipe</span> <span class="pre">-help</span></code> or <code class="docutils literal notranslate"><span class="pre">mica-pipe</span> <span class="pre">-h</span></code></p>
+</div>
+<div class="section" id="running-micapipe">
+<h2>Running micapipe<a class="headerlink" href="#running-micapipe" title="Permalink to this headline">¶</a></h2>
+<p>Basic usage of micapipe, with no options specified, will look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mica</span><span class="o">-</span><span class="n">pipe</span>  <span class="o">-</span><span class="n">sub</span> <span class="o">&lt;</span><span class="n">subject_id</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">bids</span> <span class="o">&lt;</span><span class="n">BIDS</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span> <span class="o">-&lt;</span><span class="n">module</span><span class="o">-</span><span class="n">flag</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<div class="section" id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><p>↪ <strong>&lt;subject_id&gt;</strong> : the subject identification (without the “sub-“)</p>
-<p>↪ <strong>&lt;outputDirectory&gt;</strong> : the output path for the outcomes files of the preprocessing</p>
-<p>↪ <strong>&lt;BIDS-directory&gt;</strong> : the input path, where the folder of your BIDS valid dataset is</p>
-</div></blockquote>
-</div>
-<div class="section" id="some-essential-flags">
-<h3>Some essential flags<a class="headerlink" href="#some-essential-flags" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><p>↪ <strong>-ses</strong> : Number of session (Default is ses-01)</p>
-<p>↪ <strong>-force</strong> : To overwrite the subject directory (WARNING! This will suppress your subject directory)</p>
-<p>↪ <strong>-quiet</strong> : Do NOT print comments</p>
-<p>↪ <strong>-nocleanup</strong> : Do NOT delete temporal directory at script completion</p>
-</div></blockquote>
-</div>
-<div class="section" id="flags-for-processing">
-<h3>Flags for processing<a class="headerlink" href="#flags-for-processing" title="Permalink to this headline">¶</a></h3>
-<p>🚩 Flags for first stages of structural processing:</p>
-<blockquote>
-<div><p>↪ <strong>-proc_structural</strong> : Volumetric processing</p>
-<p>↪ <strong>-proc_freesurfer</strong> : Freesurfer recon-all processing</p>
-<p>↪ <strong>-proc_dwi</strong> : DWI-Diffusion weighted images processing with MRtrix3</p>
-<p>↪ <strong>-proc_rsfmri</strong> : Resting state Functional MRI processing</p>
-</div></blockquote>
-<div class="admonition-important-to-know admonition">
-<p class="admonition-title">Important to know ☝🏼</p>
 <dl class="simple">
-<dt>You can use 🚩 -proc to run all the first stages of micapipe</dt><dd><p>The first stages of structural processing correspond to all the -proc stages of micapipe. These steps are used to preprocess the images in order to make them usable for the -post stages.</p>
+<dt>Let’s break this down:</dt><dd><ul class="simple">
+<li><p><strong>-sub</strong>: Corresponds to subject ID. Even if your data is in BIDS, we exclude the “sub-” substring from the ID code (e.g. sub-HC001 is entered as -sub HC001).</p></li>
+<li><p><strong>-out</strong>: Output directory path. Following BIDS, this corresponds to the “derivatives” directory associated with your dataset.</p></li>
+<li><p><strong>-bids</strong>: Path to rawdata BIDS directory.</p></li>
+<li><p>-&lt;module-flag&gt;: Specifies which submodule(s) to run (see next section).</p></li>
+</ul>
 </dd>
 </dl>
 </div>
-<p>🚩 Flags for second stages of structural processing:</p>
-<blockquote>
-<div><p>↪ <strong>-post_structural</strong> : Post structural volumetric processing</p>
-<p>↪ <strong>-post_dwi</strong> : Post tractography and connectome generation</p>
-<p>↪ <strong>-post_mpc</strong> : Microstructural profiles and covariance analysis</p>
-</div></blockquote>
-<div class="admonition-important-to-know admonition">
-<p class="admonition-title">Important to know ☝🏼</p>
+<div class="section" id="module-flags">
+<h2>Module flags<a class="headerlink" href="#module-flags" title="Permalink to this headline">¶</a></h2>
+<p>The processing modules composing micapipe can be run individually or bundled using specific flags.</p>
 <dl class="simple">
-<dt>You can use 🚩 -post to run all the second stages of micapipe</dt><dd><p>The second stages of structural processing correspond to all the -post stages of micapipe. These steps generate connectomes, correlations and matrices.</p>
+<dt>Processing modules for T1-weighted structural imaging consist of:</dt><dd><ul class="simple">
+<li><p><strong>-proc_structural</strong>: Basic volumetric processing on T1-weighted data.</p></li>
+<li><p><strong>-proc_freesurfer</strong>: Run freesurfer’s recon-all pipeline on T1-weighted data.</p></li>
+<li><p><strong>-post-structural</strong>: Further structural processing relying on qualtiy-controlled cortical surface segmentations.</p></li>
+<li><p><strong>-GD</strong>: Generate geodesic distance matrices from participant’s native midsurface mesh.</p></li>
+<li><p><strong>-Morphology</strong>: Registration and smoothing of surface-based morphological features of the cortex.</p></li>
+</ul>
+</dd>
+<dt>Processing module for quantitative T1 imaging:</dt><dd><ul class="simple">
+<li><p><strong>-MPC</strong>: Equivolumetric surface mapping and generate microstructural profile covariance matrices <a class="reference external" href="https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284">(Paquola et al., 2019)</a>.</p></li>
+</ul>
+</dd>
+<dt>Flags for diffusion-weighted imaging processing steps:</dt><dd><ul class="simple">
+<li><p><strong>-proc_dwi</strong>: Basic diffusion-weighted imaging processing.</p></li>
+<li><p><strong>-SC</strong>: Diffusion tractography and generate structural connectomes.</p></li>
+</ul>
+</dd>
+<dt>Flag to process resting-state functional MRI data:</dt><dd><ul class="simple">
+<li><p><strong>-proc_rsfmri</strong>: Resting-state functional processing and generate functional connectomes.</p></li>
+</ul>
+</dd>
+<dt>Lastly, to run all processing steps while making sure module interdependencies are respected:</dt><dd><ul class="simple">
+<li><p><strong>-all</strong>: Run all the modules! This could take a while…</p></li>
+</ul>
 </dd>
 </dl>
+<div class="admonition-but-wait-there-s-more admonition">
+<p class="admonition-title">But wait… there’s more! 🙀</p>
+<p>Optional arguments can be specified for some modules. See the module’s dedicated page for details!</p>
 </div>
+</div>
+<div class="section" id="more-options">
+<h2>More options<a class="headerlink" href="#more-options" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>You can specify additional options when running micapipe:</dt><dd><ul class="simple">
+<li><p><strong>-force</strong>: Overwrite existing data in the subject directory.</p></li>
+<li><p><strong>-quiet</strong>: Do not print comments and warnings.</p></li>
+<li><p><strong>-nocleanup</strong>: Prevent deletion of temporary directory created for the module.</p></li>
+<li><p><strong>-threads</strong> &lt;#&gt;: Change number of threads (default = 6).</p></li>
+<li><p><strong>-tmpDir</strong> &lt;/path&gt;: Specify custom location in with temporary directory will be created (default = /tmp).</p></li>
+<li><p><strong>-version</strong>: Print your currently installed software version.</p></li>
+<li><p><strong>-slim</strong>: Keep only crucial outputs and erase all the intermediary files</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-slim-run admonition">
+<p class="admonition-title">Slim run 👙</p>
+<p>Including the <strong>-slim</strong> flag will considerably reduce the number of outputs saved at the end of each module. Files affected by this flag are specified in each module’s dedicated page.</p>
 </div>
 </div>
 </div>

@@ -3,11 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**micapipe**
-============================================================
-
-.. title:: micapipe
-
 .. raw:: html
 
    <style type="text/css">
@@ -24,11 +19,9 @@
   :alt: Documentation Status
 
 **Welcome to micapipe's documentation!**
-============================================================
+========================================================
 
-*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. Our pipeline integrates processing streamlines for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several neuroimaging software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based connectivity matrices.
-
-Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute. 
+*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streamlines for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.
 
 .. image:: ./figures/micapipe.png
    :scale: 50 %
@@ -39,25 +32,25 @@ Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators
 
    <br>
 
-Reproducibility
+Reproducibility 👯‍♀️
 --------------------------------------------------------
-To encourage reproducibility and robustness of investigations, we provide a fully containerized version of Micapipe in the form of a Docker container. Step-by-step tutorials are provided so users can run micapipe through this container. For flexibility, we also provide guidance on bare metal installations. 
+To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations<_download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
 
 .. raw:: html
 
    <br>
 
-Datasets
+Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several openly available datasets, such as CamCAN, [...]. The pipeline was optimized for the MICs dataset (DOI: ), which includes all data modalities that can be processed in micapipe.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_. The pipeline was mainly tested on the MICs dataset (DOI: 10.5281/zenodo.4342981), which includes all data modalities currently supported by micapipe.
 
 .. raw:: html
 
    <br>
 
-Development and getting involved
+Development and getting involved 🙋‍♀️
 --------------------------------------------------------
-GitHub issues, pull requests, mailing list
+Should you have any problems, questions, or suggestions about micapipe, please post an `issue <https://github.com/MICA-LAB/micapipe/issues>`_ or formulate a `pull request <https://github.com/MICA-LAB/micapipe/pulls>`_ on our repository. 
 
 .. toctree::
    :maxdepth: 1
@@ -109,6 +102,8 @@ GitHub issues, pull requests, mailing list
 
 Core development team 🧠
 --------------------------------------------------------
+
+Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute. 
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*

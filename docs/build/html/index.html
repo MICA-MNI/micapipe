@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>micapipe &mdash; micapipe  documentation</title>
+  <title>Welcome to micapipe’s documentation! &mdash; micapipe  documentation</title>
   
 
   
@@ -44,7 +44,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Download micapipe" href="pages/01.install/index.html" /> 
+    <link rel="next" title="Installation" href="pages/01.install/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,9 +91,9 @@
             
               <p class="caption"><span class="caption-text">Getting started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pages/01.install/index.html">Download micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/02.whatyouneed/index.html">Usages Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pages/03.execution/index.html">Execution of micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/03.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/09.whatsnew/index.html">What’s new?</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Processing steps</span></p>
@@ -165,7 +165,7 @@
     
       <li><a href="#" class="icon icon-home"></a> &raquo;</li>
         
-      <li>micapipe</li>
+      <li><strong>Welcome to micapipe’s documentation!</strong></li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -184,32 +184,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="micapipe">
-<h1><strong>micapipe</strong><a class="headerlink" href="#micapipe" title="Permalink to this headline">¶</a></h1>
-<style type="text/css">
+  <style type="text/css">
    hr {
    width: 100%;
    height: 1px;
    background-color: #261F4A;
    margin-top: 24px;
    }
-</style></div>
-<div class="section" id="welcome-to-micapipe-s-documentation">
+</style><div class="section" id="welcome-to-micapipe-s-documentation">
 <h1><strong>Welcome to micapipe’s documentation!</strong><a class="headerlink" href="#welcome-to-micapipe-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p><em>Micapipe</em> is a processing pipeline providing a robust framework to analyze multimodal MRI data. Our pipeline integrates processing streamlines for <em>T1-weighted</em>, <em>microstructure-sensitive</em>, <em>diffusion-weighted</em>, and <em>resting-state functional imaging</em> to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several neuroimaging software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based connectivity matrices.</p>
-<p>Micapipe is developed by MICA-lab (<a class="reference external" href="https://mica-mni.github.io">https://mica-mni.github.io</a>) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute.</p>
+<p><em>Micapipe</em> is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streamlines for <em>T1-weighted</em>, <em>microstructure-sensitive</em>, <em>diffusion-weighted</em>, and <em>resting-state functional imaging</em> to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.</p>
 <a class="reference internal image-reference" href="_images/micapipe.png"><img alt="alternate text" class="align-center" src="_images/micapipe.png" style="width: 580.0px; height: 703.5px;" /></a>
 <br><div class="section" id="reproducibility">
-<h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Permalink to this headline">¶</a></h2>
-<p>To encourage reproducibility and robustness of investigations, we provide a fully containerized version of Micapipe in the form of a Docker container. Step-by-step tutorials are provided so users can run micapipe through this container. For flexibility, we also provide guidance on bare metal installations.</p>
+<h2>Reproducibility 👯‍♀️<a class="headerlink" href="#reproducibility" title="Permalink to this headline">¶</a></h2>
+<p>To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized <span class="xref std std-ref">installations</span>. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of <a class="reference internal" href="pages/02.whatyouneed/index.html#what-need"><span class="std std-ref">software dependencies</span></a> used by the pipeline to handle multiple MRI data modalities.</p>
 <br></div>
 <div class="section" id="datasets">
-<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
-<p>Micapipe has been tested on several openly available datasets, such as CamCAN, […]. The pipeline was optimized for the MICs dataset (DOI: ), which includes all data modalities that can be processed in micapipe.</p>
+<h2>Datasets 🕵️‍♀️<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<p>Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as <a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a>. The pipeline was mainly tested on the MICs dataset (DOI: 10.5281/zenodo.4342981), which includes all data modalities currently supported by micapipe.</p>
 <br></div>
 <div class="section" id="development-and-getting-involved">
-<h2>Development and getting involved<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>
-<p>GitHub issues, pull requests, mailing list</p>
+<h2>Development and getting involved 🙋‍♀️<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>
+<p>Should you have any problems, questions, or suggestions about micapipe, please post an <a class="reference external" href="https://github.com/MICA-LAB/micapipe/issues">issue</a> or formulate a <a class="reference external" href="https://github.com/MICA-LAB/micapipe/pulls">pull request</a> on our repository.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -222,6 +218,7 @@
 <br></div>
 <div class="section" id="core-development-team">
 <h2>Core development team 🧠<a class="headerlink" href="#core-development-team" title="Permalink to this headline">¶</a></h2>
+<p>Micapipe is developed by MICA-lab (<a class="reference external" href="https://mica-mni.github.io">https://mica-mni.github.io</a>) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute.</p>
 <ul class="simple">
 <li><p><strong>Raúl Rodríguez-Cruces</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Jessica Royer</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
@@ -244,7 +241,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pages/01.install/index.html" class="btn btn-neutral float-right" title="Download micapipe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pages/01.install/index.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
