@@ -44,7 +44,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="What’s new?" href="../09.whatsnew/index.html" />
+    <link rel="next" title="What’s new?" href="../04.whatsnew/index.html" />
     <link rel="prev" title="Usages Notes" href="../02.whatyouneed/index.html" /> 
 </head>
 
@@ -100,29 +100,26 @@
 <li class="toctree-l2"><a class="reference internal" href="#more-options">More options</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing steps</span></p>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../04.volumetric/index.html">Volumetric processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.freesurfer/index.html">Freesurfer processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../06.dwi/index.html">Diffusion weighted images processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../07.restingstate/index.html">Resting state fMRI processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../08.postmpc/index.html">Microstructural profiles and covariance analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../17.geodesic/index.html">Geodesic distance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.microstructproc/index.html">Microstructural profiles and covariance analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.dwiproc/index.html">Diffusion weighted images processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.restingstateproc/index.html">Resting state fMRI processing</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../14.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../15.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../16.mic2bids/index.html">mic2bids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../09.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../11.mic2bids/index.html">mic2bids</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../13.writeitdown/index.html">How to write it down?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../10.citingmicapipe/index.html">Citing the micapipe</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../11.references/index.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../12.acknowledge/index.html">Acknowlegdements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../13.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../14.acknowledge/index.html">Acknowlegdements</a></li>
 </ul>
 
             
@@ -200,58 +197,67 @@
 <div class="section" id="running-micapipe">
 <h2>Running micapipe<a class="headerlink" href="#running-micapipe" title="Permalink to this headline">¶</a></h2>
 <p>Basic usage of micapipe, with no options specified, will look like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mica</span><span class="o">-</span><span class="n">pipe</span>  <span class="o">-</span><span class="n">sub</span> <span class="o">&lt;</span><span class="n">subject_id</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">bids</span> <span class="o">&lt;</span><span class="n">BIDS</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span> <span class="o">-&lt;</span><span class="n">module</span><span class="o">-</span><span class="n">flag</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Let’s break this down:</dt><dd><ul class="simple">
+<blockquote>
+<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; -&lt;module-flag&gt;</pre>
+</div></blockquote>
+<p>Let’s break this down:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-sub</strong>: Corresponds to subject ID. Even if your data is in BIDS, we exclude the “sub-” substring from the ID code (e.g. sub-HC001 is entered as -sub HC001).</p></li>
 <li><p><strong>-out</strong>: Output directory path. Following BIDS, this corresponds to the “derivatives” directory associated with your dataset.</p></li>
 <li><p><strong>-bids</strong>: Path to rawdata BIDS directory.</p></li>
 <li><p>-&lt;module-flag&gt;: Specifies which submodule(s) to run (see next section).</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </div>
 <div class="section" id="module-flags">
 <h2>Module flags<a class="headerlink" href="#module-flags" title="Permalink to this headline">¶</a></h2>
 <p>The processing modules composing micapipe can be run individually or bundled using specific flags.</p>
-<dl class="simple">
-<dt>Processing modules for T1-weighted structural imaging consist of:</dt><dd><ul class="simple">
+<p>Processing modules for <a href="#id1"><span class="problematic" id="id2">:ref:`T1-weighted structural imaging&lt;structproc&gt;`_</span></a> consist of:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-proc_structural</strong>: Basic volumetric processing on T1-weighted data.</p></li>
 <li><p><strong>-proc_freesurfer</strong>: Run freesurfer’s recon-all pipeline on T1-weighted data.</p></li>
 <li><p><strong>-post-structural</strong>: Further structural processing relying on qualtiy-controlled cortical surface segmentations.</p></li>
 <li><p><strong>-GD</strong>: Generate geodesic distance matrices from participant’s native midsurface mesh.</p></li>
 <li><p><strong>-Morphology</strong>: Registration and smoothing of surface-based morphological features of the cortex.</p></li>
 </ul>
-</dd>
-<dt>Processing module for quantitative T1 imaging:</dt><dd><ul class="simple">
+</div></blockquote>
+<p>Processing module for <a href="#id3"><span class="problematic" id="id4">:ref:`quantitative T1 imaging&lt;microstructproc&gt;`_</span></a>:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-MPC</strong>: Equivolumetric surface mapping and generate microstructural profile covariance matrices <a class="reference external" href="https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284">(Paquola et al., 2019)</a>.</p></li>
 </ul>
-</dd>
-<dt>Flags for diffusion-weighted imaging processing steps:</dt><dd><ul class="simple">
+</div></blockquote>
+<p>Flags for <a href="#id5"><span class="problematic" id="id6">:ref:`diffusion-weighted imaging&lt;dwiproc&gt;`_</span></a> processing steps:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-proc_dwi</strong>: Basic diffusion-weighted imaging processing.</p></li>
 <li><p><strong>-SC</strong>: Diffusion tractography and generate structural connectomes.</p></li>
 </ul>
-</dd>
-<dt>Flag to process resting-state functional MRI data:</dt><dd><ul class="simple">
+</div></blockquote>
+<p>Flag to process <a href="#id7"><span class="problematic" id="id8">:ref:`resting-state functional MRI data&lt;restingstateproc&gt;`_</span></a>:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-proc_rsfmri</strong>: Resting-state functional processing and generate functional connectomes.</p></li>
 </ul>
-</dd>
-<dt>Lastly, to run all processing steps while making sure module interdependencies are respected:</dt><dd><ul class="simple">
+</div></blockquote>
+<p>Lastly, to run all processing steps while making sure module interdependencies are respected:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-all</strong>: Run all the modules! This could take a while…</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <div class="admonition-but-wait-there-s-more admonition">
 <p class="admonition-title">But wait… there’s more! 🙀</p>
-<p>Optional arguments can be specified for some modules. See the module’s dedicated page for details!</p>
+<p>Optional arguments can be specified for some modules. See the <code class="docutils literal notranslate"><span class="pre">Usage</span></code> tab of each module’s dedicated section for details!</p>
 </div>
 </div>
 <div class="section" id="more-options">
 <h2>More options<a class="headerlink" href="#more-options" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>You can specify additional options when running micapipe:</dt><dd><ul class="simple">
+<p>You can specify additional options when running micapipe:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>-force</strong>: Overwrite existing data in the subject directory.</p></li>
 <li><p><strong>-quiet</strong>: Do not print comments and warnings.</p></li>
 <li><p><strong>-nocleanup</strong>: Prevent deletion of temporary directory created for the module.</p></li>
@@ -260,11 +266,10 @@
 <li><p><strong>-version</strong>: Print your currently installed software version.</p></li>
 <li><p><strong>-slim</strong>: Keep only crucial outputs and erase all the intermediary files</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <div class="admonition-slim-run admonition">
 <p class="admonition-title">Slim run 👙</p>
-<p>Including the <strong>-slim</strong> flag will considerably reduce the number of outputs saved at the end of each module. Files affected by this flag are specified in each module’s dedicated page.</p>
+<p>Including the <strong>-slim</strong> flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module’s section.</p>
 </div>
 </div>
 </div>
@@ -277,7 +282,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../09.whatsnew/index.html" class="btn btn-neutral float-right" title="What’s new?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../04.whatsnew/index.html" class="btn btn-neutral float-right" title="What’s new?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../02.whatyouneed/index.html" class="btn btn-neutral float-left" title="Usages Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

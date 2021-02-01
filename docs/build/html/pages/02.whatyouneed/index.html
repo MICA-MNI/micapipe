@@ -96,33 +96,30 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Usages Notes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#data-format">Data format</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#set-the-environment">Set the environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#software-versions-requirements">Software versions requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#software-version-requirements">Software version requirements</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../03.execution/index.html">Micapipe usage overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../09.whatsnew/index.html">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing steps</span></p>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../04.volumetric/index.html">Volumetric processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.freesurfer/index.html">Freesurfer processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../06.dwi/index.html">Diffusion weighted images processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../07.restingstate/index.html">Resting state fMRI processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../08.postmpc/index.html">Microstructural profiles and covariance analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../17.geodesic/index.html">Geodesic distance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.microstructproc/index.html">Microstructural profiles and covariance analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.dwiproc/index.html">Diffusion weighted images processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.restingstateproc/index.html">Resting state fMRI processing</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../14.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../15.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../16.mic2bids/index.html">mic2bids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../09.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../11.mic2bids/index.html">mic2bids</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../13.writeitdown/index.html">How to write it down?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../10.citingmicapipe/index.html">Citing the micapipe</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../11.references/index.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../12.acknowledge/index.html">Acknowlegdements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../13.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../14.acknowledge/index.html">Acknowlegdements</a></li>
 </ul>
 
             
@@ -214,7 +211,7 @@ export PATH
 </pre></div>
 </div>
 <p>Then, you will need to also add the all dependencies (see next section for a complete list) to your PATH. For example, to add ANTs to your path:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export ANTSDIR=&quot;/data/mica1/01_programs/ants-2.3.4/bin&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export ANTSDIR=&quot;/Path/To/ANTs&quot;
 PATH=${PATH}:${ANTSDIR}
 export PATH
 </pre></div>
@@ -225,10 +222,11 @@ export PATH
 <p>No need to make changes to your local environment if you are going for a Docker or Singularity installation! This is all handled within the container.</p>
 </div>
 </div>
-<div class="section" id="software-versions-requirements">
-<h2>Software versions requirements<a class="headerlink" href="#software-versions-requirements" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Micapipe relies on several software dependencies. If you are opting for a bare-metal installation, you will need to set up these dependencies for all micapipe modules to run smoothly.</dt><dd><ul class="simple">
+<div class="section" id="software-version-requirements">
+<h2>Software version requirements<a class="headerlink" href="#software-version-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Micapipe relies on several software dependencies. If you are opting for a bare-metal installation, you will need to set up these dependencies for all micapipe modules to run smoothly.</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><strong>Freesurfer</strong>  6.0     (<a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/">https://surfer.nmr.mgh.harvard.edu/</a>)</p></li>
 <li><p><strong>FSL</strong>         6.0     (<a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki">https://fsl.fmrib.ox.ac.uk/fsl/fslwiki</a>)</p></li>
 <li><p><strong>AFNI</strong>        20.2.06 (<a class="reference external" href="https://afni.nimh.nih.gov/download">https://afni.nimh.nih.gov/download</a>)</p></li>
@@ -239,11 +237,10 @@ export PATH
 <li><p><strong>R</strong>           3.6.3   (<a class="reference external" href="https://www.r-project.org">https://www.r-project.org</a>)</p></li>
 <li><p><strong>python</strong>      3.7.6   (<a class="reference external" href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>)</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <div class="admonition-notes-on-fix admonition">
 <p class="admonition-title">Notes on FIX 🧐</p>
-<p>FIX (FMRIB’s ICA-based Xnoiseifier) is used in micapipe for removal of nuisance variable signal in resting-state fMRI data. For bare-metal installations, this portion of the functional processing will only run if FIX is found on the user’s system. Note that FIX has several dependencies, specifically FSL, R and one of the following: MATLAB Runtime Component (MCR), full MATLAB or Octave. Version 1.06 of FIX relies on MATLAB 2017b/MCR v93. Additionally, it requires the following R libraries: ‘kernlab’,’ROCR’,’class’,’party’,’e1071’,’randomForest’.</p>
+<p><a class="reference external" href="https://www.sciencedirect.com/science/article/abs/pii/S1053811913011956?via%3Dihub">FIX</a> (FMRIB’s ICA-based Xnoiseifier) is used in micapipe for removal of nuisance variable signal in resting-state fMRI data. For bare-metal installations, this portion of the functional processing will only run if FIX is found on the user’s system. Note that FIX has several dependencies, specifically FSL, R and one of the following: MATLAB Runtime Component (MCR), full MATLAB or Octave. Version 1.06 of FIX relies on MATLAB 2017b/MCR v93. Additionally, it requires the following R libraries: ‘kernlab’,’ROCR’,’class’,’party’,’e1071’,’randomForest’.</p>
 </div>
 </div>
 </div>

@@ -60,38 +60,35 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/01.install/index
    pages/02.whatyouneed/index
    pages/03.execution/index
-   pages/09.whatsnew/index
+   pages/04.whatsnew/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Processing steps
+   :caption: Processing modules
 
-   pages/04.volumetric/index
-   pages/05.freesurfer/index
-   pages/06.dwi/index
-   pages/07.restingstate/index
-   pages/08.postmpc/index
-   pages/17.geodesic/index
+   pages/05.structuralproc/index
+   pages/06.microstructproc/index
+   pages/07.dwiproc/index
+   pages/08.restingstateproc/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Additional tools
 
-   pages/14.micapipe_anonymize/index
-   pages/15.micapipe_cleanup/index
-   pages/16.mic2bids/index
+   pages/09.micapipe_anonymize/index
+   pages/10.micapipe_cleanup/index
+   pages/11.mic2bids/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: References & Acknowledgements
 
-   pages/13.writeitdown/index
-   pages/10.citingmicapipe/index
-   pages/11.references/index
-   pages/12.acknowledge/index
+   pages/12.citingmicapipe/index
+   pages/13.references/index
+   pages/14.acknowledge/index
 
 
 --------------------------------------------------------
@@ -108,7 +105,7 @@ Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
-- **Peer Herholz**, McConnell Brain Imaging Centre - Montreal Neurological Institute*
+- **Peer Herholz**, *McConnell Brain Imaging Centre - Montreal Neurological Institute*
 - **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
 - **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*

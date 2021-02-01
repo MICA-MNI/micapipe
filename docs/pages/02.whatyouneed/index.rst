@@ -29,7 +29,7 @@ To check if this set correctly, try displaying the help menu by running the foll
 
 Then, you will need to also add the all dependencies (see next section for a complete list) to your PATH. For example, to add ANTs to your path: ::
 
-     export ANTSDIR="/data/mica1/01_programs/ants-2.3.4/bin"
+     export ANTSDIR="/Path/To/ANTs"
      PATH=${PATH}:${ANTSDIR}
      export PATH
 
@@ -39,9 +39,10 @@ You can define distinct DIR variables for each dependency, and add them to the P
 
      No need to make changes to your local environment if you are going for a Docker or Singularity installation! This is all handled within the container.
 
-Software versions requirements
+Software version requirements
 --------------------------------------------------------
 Micapipe relies on several software dependencies. If you are opting for a bare-metal installation, you will need to set up these dependencies for all micapipe modules to run smoothly.
+
      - **Freesurfer**  6.0     (https://surfer.nmr.mgh.harvard.edu/)
      - **FSL**         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
      - **AFNI**        20.2.06 (https://afni.nimh.nih.gov/download)
@@ -54,4 +55,4 @@ Micapipe relies on several software dependencies. If you are opting for a bare-m
 
 .. admonition:: Notes on FIX 🧐
 
-     FIX (FMRIB’s ICA-based Xnoiseifier) is used in micapipe for removal of nuisance variable signal in resting-state fMRI data. For bare-metal installations, this portion of the functional processing will only run if FIX is found on the user's system. Note that FIX has several dependencies, specifically FSL, R and one of the following: MATLAB Runtime Component (MCR), full MATLAB or Octave. Version 1.06 of FIX relies on MATLAB 2017b/MCR v93. Additionally, it requires the following R libraries: 'kernlab','ROCR','class','party','e1071','randomForest'. 
+     `FIX <https://www.sciencedirect.com/science/article/abs/pii/S1053811913011956?via%3Dihub>`_ (FMRIB’s ICA-based Xnoiseifier) is used in micapipe for removal of nuisance variable signal in resting-state fMRI data. For bare-metal installations, this portion of the functional processing will only run if FIX is found on the user's system. Note that FIX has several dependencies, specifically FSL, R and one of the following: MATLAB Runtime Component (MCR), full MATLAB or Octave. Version 1.06 of FIX relies on MATLAB 2017b/MCR v93. Additionally, it requires the following R libraries: 'kernlab','ROCR','class','party','e1071','randomForest'. 
