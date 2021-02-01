@@ -23,7 +23,9 @@ SES=$4
 nocleanup=$5
 threads=$6
 tmpDir=$7
-PROC=$8
+dwi_main=$8
+dwi_rpe=$9
+PROC=${10}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -37,7 +39,15 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Manage manual inputs: DWI main image(s)
+if [[ "$dwi_main" != "DEFAULT" ]]; then
+  Title "tmpDir $tmpDir\n\tdwi_main $dwi_main\n\tdwi_rpe $dwi_rpe"
+    IFS=',' read -ra bids_dwis <<< "$dwi_main"
+fi
+# Manage manual inputs: DWI reverse phase encoding
+if [[ "$dwi_rpe" != "DEFAULT" ]]; then dwi_reverse=$dwi_rpe; fi
 
 # Check inputs: DWI
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY <ls -l ${subject_bids}/dwi/>"; exit; fi
@@ -193,41 +203,34 @@ if [[ ! -f $T1nativepro_in_dwi ]]; then
       dwiextract -force -nthreads $threads $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3 -force
 
       # Register DWI-b0 mean corrected to T1nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro -m $dwi_b0 -o $str_dwi_affine -t a -n $threads -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $dwi_b0 -o $str_dwi_affine -t a -n $threads -p d
       # Apply transformation DWI-b0 space to T1nativepro
-      Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro_brain -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $dwi_b0 -t [$mat_dwi_affine,1] -o $T1nativepro_in_dwi -v -u int
       # Step QC
       if [[ -f ${T1nativepro_in_dwi} ]]; then ((Nsteps++)); fi
-else
-      Info "Subject ${id} has a T1nativepro in DWI-b0 space"; ((Nsteps++))
-fi
 
-#------------------------------------------------------------------------------#
-if [[ ! -f $dwi_mask ]]; then
-      Info "Creating DWI binary mask of processed volumes"
-      # Create a binary mask of the DWI
-      Do_cmd antsApplyTransforms -d 3 -i $MNI152_mask \
-                  -r ${dwi_b0} \
-                  -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
-                  -o ${tmp}/dwi_mask.nii.gz -v
-      Do_cmd maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
-      # Step QC
-      if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
-else
-      Info "Subject ${id} has a DWI-preproc binary mask"; ((Nsteps++))
-fi
+      #------------------------------------------------------------------------------#
+            Info "Creating DWI binary mask of processed volumes"
+            # Create a binary mask of the DWI
+            Do_cmd antsApplyTransforms -d 3 -i $MNI152_mask \
+                        -r ${dwi_b0} \
+                        -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
+                        -o ${tmp}/dwi_mask.nii.gz -v
+            Do_cmd maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
+            # Step QC
+            if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
 
-#------------------------------------------------------------------------------#
-# 5TT file in dwi space
-if [[ ! -f $dwi_5tt ]]; then
-      Info "Registering 5TT file to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_5tt -v
-      # Step QC
-      if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
+      #------------------------------------------------------------------------------#
+      # 5TT file in dwi space
+            Info "Registering 5TT file to DWI-b0 space"
+            Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_5tt -v
+            # Step QC
+            if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
+
 else
-      Info "Subject ${id} has a 5TT segmentation in DWI space"; ((Nsteps++))
+      Info "Subject ${id} has a T1nativepro in DWI-b0 space"; Nsteps=$((Nsteps + 3))
 fi
 
 
@@ -341,6 +344,9 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
+# QC: Input files
+QC_proc-dwi
+
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
@@ -348,11 +354,11 @@ eri=`echo print $eri/60 | perl`
 
 # Notification of completition
 if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step: "; fi
-Title "DWI processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\t\tSteps completed: `printf "%02d" $Nsteps`/08
+Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+\t\tSteps completed: $(printf "%02d" $Nsteps)/08
 \tStatus          : $status
 \tCheck logs:
-`ls ${dir_logs}/proc-dwi_*.txt`"
+$(ls ${dir_logs}/proc-dwi_*.txt)"
 # Print QC stamp
 echo "${id}, proc_dwi, $status N=$(printf "%02d" $Nsteps)/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here
