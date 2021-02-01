@@ -48,7 +48,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 ### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
 Note "Topup Config     :" $changeTopupConfig
@@ -126,7 +126,7 @@ if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bo
 if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
 # Structural nativepro scan and freesurfer
-if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_volumetric"; exit; fi
+if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check topup input
@@ -165,7 +165,6 @@ Do_cmd mkdir -p $tmp
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Set basic parameters.
-struct2fs=$(find $dir_warp -name "*t1w2fs.lta")
 rsTag="*rsfmri*3mm*bold*AP"
 rsTagRegex=".*rsfmri.*3mm.*bold.*AP.*"
 
@@ -323,7 +322,7 @@ melodic_IC=${rsfmri_ICA}/filtered_func_data.ica/melodic_IC.nii.gz
 fmri_filtered=${rsfmri_ICA}/filtered_func_data.nii.gz
 
 # melodic will run ONLY if FIX is avaliable
-if  [[ -f `which fix` ]]; then
+if  [[ -f $(which fix) ]]; then
       if [[ ! -f ${melodic_IC} ]]; then
           Info "Running melodic"
           Do_cmd cp $fmri_HP $fmri_filtered
@@ -350,7 +349,7 @@ str_rsfmri_affine=${dir_warp}/${id}_rsfmri_to_nativepro_
 mat_rsfmri_affine=${str_rsfmri_affine}0GenericAffine.mat
 
 # Registration to native pro
-if [[ ! -f ${mat_rsfmri_affine} ]] | [[ ! -f ${T1nativepro_in_fmri} ]]; then
+if [[ ! -f ${mat_rsfmri_affine} ]] || [[ ! -f ${T1nativepro_in_fmri} ]]; then
     Info "Registering fmri space to nativepro"
     Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $fmri_brain -o $str_rsfmri_affine -t a -n $threads -p d
     Do_cmd antsApplyTransforms -d 3 -i $fmri_brain -r $T1nativepro -t $mat_rsfmri_affine -o $fmri_in_T1nativepro -v -u int
@@ -379,7 +378,7 @@ fmri_processed=${rsfmri_volum}/${id}_singleecho_fmrispace_clean.nii.gz
 
 # Run if fmri_clean does not exist
 if [[ ! -f ${fmri_processed} ]] ; then
-      if  [[ -f ${melodic_IC} ]] && [[ -f `which fix` ]]; then
+      if  [[ -f ${melodic_IC} ]] && [[ -f $(which fix) ]]; then
           if [[ ! -f ${fix_output} ]] ; then
                 Info "Getting ICA-FIX requirements"
                 # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
@@ -421,13 +420,13 @@ if [[ ! -f ${fmri_processed} ]] ; then
                     yes | Do_cmd cp -rf $fix_output $fmri_processed
                     status="${status}/FIX"
                 else
-                    Error "melodic ran but ICA-FIX failed check log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                    Error "MELODIC ran but FIX failed check log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
                 fi
           else
                 Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
           fi
       else
-          Warning "!!!!  Melodic Failed and/or ICA-FIX was not found, check the software installation !!!!
+          Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                          If you've installed FIX try to install required R packages and re-run:
                          'kernlab','ROCR','class','party','e1071','randomForest'"
           Do_cmd cp -rf $fmri_HP $fmri_processed # OR cp -rf  $singleecho $fmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
@@ -476,6 +475,7 @@ for x in lh rh; do
     out_surf_native=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_10mm.mgh
     out_surf=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.mgh
     if [[ ! -f ${out_surf} ]] ; then
+          Info "Registering subject ${id} singleecho fmri2fs  to ${x}_conte69-32 10mm surface"
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
               --mov ${singleecho} \
@@ -573,13 +573,17 @@ else
       Info "Subject ${id} has rsfmri cerebellar time-series"
 fi
 
+# -----------------------------------------------------------------------------------------------
+# QC: rsfmri processing Input files
+QC_proc-rsfmri
+
 #------------------------------------------------------------------------------#
 # run post-rsfmri
 cleanTS=${rsfmri_surf}/${id}_rsfMRI-timeseries_conte69_clean.txt
 if [[ ! -f ${cleanTS} ]] ; then
     Info "Running rsfMRI post processing"
     labelDirectory=${dir_surf}/${id}/label/
-    python $MICAPIPE/functions/03_FC.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations}
+    python $MICAPIPE/functions/03_FC.py ${id} ${proc_rsfmri} ${labelDirectory} ${util_parcelations} ${dir_volum}
 else
     Info "Subject ${id} has post-processed conte69 time-series"
 fi
@@ -596,6 +600,6 @@ eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
 Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
-`ls ${dir_logs}/proc-rsfmri_*.txt`"
+$(ls ${dir_logs}/proc-rsfmri_*.txt)"
 echo "${id}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here
