@@ -23,7 +23,8 @@ SES=$4
 nocleanup=$5
 threads=$6
 tmpDir=$7
-PROC=$8
+atlas=$8
+PROC=$9
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -38,7 +39,33 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Manage manual inputs: Parcellations
+cd $util_parcelations
+if [[ "$atlas" == "DEFAULT" ]]; then
+  atlas_parc=($(ls lh.*annot))
+  N=${#atlas_parc[*]}
+  Info "Selected parcellations: DEFAULT, N=${N}"
+else
+  IFS=',' read -ra atlas_parc <<< "$atlas"
+  for i in "${!atlas_parc[@]}"; do atlas_parc[i]=$(ls lh.${atlas_parc[$i]}_mics.annot 2>/dev/null); done
+  atlas_parc=(${atlas_parc[@]})
+  N=${#atlas_parc[*]}
+  Info "Selected parcellations: $atlas, N=${N}"
+fi
+cd $here
+
+# Check inputs: Nativepro T1
+if [ "$N" -eq 0 ]; then
+  Error "Provided -atlas do not match with any on MICAPIPE, try one of the following list:
+\t\taparc-a2009s,aparc,economo,glasser-360
+\t\tschaefer-1000,schaefer-100,schaefer-200
+\t\tschaefer-300,schaefer-400,schaefer-500
+\t\tschaefer-600,schaefer-700,schaefer-800
+\t\tschaefer-900,vosdewael-100,vosdewael-200
+\t\tvosdewael-300,vosdewael-400"; exit
+fi
 
 # Check inputs: Nativepro T1
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
@@ -122,9 +149,9 @@ fi
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
-Do_cmd cp -R ${util_surface}/fsaverage5 ${dir_surf}
+Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 cd $util_parcelations
-for parc in lh.*.annot; do
+for parc in ${atlas_parc[@]}; do
     parc_annot=${parc/lh./}
     parc_str=`echo ${parc_annot} | awk -F '_mics' '{print $1}'`
     if [[ ! -f  ${dir_volum}/${T1str_nat}_${parc_str}.nii.gz ]]; then
@@ -189,21 +216,22 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# Clean fsaverage5 direvtory
+# Clean fsaverage5 directory
 Do_cmd rm -rf ${dir_surf}/fsaverage5
 
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-if [ "$Nfiles" -eq 21 ]; then status="COMPLETED"; else status="ERROR missing parcellation or T1-fsspace: "; fi
-Title "Post-structural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\t\tNumber of outputs: `printf "%02d" $Nfiles`/21
+N=$(($N+3))
+if [ "$Nfiles" -eq $N ]; then status="COMPLETED"; else status="ERROR missing parcellation or T1-fsspace: "; fi
+Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+\t\tNumber of outputs: $(printf "%02d" $Nfiles)/$(printf "%02d" $N)
 \tStatus            : $status
 \tCheck logs:
-`ls ${dir_logs}/post-structural_*.txt`"
+$(ls ${dir_logs}/post-structural_*.txt)"
 # Print QC stamp
-echo "${id}, post_structural, $status N=$(printf "%02d" $Nfiles)/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+echo "${id}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here
