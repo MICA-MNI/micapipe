@@ -41,7 +41,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" ${dir_freesurfer}/scripts/recon-all.log; then
