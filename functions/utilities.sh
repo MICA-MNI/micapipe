@@ -349,7 +349,108 @@ function cleanup() {
   fi
   cd "$here"
   bids_variables_unset
-  export PATH=$OLD_PATH
-  unset OLD_PATH
-  # exit
+  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
+}
+
+function QC_proc-dwi() {
+  html=${dir_QC}/micapipe_qc_proc-dwi.txt
+  if [ -f $html ]; then rm $html; fi
+  for i in "${!bids_dwis[@]}"; do
+    echo "        <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
+            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
+            <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
+          </tr>" >> $html
+  done
+
+  if [ -f $dwi_reverse ]; then
+    echo -e "        <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
+            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
+            <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
+          </tr>"  >> $html
+  fi
+}
+
+function QC_proc-rsfmri() {
+  html=${dir_QC}/micapipe_qc_proc-rsfmir.txt
+  if [ -f $html ]; then rm $html; fi
+  echo -e "            <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
+              </tr>
+            " >> $html
+            if [ -f $bids_reversePhase ]; then
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
+              </tr>"  >> $html
+            fi
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
+                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
+                <td class=\"tg-8pnm\">$(find $topupConfigFile 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
+                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
+                <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
+              </tr>"   >> $html
+}
+
+function QC_SC() {
+  html=${dir_QC}/micapipe_qc_SC.txt
+  if [ -f $html ]; then rm $html; fi
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $fod 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_b0</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_b0 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mat_dwi_affine</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $mat_dwi_affine 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_5tt</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_5tt 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_cerebellum</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1_seg_cerebellum 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_subcortex</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1_seg_subcortex 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_mask</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_mask 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $fa 2>/dev/null)</td>
+              </tr>"   >> $html
 }
