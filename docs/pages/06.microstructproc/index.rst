@@ -7,6 +7,9 @@ Microstructural profile covariance
 
 DESCRIBE MPC
 
+-MPC
+--------------------------------------------------------
+
 .. admonition:: Prerequisites 🖐🏼
 
     You need to run **proc_structural**, **proc_freesurfer**, and **post_structural** before this stage

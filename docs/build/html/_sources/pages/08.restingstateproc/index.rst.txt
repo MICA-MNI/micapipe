@@ -7,6 +7,10 @@ Resting-state fMRI processing
 
 Describe rsfMRI proc
 
+
+-proc_rsfmri
+--------------------------------------------------------
+
 .. admonition:: Prerequisites 🖐🏼
 
      You need to run **proc_structural**, **proc_freesurfer**, and **post_structural** before this stage
@@ -39,7 +43,7 @@ Describe rsfMRI proc
         .. parsed-literal:: 
             $ singularity -proc_rsfmri
     
-    .. tab:: Outcomes
+    .. tab:: Outputs
 
         Directories created or populated by **-proc_rsfmri**:
 

@@ -8,7 +8,7 @@ Diffusion-weighted imaging processing
 DESCRIBE DWI PROC HERE
 
 
-DWI pre-processing
+-proc_dwi
 --------------------------------------------------------
 
 Proc-dwi description
@@ -69,7 +69,7 @@ Proc-dwi description
             - ...
                     
 
-Tractography-based structural connectivity
+-SC
 --------------------------
 
 post-dwi description
