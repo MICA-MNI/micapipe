@@ -29,7 +29,7 @@ Module flags
 --------------------------------------------------------
 The processing modules composing micapipe can be run individually or bundled using specific flags.
 
-Processing modules for :ref:`T1-weighted structural imaging<structproc>`_ consist of:
+Processing modules for :ref:`T1-weighted structural imaging<structproc>` consist of:
 
 	- **-proc_structural**: Basic volumetric processing on T1-weighted data.
 	- **-proc_freesurfer**: Run freesurfer's recon-all pipeline on T1-weighted data. 
@@ -37,16 +37,16 @@ Processing modules for :ref:`T1-weighted structural imaging<structproc>`_ consis
 	- **-GD**: Generate geodesic distance matrices from participant's native midsurface mesh.
 	- **-Morphology**: Registration and smoothing of surface-based morphological features of the cortex.
 
-Processing module for :ref:`quantitative T1 imaging<microstructproc>`_:
+Processing module for :ref:`quantitative T1 imaging<microstructproc>`:
 
 	- **-MPC**: Equivolumetric surface mapping and generate microstructural profile covariance matrices `(Paquola et al., 2019) <https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284>`_.
 
-Flags for :ref:`diffusion-weighted imaging<dwiproc>`_ processing steps:
+Flags for :ref:`diffusion-weighted imaging<dwiproc>` processing steps:
 
 	- **-proc_dwi**: Basic diffusion-weighted imaging processing.
 	- **-SC**: Diffusion tractography and generate structural connectomes.
 
-Flag to process :ref:`resting-state functional MRI data<restingstateproc>`_:
+Flag to process :ref:`resting-state functional MRI data<restingstateproc>`:
 
 	- **-proc_rsfmri**: Resting-state functional processing and generate functional connectomes.
 

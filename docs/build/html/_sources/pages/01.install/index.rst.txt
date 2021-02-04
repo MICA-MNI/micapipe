@@ -27,4 +27,4 @@ Micapipe can be directly downloaded from Github as follows: ::
 
     git clone https://github.com/MICA-LAB/micapipe.git
 
-Paths to all dependencies will need to be changed manually to :ref:`set your environment<what_need>`_.
+Paths to all dependencies will need to be changed manually to :ref:`set your environment <what_need>`.

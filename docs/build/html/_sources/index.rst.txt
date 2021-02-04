@@ -34,7 +34,7 @@
 
 Reproducibility 👯‍♀️
 --------------------------------------------------------
-To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations<_download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
+To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations <download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
 
 .. raw:: html
 
