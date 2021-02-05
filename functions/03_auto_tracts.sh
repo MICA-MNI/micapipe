@@ -1,5 +1,11 @@
 #!/bin/bash
 #
+# Automatic bundle segmentation
+#
+version() {
+  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.1)\n"
+}
+
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=$(dirname $(realpath $0))
 MICAPIPE=$(dirname $(realpath $dir_functions))
@@ -53,7 +59,7 @@ OPTIONS:
       -robust           : This option to runs a more ROBUST SyN registration ( More computation time )
       -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2
       -threads <int>    : Number of threads (Default is 6)
-
+      -version      	  : Print software version
 
 
 USAGE:
@@ -72,6 +78,10 @@ do
   case "$arg" in
   -h|-help)
     help
+    exit 1
+  ;;
+  -version)
+    version
     exit 1
   ;;
   -tck)
