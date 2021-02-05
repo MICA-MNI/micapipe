@@ -12,6 +12,7 @@ subject = sys.argv[1]
 funcDir = sys.argv[2]
 labelDir = sys.argv[3]
 parcDir = sys.argv[4]
+volmDir = sys.argv[5]
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -59,7 +60,7 @@ def missing_elements(roiList):
 
 if len(roiLabels) == 34: # no labels disappeared in the co-registration
     print('All cerebellar labels found in parcellation!')
-    cereb = cereb_tmp 
+    cereb = cereb_tmp
     exclude_labels = [np.nan]
 else:
     print('Some cerebellar ROIs were lost in co-registration to fMRI space')
@@ -176,15 +177,20 @@ tSNR = np.expand_dims(tSNR, axis=1)
 np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR, fmt='%.12f')
 
 # Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
+# Read the processed parcellations
+parcellationList = os.listdir(volmDir)
+
+# Slice the file names and remove nii*
+parcellationList=[sub.split('nativepro_')[1].split('.nii')[0] for sub in parcellationList]
+
+# Remove cerebellum and subcortical strings
+parcellationList.remove('subcortical')
+parcellationList.remove("cerebellum")
+
 # Start with conte parcellations
-parcellationList = ['glasser-360_conte69',
-                    'vosdewael-100_conte69', 'vosdewael-200_conte69',
-                    'vosdewael-300_conte69', 'vosdewael-400_conte69',
-                    'schaefer-100_conte69', 'schaefer-200_conte69', 'schaefer-300_conte69',
-                    'schaefer-400_conte69', 'schaefer-500_conte69', 'schaefer-600_conte69',
-                    'schaefer-700_conte69', 'schaefer-800_conte69', 'schaefer-900_conte69',
-                    'schaefer-1000_conte69', 'aparc_conte69']
-for parcellation in parcellationList:
+parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
+
+for parcellation in parcellationList_conte:
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
     thisparc = np.loadtxt(parcPath)
 
@@ -195,33 +201,24 @@ for parcellation in parcellationList:
     for lab in range(len(uparcel)):
         tmpData = data_corr_ctx[:, thisparc == lab]
         ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
-    
+
     ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
     ts_r = np.corrcoef(np.transpose(ts))
-    
+
     if np.isnan(exclude_labels[0]) == False:
         for i in exclude_labels:
             ts_r[:, i + n_sctx] = 0
             ts_r[i + n_sctx, :] = 0
-        ts_r = np.triu(ts_r)    
+        ts_r = np.triu(ts_r)
     else:
         ts_r = np.triu(ts_r)
-    
+
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
                ts_r, fmt='%.6f')
 
-
+#------------------------------------------------------------------------------#
 # Now generate native surface connectomes
 # These files are saved directly to the freesurfer directory through micapipe postStruct
-parcellationList = ['glasser-360',
-                   'vosdewael-100', 'vosdewael-200',
-                   'vosdewael-300', 'vosdewael-400',
-                   'schaefer-100', 'schaefer-200', 'schaefer-300',
-                   'schaefer-400', 'schaefer-500', 'schaefer-600',
-                   'schaefer-700', 'schaefer-800', 'schaefer-900',
-                   'schaefer-1000',
-                   'aparc', 'aparc-a2009s',
-                   'economo']
 for parcellation in parcellationList:
 
     # Load left and right annot files
@@ -238,7 +235,7 @@ for parcellation in parcellationList:
         native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
     for x in range(len(labels_rh)):
         native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
-    
+
     # Generate connectome on native space parcellation
     # Parcellate cortical timeseries
     dataNative_corr_ctx = dataNative_corr[:, -n_vertex_ctx_nat:]
@@ -247,18 +244,17 @@ for parcellation in parcellationList:
     for lab in range(len(uparcel)):
         tmpData = dataNative_corr_ctx[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
-    
+
         ts = np.append(dataNative_corr[:, :n], ts_native_ctx, axis=1)
         np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
         ts_r = np.corrcoef(np.transpose(ts))
-        
+
         if np.isnan(exclude_labels[0]) == False:
             for i in exclude_labels:
                 ts_r[:, i + n_sctx] = 0
                 ts_r[i + n_sctx, :] = 0
-            ts_r = np.triu(ts_r)    
+            ts_r = np.triu(ts_r)
         else:
             ts_r = np.triu(ts_r)
-        
+
         np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
-    
