@@ -3,6 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
+export Version="v0.0.1"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -255,6 +256,45 @@ micapipe_software() {
   Note "            " "$(which python)"
   Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
   Note "            " "$(which R)"
+}
+micapipe_json() {
+  # Name is the name of the raw-BIDS directory
+  if [ -f ${BIDS}/dataset_description.json ]; then
+    Name=$(cat ${BIDS}/dataset_description.json | grep Name | awk -F '"' '{print $4}')
+    BIDSVersion=$(cat ${BIDS}/dataset_description.json | grep BIDSVersion | awk -F '"' '{print $4}')
+  else
+    Name="BIDS dataset_description NOT found"
+    BIDSVersion="BIDS dataset_description NOT found"
+  fi
+
+  echo -e "{
+    \"Name\": \"${Name}\",
+    \"BIDSVersion\": \"${BIDSVersion}\",
+    \"DatasetType\": \"derivative\",
+    \"GeneratedBy\": [
+      {
+        \"Name\": \"micapipe\",
+        \"Version\": \"${Version}\",
+        \"Container\": {
+          \"Type\": \"github\",
+          \"Tag\": \"MICA-LAB/micapipe:0.0.1\"
+          }
+      },
+      {
+        \"Name\": \"$(whoami)\",
+        \"Workstation\": \"$(uname -n)\"
+        \"LastRun\": \"$(date)\"
+        \"Processing\": \"${PROC}\"
+      }
+    ],
+    \"SourceDatasets\": [
+      {
+        \"DOI\": \"doi:\",
+        \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
+        \"Version\": \"0.0.1\"
+      }
+    ]
+  }" > ${out}/pipeline-description.json
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
