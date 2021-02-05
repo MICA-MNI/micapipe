@@ -8,7 +8,7 @@ source ${MICAPIPE}/functions/utilities.sh
 help() {
 echo -e "
 COMMAND:
-    `basename $0`
+    $(basename $0)
 
         Perform automatic virtual dissection of a full-brain tractogram.
         Provide a pre-computed tck file and it will be dissected.

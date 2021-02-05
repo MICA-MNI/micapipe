@@ -40,7 +40,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
@@ -69,7 +69,7 @@ Do_cmd mkdir -p $tmp
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Make output directory
-outDir="$dir_surf"/morphology/
+outDir="$dir_surf"/morphology
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
@@ -201,10 +201,10 @@ Do_cmd rm -rf ${dir_surf}/fsaverage5
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-Title "Post-Morphology processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-morph_*.txt"
 echo "${id}, post_morpho, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here
