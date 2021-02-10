@@ -63,7 +63,7 @@ OPTIONS:
 
 
 USAGE:
-    \033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-tck\033[0m <file> \033[38;5;197m-outbase\033[0m <string> \033[38;5;197m-mask\033[0m <file> \033[38;5;197m-fa\033[0m <file>\n
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-tck\033[0m <file> \033[38;5;197m-outbase\033[0m <string> \033[38;5;197m-mask\033[0m <file> \033[38;5;197m-fa\033[0m <file>\n
 
 
 Created by Luis Concha, INB, UNAM, lconcha@unam.mx (https://github.com/lconcha/auto_tracto)

@@ -137,7 +137,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
     # Output names get the names
-    T1str_nat=`t1w_str ${id} ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz nativepro`
+    T1str_nat=$(t1w_str ${id} ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz nativepro)
     T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
     T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
     T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
