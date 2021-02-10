@@ -126,15 +126,15 @@ fi
 if [[ ! -f $dwi_corr ]]; then
       Info "DWI dwifslpreproc"
       # Get parameters
-      ReadoutTime=`mrinfo $dwi_n4 -property TotalReadoutTime`
-      pe_dir=`mrinfo $dwi_n4 -property PhaseEncodingDirection`
-      shells=(`mrinfo $dwi_n4 -shell_bvalues`)
+      ReadoutTime=$(mrinfo $dwi_n4 -property TotalReadoutTime)
+      pe_dir=$(mrinfo $dwi_n4 -property PhaseEncodingDirection)
+      shells=$(mrinfo $dwi_n4 -shell_bvalues)
       # Exclude shells with 0 value
       for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
       dwi_4proc=${tmp}/dwi_n4_even.mif
-      dim=`mrinfo $dwi_n4 -size`
+      dim=$(mrinfo $dwi_n4 -size)
       dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
       mrconvert $dwi_n4 $dwi_4proc -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
 
@@ -232,31 +232,6 @@ if [[ ! -f $T1nativepro_in_dwi ]]; then
 else
       Info "Subject ${id} has a T1nativepro in DWI-b0 space"; Nsteps=$((Nsteps + 3))
 fi
-
-
-#------------------------------------------------------------------------------#
-# Non-linear registration between masked T1w and b0-dwi
-# str_dwiT1_2_b0=${dir_warp}/${id}_dwiT1_to_b0_
-# dwiT1_2_b0_warp=${str_dwiT1_2_b0}1Warp.nii.gz
-#
-# if [[ ! -f $dwiT1_2_b0_warp ]]; then
-#     dwi_T1_masked=$tmp/dwi_T1_masked.nii.gz
-#     dwi_b0_masked=$tmp/dwi_b0_masked.nii.gz
-#     tmp_mask=${tmp}/dwi_mask_eroded.nii.gz
-#
-#     Do_cmd maskfilter $dwi_mask erode -npass 5 $tmp_mask
-#     Do_cmd ImageMath 3 dwi_b0_scaled.nii.gz RescaleImage $dwi_b0 0 100
-#     Do_cmd fslmaths dwi_b0_scaled.nii.gz -mul -1 -add 99 -mul $tmp_mask dwi_b0_inv.nii.gz
-#
-#     Do_cmd fslmaths $T1nativepro_in_dwi -mul $tmp_mask $dwi_T1_masked
-#     Do_cmd ImageMath 3 dwi_b0_matched.nii.gz HistogramMatch dwi_b0_inv.nii.gz $dwi_T1_masked
-#
-#     Do_cmd antsRegistrationSyN.sh -d 3 -x $tmp_mask -m $dwi_T1_masked -f dwi_b0_matched.nii.gz -o $str_dwiT1_2_b0 -t bo -n $threads -p d
-#     Do_cmd antsApplyTransforms -d 3 -e 3 -i $T1nativepro_in_dwi -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $T1nativepro_in_dwi -v
-#     Do_cmd antsApplyTransforms -d 3 -e 3 -i $dwi_5tt -r $dwi_b0 -n linear -t $dwiT1_2_b0_warp -o $dwi_5tt -v
-# else
-#       Info "Subject ${id} has a non-linear registration from dwi-T1w to dwi-b0"; ((Nsteps++))
-# fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
