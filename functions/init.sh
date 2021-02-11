@@ -20,7 +20,7 @@ export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
 # ICA-FIX
 export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
-export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0 "
+export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0"
 # FSL 6.0
 export FSLDIR="/data_/mica1/01_programs/fsl_mica"
 export FSL_BIN="${FSLDIR}/bin"
@@ -48,9 +48,9 @@ LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*anaconda*})
 #------------------------------------------------------------------------------#
 # Software configuration
 # FreeSurfer 6.0 configuration
-source ${FREESURFER_HOME}/FreeSurferEnv.sh
+source "${FREESURFER_HOME}/FreeSurferEnv.sh"
 # FSL 6.0 configuration
-source ${FSLDIR}/etc/fslconf/fsl.sh
+source "${FSLDIR}/etc/fslconf/fsl.sh"
 # PYTHON 3.7 configuration
 unset PYTHONPATH
 unset PYTHONHOME
