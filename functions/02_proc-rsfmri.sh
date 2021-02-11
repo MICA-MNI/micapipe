@@ -52,6 +52,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 ### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
+Info "Inputs:"
 Note "Topup Config     :" $changeTopupConfig
 Note "ICA fix training :" $changeIcaFixTraining
 Note "Main scan        :" $thisMainScan
@@ -93,6 +94,7 @@ if [ $N_mainScanJson -gt 1 ]; then
         mainScanJson=${bids_mainScanJson[$thisMainScan-1]}
     fi
 else
+    Info "Using default json scan: ${bids_mainScanJson[0]}"
     mainScanJson=${bids_mainScanJson[0]}
 fi
 
@@ -155,7 +157,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA rsfMRI processing"
+Title "Running MICA rsfMRI processing - (Version v0.0.1)"
 micapipe_software
 bids_print.variables-rsfmri
 Info "Not erasing temporal dir: $nocleanup"
@@ -423,7 +425,7 @@ if [[ ! -f ${fmri_processed} ]] ; then
                 else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
                 Info "Running ICA-FIX"
-                Do_cmd fix ${rsfmri_ICA}/ ${icafixTraining} 20 -m -h 100
+                Do_cmd fix ${rsfmri_ICA} ${icafixTraining} 20 -m -h 100
 
                 # Replace file if melodic ran correctly - Change single-echo files for clean ones
                 if [[ -f ${fix_output} ]]; then
@@ -479,10 +481,17 @@ fi
 
 #------------------------------------------------------------------------------#
 # Register to surface
+# If three surfaces are found skipp this step
+vol2surfTS=${rsfmri_surf}/${id}_singleecho_fmri2fs_?h.mgh
+out_surf_native=${rsfmri_surf}/${id}_singleecho_fmri2fs_?h_10mm.mgh
+out_surf_fsa5=${rsfmri_surf}/${id}_singleecho_fmri2fs_?h_fsa5_10mm.mgh
+out_surf=${rsfmri_surf}/${id}_singleecho_fmri2fs_?h_c69-32k_10mm.mgh
+Nsurf=$(ls $vol2surfTS $out_surf_native $out_surf_fsa5 $out_surf | wc -l)
+
+if [ "$Nsurf" -lt 8 ]; then
 for x in lh rh; do
     [[ $x == lh ]] && hemisphere=l || hemisphere=r
-    HEMI=`echo $hemisphere | tr [:lower:] [:upper:]`
-    
+    HEMI=$(echo $hemisphere | tr [:lower:] [:upper:])
     # Map volumetric timeseries to native surface
     vol2surfTS=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh
     if [[ ! -f ${vol2surfTS} ]] ; then
@@ -506,15 +515,15 @@ for x in lh rh; do
               --hemi ${x} \
               --out ${vol2surfTS}
     else
-        Info "Subject ${id} volumetric timeseries have been mapped to cortical surface"
+        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"
     fi
-    
-    # Convert native timeseries to gifti 
+
+    # Convert native timeseries to gifti
     Do_cmd mri_convert ${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}.mgh ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii
-    
+
     # Apply smoothing on native surface
     out_surf_native=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_10mm.mgh
-    if [[ ! -f ${out_surf_native} ]] ; then      
+    if [[ ! -f ${out_surf_native} ]] ; then
           if [[ ${smooth} == 1 ]] ; then
             Do_cmd wb_command -metric-smoothing \
                 ${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii  \
@@ -532,12 +541,12 @@ for x in lh rh; do
                 --fwhm-trg 10
           fi
     else
-        Info "Subject ${id} has native timeseries smoothed on surface"
+        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"
     fi
 
     # Register to fsa5 and apply smooth
     out_surf_fsa5=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_fsa5_10mm.mgh
-    if [[ ! -f ${out_surf_fsa5} ]] ; then 
+    if [[ ! -f ${out_surf_fsa5} ]] ; then
          Do_cmd mri_surf2surf \
             --hemi ${x} \
             --srcsubject ${id} \
@@ -546,12 +555,12 @@ for x in lh rh; do
             --tval ${out_surf_fsa5} \
             --fwhm-trg 10
     else
-         Info "Subject ${id} has timeseries mapped to fsa5"
+         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"
     fi
 
     # Register to conte69 and smooth
     out_surf=${rsfmri_surf}/${id}_singleecho_fmri2fs_${x}_c69-32k_10mm.mgh
-    if [[ ! -f ${out_surf} ]] ; then 
+    if [[ ! -f ${out_surf} ]] ; then
           # Register to conte69
           Do_cmd wb_command -metric-resample \
               ${tmp}/${id}_singleecho_fmri2fs_${x}.func.gii \
@@ -562,7 +571,6 @@ for x in lh rh; do
               -area-surfs \
               ${dir_surf}/${id}/surf/${hemisphere}h.midthickness.surf.gii \
               ${dir_conte69}/${id}_${hemisphere}h_midthickness_32k_fs_LR.surf.gii
-          
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
               ${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii \
@@ -576,6 +584,9 @@ for x in lh rh; do
           Info "Subject ${id} has a singleecho fmri2fs ${x}_conte69-32 10mm surface"
     fi
 done
+else
+  Info "Subject ${id} has a singleecho fmri2fs on all surfaces: fs5, conte69 and native"
+fi
 
 #------------------------------------------------------------------------------#
 #                           S U B C O R T E X

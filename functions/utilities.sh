@@ -81,10 +81,10 @@ bids_variables() {
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  export bids_mainScan=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
-  export bids_mainScanJson=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
-  export bids_mainPhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
-  export bids_reversePhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
+  bids_mainScan=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
+  bids_mainScanJson=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
+  bids_mainPhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
+  bids_reversePhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
@@ -162,10 +162,10 @@ bids_print.variables-rsfmri() {
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find $T1nativepro 2>/dev/null)"
   Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
-  Note "Main rsfMRI        =" "$(find ${bids_mainScan} 2>/dev/null)"
-  Note "Main rsfMRI json   =" "$(find ${bids_mainScanJson} 2>/dev/null)"
-  Note "Main phase scan    =" "$(find ${bids_mainPhase} 2>/dev/null)"
-  Note "Main reverse phase =" "$(find ${bids_reversePhase} 2>/dev/null)"
+  Note "Main rsfMRI        =" "$(find ${mainScan} 2>/dev/null)"
+  Note "Main rsfMRI json   =" "$(find ${mainScanJson} 2>/dev/null)"
+  Note "Main phase scan    =" "$(find ${mainPhaseScan} 2>/dev/null)"
+  Note "Main reverse phase =" "$(find ${reversePhaseScan} 2>/dev/null)"
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
   Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
 }
