@@ -3,7 +3,7 @@
 # MICA pipe cleanup script
 #
 # Will erase any temporal directory by default
-# If a flag is defined it will erase output files from an specific step
+# If a flag is defined it will erase output files and logs from an specific step
 #
 # https://github.com/MICA-MNI/micaopen/templates
 #
@@ -24,7 +24,7 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (DEFAULT is ses-pre)
 
    Flags for eraing specific processing outputs:\n
-\t\033[38;5;197m-proc_volumetric\033[0m  : DELETES volumetric processing
+\t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : DELETES Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES Resting state Funtional MRI processing
@@ -117,6 +117,14 @@ do
     postMPC=TRUE
     shift
   ;;
+  -GD)
+    postGD=TRUE
+    shift
+  ;;
+  -Morphology)
+    postMorph=TRUE
+    shift
+  ;;
   -mica)
     mica=TRUE
     shift
@@ -141,90 +149,106 @@ help; exit 1; fi
 
 # Get the real path of the Inputs
 id=${id/sub-/}
-out=`realpath $out`
-BIDS=`realpath $BIDS`
+out=$(realpath $out)
+BIDS=$(realpath $BIDS)
 
 # Number of session (Default is "ses-pre")
-if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
+if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
+
 # Exit if subject is not found
-if [ ! -d ${out}/sub-${id}/${SES} ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}/${SES}"; exit 1; fi
+if [ ! -d "${out}/sub-${id}" ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}"; exit 1; fi
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # if temporary directory is running on MICA-lab SGE
 if [ "$mica" = "TRUE" ];then source ${MICAPIPE}/functions/init.sh; fi
+
 # if temporary directory is empty
 if [ -z ${tmp} ]; then tmp=/tmp; fi
-
-# Remove temporary directories <<<<<< Will replace for cleanup tramp
-# Do_cmd rm -rf ${tmp}/*micapipe* ${tmp}/*proc* ${tmp}/*post*
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 
 # ---------------------------------------------------------------------------------------
 Title "MICA pipe cleanup \n\t\tSubject: $id"
-
-# CLEAN -MPC
-if [ "$postMPC" = "TRUE" ]; then
-    Warning "Erasing post_mpc output files"
-    Do_cmd rm -rf ${dir_surf}/micro_profiles 2>&1 | tee -a  ${dir_logs}/post_mpc.txt # <<<<<<<<<<<<< INCOMPLETE
-
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_structural
+if [ "$procVOL" = "TRUE" ]; then
+    Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
+    Do_cmd rm -rf ${proc_struct}/first/* \
+                  ${proc_struct}/*MNI* \
+                  ${proc_struct}/*nativepro_brain* \
+                  ${dir_warp}/*MNI152* \
+                  ${proc_struct}/*nativepro_5TT* \
+                  ${dir_logs}/proc-structural_*
 fi
-
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_freesurfer
 if [ "$procFS" = "TRUE" ]; then
-    Warning "Erasing proc_freesurfer output files\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf ${dir_freesurfer} 2>&1 | tee -a  ${dir_logs}/proc_freesurfer.txt
-fi
-
-# ---------------------------------------------------------------------------------------
-# CLEAN -proc_volumetric
-if [ "$procVOL" = "TRUE" ]; then
-    Warning "Erasing proc_volumetric output files\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf ${proc_struct}/first/* ${proc_struct}/*MNI* ${proc_struct}/*nativepro_brain* ${dir_warp}/*MNI152* ${proc_struct}/*nativepro_5TT* 2>&1 | tee -a  ${dir_logs}/proc_volumetric.txt
+    Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
+    Do_cmd rm -rf ${dir_freesurfer} \
+                  ${dir_logs}/proc-freesurfer*
 fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -post_structural
 if [ "$postVOL" = "TRUE" ]; then
-    Warning "Erasing post_structural output files"
-    Do_cmd rm -rf ${dir_volum}/* ${proc_struct}/${id}_t1w_*mm_fsspace.nii.gz 2>&1 | tee -a  ${dir_logs}/post_structural.txt
+    Warning "Erasing post_structural output files and logs"
+    Do_cmd rm -rf ${dir_volum}/* \
+                  ${proc_struct}/${id}_t1w_*mm_fsspace.nii.gz \
+                  ${dir_logs}/post-structural_*
+fi
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_dwi
+if [ "$procDWI" = "TRUE" ]; then
+    Warning "Erasing proc_dwi output files and logs"
+    Do_cmd rm -rf ${proc_dwi}/* \
+                  ${proc_struct}/${id}_dwi_nativepro.nii.gz \
+                  ${dir_warp}/*_dwi_to_nativepro_* \
+                  ${dir_logs}/proc-dwi_*
 fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_rsfmri
 if [ "$procfMRI" = "TRUE" ]; then
-    Warning "Erasing proc_rsfmri output files"
-    Do_cmd rm -rf ${proc_rsfmri}/* ${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz ${dir_warp}/*fmri* 2>&1 | tee -a  ${dir_logs}/proc_rsfmri.txt
+    Warning "Erasing proc_rsfmri output files and logs"
+    Do_cmd rm -rf ${proc_rsfmri}/* \
+                  ${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz \
+                  ${dir_warp}/*fmri* \
+                  ${dir_logs}/proc-rsfmri_*
 fi
-
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
-    Warning "Erasing post_tractography output files"
+    Warning "Erasing post_tractography output files and logs"
     Do_cmd rm -rf ${proc_dwi}/connectomes/${id}_${tracts}* \
                   ${proc_dwi}/QC/png/${id}_${tracts}_*connectome.png \
                   ${proc_dwi}/QC/png/${id}_${tracts}_*edgeLengths.png \
                   ${proc_dwi}/${id}_${tracts}_tdi_iFOD2-*.mif \
                   ${proc_dwi}/${id}_dwi_subcortical.nii.gz \
                   ${proc_dwi}/${id}_dwi_cerebellum.nii.gz \
-                  $proc_dwi/auto_tract/${id}_${tracts}* 2>&1 | tee -a  ${dir_logs}/post_tractography.txt
+                  ${proc_dwi}/auto_tract/${id}_${tracts}* ${dir_logs}/post-sc_*
 fi
-
 # ---------------------------------------------------------------------------------------
-# CLEAN -proc_dwi
-if [ "$procDWI" = "TRUE" ]; then
-    Warning "Erasing proc_dwi output files"
-    Do_cmd rm -rf ${proc_dwi}/* ${proc_struct}/${id}_dwi_nativepro.nii.gz ${dir_warp}/*_dwi_to_nativepro_* 2>&1 | tee -a  ${dir_logs}/proc_dwi.txt
+# CLEAN -MPC
+if [ "$postMPC" = "TRUE" ]; then
+    Warning "Erasing post_mpc output files and logs"
+    Do_cmd rm -rf ${dir_surf}/micro_profiles ${dir_logs}/post-mpc_*
+fi
+# ---------------------------------------------------------------------------------------
+# CLEAN -GD
+if [ "$postGD" = "TRUE" ]; then
+    Warning "Erasing '-GD' output files and logs"
+    Do_cmd rm -rf ${dir_surf}/geo_dist \
+                  ${dir_logs}/post-gd_*
+fi
+# ---------------------------------------------------------------------------------------
+# CLEAN -Morphology
+if [ "$postMorph" = "TRUE" ]; then
+    Warning "ERASING '-Morphology' output files and logs"
+    Do_cmd rm -rf ${dir_surf}/morphology \
+                  ${dir_logs}/post-morph_*
 fi
 
-
-# Return the original PATH if qsub || mica=TRUE
-if [ ! -z ${OLD_PATH+x} ]; then
-      export PATH=$OLD_PATH
-      unset OLD_PATH
-      unset tmp
-fi
+bids_variables_unset

@@ -39,20 +39,20 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: DWI post TRACTOGRAPHY
-fod=$proc_dwi/${id}_wm_fod_norm.mif
-dwi_5tt=$proc_dwi/${id}_dwi_5tt.nii.gz
+fod=${proc_dwi}/${id}_wm_fod_norm.mif
+dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
 T1str_nat=${id}_t1w_${res}mm_nativepro
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
-dwi_b0=$proc_dwi/${id}_dwi_b0.nii.gz
+dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
-lut_sc="$util_lut/lut_subcortical-cerebellum_mics.csv"
-dwi_mask=$proc_dwi/${id}_dwi_mask.nii.gz
-fa=$proc_dwi/${id}_dti_FA.mif
+tdi=${proc_dwi}/${id}_tdi_iFOD2-${tracts}.mif
+lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
+dwi_mask=${proc_dwi}/${id}_dwi_mask.nii.gz
+fa=${proc_dwi}/${id}_dti_FA.mif
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
@@ -65,11 +65,11 @@ if [ ! -f $dwi_mask ]; then Error "Subject $id doesn't have DWI binary mask:\n\t
 if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
 
 # -----------------------------------------------------------------------------------------------
-# Check IF output exits then EXIT
-N=`ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l`
-if [ $N -gt 3 ]; then Error "Subject $id already have some connectomes. If you want to re-run -SC first clean the outpus:
-        micapipe_cleanup -SC -sub $id -out $out -bids $BIDS"; Do_cmd exit; fi
-if [ -f $tdi ]; then Error "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; Do_cmd exit; fi
+# Check IF output exits and WARNING
+N=$(ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l)
+if [ $N -gt 3 ]; then Warning "Existing connectomes will be overwritten!! If you want to re-run -SC first clean the outpus:
+        micapipe_cleanup -SC -sub $id -out $out -bids $BIDS"; fi
+if [ -f $tdi ]; then Warning "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; fi
 
 
 #------------------------------------------------------------------------------#
@@ -98,7 +98,7 @@ Do_cmd cd ${tmp}
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
-parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"`
+parcellations=($(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
 dwi_cere=${proc_dwi}/${id}_dwi_cerebellum.nii.gz
@@ -148,8 +148,8 @@ Do_cmd tckmap -vox 1,1,1 -dec -nthreads $threads $tck $tdi -force
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
-for seg in $parcellations; do
-    parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+for seg in ${parcellations[@]}; do
+    parc_name=$(echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}')
     nom=${dwi_cnntm}/${id}_${tracts}_${parc_name}
     lut="${util_lut}/lut_${parc_name}_mics.csv"
     dwi_cortex=$tmp/${id}_${parc_name}-cor_dwi.nii.gz # Segmentation in dwi space
@@ -231,16 +231,18 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
+QC_SC
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-if [ "$Nparc" -eq 56 ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
-Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
-\t\tNumber of connectomes: `printf "%02d" $Nparc`/56
+N="$(( 2 + ${#parcellations[*]} * 3))"
+if [ "$Nparc" -eq $N ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
+Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+\t\tNumber of connectomes: $(printf "%02d" $Nparc)/$(printf "%02d" $N)
 \tlogs:
-`ls ${dir_logs}/post-dwi_*.txt`"
+$(ls ${dir_logs}/post-dwi_*.txt)"
 # Print QC stamp
-echo "${id}, post_dwi, $status N=$(printf "%02d" $Nparc)/56, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+echo "${id}, post_dwi, $status N=$(printf "%02d" $Nparc)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here

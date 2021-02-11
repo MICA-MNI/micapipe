@@ -3,6 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
+export Version="v0.0.1"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -27,24 +28,33 @@ bids_variables() {
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
   export subject=sub-${id}
-  export subject_dir=$out/${subject}/${SES}     # Output directory
-  export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
+
+  # Handle Single Session
+  if [ $SES == "SINGLE" ]; then
+      export subject_dir=$out/${subject}     # Output directory
+      export subject_bids=${BIDS}/${subject} # Input BIDS directory
+      ses=""
+  else
+      export subject_dir=$out/${subject}/${SES}     # Output directory
+      export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
+      ses="_${SES}"
+  fi
 
   # Structural directories derivatives/
-  export proc_struct=$subject_dir/proc_struct # structural processing directory
+  export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_first=$proc_struct/first      # FSL first
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 export dir_surf=$proc_struct/surfaces    # surfaces
   			     export dir_freesurfer=${dir_surf}/${id}  # freesurfer dir
   			     export dir_conte69=${dir_surf}/conte69   # conte69
-  export proc_dwi=$subject_dir/proc_dwi               # DWI processing directory
+  export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
-  export proc_rsfmri=$subject_dir/proc_rsfmri
+  export proc_rsfmri=$subject_dir/func
     export rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
     export rsfmri_volum=$proc_rsfmri/volumetric
     export rsfmri_surf=$proc_rsfmri/surfaces
-  export dir_warp=$subject_dir/xfms              # Transformation matrices
+  export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
   export dir_QC_png=$subject_dir/QC/png                  # directory with QC files
@@ -71,10 +81,10 @@ bids_variables() {
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  export bids_mainScan=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.nii*       # main rsfMRI scan
-  export bids_mainScanJson=${subject_bids}/func/${subject}_${SES}_task-rest_acq-AP_*.json   # main rsfMRI scan json
-  export bids_mainPhase=${subject_bids}/func/${subject}_${SES}_task-rest_acq-APse*.nii*     # main phase scan
-  export bids_reversePhase=${subject_bids}/func/${subject}_${SES}_task-rest_acq-PAse*.nii*  # reverse phase scan
+  export bids_mainScan=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
+  export bids_mainScanJson=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
+  export bids_mainPhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
+  export bids_reversePhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
@@ -85,7 +95,7 @@ bids_variables() {
   bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
   export bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
   export bids_inv1=${subject_bids}/anat/*inv1*.nii*
-  export dwi_reverse=${subject_bids}/dwi/*_${SES}_acq-PA_dir-*_dwi.nii*
+  export dwi_reverse=${subject_bids}/dwi/*${ses}_acq-PA_dir-*_dwi.nii*
 }
 
 bids_print.variables() {
@@ -247,6 +257,45 @@ micapipe_software() {
   Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
   Note "            " "$(which R)"
 }
+micapipe_json() {
+  # Name is the name of the raw-BIDS directory
+  if [ -f ${BIDS}/dataset_description.json ]; then
+    Name=$(cat ${BIDS}/dataset_description.json | grep Name | awk -F '"' '{print $4}')
+    BIDSVersion=$(cat ${BIDS}/dataset_description.json | grep BIDSVersion | awk -F '"' '{print $4}')
+  else
+    Name="BIDS dataset_description NOT found"
+    BIDSVersion="BIDS dataset_description NOT found"
+  fi
+
+  echo -e "{
+    \"Name\": \"${Name}\",
+    \"BIDSVersion\": \"${BIDSVersion}\",
+    \"DatasetType\": \"derivative\",
+    \"GeneratedBy\": [
+      {
+        \"Name\": \"micapipe\",
+        \"Version\": \"${Version}\",
+        \"Container\": {
+          \"Type\": \"github\",
+          \"Tag\": \"MICA-LAB/micapipe:0.0.1\"
+          }
+      },
+      {
+        \"Name\": \"$(whoami)\",
+        \"Workstation\": \"$(uname -n)\"
+        \"LastRun\": \"$(date)\"
+        \"Processing\": \"${PROC}\"
+      }
+    ],
+    \"SourceDatasets\": [
+      {
+        \"DOI\": \"doi:\",
+        \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
+        \"Version\": \"0.0.1\"
+      }
+    ]
+  }" > ${out}/pipeline-description.json
+}
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
@@ -340,7 +389,108 @@ function cleanup() {
   fi
   cd "$here"
   bids_variables_unset
-  export PATH=$OLD_PATH
-  unset OLD_PATH
-  # exit
+  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
+}
+
+function QC_proc-dwi() {
+  html=${dir_QC}/micapipe_qc_proc-dwi.txt
+  if [ -f $html ]; then rm $html; fi
+  for i in "${!bids_dwis[@]}"; do
+    echo "        <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
+            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
+            <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
+          </tr>" >> $html
+  done
+
+  if [ -f $dwi_reverse ]; then
+    echo -e "        <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
+            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
+            <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
+          </tr>"  >> $html
+  fi
+}
+
+function QC_proc-rsfmri() {
+  html=${dir_QC}/micapipe_qc_proc-rsfmir.txt
+  if [ -f $html ]; then rm $html; fi
+  echo -e "            <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
+              </tr>
+            " >> $html
+            if [ -f $bids_reversePhase ]; then
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
+              </tr>"  >> $html
+            fi
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
+                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
+                <td class=\"tg-8pnm\">$(find $topupConfigFile 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
+                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
+                <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
+              </tr>"   >> $html
+}
+
+function QC_SC() {
+  html=${dir_QC}/micapipe_qc_SC.txt
+  if [ -f $html ]; then rm $html; fi
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $fod 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_b0</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_b0 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mat_dwi_affine</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $mat_dwi_affine 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_5tt</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_5tt 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_cerebellum</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1_seg_cerebellum 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_subcortex</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1_seg_subcortex 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_mask</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $dwi_mask 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
+                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
+                <td class=\"tg-8pnm\">$(find $fa 2>/dev/null)</td>
+              </tr>"   >> $html
 }

@@ -433,8 +433,67 @@ echo "  </div>" >> $QC_html
 echo "
   <h2>Resting state fMRI -proc_rsfmri</h2>
   <div>
-    <h3>Input files</h3>
-    <h3>Functional connectomes</h3>" >> $QC_html
+    <h3>Input files</h3>" >> $QC_html
+    echo -e $table_style >> $QC_html
+    echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Variable name</th>
+              <th class=\"tg-droi\">Origin</th>
+              <th class=\"tg-droi\">Path to file</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
+              <td class=\"tg-8pnm\">BIDS func<br><br></td>
+              <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
+              <td class=\"tg-8pnm\">BIDS func<br><br></td>
+              <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
+              <td class=\"tg-8pnm\">BIDS func<br><br></td>
+              <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
+            </tr>
+          " >> $QC_html
+          if [ -f $bids_reversePhase ]; then
+            echo -e "
+                    <tr>
+                      <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
+                      <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                      <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
+                    </tr>"  >> $QC_html
+          fi
+          echo -e "
+                  <tr>
+                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
+                    <td class=\"tg-8pnm\">proc_structural<br><br></td>
+                    <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
+                  </tr>
+                  <tr>
+                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
+                    <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
+                    <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
+                  </tr>
+                  <tr>
+                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
+                    <td class=\"tg-8pnm\">DEFAULT<br><br></td>
+                    <td class=\"tg-8pnm\">$(find $topupConfigFile 2>/dev/null)</td>
+                  </tr>
+                  <tr>
+                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
+                    <td class=\"tg-8pnm\">DEFAULT<br><br></td>
+                    <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
+                  </tr>
+                </tbody>
+                </table>"  >> $QC_html
+
+echo "    <h3>Functional connectomes</h3>" >> $QC_html
 echo -e $table_style >> $QC_html
 echo -e "
     <table class=\"tg\">
@@ -475,10 +534,13 @@ echo -e "
  "  >> $QC_html
 
 #------------------------------------------------------------------------------#
-echo "
-  <h2>Micro structural profiles -MPC and Geodesic distance -GD</h2>
+echo "  <h2>Micro structural profiles -MPC and Geodesic distance -GD</h2>
   <div>
-    <h3>Input files</h3>" >> $QC_html
+    <h3>Input files -MPC</h3>" >> $QC_html
+#------------------------------------------------------------------------------#
+echo -e "    <h3>Input files -GD</h3>"  >> $QC_html
+#------------------------------------------------------------------------------#
+echo -e "    <h3>Connectomes</h3>"  >> $QC_html
 echo -e $table_style >> $QC_html
 echo -e " <table class=\"tg\">
   <thead>

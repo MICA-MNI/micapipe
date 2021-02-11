@@ -123,10 +123,10 @@ echo -e "\n\033[38;5;141m
 if [ "${#arg[@]}" -eq 0 ]; then help; exit 0; fi
 if [[ -z `which dcm2niix` ]]; then Error "dcm2niix NOT found"; exit 0; else Info "dcm2niix was found and is ready to work."; fi
 
-SUBJ_DCM=`realpath $SUBJ_DCM`
-BIDS_DIR=`realpath $BIDS_DIR`
+SUBJ_DCM=$(realpath $SUBJ_DCM)
+BIDS_DIR=$(realpath $BIDS_DIR)
 
-# Check mandatory inputs: -id Is $SUBJ_DCM found?
+# Check mandatory inputs: -id
 arg=($Subj)
 if [ "${#arg[@]}" -lt 1 ]; then Error "Subject id is missing: $Subj"; help; exit 0; fi
 if [[ $Subj =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain special characters:\n\t\t\t['!@#$%^&*()_+']"; exit 0; fi
@@ -134,7 +134,7 @@ if [[ $Subj =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain spe
 # check mandatory inputs: -bids
 if [[ -z $BIDS_DIR ]]; then Error "BIDS directory is empty"; exit 0; fi
 
-# check mandatory inputs: -in
+# check mandatory inputs: -in Is $SUBJ_DCM found?
 if [ ! -d ${SUBJ_DCM} ]; then Error "Subject DICOMS directory doesn't exist: \n\t ${Subj}";
     if [[ ${mica} == TRUE ]]; then echo "$Subj, no dicoms_sorted" >> ${BIDS_DIR}/CHANGES; fi;
     exit 0
@@ -145,7 +145,7 @@ if [[ ${force} == TRUE ]]; then rm -rf ${BIDS_DIR}/sub-${Subj}/${SES}; fi
 if [ -d ${BIDS_DIR}/sub-${Subj}/${SES} ]; then Error "Output directory already exist, use -force to overwrite it. \n\t     ${BIDS_DIR}/sub-${Subj}/${SES}\t    "; exit 0; fi
 
 # Save actual path
-here=`pwd`
+here=$(pwd)
 
 # -----------------------------------------------------------------------------------------------
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
