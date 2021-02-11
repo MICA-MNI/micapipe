@@ -100,7 +100,7 @@ load(file=paste0(mica.dir,"cmap_MICs.Rdata"))
 
 # Save png for QC purposes
 nom <-  gsub(".txt","", strsplit(conn, split = "connectomes/")[[1]][2])
-qc <- paste0(strsplit(conn, split = "proc_dwi/")[[1]][1],"QC/png/")
+qc <- paste0(strsplit(conn, split = "dwi/")[[1]][1],"QC/png/")
 print(paste0("INFO.... Saving Connectome as png for QC"))
 print(paste0("    Path=",qc, nom, ".png"))
 png(paste0(qc, nom, ".png"))

@@ -1,5 +1,11 @@
 #!/bin/bash
 #
+# Automatic bundle segmentation
+#
+version() {
+  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.1)\n"
+}
+
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=$(dirname $(realpath $0))
 MICAPIPE=$(dirname $(realpath $dir_functions))
@@ -8,7 +14,7 @@ source ${MICAPIPE}/functions/utilities.sh
 help() {
 echo -e "
 COMMAND:
-    `basename $0`
+    $(basename $0)
 
         Perform automatic virtual dissection of a full-brain tractogram.
         Provide a pre-computed tck file and it will be dissected.
@@ -53,11 +59,11 @@ OPTIONS:
       -robust           : This option to runs a more ROBUST SyN registration ( More computation time )
       -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2
       -threads <int>    : Number of threads (Default is 6)
-
+      -version      	  : Print software version
 
 
 USAGE:
-    \033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-tck\033[0m <file> \033[38;5;197m-outbase\033[0m <string> \033[38;5;197m-mask\033[0m <file> \033[38;5;197m-fa\033[0m <file>\n
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-tck\033[0m <file> \033[38;5;197m-outbase\033[0m <string> \033[38;5;197m-mask\033[0m <file> \033[38;5;197m-fa\033[0m <file>\n
 
 
 Created by Luis Concha, INB, UNAM, lconcha@unam.mx (https://github.com/lconcha/auto_tracto)
@@ -72,6 +78,10 @@ do
   case "$arg" in
   -h|-help)
     help
+    exit 1
+  ;;
+  -version)
+    version
     exit 1
   ;;
   -tck)

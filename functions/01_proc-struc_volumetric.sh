@@ -37,7 +37,7 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 #------------------------------------------------------------------------------#
 Title "Running MICA structural processing: Volumetric"
@@ -61,7 +61,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
-n=$((${N} - 1))
+n=$(($N - 1))
 
 # FSL tries to submit to SGE
 # unset FSLPARALLEL #unset SGE_ROOT         <<<<<<<<<<<<< This is not working
@@ -71,34 +71,34 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
     # Reorient  to LPI with AFNI
     # LPI is the standard 'neuroscience' orientation, where the x-axis is
     # Left-to-Right, the y-axis is Posterior-to-Anterior, and the z-axis is Inferior-to-Superior.
-    for ((k=0; k<=$n; k++)); do
-      nom=`echo ${bids_T1ws[k]} | awk -F '/' '{print $NF}'`
+    for ((k=0; k<="$n"; k++)); do
+      nom=$(echo ${bids_T1ws[k]} | awk -F '/' '{print $NF}')
       t1_reo=${tmp}/${nom/sub/reo}
       t1_obl=${tmp}/${nom/sub/obl}
       # Deoblique
-      Do_cmd 3dresample -orient LPI -prefix $t1_obl -inset ${bids_T1ws[k]}
+      Do_cmd 3dresample -orient LPI -prefix "$t1_obl" -inset "${bids_T1ws[k]}"
       # Reorient to standart
-      Do_cmd fslreorient2std $t1_obl $t1_reo
+      Do_cmd fslreorient2std "$t1_obl" "$t1_reo"
     done
 
     # If multiple T1w were provided, Register and average to the first T1w
     if [ $N -gt 1 ]; then
       ref=${bids_T1ws[0]} # reference to registration
-      ref_run=`echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
-      ref_res=`echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
+      ref_run=$(echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+      ref_res=$(echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       # Variables for N4BiasFieldCorrection & Native output
-      T1str_nat=`t1w_str ${id} ${ref} nativepro`
-      T1n4=${tmp}/${T1str_nat}_n4.nii.gz
+      T1str_nat=$(t1w_str ${id} ${ref} nativepro)
+      T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
       # Loop over each T1
       for ((i=1; i<=$n; i++)); do
-          run=`echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g'`
-          t1ref=run-${ref_run}
-          T1mat_str=${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}_
-          T1mat=${T1mat_str}0GenericAffine.mat
-          T1run_2_T1=${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz
+          run=$(echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+          t1ref="run-${ref_run}"
+          T1mat_str="${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}_"
+          T1mat="${T1mat_str}0GenericAffine.mat"
+          T1run_2_T1="${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz"
 
-          Do_cmd antsRegistrationSyN.sh -d 3 -m ${bids_T1ws[i]} -f $ref  -o $T1mat_str -t a -n $threads -p d
-          Do_cmd antsApplyTransforms -d 3 -i ${bids_T1ws[i]} -r $ref -t $T1mat -o $T1run_2_T1 -v -u int
+          Do_cmd antsRegistrationSyN.sh -d 3 -m "${bids_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
+          Do_cmd antsApplyTransforms -d 3 -i "${bids_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
       done
       # Calculate the mean over all T1w registered to the 1st t1w run
       t1s_reg=$(find ${tmp}/*_to_${t1ref}.nii.gz)
@@ -108,7 +108,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
     # If only one T1w is provided
     elif [ $N -eq 1 ]; then
       # Variables for N4BiasFieldCorrection & Native output
-      T1str_nat=`t1w_str ${id} ${t1_reo} nativepro`
+      T1str_nat=$(t1w_str ${id} ${t1_reo} nativepro)
       T1n4=${tmp}/${T1str_nat}_n4.nii.gz
       Do_cmd cp -v $t1_reo $T1n4
     fi
@@ -137,7 +137,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
     # Output names get the names
-    T1str_nat=`t1w_str ${id} ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz nativepro`
+    T1str_nat=$(t1w_str ${id} ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz nativepro)
     T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
     T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
     T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
@@ -154,24 +154,24 @@ if [ ! -f ${firstout} ]; then
 
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
     for i in ${proc_struct}/first/*pro-*; do mv -v $i ${i/pro-/pro_}; done
-    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz ${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz
-    mv -v ${proc_struct}/${T1str_nat}_brain_to_std_sub.mat ${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat
+    mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz" "${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz"
+    mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.mat" "${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat"
   else
-    Info "Subject ${id} has FSL-first"
+    Info "Subject $id has FSL-first"
 fi
 
 # FSL FAST on the t1w_nativepro
 if [ ! -f ${T1nativepro_brain/.nii.gz/_pve_0.nii.gz} ]; then
-    Do_cmd fast -N -v $T1nativepro_brain
+    Do_cmd fast -N -v "$T1nativepro_brain"
 else
-    Info "Subject ${id} has FSL-fast"
+    Info "Subject $id has FSL-fast"
 fi
 
 # Loop over all requested templates - could use a check for whether the template and the mask exists.
 # mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
 for mm in 2 0.8; do
   # Only runs if the output doesn't exist
-  if [ ! -f ${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain_pve_0.nii.gz ]; then
+  if [ ! -f "${dir_warp}/${id}_t1w_${res}mm_nativepro_brain_to_${mm}mm_MNI152_SyN_brain_1Warp.nii.gz" ]; then
       # ---------------------------------------------------------
       # MNI152 templates
       MNI152_brain=${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz
@@ -193,7 +193,7 @@ for mm in 2 0.8; do
       Do_cmd mv $T1_MNI152_warped $T1_MNI152_brain
 
   else
-      Info "Subject ${id} has t1w_${mm}mm_nativepro on MNI152 space and FSL-fast "
+      Info "Subject $id has t1w_${mm}mm_nativepro on MNI152 space and FSL-fast "
   fi
 done
 
@@ -202,7 +202,7 @@ if [[ ! -f $T1nativepro_5tt ]]; then
     # --------------------------------------------------------------
     # Step by step 5tt
     # Process data in tmp directory
-    cd ${tmp}
+    cd "$tmp"
     # Convert to mif format
     Do_cmd mrconvert $T1nativepro_brain ${tmp}/input.mif
     # Change strides
@@ -248,10 +248,10 @@ fi
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-Title "Volumetric tructural processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
-`ls ${dir_logs}/proc-volumetric_*.txt`"
+Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
+$(ls ${dir_logs}/proc-volumetric_*.txt)"
 echo "${id}, proc_struc, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here

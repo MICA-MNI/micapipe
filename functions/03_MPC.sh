@@ -41,10 +41,14 @@ fi
 source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Freesurfer space T1
 if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+
+# Check PARCELLATIONS
+parcellations=($(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+if [ ${#parcellations[*]} -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
 
 # Check microstructural image input flag and set parameters accordingly
 if [[ ${input_im} == "DEFAULT" ]]; then
@@ -87,8 +91,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR=${dir_surf}
 
 # Temporary fsa5 directory
-ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
-
+Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
 
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
@@ -102,7 +105,7 @@ if [[ ${input_lta} == "DEFAULT" ]]; then
             --mov "$regImage" \
             --int "$origImage" \
             --reg "$fs_transform" \
-            --o "$subject_dir"/proc_struct/"$id"_micro2fsspace.nii.gz \
+            --o "$subject_dir"/anat/"$id"_micro2fsspace.nii.gz \
             --init-header --t1
     else
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"
@@ -117,7 +120,7 @@ fi
 ## Register qT1 intensity to surface
 
 num_surfs=14
-outDir="$subject_dir"/proc_struct/surfaces/micro_profiles/
+outDir="$subject_dir"/anat/surfaces/micro_profiles/
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir"
 
 if [[ ! -f ${outDir}/rh.14.mgh ]]; then
@@ -201,17 +204,12 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# run  mpc on native surface
-all_parcellations='vosdewael-100 vosdewael-200 vosdewael-300 vosdewael-400
-schaefer-100 schaefer-200 schaefer-300 schaefer-400 schaefer-500 schaefer-600 schaefer-700 schaefer-800 schaefer-900 schaefer-1000
-glasser-360
-economo
-aparc
-aparc-a2009s'
-for parc in ${all_parcellations}; do
-    parc_annot=${parc}_mics.annot
+# run  mpc on native surface and different parcellations
+for seg in ${parcellations[@]}; do
+    parc=$(echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}')
+    parc_annot="${parc}_mics.annot"
+    Info "Running MPC on $parc"
     Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot"
-    echo completed "$parc"
 done
 
 #------------------------------------------------------------------------------#
@@ -224,7 +222,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-Title "Post-MPC processing ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:\n\tlogs:
+Title "Post-MPC processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/post-mpc_*.txt"
 echo "${id}, post_mpc, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here
