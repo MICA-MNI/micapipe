@@ -42,17 +42,17 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: DWI post TRACTOGRAPHY
-fod=$proc_dwi/${id}_wm_fod_norm.mif
-dwi_5tt=$proc_dwi/${id}_dwi_5tt.nii.gz
+fod=${proc_dwi}/${id}_wm_fod_norm.mif
+dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
 T1str_nat=${id}_t1w_${res}mm_nativepro
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
-dwi_b0=$proc_dwi/${id}_dwi_b0.nii.gz
+dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
 mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
-tdi=$proc_dwi/${id}_tdi_iFOD2-${tracts}.mif
-lut_sc="$util_lut/lut_subcortical-cerebellum_mics.csv"
-dwi_mask=$proc_dwi/${id}_dwi_mask.nii.gz
-fa=$proc_dwi/${id}_dti_FA.mif
+tdi=${proc_dwi}/${id}_tdi_iFOD2-${tracts}.mif
+lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
+dwi_mask=${proc_dwi}/${id}_dwi_mask.nii.gz
+fa=${proc_dwi}/${id}_dti_FA.mif
 
 # Check inputs
 if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi

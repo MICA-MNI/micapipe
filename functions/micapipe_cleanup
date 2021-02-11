@@ -228,7 +228,7 @@ if [ "$postDWI" = "TRUE" ]; then
                   ${proc_dwi}/${id}_${tracts}_tdi_iFOD2-*.mif \
                   ${proc_dwi}/${id}_dwi_subcortical.nii.gz \
                   ${proc_dwi}/${id}_dwi_cerebellum.nii.gz \
-                  $proc_dwi/auto_tract/${id}_${tracts}* ${dir_logs}/post-sc_*
+                  ${proc_dwi}/auto_tract/${id}_${tracts}* ${dir_logs}/post-sc_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC

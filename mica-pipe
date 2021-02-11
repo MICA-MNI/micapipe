@@ -16,7 +16,7 @@ echo -e "
 \t\033[38;5;197m-sub\033[0m 	          : Subject identification
 \t\033[38;5;197m-out\033[0m 	          : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
-\t\033[38;5;197m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
+\t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
    Flags for basic stages of processing:
 \t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
@@ -42,42 +42,47 @@ echo -e "
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
-   \033[38;5;197m-post_structural\033[0m
-\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
-\t\t\t        ( default is the 18 parcellations provided in the pipeline )
+\t\033[38;5;197m-proc_structural\033[0m
+\t\t\033[38;5;120m-cerebellum_seg\033[0m      : User defined segmentation of the cerebellum on native T1w_run1 space.
+\t\t\033[38;5;120m-subcortical_seg\033[0m     : User defined segmentation of the subcortical structures on native T1w_run1 space.
 
-   \033[38;5;197m-proc_freesurfer\033[0m
-\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to <subject_dir>/proc_struct/surfaces/<sub>
+\t\033[38;5;197m-proc_freesurfer\033[0m
+\t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to <subject_dir>/proc_struct/surfaces/<sub>
 
-   \033[38;5;197m-proc_dwi\033[0m
-\t\033[38;5;120m-dwi_main\033[0m            : Path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
-\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
-\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
-\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
+\t\033[38;5;197m-post_structural\033[0m
+\t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
+\t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
 
-   \033[38;5;197m-proc_rsfmri\033[0m
-\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
-\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
-\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
-\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
-\t\t\t         you must specify which scan to process ( e.g. '1' )
-\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
-\t\t\t         you must specify which one to process ( e.g. '1' )
+\t\033[38;5;197m-proc_dwi\033[0m
+\t\t\033[38;5;120m-dwi_main\033[0m            : Path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
+\t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
+\t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
+\t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
 
-   \033[38;5;197m-SC\033[0m
-\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
-\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+\t\033[38;5;197m-proc_rsfmri\033[0m
+\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+\t\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
+\t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
+\t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
+\t\t\t\t         you must specify which scan to process ( e.g. '1' )
+\t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
+\t\t\t\t         you must specify which one to process ( e.g. '1' )
 
-   \033[38;5;197m-MPC\033[0m
-\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
-\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t\033[38;5;120m-microstructural_lta\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
-\t\t\t        If left blank or omitted, registration will be computed in the script.
-\t\t\t        Note that there is currently no built-in mechanism to verify the accuracy of this registration!
+\t\033[38;5;197m-SC\033[0m
+\t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
+\t\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+
+\t\033[38;5;197m-MPC\033[0m
+\t\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
+\t\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
+\t\t\033[38;5;120m-microstructural_lta\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
+\t\t\t\t        If left blank or omitted, registration will be computed in the script.
+\t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
 
 
 \033[38;5;141mOPTIONS:\033[0m
 \t\033[38;5;197m-h|-help\033[0m          : Print help
+\t\033[38;5;197m-v|-version\033[0m 	  : Print software version
 \t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
@@ -87,7 +92,6 @@ echo -e "
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
-\t\033[38;5;197m-version\033[0m 	  : Print software version
 
 
 \033[38;5;141mUSAGE:\033[0m
@@ -144,7 +148,7 @@ do
     help
     exit 1
   ;;
-  -version)
+  -v|-version)
     version
     exit 1
   ;;
@@ -359,7 +363,7 @@ fi
 if [ -z ${dwi_rpe} ]; then dwi_rpe=DEFAULT; else dwi_rpe=$(realpath $dwi_rpe); fi
 
 # Get the real path of the Inputs
-out=$(realpath $out)/micapipe_v0.0.1
+out=$(realpath $out)/micapipe
 BIDS=$(realpath $BIDS)
 id=${id/sub-/}
 here=$(pwd)
@@ -449,7 +453,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d ${subject_dir} ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfms,QC,proc_dwi,proc_rsfmri,proc_struct/{first,volumetric,surfaces/{conte69,$id}}}
+    Do_cmd mkdir -p $subject_dir/{logs,xfm,QC,dwi,func,anat/{first,volumetric,surfaces/{conte69,$id}}}
 else
     Info "Subject ${id} directory exist"
 fi

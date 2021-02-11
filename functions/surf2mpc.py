@@ -60,7 +60,7 @@ else:
     ses_str="{dataDir}/sub-{sub}/ses-{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
 
 # setting output directory
-OPATH = "{subject_dir}/proc_struct/surfaces/micro_profiles/".format(subject_dir=ses_str)
+OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
 
 if os.path.exists(OPATH):
     try:
@@ -85,7 +85,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
 
         # Load parcellation in native surface space
-        pathToParc = "{subject_dir}/proc_struct/surfaces/{sub}/label/".format(subject_dir=ses_str, sub=sub)
+        pathToParc = "{subject_dir}/anat/surfaces/{sub}/label/".format(subject_dir=ses_str, sub=sub)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)

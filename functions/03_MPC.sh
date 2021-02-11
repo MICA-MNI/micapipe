@@ -105,7 +105,7 @@ if [[ ${input_lta} == "DEFAULT" ]]; then
             --mov "$regImage" \
             --int "$origImage" \
             --reg "$fs_transform" \
-            --o "$subject_dir"/proc_struct/"$id"_micro2fsspace.nii.gz \
+            --o "$subject_dir"/anat/"$id"_micro2fsspace.nii.gz \
             --init-header --t1
     else
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"
@@ -120,7 +120,7 @@ fi
 ## Register qT1 intensity to surface
 
 num_surfs=14
-outDir="$subject_dir"/proc_struct/surfaces/micro_profiles/
+outDir="$subject_dir"/anat/surfaces/micro_profiles/
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir"
 
 if [[ ! -f ${outDir}/rh.14.mgh ]]; then

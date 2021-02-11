@@ -41,20 +41,20 @@ bids_variables() {
   fi
 
   # Structural directories derivatives/
-  export proc_struct=$subject_dir/proc_struct # structural processing directory
+  export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_first=$proc_struct/first      # FSL first
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 export dir_surf=$proc_struct/surfaces    # surfaces
   			     export dir_freesurfer=${dir_surf}/${id}  # freesurfer dir
   			     export dir_conte69=${dir_surf}/conte69   # conte69
-  export proc_dwi=$subject_dir/proc_dwi               # DWI processing directory
+  export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
-  export proc_rsfmri=$subject_dir/proc_rsfmri
+  export proc_rsfmri=$subject_dir/func
     export rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
     export rsfmri_volum=$proc_rsfmri/volumetric
     export rsfmri_surf=$proc_rsfmri/surfaces
-  export dir_warp=$subject_dir/xfms              # Transformation matrices
+  export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
   export dir_QC_png=$subject_dir/QC/png                  # directory with QC files
@@ -81,10 +81,10 @@ bids_variables() {
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  export bids_mainScan=${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii*       # main rsfMRI scan
-  export bids_mainScanJson=${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json   # main rsfMRI scan json
-  export bids_mainPhase=${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii*     # main phase scan
-  export bids_reversePhase=${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii*  # reverse phase scan
+  export bids_mainScan=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
+  export bids_mainScanJson=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
+  export bids_mainPhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
+  export bids_reversePhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
