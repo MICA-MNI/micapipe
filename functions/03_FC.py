@@ -129,7 +129,6 @@ else:
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr, fmt='%.6f')
 
-# Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
 
@@ -145,7 +144,12 @@ parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
-    thisparc = np.loadtxt(parcPath)
+    
+    if parcellation == "aparc-a2009s_conte69":
+        print("parcellation " + parcellation + " currently not supported")
+        continue
+    else:
+        thisparc = np.loadtxt(parcPath)
 
     # Parcellate cortical timeseries
     data_corr_ctx = data_corr[:, -n_vertex_ctx_c69:]
@@ -181,26 +185,12 @@ del thisparc
 # Native surface processing
 # ------------------------------------------
 
-# Find and load surface-registered ctx + sctx + cerebellum timeseries
+# Process left hemisphere timeseries
 os.chdir(funcDir+'/surfaces/')
 x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_10mm.mgh'))
-x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_10mm.mgh'))
 lh_data_nat = nib.load(x_lh_nat)
-lh_data_nat = np.squeeze(lh_data_nat.get_fdata())
-rh_data_nat = nib.load(x_rh_nat)
-rh_data_nat = np.squeeze(rh_data_nat.get_fdata())
+lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
 
-# Reformat data
-dataNative = []
-dataNative = np.transpose(np.append(lh_data_nat, rh_data_nat, axis=0))
-n_vertex_ctx_nat = dataNative.shape[1]
-del lh_data_nat
-del rh_data_nat
-
-# Concatenate subcortex, cerebellum, and native surface timeseries
-dataNative = np.append(np.append(sctx, cereb, axis=1), dataNative, axis=1)
-
-# Perform spike regression
 spike = []
 if x_spike:
     spike = np.loadtxt(x_spike)
@@ -212,30 +202,79 @@ if x_spike:
     ones = np.ones((spike.shape[0], 1))
     mdl = []
     mdl = np.append(ones, spike, axis=1)
-    # native
-    slm = LinearRegression().fit(dataNative, mdl)
-    dataNative_corr = dataNative-np.dot(mdl, slm.coef_)
+    slm = LinearRegression().fit(lh_data_nat, mdl)
+    lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
+    del lh_data_nat
+    del slm
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    # native
-    dataNative_corr = dataNative
+    lh_data_nat_corr = lh_data_nat
+    del lh_data_nat
 
-del dataNative
+# Process right hemisphere timeseries
+os.chdir(funcDir+'/surfaces/')
+x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_10mm.mgh'))
+rh_data_nat = nib.load(x_rh_nat)
+rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
 
-# # Generate native surface connectomes     <<<<<<<<<<          REMOVE THESE lines
-# parcellationList = ['glasser-360',        <<<<<<<<<<           parcellationList is defined in lines 134:141
-#                    'vosdewael-100', 'vosdewael-200',
-#                    'vosdewael-300', 'vosdewael-400',
-#                    'schaefer-100', 'schaefer-200', 'schaefer-300',
-#                    'schaefer-400', 'schaefer-500', 'schaefer-600',
-#                    'schaefer-700', 'schaefer-800', 'schaefer-900',
-#                    'schaefer-1000',
-#                    'aparc', 'aparc-a2009s',
-#                    'economo']             <<<<<<<<<<          REMOVE THESE lines
-#------------------------------------------------------------------------------#
-# Now generate native surface connectomes
-# These files are saved directly to the freesurfer directory through micapipe postStruct
+spike = []
+if x_spike:
+    spike = np.loadtxt(x_spike)
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
+    mdl = []
+    mdl = np.append(ones, spike, axis=1)
+    slm = LinearRegression().fit(rh_data_nat, mdl)
+    rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
+    del rh_data_nat
+    del slm
+else:
+    del spike
+    print('no spikey, no spikey, will skippy')
+    rh_data_nat_corr = rh_data_nat
+    del rh_data_nat
+
+# Concatenate hemispheres and clean up
+dataNative_corr = np.append(lh_data_nat_corr, rh_data_nat_corr, axis=1)
+del lh_data_nat_corr
+del rh_data_nat_corr
+
+# Process subcortex and cerebellum
+spike = []
+if x_spike:
+    spike = np.loadtxt(x_spike)
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
+    mdl = []
+    mdl = np.append(ones, spike, axis=1)
+    # Subcortex
+    slm = LinearRegression().fit(sctx, mdl)
+    sctx_corr = sctx-np.dot(mdl, slm.coef_)
+    del sctx 
+    # Cerebellum
+    slm = LinearRegression().fit(cereb, mdl)
+    cereb_corr = cereb-np.dot(mdl, slm.coef_)
+    del cereb
+else:
+    del spike
+    print('no spikey, no spikey, will skippy')
+    # Subcortex
+    sctx_corr = sctx
+    del sctx
+    # Cerebellum
+    cereb_corr = cereb
+    del cereb
+
+# Generate native surface connectomes
 for parcellation in parcellationList:
 
     # Load left and right annot files
@@ -255,31 +294,35 @@ for parcellation in parcellationList:
 
     # Generate connectome on native space parcellation
     # Parcellate cortical timeseries
-    dataNative_corr_ctx = dataNative_corr[:, -n_vertex_ctx_nat:]
     uparcel = np.unique(native_parc)
-    ts_native_ctx = np.zeros([dataNative_corr_ctx.shape[0], len(uparcel)])
+    ts_native_ctx = np.zeros([dataNative_corr.shape[0], len(uparcel)])
     for lab in range(len(uparcel)):
-        tmpData = dataNative_corr_ctx[:, native_parc == int(uparcel[lab])]
+        tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
+    
+    ts = np.append(np.append(sctx_corr, cereb_corr, axis=1), ts_native_ctx, axis=1)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
+    
+    ts_r = np.corrcoef(np.transpose(ts))
+        
+    if np.isnan(exclude_labels[0]) == False:
+        for i in exclude_labels:
+            ts_r[:, i + n_sctx] = 0
+            ts_r[i + n_sctx, :] = 0
+        ts_r = np.triu(ts_r)    
+    else:
+        ts_r = np.triu(ts_r)
+        
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
 
-        ts = np.append(dataNative_corr[:, :n], ts_native_ctx, axis=1)
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
-        ts_r = np.corrcoef(np.transpose(ts))
-
-        if np.isnan(exclude_labels[0]) == False:
-            for i in exclude_labels:
-                ts_r[:, i + n_sctx] = 0
-                ts_r[i + n_sctx, :] = 0
-            ts_r = np.triu(ts_r)
-        else:
-            ts_r = np.triu(ts_r)
-
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
-
+# Clean up
+del ts_native_ctx
+del native_parc
 del ts_r
 del ts
 del dataNative_corr
-del native_parc
+del sctx_corr
+del cereb_corr
 
 # ------------------------------------------
 # Additional QC
