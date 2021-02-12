@@ -57,7 +57,7 @@ if len(sys.argv) < 4:
 if ses_num=="SINGLE":
     ses_str="{dataDir}/sub-{sub}".format(dataDir=dataDir, sub=sub)
 else:
-    ses_str="{dataDir}/sub-{sub}/ses-{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
+    ses_str="{dataDir}/sub-{sub}/{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
 
 # setting output directory
 OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
