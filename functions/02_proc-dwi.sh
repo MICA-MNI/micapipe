@@ -43,7 +43,9 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
-  Title "tmpDir $tmpDir\n\tdwi_main $dwi_main\n\tdwi_rpe $dwi_rpe"
+  Note "tmpDir:" "$tmpDir"
+  Note "tdwi_main:" "$dwi_main"
+  Note "dwi_rpe:" "$dwi_rpe"
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
 fi
 # Manage manual inputs: DWI reverse phase encoding
@@ -145,7 +147,7 @@ if [[ ! -f $dwi_corr ]]; then
       if [ -f $dwi_reverse ]; then
             b0_pair_tmp=${tmp}/b0_pair_tmp.mif
             b0_pair=${tmp}/b0_pair.mif
-            dwi_reverse_str=`echo $dwi_reverse | awk -F . '{print $1}'`
+            dwi_reverse_str=$(echo $dwi_reverse | awk -F . '{print $1}')
 
             Do_cmd mrconvert $dwi_reverse -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif
             dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $threads
@@ -157,13 +159,14 @@ if [[ ! -f $dwi_corr ]]; then
             mrconvert $b0_pair_tmp $b0_pair -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
             opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
       else
+            Info "Reverse phase encoding image was not found it will be omitted"
             opt='-rpe_none'
       fi
 
       Info "dwifslpreproc parameters:"
-      Note "Shell values        :" ${shells[@]}
-      Note "DWI main dimensions :" "`mrinfo $dwi_4proc -size`"
-      Note "DWI rpe dimensions  :" "`mrinfo $b0_pair -size`"
+      Note "Shell values        :" "${shells[*]}"
+      Note "DWI main dimensions :" "$(mrinfo $dwi_4proc -size)"
+      if [ -f $dwi_reverse ]; then Note "DWI rpe dimensions  :" "$(mrinfo $b0_pair -size)"; fi
       Note "pe_dir              :" $pe_dir
       Note "Readout Time        :" $ReadoutTime
 
@@ -177,7 +180,9 @@ if [[ ! -f $dwi_corr ]]; then
       else
           Do_cmd rm $dwi_n4; ((Nsteps++))
           # eddy_quad Quality Check
-          Do_cmd eddy_quad $tmp/dwi_post_eddy -idx $tmp/eddy_indices.txt -par $tmp/eddy_config.txt -m $tmp/eddy_mask.nii -b $tmp/bvals -o ${dir_QC}/eddy_QC
+          Do_cmd cd $tmp/dwifslpreproc*
+          Do_cmd eddy_quad dwi_post_eddy -idx eddy_indices.txt -par eddy_config.txt -m eddy_mask.nii -b bvals -o ${dir_QC}/eddy_QC
+          Do_cmd cd $tmp
           # Copy eddy parameters
           eddy_DIR=${proc_dwi}/eddy
           if [ ! -d ${eddy_DIR} ]; then Do_cmd mkdir ${eddy_DIR}; fi
