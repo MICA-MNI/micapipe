@@ -149,7 +149,7 @@ help; exit 1; fi
 
 # Get the real path of the Inputs
 id=${id/sub-/}
-out=$(realpath $out)
+out=$(realpath $out)/micapipe
 BIDS=$(realpath $BIDS)
 
 # Number of session (Default is "ses-pre")
