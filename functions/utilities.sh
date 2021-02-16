@@ -164,8 +164,10 @@ bids_print.variables-rsfmri() {
   Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
   Note "Main rsfMRI        =" "$(find ${mainScan} 2>/dev/null)"
   Note "Main rsfMRI json   =" "$(find ${mainScanJson} 2>/dev/null)"
-  Note "Main phase scan    =" "$(find ${mainPhaseScan} 2>/dev/null)"
-  Note "Main reverse phase =" "$(find ${reversePhaseScan} 2>/dev/null)"
+  if [[ -f ${mainPhaseScan} ]] && [[ -f ${reversePhaseScan} ]]; then
+    Note "Main phase scan    =" "$(find ${mainPhaseScan} 2>/dev/null)"
+    Note "Main reverse phase =" "$(find ${reversePhaseScan} 2>/dev/null)"
+  fi
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
   Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
 }
