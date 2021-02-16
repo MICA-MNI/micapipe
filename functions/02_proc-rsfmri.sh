@@ -126,8 +126,8 @@ fi
 
 # Check inputs
 if [ ! -f ${mainScanJson} ]; then Error "Subject $id doesn't have acq-AP_bold json file: \n\t ${mainScanJson}"; exit; fi #Last check to make sure file exists
-if [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
-if [ ! -f ${reversePhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+if [ -z ${mainPhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
+if [ -z ${reversePhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
 # Structural nativepro scan and freesurfer
 if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
@@ -211,10 +211,9 @@ if [[ ! -f ${singleecho} ]]; then
         # Get basic parameters
         rawNifti=${toProcess[$i]}
         tag=${tags[$i]}
-
+        Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
         # IF FILE NOT FOUND DON'T RUN
-        if [ -f ${rawNifti} ]; then
-              Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
+        if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
               Note "RAWNIFTI:" $rawNifti
 
               # Drop first five TRs and reorient (same orientation as T1nativepro)
@@ -256,7 +255,7 @@ if [[ ! -f ${singleecho} ]]; then
     fi
 
     # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
-    if [ ! -f ${mainPhaseScan} ] || [ ! -f ${reversePhaseScan} ]; then
+    if [ -z ${mainPhaseScan} ] || [ -z ${reversePhaseScan} ]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
         status="NO-topup"
         Do_cmd mv -v ${tmp}/mainScan_mc.nii.gz ${singleecho}
