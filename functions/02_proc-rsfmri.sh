@@ -402,7 +402,8 @@ if [[ ! -f ${fmri_processed} ]] ; then
                 Do_cmd cp ${rsfmri_volum}/${id}_singleecho.1D ${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par   # motion parameters created by mcflirt
                 # $fmri_mask                                                                                     valid mask relating to the 4D data
                 Do_cmd cp ${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz ${rsfmri_ICA}/mean_func.nii.gz      # temporal mean of 4D data
-                Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz 397 1                     # example image from 4D data
+                middleSlice=$(mrinfo "${fmri_filtered}" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
+                Do_cmd fslroi ${fmri_filtered} ${rsfmri_ICA}/reg/example_func.nii.gz "$middleSlice" 1          # example middle image from 4D data
                 Do_cmd cp $T1nativepro_brain ${rsfmri_ICA}/reg/highres.nii.gz                                  # brain-extracted structural
 
                 # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
