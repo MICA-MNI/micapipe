@@ -706,7 +706,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]] ; then
         Info "MICA qsub - Resting state fMRI processing"
