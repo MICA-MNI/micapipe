@@ -60,6 +60,7 @@ else
     Warning "MPC processing will be performed from provided input file"
     Note "Microstructural image =" ${input_im}
     microImage=${input_im}
+    regImage=${input_im}
 fi
 
 # Check .lta file input flag and set parameters accordingly
