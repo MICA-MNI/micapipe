@@ -70,6 +70,9 @@ else
     Note "micro2fs transform =" ${input_lta}
 fi
 
+# Exit if microImage does not exists
+if [ -z ${microImage} ] || [ ! -f ${microImage} ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
+
 #------------------------------------------------------------------------------#
 Title "Running MICA MPC processing"
 micapipe_software
