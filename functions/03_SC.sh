@@ -67,10 +67,11 @@ if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi";
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits and WARNING
 N=$(ls ${dwi_cnntm}/${id}_${tracts}_*-connectome.txt | wc -l)
-if [ $N -gt 3 ]; then Warning "Existing connectomes will be overwritten!! If you want to re-run -SC first clean the outpus:
-        micapipe_cleanup -SC -sub $id -out $out -bids $BIDS"; fi
-if [ -f $tdi ]; then Warning "Subject $id has a TDI QC image of ${tracts} check the connectomes:\n\t\t${dwi_cnntm}"; fi
-
+if [ $N -gt 3 ]; then Warning "
+  Connectomes with $tracts streamlines already exist!!
+  If you want to re-run the $tracts tractogram or add parcellations first clean the outpus:
+    micapipe_cleanup -SC -sub $id -out $out -bids $BIDS -tracts ${tracts}"; fi
+if [ -f $tdi ]; then Error "FC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Running MICA POST-DWI processing (Tractography)"
@@ -138,6 +139,9 @@ Do_cmd tckgen -nthreads $threads \
     -step .5 \
     -cutoff 0.06 \
     -algorithm iFOD2
+
+# Exit if tractography fails
+if [ ! -f $tck ]; then Error "Tractogram failed, check the logs: $(ls -Art ${dir_logs}/post-dwi_*.txt | tail -1)"; exit; fi
 
 # SIFT2
 Do_cmd tcksift2 -nthreads $threads $tck $fod $weights
