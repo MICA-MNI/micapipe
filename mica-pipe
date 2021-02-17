@@ -211,7 +211,7 @@ do
     specPhase=TRUE
     thisPhase=$2
     shift;shift
-  ;;  
+  ;;
   -smoothWithWB)
     smoothWB=TRUE
     shift
@@ -713,7 +713,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]] ; then
@@ -721,7 +721,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     else
         # LOCAL - Resting state fMRI processing
