@@ -34,6 +34,8 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     export MICAPIPE=/data_/mica1/01_programs/micapipe
     source ${MICAPIPE}/functions/init.sh;
 fi
+# init file for local processing at MICA lab
+if [ "$PROC" = "LOCAL-MICA" ]; then source ${MICAPIPE}/functions/init.sh; fi
 
 # source utilities
 source $MICAPIPE/functions/utilities.sh
