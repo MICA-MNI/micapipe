@@ -41,11 +41,14 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
+Info "Inputs of proc_dwi:"
+Note "tmpDir     :" "$tmpDir"
+Note "dwi_main   :" "$dwi_main"
+Note "dwi_rpe    :" "$dwi_rpe"
+Note "Processing :" "$PROC"
+
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
-  Note "tmpDir:" "$tmpDir"
-  Note "tdwi_main:" "$dwi_main"
-  Note "dwi_rpe:" "$dwi_rpe"
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
 fi
 # Manage manual inputs: DWI reverse phase encoding
@@ -173,7 +176,7 @@ if [[ ! -f $dwi_corr ]]; then
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-      echo "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $threads -nocleanup -scratch $tmp -force"
+      echo -e "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options \" --data_is_shelled --slm=linear\" -nthreads $threads -nocleanup -scratch $tmp -force"
       dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options " --data_is_shelled --slm=linear" -nthreads $threads -nocleanup -scratch $tmp -force
       # Step QC
       if [[ ! -f ${dwi_corr} ]]; then Error "dwifslpreproc failed, check the logs"; exit;
