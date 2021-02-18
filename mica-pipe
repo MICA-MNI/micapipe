@@ -339,17 +339,17 @@ help; exit 1; fi
 
 # Optional arguments rs-fmri
 optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisPhase)
-if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$(realpath $configFile); else optarg_rsfmri[0]=DEFAULT; fi
-if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$(realpath $trainingFile); else optarg_rsfmri[1]=DEFAULT; fi
-if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$(realpath $thisMainScan); else optarg_rsfmri[2]=DEFAULT; fi
-if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$(realpath $thisPhase); else optarg_rsfmri[3]=DEFAULT; fi
+if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile; else optarg_rsfmri[0]=DEFAULT; fi
+if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else optarg_rsfmri[1]=DEFAULT; fi
+if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
+if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase; else optarg_rsfmri[3]=DEFAULT; fi
 if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_lta)
-if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$(realpath $input_im)
+if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$input_im
 else optarg_mpc[0]=DEFAULT; fi
-if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_lta)
+if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_lta
 else optarg_mpc[1]=DEFAULT; fi
 
 # Optional arguments SC
