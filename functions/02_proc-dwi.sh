@@ -319,7 +319,7 @@ if [[ ! -f $fod_wmN ]]; then
             Do_cmd mtnormalise -nthreads $threads -mask $dwi_mask $fod_wm $fod_wmN
       fi
       # Step QC
-      if [[ -f ${fod} ]]; then ((Nsteps++)); fi
+      if [[ -f ${fod_wmN} ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has Fiber Orientation Distribution files"; ((Nsteps++))
 fi
@@ -329,7 +329,7 @@ fi
 dwi_gmwmi=${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif
 if [[ ! -f $dwi_gmwmi ]]; then
       Info "Calculating Gray matter White matter interface mask"
-      5tt2gmwmi $dwi_5tt $dwi_gmwmi
+      5tt2gmwmi $dwi_5tt $dwi_gmwmi; ((Nsteps++))
 else
       Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++))
 fi
