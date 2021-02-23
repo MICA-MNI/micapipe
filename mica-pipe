@@ -743,7 +743,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [[ $qtest = "TRUE" ]]; then
     log_file_str=${out}/${id}_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing}"
     if [[ $micaq == "TRUE" ]]; then
         export PROC="qsub-MICA"
         Info "MICA qsub test: $PROC"

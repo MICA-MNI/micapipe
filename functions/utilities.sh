@@ -137,6 +137,14 @@ bids_print.variables() {
   Note "util_mics         =" "$util_mics"
 }
 
+file.exist(){
+  if [[ ! -z "${2}" ]] && [[ -f "${2}" ]]; then
+    Note "$1" "$(find ${2} 2>/dev/null)"
+  else
+    Note "$1" "file not found"
+  fi
+}
+
 bids_print.variables-post() {
   # This functions prints BIDS variables names and files if found
   Info "Structural processing output variables:"
@@ -149,9 +157,9 @@ bids_print.variables-post() {
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for DWI processing:"
+  Note "proc_dwi dir    =" $proc_dwi
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  Note "dwi_reverse     =" "$(find $dwi_reverse 2>/dev/null)"
-  Note "proc_dwi        =" "$proc_dwi"
+  file.exist "dwi_reverse     =" $dwi_reverse
 
   Note "T1 nativepro    =" "$(find $T1nativepro 2>/dev/null)"
   Note "T1 5tt          =" "$(find $T15ttgen 2>/dev/null)"
@@ -163,18 +171,10 @@ bids_print.variables-rsfmri() {
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find $T1nativepro 2>/dev/null)"
   Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
-  Note "Main rsfMRI        =" "$(find ${mainScan} 2>/dev/null)"
-  Note "Main rsfMRI json   =" "$(find ${mainScanJson} 2>/dev/null)"
-  if [[ ! -z "${mainPhaseScan}" ]] && [[ -f "${mainPhaseScan}" ]]; then
-    Note "Main phase scan    =" "$(find ${mainPhaseScan} 2>/dev/null)"
-  else
-    Note "Main phase scan    =" "file not found"
-  fi
-  if [[ ! -z "${reversePhaseScan}" ]] && [[ -f "${reversePhaseScan}" ]]; then
-    Note "Main reverse phase =" "$(find ${reversePhaseScan} 2>/dev/null)"
-  else
-    Note "Main reverse phase =" "file not found"
-  fi
+  file.exist "Main rsfMRI        =" ${mainScan}
+  file.exist "Main rsfMRI json   =" ${mainScanJson}
+  file.exist "Main phase scan    =" ${mainPhaseScan}
+  file.exist "Main reverse phase =" ${reversePhaseScan}
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
   Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
 }
