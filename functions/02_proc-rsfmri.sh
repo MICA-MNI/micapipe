@@ -160,7 +160,7 @@ fi
 Title "Running MICA rsfMRI processing - (Version v0.0.1)"
 micapipe_software
 bids_print.variables-rsfmri
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 

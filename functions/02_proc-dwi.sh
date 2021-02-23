@@ -90,7 +90,7 @@ done
 Title "Running MICA Diffusion Weighted Imaging processing"
 micapipe_software
 bids_print.variables-dwi
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "ANTs and MRtrix will use $threads threads"
 
 #	Timer

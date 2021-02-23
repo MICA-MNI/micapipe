@@ -65,7 +65,7 @@ Do_cmd mkdir -p $tmp
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # GLOBAL variables for this script
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "ANTs will use $threads threads"
 
 # Freesurface SUBJECTs directory

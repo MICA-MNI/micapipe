@@ -44,7 +44,7 @@ Title "Running MICA structural processing: Volumetric"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 
 # GLOBAL variables for this script
 Info "ANTs will use $threads threads"

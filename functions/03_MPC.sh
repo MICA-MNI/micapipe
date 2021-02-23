@@ -78,7 +78,7 @@ if [ -z ${microImage} ] || [ ! -f ${microImage} ]; then Error "Image for MPC was
 Title "Running MICA MPC processing"
 micapipe_software
 bids_print.variables-post
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer

@@ -50,7 +50,7 @@ Title "Running MICA Morphology processing"
 micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)

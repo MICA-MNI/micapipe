@@ -81,7 +81,7 @@ Title "Running MICA POST-DWI processing (Tractography)"
 micapipe_software
 Info "Number of streamlines: $tracts"
 Info "Auto-tractograms: $autoTract"
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "MRtrix will use $threads threads"
 
 #	Timer

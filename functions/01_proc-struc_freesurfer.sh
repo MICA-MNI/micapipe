@@ -57,7 +57,7 @@ Title "Running MICA structural processing: Freesurfer"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
-Info "Not erasing temporal dir: $nocleanup\n\t\t\t\t\t${tmpDir}"
+Info "Saving temporal dir: $nocleanup\n\t\t\t\t\t${tmpDir}"
 
 # # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_proc-freesurfer_${id}

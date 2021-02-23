@@ -79,7 +79,7 @@ micapipe_software
 bids_print.variables-post
 
 # GLOBAL variables for this script
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
