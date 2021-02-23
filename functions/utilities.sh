@@ -341,7 +341,7 @@ function tck_json() {
         \"TractographySaved\": \"${nocleanup}\"
       }
     ]
-  }" #> ${tckjson}
+  }" > ${tckjson}
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
