@@ -110,13 +110,14 @@ Do_cmd cd $tmp
 # Image denoising must be performed as the first step of the image-processing pipeline.
 # Interpolation or smoothing in other processing steps, such as motion and distortion correction,
 # may alter the noise characteristics and thus violate the assumptions upon which MP-PCA is based.
-dwi_n4=${proc_dwi}/${id}_dwi_dnsN4.mif
 dwi_cat=${tmp}/dwi_concatenate.mif
-dwi_dns=${tmp}/dwi_concatenate_denoised.mif
+dwi_dns=${tmp}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif
+dwi_n4=${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_N4_dwi.mif
+dwi_res=${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif
 dwi_corr=${proc_dwi}/${id}_dwi_corr.mif
 
-if [[ ! -f $dwi_corr ]]; then
-    if [[ ! -f ${dwi_n4} ]]; then
+if [[ "$dwi_processed" == "FALSE" ]]; then
+    if [ ! -f ${dwi_res} ] || [ ! -f ${dwi_n4} ]; then
     Info "DWI denoise, bias filed correction and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in ${bids_dwis[@]}; do
@@ -134,7 +135,7 @@ if [[ ! -f $dwi_corr ]]; then
 
           # Denoise DWI and calculate residuals
           Do_cmd dwidenoise $dwi_cat $dwi_dns -nthreads $threads
-          Do_cmd mrcalc $dwi_cat $dwi_dns -subtract ${proc_dwi}/${id}_dwi_residuals.mif -nthreads $threads
+          Do_cmd mrcalc $dwi_cat $dwi_dns -subtract ${dwi_res} -nthreads $threads
 
           # Bias field correction DWI
           Do_cmd dwibiascorrect ants $dwi_dns $dwi_n4 -force -nthreads $threads -scratch $tmp
