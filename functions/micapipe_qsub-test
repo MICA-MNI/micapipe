@@ -37,6 +37,7 @@ fi
 
 # source utilities
 source $MICAPIPE/functions/utilities.sh
+tmp=${tmpDir}/${RANDOM}_micapipe-test_${id}
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -46,6 +47,8 @@ id       = $id
 out      = $out
 ses      = $SES
 PROC     = $PROC
+tmpDir   = $tmpDir
+tmp      = $tmp
 MICAPIPE = $MICAPIPE
 subject_bids = $subject_bids"
 
@@ -56,7 +59,6 @@ Title "Running MICA qsub test"
 aloita=$(date +%s)
 
 # Create script specific temp directory
-tmp=${tmpDir}/${RANDOM}_micapipe-test_${id}
 Do_cmd mkdir -p $tmp
 
 # TRAP in case the script fails
