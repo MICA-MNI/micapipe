@@ -39,6 +39,7 @@ bids_variables() {
       export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
       ses="_${SES}"
   fi
+idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
   export proc_struct=$subject_dir/anat # structural processing directory
@@ -303,6 +304,44 @@ micapipe_json() {
       }
     ]
   }" > ${out}/pipeline-description.json
+}
+
+function tck_json() {
+  qform=$(fslhd "$dwi_b0" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}')
+  Info "Creating tractography json file"
+  echo -e "{
+    \"fileName\": \"${8}\",
+    \"inputNIFTI\": [
+      {
+      \"Name\": \"${fod_wmN}\",
+      \"sform\": [
+\"${qform}\"
+      ],
+      \"qform\": [
+\"${sform}\"
+      ],
+      }
+    ],
+    \"Tractography\": [
+      {
+        \"TractographyClass\": \"local\",
+        \"TractographyMethod\": \"probabilistic\",
+        \"TractographyAlgorithm\": \"$1\",
+        \"StepSizeUnits\": [\"mm\"],
+        \"StepSize\": \"$2\",
+        \"AngleCurvature\": \"$3\",
+        \"cutoff\": \"$4\",
+        \"maxlength\": \"$5\",
+        \"minlength\": \"$6\",
+        \"SeedingMethod\": \"$7\",
+        \"SeedingNumberMethod\": \"${tracts}\",
+        \"TerminationCriterion\": [\"reachingTissueType”],
+        \"TerminationCriterionTest\": [\"ACT\"],
+        \"TractographySaved\": \"${nocleanup}\"
+      }
+    ]
+  }" #> ${tckjson}
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
