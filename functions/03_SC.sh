@@ -42,27 +42,30 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: DWI post TRACTOGRAPHY
-fod=${proc_dwi}/${id}_wm_fod_norm.mif
-dwi_5tt=${proc_dwi}/${id}_dwi_5tt.nii.gz
+fod_wmN=${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif
+dwi_5tt=${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz
+dwi_b0=${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz
+dwi_mask=${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz
+str_dwi_affine=${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-
+mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
+dti_FA=${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif
+lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
+# from proc_structural
 T1str_nat=${id}_t1w_${res}mm_nativepro
 T1_seg_cerebellum=${dir_volum}/${T1str_nat}_cerebellum.nii.gz
 T1_seg_subcortex=${dir_volum}/${T1str_nat}_subcortical.nii.gz
-dwi_b0=${proc_dwi}/${id}_dwi_b0.nii.gz
-mat_dwi_affine=${dir_warp}/${id}_dwi_to_nativepro_0GenericAffine.mat
+# TDI output
 tdi=${proc_dwi}/${id}_tdi_iFOD2-${tracts}.mif
-lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
-dwi_mask=${proc_dwi}/${id}_dwi_mask.nii.gz
-fa=${proc_dwi}/${id}_dti_FA.mif
 
 # Check inputs
-if [ ! -f $fod ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f $fod_wmN  ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $dwi_b0 ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $mat_dwi_affine ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $dwi_5tt ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f $T1_seg_cerebellum ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f $T1_seg_subcortex ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f $dwi_mask ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f $fa ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f $dti_FA ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
 
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits and WARNING
@@ -123,28 +126,31 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
 Info "Building the ${tracts} streamlines connectome!!!"
-tck=${tmp}/DWI_tractogram_${tracts}.tck
+tck=${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck
 weights=${tmp}/SIFT2_${tracts}.txt
 Do_cmd tckgen -nthreads $threads \
-    $fod \
+    $fod_wmN \
     $tck \
     -act $dwi_5tt \
     -crop_at_gmwmi \
-    -seed_dynamic $fod \
-    -maxlength 300 \
-    -minlength 10 \
-    -angle 22.5 \
     -backtrack \
-    -select ${tracts} \
-    -step .5 \
+    -seed_dynamic $fod_wmN \
+    -algorithm iFOD2 \
+    -step 0.5 \
+    -angle 22.5 \
     -cutoff 0.06 \
-    -algorithm iFOD2
+    -maxlength 400 \
+    -minlength 10 \
+    -select ${tracts}
 
 # Exit if tractography fails
 if [ ! -f $tck ]; then Error "Tractogram failed, check the logs: $(ls -Art ${dir_logs}/post-dwi_*.txt | tail -1)"; exit; fi
 
+# json file of tractogram
+tck_json iFOD1 0.5 22.5 0.06 400 10 seed_dynamic $tck
+
 # SIFT2
-Do_cmd tcksift2 -nthreads $threads $tck $fod $weights
+Do_cmd tcksift2 -nthreads $threads $tck $fod_wmN  $weights
 
 # TDI for QC
 Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
@@ -228,7 +234,7 @@ if [ $autoTract == "TRUE" ]; then
     autoTract_dir=$proc_dwi/auto_tract
     [[ ! -d $autoTract_dir ]] && Do_cmd mkdir -p $autoTract_dir
     fa_niigz=$tmp/${id}_dti_FA.nii.gz
-    Do_cmd mrconvert $fa $fa_niigz
+    Do_cmd mrconvert $dti_FA $fa_niigz
     echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp  \033[0m"
     ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id}_${tracts} -mask $dwi_mask -fa $fa_niigz -weights $weights -tmpDir $tmp -keep_tmp
 fi
