@@ -58,6 +58,8 @@ echo -e "
 \t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
 \t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
+\t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
+\t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
@@ -188,6 +190,10 @@ do
     procDWI=TRUE
     shift
   ;;
+  -dwi_processed)
+    dwi_processed="$2"
+    shift;shift;
+    ;;
   -proc_rsfmri)
     procfMRI=TRUE
     shift
@@ -394,6 +400,9 @@ if [ -z ${FSdir} ]; then FSdir="FALSE"; else  FSdir=$(realpath $FSdir); fi
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
+# Processed DWI
+if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
+
 # -----------------------------------------------------------------------------------------------#
 Title "MICA pipeline - (Version v0.0.1) \n\t\tSubject: $id Session: $SES"
 
@@ -503,14 +512,14 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-freesurfer$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir"
     # mica.q - Structural processing: Freesurfer
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Freesurfer"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
              # all.q - Structural processing: Freesurfer
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Structural processing: Freesurfer"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -528,9 +537,9 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed"
     # mica.q - Diffusion processing
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -538,7 +547,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Diffusion processing
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Diffusion processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -560,7 +569,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/post-structural_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
     # mica.q - POST Structural processing
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST Structural processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -568,7 +577,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - POST Structural processing
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - POST Structural processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -590,7 +599,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
     log_file_str=$dir_logs/post-gd_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Geodesic distance
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Geodesic distance"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -598,7 +607,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
               $COMMAND $PROC
     # all.q - Geodesic distance
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Geodesic distance"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -620,7 +629,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
     log_file_str=$dir_logs/post-morph_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Morphology
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Cortical Morphology"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -628,7 +637,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Morphology
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Cortical Morphoogy"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -650,7 +659,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/post-mpc_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]}"
     # mica.q - Microstructural profile covariance
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -658,7 +667,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Microstructural profile covariance
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Microstructural profile covariance"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -679,7 +688,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/post-sc_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract"
     # mica.q - post-DWI processing (tractography)
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST DWI processing (tractography)"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -687,7 +696,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - post-DWI processing (tractography)
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - POST DWI processing (tractography)"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
@@ -708,7 +717,7 @@ if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc-rsfmri_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing}"
     # mica.q - Resting state fMRI processing
-    if [[ $micaq == "TRUE" ]] ; then
+    if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
@@ -716,7 +725,7 @@ if [ "$procfMRI" = "TRUE" ]; then
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Resting state fMRI processing
-    elif [[ $qall == "TRUE" ]] ; then
+    elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Resting state fMRI processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
