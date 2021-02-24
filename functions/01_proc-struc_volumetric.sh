@@ -148,12 +148,12 @@ fi
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f ${firstout} ]; then
     Info "FSL first is running, output file:\n\t\t\t ${firstout}"
-    Do_cmd run_first_all -v -i $T1nativepro_brain -o $T1nativepro_first -b
+    Do_cmd run_first_all -i $T1nativepro_brain -o $T1nativepro_first -b
     # Wait until $firstout exists, IF it was sent to SGE
     until [ -f $firstout ]; do sleep 5; done
 
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
-    for i in ${proc_struct}/first/*pro-*; do mv -v $i ${i/pro-/pro_}; done
+    for i in ${proc_struct}/first/*pro-*; do mv $i ${i/pro-/pro_}; done
     mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz" "${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz"
     mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.mat" "${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat"
   else
@@ -162,7 +162,7 @@ fi
 
 # FSL FAST on the t1w_nativepro
 if [ ! -f ${T1nativepro_brain/.nii.gz/_pve_0.nii.gz} ]; then
-    Do_cmd fast -N -v "$T1nativepro_brain"
+    Do_cmd fast -N "$T1nativepro_brain"
 else
     Info "Subject $id has FSL-fast"
 fi
