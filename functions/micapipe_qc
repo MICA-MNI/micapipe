@@ -867,9 +867,9 @@ if [ -d "$autoTract_dir" ]; then
 echo -e "
       <p>
       <b>micapipe version:</b> $Version<br>
-      <b>User:</b>$(whoami)<br>
-      <b>Workstation:</b>$(uname -n)<br>
-      <b>Last run:</b>$(date)
+      <b>User:</b> $(whoami)<br>
+      <b>Workstation:</b> $(uname -n)<br>
+      <b>Last run:</b> $(date)
       </p>
     </div>" >> $QC_html
 fi
