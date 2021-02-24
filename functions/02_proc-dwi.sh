@@ -336,7 +336,7 @@ if [[ ! -f $dwi_SyN_warp ]]; then
     Do_cmd antsApplyTransforms -d 3 -r $fod -i $T15ttgen -t $dwi_SyN_warp -t $dwi_SyN_affine -t [$mat_dwi_affine,1] -o $dwi_5tt -v -e 3 -n linear
     if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a non-linear registration from T1w_dwi-space to DWI"; ((Nsteps++))
+    Info "Subject ${id} has a non-linear registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
 fi
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
@@ -354,6 +354,7 @@ tracts=1M
 tdi_1M=${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tdi.mif
 tckjson=${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.json
 if [[ ! -f $tdi_1M ]]; then
+  Info "Creating a track density image for quality check"
   tck_1M=${tmp}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.tck
   Do_cmd tckgen -nthreads $threads \
       $fod_wmN \
@@ -388,9 +389,9 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 9 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step: "; fi
+if [ "$Nsteps" -eq 10 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step: "; fi
 Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
-\t\tSteps completed: $(printf "%02d" $Nsteps)/09
+\t\tSteps completed: $(printf "%02d" $Nsteps)/10
 \tStatus          : $status
 \tCheck logs:
 $(ls ${dir_logs}/proc-dwi_*.txt)"
