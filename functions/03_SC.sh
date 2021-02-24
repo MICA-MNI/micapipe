@@ -77,7 +77,7 @@ if [ $N -gt 3 ]; then Warning "
 if [ -f $tdi ]; then Error "FC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA POST-DWI processing (Tractography)"
+Title "micapipe $Version: Tractography and structural connectomes"
 micapipe_software
 Info "Number of streamlines: $tracts"
 Info "Auto-tractograms: $autoTract"
