@@ -765,7 +765,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
 # Cleanup if processing was local
-if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
-    cleanup $tmpDir/*_micapipe*_${id} $nocleanup $here
-fi
+# if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
+#     cleanup $tmpDir/*_micapipe*_${id} $nocleanup $here
+# fi
 Title "GLOBAL micapipe running time with $PROC processing:\033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
