@@ -430,7 +430,7 @@ function cleanup() {
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
       echo -e "Erasing temporal directory: $tmp"
-      rm -Rf $tmp
+      rm -Rf $tmp 2>/dev/null
   else
       echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
   fi
