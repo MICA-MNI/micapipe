@@ -3,7 +3,7 @@
 # Automatic bundle segmentation
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.1)\n"
+  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2)\n"
 }
 
 export FSLOUTPUTTYPE=NIFTI_GZ

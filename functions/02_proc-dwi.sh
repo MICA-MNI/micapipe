@@ -87,7 +87,7 @@ for i in ${bids_dwis[*]}; do
 done
 
 #------------------------------------------------------------------------------#
-Title "Running MICA Diffusion Weighted Imaging processing ${Version}"
+Title "micapipe $Version: Diffusion Weighted Imaging processing"
 micapipe_software
 bids_print.variables-dwi
 Info "Saving temporal dir: $nocleanup"

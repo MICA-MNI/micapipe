@@ -75,7 +75,7 @@ fi
 if [ -z ${microImage} ] || [ ! -f ${microImage} ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA MPC processing"
+Title "micapipe $Version: MPC processing"
 micapipe_software
 bids_print.variables-post
 Info "Saving temporal dir: $nocleanup"

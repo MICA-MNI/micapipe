@@ -40,7 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 #------------------------------------------------------------------------------#
-Title "Running MICA structural processing: Volumetric"
+Title "micapipe $Version: structural processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
