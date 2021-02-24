@@ -404,7 +404,7 @@ if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
 
 # -----------------------------------------------------------------------------------------------#
-Title "MICA pipeline - (Version v0.0.1) \n\t\tSubject: $id Session: $SES"
+Title "MICA pipeline - (Version $Version) \n\t\tSubject: $id Session: $SES"
 
 # -----------------------------------------------------------------------------------------------#
 # init file for local processing at MICA lab

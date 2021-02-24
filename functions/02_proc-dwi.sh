@@ -87,7 +87,7 @@ for i in ${bids_dwis[*]}; do
 done
 
 #------------------------------------------------------------------------------#
-Title "Running MICA Diffusion Weighted Imaging processing"
+Title "Running MICA Diffusion Weighted Imaging processing ${Version}"
 micapipe_software
 bids_print.variables-dwi
 Info "Saving temporal dir: $nocleanup"
@@ -221,47 +221,33 @@ fi
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
 dwi_mask=${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz
-dwi_5tt=${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz
 dwi_b0=${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz # This should be a NIFTI for compatibility with ANTS
-dwi_in_T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz
-T1nativepro_in_dwi=${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz
 str_dwi_affine=${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-
 mat_dwi_affine=${str_dwi_affine}0GenericAffine.mat
+T1nativepro_in_dwi=${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz
 
 if [[ ! -f $T1nativepro_in_dwi ]]; then
-      Info "Registering DWI b0 to T1nativepro"
+      Info "Linear registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads $threads $dwi_corr - -bzero | mrmath - mean $dwi_b0 -axis 3 -force
 
       # Register DWI-b0 mean corrected to T1nativepro
       Do_cmd antsRegistrationSyN.sh -d 3 -f $T1nativepro_brain -m $dwi_b0 -o $str_dwi_affine -t a -n $threads -p d
-      # Apply transformation DWI-b0 space to T1nativepro
-      Do_cmd antsApplyTransforms -d 3 -i $dwi_b0 -r $T1nativepro_brain -t $mat_dwi_affine -o $dwi_in_T1nativepro -v -u int
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i $T1nativepro -r $dwi_b0 -t [$mat_dwi_affine,1] -o $T1nativepro_in_dwi -v -u int
-      # Step QC
       if [[ -f ${T1nativepro_in_dwi} ]]; then ((Nsteps++)); fi
 
       #------------------------------------------------------------------------------#
-            Info "Creating DWI binary mask of processed volumes"
-            # Create a binary mask of the DWI
-            Do_cmd antsApplyTransforms -d 3 -i $MNI152_mask \
-                        -r ${dwi_b0} \
-                        -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
-                        -o ${tmp}/dwi_mask.nii.gz -v
-            Do_cmd maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
-            # Step QC
-            if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
-
-      #------------------------------------------------------------------------------#
-      # 5TT file in dwi space
-            Info "Registering 5TT file to DWI-b0 space"
-            Do_cmd antsApplyTransforms -d 3 -e 3 -i $T15ttgen -r $dwi_b0 -n linear -t [$mat_dwi_affine,1] -o $dwi_5tt -v
-            # Step QC
-            if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
-
+      Info "Creating DWI binary mask of processed volumes"
+      # Create a binary mask of the DWI
+      Do_cmd antsApplyTransforms -d 3 -i $MNI152_mask \
+              -r ${dwi_b0} \
+              -n GenericLabel -t [$mat_dwi_affine,1] -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} \
+              -o ${tmp}/dwi_mask.nii.gz -v
+      Do_cmd maskfilter ${tmp}/dwi_mask.nii.gz erode -npass 1 $dwi_mask
+      if [[ -f ${dwi_mask} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has a T1nativepro in DWI-b0 space"; Nsteps=$((Nsteps + 3))
+      Info "Subject ${id} has an affine transformation from T1w to DWI-b0 space"; Nsteps=$((Nsteps + 2))
 fi
 
 #------------------------------------------------------------------------------#
@@ -273,10 +259,9 @@ if [[ ! -f $dti_FA ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask $dwi_mask -nthreads $threads $dwi_corr $dwi_dti
       tensor2metric -nthreads $threads -fa ${dti_FA} -adc ${dti_ADC} $dwi_dti
-      # Step QC
       if [[ -f ${dti_FA} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has DWI tensor metrics"; ((Nsteps++))
+      Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -318,12 +303,41 @@ if [[ ! -f $fod_wmN ]]; then
       #           -mask $dwi_mask
             Do_cmd mtnormalise -nthreads $threads -mask $dwi_mask $fod_wm $fod_wmN
       fi
-      # Step QC
       if [[ -f ${fod_wmN} ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has Fiber Orientation Distribution files"; ((Nsteps++))
+      Info "Subject ${id} has Fiber Orientation Distribution file"; ((Nsteps++))
 fi
 
+#------------------------------------------------------------------------------#
+# Non-linear registration between DWI space and T1w
+dwi_SyN_str=${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_
+dwi_SyN_warp=${dwi_SyN_str}1Warp.nii.gz
+dwi_SyN_Invwarp=${dwi_SyN_str}1InverseWarp.nii.gz
+dwi_SyN_affine=${dwi_SyN_str}0GenericAffine.mat
+dwi_5tt=${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz
+
+if [[ ! -f $dwi_SyN_warp ]]; then
+    Info "Non-linear registration from T1w_dwi-space to DWI"
+    dwi_in_T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz # Only for QC
+    T1nativepro_in_dwi_brain=${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro-brain.nii.gz
+    T1nativepro_in_dwi_NL=${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_NL.nii.gz
+    fod=${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz
+
+    Do_cmd fslmaths $T1nativepro_in_dwi -mul $dwi_mask $T1nativepro_in_dwi_brain
+    Do_cmd mrconvert -coord 3 0 $fod_wmN $fod
+    Do_cmd antsRegistrationSyN.sh -d 3 -m $T1nativepro_in_dwi_brain -f $fod -o $dwi_SyN_str -t s -n $threads
+    if [[ -f $dwi_SyN_warp ]]; then ((Nsteps++)); fi
+    Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
+    # Apply transformation DWI-b0 space to T1nativepro
+    Do_cmd antsApplyTransforms -d 3 -r $T1nativepro_brain -i $dwi_b0 -r $T1nativepro_brain -t $mat_dwi_affine -t [$dwi_SyN_affine,1] -t $dwi_SyN_Invwarp -o $dwi_in_T1nativepro -v -u int
+    # Apply transformation T1nativepro to DWI space
+    Do_cmd antsApplyTransforms -d 3 -r $fod -i $T1nativepro -t $dwi_SyN_warp -t $dwi_SyN_affine -t [$mat_dwi_affine,1] -o $T1nativepro_in_dwi_NL -v -u int
+    # Apply transformation 5TT to DWI space
+    Do_cmd antsApplyTransforms -d 3 -r $fod -i $T15ttgen -t $dwi_SyN_warp -t $dwi_SyN_affine -t [$mat_dwi_affine,1] -o $dwi_5tt -v -e 3 -n linear
+    if [[ -f $dwi_5tt ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${id} has a non-linear registration from T1w_dwi-space to DWI"; ((Nsteps++))
+fi
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
 dwi_gmwmi=${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif
@@ -358,7 +372,6 @@ if [[ ! -f $tdi_1M ]]; then
       -select ${tracts}
 
   Do_cmd tckmap -vox 1,1,1 -dec -nthreads $threads $tck_1M $tdi_1M
-  # Step QC
   if [[ -f ${tdi_1M} ]]; then ((Nsteps++)); fi
   tck_json iFOD1 0.5 22.5 0.06 400 10 seed_gmwmi $tck_1M
 else
@@ -382,5 +395,5 @@ Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes
 \tCheck logs:
 $(ls ${dir_logs}/proc-dwi_*.txt)"
 # Print QC stamp
-echo "${id}, proc_dwi, $status N=$(printf "%02d" $Nsteps)/09, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+echo "${id}, proc_dwi, $status N=$(printf "%02d" $Nsteps)/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here

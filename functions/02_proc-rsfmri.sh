@@ -157,7 +157,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA rsfMRI processing - (Version v0.0.1)"
+Title "Running MICA rsfMRI processing - (Version ${Version})"
 micapipe_software
 bids_print.variables-rsfmri
 Info "Saving temporal dir: $nocleanup"

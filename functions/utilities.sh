@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.0.1"
+export Version="v0.0.2"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -286,7 +286,7 @@ micapipe_json() {
         \"Version\": \"${Version}\",
         \"Container\": {
           \"Type\": \"github\",
-          \"Tag\": \"MICA-LAB/micapipe:0.0.1\"
+          \"Tag\": \"MICA-LAB/micapipe:${Version}\"
           }
       },
       {
@@ -300,7 +300,7 @@ micapipe_json() {
       {
         \"DOI\": \"doi:\",
         \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \"0.0.1\"
+        \"Version\": \"${Version}\"
       }
     ]
   }" > ${out}/pipeline-description.json
