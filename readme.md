@@ -8,7 +8,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
 [![GitHub stars](https://img.shields.io/github/stars/MICA-LAB/micapipe)](https://github.com/MICA-LAB/micapipe/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/MICA-LAB/micapipe)](https://github.com/MICA-LAB/micapipe/issues)
-[![version](https://img.shields.io/badge/version-v0.0.1-blue)](https://github.com/MICA-LAB/micapipe)
+[![version](https://img.shields.io/badge/version-v0.0.2-blue)](https://github.com/MICA-LAB/micapipe)
 
 
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
