@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.0.2 (wobbly)"
+export Version="v0.0.2"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -30,7 +30,7 @@ bids_variables() {
   export subject=sub-${id}
 
   # Handle Single Session
-  if [ "$SES" == "SINGLE" ]; then
+  if [ $SES == "SINGLE" ]; then
       export subject_dir=$out/${subject}     # Output directory
       export subject_bids=${BIDS}/${subject} # Input BIDS directory
       ses=""
@@ -39,7 +39,7 @@ bids_variables() {
       export subject_bids=${BIDS}/${subject}/${SES} # Input BIDS directory
       ses="_${SES}"
   fi
-export idBIDS="${subject}${ses}"
+idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
   export proc_struct=$subject_dir/anat # structural processing directory
@@ -157,7 +157,7 @@ bids_print.variables-post() {
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for DWI processing:"
-  Note "proc_dwi dir    =" "$proc_dwi"
+  Note "proc_dwi dir    =" $proc_dwi
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
   file.exist "dwi_reverse     =" $dwi_reverse
 
@@ -171,10 +171,10 @@ bids_print.variables-rsfmri() {
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find $T1nativepro 2>/dev/null)"
   Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
-  file.exist "Main rsfMRI        =" $mainScan
-  file.exist "Main rsfMRI json   =" $mainScanJson
-  file.exist "Main phase scan    =" $mainPhaseScan
-  file.exist "Main reverse phase =" $reversePhaseScan
+  file.exist "Main rsfMRI        =" ${mainScan}
+  file.exist "Main rsfMRI json   =" ${mainScanJson}
+  file.exist "Main phase scan    =" ${mainPhaseScan}
+  file.exist "Main reverse phase =" ${reversePhaseScan}
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
   Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
 }
@@ -241,7 +241,7 @@ t1w_str() {
   id=$1
   t1w_full=$2
   space=$3
-  res=$(mrinfo ${t1w_full} -spacing | awk '{printf "%.1f\n", $2}')
+  res=$(mrinfo "${t1w_full}" -spacing | awk '{printf "%.1f\n", $2}')
   echo "${id}_t1w_${res}mm_${space}${run}"
 }
 
@@ -268,7 +268,7 @@ micapipe_software() {
 }
 micapipe_json() {
   # Name is the name of the raw-BIDS directory
-  if [ -f "${BIDS}/dataset_description.json" ]; then
+  if [ -f ${BIDS}/dataset_description.json ]; then
     Name=$(cat ${BIDS}/dataset_description.json | grep Name | awk -F '"' '{print $4}')
     BIDSVersion=$(cat ${BIDS}/dataset_description.json | grep BIDSVersion | awk -F '"' '{print $4}')
   else
@@ -303,7 +303,7 @@ micapipe_json() {
         \"Version\": \"${Version}\"
       }
     ]
-  }" > "${out}/pipeline-description.json"
+  }" > ${out}/pipeline-description.json
 }
 
 function tck_json() {
@@ -341,7 +341,7 @@ function tck_json() {
         \"TractographySaved\": \"${nocleanup}\"
       }
     ]
-  }" > "${tckjson}"
+  }" > ${tckjson}
 }
 
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
@@ -392,9 +392,11 @@ local l_index=1
 while [ ${l_index} -le $# ]; do
     eval arg=\${$l_index}
     if [ "$arg" = "-fake" ]; then
+      isFake=1
       arg=""
     fi
     if [ "$arg" = "-no_stderr" ]; then
+      stderr=0
       arg=""
     fi
     if [ "$arg" == "-log" ]; then
@@ -439,21 +441,21 @@ function cleanup() {
 
 function QC_proc-dwi() {
   html=${dir_QC}/micapipe_qc_proc-dwi.txt
-  if [ -f "$html" ]; then rm "$html"; fi
+  if [ -f $html ]; then rm $html; fi
   for i in "${!bids_dwis[@]}"; do
     echo "        <tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
             <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
             <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
-          </tr>" >> "$html"
+          </tr>" >> $html
   done
 
-  if [ -f "$dwi_reverse" ]; then
+  if [ -f $dwi_reverse ]; then
     echo -e "        <tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
             <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
             <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
-          </tr>"  >> "$html"
+          </tr>"  >> $html
   fi
 }
 
@@ -475,13 +477,13 @@ function QC_proc-rsfmri() {
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
                 <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
               </tr>
-            " >> "$html"
-            if [ -f "$bids_reversePhase" ]; then
+            " >> $html
+            if [ -f $bids_reversePhase ]; then
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
                 <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
-              </tr>"  >> "$html"
+              </tr>"  >> $html
             fi
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
@@ -492,12 +494,12 @@ function QC_proc-rsfmri() {
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
                 <td class=\"tg-8pnm\">Default/Defined<br><br></td>
                 <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
-              </tr>"   >> "$html"
+              </tr>"   >> $html
 }
 
 function QC_SC() {
   html=${dir_QC}/micapipe_qc_SC.txt
-  if [ -f "$html" ]; then rm "$html"; fi
+  if [ -f $html ]; then rm $html; fi
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
@@ -537,5 +539,5 @@ function QC_SC() {
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
                 <td class=\"tg-8pnm\">$(find $fa 2>/dev/null)</td>
-              </tr>"   >> "$html"
+              </tr>"   >> $html
 }

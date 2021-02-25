@@ -56,7 +56,7 @@ parcellations=($(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -na
 if [ ${#parcellations[*]} -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Geodesic distance analysis\n\t\tmicapipe $Version, $PROC"
+Title "micapipe $Version: Geodesic distance processing"
 micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"

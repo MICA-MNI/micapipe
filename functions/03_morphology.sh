@@ -46,7 +46,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
+Title "micapipe $Version: Morphology processing"
 micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"

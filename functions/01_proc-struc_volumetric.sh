@@ -40,7 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 #------------------------------------------------------------------------------#
-Title "Structural processing\n\t\tmicapipe $Version, $PROC"
+Title "micapipe $Version: structural processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
@@ -62,6 +62,9 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
 n=$(($N - 1))
+
+# FSL tries to submit to SGE
+# unset FSLPARALLEL #unset SGE_ROOT         <<<<<<<<<<<<< This is not working
 
 # Creates the t1w_nativepro for structural processing
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz ]; then
@@ -142,13 +145,12 @@ else
 fi
 
 # FSL first on the t1w_nativepro
-unset SGE_ROOTs
-FSLPARALLEL=0; export FSLPARALLEL
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f ${firstout} ]; then
     Info "FSL first is running, output file:\n\t\t\t ${firstout}"
-    Do_cmd run_first_all -i $T1nativepro_brain -o $T1nativepro_first -b -v &
-    wait
+    Do_cmd run_first_all -i $T1nativepro_brain -o $T1nativepro_first -b
+    # Wait until $firstout exists, IF it was sent to SGE
+    until [ -f $firstout ]; do sleep 5; done
 
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"
     for i in ${proc_struct}/first/*pro-*; do mv $i ${i/pro-/pro_}; done
@@ -250,6 +252,6 @@ eri=$(echo print $eri/60 | perl)
 
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
-$(ls ${dir_logs}/proc-structural_*.txt)"
+$(ls ${dir_logs}/proc-volumetric_*.txt)"
 echo "${id}, proc_struc, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
 cleanup $tmp $nocleanup $here

@@ -73,7 +73,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "POST-structural processing\n\t\tmicapipe $Version, $PROC "
+Title "micapipe $Version: POST-structural processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables-post

@@ -157,7 +157,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-Title "Resting state fMRI processing\n\t\tmicapipe $Version, $PROC "
+Title "micapipe $Version: rsfMRI processing"
 micapipe_software
 bids_print.variables-rsfmri
 Info "Saving temporal dir: $nocleanup"

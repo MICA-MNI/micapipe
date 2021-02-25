@@ -53,7 +53,7 @@ exit
 fi
 
 #------------------------------------------------------------------------------#
-Title "Structural processing: Freesurfer\n\t\tmicapipe $Version, $PROC "
+Title "micapipe $Version: Freesurfer processing"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
