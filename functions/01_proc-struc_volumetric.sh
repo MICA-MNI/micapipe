@@ -40,7 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 #------------------------------------------------------------------------------#
-Title "micapipe $Version: structural processing"
+Title "Structural processing\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 # print the names on the terminal
 bids_print.variables
@@ -62,9 +62,6 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
 n=$(($N - 1))
-
-# FSL tries to submit to SGE
-# unset FSLPARALLEL #unset SGE_ROOT         <<<<<<<<<<<<< This is not working
 
 # Creates the t1w_nativepro for structural processing
 if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz ]; then
