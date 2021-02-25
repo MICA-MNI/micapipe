@@ -72,6 +72,7 @@ echo -e "
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
+\t\t\033[38;5;120m-keep_tck\033[0m           : If provided, the tractogram will be copied to /dwi dir
 \t\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
 
 \t\033[38;5;197m-MPC\033[0m
@@ -260,6 +261,10 @@ do
     tracts=$2
     shift;shift
   ;;
+  -keep_tck)
+    keep_tck=TRUE
+    shift
+  ;;
   -autoTract)
     autoTract=TRUE
     shift
@@ -361,6 +366,7 @@ else optarg_mpc[1]=DEFAULT; fi
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
+if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 
 # Optional arguments proc_dwi
 if [ -z ${dwi_main} ]; then
@@ -686,7 +692,7 @@ fi
 #   REQUIRES -proc_dwi
 if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/post-sc_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract"
+    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST DWI processing (tractography)"
