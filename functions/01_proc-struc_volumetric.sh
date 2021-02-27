@@ -83,17 +83,17 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
       ref=${bids_T1ws[0]} # reference to registration
       ref_run=$(echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       ref_res=$(echo ${bids_T1ws[0]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+      t1ref="run-${ref_run}"
       # Variables for N4BiasFieldCorrection & Native output
       T1str_nat=$(t1w_str ${id} ${ref} nativepro)
       T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
       # Loop over each T1
       for ((i=1; i<=$n; i++)); do
           run=$(echo ${bids_T1ws[i]} | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
-          t1ref="run-${ref_run}"
           T1mat_str="${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
           T1run_2_T1="${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz"
-
+          Info "Registering T1w_run-${run} to ${t1ref}"
           Do_cmd antsRegistrationSyN.sh -d 3 -m "${bids_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
           Do_cmd antsApplyTransforms -d 3 -i "${bids_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
       done
@@ -110,6 +110,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
       Do_cmd cp -v $t1_reo $T1n4
     fi
 
+    Info "T1nativepro biasfield correction and intensity rescale "
     # Output names
     T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
     T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}

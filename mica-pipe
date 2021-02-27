@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.1)\n"
+  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2 'wobbly')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -42,22 +42,20 @@ echo -e "
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
-\t\033[38;5;197m-proc_structural\033[0m
-\t\t\033[38;5;120m-cerebellum_seg\033[0m      : User defined segmentation of the cerebellum on native T1w_run1 space.
-\t\t\033[38;5;120m-subcortical_seg\033[0m     : User defined segmentation of the subcortical structures on native T1w_run1 space.
-
 \t\033[38;5;197m-proc_freesurfer\033[0m
-\t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to <subject_dir>/proc_struct/surfaces/<sub>
+\t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/micapipe/<subject>/anat/surfaces'
 
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
+\t\t\033[38;5;120m-cerebellum_seg\033[0m      : User defined segmentation of the cerebellum on native T1w_run1 space.
+\t\t\033[38;5;120m-subcortical_seg\033[0m     : User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
 \t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/sub-<sub>/<ses>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
 \t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
 
@@ -72,8 +70,9 @@ echo -e "
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
-\t\t\033[38;5;120m-keep_tck\033[0m           : If provided, the tractogram will be copied to /dwi dir
+\t\t\033[38;5;120m-keep_tck\033[0m            : If provided, the tractogram will be copied to '<output>/micapipe/<subject>/dwi'
 \t\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+\t\t\033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
 
 \t\033[38;5;197m-MPC\033[0m
 \t\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
@@ -771,7 +770,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
 # Cleanup if processing was local
-# if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
-#     cleanup $tmpDir/*_micapipe*_${id} $nocleanup $here
-# fi
+if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
+    cleanup "$tmpDir/*_micapipe*_${id}" "$nocleanup" "$here"
+fi
 Title "GLOBAL micapipe running time with $PROC processing:\033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
