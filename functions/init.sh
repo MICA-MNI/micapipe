@@ -72,11 +72,6 @@ export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HO
 # $NSLOTS if it exists (i.e. when running on SGE).
 local_threads=10
 
-# Default temporary directory
-tmp_file=$(mktemp)
-default_temp=$(dirname "$tmp_file")
-rm -f "$tmp_file"
-
 # Set basic global variables.
 # export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
 if [[ ! -z "$NSLOTS" ]]; then
@@ -90,9 +85,9 @@ export OMP_NUM_THREADS="$threads"
 if [[ -z "$PROC" ]]; then export PROC="LOCAL-MICA"; fi
 
 # Set tmpDir depending on the node
-host=$(echo $HOSTNAME | awk -F '.' '{print $1}')
+host=$(echo "$HOSTNAME" | awk -F '.' '{print $1}')
 case $host in
-    fladgate*|yeatman*|oncilla*) tmpDir="/host/$host/local_raid/temporaryLocalProcessing" ;;
-    cassio*|varro*) tmpDir="/host/$host/export02/data/temporaryLocalProcessing" ;;
-    *) tmpDir="/data/mica2/temporaryNetworkProcessing" ;;
+    fladgate*|yeatman*|oncilla*) export tmpDir="/host/$host/local_raid/temporaryLocalProcessing" ;;
+    cassio*|varro*) export tmpDir="/host/$host/export02/data/temporaryLocalProcessing" ;;
+    *) export tmpDir="/data/mica2/temporaryNetworkProcessing" ;;
 esac
