@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.0.2 (wobbly)"
+export Version="v0.0.2 'wobbly'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -411,12 +411,6 @@ if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118m\n${str}:\nCOMMAND -->  \
 if [ -z "$TEST" ]; then $l_command; fi
 }
 
-cmd() {
-text=$1
-if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118mCOMMAND -->  \033[38;5;122m${text}  \033[0m"; fi
-eval "$text"
-}
-
 function cleanup() {
   # This script will clean the temporal directory
   # and reset the old user path upon,
@@ -424,7 +418,6 @@ function cleanup() {
   tmp=$1
   nocleanup=$2
   here=$3
-  # Title "TRAP is activated"
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
       echo -e "Erasing temporal directory: $tmp"
