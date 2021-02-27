@@ -115,6 +115,7 @@ dwi_dns="${tmp}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_n4="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_N4_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${id}_dwi_corr.mif"
+b0_refacq=$(echo ${bids_dwis[0]} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
 
 if [[ "$dwi_processed" == "FALSE" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
@@ -124,7 +125,30 @@ if [[ "$dwi_processed" == "FALSE" ]]; then
                 dwi_nom=$(echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo $dwi | awk -F . '{print $1}')
                 Do_cmd mrconvert $dwi -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}.mif
+                dwiextract ${tmp}/${dwi_nom}.mif - -bzero | mrmath - mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads $threads
           done
+
+          # Rigid registration between shells
+          n=$((${#bids_dwis[*]} - 1))
+          if [[ ${#bids_dwis[*]} -gt 1 ]]; then
+            b0_ref=${tmp}/$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz
+            for ((i=1; i<=$n; i++)); do
+                dwi_nom=$(echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+                bids_dwi_str=$(echo $dwi | awk -F . '{print $1}')
+                b0_acq=$(echo ${bids_dwis[i]} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
+                b0_nom="${tmp}/$(echo ${bids_dwis[i]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz"
+                b0_run="acq-${b0_acq}"
+                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
+                b0mat="${b0mat_str}0GenericAffine.mat"
+                b0run_2_b0ref="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}.nii.gz"
+
+                Info "Registering ${b0_acq} to ${b0_refacq}"
+                Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref"  -o "$b0mat_str" -t r -n "$threads" -p d
+                mrconvert ${tmp}/${dwi_nom}.mif ${tmp}/${dwi_nom}.nii.gz
+                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
+                Do_cmd mrconvert ${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}.mif -force -quiet
+            done
+          fi
 
           # Concatenate shells and convert to mif.
           if [ "${#bids_dwis[@]}" -eq 1 ]; then
@@ -169,15 +193,28 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwiextract -nthreads $threads $dwi_n4 - -bzero | mrmath - mean ${tmp}/b0_meanMainPhase.mif -axis 3
 
       # Processing the reverse encoding b0
-      if [ -f "$dwi_reverse" ]; then
+      Title "$dwi_reverse"
+      if [ -f $dwi_reverse ]; then
             b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
             b0_pair="${tmp}/b0_pair.mif"
             dwi_reverse_str=$(echo $dwi_reverse | awk -F . '{print $1}')
 
             Do_cmd mrconvert $dwi_reverse -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif
-            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $threads
-            Do_cmd mrcat ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanReversePhase.mif $b0_pair_tmp -nthreads $threads
+            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.nii.gz -axis 3 -nthreads $threads
 
+            # Linear registration between both b0
+            rpe=$(echo ${dwi_reverse} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
+            rpemat_str="${dir_warp}/${idBIDS}_from-${rpe}_to-${b0_refacq}_mode-image_desc-rigid_"
+            rpemat="${rpemat_str}0GenericAffine.mat"
+            Do_cmd mrconvert ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanMainPhase.nii.gz
+            Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/b0_meanReversePhase.nii.gz" -f "${tmp}/b0_meanMainPhase.nii.gz"  -o "$rpemat_str" -t r -n "$threads" -p d
+            Do_cmd antsApplyTransforms -d 3 -e 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_meanReversePhase-reg.nii.gz" -v -u int
+            Do_cmd mrconvert "${tmp}/b0_meanReversePhase-reg.nii.gz" -json_import ${dwi_reverse_str}.json -fslgrad ${dwi_reverse_str}.bvec ${dwi_reverse_str}.bval ${tmp}/b0_ReversePhase.mif -force -quiet
+            dwiextract ${tmp}/b0_ReversePhase.mif - -bzero | mrmath - mean ${tmp}/b0_meanReversePhase.mif -axis 3 -nthreads $threads
+
+            # Concatenate the pe and rpe b0s
+            Do_cmd mrcat "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanReversePhase.mif" "$b0_pair_tmp" -nthreads "$threads"
+    
             # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
             dim=$(mrinfo $b0_pair_tmp -size)
             dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
