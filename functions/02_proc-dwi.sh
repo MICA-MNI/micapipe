@@ -133,8 +133,8 @@ if [[ "$dwi_processed" == "FALSE" ]]; then
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
             b0_ref=${tmp}/$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz
             for ((i=1; i<=$n; i++)); do
-                dwi_nom=$(echo $dwi | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
-                bids_dwi_str=$(echo $dwi | awk -F . '{print $1}')
+                dwi_nom=$(echo ${bids_dwis[i]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+                bids_dwi_str=$(echo ${bids_dwis[i]} | awk -F . '{print $1}')
                 b0_acq=$(echo ${bids_dwis[i]} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
                 b0_nom="${tmp}/$(echo ${bids_dwis[i]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_run="acq-${b0_acq}"
@@ -146,15 +146,16 @@ if [[ "$dwi_processed" == "FALSE" ]]; then
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref"  -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert ${tmp}/${dwi_nom}.mif ${tmp}/${dwi_nom}.nii.gz
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert ${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}.mif -force -quiet
+                Do_cmd mrconvert ${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}_Ralign.mif -force -quiet
             done
           fi
 
-          # Concatenate shells and convert to mif.
+          Info "Concatenatenating shells"
+          dwi_0=$(echo ${bids_dwis[0]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
           if [ "${#bids_dwis[@]}" -eq 1 ]; then
-            cp "${tmp}/*.mif" "$dwi_cat"
+            cp "${tmp}/${dwi_0}.mif" "$dwi_cat"
           else
-            Do_cmd mrcat "${tmp}/*.mif" "$dwi_cat" -nthreads $threads
+            Do_cmd mrcat "${tmp}/${dwi_0}.mif" "${tmp}/*_Ralign.mif" "$dwi_cat" -nthreads $threads
           fi
 
           # Denoise DWI and calculate residuals
@@ -214,7 +215,7 @@ if [[ ! -f "$dwi_corr" ]]; then
 
             # Concatenate the pe and rpe b0s
             Do_cmd mrcat "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanReversePhase.mif" "$b0_pair_tmp" -nthreads "$threads"
-    
+
             # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
             dim=$(mrinfo $b0_pair_tmp -size)
             dimNew=($(echo $dim | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
