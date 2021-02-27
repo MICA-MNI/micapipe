@@ -132,7 +132,8 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
 Info "Building the ${tracts} streamlines connectome!!!"
-tck=${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck
+tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
+tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
 weights=${tmp}/SIFT2_${tracts}.txt
 Do_cmd tckgen -nthreads $threads \
     $fod_wmN \
@@ -153,7 +154,7 @@ Do_cmd tckgen -nthreads $threads \
 if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art ${dir_logs}/post-dwi_*.txt | tail -1)"; exit; fi
 
 # json file of tractogram
-tck_json iFOD1 0.5 22.5 0.06 400 10 seed_dynamic $tck
+tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic $tck
 
 # SIFT2
 Do_cmd tcksift2 -nthreads $threads $tck $fod_wmN $weights
