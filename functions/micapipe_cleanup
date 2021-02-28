@@ -162,13 +162,13 @@ if [ ! -d "${out}/sub-${id}" ]; then Error "$id was not found on the OUTPUT dire
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # if temporary directory is running on MICA-lab SGE
-if [ "$mica" = "TRUE" ];then source ${MICAPIPE}/functions/init.sh; fi
+if [ "$mica" = "TRUE" ];then source "$MICAPIPE"/functions/init.sh; fi
 
 # if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
+if [ -z "$tmp" ]; then tmp=/tmp; fi
 
 # Optional arguments SC
-if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+if [ -z "$tracts" ]; then tracts=40M; else tracts="$tracts"; fi
 
 # ---------------------------------------------------------------------------------------
 Title "MICA pipe cleanup \n\t\tSubject: $id"
@@ -176,79 +176,81 @@ Title "MICA pipe cleanup \n\t\tSubject: $id"
 # CLEAN -proc_structural
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf ${proc_struct}/first/* \
-                  ${proc_struct}/*MNI* \
-                  ${proc_struct}/*nativepro_brain* \
-                  ${dir_warp}/*MNI152* \
-                  ${proc_struct}/*nativepro_5TT* \
-                  ${dir_logs}/proc-structural_*
+    Do_cmd rm -rf "$proc_struct"/first/* \
+                  "$proc_struct"/*MNI* \
+                  "$proc_struct"/*nativepro_brain* \
+                  "$dir_warp"/*MNI152* \
+                  "$proc_struct"/*nativepro_5TT* \
+                  "$dir_logs"/proc-structural_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_freesurfer
 if [ "$procFS" = "TRUE" ]; then
     Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf ${dir_freesurfer} \
-                  ${dir_logs}/proc-freesurfer*
+    Do_cmd rm -rf "$dir_freesurfer" \
+                  "$dir_logs"/proc-freesurfer*
 fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -post_structural
 if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
-    Do_cmd rm -rf ${dir_volum}/* \
-                  ${proc_struct}/${id}_t1w_*mm_fsspace.nii.gz \
-                  ${dir_logs}/post-structural_*
+    Do_cmd rm -rf "$dir_volum"/* \
+                  "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
+                  "$dir_logs"/post-structural_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_dwi
 if [ "$procDWI" = "TRUE" ]; then
     Warning "Erasing proc_dwi output files and logs"
-    Do_cmd rm -rf ${proc_dwi}/* \
-                  ${proc_struct}/${id}_dwi_nativepro.nii.gz \
-                  ${dir_warp}/*_dwi_to_nativepro_* \
-                  ${dir_logs}/proc-dwi_*
+    Do_cmd rm -rf "$proc_dwi"/* \
+                  "$proc_struct"/"$idBIDS"_space-nativepro_desc-dwi.nii.gz \
+                  "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
+                  "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
+                  "$dir_warp"/*_mode-image_desc-rigid_* \
+                  "$dir_logs"/proc-dwi_*
 fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_rsfmri
 if [ "$procfMRI" = "TRUE" ]; then
     Warning "Erasing proc_rsfmri output files and logs"
-    Do_cmd rm -rf ${proc_rsfmri}/* \
-                  ${proc_struct}/${id}_singleecho_nativepro_brain.nii.gz \
-                  ${dir_warp}/*fmri* \
-                  ${dir_logs}/proc-rsfmri_*
+    Do_cmd rm -rf "$proc_rsfmri"/* \
+                  "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
+                  "$dir_warp"/*fmri* \
+                  "$dir_logs"/proc-rsfmri_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     Warning "Erasing post_tractography output files and logs"
-    Do_cmd rm -rf ${proc_dwi}/connectomes/${id}_${tracts}* \
-                  ${proc_dwi}/QC/png/${id}_${tracts}_*connectome.png \
-                  ${proc_dwi}/QC/png/${id}_${tracts}_*edgeLengths.png \
-                  ${proc_dwi}/${id}_${tracts}_tdi_iFOD2-*.mif \
-                  ${proc_dwi}/${id}_dwi_subcortical.nii.gz \
-                  ${proc_dwi}/${id}_dwi_cerebellum.nii.gz \
-                  ${proc_dwi}/auto_tract/${id}_${tracts}* ${dir_logs}/post-sc_*
+    Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
+                  "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
+                  "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
+                  "$proc_dwi"/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif \
+                  "$proc_dwi"/"$idBIDS"_space-dwi_atlas-subcortical.nii.gz \
+                  "$proc_dwi"/"$idBIDS"_space-dwi_atlas-cerebellum.nii.gz \
+                  "$proc_dwi"/"${idBIDS}"_space-dwi_"${tracts}"* "$dir_logs"/post-sc_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf ${dir_surf}/micro_profiles ${dir_logs}/post-mpc_*
+    Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/post-mpc_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
-    Do_cmd rm -rf ${dir_surf}/geo_dist \
-                  ${dir_logs}/post-gd_*
+    Do_cmd rm -rf "$dir_surf"/geo_dist \
+                  "$dir_logs"/post-gd_*
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -Morphology
 if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
-    Do_cmd rm -rf ${dir_surf}/morphology \
-                  ${dir_logs}/post-morph_*
+    Do_cmd rm -rf "$dir_surf"/morphology \
+                  "$dir_logs"/post-morph_*
 fi
 
 bids_variables_unset
