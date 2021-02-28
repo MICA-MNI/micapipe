@@ -117,7 +117,7 @@ dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${id}_dwi_corr.mif"
 b0_refacq=$(echo ${bids_dwis[0]} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
 
-if [[ "$dwi_processed" == "FALSE" ]]; then
+if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
     Info "DWI denoise, bias filed correction and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
@@ -354,7 +354,7 @@ dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 
-if [[ ! -f "$dwi_SyN_warp" ]]; then
+if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
     Info "Non-linear registration from T1w_dwi-space to DWI"
     dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
     T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro-brain.nii.gz"
