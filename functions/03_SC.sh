@@ -243,7 +243,7 @@ if [ $autoTract == "TRUE" ]; then
     fa_niigz=$tmp/${id}_dti_FA.nii.gz
     Do_cmd mrconvert $dti_FA $fa_niigz
     echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck $tck -outbase $autoTract_dir/${id} -mask $dwi_mask -fa $fa_niigz -tmpDir $tmp -keep_tmp  \033[0m"
-    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase "${autoTract_dir}/${idBIDS}_space-dwi_${tracts}" -mask $dwi_mask -fa $fa_niigz -weights $weights -tmpDir $tmp -keep_tmp
+    ${MICAPIPE}/functions/03_auto_tracts.sh -tck $tck -outbase "${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter}" -mask $dwi_mask -fa $fa_niigz -weights $weights -tmpDir $tmp -keep_tmp
 fi
 
 # -----------------------------------------------------------------------------------------------
