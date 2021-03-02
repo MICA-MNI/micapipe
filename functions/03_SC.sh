@@ -161,7 +161,7 @@ Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
 
 # TDI for QC
 Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads $threads $tck $tdi -force
+Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
@@ -220,7 +220,7 @@ for seg in "${parcellations[@]}"; do
     # Build the Cortical-Subcortical-Cerebellum connectomes
     Do_cmd tck2connectome -nthreads "$threads" \
         "$tck" "$dwi_all" "${connectome_str}_full-connectome.txt" \
-        -tck_weights_in $weights -quiet
+        -tck_weights_in "$weights" -quiet
     Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
     # Calculate the edge lenghts
@@ -260,8 +260,8 @@ eri=$(echo print "$eri"/60 | perl)
 # Notification of completition
 N="$(( 2 + ${#parcellations[*]} * 3))"
 if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
-Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
-\t\tNumber of connectomes: $(printf "%02d" $Nparc)/$(printf "%02d" $N)
+Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
+\t\tNumber of connectomes: $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
 \tlogs:
 $(ls "$dir_logs"/post-sc_*.txt)"
 # Print QC stamp
