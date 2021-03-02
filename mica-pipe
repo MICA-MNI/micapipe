@@ -686,7 +686,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-#       post-DWI processing (tractography)
+#       SC: Structural Connectome processing (tractography)
 # -----------------------------------------------------------------------------------------------#
 #   REQUIRES -proc_dwi
 if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
@@ -698,7 +698,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]]; then
@@ -706,7 +706,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_pstDWI -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     else
         # LOCAL - post-DWI processing (tractography)
