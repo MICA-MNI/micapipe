@@ -34,7 +34,7 @@
 
 Reproducibility 👯‍♀️
 --------------------------------------------------------
-To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations <download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
+To encourage reproducibility and robustness of investigations using micapipe, we provide a fully containerized version of the pipeline in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations <download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
 
 .. raw:: html
 
@@ -42,7 +42,7 @@ To encourage reproducibility and robustness of investigations, we provide a full
 
 Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_. The pipeline was mainly tested on the MICs dataset (DOI: 10.5281/zenodo.4342981), which includes all data modalities currently supported by micapipe.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `PREVENT-AD <https://openpreventad.loris.ca/>`_, `Healthy Brain Network <http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/>`_, and `Microstructure-Informed Connectomis (MICs) <https://openneuro.org/>`_.
 
 .. raw:: html
 
@@ -75,11 +75,26 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 .. toctree::
    :maxdepth: 1
    :hidden:
+   :caption: Quality control
+
+   pages/15.qc/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Tutorials
+   
+   pages/16.matrices/index
+   pages/17.surfaces/index
+   pages/18_gradients/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Additional tools
 
    pages/09.micapipe_anonymize/index
    pages/10.micapipe_cleanup/index
-   pages/11.mic2bids/index
 
 .. toctree::
    :maxdepth: 1
@@ -105,7 +120,7 @@ Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
-- **Peer Herholz**, *McConnell Brain Imaging Centre - Montreal Neurological Institute*
+- **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
 - **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
 - **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
