@@ -113,15 +113,24 @@
 <li class="toctree-l1"><a class="reference internal" href="../07.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../08.restingstateproc/index.html">Resting-state fMRI processing</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Quality control</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../15.qc/index.html">Quality control reports</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../16.matrices/index.html">Structure of output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../17.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../18_gradients/index.html">Computing gradients from output matrices</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../09.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../10.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../11.mic2bids/index.html">mic2bids</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../12.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../12.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../13.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../14.acknowledge/index.html">Acknowlegdements</a></li>
 </ul>
@@ -193,7 +202,7 @@
             
   <div class="section" id="structural-processing">
 <span id="structproc"></span><h1>Structural processing<a class="headerlink" href="#structural-processing" title="Permalink to this headline">¶</a></h1>
-<p>This sections describes all structural processing modules, which includes pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (<strong>-proc_structural</strong>) and surface-based (<strong>proc-freesurfer</strong>, <strong>-post_structural</strong>, <strong>-GD</strong>, <strong>-Morphology</strong>) processing. These modules map subject data to several volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to several parcellation schemes as well as vertexwise cortical thickness and curvature data.</p>
+<p>This section describes all structural processing modules, which includes pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (<strong>-proc_structural</strong>) and surface-based (<strong>proc-freesurfer</strong>, <strong>-post_structural</strong>, <strong>-GD</strong>, <strong>-Morphology</strong>) processing. These modules map subject data to several volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to several parcellation schemes as well as vertexwise cortical thickness and curvature data.</p>
 <div class="section" id="proc-structural">
 <h2>-proc_structural<a class="headerlink" href="#proc-structural" title="Permalink to this headline">¶</a></h2>
 <p>This module performs initial structural pre-processing, keeping data in volumetric format. Two main spaces are found in this stream: <em>nativepro</em> as well as <em>MNI152</em>.</p>
@@ -250,17 +259,17 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
 <p>Directories created or populated by <strong>-proc-structural</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">first</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">xfms</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">first</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">xfms</span>
 </pre></div>
 </div>
 <p>Files generated by <strong>-proc-structural</strong>:</p>
-<pre class="literal-block">- Main structural scan: <em>&lt;outputDirectory&gt;/proc_struct/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro.nii.gz</em>
-- Brain extracted main structural scan: <em>&lt;outputDirectory&gt;/proc_struct/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain.nii.gz</em>
-- Brain-mask for main structural scan: <em>&lt;outputDirectory&gt;/proc_struct/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_mask.nii.gz</em>
+<pre class="literal-block">- Main structural scan: <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro.nii.gz</em>
+- Brain extracted main structural scan: <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain.nii.gz</em>
+- Brain-mask for main structural scan: <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_mask.nii.gz</em>
 - Main structural scan linearly-registered to MNI152 1mm template, generated during FSL FIRST: <em>&lt;sub&gt;_t1w_1mm_MNI152_brain_affine.nii.gz</em>
-- FSL FAST outputs stored in <em>&lt;outputDirectory&gt;/proc_struct/</em>:
+- FSL FAST outputs stored in <em>&lt;outputDirectory&gt;/micapipe/anat/</em>:
     - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_seg.nii.gz</em>
     - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_pve_0.nii.gz</em>
     - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_pve_1.nii.gz</em>
@@ -268,15 +277,15 @@
     - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_pveseg.nii.gz</em>
     - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_mixeltype.nii.gz</em>
 - Main structural scan non-linearly-registered to MNI152:
-    - <em>&lt;sub&gt;_t1w_0.8mm_MNI152_brain.nii.gz</em>
-    - <em>&lt;sub&gt;_t1w_2mm_MNI152_brain.nii.gz</em>
+    - <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_0.8mm_MNI152_brain.nii.gz</em>
+    - <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_2mm_MNI152_brain.nii.gz</em>
 - Final 5ttgen output:
-    - <em>&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_5TT.nii.gz</em>
-- FSL FIRST intermediary files: <em>&lt;outputDirectory&gt;/proc_struct/first/*</em>
-- If multiple T1w scans are found in the raw data directory, transformation files to generate nativepro image will generated and stored here: <em>&lt;outputDirectory&gt;/xfms/&lt;sub&gt;_t1w_run-2_to_run-1*</em>
-- Linear registration to MNI152 generated during FSL FIRST: <em>&lt;outputDirectory&gt;/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_1mm_MNI152_brain.mat</em>
-- Files generated for non-linear registration to MNI152 2mm template:  <em>&lt;outputDirectory&gt;/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_2mm_MNI152_SyN_brain*</em>
-- Files generated for non-linear registration to MNI152 0.8mm template: <em>&lt;outputDirectory&gt;/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_0.8mm_MNI152_SyN_brain*</em></pre>
+    - <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_5TT.nii.gz</em>
+- FSL FIRST intermediary files: <em>&lt;outputDirectory&gt;/micapipe/anat/first/*</em>
+- If multiple T1w scans are found in the raw data directory, transformation files to generate nativepro image will generated and stored here: <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_t1w_run-2_to_run-1*</em>
+- Linear registration to MNI152 generated during FSL FIRST: <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_1mm_MNI152_brain.mat</em>
+- Files generated for non-linear registration to MNI152 2mm template:  <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_2mm_MNI152_SyN_brain*</em>
+- Files generated for non-linear registration to MNI152 0.8mm template: <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_t1w_&lt;resolution&gt;_nativepro_brain_to_0.8mm_MNI152_SyN_brain*</em></pre>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-3 docutils container">
 <p>Files conserved during <strong>-proc-structural</strong> slim run</p>
@@ -322,7 +331,7 @@
 </ul>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
-<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong> -&lt;options&gt;</pre>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong> &lt;options&gt;</pre>
 <p>Docker command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_freesurfer -&lt;options&gt;
 </pre></div>
@@ -338,7 +347,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
 <p>Directories created or populated by <strong>-proc-freesurfer</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">freesurfer</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>Files generated by <strong>-proc-freesurfer</strong>:</p>
@@ -385,11 +394,12 @@
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-0 active docutils container">
 <ul class="simple">
 <li><p>Compute affine registration from native FreeSurfer space to nativepro space</p></li>
-<li><p>Apply inverse of nativro -&gt; MNI152 transmation to cerebellar parcellation template</p></li>
-<li><p>Perform surface-based registration of fsaverage5 annotation labels to native FreeSurfer space</p></li>
+<li><p>Register cerebellar atlas (MNI152) to subject’s nativepro space using affine transformation</p></li>
+<li><p>Perform surface-based registration of fsaverage5 annotation labels to native surface</p></li>
 <li><p>Register native surface parcellations to native FreeSurfer volume</p></li>
 <li><p>Apply linear registrations to bring volumetric parcellations to nativepro space</p></li>
-<li><p>Build conte69-32k sphere, resample white and pial surfaces to conte69-32k, and create midsurface</p></li>
+<li><p>Build conte69-32k sphere and resample white and pial surfaces to conte69-32k template</p></li>
+<li><p>Create midthickness surface from native surface and resampled conte69-32k template</p></li>
 </ul>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-1 docutils container">
@@ -405,24 +415,24 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-2 docutils container">
 <p>Directories created or populated by <strong>-post-structural</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">conte69</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">label</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">volumetric</span>
-<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">xfms</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">conte69</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">label</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">volumetric</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">xfms</span>
 </pre></div>
 </div>
 <p>Files generated by <strong>-post-structural</strong>:</p>
-<pre class="literal-block">- Main structural scan in FreeSurfer space: <em>&lt;outputDirectory&gt;/proc_struct/&lt;sub&gt;_t1w_XXmm_fsspace.nii.gz</em>
-- Surface files formatted for Conte69 transformations, stored in &lt;outputDirectory&gt;/proc_struct/surfaces/conte69:
+<pre class="literal-block">- Main structural scan in FreeSurfer space: <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_t1w_XXmm_fsspace.nii.gz</em>
+- Surface files formatted for Conte69 transformations, stored in &lt;outputDirectory&gt;/micapipe/anat/surfaces/conte69:
     - Subject's pial surface resampled to Conte69 32k-vertex template: <em>&lt;sub&gt;_&lt;hemi&gt;_pial_32k_fs_LR.surf.gii</em>
     - Subject's white matter surface resampled to Conte69 32k-vertex template: <em>&lt;sub&gt;_&lt;hemi&gt;_white_32k_fs_LR.surf.gii</em>
     - Subject's midsurface resampled to Conte69 32k-vertex template: <em>&lt;sub&gt;_&lt;hemi&gt;_midthickness_32k_fs_LR.surf.gii</em>
     - Subject's surface sphere resampled to Conte69 32k-vertex template: <em>&lt;sub&gt;_&lt;hemi&gt;_sphereReg.surf.gii</em>
     - Subject's native surface converted to GIFTI format: <em>&lt;hemi&gt;.pial.surf.gii</em>, <em>&lt;hemi&gt;.white.surf.gii</em>
-- Native surface mapped annotation labels: <em>&lt;outputDirectory&gt;/proc_struct/surfaces/&lt;sub&gt;/labels/&lt;hemi&gt;.&lt;parcellation&gt;_mics.annot</em>
-- Volumetric parcellation files: <em>&lt;outputDirectory&gt;/proc_struct/volumetric/&lt;sub&gt;_t1w_0.8mm_nativepro_&lt;parcellation&gt;.nii.gz</em>
-- Files generated for non-linear registration between native FreeSurfer space and nativepro: <em>&lt;outputDirectory&gt;/xfms/&lt;sub&gt;_t1w_XXmm_fsspace_to_nativepro*</em></pre>
+- Native surface mapped annotation labels: <em>&lt;outputDirectory&gt;/micapipe/anat/surfaces/&lt;sub&gt;/labels/&lt;hemi&gt;.&lt;parcellation&gt;_mics.annot</em>
+- Volumetric parcellation files: <em>&lt;outputDirectory&gt;/micapipe/anat/volumetric/&lt;sub&gt;_t1w_0.8mm_nativepro_&lt;parcellation&gt;.nii.gz</em>
+- Files generated for non-linear registration between native FreeSurfer space and nativepro: <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_t1w_XXmm_fsspace_to_nativepro*</em></pre>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-3 docutils container">
 <p>Files conserved during <strong>-post-structural</strong> slim run</p>
@@ -465,7 +475,7 @@
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
 <ul class="simple">
 <li><p>Identifies centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel</p></li>
-<li><p>Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using <a class="reference external" href="https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance">workbench -surface-geodesic-distance.</a></p></li>
+<li><p>Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using <a class="reference external" href="https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance">workbench -surface-geodesic-distance</a></p></li>
 <li><p>Average computed distances within parcels</p></li>
 </ul>
 </div>
@@ -482,7 +492,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-2 docutils container">
 <p>Directories created or populated by <strong>-GD</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">geo_dist</span><span class="o">/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">geo_dist</span><span class="o">/</span>
 </pre></div>
 </div>
 <p>Files generated by <strong>-GD</strong>:</p>
@@ -545,7 +555,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-2 docutils container">
 <p>Directories created or populated by <strong>-Morphology</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">proc_struct</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">morphology</span><span class="o">/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">morphology</span><span class="o">/</span>
 </pre></div>
 </div>
 <p>Files generated by <strong>-Morphology</strong>:</p>

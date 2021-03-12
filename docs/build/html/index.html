@@ -103,15 +103,24 @@
 <li class="toctree-l1"><a class="reference internal" href="pages/07.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/08.restingstateproc/index.html">Resting-state fMRI processing</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Quality control</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/15.qc/index.html">Quality control reports</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/16.matrices/index.html">Structure of output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/17.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/18_gradients/index.html">Computing gradients from output matrices</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pages/09.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/10.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pages/11.mic2bids/index.html">mic2bids</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pages/12.citingmicapipe/index.html">Citing the micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/12.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/13.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/14.acknowledge/index.html">Acknowlegdements</a></li>
 </ul>
@@ -194,15 +203,19 @@
 <a class="reference internal image-reference" href="_images/micapipe.png"><img alt="alternate text" class="align-center" src="_images/micapipe.png" style="width: 580.0px; height: 703.5px;" /></a>
 <br><div class="section" id="reproducibility">
 <h2>Reproducibility 👯‍♀️<a class="headerlink" href="#reproducibility" title="Permalink to this headline">¶</a></h2>
-<p>To encourage reproducibility and robustness of investigations, we provide a fully containerized version of micapipe in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized <a class="reference internal" href="pages/01.install/index.html#download-page"><span class="std std-ref">installations</span></a>. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of <a class="reference internal" href="pages/02.whatyouneed/index.html#what-need"><span class="std std-ref">software dependencies</span></a> used by the pipeline to handle multiple MRI data modalities.</p>
+<p>To encourage reproducibility and robustness of investigations using micapipe, we provide a fully containerized version of the pipeline in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized <a class="reference internal" href="pages/01.install/index.html#download-page"><span class="std std-ref">installations</span></a>. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of <a class="reference internal" href="pages/02.whatyouneed/index.html#what-need"><span class="std std-ref">software dependencies</span></a> used by the pipeline to handle multiple MRI data modalities.</p>
 <br></div>
 <div class="section" id="datasets">
 <h2>Datasets 🕵️‍♀️<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
-<p>Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as <a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a>. The pipeline was mainly tested on the MICs dataset (DOI: 10.5281/zenodo.4342981), which includes all data modalities currently supported by micapipe.</p>
+<p>Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as <a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a>, <a class="reference external" href="https://openpreventad.loris.ca/">PREVENT-AD</a>, <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/">Healthy Brain Network</a>, and <a class="reference external" href="https://openneuro.org/">Microstructure-Informed Connectomis (MICs)</a>.</p>
 <br></div>
 <div class="section" id="development-and-getting-involved">
 <h2>Development and getting involved 🙋‍♀️<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>
 <p>Should you have any problems, questions, or suggestions about micapipe, please post an <a class="reference external" href="https://github.com/MICA-LAB/micapipe/issues">issue</a> or formulate a <a class="reference external" href="https://github.com/MICA-LAB/micapipe/pulls">pull request</a> on our repository.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -220,7 +233,7 @@
 <li><p><strong>Raúl Rodríguez-Cruces</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Jessica Royer</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Sara Larivière</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
-<li><p><strong>Peer Herholz</strong>, <em>McConnell Brain Imaging Centre - Montreal Neurological Institute</em></p></li>
+<li><p><strong>Peer Herholz</strong>, <em>NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Bo-yong Park</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Reinder Vos de Wael</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>
 <li><p><strong>Casey Paquola</strong>, <em>MICA Lab - Montreal Neurological Institute</em></p></li>

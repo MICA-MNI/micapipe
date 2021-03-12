@@ -1,12 +1,12 @@
 .. _citing:
 
-.. title:: Citing the micapipe
+.. title:: Citing micapipe
 
-Citing the micapipe
+Citing micapipe
 ================================================
 
-
-Please cite the following when referring to your use of your pipelie:
-    Reference here
+If you used micapipe to process any part of your dataset, please cite the following:
+    Pipeline descriptor
+    Pipeline DOI
 
 

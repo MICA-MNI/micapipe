@@ -62,6 +62,7 @@ More options
 --------------------------------------------------------
 You can specify additional options when running micapipe:
 
+	- **-ses**: Specify the session name with this flag (default: processing is performed as a single session).
 	- **-force**: Overwrite existing data in the subject directory.
 	- **-quiet**: Do not print comments and warnings.
 	- **-nocleanup**: Prevent deletion of temporary directory created for the module.
