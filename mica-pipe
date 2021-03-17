@@ -60,13 +60,15 @@ echo -e "
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
-\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
-\t\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
-\t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
+\t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
+\t\t\t\t         Default='task-rest_acq-AP_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
 \t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
 \t\t\t\t         you must specify which one to process ( e.g. '1' )
+\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+\t\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
+\t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -213,6 +215,10 @@ do
     thisMainScan=$2
     shift;shift
   ;;
+  -mainScanStr)
+    mainScanStr=$2
+    shift;shift
+  ;;
   -phaseReversalRun)
     specPhase=TRUE
     thisPhase=$2
@@ -325,14 +331,14 @@ do
 done
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
+arg=("$id" "$out" "$BIDS")
 if [ "${#arg[@]}" -lt 3 ]; then
 Error "One or more mandatory arguments are missing:
                -sub  : $id
                -out  : $out
                -bids : $BIDS"
 help; exit 1; fi
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest)
+runs=("$ALL" "$procVOL" "$procFS" "$postVOL" "$procDWI" "$procfMRI" "$postDWI" "$postGD" "$postMorph" "$postMPC" "$qtest")
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -354,6 +360,7 @@ if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else opta
 if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
 if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase; else optarg_rsfmri[3]=DEFAULT; fi
 if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
+if [ -z ${mainScanStr} ]; then mainScanStr=DEFAULT; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_lta)
@@ -489,7 +496,7 @@ micapipe_json
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc-structural_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_structural_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
@@ -514,7 +521,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc-freesurfer$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_freesurfer_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]]; then
@@ -541,7 +548,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc-dwi_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
@@ -571,7 +578,7 @@ fi
 # # #         POST Structural processing
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
-    log_file_str=$dir_logs/post-structural_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/post_structural_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
     # mica.q - POST Structural processing
     if [[ $micaq == "TRUE" ]]; then
@@ -601,7 +608,7 @@ fi
 #     Generates geodesic distance matrices calculated along cortical surface mesh
 #     REQUIRES -post-structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
-    log_file_str=$dir_logs/post-gd_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/GD_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Geodesic distance
     if [[ $micaq == "TRUE" ]]; then
@@ -631,7 +638,7 @@ fi
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
 #     REQUIRES -post-structural, -proc_freesurfer, and -postMPC
 if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
-    log_file_str=$dir_logs/post-morph_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/Morphology_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Morphology
     if [[ $micaq == "TRUE" ]]; then
@@ -661,7 +668,7 @@ fi
 #     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
-    log_file_str=$dir_logs/post-mpc_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]}"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
@@ -690,7 +697,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #   REQUIRES -proc_dwi
 if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/post-sc_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/SC_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
@@ -719,8 +726,8 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc-rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing}"
+    log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
