@@ -222,16 +222,16 @@ Do_cmd rm -rf ${dir_surf}/fsaverage5
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 N=$(($N+3))
 if [ "$Nfiles" -eq $N ]; then status="COMPLETED"; else status="ERROR missing parcellation or T1-fsspace: "; fi
-Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \t\tNumber of outputs: $(printf "%02d" $Nfiles)/$(printf "%02d" $N)
 \tStatus            : $status
 \tCheck logs:
-$(ls ${dir_logs}/post-structural_*.txt)"
+$(ls ${dir_logs}/post_structural_*.txt)"
 # Print QC stamp
-echo "${id}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
-cleanup $tmp $nocleanup $here
+echo "${id}, ${SES/ses-/}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+cleanup "$tmp" "$nocleanup" "$here"
