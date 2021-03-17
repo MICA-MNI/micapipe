@@ -25,7 +25,7 @@ threads=$6
 # tmpDir=$7
 PROC=$8
 export OMP_NUM_THREADS=$threads
-here=$(pwd)
+export here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -47,13 +47,13 @@ outPath=${dir_surf}/geo_dist
 workbench_path=$(which wb_command)
 
 # Check inputs: freesurfer space T1 (to make sure freesurfer was run)
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-if [ ! -f ${lh_midsurf} ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
-if [ ! -f ${rh_midsurf} ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
+if [ ! -f "${T1freesurfr}" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "${lh_midsurf}" ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
+if [ ! -f "${rh_midsurf}" ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
 # Check PARCELLATIONS
-parcellations=($(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
-if [ ${#parcellations[*]} -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
+parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+if [ "${#parcellations[*]}" -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Geodesic distance analysis\n\t\tmicapipe $Version, $PROC"
@@ -62,9 +62,9 @@ bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
 # Check IF output exits and WARNING
-N=$(ls ${outPath}/* | wc -l)
-if [ $N -gt 2 ]; then Warning "Existing connectomes will be skipped!! If you want to re-run -GD first clean the outpus:
-          micapipe_cleanup -GD -sub $id -out $out -bids $BIDS"; fi
+N=$(ls "${outPath}"/* 2>/dev/null | wc -l)
+if [ "$N" -gt 2 ]; then Warning "Existing connectomes will be skipped!! If you want to re-run -GD first clean the outpus:
+          micapipe_cleanup -GD -sub ${id} -out ${out} -bids ${BIDS}"; fi
 
 #	Timer
 aloita=$(date +%s)
@@ -74,29 +74,29 @@ aloita=$(date +%s)
 
 #------------------------------------------------------------------------------#
 # Compute geodesic distance on all parcellations
-for seg in ${parcellations[@]}; do
-  parc=$(echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}')
-    lh_annot=${dir_surf}/${id}/label/lh.${parc}_mics.annot
-    rh_annot=${dir_surf}/${id}/label/rh.${parc}_mics.annot
-    outName=${outPath}/${id}_${parc}
+for seg in "${parcellations[@]}"; do
+  parc=$(echo "${seg/.nii.gz/}" | awk -F 'nativepro_' '{print $2}')
+    lh_annot="${dir_surf}/${id}/label/lh.${parc}_mics.annot"
+    rh_annot="${dir_surf}/${id}/label/rh.${parc}_mics.annot"
+    outName="${outPath}/${id}_${parc}"
     if [ -f "${outName}_GD.txt" ]; then
         Warning "skipping Geodesic Distance on $parc, already exists"
     else
         Info "Computing Geodesic Distance on $parc"
-        Do_cmd python $MICAPIPE/functions/geoDistMapper.py "$lh_midsurf" "$rh_midsurf" "$outName" "$lh_annot" "$rh_annot" "$workbench_path"
+        Do_cmd python "$MICAPIPE"/functions/geoDistMapper.py "$lh_midsurf" "$rh_midsurf" "$outName" "$lh_annot" "$rh_annot" "$workbench_path"
     fi
 done
 
-Do_cmd rm -rf ${outPath}/*.func.gii
+Do_cmd rm -rf "${outPath}"/*.func.gii
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
-$dir_logs/post-gd_*.txt"
-echo "${id}, post_gd, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
+Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+${dir_logs}/post-gd_*.txt"
+echo "${id}, ${SES/ses-/}, GD, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
 bids_variables_unset
