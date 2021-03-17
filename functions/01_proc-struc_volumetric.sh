@@ -243,14 +243,13 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
-$(ls ${dir_logs}/proc-structural_*.txt)"
-echo "${id}, proc_struc, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
-cleanup $tmp $nocleanup $here
+Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+$(ls ${dir_logs}/proc_structural_*.txt)"
+echo "${id}, ${SES/ses-/}, proc_structural, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+cleanup "$tmp" "$nocleanup" "$here"
