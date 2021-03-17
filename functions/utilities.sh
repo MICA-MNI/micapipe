@@ -82,21 +82,21 @@ export idBIDS="${subject}${ses}"
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  bids_mainScan=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.nii* 2>/dev/null))       # main rsfMRI scan
-  bids_mainScanJson=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-AP_*.json 2>/dev/null))   # main rsfMRI scan json
-  bids_mainPhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-APse*.nii* 2>/dev/null))     # main phase scan
-  bids_reversePhase=($(ls ${subject_bids}/func/${subject}${ses}_task-rest_acq-PAse*.nii* 2>/dev/null))  # reverse phase scan
+  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.nii* 2>/dev/null))       # main rsfMRI scan
+  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.json 2>/dev/null))   # main rsfMRI scan json
+  bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse_bold.nii* 2>/dev/null))     # main phase scan
+  bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse_bold.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
 
   # BIDS Files
-  bids_T1ws=($(ls ${subject_bids}/anat/*T1w.nii* 2>/dev/null))
-  bids_dwis=($(ls ${subject_bids}/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
-  export bids_T1map=${subject_bids}/anat/*mp2rage*.nii*
-  export bids_inv1=${subject_bids}/anat/*inv1*.nii*
-  export dwi_reverse=${subject_bids}/dwi/*${ses}_acq-PA_dir-*_dwi.nii*
+  bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
+  bids_dwis=($(ls "$subject_bids"/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
+  bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
+  bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
+  dwi_reverse=$(ls "$subject_bids"/dwi/*"$ses"_acq-PA_dir-*_dwi.nii* 2>/dev/null)
 }
 
 bids_print.variables() {
@@ -139,7 +139,7 @@ bids_print.variables() {
 
 file.exist(){
   if [[ ! -z "${2}" ]] && [[ -f "${2}" ]]; then
-    Note "$1" "$(find ${2} 2>/dev/null)"
+    Note "$1" "$(find $2 2>/dev/null)"
   else
     Note "$1" "file not found"
   fi
@@ -269,38 +269,38 @@ micapipe_software() {
 micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
-    Name=$(cat ${BIDS}/dataset_description.json | grep Name | awk -F '"' '{print $4}')
-    BIDSVersion=$(cat ${BIDS}/dataset_description.json | grep BIDSVersion | awk -F '"' '{print $4}')
+    Name=$(grep Name "${BIDS}"/dataset_description.json | awk -F '"' '{print $4}')
+    BIDSVersion=$(grep BIDSVersion "${BIDS}"/dataset_description.json | awk -F '"' '{print $4}')
   else
     Name="BIDS dataset_description NOT found"
     BIDSVersion="BIDS dataset_description NOT found"
   fi
 
   echo -e "{
-    \"Name\": \"${Name}\",
-    \"BIDSVersion\": \"${BIDSVersion}\",
+    \"Name\": \""$Name"\",
+    \"BIDSVersion\": \""$BIDSVersion"\",
     \"DatasetType\": \"derivative\",
     \"GeneratedBy\": [
       {
         \"Name\": \"micapipe\",
-        \"Version\": \"${Version}\",
+        \"Version\": \""$Version"\",
         \"Container\": {
           \"Type\": \"github\",
-          \"Tag\": \"MICA-LAB/micapipe:${Version}\"
+          \"Tag\": \"MICA-MNI/micapipe:"$Version"\"
           }
       },
       {
         \"Name\": \"$(whoami)\",
         \"Workstation\": \"$(uname -n)\"
         \"LastRun\": \"$(date)\"
-        \"Processing\": \"${PROC}\"
+        \"Processing\": \""$PROC"\"
       }
     ],
     \"SourceDatasets\": [
       {
         \"DOI\": \"doi:\",
         \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \"${Version}\"
+        \"Version\": \""$Version"\"
       }
     ]
   }" > "${out}/pipeline-description.json"
@@ -398,7 +398,7 @@ while [ ${l_index} -le $# ]; do
       arg=""
     fi
     if [ "$arg" == "-log" ]; then
-      nextarg=$(expr "${l_index}" + 1)
+      nextarg=$(("${l_index}" + 1))
       eval logfile=\${"${nextarg}"}
       arg=""
       l_index=$[${l_index}+1]
@@ -421,7 +421,7 @@ function cleanup() {
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
       echo -e "Erasing temporal directory: $tmp"
-      rm -Rf $tmp 2>/dev/null
+      rm -Rf "$tmp" 2>/dev/null
   else
       echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
   fi
@@ -451,8 +451,8 @@ function QC_proc-dwi() {
 }
 
 function QC_proc-rsfmri() {
-  html=${dir_QC}/micapipe_qc_proc-rsfmir.txt
-  if [ -f $html ]; then rm $html; fi
+  html="$dir_QC"/micapipe_qc_proc-rsfmir.txt
+  if [ -f "$html" ]; then rm "$html"; fi
   echo -e "            <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
