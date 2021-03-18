@@ -15,13 +15,15 @@
 
 #---------------- FUNCTION: HELP ----------------#
 help() {
-echo -e "\033[38;5;141m
-Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+echo -e "
+\033[38;5;141mCOMMAND:\033[0m
+   $(basename $0)
+
+\033[38;5;141mARGUMENTS:\033[0m
 \t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
-
-\t\033[38;5;197m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (DEFAULT is ses-pre)
+\t\033[38;5;120m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
    Flags for eraing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
@@ -29,9 +31,11 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES Resting state Funtional MRI processing
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
-\t\033[38;5;197m-SC\033[0m         : DELETES Post tractography and connectome generation
-\t\033[38;5;197m-MPC\033[0m         : DELETES Microstructural profiles and covariance analysis
+\t\033[38;5;197m-SC\033[0m               : DELETES Post tractography and connectome generation
+\t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
 
+\033[38;5;141mUSAGE:\033[0m
+$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;120m-ses\033[0m <session> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
 
 McGill University, MNI, MICA-lab, May-September 2020
 https://github.com/MICA-MNI/micapipe
@@ -139,12 +143,12 @@ done
 
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
-if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:"
-Note "-sub " $id
-Note "-out " "$out"
-Note "-bids " "$BIDS"
-help; exit 1; fi
+if [ "${#arg[@]}" -lt 3 ]; then help
+Error "One or more mandatory arguments are missing:
+                  -sub  : $id
+                  -out  : $out
+                  -bids : $BIDS"
+exit 1; fi
 
 
 # Get the real path of the Inputs
