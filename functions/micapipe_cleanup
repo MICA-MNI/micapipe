@@ -226,6 +226,7 @@ if [ "$procfMRI" = "TRUE" ]; then
     Do_cmd rm -rf "$proc_rsfmri"/* \
                   "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
                   "$dir_warp"/*fmri* \
+                  "$proc_struct"/*_space-nativepro_desc-T1wbold.nii.gz \
                   "$dir_logs"/proc_rsfmri_*
     grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
