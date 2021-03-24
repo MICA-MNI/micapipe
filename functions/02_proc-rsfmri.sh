@@ -208,7 +208,7 @@ done
 readoutTime=$(cat "${mainScanJson}" | grep "TotalReadoutTime" | grep -Eo [0-9].[0-9]+)
 
 # Scans to process
-toProcess=("$mainScan" "$mainPhaseScan" "$reversePhaseScan")
+toProcess=($mainScan $mainPhaseScan $reversePhaseScan)
 tags=(mainScan mainPhaseScan reversePhaseScan)
 singleecho="${rsfmri_volum}/${id}"_space-rsfmri_desc-singleecho.nii.gz
 
@@ -398,10 +398,10 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
 
     Info "Registering fmri space to nativepro"
     # Affine from rsfMRI to t1-nativepro
-    Do_cmd antsRegistrationSyNQuick.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
 
     # SyN from T1_nativepro to t1-nativepro
-    Do_cmd antsRegistrationSyNQuick.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d
 
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$T1nativepro_brain" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
