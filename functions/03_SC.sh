@@ -78,7 +78,7 @@ N=$(ls "${dwi_cnntm}"/"${idBIDS}"_space-dwi_atlas-*_desc-iFOD2-"${tracts}"-"${fi
 if [ "$N" -gt 3 ]; then Warning "
   Connectomes with $tracts streamlines already exist!!
   If you want to re-run the $tracts tractogram or add parcellations first clean the outpus:
-    micapipe_cleanup -SC -sub $id -out $out -bids $BIDS -tracts ${tracts}"; fi
+    micapipe_cleanup -SC -sub $id -out ${out/"/micapipe"/} -bids $BIDS -tracts ${tracts}"; fi
 if [ -f "$tdi" ]; then Error "FC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
@@ -102,8 +102,8 @@ Do_cmd mkdir -p "$tmp"
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Create Connectomes directory for the outpust
-[[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png"
+[[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm" && chmod -R 770 "$dwi_cnntm"
+[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 Do_cmd cd "$tmp"
 
 # -----------------------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="ERROR missing a 
 Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \t\tNumber of connectomes: $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
 \tlogs:
-$(ls "$dir_logs"/post-sc_*.txt)"
+$(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-echo "${id}, post_dwi, ${status} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}" >> "${out}"/brain-proc.csv
+echo "${id}, ${SES/ses-/}, SC, ${status} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}" >> "${out}/brain-proc.csv"
 cleanup "$tmp" "$nocleanup" "$here"

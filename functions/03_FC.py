@@ -36,8 +36,8 @@ else:
 
 # Find and load surface-registered ctx + sctx + cerebellum timeseries
 os.chdir(funcDir+'/surfaces/')
-x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*lh*c69-32k_10mm*'))
-x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*rh*c69-32k_10mm*'))
+x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_lh_10mm*'))
+x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_rh_10mm*'))
 lh_data = nib.load(x_lh)
 lh_data = np.squeeze(lh_data.get_fdata())
 rh_data = nib.load(x_rh)
@@ -63,14 +63,14 @@ del rh_data
 
 # Load subcortical and cerebellar timeseries
 # Subcortex
-sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
+sctx = np.loadtxt(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_timeseries_subcortical.txt')
 n_sctx = sctx.shape[1]
 
 # Cerebellum
 # A little hacky because the co-registration to fMRI space make some cerebellar ROIs disappear
 # Missing label indices are replaced by zeros in timeseries and FC matrix
-cereb_tmp = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
-f = open(funcDir+'/volumetric/'+subject+'_singleecho_fmrispace_cerebellum_roi_stats.txt', "rt")
+cereb_tmp = np.loadtxt(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_timeseries_cerebellum.txt')
+f = open(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_cerebellum_roi_stats.txt', "rt")
 cerebLabels = f.read()
 s1 = cerebLabels.find("nii.gz")
 startROIs = s1 + len("nii.gz") + 6
@@ -127,7 +127,7 @@ else:
     data_corr = data
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-timeseries_clean.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
@@ -144,7 +144,7 @@ parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
-    
+
     if parcellation == "aparc-a2009s_conte69":
         print("parcellation " + parcellation + " currently not supported")
         continue
@@ -170,7 +170,7 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt',
                ts_r, fmt='%.6f')
 
 # Clean up
@@ -187,7 +187,7 @@ del thisparc
 
 # Process left hemisphere timeseries
 os.chdir(funcDir+'/surfaces/')
-x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_10mm.mgh'))
+x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/' + subject + '_rsfmri_space-fsnative_lh_10mm.mgh'))
 lh_data_nat = nib.load(x_lh_nat)
 lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
 
@@ -214,7 +214,7 @@ else:
 
 # Process right hemisphere timeseries
 os.chdir(funcDir+'/surfaces/')
-x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_10mm.mgh'))
+x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_rh_10mm.mgh'))
 rh_data_nat = nib.load(x_rh_nat)
 rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
 
@@ -259,7 +259,7 @@ if x_spike:
     # Subcortex
     slm = LinearRegression().fit(sctx, mdl)
     sctx_corr = sctx-np.dot(mdl, slm.coef_)
-    del sctx 
+    del sctx
     # Cerebellum
     slm = LinearRegression().fit(cereb, mdl)
     cereb_corr = cereb-np.dot(mdl, slm.coef_)
@@ -299,21 +299,21 @@ for parcellation in parcellationList:
     for lab in range(len(uparcel)):
         tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
-    
+
     ts = np.append(np.append(sctx_corr, cereb_corr, axis=1), ts_native_ctx, axis=1)
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
-    
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
+
     ts_r = np.corrcoef(np.transpose(ts))
-        
+
     if np.isnan(exclude_labels[0]) == False:
         for i in exclude_labels:
             ts_r[:, i + n_sctx] = 0
             ts_r[i + n_sctx, :] = 0
-        ts_r = np.triu(ts_r)    
+        ts_r = np.triu(ts_r)
     else:
         ts_r = np.triu(ts_r)
-        
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
+
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt', ts_r, fmt='%.6f')
 
 # Clean up
 del ts_native_ctx
@@ -338,15 +338,15 @@ plt.title(title, fontsize=16)
 ax.set(xlabel='')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png', dpi=300)
+plt.savefig(funcDir+'/surfaces/' + subject + '_rsfmri-framewiseDisplacement.png', dpi=300)
 
 del fd
 
 # tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_NoHP.mgh'))
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_lh_NoHP.mgh'))
 lh_nat_noHP_data = nib.load(lh_nat_noHP)
 lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_NoHP.mgh'))
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_rh_NoHP.mgh'))
 rh_nat_noHP_data = nib.load(rh_nat_noHP)
 rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
 
@@ -361,4 +361,4 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR, fmt='%.12f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_space-rsfmri_desc-tSNR.txt', tSNR, fmt='%.12f')

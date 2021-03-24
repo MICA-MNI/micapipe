@@ -15,13 +15,15 @@
 
 #---------------- FUNCTION: HELP ----------------#
 help() {
-echo -e "\033[38;5;141m
-Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+echo -e "
+\033[38;5;141mCOMMAND:\033[0m
+   $(basename $0)
+
+\033[38;5;141mARGUMENTS:\033[0m
 \t\033[38;5;197m-sub\033[0m 	         : Subject identification (no 'sub-')
 \t\033[38;5;197m-out\033[0m 	         : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
-
-\t\033[38;5;197m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (DEFAULT is ses-pre)
+\t\033[38;5;120m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
    Flags for eraing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
@@ -29,9 +31,11 @@ Usage:  `basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;1
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES Resting state Funtional MRI processing
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
-\t\033[38;5;197m-SC\033[0m         : DELETES Post tractography and connectome generation
-\t\033[38;5;197m-MPC\033[0m         : DELETES Microstructural profiles and covariance analysis
+\t\033[38;5;197m-SC\033[0m               : DELETES Post tractography and connectome generation
+\t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
 
+\033[38;5;141mUSAGE:\033[0m
+$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;120m-ses\033[0m <session> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
 
 McGill University, MNI, MICA-lab, May-September 2020
 https://github.com/MICA-MNI/micapipe
@@ -139,12 +143,12 @@ done
 
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
-if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:"
-Note "-sub " $id
-Note "-out " "$out"
-Note "-bids " "$BIDS"
-help; exit 1; fi
+if [ "${#arg[@]}" -lt 3 ]; then help
+Error "One or more mandatory arguments are missing:
+                  -sub  : $id
+                  -out  : $out
+                  -bids : $BIDS"
+exit 1; fi
 
 
 # Get the real path of the Inputs
@@ -181,14 +185,16 @@ if [ "$procVOL" = "TRUE" ]; then
                   "$proc_struct"/*nativepro_brain* \
                   "$dir_warp"/*MNI152* \
                   "$proc_struct"/*nativepro_5TT* \
-                  "$dir_logs"/proc-structural_*
+                  "$dir_logs"/proc_structural_*
+    grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_freesurfer
 if [ "$procFS" = "TRUE" ]; then
     Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
     Do_cmd rm -rf "$dir_freesurfer" \
-                  "$dir_logs"/proc-freesurfer*
+                  "$dir_logs"/proc_freesurfer*
+    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -197,7 +203,8 @@ if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
     Do_cmd rm -rf "$dir_volum"/* \
                   "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
-                  "$dir_logs"/post-structural_*
+                  "$dir_logs"/post_structural_*
+    grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_dwi
@@ -208,7 +215,8 @@ if [ "$procDWI" = "TRUE" ]; then
                   "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
                   "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "$dir_warp"/*_mode-image_desc-rigid_* \
-                  "$dir_logs"/proc-dwi_*
+                  "$dir_logs"/proc_dwi_*
+    grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -218,7 +226,9 @@ if [ "$procfMRI" = "TRUE" ]; then
     Do_cmd rm -rf "$proc_rsfmri"/* \
                   "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
                   "$dir_warp"/*fmri* \
-                  "$dir_logs"/proc-rsfmri_*
+                  "$proc_struct"/*_space-nativepro_desc-T1wbold.nii.gz \
+                  "$dir_logs"/proc_rsfmri_*
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
@@ -228,30 +238,34 @@ if [ "$postDWI" = "TRUE" ]; then
     Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
-                  "$proc_dwi"/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif \
+                  "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_tdi.mif \
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-subcortical.nii.gz \
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-cerebellum.nii.gz \
-                  "$proc_dwi"/"${idBIDS}"_space-dwi_"${tracts}"* "$dir_logs"/post-sc_*
+                  "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
+    grep -v "${id}, ${SES/ses-/}, SC" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/post-mpc_*
+    Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/MPC_*
+    grep -v "${id}, ${SES/ses-/}, MPC" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
     Do_cmd rm -rf "$dir_surf"/geo_dist \
-                  "$dir_logs"/post-gd_*
+                  "$dir_logs"/GD_*
+    grep -v "${id}, ${SES/ses-/}, GD" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -Morphology
 if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
     Do_cmd rm -rf "$dir_surf"/morphology \
-                  "$dir_logs"/post-morph_*
+                  "$dir_logs"/Morphology_*
+    grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
 fi
 
 bids_variables_unset

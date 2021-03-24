@@ -225,6 +225,6 @@ lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
-echo -e "\n\n${id}, MICAq-TEST, DONE, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" #>> ${out}/brain-proc.csv
+echo -e "\n\n${id}, ${SES}, MICAq-TEST, DONE, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" #>> "${out}/brain-proc.csv"
 Title "Running MICA qsub test ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
-cleanup $tmp $nocleanup $here
+cleanup "$tmp" "$nocleanup" "$here"
