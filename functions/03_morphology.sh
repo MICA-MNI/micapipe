@@ -46,11 +46,11 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA Morphology processing"
+Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)
@@ -201,10 +201,10 @@ Do_cmd rm -rf ${dir_surf}/fsaverage5
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:\n\tlogs:
-$dir_logs/post-morph_*.txt"
-echo "${id}, post_morpho, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
-cleanup $tmp $nocleanup $here
+Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+$dir_logs/Morphology_*.txt"
+echo "${id}, ${SES/ses-/}, Morphology, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+cleanup "$tmp" "$nocleanup" "$here"

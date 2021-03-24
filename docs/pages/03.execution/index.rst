@@ -1,63 +1,76 @@
 .. _execution:
 
-.. title:: How execute the micapipe
+.. title:: Running micapipe: overview
 
-Execution of micapipe
-======================================
+Micapipe usage overview
+============================================================
 
+But how exactly does one run micapipe? 
 
-Command-Line Arguments
-----------------------
-.. code-block:: text
+.. admonition:: Help! 🥺
 
-        $ mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory>
+	A list and brief descripton of each argument and flag can be displayed using the command : ``mica-pipe -help`` or ``mica-pipe -h``
 
-Positional Arguments
-~~~~~~~~~~~~~~~~~~~~~~
-	↪ **<subject_id>** : the subject identification (without the "sub-")
+Running micapipe
+--------------------------------------------------------
+Basic usage of micapipe, with no options specified, will look like:
 
-	↪ **<outputDirectory>** : the output path for the outcomes files of the preprocessing
+    .. parsed-literal:: 
+        $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> -<module-flag>
 
-	↪ **<BIDS-directory>** : the input path, where the folder of your BIDS valid dataset is
+Let's break this down:
 
-Some essential flags 
-~~~~~~~~~~~~~~~~~~~~~~
-	↪ **-ses** : Number of session (Default is ses-01)
+	- **-sub**: Corresponds to subject ID. Even if your data is in BIDS, we exclude the "sub-" substring from the ID code (e.g. sub-HC001 is entered as -sub HC001).
+	- **-out**: Output directory path. Following BIDS, this corresponds to the "derivatives" directory associated with your dataset.
+	- **-bids**: Path to rawdata BIDS directory. 
+	- -<module-flag>: Specifies which submodule(s) to run (see next section).
 
-	↪ **-force** : To overwrite the subject directory (WARNING! This will suppress your subject directory)
+Module flags
+--------------------------------------------------------
+The processing modules composing micapipe can be run individually or bundled using specific flags.
 
-	↪ **-quiet** : Do NOT print comments
+Processing modules for :ref:`T1-weighted structural imaging<structproc>` consist of:
 
-	↪ **-nocleanup** : Do NOT delete temporal directory at script completion
+	- **-proc_structural**: Basic volumetric processing on T1-weighted data.
+	- **-proc_freesurfer**: Run freesurfer's recon-all pipeline on T1-weighted data. 
+	- **-post-structural**: Further structural processing relying on qualtiy-controlled cortical surface segmentations.
+	- **-GD**: Generate geodesic distance matrices from participant's native midsurface mesh.
+	- **-Morphology**: Registration and smoothing of surface-based morphological features of the cortex.
 
-Flags for processing
-~~~~~~~~~~~~~~~~~~~~~~
-🚩 Flags for first stages of structural processing: 
+Processing module for :ref:`quantitative T1 imaging<microstructproc>`:
 
-	↪ **-proc_structural** : Volumetric processing
+	- **-MPC**: Equivolumetric surface mapping and generate microstructural profile covariance matrices `(Paquola et al., 2019) <https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284>`_.
 
-	↪ **-proc_freesurfer** : Freesurfer recon-all processing
+Flags for :ref:`diffusion-weighted imaging<dwiproc>` processing steps:
 
-	↪ **-proc_dwi** : DWI-Diffusion weighted images processing with MRtrix3
+	- **-proc_dwi**: Basic diffusion-weighted imaging processing.
+	- **-SC**: Diffusion tractography and generate structural connectomes.
 
-	↪ **-proc_rsfmri** : Resting state Functional MRI processing 
+Flag to process :ref:`resting-state functional MRI data<restingstateproc>`:
 
-.. admonition:: Important to know ☝🏼
+	- **-proc_rsfmri**: Resting-state functional processing and generate functional connectomes.
 
-     You can use 🚩 -proc to run all the first stages of micapipe 	
-	 The first stages of structural processing correspond to all the -proc stages of micapipe. These steps are used to preprocess the images in order to make them usable for the -post stages. 	
+Lastly, to run all processing steps while making sure module interdependencies are respected:
 
-🚩 Flags for second stages of structural processing:
+	- **-all**: Run all the modules! This could take a while...
 
-	↪ **-post_structural** : Post structural volumetric processing
+.. admonition:: But wait... there's more! 🙀
 
-	↪ **-post_dwi** : Post tractography and connectome generation 
+	Optional arguments can be specified for some modules. See the ``Usage`` tab of each module's dedicated section for details! 
 
-	↪ **-post_mpc** : Microstructural profiles and covariance analysis
+More options
+--------------------------------------------------------
+You can specify additional options when running micapipe:
 
-.. admonition:: Important to know ☝🏼
+	- **-ses**: Specify the session name with this flag (default: processing is performed as a single session).
+	- **-force**: Overwrite existing data in the subject directory.
+	- **-quiet**: Do not print comments and warnings.
+	- **-nocleanup**: Prevent deletion of temporary directory created for the module.
+	- **-threads** <#>: Change number of threads (default = 6).
+	- **-tmpDir** </path>: Specify custom location in with temporary directory will be created (default = /tmp).
+	- **-version**: Print your currently installed software version.
+	- **-slim**: Keep only crucial outputs and erase all the intermediary files
+ 
+.. admonition:: Slim run 👙
 
-     You can use 🚩 -post to run all the second stages of micapipe 	
-	 The second stages of structural processing correspond to all the -post stages of micapipe. These steps generate connectomes, correlations and matrices. 	
-
-
+	Including the **-slim** flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module's section.

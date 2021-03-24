@@ -73,13 +73,13 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ]; then Error "Subject $
 if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Running MICA POST-structural processing"
+Title "POST-structural processing\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 # print the names on the terminal
 bids_print.variables-post
 
 # GLOBAL variables for this script
-Info "Not erasing temporal dir: $nocleanup"
+Info "Saving temporal dir: $nocleanup"
 Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
@@ -222,16 +222,16 @@ Do_cmd rm -rf ${dir_surf}/fsaverage5
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 N=$(($N+3))
 if [ "$Nfiles" -eq $N ]; then status="COMPLETED"; else status="ERROR missing parcellation or T1-fsspace: "; fi
-Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \t\tNumber of outputs: $(printf "%02d" $Nfiles)/$(printf "%02d" $N)
 \tStatus            : $status
 \tCheck logs:
-$(ls ${dir_logs}/post-structural_*.txt)"
+$(ls ${dir_logs}/post_structural_*.txt)"
 # Print QC stamp
-echo "${id}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" ${eri}), $PROC" >> ${out}/brain-proc.csv
-cleanup $tmp $nocleanup $here
+echo "${id}, ${SES/ses-/}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+cleanup "$tmp" "$nocleanup" "$here"

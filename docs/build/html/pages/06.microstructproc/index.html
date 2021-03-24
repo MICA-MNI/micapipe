@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>MPC &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Diffusion-weighted imaging processing" href="../07.dwiproc/index.html" />
+    <link rel="prev" title="Structural processing" href="../05.structuralproc/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> micapipe
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../05.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Microstructural profile covariance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mpc">-MPC</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../07.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../08.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quality control</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../15.qc/index.html">Quality control reports</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../16.matrices/index.html">Structure of output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../17.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../18_gradients/index.html">Computing gradients from output matrices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../09.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../12.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../13.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../14.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>MPC</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/06.microstructproc/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="microstructural-profile-covariance">
+<span id="microstructproc"></span><h1>Microstructural profile covariance<a class="headerlink" href="#microstructural-profile-covariance" title="Permalink to this headline">¶</a></h1>
+<p>This module samples intracortical intensities from a microstructurally-sensitive contrast provided as an input volume. This is achieved by constructing a series of equivolumetric surfaces between pial and white matter boundaries, yielding unique intracortical intensity profiles at each vertex of the native surface mesh. This approach has been previously applied in the <a class="reference external" href="https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284">whole cortex</a>, as well as in targeted structures such as the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S1053811920303451">insula</a>. By parcellating and cross-correlating nodal intensity profiles, this module profiles microstructural profile covariance (MPC) matrices describing similiarity in intracortical microstructure across the cortex.</p>
+<p>Intracortical equivolumetric surfaces are generated using scripts from the <a class="reference external" href="https://github.com/kwagstyl/surface_tools">surface tools repository</a>, available via GitHub.</p>
+<div class="section" id="mpc">
+<h2>-MPC<a class="headerlink" href="#mpc" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-prerequisites admonition">
+<p class="admonition-title">Prerequisites 🖐🏼</p>
+<p>You need to run <strong>proc_structural</strong>, <strong>proc_freesurfer</strong>, and <strong>post_structural</strong> before this stage</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-3 docutils container">
+<div class="docutils container">
+<p>-slim</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<ul class="simple">
+<li><p>Compute boundary-based registration from microstructural imaging volume to FreeSurfer native space</p></li>
+<li><p>Generate 16 equivolumetric surfaces between pial and white matter boundary previously defined from FreeSurfer. Surfaces closest to pial and white matter boundaries are then discarded to account for partial volume effects</p></li>
+<li><p>Perform surface-based registration to fsaverage5 and conte69-32k templates</p></li>
+<li><p>Average intensity profiles within parcels defined on the native FreeSurfer surface, while excluding outlier vertices</p></li>
+<li><p>Perform partial correlation, controlling for parcel-wide mean profile, across all pairs of intensity profiles</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-MPC</strong> &lt;options&gt;</pre>
+<p>Docker command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -MPC
+</pre></div>
+</div>
+<p>Singularity command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ singularity -MPC
+</pre></div>
+</div>
+<p>Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-microstructural_img</span> <span class="pre">&lt;path&gt;</span></code> specifies an input image on which to sample intensities for the MPC analysis. You must specify this flag if your dataset does not include a qT1 image, or if your microstructurally-sensitive imaging contrast is not stored in the <code class="docutils literal notranslate"><span class="pre">rawdata</span></code> branch of the BIDS directory (for example, T1-weighted divided by T2-weighted derivative file).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-microstructural_lta</span> <span class="pre">&lt;path&gt;</span></code> lets the user specify their own registration file to map the input image to native freesurfer space. The registration file must be in <code class="docutils literal notranslate"><span class="pre">.lta</span></code> format. If omitted, the registration will be performed in the script using <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/bbregister/">bbregister</a>. This option may be useful if registrations need to be optimized for specific subjects or datasets.</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<p>Directories created or populated by <strong>-MPC</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">micro_profiles</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">anat</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/</span><span class="n">xfms</span>
+</pre></div>
+</div>
+<p>Files generated by <strong>-MPC</strong>:</p>
+<pre class="literal-block">- Microstructural image in native FreeSurfer space: <em>&lt;outputDirectory&gt;/micapipe/anat/&lt;sub&gt;_micro2fsspace.nii.gz</em>
+- Boundary-based registration outputs to register microstructural image to native FreeSurfer space: <em>&lt;outputDirectory&gt;/micapipe/xfms/&lt;sub&gt;_micro2fs*</em>
+- Equivolumetric surface sampling ouputs stored in  <em>&lt;outputDirectory&gt;/micapipe/anat/surfaces/micro_profiles</em>:
+    - Native FreeSurfer space intensity at depth #: <em>&lt;hemi&gt;.&lt;#&gt;.mgh</em>
+    - fsaverage5 template space intensity at depth #: <em>&lt;hemi&gt;.&lt;#&gt;_fsa5.mgh</em>
+    - conte69 template space intensity at depth #: <em>&lt;hemi&gt;.&lt;#&gt;_c69-32k.mgh</em>
+    - Parcellated intensity profiles: <em>sub-&lt;sub&gt;_ses-01_space-fsnative_atlas-&lt;atlas&gt;_desc-intensityProfiles.txt</em>
+    - MPC matrices: <em>sub-&lt;sub&gt;_ses-01_space-fsnative_atlas-&lt;atlas&gt;_desc-mpc.txt</em></pre>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-3 docutils container">
+<p>Files conserved during <strong>-MPC</strong> slim run</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../07.dwiproc/index.html" class="btn btn-neutral float-right" title="Diffusion-weighted imaging processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../05.structuralproc/index.html" class="btn btn-neutral float-left" title="Structural processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

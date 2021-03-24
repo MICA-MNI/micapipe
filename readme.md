@@ -2,10 +2,14 @@
 
 ## Multimodal connectome processing with the `micapipe` ##
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.io/github/license/MICA-MNI/micapipe)](https://www.gnu.org/licenses/gpl-3.0)
 [![Documentation Status](https://readthedocs.org/projects/micapipe/badge/?version=latest)](https://micapipe.readthedocs.io/en/latest/?badge=latest)
-[![CircleCI](https://circleci.com/gh/rcruces/micapipe/tree/master.svg?style=shield)](https://circleci.com/gh/rcruces/micapipe/tree/master)
+[![CircleCI](https://circleci.com/gh/MICA-MNI/micapipe/tree/master.svg?style=shield)](https://circleci.com/gh/rcruces/MICA-MNI/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
+[![GitHub stars](https://img.shields.io/github/stars/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
+[![version](https://img.shields.io/badge/version-v0.0.2-blue)](https://github.com/MICA-MNI/micapipe)
+
 
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    

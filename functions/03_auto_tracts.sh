@@ -3,7 +3,7 @@
 # Automatic bundle segmentation
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.1)\n"
+  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2)\n"
 }
 
 export FSLOUTPUTTYPE=NIFTI_GZ
@@ -289,13 +289,13 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-Do_cmd cd $here
+Do_cmd cd "$here"
 
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Auto-Tracto ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
+Title "Auto-Tracto ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m"
 bids_variables_unset

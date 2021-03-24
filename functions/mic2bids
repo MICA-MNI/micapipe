@@ -10,10 +10,11 @@ Usage:    `basename $0`\033[0m  \033[38;5;197m-in\033[0m <DICOMS_directory> \033
 \t\t\033[38;5;197m-in\033[0m 	Input directory with the subject's DICOMS directories (FULL PATH)
 \t\t\033[38;5;197m-id\033[0m 	Subject identification for the new BIDS directory
 \t\t\t  -id CAN be different than -in DICOMS directory
-\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory ( . or FULL PATH)
-\t\t\033[38;5;197m-force\033[0m 	flag that will overwrite the directory
 \t\t\033[38;5;197m-ses\033[0m 	flag to specify the session number (DEFAULT is 'ses-pre')
+\t\t\033[38;5;197m-bids\033[0m 	Path to BIDS directory ( . or FULL PATH)
 \t\t\033[38;5;197m-mica\033[0m 	ALWAYS use this flag in mica workstations
+
+\t\t\033[38;5;197m-force\033[0m 	flag that will overwrite the directory
 
 Check output with:
 http://bids-standard.github.io/bids-validator/
@@ -50,7 +51,7 @@ echo -e "\033[38;5;1m\n---------------------------------------------------------
 \033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
 fi
 
-if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
+if [ ! -f "${MICAPIPE}/functions/utilities.sh" ]; then
 echo -e "\033[38;5;1m\n---------------------------------------------------------\n
 [ERROR]... MICAPIPE is defined but the PATH is wrong,
            it should match /micapipe directory\033[0m
@@ -60,7 +61,7 @@ echo -e "\033[38;5;1m\n---------------------------------------------------------
 fi
 
 # Source print functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+source "${MICAPIPE}/functions/utilities.sh"
 
 #------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -102,17 +103,18 @@ do
 done
 
 # argument check out & WARNINGS
-arg=($SUBJ_DCM $Subj $BIDS_DIR)
-if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:"
-Note "-in " $SUBJ_DCM
-Note "-id " "$Subj"
-Note "-bids " "$BIDS_DIR"
+arg=("$SUBJ_DCM" "$Subj" "$BIDS_DIR" "$SES")
+if [ "${#arg[@]}" -lt 4 ]; then
+Error "One or more mandatory arguments are missing:
+         -id    $Subj
+         -ses   $SES
+         -in    $SUBJ_DCM
+         -bids  $BIDS_DIR"
 help; exit 0; fi
 
 # Sequence names and variables (ses is for default "ses-pre")
-if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
-id=sub-${Subj}_${SES}_
+SES="ses-${SES/ses-/}"
+id="sub-${Subj}_${SES}_"
 
 echo -e "\n\033[38;5;141m
 -------------------------------------------------------------
@@ -121,28 +123,28 @@ echo -e "\n\033[38;5;141m
 
 # argument check out & WARNINGS
 if [ "${#arg[@]}" -eq 0 ]; then help; exit 0; fi
-if [[ -z `which dcm2niix` ]]; then Error "dcm2niix NOT found"; exit 0; else Info "dcm2niix was found and is ready to work."; fi
+if [[ -z $(which dcm2niix) ]]; then Error "dcm2niix NOT found"; exit 0; else Info "dcm2niix was found and is ready to work."; fi
 
-SUBJ_DCM=$(realpath $SUBJ_DCM)
-BIDS_DIR=$(realpath $BIDS_DIR)
+SUBJ_DCM=$(realpath "$SUBJ_DCM")
+BIDS_DIR=$(realpath "$BIDS_DIR")
 
 # Check mandatory inputs: -id
-arg=($Subj)
+arg=("$Subj")
 if [ "${#arg[@]}" -lt 1 ]; then Error "Subject id is missing: $Subj"; help; exit 0; fi
-if [[ $Subj =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain special characters:\n\t\t\t['!@#$%^&*()_+']"; exit 0; fi
+if [[ "$Subj" =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain special characters:\n\t\t\t['!@#$%^&*()_+']"; exit 0; fi
 
 # check mandatory inputs: -bids
-if [[ -z $BIDS_DIR ]]; then Error "BIDS directory is empty"; exit 0; fi
+if [[ -z "$BIDS_DIR" ]]; then Error "BIDS directory is empty"; exit 0; fi
 
 # check mandatory inputs: -in Is $SUBJ_DCM found?
-if [ ! -d ${SUBJ_DCM} ]; then Error "Subject DICOMS directory doesn't exist: \n\t ${Subj}";
-    if [[ ${mica} == TRUE ]]; then echo "$Subj, no dicoms_sorted" >> ${BIDS_DIR}/CHANGES; fi;
+if [ ! -d "${SUBJ_DCM}" ]; then Error "Subject DICOMS directory doesn't exist: \n\t ${Subj}";
+    if [[ "${mica}" == TRUE ]]; then echo "$Subj, no dicoms_sorted" >> "${BIDS_DIR}/CHANGES"; fi;
     exit 0
 fi
 
 # overwrite BIDS-SUBJECT
-if [[ ${force} == TRUE ]]; then rm -rf ${BIDS_DIR}/sub-${Subj}/${SES}; fi
-if [ -d ${BIDS_DIR}/sub-${Subj}/${SES} ]; then Error "Output directory already exist, use -force to overwrite it. \n\t     ${BIDS_DIR}/sub-${Subj}/${SES}\t    "; exit 0; fi
+if [[ "${force}" == TRUE ]]; then rm -rf "${BIDS_DIR}/sub-${Subj}/${SES}"; fi
+# if [ -d ${BIDS_DIR}/sub-${Subj}/${SES} ]; then Error "Output directory already exist, use -force to overwrite it. \n\t     ${BIDS_DIR}/sub-${Subj}/${SES}\t    "; exit 0; fi
 
 # Save actual path
 here=$(pwd)
@@ -160,72 +162,73 @@ bidsDWI=(acq-b700_dir-NUM_dwi acq-b300_dir-NUM_dwi acq-PA_dir-NUM_dwi acq-b2000_
 # -----------------------------------------------------------------------------------------------
 
 # Create BIDS/subj_dir
-BIDS=${BIDS_DIR}/sub-${Subj}/${SES}
-Do_cmd mkdir -p ${BIDS}/{anat,func,dwi}
-if [ ! -d ${BIDS} ]; then Error "Could not create subject BIDS directory, check permissions \n\t     ${BIDS}\t    "; exit 0; fi
+BIDS="${BIDS_DIR}/sub-${Subj}/${SES}"
+Do_cmd mkdir -p "$BIDS"/{anat,func,dwi}
+if [ ! -d "$BIDS" ]; then Error "Could not create subject BIDS directory, check permissions \n\t     ${BIDS}\t    "; exit 0; fi
 
 # dicomx to Nifti with BIDS Naming
 Do_cmd cd $SUBJ_DCM
 # Warning lenght
 n=$((${#orig[@]} - 1))
-for ((k=0; k<=$n; k++)); do
-  N=`ls -d ${orig[k]} | wc -l`
+for ((k=0; k<=n; k++)); do
+  N=$(ls -d ${orig[k]} | wc -l)
   # ONLY for MICA dicoms_sorted NAMES
-  if [[ ${mica} == TRUE ]]; then N=`ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") | wc -l`; fi
-  if [ $N -eq 0 ]; then
+  if [[ "$mica" == TRUE ]]; then N=`ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") | wc -l`; fi
+  if [ "$N" -eq 0 ]; then
     Warn "No directories were found with the following name: ${orig[k]}"
-  elif [ $N -gt 1 ]; then
-    Names=(`ls -d ${orig[k]}`)
+  elif [ "$N" -gt 1 ]; then
+    Names=($(ls -d ${orig[k]}))
     # ONLY for MICA dicoms_sorted NAMES
-    if [[ ${mica} == TRUE ]]; then Names=(`ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*")`); fi
+    if [[ "$mica" == TRUE ]]; then Names=($(ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*"))); fi
     for ((i = 1; i <= N; i++)); do
-       nii=`echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}'`
-       nom=${id}${bids[k]}
-       dcm=`echo ${nom##*_}`
-       nom=`echo ${nom/$dcm/}run-${i}_${dcm}`
-       Do_cmd dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}
+       nii=$(echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}')
+       nom="${id}${bids[k]}"
+       dcm=$(echo ${nom##*_})
+       nom=$(echo "${nom/$dcm/}run-${i}_${dcm}")
+       Do_cmd dcm2niix -b y -o "$BIDS" -f "$nom" ${nii}${orig[k]}
     done
-  elif [ $N -eq 1 ]; then
-     Do_cmd dcm2niix -b y -o ${BIDS} -f ${id}${bids[k]} ${orig[k]}
+  elif [ "$N" -eq 1 ]; then
+     Do_cmd dcm2niix -b y -o "$BIDS" -f ${id}${bids[k]} ${orig[k]}
   fi
 done
 # move files to their corresponding directory
-Do_cmd mv -v $BIDS/*mp2rage* $BIDS/anat
-Do_cmd mv -v $BIDS/*bold* $BIDS/func
-Do_cmd mv -v $BIDS/*T1* $BIDS/anat
+Do_cmd mv -v "$BIDS"/*mp2rage* "$BIDS"/anat
+Do_cmd mv -v "$BIDS"/*bold* "$BIDS"/func
+Do_cmd mv -v "$BIDS"/*T1* "$BIDS"/anat
 
 # BIDS names of DWI including NUM_dwi: Number of Directions
 n=$((${#origDWI[@]} - 1))
-for ((k=0; k<=$n; k++)); do
-  N=`ls -d ${origDWI[k]} | wc -l`
-  if [ $N -eq 0 ]; then
+for ((k=0; k<=n; k++)); do
+  N=$(ls -d ${origDWI[k]} | wc -l)
+  if [ "$N" -eq 0 ]; then
     Warn "No directories were found with the following name: ${origDWI[k]}"
-  elif [ $N -gt 1 ]; then
-    Names=(`ls -d ${origDWI[k]}`)
+  elif [ "$N" -gt 1 ]; then
+    Names=($(ls -d ${origDWI[k]}))
     for ((i = 1; i <= N; i++)); do
-       nii=`echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}'`
+       nii=$(echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}')
        nom=${id}${bidsDWI[k]}
-       dcm=`echo ${nom##*_}`
-       nom=`echo ${nom/$dcm/}run-${i}_${dcm}`
-       Do_cmd dcm2niix -b y -o ${BIDS} -f $nom ${nii}${orig[k]}
+       dcm=$(echo ${nom##*_})
+       nom=$(echo ${nom/$dcm/}run-${i}_${dcm})
+       Do_cmd dcm2niix -b y -o "$BIDS" -f $nom ${nii}${orig[k]}
     done
   elif [ $N -eq 1 ]; then
-     Do_cmd dcm2niix -b y -o ${BIDS} -f ${id}${bidsDWI[k]} ${origDWI[k]}
+     Do_cmd dcm2niix -b y -o "$BIDS" -f ${id}${bidsDWI[k]} ${origDWI[k]}
   fi
 done
 
-Do_cmd cd $BIDS
-for n in `ls *bval`; do Dir=0
-  for i in `cat $n`; do if [[ "$i" == 0.00 ]] || [[ "$i" == 0 ]]; then Dir=$((Dir+1)); else Dir=$((Dir+1)); fi; done
-  for j in ${n/bval/}*; do mv -v $j dwi/${j/NUM/$Dir}; done
+Do_cmd cd "$BIDS"
+for n in $(ls *bval); do Dir=0
+  for i in $(cat $n); do if [[ "$i" == 0.00 ]] || [[ "$i" == 0 ]]; then Dir=$((Dir+1)); else Dir=$((Dir+1)); fi; done
+  for j in ${n/bval/}*; do mv -v "$j" dwi/${j/NUM/$Dir}; done
 done
 
 # QC, count the number of Niftis (json) per subject
-N=`ls -R */*json | wc -l`
-echo "sub-${Subj} $N $SUBJ_DCM" >> ${BIDS_DIR}/participants.tsv
+N=$(ls -R */*json | wc -l)
+echo "sub-${Subj} $N $SUBJ_DCM" >> "$BIDS_DIR"/participants.tsv
 
 # Go back to initial directory
-Do_cmd cd $here
+Do_cmd cd "$here"
 
-Info "Remember to validate your BIDS directory:\nhttp://bids-standard.github.io/bids-validator/"
+Info "Remember to validate your BIDS directory:
+                http://bids-standard.github.io/bids-validator/"
 bids_variables_unset

@@ -3,16 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-**micapipe**
-============================
-.. image:: https://readthedocs.org/projects/micapipe/badge/?version=latest
-  :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
-  :alt: Documentation Status
-
-*An open source repository about the micapipe, a preprocessing pipeline for structural, diffusion and resting state fMRI data.*
-
-.. title:: micapipe
-
 .. raw:: html
 
    <style type="text/css">
@@ -24,6 +14,44 @@
       }
    </style>
 
+.. .. image:: https://readthedocs.org/projects/micapipe/badge/?version=latest
+  :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
+
+**Welcome to micapipe's documentation!**
+========================================================
+
+*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streamlines for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.
+
+.. image:: ./figures/micapipe.png
+   :scale: 50 %
+   :alt: alternate text
+   :align: center
+
+.. raw:: html
+
+   <br>
+
+Reproducibility 👯‍♀️
+--------------------------------------------------------
+To encourage reproducibility and robustness of investigations using micapipe, we provide a fully containerized version of the pipeline in the form of a Docker container. Step-by-step tutorials are provided for bare metal and containerized :ref:`installations <download_page>`. We encourage users to use containerized versions, offered through Docker and Singularity, given the large number of :ref:`software dependencies<what_need>` used by the pipeline to handle multiple MRI data modalities. 
+
+.. raw:: html
+
+   <br>
+
+Datasets 🕵️‍♀️
+--------------------------------------------------------
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `PREVENT-AD <https://openpreventad.loris.ca/>`_, `Healthy Brain Network <http://fcon_1000.projects.nitrc.org/indi/cmi_healthy_brain_network/>`_, and `Microstructure-Informed Connectomis (MICs) <https://openneuro.org/>`_.
+
+.. raw:: html
+
+   <br>
+
+Development and getting involved 🙋‍♀️
+--------------------------------------------------------
+Should you have any problems, questions, or suggestions about micapipe, please post an `issue <https://github.com/MICA-LAB/micapipe/issues>`_ or formulate a `pull request <https://github.com/MICA-LAB/micapipe/pulls>`_ on our repository. 
+
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -32,63 +60,67 @@
    pages/01.install/index
    pages/02.whatyouneed/index
    pages/03.execution/index
-   pages/09.whatsnew/index
+   pages/04.whatsnew/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Processing steps
+   :caption: Processing modules
 
-   pages/04.volumetric/index
-   pages/05.freesurfer/index
-   pages/06.dwi/index
-   pages/07.restingstate/index
-   pages/08.postmpc/index
-   pages/17.geodesic/index
+   pages/05.structuralproc/index
+   pages/06.microstructproc/index
+   pages/07.dwiproc/index
+   pages/08.restingstateproc/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Quality control
+
+   pages/15.qc/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Tutorials
+   
+   pages/16.matrices/index
+   pages/17.surfaces/index
+   pages/18_gradients/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Additional tools
 
-   pages/14.micapipe_anonymize/index
-   pages/15.micapipe_cleanup/index
-   pages/16.mic2bids/index
+   pages/09.micapipe_anonymize/index
+   pages/10.micapipe_cleanup/index
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: References & Acknowledgements
 
-   pages/13.writeitdown/index
-   pages/10.citingmicapipe/index
-   pages/11.references/index
-   pages/12.acknowledge/index
+   pages/12.citingmicapipe/index
+   pages/13.references/index
+   pages/14.acknowledge/index
 
 
-.. image:: ./figures/micapipe.png
-   :scale: 50 %
-   :alt: alternate text
-   :align: center
-
-
-Getting started
 --------------------------------------------------------
-This pipeline is developed by the MICA-lab (https://mica-mni.github.io) at the McConnell Brain Imaging Center of the Montreal Neurological Institute.  Our main goal is to provide a robust framework to process multimodal MRI data for multiscale connectomics. `micapipe` utilizes a set of known software dependencies and different brain atlases.
-
-The pipelines integrates *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
 .. raw:: html
 
    <br>
 
-
 Core development team 🧠
--------------------------
+--------------------------------------------------------
+
+Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute. 
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
+- **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
 - **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
 - **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*

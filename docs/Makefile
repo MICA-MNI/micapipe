@@ -15,7 +15,7 @@ help:
 
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf $(GENERATEDDIR)/*
+#	rm -rf $(GENERATEDDIR)/*
 
 .PHONY: help Makefile
 

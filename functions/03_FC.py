@@ -29,25 +29,48 @@ else:
     print('')
     exit()
 
-# find necessary files
-os.chdir(funcDir+'/surfaces/')
-x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*lh*c69-32k_10mm*'))
-x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*rh*c69-32k_10mm*'))
-os.chdir(funcDir+'/volumetric/')
-x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD*'))
-x_dof = " ".join(glob.glob(funcDir+'/volumetric/'+'*singleecho.1D'))
-x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
-x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 
-# Grab subcortical timeseries
-sctx = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_subcortical.txt')
+# ------------------------------------------
+# Conte69 processing
+# ------------------------------------------
+
+# Find and load surface-registered ctx + sctx + cerebellum timeseries
+os.chdir(funcDir+'/surfaces/')
+x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_lh_10mm*'))
+x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_rh_10mm*'))
+lh_data = nib.load(x_lh)
+lh_data = np.squeeze(lh_data.get_fdata())
+rh_data = nib.load(x_rh)
+rh_data = np.squeeze(rh_data.get_fdata())
+
+# exit if more than one scan exists
+if len(x_lh.split(" ")) == 1:
+    print('')
+    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+    print('only one scan found; all good in the hood')
+    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+    print('')
+else:
+    print('more than one scan found; exiting. Bye-bye')
+    exit()
+
+# Reformat data
+data = []
+data = np.transpose(np.append(lh_data, rh_data, axis=0))
+n_vertex_ctx_c69 = data.shape[1]
+del lh_data
+del rh_data
+
+# Load subcortical and cerebellar timeseries
+# Subcortex
+sctx = np.loadtxt(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_timeseries_subcortical.txt')
 n_sctx = sctx.shape[1]
 
-# Grab cerebellar timeseries
+# Cerebellum
 # A little hacky because the co-registration to fMRI space make some cerebellar ROIs disappear
 # Missing label indices are replaced by zeros in timeseries and FC matrix
-cereb_tmp = np.loadtxt(funcDir+'/volumetric/'+subject+'_singleecho_timeseries_cerebellum.txt')
-f = open(funcDir+'/volumetric/'+subject+'_singleecho_fmrispace_cerebellum_roi_stats.txt', "rt")
+cereb_tmp = np.loadtxt(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_timeseries_cerebellum.txt')
+f = open(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_cerebellum_roi_stats.txt', "rt")
 cerebLabels = f.read()
 s1 = cerebLabels.find("nii.gz")
 startROIs = s1 + len("nii.gz") + 6
@@ -74,48 +97,17 @@ else:
     exclude_labels = missing_elements(roiLabelsInt[0])
     print('Matrix entries for following ROIs will be zero: ', exclude_labels)
 
-# calculate number of non cortical rows/colunms in matrix
+# Calculate number of non cortical rows/colunms in matrix and concatenate
 n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx vertices only
-
-# We want to clean up native timeseries too!
-x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_10mm.mgh'))
-x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_10mm.mgh'))
-
-# exit if more than one scan exists
-if len(x_lh.split(" ")) == 1:
-    print('')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('only one scan found; all good in the hood')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('')
-else:
-    print('more than one scan found; exiting. Bye-bye')
-    exit()
-
-data = []
-dataNative = []
-spike = []
-
-# load and concatenate surface-registered ctx + sctx + cerebellum timeseries
-# conte
-lh_data = nib.load(x_lh)
-lh_data = np.squeeze(lh_data.get_fdata())
-rh_data = nib.load(x_rh)
-rh_data = np.squeeze(rh_data.get_fdata())
-data = np.transpose(np.append(lh_data, rh_data, axis=0))
-n_vertex_ctx_c69 = data.shape[1]
 data = np.append(np.append(sctx, cereb, axis=1), data, axis=1)
 
-# native
-lh_data_nat = nib.load(x_lh_nat)
-lh_data_nat = np.squeeze(lh_data_nat.get_fdata())
-rh_data_nat = nib.load(x_rh_nat)
-rh_data_nat = np.squeeze(rh_data_nat.get_fdata())
-dataNative = np.transpose(np.append(lh_data_nat, rh_data_nat, axis=0))
-n_vertex_ctx_nat = dataNative.shape[1]
-dataNative = np.append(np.append(sctx, cereb, axis=1), dataNative, axis=1)
-
-# load confound files
+# Load confound files
+spike = []
+os.chdir(funcDir+'/volumetric/')
+x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD*'))
+x_dof = " ".join(glob.glob(funcDir+'/volumetric/'+'*singleecho.1D'))
+x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
+x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 if x_spike:
     spike = np.loadtxt(x_spike)
     if spike.ndim == 1:
@@ -129,54 +121,14 @@ if x_spike:
     # conte
     slm = LinearRegression().fit(data, mdl)
     data_corr = data-np.dot(mdl, slm.coef_)
-    # native
-    slm = LinearRegression().fit(dataNative, mdl)
-    dataNative_corr = dataNative-np.dot(mdl, slm.coef_)
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    # conte
     data_corr = data
-    # native
-    dataNative_corr = dataNative
 
-# save timeseries in conte69 format
-np.savetxt(funcDir+'/surfaces/' + subject + '_rsfMRI-timeseries_conte69_clean.txt', data_corr, fmt='%.6f')
+# save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-timeseries_clean.txt', data_corr, fmt='%.6f')
 
-# mean framewise displacement + save plot
-fd = np.loadtxt(x_fd)
-title = 'mean FD: ' + str(np.mean(fd))
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(figsize=(16, 6))
-plt.plot(fd, color="#2171b5")
-plt.title(title, fontsize=16)
-ax.set(xlabel='')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-plt.savefig(funcDir+'/surfaces/' + subject + '_rsfMRI-framewiseDisplacement.png', dpi=300)
-
-# tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_lh_NoHP.mgh'))
-lh_nat_noHP_data = nib.load(lh_nat_noHP)
-lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*fmri2fs_rh_NoHP.mgh'))
-rh_nat_noHP_data = nib.load(rh_nat_noHP)
-rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
-
-lhM = np.mean(lh_nat_noHP_data, axis = 1)
-lhSD = np.std(lh_nat_noHP_data, axis = 1)
-lh_tSNR = np.divide(lhM, lhSD)
-
-rhM = np.mean(rh_nat_noHP_data, axis = 1)
-rhSD = np.std(rh_nat_noHP_data, axis = 1)
-rh_tSNR = np.divide(rhM, rhSD)
-
-tSNR = np.append(lh_tSNR, rh_tSNR)
-tSNR = np.expand_dims(tSNR, axis=1)
-
-np.savetxt(funcDir+'/surfaces/' + subject + '_tSNR.txt', tSNR, fmt='%.12f')
-
-# Parcellate the data to like so many different parcellations, !¡!¡!¡ ôôô-my-god ¡!¡!¡!
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
 
@@ -192,7 +144,12 @@ parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
-    thisparc = np.loadtxt(parcPath)
+
+    if parcellation == "aparc-a2009s_conte69":
+        print("parcellation " + parcellation + " currently not supported")
+        continue
+    else:
+        thisparc = np.loadtxt(parcPath)
 
     # Parcellate cortical timeseries
     data_corr_ctx = data_corr[:, -n_vertex_ctx_c69:]
@@ -213,12 +170,111 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt',
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt',
                ts_r, fmt='%.6f')
 
-#------------------------------------------------------------------------------#
-# Now generate native surface connectomes
-# These files are saved directly to the freesurfer directory through micapipe postStruct
+# Clean up
+del ts_r
+del ts
+del data_corr
+del data
+del thisparc
+
+
+# ------------------------------------------
+# Native surface processing
+# ------------------------------------------
+
+# Process left hemisphere timeseries
+os.chdir(funcDir+'/surfaces/')
+x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/' + subject + '_rsfmri_space-fsnative_lh_10mm.mgh'))
+lh_data_nat = nib.load(x_lh_nat)
+lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
+
+spike = []
+if x_spike:
+    spike = np.loadtxt(x_spike)
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
+    mdl = []
+    mdl = np.append(ones, spike, axis=1)
+    slm = LinearRegression().fit(lh_data_nat, mdl)
+    lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
+    del lh_data_nat
+    del slm
+else:
+    del spike
+    print('no spikey, no spikey, will skippy')
+    lh_data_nat_corr = lh_data_nat
+    del lh_data_nat
+
+# Process right hemisphere timeseries
+os.chdir(funcDir+'/surfaces/')
+x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_rh_10mm.mgh'))
+rh_data_nat = nib.load(x_rh_nat)
+rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
+
+spike = []
+if x_spike:
+    spike = np.loadtxt(x_spike)
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
+    mdl = []
+    mdl = np.append(ones, spike, axis=1)
+    slm = LinearRegression().fit(rh_data_nat, mdl)
+    rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
+    del rh_data_nat
+    del slm
+else:
+    del spike
+    print('no spikey, no spikey, will skippy')
+    rh_data_nat_corr = rh_data_nat
+    del rh_data_nat
+
+# Concatenate hemispheres and clean up
+dataNative_corr = np.append(lh_data_nat_corr, rh_data_nat_corr, axis=1)
+del lh_data_nat_corr
+del rh_data_nat_corr
+
+# Process subcortex and cerebellum
+spike = []
+if x_spike:
+    spike = np.loadtxt(x_spike)
+    if spike.ndim == 1:
+        spike = np.expand_dims(spike, axis=1)
+    else:
+        print("spike file loaded as 2D")
+    # regress out spikes from individual timeseries
+    ones = np.ones((spike.shape[0], 1))
+    mdl = []
+    mdl = np.append(ones, spike, axis=1)
+    # Subcortex
+    slm = LinearRegression().fit(sctx, mdl)
+    sctx_corr = sctx-np.dot(mdl, slm.coef_)
+    del sctx
+    # Cerebellum
+    slm = LinearRegression().fit(cereb, mdl)
+    cereb_corr = cereb-np.dot(mdl, slm.coef_)
+    del cereb
+else:
+    del spike
+    print('no spikey, no spikey, will skippy')
+    # Subcortex
+    sctx_corr = sctx
+    del sctx
+    # Cerebellum
+    cereb_corr = cereb
+    del cereb
+
+# Generate native surface connectomes
 for parcellation in parcellationList:
 
     # Load left and right annot files
@@ -238,23 +294,71 @@ for parcellation in parcellationList:
 
     # Generate connectome on native space parcellation
     # Parcellate cortical timeseries
-    dataNative_corr_ctx = dataNative_corr[:, -n_vertex_ctx_nat:]
     uparcel = np.unique(native_parc)
-    ts_native_ctx = np.zeros([dataNative_corr_ctx.shape[0], len(uparcel)])
+    ts_native_ctx = np.zeros([dataNative_corr.shape[0], len(uparcel)])
     for lab in range(len(uparcel)):
-        tmpData = dataNative_corr_ctx[:, native_parc == int(uparcel[lab])]
+        tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-        ts = np.append(dataNative_corr[:, :n], ts_native_ctx, axis=1)
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-timeseries_' + parcellation + '_clean.txt', ts, fmt='%.12f')
-        ts_r = np.corrcoef(np.transpose(ts))
+    ts = np.append(np.append(sctx_corr, cereb_corr, axis=1), ts_native_ctx, axis=1)
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
 
-        if np.isnan(exclude_labels[0]) == False:
-            for i in exclude_labels:
-                ts_r[:, i + n_sctx] = 0
-                ts_r[i + n_sctx, :] = 0
-            ts_r = np.triu(ts_r)
-        else:
-            ts_r = np.triu(ts_r)
+    ts_r = np.corrcoef(np.transpose(ts))
 
-        np.savetxt(funcDir + '/surfaces/' + subject + '_rsfMRI-connectome_' + parcellation + '_clean.txt', ts_r, fmt='%.6f')
+    if np.isnan(exclude_labels[0]) == False:
+        for i in exclude_labels:
+            ts_r[:, i + n_sctx] = 0
+            ts_r[i + n_sctx, :] = 0
+        ts_r = np.triu(ts_r)
+    else:
+        ts_r = np.triu(ts_r)
+
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt', ts_r, fmt='%.6f')
+
+# Clean up
+del ts_native_ctx
+del native_parc
+del ts_r
+del ts
+del dataNative_corr
+del sctx_corr
+del cereb_corr
+
+# ------------------------------------------
+# Additional QC
+# ------------------------------------------
+
+# mean framewise displacement + save plot
+fd = np.loadtxt(x_fd)
+title = 'mean FD: ' + str(np.mean(fd))
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(16, 6))
+plt.plot(fd, color="#2171b5")
+plt.title(title, fontsize=16)
+ax.set(xlabel='')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.savefig(funcDir+'/surfaces/' + subject + '_rsfmri-framewiseDisplacement.png', dpi=300)
+
+del fd
+
+# tSNR
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_lh_NoHP.mgh'))
+lh_nat_noHP_data = nib.load(lh_nat_noHP)
+lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_rh_NoHP.mgh'))
+rh_nat_noHP_data = nib.load(rh_nat_noHP)
+rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
+
+lhM = np.mean(lh_nat_noHP_data, axis = 1)
+lhSD = np.std(lh_nat_noHP_data, axis = 1)
+lh_tSNR = np.divide(lhM, lhSD)
+
+rhM = np.mean(rh_nat_noHP_data, axis = 1)
+rhSD = np.std(rh_nat_noHP_data, axis = 1)
+rh_tSNR = np.divide(rhM, rhSD)
+
+tSNR = np.append(lh_tSNR, rh_tSNR)
+tSNR = np.expand_dims(tSNR, axis=1)
+
+np.savetxt(funcDir+'/surfaces/' + subject + '_space-rsfmri_desc-tSNR.txt', tSNR, fmt='%.12f')
