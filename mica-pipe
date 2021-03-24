@@ -331,14 +331,14 @@ do
 done
 
 # argument check out & WARNINGS
-arg=("$id" "$out" "$BIDS")
-if [ "${#arg[@]}" -lt 3 ]; then
+arg=($id $out $BIDS)
+if [ ${#arg[@]} -lt 3 ]; then
 Error "One or more mandatory arguments are missing:
                -sub  : $id
                -out  : $out
                -bids : $BIDS"
 help; exit 1; fi
-runs=("$ALL" "$procVOL" "$procFS" "$postVOL" "$procDWI" "$procfMRI" "$postDWI" "$postGD" "$postMorph" "$postMPC" "$qtest")
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
