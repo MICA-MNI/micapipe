@@ -480,6 +480,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 if [ ! -d ${subject_dir} ]; then
     Info "Subject ${id} directory doesn't exist"
     Do_cmd mkdir -p $subject_dir/{logs,xfm,QC,dwi,func,anat/{first,volumetric,surfaces/{conte69,$id}}}
+    chmod -R 770 $subject_dir
 else
     Info "Subject ${id} directory exist"
 fi

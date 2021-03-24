@@ -102,8 +102,8 @@ Do_cmd mkdir -p "$tmp"
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Create Connectomes directory for the outpust
-[[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png"
+[[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm" && chmod -R 770 "$dwi_cnntm"
+[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 Do_cmd cd "$tmp"
 
 # -----------------------------------------------------------------------------------------------
