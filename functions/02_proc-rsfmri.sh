@@ -439,7 +439,7 @@ if [[ ! -f "${fmri_processed}" ]] ; then
 
                 # $fmri_filtered                                                                                 preprocessed 4D data
                 # $melodic_IC                                                                                    melodic (command-line program) full output directory
-                Do_cmd cp "${rsfmri_volum}/${id}_singleecho.1D" "${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
+                Do_cmd cp "${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D" "${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
                 # $fmri_mask                                                                                     valid mask relating to the 4D data
                 Do_cmd cp "${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz" "${rsfmri_ICA}/mean_func.nii.gz"      # temporal mean of 4D data
                 middleSlice=$(mrinfo $fmri_filtered -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
