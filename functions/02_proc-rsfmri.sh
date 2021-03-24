@@ -292,12 +292,12 @@ if [[ ! -f "${singleecho}" ]]; then
             Do_cmd topup --imain="${tmp}/singleecho_mergeForTopUp.nii.gz" --datain="${tmp}/singleecho_topupDataIn.txt" --config="${topupConfigFile}" --out="$tmp/singleecho_topup"
             Do_cmd applytopup --imain="${mainScan}" --inindex=1 --datain="${tmp}/singleecho_topupDataIn.txt" --topup="${tmp}/singleecho_topup" --method=jac --out="${singleecho}"
 
-            # rsfmri for registration
-            Do_cmd applytopup --imain="${tmp}/singleecho_mainPhaseAligned.nii.gz" --inindex=1 --datain="${tmp}/singleecho_topupDataIn.txt" --topup="${tmp}/singleecho_topup" --method=jac --out="${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz"
-            Do_cmd fslmaths "${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz" -Tmean "$rsfmri4reg"
+            # # rsfmri for registration
+            # Do_cmd applytopup --imain="${tmp}/singleecho_mainPhaseAligned.nii.gz" --inindex=1 --datain="${tmp}/singleecho_topupDataIn.txt" --topup="${tmp}/singleecho_topup" --method=jac --out="${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz"
+            # Do_cmd fslmaths "${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz" -Tmean "$rsfmri4reg"
 
             # Check if it worked
-            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
+            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
             echo "${singleecho}, TOPUP, $(whoami), $(date)" >> "${rsfmri_volum}/TOPUP.txt"
             status="TOPUP"
         else
@@ -305,7 +305,7 @@ if [[ ! -f "${singleecho}" ]]; then
         fi
     fi
 else
-      Info "Subject ${id} has a singleecho_fmrispace processed"
+      Info "Subject ${id} has a singleecho_fmrispace processed"; ((Nsteps++))
 fi
 
 
@@ -380,9 +380,9 @@ SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
 
 # Registration to native pro
 if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
-    if [[ -f "$rsfmri4reg" ]]; then
-        Do_cmd fslmaths "$rsfmri4reg" -mul "$fmri_mask" "$fmri_brain"
-    fi
+    # if [[ -f "$rsfmri4reg" ]]; then
+    #     Do_cmd fslmaths "$rsfmri4reg" -mul "$fmri_mask" "$fmri_brain"
+    # fi
 
     Info "Creating a synthetic BOLD image for registration"
     # Inverse T1w
