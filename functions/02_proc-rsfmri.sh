@@ -213,7 +213,7 @@ tags=(mainScan mainPhaseScan reversePhaseScan)
 singleecho="${rsfmri_volum}/${idBIDS}"_space-rsfmri_desc-singleecho.nii.gz
 
 # scan for registration to T1
-rsfmri4reg="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mainPhaseAligned_mean.nii.gz"
+rsfmri4reg="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mainPhaseAlignedTopup_mean.nii.gz"
 
 # Processing single.
 if [[ ! -f "${singleecho}" ]]; then
@@ -227,12 +227,14 @@ if [[ ! -f "${singleecho}" ]]; then
         if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
               Note "RAWNIFTI:" "$rawNifti"
 
-              # Drop first five TRs and reorient (same orientation as T1nativepro)
+              # Drop first five TRs and reorient to standard
               if [ "$tag" == "mainScan" ]; then
                   Do_cmd nifti_tool -cbl -prefix "${tmp}/${tag}_trDrop.nii.gz" -infiles "$rawNifti"'[5..$]'
-                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
+                  # Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
+                  Do_cmd fslreorient2std "${tmp}/${tag}_trDrop.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
               else
-                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "$rawNifti"
+                  # Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "$rawNifti"
+                  Do_cmd fslreorient2std "$rawNifti" "${tmp}/${tag}_reorient.nii.gz"
               fi
 
               # Remove slices to make an even number of slices in all directions (requisite for topup).
@@ -394,7 +396,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
     # Match histograms values acording to rsfmri
     Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
     # Smoothing
-    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 2
+    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 1
 
     Info "Registering fmri space to nativepro"
     # Affine from rsfMRI to t1-nativepro
@@ -408,7 +410,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
 
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
-
+    do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
 else
     Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"
 fi
