@@ -62,13 +62,13 @@ export idBIDS="${subject}${ses}"
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ]; then
-      export T1nativepro=${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz
-      export T1nativepro_brain=${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz
-      export T1nativepro_mask=${proc_struct}/${id}_t1w_*mm_nativepro_brain_mask.nii.gz
+      export res=$(mrinfo "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
+      export T1nativepro=${proc_struct}/${id}_t1w_${res}mm_nativepro.nii.gz
+      export T1nativepro_brain=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain.nii.gz
+      export T1nativepro_mask=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_mask.nii.gz
       export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
-      export T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
-      export T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
-      export res=$(mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}')
+      export T15ttgen=${proc_struct}/${id}_t1w_${res}mm_nativepro_5TT.nii.gz
+      export T1fast_seg=$proc_struct/first/${id}_t1w_${res}mm_nativepro_all_fast_firstseg.nii.gz
   fi
 
   # Native midsurface in gifti format
