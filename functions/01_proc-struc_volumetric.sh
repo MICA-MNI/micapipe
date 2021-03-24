@@ -127,7 +127,7 @@ if [ ! -f ${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz ] || [ ! -f ${proc_struc
     if [ ! -f ${T1nativepro} ]; then Error "$T1str_nat was not generated"; Do_cmd exit; fi
 
     # Brainmask
-    Do_cmd bet $T1nativepro $T1nativepro_brain  -B -f 0.25 -v
+    Do_cmd bet $T1nativepro $T1nativepro_brain -B -f 0.25 -v
 
     # If no T1native pro exit_status "something is wrong" exit
     if [ ! -f ${T1nativepro_brain} ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; fi
