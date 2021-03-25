@@ -389,7 +389,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
     Info "Creating a synthetic BOLD image for registration"
     # Inverse T1w
     Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
-    # masked Inverse T1
+    # Dilate the T1-mask
     #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
     # Masked the inverted T1w
     Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
@@ -695,5 +695,5 @@ eri=$(echo print "$eri"/60 | perl)
 # Notification of completition
 Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
-echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

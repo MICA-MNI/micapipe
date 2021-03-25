@@ -233,5 +233,5 @@ Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$e
 \tCheck logs:
 $(ls ${dir_logs}/post_structural_*.txt)"
 # Print QC stamp
-echo "${id}, ${SES/ses-/}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+echo "${id}, ${SES/ses-/}, post_structural, $status N=$(printf "%02d" $Nfiles)/$(printf "%02d" $N), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
