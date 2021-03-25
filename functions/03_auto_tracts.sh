@@ -278,7 +278,7 @@ filter(){
 # -----------------------------------------------------------------------------------------------
 ## Main loop
 structures=$(ls -1 "$autoPtx")
-for st in "$structures"; do
+for st in $structures; do
   Info "Working on $st"; filter "$st"
 done
 
