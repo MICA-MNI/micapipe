@@ -213,7 +213,7 @@ tags=(mainScan mainPhaseScan reversePhaseScan)
 singleecho="${rsfmri_volum}/${idBIDS}"_space-rsfmri_desc-singleecho.nii.gz
 
 # scan for registration to T1
-rsfmri4reg="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mainPhaseAlignedTopup_mean.nii.gz"
+# rsfmri4reg="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mainPhaseAlignedTopup_mean.nii.gz"
 
 # Processing single.
 if [[ ! -f "${singleecho}" ]]; then
@@ -617,7 +617,7 @@ for x in lh rh; do
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
               "${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii" \
-              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_"${x}".func.gii" \
+              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" \
               10 \
               "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}_10mm.func.gii"
 

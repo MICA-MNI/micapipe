@@ -178,7 +178,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       # Get parameters
       ReadoutTime=$(mrinfo "$dwi_n4" -property TotalReadoutTime)
       pe_dir=$(mrinfo "$dwi_n4" -property PhaseEncodingDirection)
-      shells=$(mrinfo "$dwi_n4" -shell_bvalues)
+      shells=($(mrinfo "$dwi_n4" -shell_bvalues))
       # Exclude shells with 0 value
       for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
 
@@ -327,7 +327,6 @@ if [[ ! -f "$fod_wmN" ]]; then
             Do_cmd mtnormalise "$fod_wm" "$fod_wmN" "$fod_gm" "$fod_gmN" "$fod_csf" "$fod_csfN" -nthreads "$threads" -mask "$dwi_mask"
       else
       #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
-      #
       #       Do_cmd dwi2response tournier -nthreads $threads $dwi_corr \
       #           ${proc_dwi}/${id}_response_tournier.txt \
       #           -mask $dwi_mask
