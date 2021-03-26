@@ -27,8 +27,6 @@ import sys
 import subprocess
 import numpy as np
 import nibabel as nib
-import scipy as sp
-from scipy import spatial
 
 
 # Set up arguments
@@ -57,9 +55,9 @@ faces = np.append(faces_lh, faces_rh, axis = 0)
 [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(rh_annot, orig_ids=True)
 nativeLength = len(labels_lh)+len(labels_rh)
 parc = np.zeros((nativeLength))
-for x in range(len(labels_lh)):
+for (x, _) in enumerate(labels_lh):
     parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
-for x in range(len(labels_rh)):
+for (x, _) in enumerate(labels_rh):
     parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
 
 
@@ -68,7 +66,7 @@ uparcel = np.unique(parc)
 voi = np.zeros([1, len(uparcel)])
 
 print("[ INFO ]..... Finings centre vertex for each parcel")
-for n in range(len(uparcel)):
+for (n, _) in enumerate(uparcel):
     this_parc = np.where(parc == uparcel[n])[0]
     distances = sp.spatial.distance.pdist(np.squeeze(vertices[this_parc,:]), 'euclidean') # Returns condensed matrix of distances
     distancesSq = sp.spatial.distance.squareform(distances) # convert to square form

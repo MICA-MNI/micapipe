@@ -5,7 +5,7 @@
 # Translated to python by Jessica Royer
 
 # build_mpc   Construct a microstructure profile covariance matrix
-  
+
 # INPUT
 # data          surfaces x vertices matrix containing intensity values
 # parc          1 x vertices vector with unique integrers correpsonding to 
@@ -20,7 +20,6 @@
 ####################################################################################################
 
 # Import packages
-import sys
 import numpy as np
 import scipy.special
 import scipy.stats
@@ -46,7 +45,7 @@ def build_mpc(data, parc=None, idxExclude=None):
         print("Parcellating microstructural profiles with provided labels")
         print("----------------------------------------------------------")
         print("")
-        for ii in range(len(uparcel)):
+        for (ii, _) in enumerate(uparcel):
             
             # Get vertices within parcel
             thisparcel = uparcel[ii]

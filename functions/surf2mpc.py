@@ -36,7 +36,6 @@ import sys
 import os
 import numpy as np
 import nibabel as nib
-import pandas as pd
 from build_mpc import build_mpc
 
 # Define input arguments
@@ -96,9 +95,9 @@ if os.path.exists(OPATH):
         # Join hemispheres
         parcLength = len(labels_lh)+len(labels_rh)
         parc = np.zeros((parcLength))
-        for x in range(len(labels_lh)):
+        for (x, _) in enumerate(labels_lh):
             parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
-        for x in range(len(labels_rh)):
+        for (x, _) in enumerate(labels_rh):
             parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
         uparcel = np.unique(parc)
 
@@ -115,7 +114,7 @@ if os.path.exists(OPATH):
                     exclude_labels = np.append(exclude_labels, reg, axis = 0)
         elif parcShortName == 'aparc-a2009s':
             exclude_labels = []
-            for i in range(len(names_lh)):
+            for (i, _) in enumerate(names_lh):
                 # Exclude pericallosal plus medial wall.
                 # The label "unknown" is not represented in the parcellation.
                 # For this reason we have to adjust the label numbers by subtracting 1 (line 111)
