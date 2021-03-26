@@ -587,18 +587,30 @@ for x in lh rh; do
         Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"
     fi
 
-    # Register to fsa5 and apply smooth
-    out_surf_fsa5="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}_10mm.mgh"
+    # Register to fsa5 and smooth
+    out_surf_fsa5="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}.mgh"
     if [[ ! -f "$out_surf_fsa5" ]] ; then
          Do_cmd mri_surf2surf \
             --hemi "${x}" \
             --srcsubject "$id" \
             --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
             --trgsubject fsaverage5 \
-            --tval "$out_surf_fsa5" \
-            --fwhm-trg 10
+            --tval "$out_surf_fsa5"
     else
          Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"
+    fi
+    
+    out_surf_fsa5_sm="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}_10mm.mgh"
+    if [[ ! -f "$out_surf_fsa5_sm" ]] ; then
+         Do_cmd mri_surf2surf \
+            --hemi "${x}" \
+            --srcsubject "$id" \
+            --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
+            --trgsubject fsaverage5 \
+            --tval "$out_surf_fsa5_sm" \
+            --fwhm-trg 10
+    else
+         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"
     fi
 
     # Register to conte69 and smooth
@@ -628,7 +640,7 @@ for x in lh rh; do
     fi
 done
 else
-  Info "Subject ${id} has a singleecho fmri2fs on all surfaces: fs5, conte69 and native"
+  Info "Subject ${id} has a singleecho fmri2fs on all surfaces: native, fsa5, and conte69"
 fi
 
 #------------------------------------------------------------------------------#
