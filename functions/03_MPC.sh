@@ -230,5 +230,5 @@ Nprofiles=("${outDir}"/intensity_profiles_*.txt)
 if [ "${#Nprofiles[*]}" -eq "${#parcellations[*]}" ]; then status="COMPLETED"; else status="ERROR MPC is missing a intensity profile"; fi
 Title "Post-MPC processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 $dir_logs/MPC_*.txt"
-echo "${id}, ${SES/ses-/}, MPC, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, MPC, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

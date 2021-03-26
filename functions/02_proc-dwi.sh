@@ -430,5 +430,5 @@ Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes
 \tCheck logs:
 $(ls "${dir_logs}"/proc_dwi_*.txt)"
 # Print QC stamp
-echo "${id}, ${SES/ses-/}, proc_dwi, $status N=$(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_dwi, $status N=$(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

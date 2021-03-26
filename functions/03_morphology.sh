@@ -212,5 +212,5 @@ eri=$(echo print "$eri"/60 | perl)
 if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR Morphology is missing a processing step"; fi
 Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m, ${status}:\n\tlogs:
 ${dir_logs}/Morphology_*.txt"
-echo "${id}, ${SES/ses-/}, Morphology, $status N=$(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, Morphology, $status N=$(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

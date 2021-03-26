@@ -191,7 +191,7 @@ for mm in 2 0.8; do
   fi
 done
 
-# Update the T1nativepro_mask and T1nativepro_brain
+# Update the T1native mask and T1native_brain
 Do_cmd antsApplyTransforms -d 3 -n GenericLabel -i "$MNI152_mask" -r "$T1nativepro_brain" \
         -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" -o "$T1nativepro_mask" -v
 Do_cmd ImageMath 3 "$T1nativepro_brain" m "$T1nativepro" "$T1nativepro_mask"
@@ -251,5 +251,5 @@ eri=$(echo print "$eri"/60 | perl)
 # Notification of completition
 Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 $(ls "$dir_logs"/proc_structural_*.txt)"
-echo "${id}, ${SES/ses-/}, proc_structural, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_structural, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

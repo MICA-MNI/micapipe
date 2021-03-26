@@ -124,5 +124,5 @@ eri=$(echo print "$eri"/60 | perl)
 Title "Freesurfer recon-all processing ended: ${status}\n\tlogs:
 $(ls "$dir_logs"/proc_freesurfer*.txt)"
 
-echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

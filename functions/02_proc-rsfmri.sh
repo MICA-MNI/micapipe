@@ -695,5 +695,5 @@ eri=$(echo print "$eri"/60 | perl)
 # Notification of completition
 Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
-echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${version}" >> "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
