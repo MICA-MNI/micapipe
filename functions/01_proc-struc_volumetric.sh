@@ -149,7 +149,10 @@ firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f "$firstout" ]; then
     Info "FSL first is running, output file:\n\t\t\t ${firstout}"
     Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b -v &
-    wait
+    wait $!
+    until [ -f "$firstout" ]; do sleep 120; done
+    # Ndim=$(mrinfo "$firstout" -ndim)
+    # until [ "$Ndim" -eq 3 ]; do sleep 10; Ndim=$(mrinfo "$firstout" -ndim); done
 
     Info "Changing FIRST output names to maintain MICA-BIDS naming convention"  # <<<<<<<<<< ERASE THIS STEP???
     for i in "${proc_struct}"/first/*pro-*; do mv "$i" "${i/pro-/pro_}"; done
