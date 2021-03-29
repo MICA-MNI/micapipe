@@ -107,7 +107,7 @@ if os.path.exists(OPATH):
         parcShortName = parc_name.replace("_mics.annot", "")
         if parcShortName == 'aparc':
             exclude_labels = []
-            for i in range(len(names_lh)):
+            for (i, _) in enumerate(names_lh):
                 # Exclude corpus callosum plus medial wall ("unknown")
                 if (names_lh[i].decode() == 'corpuscallosum' or names_lh[i].decode() == 'unknown'):
                     reg = [i, i + int(len(uparcel)/2)]
@@ -117,7 +117,7 @@ if os.path.exists(OPATH):
             for (i, _) in enumerate(names_lh):
                 # Exclude pericallosal plus medial wall.
                 # The label "unknown" is not represented in the parcellation.
-                # For this reason we have to adjust the label numbers by subtracting 1 (line 111)
+                # For this reason we have to adjust the label numbers by subtracting 1
                 if (names_lh[i].decode() == 'S_pericallosal' or names_lh[i].decode() == 'G_subcallosal' or names_lh[i].decode() == 'Medial_wall'):
                     reg = [i-1, i + int(len(uparcel)/2)-1]
                     exclude_labels = np.append(exclude_labels, reg, axis = 0)
