@@ -27,6 +27,7 @@ import sys
 import subprocess
 import numpy as np
 import nibabel as nib
+from scipy import spatial
 
 
 # Set up arguments
@@ -68,8 +69,8 @@ voi = np.zeros([1, len(uparcel)])
 print("[ INFO ]..... Finings centre vertex for each parcel")
 for (n, _) in enumerate(uparcel):
     this_parc = np.where(parc == uparcel[n])[0]
-    distances = sp.spatial.distance.pdist(np.squeeze(vertices[this_parc,:]), 'euclidean') # Returns condensed matrix of distances
-    distancesSq = sp.spatial.distance.squareform(distances) # convert to square form
+    distances = spatial.distance.pdist(np.squeeze(vertices[this_parc,:]), 'euclidean') # Returns condensed matrix of distances
+    distancesSq = spatial.distance.squareform(distances) # convert to square form
     sumDist = np.sum(distancesSq, axis = 1) # sum distance across columns
     index = np.where(sumDist == np.min(sumDist)) # minimum sum distance index
     voi[0, n] = this_parc[index[0][0]]
