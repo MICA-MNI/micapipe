@@ -83,10 +83,10 @@ export idBIDS="${subject}${ses}"
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.nii* 2>/dev/null))       # main rsfMRI scan
-  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.json 2>/dev/null))   # main rsfMRI scan json
-  bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse_bold.nii* 2>/dev/null))     # main phase scan
-  bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse_bold.nii* 2>/dev/null))  # reverse phase scan
+  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP*bold.nii* 2>/dev/null))       # main rsfMRI scan
+  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP*bold.json 2>/dev/null))   # main rsfMRI scan json
+  bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse*bold.nii* 2>/dev/null))     # main phase scan
+  bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse*bold.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
