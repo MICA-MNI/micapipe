@@ -82,7 +82,6 @@ if [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ] || [ ! -f "${proc_
     if [ "$N" -gt 1 ]; then
       ref=${bids_T1ws[0]} # reference to registration
       ref_run=$(echo "${bids_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
-      ref_res=$(echo "${bids_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       t1ref="run-${ref_run}"
       # Variables for N4BiasFieldCorrection & Native output
       T1str_nat=$(t1w_str "${id}" "${ref}" nativepro)
@@ -100,7 +99,7 @@ if [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ] || [ ! -f "${proc_
       # Calculate the mean over all T1w registered to the 1st t1w run
       t1s_reg=$(find "${tmp}"/*_to_"${t1ref}".nii.gz)
       t1s_add=$(echo "-add $(echo ${t1s_reg} | sed 's: : -add :g')")
-      Do_cmd fslmaths $ref $t1s_add -div $N $T1n4 -odt float
+      Do_cmd fslmaths "$ref" "$t1s_add" -div "$N" "$T1n4" -odt float
 
     # If only one T1w is provided
     elif [ "$N" -eq 1 ]; then
