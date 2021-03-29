@@ -147,9 +147,11 @@ if [ ! -f ${mainScanJson} ]; then Error "Couldn't find $id main rsfMRI scan json
 if [ -z ${mainPhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
 if [ -z ${reversePhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
-# Structural nativepro scan and freesurfer
-if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
-if [ ! -f ${T1freesurfr} ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+# Check requirements: Structural nativepro scan and freesurfer, and post_structural
+if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
+if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
+if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
 
 # Check topup input
 if [[ ${changeTopupConfig} == "DEFAULT" ]]; then
