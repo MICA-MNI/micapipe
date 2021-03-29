@@ -53,6 +53,8 @@ source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
+T1_seg_subcortex="${dir_volum}/${id}_t1w_${res}mm_nativepro_subcortical.nii.gz"
+T1_seg_cerebellum="${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz"
 
 ### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -150,8 +152,8 @@ if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_b
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
 if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
-if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
+if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\t ls ${T1_seg_cerebellum} \n\t\tRUN -post_structural"; exit; fi
+if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\t ls ${T1_seg_subcortex} \n\t\t -post_structural"; exit; fi
 
 # Check topup input
 if [[ ${changeTopupConfig} == "DEFAULT" ]]; then
@@ -654,7 +656,6 @@ fi
 #------------------------------------------------------------------------------#
 #                           S U B C O R T E X
 # Subcortical segmentation (nativepro) to rsfmri space
-T1_seg_subcortex="${dir_volum}/${id}_t1w_${res}mm_nativepro_subcortical.nii.gz"
 rsfmri_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_subcortical.nii.gz"
 timese_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_timeseries_subcortical.txt"
 
@@ -670,8 +671,6 @@ fi
 
 #------------------------------------------------------------------------------#
 #                           C E R E B E L L U M
-
-T1_seg_cerebellum="${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz"
 rsfmri_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum.nii.gz"
 timese_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_timeseries_cerebellum.txt"
 stats_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum_roi_stats.txt"
