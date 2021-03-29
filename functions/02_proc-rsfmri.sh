@@ -327,7 +327,7 @@ fmri_mask="${rsfmri_ICA}/mask.nii.gz"
 fmri_HP="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_HP.nii.gz"
 fmri_brain="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_brain.nii.gz"
 
-if [[ ! -f "$fmri_mask" ]]; then
+if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then
     Info "Generating a rsfMRI binary mask"
     # Calculates the mean rsfMRI volume
     Do_cmd fslmaths "$singleecho" -Tmean "$fmri_mean"
@@ -343,7 +343,7 @@ else
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "${fmri_HP}" ]]; then
+if [[ ! -f "$fmri_HP" ]]; then
     Info "High pass filter"
     Do_cmd 3dTproject -input "${singleecho}" -prefix "$fmri_HP" -passband 0.01 666
 else
@@ -418,7 +418,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
 
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
-    do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+    Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
 else
     Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"
 fi
