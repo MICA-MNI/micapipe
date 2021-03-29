@@ -132,7 +132,7 @@ else
     if [[ "$thisPhase" == "DEFAULT" ]]; then
         Info "No run number specified for phase reversals and did not find more than one phase reversal scan - all good!"
     else
-        if [ $thisPhase -gt $N_mainPhase ] || [ $thisPhase -gt $N_revPhase ]; then
+        if [ "$thisPhase" -gt "$N_mainPhase" ] || [ "$thisPhase" -gt "$N_revPhase" ]; then
             Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default"; fi
     fi
 fi
@@ -142,10 +142,10 @@ if [[ "$fmri_pe" != DEFAULT ]]; then mainPhaseScan=$(ls "${subject_bids}/func/${
 if [[ "$fmri_rpe" != DEFAULT ]]; then reversePhaseScan=$(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
 
 # Check inputs
-if [ ! -f ${mainScan} ]; then Error "Couldn't find $id main rsfMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
-if [ ! -f ${mainScanJson} ]; then Error "Couldn't find $id main rsfMRI scan json file: \n\t ls ${mainScanJson}"; exit; fi #Last check to make sure file exists
-if [ -z ${mainPhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
-if [ -z ${reversePhaseScan} ] || [ ! -f ${mainPhaseScan} ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+if [ ! -f "$mainScan" ]; then Error "Couldn't find $id main rsfMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
+if [ ! -f "$mainScanJson" ]; then Error "Couldn't find $id main rsfMRI scan json file: \n\t ls ${mainScanJson}"; exit; fi #Last check to make sure file exists
+if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
+if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
@@ -452,7 +452,7 @@ if [[ ! -f "${fmri_processed}" ]] ; then
                 Do_cmd cp "${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D" "${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
                 # $fmri_mask                                                                                     valid mask relating to the 4D data
                 Do_cmd cp "${rsfmri_ICA}/filtered_func_data.ica/mean.nii.gz" "${rsfmri_ICA}/mean_func.nii.gz"      # temporal mean of 4D data
-                middleSlice=$(mrinfo $fmri_filtered -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
+                middleSlice=$(mrinfo "$fmri_filtered" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
                 Do_cmd fslroi "$fmri_filtered" "${rsfmri_ICA}/reg/example_func.nii.gz" "$middleSlice" 1          # example middle image from 4D data
                 Do_cmd cp "$T1nativepro_brain" "${rsfmri_ICA}/reg/highres.nii.gz"                                  # brain-extracted structural
 
