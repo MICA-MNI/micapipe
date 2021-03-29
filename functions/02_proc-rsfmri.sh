@@ -35,7 +35,9 @@ thisMainScan=${10}
 thisPhase=${11}
 smooth=${12}
 mainScanStr=${13}
-PROC=${14}
+fmri_pe=${14}
+fmri_rpe=${15}
+PROC=${16}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -56,12 +58,12 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 Info "Inputs:"
 Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
-if [[ "$mainScanStr" == DEFAULT ]]; then
-    Note "Main scan        :" "$thisMainScan"
-else
-    Note "Main scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${mainScanStr}".nii* 2>/dev/null)
-fi
-Note "Phase scan       :" "$thisPhase"
+if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
+Note "Main scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${mainScanStr}".nii* 2>/dev/null); fi
+if [[ "$fmri_pe" == DEFAULT ]]; then Note "Phase scan        :" "$fmri_pe"; else
+Note "Phase scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
+if [[ "$fmri_rpe" == DEFAULT ]]; then Note "Reverse Phase    :" "$fmri_rpe"; else
+Note "Reverse Phase    :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -108,7 +110,7 @@ else
     mainScan=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".nii* 2>/dev/null)
     mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
 fi
-
+#------------------------------------------------------------------------------#
 # Phase encoding
 N_mainPhase=${#bids_mainPhase[@]}
 N_revPhase=${#bids_reversePhase[@]}
@@ -134,6 +136,10 @@ else
             Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default"; fi
     fi
 fi
+
+# Manually defined Phase scan and reverse phase scan
+if [[ "$fmri_pe" != DEFAULT ]]; then mainPhaseScan=$(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
+if [[ "$fmri_rpe" != DEFAULT ]]; then reversePhaseScan=$(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
 
 # Check inputs
 if [ ! -f ${mainScan} ]; then Error "Couldn't find $id main rsfMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
@@ -599,7 +605,7 @@ for x in lh rh; do
     else
          Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"
     fi
-    
+
     out_surf_fsa5_sm="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}_10mm.mgh"
     if [[ ! -f "$out_surf_fsa5_sm" ]] ; then
          Do_cmd mri_surf2surf \

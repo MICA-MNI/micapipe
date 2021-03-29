@@ -62,6 +62,10 @@ echo -e "
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
+\t\t\033[38;5;120m-fmri_pe\033[0m         : String to manually identify the main phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_pe>.nii.gz)
+\t\t\t\t         Default='task-rest_acq-APse_bold'
+\t\t\033[38;5;120m-fmri_rpe\033[0m         : String to manually identify the reverse phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_rpe>.nii.gz)
+\t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
 \t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
@@ -219,6 +223,14 @@ do
     mainScanStr=$2
     shift;shift
   ;;
+  -fmri_pe)
+  fmri_pe=$2
+  shift;shift
+  ;;
+  -fmri_rpe)
+  fmri_rpe=$2
+  shift;shift
+  ;;
   -phaseReversalRun)
     specPhase=TRUE
     thisPhase=$2
@@ -360,7 +372,9 @@ if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else opta
 if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
 if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase; else optarg_rsfmri[3]=DEFAULT; fi
 if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
-if [ -z ${mainScanStr} ]; then mainScanStr=DEFAULT; fi
+if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
+if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; fi
+if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_lta)
@@ -728,7 +742,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
