@@ -6,7 +6,7 @@
 Structural processing
 ============================================================
 
-This section describes all structural processing modules, which includes pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (**-proc_structural**) and surface-based (**proc-freesurfer**, **-post_structural**, **-GD**, **-Morphology**) processing. These modules map subject data to several volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to several parcellation schemes as well as vertexwise cortical thickness and curvature data. 
+This section describes all structural processing modules, which include pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (**-proc_structural**) and surface-based (**proc-freesurfer**, **-post_structural**, **-GD**, **-Morphology**) processing. These modules map subject data to volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to multiple parcellation schemes as well as vertexwise cortical thickness and curvature data. 
 
 
 -proc_structural
@@ -180,6 +180,12 @@ This first structural post-processing module registers native FreeSurfer-space c
 
         .. parsed-literal:: 
             $ singularity -post_structural
+
+        Options: 
+
+        - ``atlas <atlas_name>``: Registers only selected parcellations to subject space (e.g. economo,aparc). By default, all 18 parcellations included in the pipeline will be registered to the subject's native volumetric and surface space.
+        - ``cerebellum_seg <path>``: Use specified parcellation of the cerebellum rather than micapipe default.
+        - ``subcortical_seg <path>``: Use specified subcortical parcellation rather than micapipe default.
 
     .. tab:: Outputs
 

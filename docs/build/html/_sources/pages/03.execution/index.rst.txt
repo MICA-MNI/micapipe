@@ -16,13 +16,14 @@ Running micapipe
 Basic usage of micapipe, with no options specified, will look like:
 
     .. parsed-literal:: 
-        $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> -<module-flag>
+        $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> -<module-flag>
 
 Let's break this down:
 
 	- **-sub**: Corresponds to subject ID. Even if your data is in BIDS, we exclude the "sub-" substring from the ID code (e.g. sub-HC001 is entered as -sub HC001).
 	- **-out**: Output directory path. Following BIDS, this corresponds to the "derivatives" directory associated with your dataset.
 	- **-bids**: Path to rawdata BIDS directory. 
+	- **-ses**: This optional flag allows the user to specify a session name (e.g. 01, 02, pre, post...). If omitted, all processing will be managed as a single session.
 	- -<module-flag>: Specifies which submodule(s) to run (see next section).
 
 Module flags
