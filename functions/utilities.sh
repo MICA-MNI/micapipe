@@ -452,29 +452,30 @@ function QC_proc-dwi() {
 }
 
 function QC_proc-rsfmri() {
-  html="$dir_QC"/micapipe_qc_proc-rsfmir.txt
+  html="$dir_QC"/micapipe_QC_proc-rsfmir.txt
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "            <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $mainScan 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
-              </tr>
-            " >> "$html"
-            if [ -f "$bids_reversePhase" ]; then
+                <td class=\"tg-8pnm\">$(find $mainScanJson 2>/dev/null)</td>
+              </tr>" >> "$html"
+            if [ -f "$mainPhaseScan" ]; then
   echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainPhaseScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $mainPhaseScan 2>/dev/null)</td>
+              </tr>"  >> "$html"
+            fi
+            if [ -f "$reversePhaseScan" ]; then
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">reversePhaseScan</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $reversePhaseScan 2>/dev/null)</td>
               </tr>"  >> "$html"
             fi
   echo -e "          <tr>
@@ -490,7 +491,7 @@ function QC_proc-rsfmri() {
 }
 
 function QC_SC() {
-  html=${dir_QC}/micapipe_qc_SC.txt
+  html=${dir_QC}/micapipe_QC_SC.txt
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
