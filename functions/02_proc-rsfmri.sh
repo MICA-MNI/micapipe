@@ -240,11 +240,11 @@ if [[ ! -f "${singleecho}" ]]; then
               # Drop first five TRs and reorient to standard
               if [ "$tag" == "mainScan" ]; then
                   Do_cmd nifti_tool -cbl -prefix "${tmp}/${tag}_trDrop.nii.gz" -infiles "$rawNifti"'[5..$]'
-                  # Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
-                  Do_cmd fslreorient2std "${tmp}/${tag}_trDrop.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
+                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
+                  Do_cmd fslreorient2std "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
               else
-                  # Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "$rawNifti"
-                  Do_cmd fslreorient2std "$rawNifti" "${tmp}/${tag}_reorient.nii.gz"
+                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "$rawNifti"
+                  Do_cmd fslreorient2std "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
               fi
 
               # Remove slices to make an even number of slices in all directions (requisite for topup).
@@ -485,7 +485,7 @@ if [[ ! -f "${fmri_processed}" ]] ; then
                     yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
                     status="${status}/FIX"
                 else
-                    Error "FIX failed check, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                    Error "FIX failed, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
                 fi
           else
                 Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
