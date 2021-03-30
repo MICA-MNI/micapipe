@@ -265,5 +265,5 @@ Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\
 \tlogs:
 $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-echo "${id}, ${SES/ses-/}, SC, ${status} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}" >> "${out}/brain-proc.csv"
+echo "${id}, ${SES/ses-/}, SC, ${status}-${tracts} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

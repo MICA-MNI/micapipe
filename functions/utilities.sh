@@ -62,13 +62,13 @@ export idBIDS="${subject}${ses}"
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ]; then
-      export T1nativepro=${proc_struct}/${id}_t1w_*mm_nativepro.nii.gz
-      export T1nativepro_brain=${proc_struct}/${id}_t1w_*mm_nativepro_brain.nii.gz
-      export T1nativepro_mask=${proc_struct}/${id}_t1w_*mm_nativepro_brain_mask.nii.gz
+      export res=$(mrinfo "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
+      export T1nativepro=${proc_struct}/${id}_t1w_${res}mm_nativepro.nii.gz
+      export T1nativepro_brain=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain.nii.gz
+      export T1nativepro_mask=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_mask.nii.gz
       export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
-      export T15ttgen=${proc_struct}/${id}_t1w_*mm_nativepro_5TT.nii.gz
-      export T1fast_seg=$proc_struct/first/${id}_t1w_*mm_nativepro_all_fast_firstseg.nii.gz
-      export res=$(mrinfo ${T1nativepro} -spacing | awk '{printf "%.1f\n", $2}')
+      export T15ttgen=${proc_struct}/${id}_t1w_${res}mm_nativepro_5TT.nii.gz
+      export T1fast_seg=$proc_struct/first/${id}_t1w_${res}mm_nativepro_all_fast_firstseg.nii.gz
   fi
 
   # Native midsurface in gifti format
@@ -83,10 +83,10 @@ export idBIDS="${subject}${ses}"
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.nii* 2>/dev/null))       # main rsfMRI scan
-  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_bold.json 2>/dev/null))   # main rsfMRI scan json
-  bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse_bold.nii* 2>/dev/null))     # main phase scan
-  bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse_bold.nii* 2>/dev/null))  # reverse phase scan
+  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.nii* 2>/dev/null))       # main rsfMRI scan
+  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.json 2>/dev/null))   # main rsfMRI scan json
+  bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse_*bold.nii* 2>/dev/null))     # main phase scan
+  bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse_*bold.nii* 2>/dev/null))  # reverse phase scan
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
@@ -452,29 +452,30 @@ function QC_proc-dwi() {
 }
 
 function QC_proc-rsfmri() {
-  html="$dir_QC"/micapipe_qc_proc-rsfmir.txt
+  html="$dir_QC"/micapipe_QC_proc-rsfmir.txt
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "            <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $mainScan 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
-              </tr>
-            " >> "$html"
-            if [ -f "$bids_reversePhase" ]; then
+                <td class=\"tg-8pnm\">$(find $mainScanJson 2>/dev/null)</td>
+              </tr>" >> "$html"
+            if [ -f "$mainPhaseScan" ]; then
   echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainPhaseScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $mainPhaseScan 2>/dev/null)</td>
+              </tr>"  >> "$html"
+            fi
+            if [ -f "$reversePhaseScan" ]; then
+  echo -e "          <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">reversePhaseScan</span></td>
+                <td class=\"tg-8pnm\">BIDS func<br><br></td>
+                <td class=\"tg-8pnm\">$(find $reversePhaseScan 2>/dev/null)</td>
               </tr>"  >> "$html"
             fi
   echo -e "          <tr>
@@ -490,7 +491,7 @@ function QC_proc-rsfmri() {
 }
 
 function QC_SC() {
-  html=${dir_QC}/micapipe_qc_SC.txt
+  html=${dir_QC}/micapipe_QC_SC.txt
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>

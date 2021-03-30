@@ -89,10 +89,10 @@ else:
     print('Some cerebellar ROIs were lost in co-registration to fMRI space')
     cereb = np.zeros((cereb_tmp.shape[0], 34), dtype=np.int8)
     roiLabelsInt = np.zeros((1,len(roiLabels)), dtype=np.int8)
-    for ii in range(len(roiLabels)):
+    for (ii, _) in enumerate(roiLabels):
         roiLabelsInt[0,ii] = int(float(roiLabels[ii]))
     roiLabelsInt = roiLabelsInt - 1
-    for ii in range(len(roiLabels)):
+    for (ii, _) in enumerate(roiLabels):
         cereb[:,roiLabelsInt[0,ii]] = cereb_tmp[:,ii]
     exclude_labels = missing_elements(roiLabelsInt[0])
     print('Matrix entries for following ROIs will be zero: ', exclude_labels)
@@ -287,16 +287,16 @@ for parcellation in parcellationList:
     # Join hemispheres
     nativeLength = len(labels_lh)+len(labels_rh)
     native_parc = np.zeros((nativeLength))
-    for x in range(len(labels_lh)):
+    for (x, _) in enumerate(labels_lh):
         native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
-    for x in range(len(labels_rh)):
+    for (x, _) in enumerate(labels_rh):
         native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
 
     # Generate connectome on native space parcellation
     # Parcellate cortical timeseries
     uparcel = np.unique(native_parc)
     ts_native_ctx = np.zeros([dataNative_corr.shape[0], len(uparcel)])
-    for lab in range(len(uparcel)):
+    for (lab, _) in enumerate(uparcel):
         tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 

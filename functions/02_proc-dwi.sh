@@ -74,12 +74,12 @@ fi
 # Check inputs: DWI
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY <ls -l ${subject_bids}/dwi/>"; exit; fi
 if [ ! -f "${T1_MNI152_InvWarp}" ]; then Error "Subject $id doesn't have T1_nativepro warp to MNI152.\n\t\tRun -proc_structural"; exit; fi
-if [ ! -f ${T1nativepro} ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
-if [ ! -f ${T15ttgen} ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
+if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
+if [ ! -f "${T15ttgen}" ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
 
 # CHECK if PhaseEncodingDirection and TotalReadoutTime exist
 for i in ${bids_dwis[*]}; do
-  json=$(echo $i | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1 ".json"}')
+  json=$(echo "$i" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1 ".json"}')
   ped=$(grep PhaseEncodingDirection\": "${subject_bids}/dwi/${json}" | awk -F "\"" '{print $4}')
   trt=$(grep TotalReadoutTime "${subject_bids}/dwi/${json}" | awk -F " " '{print $2}')
   if [[ -z "$ped" ]]; then Error "PhaseEncodingDirection is missing in $json"; exit; fi
@@ -132,21 +132,19 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           n=$((${#bids_dwis[*]} - 1))
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
             b0_ref=${tmp}/$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz
-            for ((i=1; i<=$n; i++)); do
-                dwi_nom=$(echo ${bids_dwis[i]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
-                bids_dwi_str=$(echo ${bids_dwis[i]} | awk -F . '{print $1}')
-                b0_acq=$(echo ${bids_dwis[i]} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
-                b0_nom="${tmp}/$(echo ${bids_dwis[i]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz"
-                b0_run="acq-${b0_acq}"
+            for ((i=1; i<=n; i++)); do
+                dwi_nom=$(echo "${bids_dwis[i]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+                bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
+                b0_acq=$(echo "${bids_dwis[i]}" | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
+                b0_nom="${tmp}/$(echo "${bids_dwis[i]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
-                b0run_2_b0ref="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}.nii.gz"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref"  -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert ${tmp}/${dwi_nom}.mif ${tmp}/${dwi_nom}.nii.gz
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert ${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz -json_import ${bids_dwi_str}.json -fslgrad ${bids_dwi_str}.bvec ${bids_dwi_str}.bval ${tmp}/${dwi_nom}_Ralign.mif -force -quiet
+                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_Ralign.mif" -force -quiet
             done
           fi
 
@@ -178,17 +176,17 @@ fi
 if [[ ! -f "$dwi_corr" ]]; then
       Info "DWI dwifslpreproc"
       # Get parameters
-      ReadoutTime=$(mrinfo $dwi_n4 -property TotalReadoutTime)
-      pe_dir=$(mrinfo $dwi_n4 -property PhaseEncodingDirection)
-      shells=$(mrinfo $dwi_n4 -shell_bvalues)
+      ReadoutTime=$(mrinfo "$dwi_n4" -property TotalReadoutTime)
+      pe_dir=$(mrinfo "$dwi_n4" -property PhaseEncodingDirection)
+      shells=($(mrinfo "$dwi_n4" -shell_bvalues))
       # Exclude shells with 0 value
       for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
       dwi_4proc=${tmp}/dwi_n4_even.mif
-      dim=$(mrinfo $dwi_n4 -size)
+      dim=$(mrinfo "$dwi_n4" -size)
       dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-      mrconvert "$dwi_n4" "$dwi_4proc" -coord 0 0:${dimNew[0]} -coord 1 0:${dimNew[1]} -coord 2 0:${dimNew[2]} -coord 3 0:end -force
+      mrconvert "$dwi_n4" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
 
       # Get the mean b-zero (un-corrected)
       dwiextract -nthreads "$threads" "$dwi_n4" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
@@ -203,10 +201,10 @@ if [[ ! -f "$dwi_corr" ]]; then
             dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
 
             # Linear registration between both b0
-            rpe=$(echo ${dwi_reverse} | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
+            rpe=$(echo "${dwi_reverse}" | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
             rpemat_str="${dir_warp}/${idBIDS}_from-${rpe}_to-${b0_refacq}_mode-image_desc-rigid_"
             rpemat="${rpemat_str}0GenericAffine.mat"
-            Do_cmd mrconvert ${tmp}/b0_meanMainPhase.mif ${tmp}/b0_meanMainPhase.nii.gz
+            Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
             Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/b0_meanReversePhase.nii.gz" -f "${tmp}/b0_meanMainPhase.nii.gz"  -o "$rpemat_str" -t r -n "$threads" -p d
             Do_cmd antsApplyTransforms -d 3 -e 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_meanReversePhase-reg.nii.gz" -v -u int
             Do_cmd mrconvert "${tmp}/b0_meanReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif" -force -quiet
@@ -216,7 +214,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             Do_cmd mrcat "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanReversePhase.mif" "$b0_pair_tmp" -nthreads "$threads"
 
             # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-            dim=$(mrinfo $b0_pair_tmp -size)
+            dim=$(mrinfo "$b0_pair_tmp" -size)
             dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
             mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
             opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
@@ -227,8 +225,8 @@ if [[ ! -f "$dwi_corr" ]]; then
 
       Info "dwifslpreproc parameters:"
       Note "Shell values        :" "${shells[*]}"
-      Note "DWI main dimensions :" "$(mrinfo $dwi_4proc -size)"
-      if [ -f "$dwi_reverse" ]; then Note "DWI rpe dimensions  :" "$(mrinfo $b0_pair -size)"; fi
+      Note "DWI main dimensions :" "$(mrinfo "$dwi_4proc" -size)"
+      if [ -f "$dwi_reverse" ]; then Note "DWI rpe dimensions  :" "$(mrinfo "$b0_pair" -size)"; fi
       Note "pe_dir              :" "$pe_dir"
       Note "Readout Time        :" "$ReadoutTime"
 
@@ -294,8 +292,8 @@ dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
 if [[ ! -f "$dti_FA" ]]; then
       Info "Calculating basic DTI metrics"
-      dwi2tensor -mask $dwi_mask -nthreads $threads $dwi_corr $dwi_dti
-      tensor2metric -nthreads $threads -fa ${dti_FA} -adc ${dti_ADC} $dwi_dti
+      dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
+      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" "$dwi_dti"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++))
@@ -329,7 +327,6 @@ if [[ ! -f "$fod_wmN" ]]; then
             Do_cmd mtnormalise "$fod_wm" "$fod_wmN" "$fod_gm" "$fod_gmN" "$fod_csf" "$fod_csfN" -nthreads "$threads" -mask "$dwi_mask"
       else
       #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
-      #
       #       Do_cmd dwi2response tournier -nthreads $threads $dwi_corr \
       #           ${proc_dwi}/${id}_response_tournier.txt \
       #           -mask $dwi_mask
@@ -389,7 +386,7 @@ fi
 # QC of the tractography
 tracts=1M
 tdi_1M="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tdi.mif"
-tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.json"
+export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.json"
 if [[ ! -f "$tdi_1M" ]]; then
   Info "Creating a track density image for quality check"
   tck_1M="${tmp}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.tck"
@@ -426,12 +423,12 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 10 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step: "; fi
+if [ "$Nsteps" -eq 10 ]; then status="COMPLETED"; else status="ERROR DWI is missing a processing step"; fi
 Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \t\tSteps completed: $(printf "%02d" "$Nsteps")/10
 \tStatus          : ${status}
 \tCheck logs:
 $(ls "${dir_logs}"/proc_dwi_*.txt)"
 # Print QC stamp
-echo "${id}, ${SES/ses-/}, proc_dwi, $status N=$(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+echo "${id}, ${SES/ses-/}, proc_dwi, ${status} N=$(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

@@ -43,7 +43,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Freesurfer space T1
-if [ ! -f ${T1freesurfr} ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1freesurfr" ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
@@ -54,16 +54,17 @@ Info "Saving temporal dir: $nocleanup"
 
 # Timer
 aloita=$(date +%s)
+Nsteps=0
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
 
 # Temporary fsa5 directory
-Do_cmd ln -s $FREESURFER_HOME/subjects/fsaverage5/ ${dir_surf}
+Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "$dir_surf"
 
 # Create script specific temp directory
-tmp=${tmpDir}/${RANDOM}_micapipe_post-morpho_${id}
-Do_cmd mkdir -p $tmp
+tmp="${tmpDir}/${RANDOM}_micapipe_post-morpho_${id}"
+Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -73,65 +74,67 @@ outDir="$dir_surf"/morphology
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
-dataDir=${dir_freesurfer}/surf/
+dataDir="${dir_freesurfer}/surf/"
 
 #------------------------------------------------------------------------------#
 ### Cortical Thickness ###
 
 # Register to fsa5 and apply 10mm smooth
-if [[ ! -f ${outDir}/rh.thickness_10mm_fsa5.mgh ]]; then
+if [[ ! -f "${outDir}/rh.thickness_10mm_fsa5.mgh" ]]; then
     for hemi in lh rh; do
         # Convert native file to mgh and save in output directory
-        Do_cmd mri_convert ${dataDir}/${hemi}.thickness ${outDir}/${hemi}_thickness.mgh
+        Do_cmd mri_convert "${dataDir}/${hemi}.thickness ${outDir}/${hemi}_thickness.mgh"
 
-        Do_cmd mri_surf2surf --hemi ${hemi} \
-            --srcsubject ${id} \
-            --srcsurfval ${outDir}/${hemi}_thickness.mgh \
+        Do_cmd mri_surf2surf --hemi "$hemi" \
+            --srcsubject "$id" \
+            --srcsurfval "${outDir}/${hemi}_thickness.mgh" \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.thickness_fsa5.mgh
+            --trgsurfval "${outDir}/${hemi}.thickness_fsa5.mgh"
 
-        Do_cmd mri_surf2surf --hemi ${hemi} \
+        Do_cmd mri_surf2surf --hemi "$hemi" \
             --fwhm-trg 10 \
-            --srcsubject ${id} \
-            --srcsurfval ${outDir}/${hemi}_thickness.mgh \
+            --srcsubject "$id" \
+            --srcsurfval "${outDir}/${hemi}_thickness.mgh" \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.thickness_10mm_fsa5.mgh
+            --trgsurfval "${outDir}/${hemi}.thickness_10mm_fsa5.mgh"
+            if [[ -f "${outDir}/${hemi}.thickness_10mm_fsa5.mgh" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${id} cortical thickness is registered to fsa5"
+    Info "Subject ${id} cortical thickness is registered to fsa5"; Nsteps=$((Nsteps + 2))
 fi
 
 # Register to conte69 and apply 10mm smooth
-if [[ ! -f ${outDir}/rh_thickness_10mm_c69-32k.mgh ]]; then
+if [[ ! -f "${outDir}/rh_thickness_10mm_c69-32k.mgh" ]]; then
     for hemi in lh rh; do
-        [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
-        HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
+        [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
 
-        Do_cmd mri_convert ${outDir}/${hemi}_thickness.mgh ${tmp}/${hemi}_thickness.func.gii
+        Do_cmd mri_convert "${outDir}/${hemi}_thickness.mgh" "${tmp}/${hemi}_thickness.func.gii"
 
         Do_cmd wb_command -metric-resample \
-            ${tmp}/${hemi}_thickness.func.gii \
-            ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
-            ${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii \
+            "${tmp}/${hemi}_thickness.func.gii" \
+            "${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii" \
+            "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
             ADAP_BARY_AREA \
-            ${tmp}/${hemi}_thickness_c69-32k.func.gii \
+            "${tmp}/${hemi}_thickness_c69-32k.func.gii" \
             -area-surfs \
-            ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
-            ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
+            "${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii" \
+            "${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii"
 
-        Do_cmd mri_convert ${tmp}/${hemi}_thickness.func.gii ${outDir}/${hemi}_thickness_c69-32k.mgh
+        Do_cmd mri_convert "${tmp}/${hemi}_thickness.func.gii" "${outDir}/${hemi}_thickness_c69-32k.mgh"
 
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
-            ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
-            ${tmp}/${hemi}_thickness_c69-32k.func.gii \
+            "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" \
+            "${tmp}/${hemi}_thickness_c69-32k.func.gii" \
             10 \
-            ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii
+            "${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii"
 
-        Do_cmd mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii ${outDir}/${hemi}_thickness_10mm_c69-32k.mgh
+        Do_cmd "mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii" "${outDir}/${hemi}_thickness_10mm_c69-32k.mgh"
+        if [[ -f "${outDir}/${hemi}_thickness_10mm_c69-32k.mgh" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${id} cortical thickness is registered to conte69"
+    Info "Subject ${id} cortical thickness is registered to conte69"; Nsteps=$((Nsteps + 2))
 fi
 
 
@@ -139,64 +142,66 @@ fi
 ### Curvature ###
 
 # Register to fsa5 and apply 10mm smooth
-if [[ ! -f ${outDir}/rh.curv_10mm_fsa5.mgh ]]; then
+if [[ ! -f "${outDir}/rh.curv_10mm_fsa5.mgh" ]]; then
     for hemi in lh rh; do
         # Convert native file to mgh and save in output directory
-        Do_cmd mri_convert ${dataDir}/${hemi}.curv ${outDir}/${hemi}_curv.mgh
+        Do_cmd mri_convert "${dataDir}/${hemi}.curv ${outDir}/${hemi}_curv.mgh"
 
-        Do_cmd mri_surf2surf --hemi ${hemi} \
-            --srcsubject ${id} \
-            --srcsurfval ${outDir}/${hemi}_curv.mgh \
+        Do_cmd mri_surf2surf --hemi "${hemi}" \
+            --srcsubject "${id}" \
+            --srcsurfval "${outDir}/${hemi}_curv.mgh" \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.curv_fsa5.mgh
+            --trgsurfval "${outDir}/${hemi}.curv_fsa5.mgh"
 
-        Do_cmd mri_surf2surf --hemi ${hemi} \
+        Do_cmd mri_surf2surf --hemi "${hemi}" \
             --fwhm-trg 10 \
-            --srcsubject ${id} \
-            --srcsurfval ${outDir}/${hemi}_curv.mgh \
+            --srcsubject "${id}" \
+            --srcsurfval "${outDir}/${hemi}_curv.mgh" \
             --trgsubject fsaverage5 \
-            --trgsurfval ${outDir}/${hemi}.curv_10mm_fsa5.mgh
+            --trgsurfval "${outDir}/${hemi}.curv_10mm_fsa5.mgh"
+        if [[ -f "${outDir}/${hemi}.curv_10mm_fsa5.mgh" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${id} curvature is registered to fsa5"
+    Info "Subject ${id} curvature is registered to fsa5"; Nsteps=$((Nsteps + 2))
 fi
 
 # Register to conte69 and apply 10mm smooth
-if [[ ! -f ${outDir}/rh_curv_10mm_c69-32k.mgh ]]; then
+if [[ ! -f "${outDir}/rh_curv_10mm_c69-32k.mgh" ]]; then
     for hemi in lh rh; do
-        [[ $hemi == lh ]] && hemisphere=l || hemisphere=r
-        HEMICAP=`echo $hemisphere | tr [:lower:] [:upper:]`
+        [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=$(echo "$hemisphere" | tr [:lower:] [:upper:])
 
-        Do_cmd mri_convert ${outDir}/${hemi}_curv.mgh ${tmp}/${hemi}_curv.func.gii
+        Do_cmd mri_convert "${outDir}/${hemi}_curv.mgh" "${tmp}/${hemi}_curv.func.gii"
 
         Do_cmd wb_command -metric-resample \
-            ${tmp}/${hemi}_thickness.func.gii \
-            ${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii \
-            ${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii \
+            "${tmp}/${hemi}_thickness.func.gii" \
+            "${dir_conte69}/${id}_${hemi}_sphereReg.surf.gii" \
+            "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
             ADAP_BARY_AREA \
-            ${tmp}/${hemi}_curv_c69-32k.func.gii \
+            "${tmp}/${hemi}_curv_c69-32k.func.gii" \
             -area-surfs \
-            ${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii \
-            ${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii
+            "${dir_surf}/${id}/surf/${hemi}.midthickness.surf.gii" \
+            "${dir_conte69}/${id}_${hemi}_midthickness_32k_fs_LR.surf.gii"
 
-        Do_cmd mri_convert ${tmp}/${hemi}_curv.func.gii ${outDir}/${hemi}_curv_c69-32k.mgh
+        Do_cmd mri_convert "${tmp}/${hemi}_curv.func.gii" "${outDir}/${hemi}_curv_c69-32k.mgh"
 
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
-            ${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii \
-            ${tmp}/${hemi}_curv_c69-32k.func.gii \
+            "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" \
+            "${tmp}/${hemi}_curv_c69-32k.func.gii" \
             10 \
-            ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii
+            "${tmp}/${hemi}_curv_10mm_c69-32k.func.gii"
 
-        Do_cmd mri_convert ${tmp}/${hemi}_curv_10mm_c69-32k.func.gii ${outDir}/${hemi}_curv_10mm_c69-32k.mgh
+        Do_cmd mri_convert "${tmp}/${hemi}_curv_10mm_c69-32k.func.gii" "${outDir}/${hemi}_curv_10mm_c69-32k.mgh"
+        if [[ -f "${outDir}/${hemi}_curv_10mm_c69-32k.mgh" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${id} curvature is registered to conte69"
+    Info "Subject ${id} curvature is registered to conte69"; Nsteps=$((Nsteps + 2))
 fi
 
 #------------------------------------------------------------------------------#
 # Clean fsaverage5 directory
-Do_cmd rm -rf ${dir_surf}/fsaverage5
+Do_cmd rm -rf "${dir_surf}/fsaverage5"
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -204,7 +209,8 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
-$dir_logs/Morphology_*.txt"
-echo "${id}, ${SES/ses-/}, Morphology, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR Morphology is missing a processing step"; fi
+Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m, ${status}:\n\tlogs:
+${dir_logs}/Morphology_*.txt"
+echo "${id}, ${SES/ses-/}, Morphology, $status N=$(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
