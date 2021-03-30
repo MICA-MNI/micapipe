@@ -186,7 +186,7 @@ if [ "$procVOL" = "TRUE" ]; then
                   "$dir_warp"/*MNI152* \
                   "$proc_struct"/*nativepro_5TT* \
                   "$dir_logs"/proc_structural_*
-    grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_freesurfer
@@ -194,7 +194,7 @@ if [ "$procFS" = "TRUE" ]; then
     Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
     Do_cmd rm -rf "$dir_freesurfer" \
                   "$dir_logs"/proc_freesurfer*
-    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ if [ "$postVOL" = "TRUE" ]; then
     Do_cmd rm -rf "$dir_volum"/* \
                   "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
                   "$dir_logs"/post_structural_*
-    grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_dwi
@@ -216,7 +216,7 @@ if [ "$procDWI" = "TRUE" ]; then
                   "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "$dir_warp"/*_mode-image_desc-rigid_* \
                   "$dir_logs"/proc_dwi_*
-    grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ if [ "$procfMRI" = "TRUE" ]; then
                   "$dir_warp"/*fmri* \
                   "$proc_struct"/*_space-nativepro_desc-T1wbold.nii.gz \
                   "$dir_logs"/proc_rsfmri_*
-    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
@@ -242,14 +242,14 @@ if [ "$postDWI" = "TRUE" ]; then
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-subcortical.nii.gz \
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-cerebellum.nii.gz \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
-    grep -v "${id}, ${SES/ses-/}, SC" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
     Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/MPC_*
-    grep -v "${id}, ${SES/ses-/}, MPC" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
@@ -257,7 +257,7 @@ if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
     Do_cmd rm -rf "$dir_surf"/geo_dist \
                   "$dir_logs"/GD_*
-    grep -v "${id}, ${SES/ses-/}, GD" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -Morphology
@@ -265,7 +265,7 @@ if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
     Do_cmd rm -rf "$dir_surf"/morphology \
                   "$dir_logs"/Morphology_*
-    grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/brain-proc.csv" > tmpfile && mv tmpfile "${out}/brain-proc.csv"
+    grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 bids_variables_unset
