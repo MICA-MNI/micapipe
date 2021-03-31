@@ -62,9 +62,9 @@ echo -e "
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
-\t\t\033[38;5;120m-fmri_pe\033[0m         : String to manually identify the main phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_pe>.nii.gz)
+\t\t\033[38;5;120m-fmri_pe\033[0m             : String to manually identify the main phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_pe>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m         : String to manually identify the reverse phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_rpe>.nii.gz)
+\t\t\033[38;5;120m-fmri_rpe\033[0m            : String to manually identify the reverse phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_rpe>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )

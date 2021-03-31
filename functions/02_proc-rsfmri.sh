@@ -62,8 +62,8 @@ Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
 if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
 Note "Main scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${mainScanStr}".nii* 2>/dev/null); fi
-if [[ "$fmri_pe" == DEFAULT ]]; then Note "Phase scan        :" "$fmri_pe"; else
-Note "Phase scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
+if [[ "$fmri_pe" == DEFAULT ]]; then Note "Phase scan       :" "$fmri_pe"; else
+Note "Phase scan       :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
 if [[ "$fmri_rpe" == DEFAULT ]]; then Note "Reverse Phase    :" "$fmri_rpe"; else
 Note "Reverse Phase    :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
 
