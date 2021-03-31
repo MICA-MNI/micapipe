@@ -151,7 +151,7 @@ fi
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"
 cd "$util_parcelations"
-for parc in $"{atlas_parc[@]}"; do
+for parc in "${atlas_parc[@]}"; do
     parc_annot="${parc/lh./}"
     parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
     if [[ ! -f "${dir_volum}/${T1str_nat}_${parc_str}.nii.gz" ]]; then
