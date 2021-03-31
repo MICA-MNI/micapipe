@@ -137,12 +137,13 @@ parcellationList=[sub.split('nativepro_')[1].split('.nii')[0] for sub in parcell
 
 # Remove cerebellum and subcortical strings
 parcellationList.remove('subcortical')
-parcellationList.remove("cerebellum")
+parcellationList.remove('cerebellum')
 
 # Start with conte parcellations
 parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
+    parcSaveName = parellation.split('_conte')
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
     if parcellation == "aparc-a2009s_conte69":
@@ -170,7 +171,7 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt',
+    np.savetxt(funcDir + '/surfaces/' + subject + '_space-conte69_atlas-' + parcSaveName + '_desc-fc.txt',
                ts_r, fmt='%.6f')
 
 # Clean up

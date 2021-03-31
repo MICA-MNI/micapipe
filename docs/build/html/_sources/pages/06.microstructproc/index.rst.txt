@@ -9,6 +9,7 @@ This module samples intracortical intensities from a microstructurally-sensitive
 
 Intracortical equivolumetric surfaces are generated using scripts from the `surface tools repository <https://github.com/kwagstyl/surface_tools>`_, available via GitHub.
 
+
 -MPC
 --------------------------------------------------------
 
@@ -61,7 +62,7 @@ Intracortical equivolumetric surfaces are generated using scripts from the `surf
         .. parsed-literal:: 
             - Microstructural image in native FreeSurfer space: *<outputDirectory>/micapipe/anat/<sub>_micro2fsspace.nii.gz*
             - Boundary-based registration outputs to register microstructural image to native FreeSurfer space: *<outputDirectory>/micapipe/xfms/<sub>_micro2fs**
-            - Equivolumetric surface sampling ouputs stored in  *<outputDirectory>/micapipe/anat/surfaces/micro_profiles*:
+            - Equivolumetric surface sampling ouputs stored in *<outputDirectory>/micapipe/anat/surfaces/micro_profiles*:
                 - Native FreeSurfer space intensity at depth #: *<hemi>.<#>.mgh*
                 - fsaverage5 template space intensity at depth #: *<hemi>.<#>_fsa5.mgh*
                 - conte69 template space intensity at depth #: *<hemi>.<#>_c69-32k.mgh*
