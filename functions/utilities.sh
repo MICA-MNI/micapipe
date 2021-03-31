@@ -496,7 +496,7 @@ function QC_SC() {
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $fod 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $fod_wmN 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_b0</span></td>
@@ -531,6 +531,6 @@ function QC_SC() {
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $fa 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $dti_FA 2>/dev/null)</td>
               </tr>"   >> "$html"
 }
