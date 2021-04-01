@@ -143,7 +143,7 @@ parcellationList.remove('cerebellum')
 parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
-    parcSaveName = parellation.split('_conte')
+    parcSaveName = parcellation.split('_conte')
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
     if parcellation == "aparc-a2009s_conte69":
