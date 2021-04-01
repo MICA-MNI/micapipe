@@ -427,10 +427,10 @@ fi
 
 #------------------------------------------------------------------------------#
 # Register rsfMRI to Freesurfer space with Freesurfer
-fmri2fs_lta="${dir_warp}/${idBIDS}_rsfmri_space-fsnative.lta"
-if [[ ! -f "${fmri2fs_lta}" ]] ; then
+fmri2fs_dat="${dir_warp}/${idBIDS}_rsfmri_space-fsnative.dat"
+if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$id" --mov "$fmri_mean" --reg "${fmri2fs_lta}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
+    Do_cmd bbregister --s "$id" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
 else
     Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"
 fi
@@ -551,7 +551,7 @@ for x in lh rh; do
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
               --mov "$singleecho" \
-              --reg "$fmri2fs_lta" \
+              --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$id" \
               --interp trilinear \
@@ -561,7 +561,7 @@ for x in lh rh; do
           # Map high-passed timeseries to surface
           Do_cmd mri_vol2surf \
               --mov "$fmri_processed "\
-              --reg "$fmri2fs_lta" \
+              --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$id" \
               --interp trilinear \
