@@ -67,7 +67,7 @@ fi
 if [[ "$input_lta" == "DEFAULT" ]]; then
     Warning "Registration to freesurfer space will be performed within script"
 else
-    Warning "Applying provided .lta file to perform registration to native freesurfer space"
+    Warning "Applying provided .dat file to perform registration to native freesurfer space"
     Note "micro2fs transform =" "$input_lta"
 fi
 
@@ -102,8 +102,8 @@ Do_cmd ln -s "$FREESURFER_HOME"/subjects/fsaverage5/ "$dir_surf"
 
 origImage=${bids_T1ws[0]}
 if [[ ${input_lta} == "DEFAULT" ]]; then
-    fs_transform="$dir_warp"/"$id"_micro2fs_bbr.lta
-    if [[ ! -f "$dir_warp"/"$id"_micro2fs_bbr.lta ]]; then
+    fs_transform="$dir_warp"/"$id"_micro2fs_bbr.dat
+    if [[ ! -f "$dir_warp"/"$id"_micro2fs_bbr.dat ]]; then
         Info "Running microstructural -> freesurfer registration for Subject ${id}"
         Do_cmd bbregister --s "$id" \
             --mov "$regImage" \
@@ -115,7 +115,7 @@ if [[ ${input_lta} == "DEFAULT" ]]; then
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"
     fi
 else
-    Info "Using provided input .lta for vol2surf"
+    Info "Using provided input .dat for vol2surf"
     fs_transform="$input_lta"
 fi
 
