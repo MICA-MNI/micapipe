@@ -408,8 +408,11 @@ here=$(pwd)
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
+# LOADS variables with the BIDS format
+bids_variables $BIDS $id $out $SES
+
 # Check BIDS Directory
-if [ ! -d ${BIDS}/sub-${id} ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${BIDS}/sub-${id}"; exit 1; fi
+if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
 
 # Erase temporal files by default
 if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
@@ -471,9 +474,6 @@ if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 # Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
 if [[ -z $threads ]]; then export threads=6; fi
 Info "micapipe will use $threads threads for multicore processing"
-
-# LOADS variables with the BIDS format
-bids_variables $BIDS $id $out $SES
 
 # Directories check
 if [[ ${force} == TRUE ]]; then
