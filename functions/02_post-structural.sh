@@ -145,7 +145,6 @@ else
     Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nfiles++))
 fi
 
-
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"

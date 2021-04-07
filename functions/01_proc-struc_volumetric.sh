@@ -140,6 +140,7 @@ else
     T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
     T1nativepro_5tt=${T1nativepro/.nii.gz/_5TT.nii.gz}
 fi
+# <<<<<< create JSON of t1w_nativepro
 
 # FSL first on the t1w_nativepro
 unset SGE_ROOTs
@@ -193,7 +194,7 @@ for mm in 2 0.8; do
   fi
 done
 
-# Update the T1native mask and T1native_brain
+# Update the T1native mask and T1native_brain <<<<<< create JSONS
 Do_cmd antsApplyTransforms -d 3 -n GenericLabel -i "$MNI152_mask" -r "$T1nativepro_brain" \
         -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" -o "$T1nativepro_mask" -v
 Do_cmd ImageMath 3 "$T1nativepro_brain" m "$T1nativepro" "$T1nativepro_mask"
