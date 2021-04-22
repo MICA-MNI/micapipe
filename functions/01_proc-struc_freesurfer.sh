@@ -101,13 +101,13 @@ elif [[ "$FSdir" = "FALSE" ]]; then
     fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
 
     # Perform recon-all surface registration
-    Do_cmd recon-all -cm -all "$fs_cmd" -s "$id"
+    Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS"
 
     # Copy the recon-all log to our MICA-log Directory
-    Do_cmd cp -v "${tmp}/${id}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
+    Do_cmd cp -v "${tmp}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
 
     # Copy results to  freesurfer's SUBJECTS_DIR directory
-    Do_cmd cp -rv "${tmp}/${id}" "$dir_surf"
+    Do_cmd cp -rv "${tmp}/${idBIDS}" "$dir_surf"
 
     Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 fi
