@@ -188,8 +188,8 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_curvature_10mm.mgh" ]]
             10 \
             "${tmp}/${hemi}_curv_10mm_c69-32k.func.gii"
 
-        Do_cmd mri_convert "${tmp}/${hemi}_curv_10mm_c69-32k.func.gii" "${outDir}/${hemi}_curv_10mm_c69-32k.mgh"
-        if [[ -f "${outDir}/${hemi}_curv_10mm_c69-32k.mgh" ]]; then ((Nsteps++)); fi
+        Do_cmd mri_convert "${tmp}/${hemi}_curv_10mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_curvature_10mm.mgh"
+        if [[ -f "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_curvature_10mm.mgh" ]]; then ((Nsteps++)); fi
     done
 else
     Info "Subject ${id} curvature is registered to conte69"; Nsteps=$((Nsteps + 2))
