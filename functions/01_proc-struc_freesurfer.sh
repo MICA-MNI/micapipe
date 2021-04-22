@@ -121,8 +121,9 @@ lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
-Title "Freesurfer recon-all processing ended: ${status}\n\tlogs:
-$(ls "$dir_logs"/proc_freesurfer*.txt)"
+Title "Freesurfer recon-all processing ended:
+\tStatus          : ${status}
+\tCheck logs      : $(ls "$dir_logs"/proc_freesurfer*.txt)"
 
 echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
