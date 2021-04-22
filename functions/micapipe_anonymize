@@ -13,12 +13,13 @@
 #
 #
 # source print funtions for MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+MICAPIPE=$(dirname $(dirname $(realpath "$0")))
+source "${MICAPIPE}/functions/utilities.sh"
 
 help() {
 echo -e "
 \033[38;5;141mCOMMAND:\033[0m
-   `basename $0`
+   $(basename $0)
 
 \033[38;5;141mARGUMENTS:\033[0m
 \t\033[38;5;197m-sub\033[0m 	        : Subject identification (no 'sub-')
@@ -38,7 +39,7 @@ echo -e "
 \t\033[38;5;197m-threads\033[0m        : Number of threads (Default is 6)
 
 \033[38;5;141mUSAGE:\033[0m
-\033[38;5;141m`basename $0`\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+\033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
 \033[38;5;141mDEPENDENCIES:\033[0m
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
