@@ -126,25 +126,9 @@ http://mica-mni.github.io/
 "
 }
 
-# Check MICAPIPE
-if [ -z "${MICAPIPE}" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE must be define in your enviroment\033[0m
-           TRY: export MICAPIPE=<github_Directory>/micasoft\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined, but the PATH is wrong,
-           it should match /micasoft directory\033[0m
-           CHECK PATH to MICAPIPE:
-           $MICAPIPE\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
 # Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+MICAPIPE=$(dirname $(realpath "$0"))
+source "${MICAPIPE}/functions/utilities.sh"
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -408,8 +392,11 @@ here=$(pwd)
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
+# Assigns variables names
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
 # Check BIDS Directory
-if [ ! -d ${BIDS}/sub-${id} ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${BIDS}/sub-${id}"; exit 1; fi
+if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
 
 # Erase temporal files by default
 if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
@@ -433,14 +420,11 @@ if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(re
 Title "MICA pipeline - (Version $Version) \n\t\tSubject: $id Session: $SES"
 
 # -----------------------------------------------------------------------------------------------#
-# init file for local processing at MICA lab
+# Launch the init file for local processing at MICA lab
 if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
-    # Launch the init file.
-    source ${MICAPIPE}/functions/init.sh
-    if [[ $? != 0 ]]; then
-      Error "Could not find init file. Is this script in the\n base directory of the MICAPIPE github and in init \nfile in the functions subdirectory?"; exit 1
-    fi
+    source "${MICAPIPE}/functions/init.sh"
 else
+
     # -----------------------------------------------------------------------------------------------#
     #   CHECK PACKAGES DEPENDENCIES
     # Dicom to nifti X converter
@@ -459,7 +443,7 @@ else
     if [[ -z $(which antsRegistration) ]]; then Error "ANTs was not found"; exit 1; fi
     # workbench
     if [[ -z $(which wb_command) ]]; then Error "WorkBench was not found"; exit 1; fi
-    # workbench
+    # fix
     if [[ -z $(which fix) ]]; then Warning "fix was not found, ICA-FIX will be skipped"; fi
     # R
     if [[ -z $(which R) ]]; then Warning "R was not found"; fi
@@ -471,9 +455,6 @@ if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 # Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
 if [[ -z $threads ]]; then export threads=6; fi
 Info "micapipe will use $threads threads for multicore processing"
-
-# LOADS variables with the BIDS format
-bids_variables $BIDS $id $out $SES
 
 # Directories check
 if [[ ${force} == TRUE ]]; then
@@ -491,13 +472,17 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # -----------------------------------------------------------------------------------------------#
 #   subject_dir
 # Creates subject directory if it doesn't exist
-if [ ! -d ${subject_dir} ]; then
+if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${id} directory doesn't exist"
     Do_cmd mkdir -p $subject_dir/{logs,xfm,QC,dwi,func,anat/{first,volumetric,surfaces/{conte69,$id}}}
     chmod -R 770 $subject_dir
 else
     Info "Subject ${id} directory exist"
 fi
+
+# freesurfer Directory
+if [ ! -d "$dir_surf" ]; then mkdir "$dir_surf" && chmod -R 770 "$dir_surf"; fi
+if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
 
 # print directory organization
 if [[ ! -z $(which tree) ]]; then
@@ -618,36 +603,6 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-#                   POST Geodesic distance mica-03
-# -----------------------------------------------------------------------------------------------#
-#     Generates geodesic distance matrices calculated along cortical surface mesh
-#     REQUIRES -post-structural and -proc_freesurfer
-if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
-    log_file_str=$dir_logs/GD_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
-    # mica.q - Geodesic distance
-    if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - Geodesic distance"
-        Warning "This option only works on the MICA workstations"
-        export PROC="qsub-MICA"
-        # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-              $COMMAND $PROC
-    # all.q - Geodesic distance
-    elif [[ $qall == "TRUE" ]]; then
-        Info "all.q qsub - Geodesic distance"
-        Warning "This option only works on the McGill BIC network"
-        export PROC="qsub-all.q"
-        # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    else
-        # LOCAL - Geodesic distance processing
-        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-    fi
-fi
-
-# -----------------------------------------------------------------------------------------------#
 #                   POST Cortical morphology analyses mica-03
 # -----------------------------------------------------------------------------------------------#
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
@@ -704,6 +659,36 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     else
         # LOCAL - POST-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Geodesic distance mica-03
+# -----------------------------------------------------------------------------------------------#
+#     Generates geodesic distance matrices calculated along cortical surface mesh
+#     REQUIRES -post-structural and -proc_freesurfer
+if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
+    log_file_str=$dir_logs/GD_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    # mica.q - Geodesic distance
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Geodesic distance"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+              $COMMAND $PROC
+    # all.q - Geodesic distance
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Geodesic distance"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+        # LOCAL - Geodesic distance processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
