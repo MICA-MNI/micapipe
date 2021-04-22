@@ -83,7 +83,7 @@ echo -e "
 \t\033[38;5;197m-MPC\033[0m
 \t\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t\t\033[38;5;120m-microstructural_lta\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
+\t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
 \t\t\t\t        If left blank or omitted, registration will be computed in the script.
 \t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
 
@@ -249,9 +249,9 @@ do
     input_im=$2
     shift;shift
   ;;
-  -microstructural_lta)
+  -microstructural_dat)
     transform_spec=TRUE
-    input_lta=$2
+    input_dat=$2
     shift;shift
   ;;
   -mica)
@@ -361,10 +361,10 @@ if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; fi
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; fi
 
 # Optional arguments mpc
-optarg_mpc=($input_im $input_lta)
+optarg_mpc=($input_im $input_dat)
 if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$input_im
 else optarg_mpc[0]=DEFAULT; fi
-if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_lta
+if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_dat
 else optarg_mpc[1]=DEFAULT; fi
 
 # Optional arguments SC
