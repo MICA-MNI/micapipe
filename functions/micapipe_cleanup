@@ -181,10 +181,9 @@ Title "MICA pipe cleanup \n\t\tSubject: $id"
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
     Do_cmd rm -rf "$proc_struct"/first/* \
-                  "$proc_struct"/*MNI* \
-                  "$proc_struct"/*nativepro_brain* \
-                  "$dir_warp"/*MNI152* \
-                  "$proc_struct"/*nativepro_5TT* \
+                  "$proc_struct"/*_space-nativepro_t1w_* \
+                  "$dir_warp"/*-nativepro_brain_to-MNI152_* \
+                  "$dir_warp"/*pre_t1w_from-run-* \
                   "$dir_logs"/proc_structural_*
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -203,6 +202,7 @@ if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
     Do_cmd rm -rf "$dir_volum"/* \
                   "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
+                  "${dir_conte69}"/* \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
