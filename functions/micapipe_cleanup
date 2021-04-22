@@ -201,8 +201,10 @@ fi
 if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
     Do_cmd rm -rf "$dir_volum"/* \
-                  "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
+                  "$proc_struct"/"$idBIDS"_space-fsnative_t1w.nii.gz \
+                  "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_t1w_* \
                   "${dir_conte69}"/* \
+                  "${dir_freesurfer}"/label/*_mics* \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -248,14 +250,16 @@ fi
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/MPC_*
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
+                  "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
+                  "$dir_logs"/MPC_*
     grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
-    Do_cmd rm -rf "$dir_surf"/geo_dist \
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/geo_dist" \
                   "$dir_logs"/GD_*
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -263,7 +267,7 @@ fi
 # CLEAN -Morphology
 if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
-    Do_cmd rm -rf "$dir_surf"/morphology \
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/morphology" \
                   "$dir_logs"/Morphology_*
     grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
