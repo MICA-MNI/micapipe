@@ -373,23 +373,26 @@ if (file.exists(cv.lh.fs5) && file.exists(cv.rh.fs5)) {
 #### Microstructural profile covariance ####
 mask.lh <- ifelse(freesurferformats::read.fs.morph(paste0(dir_fs,"/",BIDSid,"/surf/lh.thickness"))<0.5,0,1)
 mask.rh <- ifelse(freesurferformats::read.fs.morph(paste0(dir_fs,"/",BIDSid,"/surf/rh.thickness"))<0.5,0,1)
-
 for (i in 1:14) {
   i0 <- sprintf("%02d", i)
-  nom <-  paste0(BIDSid,"_space-fsnative_desc-qc_MPC-",i0,".png"); nom.png <- paste0(dir_QC_png,"/",nom)
-  if (!file.exists(nom.png)) {
-    # Load the data
-    morph <- list(lh=freesurferformats::read.fs.morph(paste0(dir_mpc,"/lh.",i,".mgh"))*mask.lh,
-                rh=freesurferformats::read.fs.morph(paste0(dir_mpc,"/rh.",i,".mgh"))*mask.rh )
-    # Calculate color range (quatile 20% to 95%) >>>> rgla <- list('trans_fun'=limit_fun(1200,2000), 'no_vis'=T);
-    Qt <- round(quantile(c(morph$lh[morph$lh!=0], morph$rh[morph$rh!=0]), probs = c(0.2,0.95)),0)
-    print(paste0("INFO.... Creating PNG of MPC-", i0))
-    rgla <- list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T);
-    cm <- vis.data.on.subject(dir_fs, BIDSid, morph_data_lh=morph$lh, morph_data_rh=morph$rh,
-                              surface = "pial", draw_colorbar = 'horizontal', rglactions = rgla)
-    img <- vis.export.from.coloredmeshes(cm, output_img = nom.png, colorbar_legend = paste0('MPC-',i0), grid_like = FALSE, view_angles = view_angles);
-    while (rgl.cur() > 0) { rgl.close() }
-  } else { print(paste0("INFO.... File exists: ", nom)) }
+  mpc.lh <- paste0(dir_mpc,"/",BIDSid,"_space-fsnative_desc-lh_MPC-",i,".mgh")
+  mpc.rh <- paste0(dir_mpc,"/",BIDSid,"_space-fsnative_desc-rh_MPC-",i,".mgh")
+  if (file.exists(mpc.lh) && file.exists(mpc.rh)) {
+    nom <-  paste0(BIDSid,"_space-fsnative_desc-qc_MPC-",i0,".png"); nom.png <- paste0(dir_QC_png,"/",nom)
+    if (!file.exists(nom.png)) {
+    } else { print(paste0("INFO.... File exists: ", nom)) }
+      # Load the data
+      morph <- list(lh=freesurferformats::read.fs.morph(mpc.lh)*mask.lh,
+                    rh=freesurferformats::read.fs.morph(mpc.rh)*mask.rh )
+      # Calculate color range (quatile 20% to 95%) >>>> rgla <- list('trans_fun'=limit_fun(1200,2000), 'no_vis'=T);
+      Qt <- round(quantile(c(morph$lh[morph$lh!=0], morph$rh[morph$rh!=0]), probs = c(0.2,0.95)),0)
+      print(paste0("INFO.... Creating PNG of MPC-", i0))
+      rgla <- list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T);
+      cm <- vis.data.on.subject(dir_fs, BIDSid, morph_data_lh=morph$lh, morph_data_rh=morph$rh,
+                                              surface = "pial", draw_colorbar = 'horizontal', rglactions = rgla)
+      img <- vis.export.from.coloredmeshes(cm, output_img = nom.png, colorbar_legend = paste0('MPC-',i0), grid_like = FALSE, view_angles = view_angles);
+      while (rgl.cur() > 0) { rgl.close() }
+  }
 }
 
 # -----------------------------------------------------
