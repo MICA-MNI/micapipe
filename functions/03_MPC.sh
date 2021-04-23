@@ -16,7 +16,7 @@
 #   $2 : participant
 #   $3 : Out Directory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -228,8 +228,8 @@ eri=$(echo print "$eri"/60 | perl)
 N=$((N+85))
 if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="ERROR MPC is missing a intensity profile"; fi
 Title "Post-MPC processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m
-\tSteps completed : $(printf "%02d" "$Nsteps")/$N
+\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
 \tStatus          : ${status}
-\tCheck logs      : $dir_logs/MPC_*.txt"
+\tCheck logs      : $(ls $dir_logs/MPC_*.txt)"
 echo "${id}, ${SES/ses-/}, MPC, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
