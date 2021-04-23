@@ -15,7 +15,7 @@
 #   $2 : participant
 #   $3 : Out Directory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -41,7 +41,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Define output directory
-outPath=${dir_surf}/geo_dist
+outPath="${proc_struct}/surfaces/geo_dist"
 
 # wb_command
 workbench_path=$(which wb_command)
@@ -68,22 +68,24 @@ if [ "$N" -gt 2 ]; then Warning "Existing connectomes will be skipped!! If you w
 
 #	Timer
 aloita=$(date +%s)
-
+Nsteps=0
 # creates output directory if it doesn't exist
 [[ ! -d "$outPath" ]] && mkdir -p "$outPath"
 
 #------------------------------------------------------------------------------#
 # Compute geodesic distance on all parcellations
+N=${#parcellations[*]}
 for seg in "${parcellations[@]}"; do
-  parc=$(echo "${seg/.nii.gz/}" | awk -F 'nativepro_' '{print $2}')
-    lh_annot="${dir_surf}/${id}/label/lh.${parc}_mics.annot"
-    rh_annot="${dir_surf}/${id}/label/rh.${parc}_mics.annot"
-    outName="${outPath}/${id}_${parc}"
-    if [ -f "${outName}_GD.txt" ]; then
-        Warning "skipping Geodesic Distance on $parc, already exists"
+  parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
+    lh_annot="${dir_freesurfer}/label/lh.${parc}_mics.annot"
+    rh_annot="${dir_freesurfer}/label/rh.${parc}_mics.annot"
+    outName="${outPath}/${idBIDS}_space-fsnative_atlas-${parc}_desc-GD"
+    if [ -f "${outName}.txt" ]; then
+        Info "Geodesic Distance on $parc, already exists"; ((Nsteps++))
     else
         Info "Computing Geodesic Distance on $parc"
         Do_cmd python "$MICAPIPE"/functions/geoDistMapper.py "$lh_midsurf" "$rh_midsurf" "$outName" "$lh_annot" "$rh_annot" "$workbench_path"
+        if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
     fi
 done
 
@@ -96,7 +98,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
-${dir_logs}/post-gd_*.txt"
-echo "${id}, ${SES/ses-/}, GD, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/brain-proc.csv"
+if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="ERROR GD is missing a prcellation"; fi
+Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
+\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
+\tStatus          : ${status}
+\tCheck logs      : $(ls ${dir_logs}/GD_*.txt)"
+echo "${id}, ${SES/ses-/}, GD, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/micapipe_processed_sub"
 bids_variables_unset
