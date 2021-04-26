@@ -151,7 +151,7 @@ if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_b
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
-if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
 if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\t ls ${T1_seg_cerebellum} \n\t\tRUN -post_structural"; exit; fi
 if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\t ls ${T1_seg_subcortex} \n\t\t -post_structural"; exit; fi
 
@@ -190,7 +190,7 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 aloita=$(date +%s)
 Nsteps=0
 # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_proc-rsfmri_${id}"
+tmp="${tmpDir}/${RANDOM}_micapipe_proc-rsfmri_${idBIDS}"
 Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
@@ -337,16 +337,18 @@ if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then
 
     # masked mean rsfMRI time series
     Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$fmri_brain"
+    if [[ -f "${fmri_mask}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a binary mask of the rsfMRI"
+    Info "Subject ${id} has a binary mask of the rsfMRI"; ((Nsteps++))
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
 if [[ ! -f "$fmri_HP" ]]; then
     Info "High pass filter"
     Do_cmd 3dTproject -input "${singleecho}" -prefix "$fmri_HP" -passband 0.01 666
+        if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has High-pass filter"
+    Info "Subject ${id} has High-pass filter"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -418,8 +420,9 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
     Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+    if [[ -f "${SyN_rsfmri_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"
+    Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -427,9 +430,10 @@ fi
 fmri2fs_dat="${dir_warp}/${idBIDS}_rsfmri_space-fsnative.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$id" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
+    Do_cmd bbregister --s "$idBIDS" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
+    if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"
+    Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -716,9 +720,9 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 17 ]; then status="COMPLETED"; else status="proc_rsfmri is missing a processing step"; fi
+if [ "$Nsteps" -eq 21 ]; then status="COMPLETED"; else status="proc_rsfmri is missing a processing step"; fi
 Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" "$Nsteps")/17
+\tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
 echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
