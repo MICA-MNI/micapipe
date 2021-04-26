@@ -43,25 +43,9 @@ http://mica-mni.github.io/
 "
 }
 
-# Check MICAPIPE
-if [ -z "${MICAPIPE}" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE must be define in your enviroment\033[0m
-           TRY: export MICAPIPE=<github_Directory>/micasoft\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined, but the PATH is wrong,
-           it should match /micasoft directory\033[0m
-           CHECK PATH to MICAPIPE:
-           $MICAPIPE\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-# Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+# source print funtions for MICAPIPE
+MICAPIPE=$(dirname $(dirname $(realpath "$0")))
+source "${MICAPIPE}/functions/utilities.sh"
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -231,8 +215,9 @@ if [ "$procfMRI" = "TRUE" ]; then
     Warning "Erasing proc_rsfmri output files and logs"
     Do_cmd rm -rf "$proc_rsfmri"/* \
                   "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
-                  "$dir_warp"/*fmri* \
-                  "$proc_struct"/*_space-nativepro_desc-T1wbold.nii.gz \
+                  "$dir_warp"/*_rsfmri_from-rsfmri_to-nativepro* \
+                  "${dir_warp}/${idBIDS}"_rsfmri_space-fsnative.dat \
+                  "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
                   "$dir_logs"/proc_rsfmri_*
     grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
