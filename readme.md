@@ -10,7 +10,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
 [![version](https://img.shields.io/badge/version-v0.0.2-blue)](https://github.com/MICA-MNI/micapipe)
 
-
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    
 > The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. 
