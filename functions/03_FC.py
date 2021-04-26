@@ -133,7 +133,7 @@ np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-time
 parcellationList = os.listdir(volmDir)
 
 # Slice the file names and remove nii*
-parcellationList=[sub.split('nativepro_')[1].split('.nii')[0] for sub in parcellationList]
+parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
 
 # Remove cerebellum and subcortical strings
 parcellationList.remove('subcortical')
@@ -143,6 +143,7 @@ parcellationList.remove("cerebellum")
 parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
 for parcellation in parcellationList_conte:
+    parcSaveName = parcellation.split('_conte')[0]
     parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
     if parcellation == "aparc-a2009s_conte69":

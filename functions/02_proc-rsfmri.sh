@@ -21,7 +21,7 @@
 #   $2 : participant
 #   $3 : Out Directory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -53,8 +53,8 @@ source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-T1_seg_subcortex="${dir_volum}/${id}_t1w_${res}mm_nativepro_subcortical.nii.gz"
-T1_seg_cerebellum="${dir_volum}/${id}_t1w_${res}mm_nativepro_cerebellum.nii.gz"
+T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
+T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
 
 ### CHECK INPUTS: rsfMRI, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -188,7 +188,7 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-
+Nsteps=0
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_proc-rsfmri_${id}"
 Do_cmd mkdir -p "$tmp"
@@ -198,9 +198,6 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Define directories
 export SUBJECTS_DIR="$dir_surf"
-
-# Temporary fsa5 directory
-Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "$dir_surf"
 
 # rsfMRI directories
 rsfmri_volum="${proc_rsfmri}/volumetric"   # volumetricOutputDirectory
@@ -272,7 +269,7 @@ if [[ ! -f "${singleecho}" ]]; then
                                    -s "${rsfmri_volum}/${idBIDS}_space-rsfmri_metric_FD.1D" --fd
         Do_cmd mv "${rsfmri_volum}/${idBIDS}_space-rsfmri_mainScan.1D ${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D"
     else
-        Info "Subject ${id} has a singleecho.1D with motion outliers"
+        Info "Subject ${id} has a singleecho.1D with motion outliers"; ((Nsteps++))
     fi
 
     # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
@@ -313,11 +310,11 @@ if [[ ! -f "${singleecho}" ]]; then
             echo "${singleecho}, TOPUP, $(whoami), $(date)" >> "${rsfmri_volum}/TOPUP.txt"
             status="TOPUP"
         else
-              Info "Subject ${id} has singleecho in fmrispace with TOPUP"
+              Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++))
         fi
     fi
 else
-      Info "Subject ${id} has a singleecho_fmrispace processed"; ((Nsteps++))
+      Info "Subject ${id} has a singleecho_fmrispace processed"; Nsteps=$((Nsteps + 2))
 fi
 
 
@@ -383,7 +380,7 @@ fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.n
 T1nativepro_in_fmri="${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"
 str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_"
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
-t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz"
+t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
 str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_to-nativepro_mode-image_desc-SyN_"
 SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
@@ -413,7 +410,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
 
     # SyN from T1_nativepro to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d -i "$mat_rsfmri_affine"
 
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$T1nativepro_brain" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
@@ -427,10 +424,10 @@ fi
 
 #------------------------------------------------------------------------------#
 # Register rsfMRI to Freesurfer space with Freesurfer
-fmri2fs_lta="${dir_warp}/${idBIDS}_rsfmri_space-fsnative.lta"
-if [[ ! -f "${fmri2fs_lta}" ]] ; then
+fmri2fs_dat="${dir_warp}/${idBIDS}_rsfmri_space-fsnative.dat"
+if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$id" --mov "$fmri_mean" --reg "${fmri2fs_lta}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
+    Do_cmd bbregister --s "$id" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
 else
     Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"
 fi
@@ -509,27 +506,29 @@ if [[ ! -f "${global_signal}" ]] ; then
       tissues=(CSF GM WM)
       for idx in {0..2}; do
            tissue=${tissues[$idx]}
-           tissuemap="${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_pve_${idx}.nii.gz"
-           tissue_series="${rsfmri_volum}/${idBIDS}_space-rsfmri_${tissue}.txt"
+           tissuemap="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
+           tissue_series="${rsfmri_volum}/${idBIDS}_space-rsfmri_pve_${tissue}.txt"
            if [[ ! -f "${tissue_series}" ]] ; then
            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -v -u int
            Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -w
          else
-             Info "Subject ${id} has $tissue time-series"
+             Info "Subject ${idBIDS} has $tissue time-series"
          fi
       done
       Do_cmd fslmaths "${tmp}/${idBIDS}_space-rsfmri_WM.nii.gz" -add  "${tmp}/${idBIDS}_space-rsfmri_GM.nii.gz" -add  "${tmp}/${idBIDS}_space-rsfmri_CSF.nii.gz" "${tmp}/${idBIDS}_space-rsfmri_WB.nii.gz"
       Do_cmd fslmeants -i "$fmri_processed" -o "$global_signal" -m "${tmp}/${idBIDS}_space-rsfmri_WB.nii.gz" -w
+      if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has Global time-series"
+      Info "Subject ${id} has Global time-series"; ((Nsteps++))
 fi
 
 # Motion confound
 spikeRegressors="${rsfmri_volum}/${idBIDS}_space-rsfmri_spikeRegressors_REFRMS.1D"
 if [[ ! -f "$spikeRegressors" ]] ; then
     Do_cmd fsl_motion_outliers -i "$fmri_processed" -o "$spikeRegressors" -s "${rsfmri_volum}/${idBIDS}_space-rsfmri_metric_REFRMS.1D" --refmse --nomoco
+    if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
+    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -551,9 +550,9 @@ for x in lh rh; do
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
               --mov "$singleecho" \
-              --reg "$fmri2fs_lta" \
+              --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
-              --trgsubject "$id" \
+              --trgsubject "$idBIDS" \
               --interp trilinear \
               --hemi "${x}" \
               --out "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_"${x}"_NoHP.mgh
@@ -561,14 +560,15 @@ for x in lh rh; do
           # Map high-passed timeseries to surface
           Do_cmd mri_vol2surf \
               --mov "$fmri_processed "\
-              --reg "$fmri2fs_lta" \
+              --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
-              --trgsubject "$id" \
+              --trgsubject "$idBIDS" \
               --interp trilinear \
               --hemi "$x" \
               --out "$vol2surfTS"
+          if [[ -f "$vol2surfTS" ]] ; then ((Nsteps++)); fi
     else
-        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"
+        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"; ((Nsteps++))
     fi
 
     # Convert native timeseries to gifti
@@ -587,14 +587,15 @@ for x in lh rh; do
           else
             Do_cmd mri_surf2surf \
                 --hemi "$x" \
-                --srcsubject "$id" \
+                --srcsubject "$idBIDS" \
                 --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
-                --trgsubject "$id" \
+                --trgsubject "$idBIDS" \
                 --tval "$out_surf_native" \
                 --fwhm-trg 10
           fi
+    if [[ -f "$out_surf_native" ]] ; then ((Nsteps++)); fi
     else
-        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"
+        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"; ((Nsteps++))
     fi
 
     # Register to fsa5 and smooth
@@ -602,25 +603,27 @@ for x in lh rh; do
     if [[ ! -f "$out_surf_fsa5" ]] ; then
          Do_cmd mri_surf2surf \
             --hemi "${x}" \
-            --srcsubject "$id" \
+            --srcsubject "$idBIDS" \
             --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
             --trgsubject fsaverage5 \
             --tval "$out_surf_fsa5"
+         if [[ -f "$out_surf_fsa5" ]] ; then ((Nsteps++)); fi
     else
-         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"
+         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"; ((Nsteps++))
     fi
 
     out_surf_fsa5_sm="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}_10mm.mgh"
     if [[ ! -f "$out_surf_fsa5_sm" ]] ; then
          Do_cmd mri_surf2surf \
             --hemi "${x}" \
-            --srcsubject "$id" \
+            --srcsubject "$idBIDS" \
             --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
             --trgsubject fsaverage5 \
             --tval "$out_surf_fsa5_sm" \
             --fwhm-trg 10
+         if [[ -f "$out_surf_fsa5_sm" ]] ; then ((Nsteps++)); fi
     else
-         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"
+         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"; ((Nsteps++))
     fi
 
     # Register to conte69 and smooth
@@ -629,13 +632,13 @@ for x in lh rh; do
           # Register to conte69
           Do_cmd wb_command -metric-resample \
               "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}.func.gii" \
-              "${dir_conte69}/${id}_${hemisphere}h_sphereReg.surf.gii" \
+              "${dir_conte69}/${idBIDS}_${hemi}_sphereReg.surf.gii" \
               "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii" \
               ADAP_BARY_AREA \
               "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" \
               -area-surfs \
-              "${dir_surf}/${id}/surf/${hemisphere}h.midthickness.surf.gii" \
-              "${dir_conte69}/${id}_${hemisphere}h_midthickness_32k_fs_LR.surf.gii"
+              "${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii" \
+              "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
               "${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii" \
@@ -645,12 +648,13 @@ for x in lh rh; do
 
           Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" "${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_${x}.mgh"
           Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}_10mm.func.gii" "${out_surf}"
+          if [[ -f "$out_surf" ]] ; then ((Nsteps++)); fi
     else
-          Info "Subject ${id} has a singleecho fmri2fs ${x} on conte69-32k 10mm surface"
+          Info "Subject ${id} has a singleecho fmri2fs ${x} on conte69-32k 10mm surface"; ((Nsteps++))
     fi
 done
 else
-  Info "Subject ${id} has a singleecho fmri2fs on all surfaces: native, fsa5, and conte69"
+  Info "Subject ${id} has a singleecho fmri2fs on all surfaces: native, native_fwhm-10mm, fsa5, fsa5_fwhm-10mm, and conte69fwhm_10mm"; Nsteps=$((Nsteps+10))
 fi
 
 #------------------------------------------------------------------------------#
@@ -665,8 +669,9 @@ if [[ ! -f "$timese_subcortex" ]] ; then
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$fmri_processed" --seg "$rsfmri_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
+      if [[ -f "$timese_subcortex" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has rsfmri subcortical time-series"
+      Info "Subject ${id} has rsfmri subcortical time-series"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -682,8 +687,9 @@ if [[ ! -f "$timese_cerebellum" ]] ; then
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$fmri_processed" --seg "$rsfmri_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
       3dROIstats -mask "$rsfmri_cerebellum" -nzsum "$rsfmri_cerebellum" > "$stats_cerebellum"
+      if [[ -f "$timese_cerebellum" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has rsfmri cerebellar time-series"
+      Info "Subject ${id} has rsfmri cerebellar time-series"; ((Nsteps++))
 fi
 
 # -----------------------------------------------------------------------------------------------
@@ -695,15 +701,13 @@ QC_proc-rsfmri
 cleanTS="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_desc-timeseries_clean.txt"
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running rsfMRI post processing"
-    labelDirectory="${dir_surf}/${id}/label/"
+    labelDirectory="${dir_freesurfer}/label/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_rsfmri" "$labelDirectory" "$util_parcelations" "$dir_volum"
+    if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has post-processed conte69 time-series"
+    Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
 fi
 
-#------------------------------------------------------------------------------#
-# Clean fsaverage5 directory
-Do_cmd rm -rf "${dir_surf}/fsaverage5"
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
@@ -712,7 +716,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
-$(ls "${dir_logs}"/proc_rsfmri_*.txt)"
+if [ "$Nsteps" -eq 17 ]; then status="COMPLETED"; else status="proc_rsfmri is missing a processing step"; fi
+Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
+\tSteps completed : $(printf "%02d" "$Nsteps")/17
+\tStatus          : ${status}
+\tCheck logs      : $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
 echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
