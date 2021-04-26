@@ -6,7 +6,7 @@ Col="38;5;83m" # Color code
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "\033[38;5;141m
-Usage:    `basename $0`\033[0m  \033[38;5;197m-in\033[0m <DICOMS_directory> \033[38;5;197m-id\033[0m <control_01> \033[38;5;197m-bids\033[0m <BIDS directory path>\n
+Usage:    $(basename $0)\033[0m  \033[38;5;197m-in\033[0m <DICOMS_directory> \033[38;5;197m-id\033[0m <control_01> \033[38;5;197m-bids\033[0m <BIDS directory path>\n
 \t\t\033[38;5;197m-in\033[0m 	Input directory with the subject's DICOMS directories (FULL PATH)
 \t\t\033[38;5;197m-id\033[0m 	Subject identification for the new BIDS directory
 \t\t\t  -id CAN be different than -in DICOMS directory
@@ -43,24 +43,9 @@ raul.rodriguezcrcues@mcgill.ca
 # *dwi_b0_5PA         | sub-01_${SES}_acq-PA_dir-5_dwi
 # **_dwi_b2000**      | sub-01_${SES}_acq-b2000_dir-66_dwi
 
-# Chek MICAPIPE
-if [ -z "${MICAPIPE}" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE must be define in your enviroment\033[0m
-           TRY: export MICAPIPE=<github_Directory>/micapipe\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
-fi
-
-if [ ! -f "${MICAPIPE}/functions/utilities.sh" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined but the PATH is wrong,
-           it should match /micapipe directory\033[0m
-           CHECK PATH to MICAPIPE:
-           $MICAPIPE\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 0
-fi
-
 # Source print functions from MICAPIPE
+dir_functions=$(dirname $(realpath "$0"))
+MICAPIPE=$(dirname $(realpath "$dir_functions"))
 source "${MICAPIPE}/functions/utilities.sh"
 
 #------------------------------------------------------------------------------#
@@ -103,14 +88,14 @@ do
 done
 
 # argument check out & WARNINGS
-arg=("$SUBJ_DCM" "$Subj" "$BIDS_DIR" "$SES")
-if [ "${#arg[@]}" -lt 4 ]; then
+arg=($SUBJ_DCM $Subj $BIDS_DIR $SES)
+if [ "${#arg[@]}" -lt 4 ]; then help
 Error "One or more mandatory arguments are missing:
          -id    $Subj
          -ses   $SES
          -in    $SUBJ_DCM
          -bids  $BIDS_DIR"
-help; exit 0; fi
+exit 0; fi
 
 # Sequence names and variables (ses is for default "ses-pre")
 SES="ses-${SES/ses-/}"
@@ -131,7 +116,7 @@ BIDS_DIR=$(realpath "$BIDS_DIR")
 # Check mandatory inputs: -id
 arg=("$Subj")
 if [ "${#arg[@]}" -lt 1 ]; then Error "Subject id is missing: $Subj"; help; exit 0; fi
-if [[ "$Subj" =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain special characters:\n\t\t\t['!@#$%^&*()_+']"; exit 0; fi
+if [[ "$Subj" =~ ['!@#$%^&*()_+'] ]]; then Error "Subject id shouldn't contain special characters:\n\t\t\t['!@#\$%^&*()_+']"; exit 0; fi
 
 # check mandatory inputs: -bids
 if [[ -z "$BIDS_DIR" ]]; then Error "BIDS directory is empty"; exit 0; fi
