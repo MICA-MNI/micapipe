@@ -64,9 +64,15 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
 n=$((N - 1))
+T1str_nat="${idBIDS}_space-nativepro_t1w"
+T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
+T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
+T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
+T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
+T1nativepro_5tt=${T1nativepro/.nii.gz/_5TT.nii.gz}
 
 # Creates the t1w_nativepro for structural processing
-if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ] || [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w_brain.nii.gz ]; then
+if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1str_nat}"_brain.nii.gz ]; then
     # Reorient  to LPI with AFNI
     # LPI is the standard 'neuroscience' orientation, where the x-axis is
     # Left-to-Right, the y-axis is Posterior-to-Anterior, and the z-axis is Inferior-to-Superior.
@@ -85,9 +91,6 @@ if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ] || [ ! -f "${p
       ref=${bids_T1ws[0]} # reference to registration
       ref_run=$(echo "${bids_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       t1ref="run-${ref_run}"
-      # Variables for N4BiasFieldCorrection & Native output
-      T1str_nat=$(t1w_str "${idBIDS}" "${ref}")
-      T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
           run=$(echo "${bids_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
@@ -105,18 +108,10 @@ if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ] || [ ! -f "${p
 
     # If only one T1w is provided
     elif [ "$N" -eq 1 ]; then
-      # Variables for N4BiasFieldCorrection & Native output
-      T1str_nat=$(t1w_str "${id}" "${t1_reo}" nativepro)
-      T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
       Do_cmd cp -v "$t1_reo" "$T1n4"
     fi
 
-    Info "T1nativepro biasfield correction and intensity rescale "
-    # Output names
-    T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
-    T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
-    T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
-    T1nativepro_5tt=${T1nativepro/.nii.gz/_5TT.nii.gz}
+    Info "T1w_nativepro biasfield correction and intensity rescaling"
 
     # Intensity Non-uniform correction - N4
     Do_cmd N4BiasFieldCorrection  -d 3 -i "$T1n4" -r -o "$T1n4" -v
@@ -134,14 +129,7 @@ if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ] || [ ! -f "${p
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
 
 else
-    Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
-    # Output names get the names
-    T1str_nat=$(t1w_str "${idBIDS}" "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz)
-    T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
-    T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
-    T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
-    T1nativepro_5tt=${T1nativepro/.nii.gz/_5TT.nii.gz}
-    ((Nsteps++))
+    Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"; ((Nsteps++))
 fi
 json_nativepro_t1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
 
