@@ -166,6 +166,9 @@ bids_print.variables-post
 bids_print.variables-dwi
 bids_print.variables-rsfmri
 
+#	Timer
+aloita=$(date +%s)
+
 #------------------------------------------------------------------------------#
 # Create files and png for QC
 # Create tmp dir
@@ -178,7 +181,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 cd $tmpDir
 
 # Create matrices and surfaces pngs
-Do_cmd rm ${dir_QC_png}/*_desc-qc*
+# Do_cmd rm ${dir_QC_png}/*_desc-qc*
 Rscript ${MICAPIPE}/functions/micapipe_qc.R \
 --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
 --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
@@ -199,7 +202,7 @@ if [ -d "$autoTract_dir" ]; then
   for plane in 0 1; do
      COMMAND="mrview $autoTract_dir/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_atlas2fa.nii.gz -mode 1 -plane $plane -colourbar 0 -comments 0 -voxelinfo 0 -focus 0 -intensity_range 0,100000 -imagevisible 1 $COMMAND_tract -capture.grab -exit"
      $COMMAND
-     mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc-plane${plane}.png"
+     mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png"
   done
 fi
 
@@ -228,10 +231,7 @@ table_style=" <style type=\"text/css\">
     font-size:16px;text-align:left;vertical-align:top}
   </style>"
 
-#	Timer
-aloita=$(date +%s)
-
-echo "<!doctype html>
+echo -e "<!doctype html>
 <html>
 <head>
   <meta charset=\"utf-8\">
@@ -270,7 +270,7 @@ echo "<!doctype html>
     border: none;
     text-align: left;
     outline: none;
-    font-size: 18px;
+    font-size: 16px;
     transition: 0.4s;
   }
 
@@ -279,15 +279,17 @@ echo "<!doctype html>
   }
 
   .accordion:after {
-    content: '\\002B';
+    content: \"\\2795\";
     color: #777;
     font-weight: bold;
     float: right;
+    font-size: 10px;
     margin-left: 5px;
   }
 
   .active:after {
-    content: \"\\2212\";
+    content: \"\\2796\";
+    font-size: 10px;
   }
 
   .panel {
@@ -458,7 +460,7 @@ nifti_check() {
     fi
       echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>
            <br>
-           <img src=\"$3\"  alt=\"HTML5\" style=\"height:400px\"  class=\"center\">"  >> "$QC_html"
+           <img src=\"$outname\"  alt=\"HTML5\" style=\"height:400px\"  class=\"center\">"  >> "$QC_html"
   else echo -e " --- FILE NOT FOUND ---  " >> "$QC_html"
   fi
 }
@@ -746,18 +748,18 @@ echo -e "
       <tbody>" >> "$QC_html"
 
 # iterate over each FC png file
-Nconn=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-*_desc-fc.txt 2>/dev/null | wc -l)
+Nconn=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-*_desc-FC.txt 2>/dev/null | wc -l)
 if [ ! "$Nconn" -eq 0 ]; then
   for seg in $parcellations; do
       parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
       echo -e " <tr>
             <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
       for ext in FC FC-conte69; do
-          nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc-${ext}.png
+          nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
           if [ -f "$nom" ]; then
               echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
           else
-              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${id}_${parc_name}_${ext}.png\"</span><br><br></td>"  >> "$QC_html"
+              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
           fi
       done
       echo "  </tr>" >> "$QC_html"
@@ -841,7 +843,7 @@ echo -e "
            if [ -f "$nom" ]; then
                echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
            else
-               echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${id}_${tracts}_${parc_name}_${ext}.png\"</span><br><br></td>"  >> "$QC_html"
+               echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"SC-${tracts} ${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
            fi
        done
        echo "  </tr>" >> "$QC_html"
@@ -885,9 +887,9 @@ for seg in $parcellations; do
         if [ "$Nfiles" -eq 0 ]; then
             Message="\"tg-dp6t\"><br><br><span style=\"font-weight:bold\">>>>   Module not   <<<</span><br><span style=\"font-weight:bold\">processed:</span><br><span style=\"font-weight:bold\">-${ext/-intensity/}";
         else
-            Message="\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${idBIDS}_atlas-${parc_name}_desc-qc-${ext}.png\"";
+            Message="\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"";
         fi
-        nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc-${ext}.png
+        nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
         if [ -f "$nom" ]; then
             echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"height:${px}\"></td>" >> "$QC_html"
         else
@@ -939,9 +941,9 @@ echo -e "\n      <h2>Outputs files</h2>" >> "$QC_html"
 auto_FAatlas="${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-5M-SIFT2_atlas2fa.nii.gz"
 nifti_check "FA atlas in native dwi" "$auto_FAatlas" "${dir_QC_png}/${idBIDS}_space-dwi_FAatlas.png"
 echo -e "\n      <h2>Sagital view: QC segmentations of $Ntracts tracts</h2>
-        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc-plane0.png\" width=\"625\" height=\"530\">
+        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane0.png\" width=\"625\" height=\"530\">
       <h3>Coronal view: QC segmentations of $Ntracts tracts</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc-plane1.png\"  width=\"625\" height=\"530\">
+        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane1.png\"  width=\"625\" height=\"530\">
     </div>" >> "$QC_html"
 fi
 
