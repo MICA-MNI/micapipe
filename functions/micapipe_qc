@@ -178,10 +178,10 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 cd $tmpDir
 
 # Create matrices and surfaces pngs
-# Do_cmd rm ${dir_QC_png}/*_desc-qc_*
-# Rscript ${MICAPIPE}/functions/micapipe_qc.R \
-# --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
-# --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
+Do_cmd rm ${dir_QC_png}/*_desc-qc*
+Rscript ${MICAPIPE}/functions/micapipe_qc.R \
+--BIDSid="$idBIDS" --subject_dir="$subject_dir" \
+--mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
 
 # Do autotract only if dir exists
 if [ -d "$autoTract_dir" ]; then
@@ -447,12 +447,13 @@ MNI152_2_brain="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
 
 nifti_check() {
   echo -e "    <h3>$1</h3>" >> "$QC_html"
+  outname=${3/.png/_desc-qc.png}
   if [[ -f "$2" ]]; then
-    if [[ ! -f "$3" ]]; then
+    if [[ ! -f "$outname" ]]; then
       if [ -f "$4" ]; then
-          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$3" --overlay="$4"
+          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname" --overlay="$4"
       else
-          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$3"
+          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname"
       fi
     fi
       echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>

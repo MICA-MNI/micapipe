@@ -434,35 +434,35 @@ for (seg in parc) { subj_id <- paste0(BIDSid,"_atlas-",seg)
     # Functional connectome
     conn.rsf <- paste0(rsfmri_surf,"/",BIDSid,"_rsfmri_space-fsnative_atlas-",seg,"_desc-FC.txt")
       if (file.exists(conn.rsf)==TRUE) { conn.rsf <- load.conn(conn.rsf); File <- ""; ColMap <- cmap.FC(256)
-          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc-FC.png"))
+          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_FC.png"))
           image(conn.rsf, axes=FALSE, main=paste0(subj_id,"_FC"), col=ColMap ); dev.off()
           } else { conn.rsf <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "FC")) }
 
     # Functional connectome conte69
     conn69.rsf <- paste0(rsfmri_surf,"/",BIDSid,"_rsfmri_space-conte69-32k_atlas-",seg,"_desc-FC.txt")
       if (file.exists(conn69.rsf)==TRUE) { conn69.rsf <- load.conn(conn69.rsf); File <- ""; ColMap <- cmap.FC(256)
-          png(paste0(dir_QC_png,"/", subj_id,"_desc-qc-FC-conte69.png"))
+          png(paste0(dir_QC_png,"/", subj_id,"_desc-qc_FC-conte69.png"))
           image(conn69.rsf, axes=FALSE, main=paste0(File, subj_id,"_FC-conte69.png"), col=ColMap ); dev.off()
       } else { conn69.rsf <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "FC conte 69")) }
 
     # Geodesic distance
     conn.geo <- paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-GD.txt")
       if (file.exists(conn.geo)==TRUE) { conn.geo <- load.conn(conn.geo, sym=FALSE); File <- ""; ColMap <- cmap.GD(256)
-          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc-GD.png"))
+          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_GD.png"))
           image(conn.geo, axes=FALSE, main=paste0(subj_id,"_GD"), col=ColMap ); dev.off()
        } else { conn.geo <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "GD")) }
 
     # Micro structural profiles
     conn.mpc <- paste0(dir_surf,"/micro_profiles/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-MPC.txt")
       if (file.exists(conn.mpc)==TRUE) { conn.mpc <- load.conn(conn.mpc); File <- ""; ColMap <- cmap.MPC(256)
-          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc-MPC.png"))
+          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_MPC.png"))
           image(conn.mpc, axes=FALSE, main=paste0(BIDSid," ",seg,"MPC"), col=ColMap ); dev.off()
       } else { conn.mpc <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "MPC")) }
 
     # Intensity profiles
     conn.int <- paste0(dir_surf,"/micro_profiles/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-intensity_profiles.txt")
       if (file.exists(conn.int)==TRUE) { conn.int <- load.conn(conn.int, sym=FALSE); File <- ""; ColMap <- cmap.MPC(256)
-          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc-MPC-intensity.png"), height = 250)
+          png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_MPC-intensity.png"), height = 250)
           image(t(conn.int), axes=FALSE, main=paste0(subj_id,"_Intensity"), col=ColMap ); dev.off()
       } else { conn.int <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "intensity")) }
 }
