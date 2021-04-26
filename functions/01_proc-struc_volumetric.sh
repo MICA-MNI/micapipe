@@ -156,7 +156,7 @@ else
     Info "Subject $id has FSL-fast"; ((Nsteps++))
 fi
 
-# Loop over all requested templates - could use a check for whether the template and the mask exists.
+# Loop over all requested templates.
 # mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
 for mm in 2 0.8; do
   # Only runs if the output doesn't exist
