@@ -150,7 +150,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           fi
 
           Info "Concatenatenating shells"
-          dwi_0=$(echo ${bids_dwis[0]} | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+          dwi_0=$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
           if [ "${#bids_dwis[@]}" -eq 1 ]; then
             cp "${tmp}/${dwi_0}.mif" "$dwi_cat"
           else

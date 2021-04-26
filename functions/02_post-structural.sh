@@ -226,7 +226,7 @@ if [ "$Nfiles" -eq $N ]; then status="COMPLETED"; else status="ERROR missing par
 Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \tSteps completed : $(printf "%02d" $Nfiles)/$(printf "%02d" $N)
 \tStatus          : ${status}
-\tCheck logs      : $(ls ${dir_logs}/post_structural_*.txt)"
+\tCheck logs      : $(ls "${dir_logs}"/post_structural_*.txt)"
 # Print QC stamp
 echo "${id}, ${SES/ses-/}, post_structural, $status N=$(printf "%02d" "$Nfiles")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
