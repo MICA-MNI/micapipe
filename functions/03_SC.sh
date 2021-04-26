@@ -15,7 +15,7 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -56,9 +56,9 @@ dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # from proc_structural
-T1str_nat="${id}_t1w_${res}mm_nativepro"
-T1_seg_cerebellum="${dir_volum}/${T1str_nat}_cerebellum.nii.gz"
-T1_seg_subcortex="${dir_volum}/${T1str_nat}_subcortical.nii.gz"
+T1str_nat="${idBIDS}_space-nativepro_t1w_atlas"
+T1_seg_cerebellum="${dir_volum}/${T1str_nat}-cerebellum.nii.gz"
+T1_seg_subcortex="${dir_volum}/${T1str_nat}-subcortical.nii.gz"
 # TDI output
 tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif"
 
@@ -79,7 +79,7 @@ if [ "$N" -gt 3 ]; then Warning "
   Connectomes with $tracts streamlines already exist!!
   If you want to re-run the $tracts tractogram or add parcellations first clean the outpus:
     micapipe_cleanup -SC -sub $id -out ${out/"/micapipe"/} -bids $BIDS -tracts ${tracts}"; fi
-if [ -f "$tdi" ]; then Error "FC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
+if [ -f "$tdi" ]; then Error "SC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Tractography and structural connectomes\n\t\tmicapipe $Version, $PROC"
@@ -109,8 +109,6 @@ Do_cmd cd "$tmp"
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
 parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
-T1_seg_cerebellum="${dir_volum}/${T1str_nat}_cerebellum.nii.gz"
-T1_seg_subcortex="${dir_volum}/${T1str_nat}_subcortical.nii.gz"
 dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
 dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
 
@@ -166,7 +164,7 @@ Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
 for seg in "${parcellations[@]}"; do
-    parc_name=$(echo "${seg/.nii.gz/}" | awk -F 'nativepro_' '{print $2}')
+    parc_name=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     connectome_str="${dwi_cnntm}/${idBIDS}_space-dwi_atlas-${parc_name}_desc-iFOD2-${tracts}-${filter}"
     lut="${util_lut}/lut_${parc_name}_mics.csv"
     dwi_cortex="${tmp}/${id}_${parc_name}-cor_dwi.nii.gz" # Segmentation in dwi space
@@ -232,7 +230,7 @@ for seg in "${parcellations[@]}"; do
 done
 
 # Change connectome permissions
-Do_cmd chmod 770 -R "$dwi_cnntm"/*
+chmod 770 -R "$dwi_cnntm"/*
 
 # -----------------------------------------------------------------------------------------------
 # Compute Auto-Tractography
@@ -247,8 +245,8 @@ if [ "$autoTract" == "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------
-# save the tractogram
-if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; fi
+# save the tractogram and the SIFT2 weights
+if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; Do_cmd mv "$weights" "${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography_weights.txt"; fi
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
@@ -261,9 +259,9 @@ eri=$(echo print "$eri"/60 | perl)
 N="$(( 2 + ${#parcellations[*]} * 3))"
 if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
 Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\t\tNumber of connectomes: $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
-\tlogs:
-$(ls "$dir_logs"/SC_*.txt)"
+\tSteps completed : $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
+\tStatus          : ${status}
+\tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
 echo "${id}, ${SES/ses-/}, SC, ${status}-${tracts} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
