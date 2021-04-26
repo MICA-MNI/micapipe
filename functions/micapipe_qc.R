@@ -380,7 +380,6 @@ for (i in 1:14) {
   if (file.exists(mpc.lh) && file.exists(mpc.rh)) {
     nom <-  paste0(BIDSid,"_space-fsnative_desc-qc_MPC-",i0,".png"); nom.png <- paste0(dir_QC_png,"/",nom)
     if (!file.exists(nom.png)) {
-    } else { print(paste0("INFO.... File exists: ", nom)) }
       # Load the data
       morph <- list(lh=freesurferformats::read.fs.morph(mpc.lh)*mask.lh,
                     rh=freesurferformats::read.fs.morph(mpc.rh)*mask.rh )
@@ -389,9 +388,10 @@ for (i in 1:14) {
       print(paste0("INFO.... Creating PNG of MPC-", i0))
       rgla <- list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T);
       cm <- vis.data.on.subject(dir_fs, BIDSid, morph_data_lh=morph$lh, morph_data_rh=morph$rh,
-                                              surface = "pial", draw_colorbar = 'horizontal', rglactions = rgla)
+                                surface = "pial", draw_colorbar = 'horizontal', rglactions = rgla)
       img <- vis.export.from.coloredmeshes(cm, output_img = nom.png, colorbar_legend = paste0('MPC-',i0), grid_like = FALSE, view_angles = view_angles);
       while (rgl.cur() > 0) { rgl.close() }
+    } else { print(paste0("INFO.... File exists: ", nom)) }
   }
 }
 
