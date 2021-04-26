@@ -103,5 +103,5 @@ Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") min
 \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/GD_*.txt)"
-echo "${id}, ${SES/ses-/}, GD, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/micapipe_processed_sub"
+echo "${id}, ${SES/ses-/}, GD, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), $PROC" >> "${out}/micapipe_processed_sub.csv"
 bids_variables_unset
