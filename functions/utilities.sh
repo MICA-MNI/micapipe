@@ -149,9 +149,9 @@ file.exist(){
 bids_print.variables-post() {
   # This functions prints BIDS variables names and files if found
   Info "Structural processing output variables:"
-  Note "T1 nativepro    =" "$(find $T1nativepro 2>/dev/null)"
-  Note "T1 5tt          =" "$(find $T15ttgen 2>/dev/null)"
-  Note "T1 fast_all     =" "$(find $T1fast_seg 2>/dev/null)"
+  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "T1 fast_all     =" "$(find "$T1fast_seg" 2>/dev/null)"
   Note "T1 resolution   =" "$res"
 }
 
@@ -162,16 +162,16 @@ bids_print.variables-dwi() {
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
   file.exist "dwi_reverse     =" $dwi_reverse
 
-  Note "T1 nativepro    =" "$(find $T1nativepro 2>/dev/null)"
-  Note "T1 5tt          =" "$(find $T15ttgen 2>/dev/null)"
+  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
   Note "MNI152_mask     =" "$MNI152_mask"
 }
 
 bids_print.variables-rsfmri() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for rs-fMRI processing:"
-  Note "T1 nativepro       =" "$(find $T1nativepro 2>/dev/null)"
-  Note "T1 freesurfer      =" "$(find $T1freesurfr 2>/dev/null)"
+  Note "T1 nativepro       =" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 freesurfer      =" "$(find "$T1freesurfr" 2>/dev/null)"
   file.exist "Main rsfMRI        =" $mainScan
   file.exist "Main rsfMRI json   =" $mainScanJson
   file.exist "Main phase scan    =" $mainPhaseScan
@@ -234,16 +234,6 @@ bids_variables_unset() {
   unset dwi_reverse
 }
 
-t1w_str() {
-  # This function aims to create a NAME strig with homogeneous format
-  # NEW name format:
-  #      <id>_<source>_<resolution>_<brain-space>_<class>_<extras>.<extension>
-  #
-  id=$1
-  t1w_full=$2
-  echo "${id}_space-nativepro_t1w${run}"
-}
-
 micapipe_software() {
   Info "MICA pipe - Software versions"
   Note "MRtrix3....." "$(mrinfo -version | awk 'NR==1 {print $3}')"
@@ -276,30 +266,30 @@ micapipe_json() {
   fi
 
   echo -e "{
-    \"Name\": \""$Name"\",
-    \"BIDSVersion\": \""$BIDSVersion"\",
+    \"Name\": \"${Name}\",
+    \"BIDSVersion\": \"${BIDSVersion}\",
     \"DatasetType\": \"derivative\",
     \"GeneratedBy\": [
       {
         \"Name\": \"micapipe\",
-        \"Version\": \""$Version"\",
+        \"Version\": \"${Version}\",
         \"Container\": {
           \"Type\": \"github\",
-          \"Tag\": \"MICA-MNI/micapipe:"$Version"\"
+          \"Tag\": \"MICA-MNI/micapipe:${Version}\"
           }
       },
       {
         \"Name\": \"$(whoami)\",
         \"Workstation\": \"$(uname -n)\"
         \"LastRun\": \"$(date)\"
-        \"Processing\": \""$PROC"\"
+        \"Processing\": \"${PROC}\"
       }
     ],
     \"SourceDatasets\": [
       {
         \"DOI\": \"doi:\",
         \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \""$Version"\"
+        \"Version\": \"${Version}\"
       }
     ]
   }" > "${out}/pipeline-description.json"
@@ -555,12 +545,12 @@ function QC_proc-rsfmri() {
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
                 <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find $topupConfigFile 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$topupConfigFile" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
                 <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$icafixTraining" 2>/dev/null)</td>
               </tr>"   > "$html"
 }
 
@@ -570,41 +560,41 @@ function QC_SC() {
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $fod_wmN 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$fod_wmN" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_b0</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $dwi_b0 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$dwi_b0" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mat_dwi_affine</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $mat_dwi_affine 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$mat_dwi_affine" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_5tt</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $dwi_5tt 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$dwi_5tt" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_cerebellum</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $T1_seg_cerebellum 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$T1_seg_cerebellum" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_subcortex</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $T1_seg_subcortex 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$T1_seg_subcortex" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_mask</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $dwi_mask 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$dwi_mask" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $dti_FA 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$dti_FA" 2>/dev/null)</td>
               </tr>"   >> "$html"
 }
