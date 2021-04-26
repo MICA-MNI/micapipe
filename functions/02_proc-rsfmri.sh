@@ -433,7 +433,7 @@ if [[ ! -f "${fmri2fs_dat}" ]] ; then
     Do_cmd bbregister --s "$idBIDS" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_rsfmri_space-fsnative_outbbreg_FIX.nii.gz" --init-fsl --bold
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a lta transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
+    Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -538,11 +538,10 @@ fi
 #------------------------------------------------------------------------------#
 # Register to surface
 # If three surfaces are found skipp this step
-vol2surfTS="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_?h.mgh
-out_surf_native="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_?h_10mm.mgh
-out_surf_fsa5="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsaverage5_?h_10mm.mgh
-out_surf="${rsfmri_surf}/${idBIDS}"_rsfmri_space-conte69-32k_?h_10mm.mgh
-Nsurf=$(ls $vol2surfTS $out_surf_native $out_surf_fsa5 $out_surf 2>/dev/null | wc -l)
+Nsurf=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_?h.mgh \
+            "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_?h_10mm.mgh \
+            "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsaverage5_?h_10mm.mgh \
+            "${rsfmri_surf}/${idBIDS}"_rsfmri_space-conte69-32k_?h_10mm.mgh 2>/dev/null | wc -l)
 
 if [ "$Nsurf" -lt 8 ]; then
 for hemisphere in lh rh; do
