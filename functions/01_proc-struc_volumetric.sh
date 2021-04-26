@@ -128,10 +128,11 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     # If no T1native pro exit_status "something is wrong" exit
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
 
+    # Create json file for T1native
+    json_nativepro_t1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"; ((Nsteps++))
 fi
-json_nativepro_t1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
 
 # FSL first on the t1w_nativepro
 unset SGE_ROOTs
