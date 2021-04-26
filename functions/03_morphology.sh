@@ -206,6 +206,6 @@ if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR Morphology i
 Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m.
 \tSteps completed : $(printf "%02d" "$Nsteps")/08
 \tStatus          : ${status}
-\tCheck logs      : $(ls ${dir_logs}/Morphology_*.txt)"
+\tCheck logs      : $(ls "${dir_logs}"/Morphology_*.txt)"
 echo "${id}, ${SES/ses-/}, Morphology, $status N=$(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
