@@ -44,6 +44,7 @@ sub = sys.argv[2]
 ses_num = sys.argv[3]
 num_surf = sys.argv[4]
 parc_name = sys.argv[5]
+dir_fs = sys.argv[6]
 
 # Define default input if none given
 if len(sys.argv) < 5:
@@ -55,8 +56,10 @@ if len(sys.argv) < 4:
 # Manage single session
 if ses_num=="SINGLE":
     ses_str="{dataDir}/sub-{sub}".format(dataDir=dataDir, sub=sub)
+    bids_id="sub-{sub}".format(sub=sub)
 else:
     ses_str="{dataDir}/sub-{sub}/{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
+    bids_id="sub-{sub}_{ses}".format(sub=sub, ses=ses_num)
 
 # setting output directory
 OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
@@ -66,7 +69,7 @@ if os.path.exists(OPATH):
 
         # Get data for specified hemisphere and surface number
         def get_hemisphere(surface_number, hemi):
-            thisname_mgh = "{OPATH}{hemi}h.{surface_number:d}.mgh".format(OPATH=OPATH, hemi=hemi, surface_number=surface_number+1)
+            thisname_mgh = "{output}{bids_id}_space-fsnative_desc-{hemi}h_MPC-{surface_number:d}.mgh".format(output=OPATH, bids_id=bids_id, hemi=hemi, surface_number=surface_number+1)
             img = nib.load(thisname_mgh)
             data = img.get_fdata()
             return data.reshape((1,-1))
@@ -84,7 +87,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
 
         # Load parcellation in native surface space
-        pathToParc = "{subject_dir}/anat/surfaces/{sub}/label/".format(subject_dir=ses_str, sub=sub)
+        pathToParc = "{dir_fs}/label/".format(subject_dir=ses_str, sub=sub, dir_fs=dir_fs)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)
@@ -143,9 +146,9 @@ if os.path.exists(OPATH):
             print("")
             sys.exit(1)
         else:
-            parc_str = parc_name.replace('.annot', "")
-            np.savetxt("{output}/mpc_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), MPC, fmt='%.6f')
-            np.savetxt("{output}/intensity_profiles_{parc_str}.txt".format(output=OPATH, parc_str=parc_str), I, fmt='%.12f')
+            parc_str = parc_name.replace('_mics.annot', "")
+            np.savetxt("{output}/{bids_id}_space-fsnative_atlas-{parc_str}_desc-MPC.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), MPC, fmt='%.6f')
+            np.savetxt("{output}/{bids_id}_space-fsnative_atlas-{parc_str}_desc-intensity_profiles.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), I, fmt='%.12f')
             print("")
             print("-------------------------------------")
             print("MPC building successful for subject {sub}".format(sub=sub))

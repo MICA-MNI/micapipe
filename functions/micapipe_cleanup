@@ -43,25 +43,9 @@ http://mica-mni.github.io/
 "
 }
 
-# Check MICAPIPE
-if [ -z "${MICAPIPE}" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE must be define in your enviroment\033[0m
-           TRY: export MICAPIPE=<github_Directory>/micasoft\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined, but the PATH is wrong,
-           it should match /micasoft directory\033[0m
-           CHECK PATH to MICAPIPE:
-           $MICAPIPE\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-# Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+# source print funtions for MICAPIPE
+MICAPIPE=$(dirname $(dirname $(realpath "$0")))
+source "${MICAPIPE}/functions/utilities.sh"
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -181,10 +165,9 @@ Title "MICA pipe cleanup \n\t\tSubject: $id"
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
     Do_cmd rm -rf "$proc_struct"/first/* \
-                  "$proc_struct"/*MNI* \
-                  "$proc_struct"/*nativepro_brain* \
-                  "$dir_warp"/*MNI152* \
-                  "$proc_struct"/*nativepro_5TT* \
+                  "$proc_struct"/*_space-nativepro_t1w_* \
+                  "$dir_warp"/*-nativepro_brain_to-MNI152_* \
+                  "$dir_warp"/*pre_t1w_from-run-* \
                   "$dir_logs"/proc_structural_*
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -202,7 +185,10 @@ fi
 if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
     Do_cmd rm -rf "$dir_volum"/* \
-                  "$proc_struct"/"$id"_t1w_*mm_fsspace.nii.gz \
+                  "$proc_struct"/"$idBIDS"_space-fsnative_t1w.nii.gz \
+                  "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_t1w_* \
+                  "${dir_conte69}"/* \
+                  "${dir_freesurfer}"/label/*_mics* \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -210,8 +196,12 @@ fi
 # CLEAN -proc_dwi
 if [ "$procDWI" = "TRUE" ]; then
     Warning "Erasing proc_dwi output files and logs"
-    Do_cmd rm -rf "$proc_dwi"/* \
-                  "$proc_struct"/"$idBIDS"_space-nativepro_desc-dwi.nii.gz \
+    dwifiles=($(find "${proc_dwi}" -name "*_space-dwi_desc-*" ! -name "*iFOD2*"))
+    Do_cmd rm -rf "$proc_dwi"/eddy/* \
+                  "${dwifiles[*]}" \
+                  "${proc_dwi}/${idBIDS}"_space-dwi_model-* \
+                  "${proc_dwi}/${idBIDS}"_space-dwi_desc-MP-* \
+                  "${proc_struct}/${idBIDS}"_space-nativepro_desc-dwi.nii.gz \
                   "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
                   "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "$dir_warp"/*_mode-image_desc-rigid_* \
@@ -225,8 +215,9 @@ if [ "$procfMRI" = "TRUE" ]; then
     Warning "Erasing proc_rsfmri output files and logs"
     Do_cmd rm -rf "$proc_rsfmri"/* \
                   "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
-                  "$dir_warp"/*fmri* \
-                  "$proc_struct"/*_space-nativepro_desc-T1wbold.nii.gz \
+                  "$dir_warp"/*_rsfmri_from-rsfmri_to-nativepro* \
+                  "${dir_warp}/${idBIDS}"_rsfmri_space-fsnative.dat \
+                  "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
                   "$dir_logs"/proc_rsfmri_*
     grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -248,14 +239,17 @@ fi
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf "$dir_surf"/micro_profiles "$dir_logs"/MPC_*
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
+                  "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
+                  "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
+                  "$dir_logs"/MPC_*
     grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
-    Do_cmd rm -rf "$dir_surf"/geo_dist \
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/geo_dist" \
                   "$dir_logs"/GD_*
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -263,7 +257,7 @@ fi
 # CLEAN -Morphology
 if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
-    Do_cmd rm -rf "$dir_surf"/morphology \
+    Do_cmd rm -rf "${subject_dir}/anat/surfaces/morphology" \
                   "$dir_logs"/Morphology_*
     grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi

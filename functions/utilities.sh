@@ -42,12 +42,12 @@ bids_variables() {
 export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
+  export dir_surf=${out/\/micapipe/}/freesurfer    # surfaces
+  	 export dir_freesurfer=${dir_surf}/${idBIDS}  # freesurfer dir
   export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_first=$proc_struct/first      # FSL first
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
-  	 export dir_surf=$proc_struct/surfaces    # surfaces
-  			     export dir_freesurfer=${dir_surf}/${id}  # freesurfer dir
-  			     export dir_conte69=${dir_surf}/conte69   # conte69
+  	 export dir_conte69=${proc_struct}/surfaces/conte69   # conte69
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
@@ -61,14 +61,14 @@ export idBIDS="${subject}${ses}"
   export dir_QC_png=$subject_dir/QC/png                  # directory with QC files
 
   # post structural Files (the resolution might vary depending on the dataset)
-  if [ -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ]; then
-      export res=$(mrinfo "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
-      export T1nativepro=${proc_struct}/${id}_t1w_${res}mm_nativepro.nii.gz
-      export T1nativepro_brain=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain.nii.gz
-      export T1nativepro_mask=${proc_struct}/${id}_t1w_${res}mm_nativepro_brain_mask.nii.gz
+  if [ -f "${proc_struct}"/"${idBIDS}"_space-nativepro_t1w.nii.gz ]; then
+      export res=$(mrinfo "${proc_struct}"/"${idBIDS}"_space-nativepro_t1w.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
+      export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_t1w.nii.gz
+      export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz
+      export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz
       export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
-      export T15ttgen=${proc_struct}/${id}_t1w_${res}mm_nativepro_5TT.nii.gz
-      export T1fast_seg=$proc_struct/first/${id}_t1w_${res}mm_nativepro_all_fast_firstseg.nii.gz
+      export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_t1w_5TT.nii.gz
+      export T1fast_seg=$proc_struct/first/${idBIDS}_space-nativepro_t1w_all_fast_firstseg.nii.gz
   fi
 
   # Native midsurface in gifti format
@@ -76,8 +76,8 @@ export idBIDS="${subject}${ses}"
   export rh_midsurf=${dir_freesurfer}/surf/rh.midthickness.surf.gii
 
   # Registration from MNI152 to Native pro
-  export T1str_nat=${id}_t1w_${res}mm_nativepro
-  export mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
+  export T1str_nat=${idBIDS}_space-nativepro_t1w
+  export mat_MNI152_SyN=${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_    # transformation strings nativepro to MNI152_0.8mm
   export T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
   export T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
@@ -241,9 +241,7 @@ t1w_str() {
   #
   id=$1
   t1w_full=$2
-  space=$3
-  res=$(mrinfo ${t1w_full} -spacing | awk '{printf "%.1f\n", $2}')
-  echo "${id}_t1w_${res}mm_${space}${run}"
+  echo "${id}_space-nativepro_t1w${run}"
 }
 
 micapipe_software() {
@@ -345,6 +343,82 @@ function tck_json() {
   }" > "${tckjson}"
 }
 
+function json_nativepro_t1w() {
+  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+  Info "Creating T1w_nativepro json file"
+  echo -e "{
+    \"fileName\": \"${1}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"Transform\": \"${Transform}\",
+    \"sform\": [
+\"${qform}\"
+    ],
+    \"qform\": [
+\"${sform}\"
+    ],
+    \"inputsRawdata\": \"${3}\",
+    \"anatPreproc\": [
+      {
+        \"Resample\": \"LPI\",
+        \"Reorient\": \"fslreorient2std\",
+        \"NumberofT1w\": \"$2\",
+        \"BiasFieldCorrection\": \"ANTS N4BiasFieldCorrection\",
+        \"RescaleRange\": \"0:100\"
+      }
+    ]
+  }" > "$4"
+}
+
+function json_nativepro_mask() {
+  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+  Info "Creating T1natipro_brain json file"
+  echo -e "{
+    \"fileName\": \"${1}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"Transform\": \"${Transform}\",
+    \"inputNIFTI\": [
+      {
+      \"Name\": \"${T1nativepro}\",
+      \"sform\": [
+\"${qform}\"
+      ],
+      \"qform\": [
+\"${sform}\"
+      ],
+      }
+    ],
+    \"BinaryMask\": [
+      {
+        \"BinaryMask_original\": \"$2\",
+        \"BinaryMask_from\": \"MNI152_0.8mm\",
+        \"BinaryMask_antsApplyTransforms\": \"$4\"
+      }
+    ]
+  }" > "$3"
+}
+
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
 # This is optional on the pipelines
@@ -432,7 +506,7 @@ function cleanup() {
 }
 
 function QC_proc-dwi() {
-  html=${dir_QC}/micapipe_qc_proc-dwi.txt
+  html=${dir_QC}/micapipe_QC_proc-dwi.txt
   if [ -f "$html" ]; then rm "$html"; fi
   for i in "${!bids_dwis[@]}"; do
     echo "        <tr>
@@ -452,7 +526,7 @@ function QC_proc-dwi() {
 }
 
 function QC_proc-rsfmri() {
-  html="$dir_QC"/micapipe_QC_proc-rsfmir.txt
+  html="$dir_QC"/micapipe_QC_proc-rsfmri.txt
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "            <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
@@ -487,7 +561,7 @@ function QC_proc-rsfmri() {
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
                 <td class=\"tg-8pnm\">Default/Defined<br><br></td>
                 <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
-              </tr>"   >> "$html"
+              </tr>"   > "$html"
 }
 
 function QC_SC() {

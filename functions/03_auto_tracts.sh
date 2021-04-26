@@ -5,7 +5,7 @@
 version() {
   echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2)\n"
 }
-
+umask 003
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=$(dirname $(realpath "$0"))
 MICAPIPE=$(dirname $(realpath "$dir_functions"))
@@ -284,7 +284,7 @@ done
 
 # -----------------------------------------------------------------------------------------------
 ## Clean up
-if [ "$keep_tmp" -eq 0 ]; then
+if [ -z "$keep_tmp" ]; then
     Info "Auto-tract: Deleting tmpDir $tmp"
     Do_cmd rm -fR "$tmp"
 else

@@ -15,7 +15,7 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -51,6 +51,8 @@ Info "ANTs will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
+Nsteps=0
+umask 011
 
 # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}
@@ -64,7 +66,7 @@ N=${#bids_T1ws[@]} # total number of T1w
 n=$((N - 1))
 
 # Creates the t1w_nativepro for structural processing
-if [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ] || [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro_brain.nii.gz ]; then
+if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ] || [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w_brain.nii.gz ]; then
     # Reorient  to LPI with AFNI
     # LPI is the standard 'neuroscience' orientation, where the x-axis is
     # Left-to-Right, the y-axis is Posterior-to-Anterior, and the z-axis is Inferior-to-Superior.
@@ -84,14 +86,14 @@ if [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ] || [ ! -f "${proc_
       ref_run=$(echo "${bids_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       t1ref="run-${ref_run}"
       # Variables for N4BiasFieldCorrection & Native output
-      T1str_nat=$(t1w_str "${id}" "${ref}" nativepro)
+      T1str_nat=$(t1w_str "${idBIDS}" "${ref}")
       T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
           run=$(echo "${bids_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
-          T1mat_str="${dir_warp}/${id}_t1w_run-${run}_to_${t1ref}_"
+          T1mat_str="${dir_warp}/${idBIDS}_t1w_from-run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
-          T1run_2_T1="${tmp}/${id}_t1w_run-${run}_to_${t1ref}.nii.gz"
+          T1run_2_T1="${tmp}/${id}_t1w_from-run-${run}_to_${t1ref}.nii.gz"
           Info "Registering T1w_run-${run} to ${t1ref}"
           Do_cmd antsRegistrationSyN.sh -d 3 -m "${bids_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
           Do_cmd antsApplyTransforms -d 3 -i "${bids_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
@@ -129,75 +131,73 @@ if [ ! -f "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz ] || [ ! -f "${proc_
     Do_cmd bet "$T1nativepro" "$T1nativepro_brain" -B -f 0.25 -v
 
     # If no T1native pro exit_status "something is wrong" exit
-    if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; fi
+    if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
 
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"
     # Output names get the names
-    T1str_nat=$(t1w_str "${id}" "${proc_struct}"/"${id}"_t1w_*mm_nativepro.nii.gz nativepro)
+    T1str_nat=$(t1w_str "${idBIDS}" "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz)
     T1nativepro=${proc_struct}/${T1str_nat}.nii.gz
     T1nativepro_brain=${T1nativepro/.nii.gz/_brain.nii.gz}
     T1nativepro_first=${proc_struct}/first/${T1str_nat}.nii.gz
     T1nativepro_5tt=${T1nativepro/.nii.gz/_5TT.nii.gz}
+    ((Nsteps++))
 fi
-# <<<<<< create JSON of t1w_nativepro
+json_nativepro_t1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
 
 # FSL first on the t1w_nativepro
 unset SGE_ROOTs
 FSLPARALLEL=0; export FSLPARALLEL
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f "$firstout" ]; then
-    Info "FSL first is running, output file:\n\t\t\t ${firstout}"
-    Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b -v &
+    Info "FSL first is running, output file: ${T1str_nat}\n\t\t\t ${firstout}"
+    Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b &
     wait $!
     until [ -f "$firstout" ]; do sleep 120; done
-    # Ndim=$(mrinfo "$firstout" -ndim)
-    # until [ "$Ndim" -eq 3 ]; do sleep 10; Ndim=$(mrinfo "$firstout" -ndim); done
-
-    Info "Changing FIRST output names to maintain MICA-BIDS naming convention"  # <<<<<<<<<< ERASE THIS STEP???
-    for i in "${proc_struct}"/first/*pro-*; do mv "$i" "${i/pro-/pro_}"; done
-    mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.nii.gz" "${proc_struct}/${id}_t1w_1mm_MNI152_brain_affine.nii.gz"
-    mv -v "${proc_struct}/${T1str_nat}_brain_to_std_sub.mat" "${dir_warp}/${T1str_nat}_brain_to_1mm_MNI152_brain.mat"
+    if [ -f "$firstout" ]; then ((Nsteps++)); fi
   else
-    Info "Subject $id has FSL-first"
+    Info "Subject $id has FSL-first"; ((Nsteps++))
 fi
 
 # FSL FAST on the t1w_nativepro
 if [ ! -f "${T1nativepro_brain/.nii.gz/_pve_0.nii.gz}" ]; then
     Do_cmd fast -N "$T1nativepro_brain"
+    if [ -f "${T1nativepro_brain/.nii.gz/_pve_0.nii.gz}" ]; then ((Nsteps++)); fi
 else
-    Info "Subject $id has FSL-fast"
+    Info "Subject $id has FSL-fast"; ((Nsteps++))
 fi
 
 # Loop over all requested templates - could use a check for whether the template and the mask exists.
 # mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
 for mm in 2 0.8; do
   # Only runs if the output doesn't exist
-  if [ ! -f "${dir_warp}/${id}_t1w_${res}mm_nativepro_brain_to_${mm}mm_MNI152_SyN_brain_1Warp.nii.gz" ]; then
+  if [ ! -f "${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_${mm}mm_mode-image_desc-SyN_1Warp.nii.gz" ]; then
+      Info "Registration of T1w nativepro to MNI152 ${mm}mm"
       # ---------------------------------------------------------
       # MNI152 brain templates
       MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
       # T1 to MNI152 transformation matrix and warp field names
-      str_MNI152_SyN="${dir_warp}/${T1str_nat}_brain_to_${mm}mm_MNI152_SyN_brain_"
-      # Outputs
-      T1_MNI152_warped="${str_MNI152_SyN}Warped.nii.gz"
-      T1_MNI152_brain="${proc_struct}/${id}_t1w_${mm}mm_MNI152_brain.nii.gz"
-
+      str_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_${mm}mm_mode-image_desc-SyN_"
       # ANTs - 3 steps registration: rigid, affine and SyN
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$MNI152_brain" -m "$T1nativepro_brain" -o "$str_MNI152_SyN" -t s -n "$threads"
-
-      # Nativepro to MNI152, first the brain then the full volume
-      Do_cmd mv "$T1_MNI152_warped" "$T1_MNI152_brain"
-
+      ((Nsteps++))
   else
-      Info "Subject $id has t1w_${mm}mm_nativepro on MNI152 space and FSL-fast "
+      Info "Subject $id has nativepro_t1w on MNI152 space"; ((Nsteps++))
   fi
 done
 
-# Update the T1native mask and T1native_brain <<<<<< create JSONS
-Do_cmd antsApplyTransforms -d 3 -n GenericLabel -i "$MNI152_mask" -r "$T1nativepro_brain" \
-        -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" -o "$T1nativepro_mask" -v
-Do_cmd ImageMath 3 "$T1nativepro_brain" m "$T1nativepro" "$T1nativepro_mask"
+# Update the T1native mask and T1native_brain
+T1nativepro_maskjson="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.json"
+if [ ! -f "$T1nativepro_maskjson" ]; then
+    Do_cmd antsApplyTransforms -d 3 -n GenericLabel -i "$MNI152_mask" -r "$T1nativepro_brain" \
+            -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" -o "$T1nativepro_mask" -v
+    Do_cmd ImageMath 3 "$T1nativepro_brain" m "$T1nativepro" "$T1nativepro_mask"
+    json_nativepro_mask "$T1nativepro_brain" "$MNI152_mask" "$T1nativepro_maskjson"\
+        "antsApplyTransforms -d 3 -n GenericLabel -i ${MNI152_mask} -r ${T1nativepro_brain} -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} -o ${T1nativepro_mask}"
+    ((Nsteps++))
+else
+        Info "Subject $id has a masked t1w_${mm}mm_nativepro"; ((Nsteps++))
+fi
 
 # Generate a five-tissue-type image for anatomically constrained tractography
 if [[ ! -f "$T1nativepro_5tt" ]]; then
@@ -211,7 +211,7 @@ if [[ ! -f "$T1nativepro_5tt" ]]; then
     first_input='T1.nii'
     Do_cmd mrconvert input.mif "$first_input" -strides -1,+2,+3
     Info "Convert FIRST meshes to partial volume images:"
-    firstr="${proc_struct}/first/${T1str_nat}_"
+    firstr="${proc_struct}/first/${T1str_nat}-"
     sgm_structures=(L_Accu R_Accu L_Caud R_Caud L_Pall R_Pall L_Puta R_Puta L_Thal R_Thal)
     echo "         	${sgm_structures[@]}"
     for struct in "${sgm_structures[@]}"; do
@@ -241,8 +241,9 @@ if [[ ! -f "$T1nativepro_5tt" ]]; then
     Do_cmd mv combined_precrop.mif result.mif
     Do_cmd mrconvert result.mif "$T1nativepro_5tt"
     Do_cmd cd "$here"
+    if [[ -f "$T1nativepro_5tt" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has 5TT nifti"
+    Info "Subject ${id} has 5TT nifti"; ((Nsteps++))
 fi
 
 # -----------------------------------------------------------------------------------------------
@@ -252,7 +253,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
+if [ "$Nsteps" -eq 7 ]; then status="COMPLETED"; else status="ERROR proc_structural is missing a step"; fi
 Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
-$(ls "$dir_logs"/proc_structural_*.txt)"
-echo "${id}, ${SES/ses-/}, proc_structural, COMPLETED, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+\tSteps completed : $(printf "%02d" "$Nsteps")/07
+\tStatus          : ${status}
+\tCheck logs      : $(ls "$dir_logs"/proc_structural_*.txt)"
+echo "${id}, ${SES/ses-/}, proc_structural, ${status} N=$(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

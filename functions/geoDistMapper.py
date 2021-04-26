@@ -123,5 +123,5 @@ for ii in range(len(np.unique(labels_rh))):
 
     GD[ii_rh,:] = np.append(np.zeros((parcGD.shape[0], parcGD.shape[1])), parcGD, axis = 1)
 
-np.savetxt(outPath + '_GD.txt', GD, fmt='%.12f')
+np.savetxt(outPath + '.txt', GD, fmt='%.12f')
 print("[ INFO ]..... Geodesic distance completed")

@@ -13,26 +13,33 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
+Version="(Version v.0.0.2 'wobbly')"
+version() {
+  echo -e "\nMICAPIPE Feb 2021 ${Version}\n"
+}
 
 #---------------- FUNCTION: HELP ----------------#
 help() {
 echo -e "
 \033[38;5;141mCOMMAND:\033[0m
-`basename $0`
+$(basename $0)
 
 \033[38;5;141mARGUMENTS:\033[0m
 \t\033[38;5;197m-sub\033[0m 	          : Subject identification
 \t\033[38;5;197m-out\033[0m 	          : Output directory for the processed files <derivatives>.
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
-\t\033[38;5;120m-ses <str>\033[0m 	  : OPTIONAL flag that indicates the session name (default = ses-pre)
+\t\033[38;5;120m-ses <str>\033[0m 	  : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 \t\033[38;5;120m-tracts <int>\033[0m     : OPTIONAL Number of streamlines, where 'M' stands for millions (default=40M)
 
 \033[38;5;141mOPTIONS:\033[0m
 \t\033[38;5;197m-h|-help\033[0m          : Print help
+\t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
+\t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
+\t\033[38;5;197m-version\033[0m 	  : Print software version
 
 \033[38;5;141mUSAGE:\033[0m
-    \033[38;5;141m`basename $0`\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+    \033[38;5;141m$(basename $0)\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
 \033[38;5;141mDEPENDENCIES:\033[0m
 
@@ -42,25 +49,9 @@ http://mica-mni.github.io/
 "
 }
 
-# Check MICAPIPE
-if [ -z "${MICAPIPE}" ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE must be define in your enviroment\033[0m
-           TRY: export MICAPIPE=<github_Directory>/micasoft\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
-if [ ! -f ${MICAPIPE}/functions/utilities.sh ]; then
-echo -e "\033[38;5;1m\n---------------------------------------------------------\n
-[ERROR]... MICAPIPE is defined, but the PATH is wrong,
-           it should match /micasoft directory\033[0m
-           CHECK PATH to MICAPIPE:
-           $MICAPIPE\n
-\033[38;5;1m---------------------------------------------------------\033[0m\n"; exit 1
-fi
-
 # Source utilities functions from MICAPIPE
-source ${MICAPIPE}/functions/utilities.sh
+MICAPIPE=$(dirname $(dirname $(realpath "$0")))
+source "${MICAPIPE}/functions/utilities.sh"
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -70,6 +61,10 @@ do
   case "$arg" in
   -h|-help)
     help
+    exit 1
+  ;;
+  -version)
+    version
     exit 1
   ;;
   -sub)
@@ -92,6 +87,18 @@ do
     tracts=$2
     shift;shift
   ;;
+  -mica)
+    mica=TRUE
+    shift
+  ;;
+  -nocleanup)
+    nocleanup=TRUE
+    shift
+  ;;
+  -tmpDir)
+    tmpDir=$2
+    shift;shift;
+  ;;
   -*)
     Error "Unknown option ${2}"
     help
@@ -110,35 +117,100 @@ Error "One or more mandatory arguments are missing:
 help; exit 1; fi
 
 # Get the real path of the Inputs
+out=$(realpath $out)/micapipe
+BIDS=$(realpath $BIDS)
 id=${id/sub-/}
-out=`realpath $out`
-BIDS=`realpath $BIDS`
+here=$(pwd)
 
 # Number of session (Default is "ses-pre")
-if [ -z ${SES} ]; then SES="ses-pre"; else SES="ses-${SES/ses-/}"; fi
-
-# Exit if subject is not found
-if [ ! -d ${out}/sub-${id}/${SES} ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}/${SES}"; exit 1; fi
-
-# Optional arguments number of tracts
-if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
-bids_variables $BIDS $id $out $SES
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Exit if subject is not found
+if [ ! -d "${subject_dir}" ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${subject_dir}"; exit 1; fi
+
+# Optional arguments number of tracts
+if [ -z "${tracts}" ]; then tracts=40M; else tracts="$tracts"; fi
+
+# Temporal directory
+if [ -z "${tmpDir}" ]; then export tmpDir="/tmp/${RANDOM}_micapipe_QC_${id}"; else tmpDir=$(realpath "$tmpDir"); fi
+
+# Erase temporal files by default
+if [ -z "${nocleanup}" ]; then nocleanup=FALSE; fi
+
+# Processing
+if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
+if [ "$mica" = "TRUE" ]; then source "${MICAPIPE}/functions/init.sh"; fi
+
+# Assigns variables names
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
+procDirs=$(ls -d "${subject_dir}/anat" "${subject_dir}/dwi" "${subject_dir}/func" | wc -l)
+if [ "${procDirs}" -lt 3 ]; then
+Error "Wrong path to subject_dir, Did you forget to set the '-ses' flag (SINGLE by default)?:
+               -ses  : $SES"
+help; exit 1; fi
 
 # Variables
-parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort`
+parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort)
+workflow="${dir_QC}/${idBIDS}_desc-qc_micapipe_workflow.html"
 
 #------------------------------------------------------------------------------#
-Title "MICAPIPE: Creating a QC html file for $id"
+Title "MICAPIPE: Creating a QC html file for $idBIDS"
 micapipe_software
+micapipe_json
 bids_print.variables
 bids_print.variables-post
 bids_print.variables-dwi
 bids_print.variables-rsfmri
 
+#	Timer
+aloita=$(date +%s)
+
+#------------------------------------------------------------------------------#
+# Create files and png for QC
+# Create tmp dir
+if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
+
+# TRAP in case the script fails
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
+
+# Calculate everythin on a tmpDir dir
+cd $tmpDir
+
+# Create matrices and surfaces pngs
+# Do_cmd rm ${dir_QC_png}/*_desc-qc*
+Rscript ${MICAPIPE}/functions/micapipe_qc.R \
+--BIDSid="$idBIDS" --subject_dir="$subject_dir" \
+--mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
+
+# Do autotract only if dir exists
+if [ -d "$autoTract_dir" ]; then
+  Ntracts=0 # 14 tracts tested for QC
+  COMMAND_tract=""
+  for tck in CG_L CG_R CST_L CST_R ILF_L ILF_R SLF_L SLF_R AF_L AF_R UF_L UF_R FMA FMI; do
+      tck_nom=${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_${tck}.tck
+      if [[ -f $tck_nom ]]; then
+        ((Ntracts++));
+        COMMAND_tract=$(echo -e "${COMMAND_tract} -tractography.load $tck_nom -tractography.opacity 0.15 -tractography.thickness 0 -tractography.geometry lines -tractography.slab -1")
+      fi
+  done
+  # Create png
+  Info "Autotract QC found $Ntracts out of 14 tested bundles, creating png"
+  for plane in 0 1; do
+     COMMAND="mrview $autoTract_dir/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_atlas2fa.nii.gz -mode 1 -plane $plane -colourbar 0 -comments 0 -voxelinfo 0 -focus 0 -intensity_range 0,100000 -imagevisible 1 $COMMAND_tract -capture.grab -exit"
+     $COMMAND
+     mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png"
+  done
+fi
+
+cd $here
+
+#------------------------------------------------------------------------------#
 # Individual QC html file
-QC_html=${dir_QC}/${id}_micapipe_qc.html
+QC_html=${dir_QC}/${idBIDS}_micapipe_qc.html
 px=200px
 table_style=" <style type=\"text/css\">
   .tg  {border-collapse:collapse;border-spacing:0;}
@@ -159,24 +231,77 @@ table_style=" <style type=\"text/css\">
     font-size:16px;text-align:left;vertical-align:top}
   </style>"
 
-#	Timer
-aloita=$(date +%s)
-
-echo "<!doctype html>
+echo -e "<!doctype html>
 <html>
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title> MICAPIPE QC - ${id}_${SES}</title>
-  <link rel=\"stylesheet\" href=\"//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css\">
-  <link rel=\"stylesheet\" href=\"/resources/demos/style.css\">
-  <script src=\"https://code.jquery.com/jquery-1.12.4.js\"></script>
-  <script src=\"https://code.jquery.com/ui/1.12.1/jquery-ui.js\"></script>
-  <script>
-  \$( function() {
-  \$( \"#accordion\" ).accordion({collapsible:true, active:false});
-  } );
-  </script>
+  <title> MICAPIPE QC - Subject: ${id} - Session: ${SES}</title>
+
+  <!-- Java accordion script -->
+  <link rel=\"stylesheet\" type=\"text/css\" href=\"http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css\" />
+              <script type=\"text/javascript\" language=\"javascript\" src=\"http://code.jquery.com/jquery-1.9.1.js\"></script>
+              <script type=\"text/javascript\" language=\"javascript\" src=\"http://code.jquery.com/ui/1.10.3/jquery-ui.js\"></script>
+              <script type=\"text/javascript\" language=\"javascript\">
+                  \$(function() {
+                      \$( \"#accordion\" ).accordion({
+                          collapsible: true,
+                          heightStyle: \"content\",
+                          animate: {
+                              duration: 200,
+                              down: {
+                                  easing: \"easeOutBounce\",
+                                  duration: 1000
+                              }
+                          }
+                      });
+                  });
+              </script>
+
+  <!-- Accordion script -->
+  <style>
+  .accordion {
+    background-color: #eee;
+    color: #656565;
+    font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;
+    cursor: pointer;
+    padding: 15px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+    transition: 0.4s;
+  }
+
+  .active, .accordion:hover {
+    background-color: #ccc;
+  }
+
+  .accordion:after {
+    content: \"\\2795\";
+    color: #777;
+    font-weight: bold;
+    float: right;
+    font-size: 10px;
+    margin-left: 5px;
+  }
+
+  .active:after {
+    content: \"\\2796\";
+    font-size: 10px;
+  }
+
+  .panel {
+    padding: 0 18px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+  }
+  </style>
+
+  <!-- Headings format -->
   <style>
     h1 {color:#343434;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;text-align:center;}
     h2 {color:#656565;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
@@ -184,52 +309,109 @@ echo "<!doctype html>
     p {color:#656565;font-family:\"Trebuchet MS\", Helvetica, sans-serif !important;;}
     a {color:#343434;font-family:\"Trebuchet MS\";}
   </style>
-</head>
-<body>
 
-<br>
-<img src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:1400px\">
-<h1> Quality Check - Subject: ${id} - Session: ${SES}</h1>
-" >  $QC_html
+  <!-- Navigation Bar script -->
+  <style>
+  body {
+    font-family: \"Lato\", sans-serif;
+  }
+  .sidenav {
+    height: 100%;
+    width: 200px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    padding-top: 40px;
+  }
+
+  .sidenav a {
+    padding: 6px 6px 6px 32px;
+    text-decoration: none;
+    font-size: 16px;
+    color: #818181;
+    display: block;
+  }
+
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+
+  .main {
+    margin-left: 200px; /* Same as the width of the sidenav */
+  }
+
+  @media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+  }
+  </style>
+
+  <!-- Sticky image -->
+  <style>
+  img.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    width: 200px;
+  }
+  </style>
+
+</head>
+<body>" >  $QC_html
 
 #------------------------------------------------------------------------------#
-# Table of content
+# Navigation bar
 echo -e "
-  <h2>Table of Contents</h2>
-    <a href=\"#Completed workflow\">Completed workflow</a><br>
-    <a href=\"#Structural processing -proc_structural\">First stage: Structural processing</a><br>
-    <a href=\"#Freesurfer processing -proc_freesurfer\">First stage: Freesurfer processing</a><br>
-    <a href=\"#Post-structural processing -post_structural\">Second stage: Post-structural processing</a><br>
-    <a href=\"#Diffusion MRI processing -proc_dwi\">Second stage: Diffusion MRI processing</a><br>
-    <a style=\"margin-left: 2rem;\" href=\"#Motion parameters\">Motion parameters</a><br>
-    <a style=\"margin-left: 2rem;\" href=\"#Noise estimation\">Noise estimation</a><br>
-    <a href=\"#Resting state fMRI -proc_rsfmri\">Second stage: Resting state fMRI</a><br>
-    <a style=\"margin-left: 2rem;\" href=\"#Functional connectomes\">Functional connectomes</a><br>
-    <a href=\"#Structural Connectomes -SC\">Third stage: Structural Connectomes</a><br>
-    <a href=\"#Micro structural profiles -MPC and Geodesic distance (-GD)\">Third stage: Micro structural profiles and Geodesic distance</a><br>
-    <a href=\"#Cortical morphology -Morphology\">Third stage: Cortical morphology analysis</a><br>" >> $QC_html
+<div class=\"sidenav\">
+    <a href=\"#top\"><img src=\"${MICAPIPE}/docs/figures/micapipe_small_black.png\" style=\"width:100%\"  alt=\"micapipe\"></a>
+    <a href=\"#top\" style=\"color:white; font-size: 17px\">QC: $idBIDS</a>
+    <a href=\"#workflow\">Workflow</a>
+    <a href=\"#procStruct\">proc_structural</a>
+    <a href=\"#freesurfer\">proc_freesurfer</a>
+    <a href=\"#postStruct\">post_structural</a>
+    <a href=\"#diffusion\">proc_dwi</a>
+    <a href=\"#resting\">proc_rsfmri</a>
+    <a style=\"margin-left: 1rem; font-size: 14px\" href=\"#functionalConn\">Functional connectomes</a>
+    <a href=\"#structuralConn\">Structural Connectomes</a>
+    <a href=\"#mpcGD\">MPC & GD connectomes</a>
+    <a href=\"#mpc\">Microstructural profile covariance (MPC)</a>
+    <a href=\"#morphology\">Cortical morphology</a>" >> "$QC_html"
 if [ -d "$autoTract_dir" ]; then
-echo -e "    <a href=\"#Auto tractography -autoTract\">Third stage: Auto tractography</a><br>" >> $QC_html
+echo -e "    <a href=\"#autoTract\">Automatic bundle segmentation</a>" >> "$QC_html"
 fi
+echo -e "    <a href=\"#info\">Info</a>
+</div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 # MICAPIPE processing flowchart
-echo "
-<div id=\"accordion\">
-  <h2>Completed workflow</h2>
-  <div>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
+echo -e "
+<img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">
+<h1>Subject: ${id}, session: ${SES}</h1>
+<div class=\"main\">
+      <div id=\"accordion\">
+          <h3 id=\"workflow\">Workflow</h3>
+          <div>
+              <p>Modules already processed are shown as colored nodes.</p>
+              <iframe width=\"600\" src=\"$workflow\" title=\"Processed modules\" style=\"border: none; overflow: hidden; height: 70%;
+                width: 80%; position: absolute;\"></iframe>
+              <br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>
+          </div>
+      </div>"  >> "$QC_html"
+
+
 
 #------------------------------------------------------------------------------#
 # MICAPIPE Processing Modules QC
 # QC rsfMRI
 # /data_/mica3/BIDS_MIC/derivatives/sub-HC011/ses-01/proc_rsfmri/surfaces
 # Include html into html: https://stackoverflow.com/questions/8988855/include-another-html-file-in-a-html-file
-echo "  <h2>Structural processing -proc_structural</h2>
-  <div>
-    <h3>Input files</h3>" >> $QC_html
-    echo -e $table_style >> $QC_html
+echo -e "\n    <button class=\"accordion\" id=\"procStruct\">Structural processing: -proc_anat</button>
+    <div class=\"panel\">
+    <h2>Input files</h2>" >> "$QC_html"
+    echo -e $table_style >> "$QC_html"
     echo -e "
         <table class=\"tg\">
           <thead>
@@ -245,7 +427,7 @@ echo "  <h2>Structural processing -proc_structural</h2>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[0]}</td>
             </tr>
-            " >> $QC_html
+            " >> "$QC_html"
 N=${#bids_T1ws[@]}
 n=$((${N} - 1))
 if [ "$N" -gt 1 ]; then
@@ -255,19 +437,51 @@ if [ "$N" -gt 1 ]; then
               <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1run_$((${i}+1))</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
-            </tr>" >> $QC_html
+            </tr>" >> "$QC_html"
   done
 fi
-    echo -e "
+
+# proc_structural -NIFTI volumes
+T1_in_MNI152_08="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_Warped.nii.gz"
+MNI152_08_brain="${util_MNIvolumes}/MNI152_T1_0.8mm_brain.nii.gz"
+T1_in_MNI152_2="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_Warped.nii.gz"
+MNI152_2_brain="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
+
+nifti_check() {
+  echo -e "    <h3>$1</h3>" >> "$QC_html"
+  outname=${3/.png/_desc-qc.png}
+  if [[ -f "$2" ]]; then
+    if [[ ! -f "$outname" ]]; then
+      if [ -f "$4" ]; then
+          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname" --overlay="$4"
+      else
+          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname"
+      fi
+    fi
+      echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>
+           <br>
+           <img src=\"$outname\"  alt=\"HTML5\" style=\"height:400px\"  class=\"center\">"  >> "$QC_html"
+  else echo -e " --- FILE NOT FOUND ---  " >> "$QC_html"
+  fi
+}
+echo -e "
           </tbody>
           </table>
-  </div>"  >> $QC_html
+    <h2>Main outputs</h2>"  >> "$QC_html"
+nifti_check "T1w nativepro" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w.png"
+nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T15ttgen" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_5TT.png"
+nifti_check "T1w nativepro fast" "$T1fast_seg" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_fast.png"
+nifti_check "T1w nativepro brain" "$T1nativepro_brain" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_brain.png"
+nifti_check "T1w nativepro in MNI152 0.8mm" "$T1_in_MNI152_08" "${dir_QC_png}/${idBIDS}_space-MNI152_0.8mm_nativepro_t1w.png" "$MNI152_08_brain"
+nifti_check "T1w nativepro in MNI152 2mm" "$T1_in_MNI152_2" "${dir_QC_png}/${idBIDS}_space-MNI152_2mm_nativepro_t1w.png" "$MNI152_2_brain"
+echo -e "    </div>"  >> "$QC_html"
 
 #------------------------------------------------------------------------------#
-echo "  <h2>Freesurfer processing -proc_freesurfer</h2>
-  <div>
-    <h3>Input files</h3>" >> $QC_html
-    echo -e $table_style >> $QC_html
+echo "
+    <button class=\"accordion\" id=\"freesurfer\">Freesurfer processing: -proc_freesurfer</button>
+    <div class=\"panel\">
+    <h2>Input files</h2>" >> "$QC_html"
+    echo -e $table_style >> "$QC_html"
     echo -e "
         <table class=\"tg\">
           <thead>
@@ -277,7 +491,7 @@ echo "  <h2>Freesurfer processing -proc_freesurfer</h2>
               <th class=\"tg-droi\">Path to file</th>
             </tr>
           </thead>
-          <tbody>" >> $QC_html
+          <tbody>" >> "$QC_html"
 N=${#bids_T1ws[@]}
 n=$((${N} - 1))
 if [ "$N" -gt 1 ]; then
@@ -287,26 +501,36 @@ if [ "$N" -gt 1 ]; then
               <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_T1ws[${i}]</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
-            </tr>" >> $QC_html
+            </tr>" >> "$QC_html"
   done
 fi
     echo -e "
           </tbody>
           </table>
-  </div>"  >> $QC_html
-# $QA_TOOLS/recon_checker -help
-# https://surfer.nmr.mgh.harvard.edu/fswiki/QATools
+    <h2>Freesurfer native surfaces</h2>
+    <h3>Thickness</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_thickness.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>Curvature</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_curv.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>Sulcal depth</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_sulc.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>Destrieux Atlas (aparc.a2009s)</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_aparc.a2009s_desc-qc.png\" alt=\"HTML5\" style=\"height:140px\" class=\"center\">
+    <h3>Desikan-Killiany Atlas (aparc)</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_aparc_desc-qc.png\" alt=\"HTML5\" style=\"height:140px\" class=\"center\">
+    </div>"  >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 # POST-STRUCTRURAL QC
-mat_MNI152_SyN=${dir_warp}/${T1str_nat}_brain_to_0.8mm_MNI152_SyN_brain_    # transformation strings nativepro to MNI152_0.8mm
-T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
-T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
+mat_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_"
+T1_MNI152_InvWarp="${mat_MNI152_SyN}1InverseWarp.nii.gz"
+T1_MNI152_affine="${mat_MNI152_SyN}0GenericAffine.mat"
 
-echo "  <h2>Post-structural processing -post_structural</h2>
-  <div>
-  <h3>Input files</h3>" >> $QC_html
-  echo -e $table_style >> $QC_html
+echo "
+    <button class=\"accordion\" id=\"postStruct\">Post-structural processing: -post_structural</button>
+    <div class=\"panel\">
+      <h2>Input files</h2>" >> "$QC_html"
+  echo -e $table_style >> "$QC_html"
   echo -e "      <table class=\"tg\">
         <thead>
           <tr>
@@ -317,12 +541,12 @@ echo "  <h2>Post-structural processing -post_structural</h2>
           <tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
             <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
-            <td class=\"tg-8pnm\">${T1freesurfr}</td>
+            <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
           </tr>
           <tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
             <td class=\"tg-8pnm\">proc_structural<br><br></td>
-            <td class=\"tg-8pnm\">${proc_struct}/${id}_t1w_${res}mm_nativepro.nii.gz</td>
+            <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
           </tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1fast_seg</span></td>
             <td class=\"tg-8pnm\">proc_structural<br><br></td>
@@ -337,40 +561,52 @@ echo "  <h2>Post-structural processing -post_structural</h2>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_affine</span></td>
             <td class=\"tg-8pnm\">proc_structural<br><br></td>
             <td class=\"tg-8pnm\">$(find $T1_MNI152_affine 2>/dev/null)</td>
-          </tr>" >> $QC_html
+          </tr>" >> "$QC_html"
           echo -e "
                 </tbody>
-                </table>"  >> $QC_html
+                </table>"  >> "$QC_html"
 #------------------------------------------------------------------------------#
-echo -e "<h3>Output volumetric parcellations</h3>" >> $QC_html
-echo -e $table_style >> $QC_html
+T1_fsnative="${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz"
+T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
+T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
+echo -e "<h2>Outputs</h2>"  >> "$QC_html"
+nifti_check "T1w nativepro in freesurfer space" "$T1_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png"
+nifti_check "T1w nativepro cerebellum atlas" "$T1_seg_cerebellum" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png"
+nifti_check "T1w nativepro subcortical atlas" "$T1_seg_subcortex" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png"
+#------------------------------------------------------------------------------#
+echo -e "<h2>Output parcellations</h2>" >> "$QC_html"
+echo -e $table_style >> "$QC_html"
 echo -e "      <table class=\"tg\">
       <thead>
         <tr>
           <th class=\"tg-rkbl\">Parcellation</th>
-          <th class=\"tg-droi\">Path to file</th>
-        </tr>" >> $QC_html
+          <th class=\"tg-rkbl\">Surface labels</th>
+          <th class=\"tg-droi\">Path to Nifti file</th>
+        </tr>" >> "$QC_html"
+
 # Prepare the segmentatons
-parcellations=`find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"`
+parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*")
 for seg in $parcellations; do
-    parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+    parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
     echo -e "
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${parc_name}</span></td>
+                <td class=\"tg-8pnm\"><img src=\"${dir_QC_png}/${idBIDS}_atlas-${parc_name}_mics_desc-qc.png\" alt=\"HTML5\" style=\"height:100px\" class=\"center\"></td>
                 <td class=\"tg-8pnm\">${seg}</td>
-              </tr>"  >> $QC_html
+              </tr>"  >> "$QC_html"
 done
 echo -e "
       </tbody>
       </table>
-    </div>" >> $QC_html
+    </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
+# proc_dwi
 echo "
-<h2>Diffusion MRI processing -proc_dwi</h2>
-  <div>
-    <h3>Input files</h3>" >> $QC_html
-    echo -e $table_style >> $QC_html
+    <button class=\"accordion\" id=\"diffusion\">Diffusion MRI processing: -proc_dwi</button>
+    <div class=\"panel\">
+      <h2>Input files</h2>" >> "$QC_html"
+    echo -e $table_style >> "$QC_html"
     echo -e "
         <table class=\"tg\">
           <thead>
@@ -380,29 +616,14 @@ echo "
               <th class=\"tg-droi\">Path to file</th>
             </tr>
           </thead>
-          <tbody>" >> $QC_html
-    N=${#bids_dwis[@]}
-    n=$((${N} - 1))
-    if [ "$N" -gt 1 ]; then
-      for ((i=0; i<=$n; i++)); do
-      echo "
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
-              <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
-              <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
-            </tr>" >> $QC_html
-      done
-    fi
-    if [ -f $dwi_reverse ]; then
-      echo -e "
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
-                <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
-              </tr>"  >> $QC_html
-    fi
-    echo -e "
-            <tr>
+          <tbody>" >> "$QC_html"
+
+# proc_dwi inputs Main DWI(s) and Reverse Phase Encoding
+if [ ! -f ${dir_QC}/micapipe_qc_proc-dwi.txt ]; then QC_proc-dwi; fi
+  cat ${dir_QC}/micapipe_qc_proc-dwi.txt >> "$QC_html"
+
+# Other inputs
+    echo -e "            <tr>
               <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
               <td class=\"tg-8pnm\">proc_structural<br><br></td>
               <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
@@ -423,18 +644,61 @@ echo "
               <td class=\"tg-8pnm\">$(find $T15ttgen 2>/dev/null)</td>
             </tr>
           </tbody>
-          </table>"  >> $QC_html
-echo "    <h3>Motion parameters</h3>" >> $QC_html
-echo "    <h3>Noise estimation</h3>" >> $QC_html
-echo "  </div>" >> $QC_html
+          </table>"  >> "$QC_html"
+nifti_check "DWI main phase encoding" "${bids_dwis[0]}" "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
+nifti_check "DWI reverse phase encoding" "$dwi_reverse" "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+
+# DWI main outputs
+dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
+dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
+dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
+dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+
+dwi_t1wNL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_NL.nii.gz"
+dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+dwi_cereb="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
+dwi_subco="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
+
+dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
+dwi_tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-1M_tdi.mif"
+dwi_adc="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
+dwi_fa="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+
+Do_cmd mrmath "$dwi_res" mean "${tmpDir}/dwi_res.nii.gz" -axis 3
+Do_cmd mrmath "$dwi_corr" mean "${tmpDir}/dwi_corr.nii.gz" -axis 3
+Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_fod.nii.gz"
+Do_cmd mrconvert "$dwi_gmwmi" "${tmpDir}/dwi_gmwmi.nii.gz"
+Do_cmd mrconvert "$dwi_tdi" "${tmpDir}/dwi_tdi.nii.gz"
+Do_cmd mrconvert "$dwi_adc" "${tmpDir}/dwi_adc.nii.gz"
+Do_cmd mrconvert "$dwi_fa" "${tmpDir}/dwi_fa.nii.gz"
+
+echo -e "\n        <h2>Outputs</h2>" >> "$QC_html"
+nifti_check "DWI MP-PCA mean residuals (mean)" "${tmpDir}/dwi_res.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_MP-PCA.png"
+nifti_check "DWI b0 pre-processed" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_b0.png"
+nifti_check "DWI pre-processed (mean)" "${tmpDir}/dwi_corr.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_preproc.png"
+nifti_check "White matter Fiber Orientation Distribution (FOD)" "${tmpDir}/dwi_fod.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_wmFOD.png"
+nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M.png"
+nifti_check "DTI ADC" "${tmpDir}/dwi_adc.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_adc.png"
+nifti_check "DTI FA" "${tmpDir}/dwi_fa.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_fa.png"
+nifti_check "T1w in DWI space" "${dwi_t1wNL}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png"
+nifti_check "Cerebellum atlas in DWI space" "${dwi_cereb}" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum.nii.png"
+nifti_check "Subcortical atlas in DWI space" "${dwi_subco}" "${dir_QC_png}/${idBIDS}_space-dwi_subcortical.nii.png"
+nifti_check "5TT in DWI space" "${dwi_5tt}" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii.png"
+nifti_check "GMWMI in DWI space" "${tmpDir}/dwi_gmwmi.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi.nii.png"
+
+if [ -f "${dir_QC}/eddy_QC/qc.pdf" ]; then
+  echo -e "\n        <h2>Eddy quad by FSL</h2>
+  <embed src=\"${dir_QC}/eddy_QC/qc.pdf\" width=\"1000\" height=\"500\" type=\"application/pdf\"> " >> "$QC_html"
+fi
+echo -e "\n    </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 # RESTING STATE
-echo "
-  <h2>Resting state fMRI -proc_rsfmri</h2>
-  <div>
-    <h3>Input files</h3>" >> $QC_html
-    echo -e $table_style >> $QC_html
+echo -e "
+    <button class=\"accordion\" id=\"resting\">Resting state fMRI processing: -proc_rsfmri</button>
+    <div class=\"panel\">
+      <h2>Input files</h2>" >> "$QC_html"
+    echo -e $table_style >> "$QC_html"
     echo -e "
         <table class=\"tg\">
           <thead>
@@ -444,57 +708,34 @@ echo "
               <th class=\"tg-droi\">Path to file</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScan</span></td>
-              <td class=\"tg-8pnm\">BIDS func<br><br></td>
-              <td class=\"tg-8pnm\">$(find $bids_mainScan 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
-              <td class=\"tg-8pnm\">BIDS func<br><br></td>
-              <td class=\"tg-8pnm\">$(find $bids_mainScanJson 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainPhase</span></td>
-              <td class=\"tg-8pnm\">BIDS func<br><br></td>
-              <td class=\"tg-8pnm\">$(find $bids_mainPhase 2>/dev/null)</td>
-            </tr>
-          " >> $QC_html
-          if [ -f $bids_reversePhase ]; then
-            echo -e "
-                    <tr>
-                      <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_reversePhase</span></td>
-                      <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                      <td class=\"tg-8pnm\">$(find $bids_reversePhase 2>/dev/null)</td>
-                    </tr>"  >> $QC_html
-          fi
-          echo -e "
-                  <tr>
-                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
-                    <td class=\"tg-8pnm\">proc_structural<br><br></td>
-                    <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
-                  </tr>
-                  <tr>
-                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
-                    <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
-                    <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
-                  </tr>
-                  <tr>
-                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
-                    <td class=\"tg-8pnm\">DEFAULT<br><br></td>
-                    <td class=\"tg-8pnm\">$(find $topupConfigFile 2>/dev/null)</td>
-                  </tr>
-                  <tr>
-                    <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
-                    <td class=\"tg-8pnm\">DEFAULT<br><br></td>
-                    <td class=\"tg-8pnm\">$(find $icafixTraining 2>/dev/null)</td>
-                  </tr>
-                </tbody>
-                </table>"  >> $QC_html
+          <tbody>"  >> "$QC_html"
+# proc_rsfmri Input files
+if [ ! -f ${dir_QC}/micapipe_QC_proc-rsfmri.txt ]; then QC_proc-rsfmri; fi
+cat ${dir_QC}/micapipe_QC_proc-rsfmri.txt >> "$QC_html"
 
-echo "    <h3>Functional connectomes</h3>" >> $QC_html
-echo -e $table_style >> $QC_html
+echo -e "
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
+              <td class=\"tg-8pnm\">proc_structural<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
+            </tr>
+            <tr>
+              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
+              <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
+              <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
+            </tr>
+          </tbody>
+          </table>"  >> "$QC_html"
+# rsfmri motion parameters
+rsfmri_motion=${rsfmri_surf}/${idBIDS}_rsfmri-framewiseDisplacement.png
+if [ -f ${rsfmri_motion} ]; then
+  echo -e "\n      <h3>Framewise displacement: rsfMRI</h3>
+  <img src=\"${rsfmri_motion}\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\"> " >> "$QC_html"
+fi
+
+# Fuctional Connectomes
+echo -e "\n      <h3 id=\"functionalConn\">Functional connectomes</h3>" >> "$QC_html"
+echo -e $table_style >> "$QC_html"
 echo -e "
     <table class=\"tg\">
       <thead>
@@ -504,24 +745,24 @@ echo -e "
           <th class=\"tg-droi\">FC conte69</th>
         </tr>
       </thead>
-      <tbody>" >> $QC_html
+      <tbody>" >> "$QC_html"
 
 # iterate over each FC png file
-Nconn=$(ls ${dir_QC_png}/*_FC*.png 2>/dev/null | wc -l)
+Nconn=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-*_desc-FC.txt 2>/dev/null | wc -l)
 if [ ! "$Nconn" -eq 0 ]; then
   for seg in $parcellations; do
-      parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+      parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
       echo -e " <tr>
-            <td class=\"tg-droi\">${parc_name}</td>"  >> $QC_html
+            <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
       for ext in FC FC-conte69; do
-          nom=${dir_QC_png}/${id}_${parc_name}_${ext}.png
+          nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
           if [ -f "$nom" ]; then
-              echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> $QC_html
+              echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
           else
-              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${id}_${parc_name}_${ext}.png\"</span><br><br></td>"  >> $QC_html
+              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
           fi
       done
-      echo "  </tr>" >> $QC_html
+      echo "  </tr>" >> "$QC_html"
   done
 else
   echo "  <p> ...Not processed yet... </p>" >>  $QC_html
@@ -531,140 +772,235 @@ echo -e "
     </tbody>
     </table>
    </div>
- "  >> $QC_html
+ "  >> "$QC_html"
 
-#------------------------------------------------------------------------------#
-echo "  <h2>Micro structural profiles -MPC and Geodesic distance -GD</h2>
-  <div>
-    <h3>Input files -MPC</h3>" >> $QC_html
-#------------------------------------------------------------------------------#
-echo -e "    <h3>Input files -GD</h3>"  >> $QC_html
-#------------------------------------------------------------------------------#
-echo -e "    <h3>Connectomes</h3>"  >> $QC_html
-echo -e $table_style >> $QC_html
-echo -e " <table class=\"tg\">
-  <thead>
-    <tr>
-      <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
-      <th class=\"tg-droi\">MPC Connectome</th>
-      <th class=\"tg-droi\">MPC Intensity</th>
-      <th class=\"tg-droi\">Geodesic <br>Distance</th>
-    </tr>
-  </thead>
-  <tbody>" >> $QC_html
+ #------------------------------------------------------------------------------#
+ # Diffusion processing MRI
+ echo -e "
+     <button class=\"accordion\" id=\"structuralConn\">Structural Connectomes: -SC</button>
+     <div class=\"panel\">
+       <h2>Input files</h2>" >> "$QC_html"
+ #-------------------------------------
+ # SC - Inputs files
+ tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif"
+ # create tdi PNG
+ if [ -f $tdi ]; then
+   # Input files table
+   echo -e $table_style >> "$QC_html"
+   echo -e "
+       <table class=\"tg\">
+         <thead>
+           <tr>
+             <th class=\"tg-rkbl\">Variable name</th>
+             <th class=\"tg-droi\">Origin</th>
+             <th class=\"tg-droi\">Path to file</th>
+           </tr>
+         </thead>
+         <tbody>"  >> "$QC_html"
+
+   # Structural connectomes Input files
+   # if [ ! -f ${dir_QC}/micapipe_qc_SC.txt ]; then QC_SC; fi
+   cat ${dir_QC}/micapipe_qc_SC.txt >> "$QC_html"
+
+   echo -e "
+         </tbody>
+         </table>"  >> "$QC_html"
+   #-------------------------------------
+   Do_cmd mrconvert "$tdi" "${tmpDir}/dwi_tdi-${tracts}.nii.gz"
+   nifti_check "Tract Density Imaging ${tracts} tracts" "${tmpDir}/dwi_tdi-${tracts}.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-${tracts}.png"
+ else
+   echo "  <p> ...Not processed yet... </p>" >> "$QC_html"
+ fi
+
+ #-------------------------------------
+ # SC - Output connectomes
+ echo -e "<h2>Structural Connectomes</h2>" >> "$QC_html"
+ echo -e $table_style >> "$QC_html"
+ echo -e "
+       <table class=\"tg\">
+       <thead>
+         <tr>
+           <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
+           <th class=\"tg-droi\">Cortical <br>connectome</th>
+           <th class=\"tg-droi\">Cortical-Subcortical <br>Connectome</th>
+           <th class=\"tg-droi\">Full <br>Connectome</th>
+           <th class=\"tg-droi\">Cortical <br>Edge lengths</th>
+           <th class=\"tg-droi\"><span style=\"font-style:normal\">Cortical-Subcortical </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
+           <th class=\"tg-droi\"><span style=\"font-style:normal\">Full </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
+         </tr>
+       </thead>
+       <tbody>" >> "$QC_html"
+
+ # Iterate over all the parcellation
+ Nconn=$(ls ${dwi_cnntm}/*_full-connectome.txt 2>/dev/null | wc -l)
+ if [ ! "$Nconn" -eq 0 ]; then
+   for seg in $parcellations; do
+       parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
+       echo -e " <tr>
+             <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
+       for ext in cor-connectome sub-connectome full-connectome cor-edgeLengths sub-edgeLengths full-edgeLengths; do
+           nom=${dir_QC_png}/${idBIDS}_space-dwi_atlas-${parc_name}_desc-iFOD2-${tracts}-SIFT2_${ext}.png
+           if [ -f "$nom" ]; then
+               echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
+           else
+               echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"SC-${tracts} ${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
+           fi
+       done
+       echo "  </tr>" >> "$QC_html"
+   done
+ else
+   echo "  <p> ...Not processed yet... </p>" >> "$QC_html"
+ fi
+
+ # Close Structural connectome QC table
+ echo -e "
+       </tbody>
+       </table>
+   </div>
+ "  >> "$QC_html"
+
+#-------------------------------------
+echo "
+    <button class=\"accordion\" id=\"mpcGD\">MPC and GD Connectomes</button>
+    <div class=\"panel\">" >> "$QC_html"
+echo -e $table_style >> "$QC_html"
+echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
+              <th class=\"tg-droi\">MPC Connectome</th>
+              <th class=\"tg-droi\">MPC Intensity</th>
+              <th class=\"tg-droi\">Geodesic <br>Distance</th>
+            </tr>
+          </thead>
+          <tbody>" >> "$QC_html"
 
 # Iterate over all the parcellation
 for seg in $parcellations; do
-    parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
+    parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
     echo -e " <tr>
-          <td class=\"tg-droi\">${parc_name}</td>"  >> $QC_html
+          <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
     for ext in MPC MPC-intensity GD; do
         Nfiles=$(ls ${dir_QC_png}/*_${ext}.png 2>/dev/null | wc -l)
         # echo "Nfiles=$Nfiles Modality=$ext"
         if [ "$Nfiles" -eq 0 ]; then
             Message="\"tg-dp6t\"><br><br><span style=\"font-weight:bold\">>>>   Module not   <<<</span><br><span style=\"font-weight:bold\">processed:</span><br><span style=\"font-weight:bold\">-${ext/-intensity/}";
         else
-            Message="\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${id}_${parc_name}_${ext}.png\"";
+            Message="\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"";
         fi
-        nom=${dir_QC_png}/${id}_${parc_name}_${ext}.png
+        nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
         if [ -f "$nom" ]; then
-            echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"height:${px}\"></td>" >> $QC_html
+            echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"height:${px}\"></td>" >> "$QC_html"
         else
-            echo "            <td class=${Message}</span><br><br></td>"  >> $QC_html
+            echo "            <td class=${Message}</span><br><br></td>"  >> "$QC_html"
         fi
     done
-    echo "  </tr>" >> $QC_html
+    echo "  </tr>" >> "$QC_html"
 done
 
 # Close MPC and GD QC table
+# ${dir_QC_png}/
 echo -e "
-  </tbody>
-  </table>
-  </div>
-"  >> $QC_html
-
-#------------------------------------------------------------------------------#
-# Diffusion processing MRI
-echo -e "
-  <h2>Structural Connectomes -SC</h2>
-  <div>
-    <h3>Input files</h3>" >> $QC_html
-echo -e $table_style >> $QC_html
-echo -e "
-      <table class=\"tg\">
-      <thead>
-        <tr>
-          <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
-          <th class=\"tg-droi\">Cortical <br>connectome</th>
-          <th class=\"tg-droi\">Cortical-Subcortical <br>Connectome</th>
-          <th class=\"tg-droi\">Full <br>Connectome</th>
-          <th class=\"tg-droi\">Cortical <br>Edge lengths</th>
-          <th class=\"tg-droi\"><span style=\"font-style:normal\">Cortical-Subcortical </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
-          <th class=\"tg-droi\"><span style=\"font-style:normal\">Full </span><br><span style=\"font-style:normal\">Edge lengths</span></th>
-        </tr>
-      </thead>
-      <tbody>" >> $QC_html
-
-# Iterate over all the parcellation
-Nconn=$(ls ${dir_QC_png}/*connectome.png 2>/dev/null | wc -l)
-if [ ! "$Nconn" -eq 0 ]; then
-  for seg in $parcellations; do
-      parc_name=`echo ${seg/.nii.gz/} | awk -F 'nativepro_' '{print $2}'`
-      echo -e " <tr>
-            <td class=\"tg-droi\">${parc_name}</td>"  >> $QC_html
-      for ext in cor-connectome sub-connectome full-connectome cor-edgeLengths sub-edgeLengths full-edgeLengths; do
-          nom=${dir_QC_png}/${id}_${tracts}_${parc_name}_${ext}.png
-          if [ -f "$nom" ]; then
-              echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> $QC_html
-          else
-              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${id}_${tracts}_${parc_name}_${ext}.png\"</span><br><br></td>"  >> $QC_html
-          fi
-      done
-      echo "  </tr>" >> $QC_html
-  done
-else
-  echo "  <p> ...Not processed yet... </p>" >> $QC_html
-fi
-
-# Close Structural connectome QC table
-echo -e "
-      </tbody>
-      </table>
-  </div>
-"  >> $QC_html
+        </tbody>
+        </table>
+    </div>"  >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 echo "
-  <h2>Cortical morphology -Morphology</h2>
-  <div>
-    <h3>Input files</h3>
-    <p>... work in progress ...</p>
-  </div>" >> $QC_html
+    <button class=\"accordion\" id=\"mpc\">Microstructural profile covariance: -MPC</button>
+    <div class=\"panel\">
+      <h2>Surfaces</h2>" >> "$QC_html"
+      for i in $(seq -f "%02g" 1 14); do
+        echo -e "<h3>MPC surface-${i}</h3>
+            <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_MPC-${i}.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">" >> "$QC_html"
+      done
+echo "
+    </div>"  >> "$QC_html"
+
+#------------------------------------------------------------------------------#
+echo -e "\n  <button class=\"accordion\" id=\"morphology\">Cortical morphology</button>
+  <div class=\"panel\">
+    <h3>Curvature native surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_morphology-curvature.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Curvature fsaverage5</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-qc_morphology-curvature.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Thickness native surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_morphology-thickness.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Thickness fsaverage5 fwhm=10mm</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-qc_morphology-thickness.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+  </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 # Do autotract only if dir exists
 if [ -d "$autoTract_dir" ]; then
   echo "
-    <h2>Auto tractography -autoTract</h2>
-    <div>
-      <h3>Input files</h3>
-      <p>... work in progress ...</p>
-    </div>" >> $QC_html
+    <button class=\"accordion\" id=\"autoTract\">Automatic bundle segmentation</button>
+    <div class=\"panel\">" >> "$QC_html"
+echo -e "\n      <h2>Outputs files</h2>" >> "$QC_html"
+auto_FAatlas="${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-5M-SIFT2_atlas2fa.nii.gz"
+nifti_check "FA atlas in native dwi" "$auto_FAatlas" "${dir_QC_png}/${idBIDS}_space-dwi_FAatlas.png"
+echo -e "\n      <h2>Sagital view: QC segmentations of $Ntracts tracts</h2>
+        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane0.png\" width=\"625\" height=\"530\">
+      <h3>Coronal view: QC segmentations of $Ntracts tracts</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane1.png\"  width=\"625\" height=\"530\">
+    </div>" >> "$QC_html"
 fi
+
+#------------------------------------------------------------------------------#
+# Do autotract only if dir exists
+if [ -d "$autoTract_dir" ]; then
+  echo "
+    <button class=\"accordion\" id=\"info\">Info</button>
+    <div class=\"panel\">" >> "$QC_html"
+echo -e "
+      <p>
+      <b>micapipe version:</b> $Version<br>
+      <b>User:</b> $(whoami)<br>
+      <b>Workstation:</b> $(uname -n)<br>
+      <b>Last run:</b> $(date)
+      </p>
+    </div>" >> "$QC_html"
+fi
+
+#------------------------------------------------------------------------------#
+# Accordion config
+echo -e "
+<script>
+var acc = document.getElementsByClassName(\"accordion\");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener(\"click\", function() {
+    this.classList.toggle(\"active\");
+    var panel = this.nextElementSibling;
+    if (panel.style.maxHeight) {
+      panel.style.maxHeight = null;
+    } else {
+      panel.style.maxHeight = panel.scrollHeight + \"px\";
+    }
+  });
+}
+</script>"  >> "$QC_html"
+
 #------------------------------------------------------------------------------#
 # closes html document
 echo "
 </div>
 
 </body>
-</html>" >> $QC_html
+</html>" >> "$QC_html"
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 
-Title "QC html creation ended in \033[38;5;220m `printf "%0.3f\n" ${eri}` minutes \033[38;5;141m:
+# Cleanup if processing was local
+if [ -d $tmpDir ]; then
+    cleanup $tmpDir $nocleanup $here
+fi
+
+Title "QC html creation ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
 \t\tOutput file path: $QC_html"
-bids_variables_unset

@@ -15,7 +15,7 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -114,11 +114,12 @@ dwi_cat="${tmp}/dwi_concatenate.mif"
 dwi_dns="${tmp}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_n4="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_N4_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
-dwi_corr="${proc_dwi}/${id}_dwi_corr.mif"
+dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
 b0_refacq=$(echo "${bids_dwis[0]}" | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
 
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
+    if [ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]; then Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${bids_dwis[0]}"  --out="${dir_QC_png}/${idBIDS}_space-dwi_pe.png"; fi
     Info "DWI denoise, bias filed correction and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in "${bids_dwis[@]}"; do
@@ -159,6 +160,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           # Denoise DWI and calculate residuals
           Do_cmd dwidenoise "$dwi_cat" "$dwi_dns" -nthreads "$threads"
           Do_cmd mrcalc "$dwi_cat" "$dwi_dns" -subtract "$dwi_res" -nthreads "$threads"
+          Do_cmd mrinfo "$dwi_res" -json_all "${dwi_res/mif/json}"
 
           # Bias field correction DWI
           Do_cmd dwibiascorrect ants "$dwi_dns" "$dwi_n4" -force -nthreads "$threads" -scratch "$tmp"
@@ -193,6 +195,7 @@ if [[ ! -f "$dwi_corr" ]]; then
 
       # Processing the reverse encoding b0
       if [ -f "$dwi_reverse" ]; then
+            Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$dwi_reverse" --out="${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
             b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
             b0_pair="${tmp}/b0_pair.mif"
             dwi_reverse_str=$(echo "$dwi_reverse" | awk -F . '{print $1}')
@@ -238,6 +241,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       # Step QC
       if [[ ! -f "$dwi_corr" ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
+          Do_cmd mrinfo "$dwi_corr" -json_all "${dwi_corr/mif/json}"
           Do_cmd rm "$dwi_n4"; ((Nsteps++))
           # eddy_quad Quality Check
           Do_cmd cd "$tmp"/dwifslpreproc*
@@ -294,6 +298,7 @@ if [[ ! -f "$dti_FA" ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
       tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" "$dwi_dti"
+      Do_cmd mrinfo "$dwi_dti" -json_all "${dwi_dti/mif/json}"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++))
@@ -325,6 +330,9 @@ if [[ ! -f "$fod_wmN" ]]; then
                 -mask "$dwi_mask"
       if [ "${#shells[@]}" -ge 2 ]; then
             Do_cmd mtnormalise "$fod_wm" "$fod_wmN" "$fod_gm" "$fod_gmN" "$fod_csf" "$fod_csfN" -nthreads "$threads" -mask "$dwi_mask"
+            Do_cmd mrinfo "$fod_wmN" -json_all "${fod_wmN/mif/json}"
+            Do_cmd mrinfo "$fod_gmN" -json_all "${fod_gmN/mif/json}"
+            Do_cmd mrinfo "$fod_csfN" -json_all "${fod_csfN/mif/json}"
       else
       #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
       #       Do_cmd dwi2response tournier -nthreads $threads $dwi_corr \
@@ -336,6 +344,7 @@ if [[ ! -f "$fod_wmN" ]]; then
       #           ${tmp}/FOD.mif \
       #           -mask $dwi_mask
             Do_cmd mtnormalise -nthreads "$threads" -mask "$dwi_mask" "$fod_wm" "$fod_wmN"
+            Do_cmd mrinfo "$fod_wmN" -json_all "${fod_wmN/mif/json}"
       fi
       if [[ -f "$fod_wmN" ]]; then ((Nsteps++)); fi
 else
@@ -377,7 +386,8 @@ fi
 dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
 if [[ ! -f "$dwi_gmwmi" ]]; then
       Info "Calculating Gray matter White matter interface mask"
-      Do_cmd 5tt2gmwmi "$dwi_5tt" "$dwi_gmwmi"; ((Nsteps++))
+      Do_cmd 5tt2gmwmi "$dwi_5tt" "$dwi_gmwmi"
+      Do_cmd mrinfo "$dwi_gmwmi" -json_all "${dwi_gmwmi/mif/json}"; ((Nsteps++))
 else
       Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++))
 fi

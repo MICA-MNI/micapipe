@@ -133,7 +133,7 @@ np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-time
 parcellationList = os.listdir(volmDir)
 
 # Slice the file names and remove nii*
-parcellationList=[sub.split('nativepro_')[1].split('.nii')[0] for sub in parcellationList]
+parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
 
 # Remove cerebellum and subcortical strings
 parcellationList.remove('subcortical')
@@ -171,7 +171,7 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_space-conte69_atlas-' + parcSaveName + '_desc-fc.txt',
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC.txt',
                ts_r, fmt='%.6f')
 
 # Clean up
@@ -302,7 +302,7 @@ for parcellation in parcellationList:
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
     ts = np.append(np.append(sctx_corr, cereb_corr, axis=1), ts_native_ctx, axis=1)
-    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
 
     ts_r = np.corrcoef(np.transpose(ts))
 
@@ -314,7 +314,7 @@ for parcellation in parcellationList:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_space-fsnative_atlas-' + parcellation + '_desc-fc.txt', ts_r, fmt='%.6f')
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-FC.txt', ts_r, fmt='%.6f')
 
 # Clean up
 del ts_native_ctx
@@ -362,4 +362,4 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/surfaces/' + subject + '_space-rsfmri_desc-tSNR.txt', tSNR, fmt='%.12f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_desc-tSNR.txt', tSNR, fmt='%.12f')
