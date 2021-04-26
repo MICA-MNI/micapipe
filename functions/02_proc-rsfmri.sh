@@ -545,11 +545,10 @@ out_surf="${rsfmri_surf}/${idBIDS}"_rsfmri_space-conte69-32k_?h_10mm.mgh
 Nsurf=$(ls $vol2surfTS $out_surf_native $out_surf_fsa5 $out_surf 2>/dev/null | wc -l)
 
 if [ "$Nsurf" -lt 8 ]; then
-for x in lh rh; do
-    [[ "$x" == lh ]] && hemisphere=l || hemisphere=r
-    HEMI=$(echo "$hemisphere" | tr [:lower:] [:upper:])
-    Info "Mapping volumetric timeseries to native surface ${x}"
-    vol2surfTS="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_${x}.mgh
+for hemisphere in lh rh; do
+    HEMI=$(echo "${hemisphere/h/}" | tr [:lower:] [:upper:])
+    Info "Mapping volumetric timeseries to native surface ${hemisphere}"
+    vol2surfTS="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_${hemisphere}.mgh
     if [[ ! -f "$vol2surfTS" ]] ; then
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
@@ -558,8 +557,8 @@ for x in lh rh; do
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$idBIDS" \
               --interp trilinear \
-              --hemi "${x}" \
-              --out "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_"${x}"_NoHP.mgh
+              --hemi "${hemisphere}" \
+              --out "${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_"${hemisphere}"_NoHP.mgh
 
           # Map high-passed timeseries to surface
           Do_cmd mri_vol2surf \
@@ -568,7 +567,7 @@ for x in lh rh; do
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$idBIDS" \
               --interp trilinear \
-              --hemi "$x" \
+              --hemi "${hemisphere}" \
               --out "$vol2surfTS"
           if [[ -f "$vol2surfTS" ]] ; then ((Nsteps++)); fi
     else
@@ -576,23 +575,23 @@ for x in lh rh; do
     fi
 
     # Convert native timeseries to gifti
-    Do_cmd mri_convert "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}.func.gii"
+    Do_cmd mri_convert "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" "${tmp}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.func.gii"
 
     # Apply smoothing on native surface
-    out_surf_native="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}_10mm.mgh"
+    out_surf_native="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}_10mm.mgh"
     if [[ ! -f "$out_surf_native" ]] ; then
           if [[ "$smooth" == 1 ]] ; then
             Do_cmd wb_command -metric-smoothing \
-                "${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii"  \
-                "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}.func.gii" \
+                "${dir_freesurfer}/surf/${hemisphere}.midthickness.surf.gii"  \
+                "${tmp}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.func.gii" \
                 10 \
-                "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}_10mm.func.gii"
-            Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}_10mm.func.gii" "$out_surf_native"
+                "${tmp}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}_10mm.func.gii"
+            Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}_10mm.func.gii" "$out_surf_native"
           else
             Do_cmd mri_surf2surf \
-                --hemi "$x" \
+                --hemi "${hemisphere}" \
                 --srcsubject "$idBIDS" \
-                --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
+                --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" \
                 --trgsubject "$idBIDS" \
                 --tval "$out_surf_native" \
                 --fwhm-trg 10
@@ -603,12 +602,12 @@ for x in lh rh; do
     fi
 
     # Register to fsa5 and smooth
-    out_surf_fsa5="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}.mgh"
+    out_surf_fsa5="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${hemisphere}.mgh"
     if [[ ! -f "$out_surf_fsa5" ]] ; then
          Do_cmd mri_surf2surf \
-            --hemi "${x}" \
+            --hemi "${hemisphere}" \
             --srcsubject "$idBIDS" \
-            --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
+            --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" \
             --trgsubject fsaverage5 \
             --tval "$out_surf_fsa5"
          if [[ -f "$out_surf_fsa5" ]] ; then ((Nsteps++)); fi
@@ -616,12 +615,12 @@ for x in lh rh; do
          Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"; ((Nsteps++))
     fi
 
-    out_surf_fsa5_sm="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${x}_10mm.mgh"
+    out_surf_fsa5_sm="${rsfmri_surf}/${idBIDS}_rsfmri_space-fsaverage5_${hemisphere}_10mm.mgh"
     if [[ ! -f "$out_surf_fsa5_sm" ]] ; then
          Do_cmd mri_surf2surf \
-            --hemi "${x}" \
+            --hemi "${hemisphere}" \
             --srcsubject "$idBIDS" \
-            --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${x}.mgh" \
+            --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" \
             --trgsubject fsaverage5 \
             --tval "$out_surf_fsa5_sm" \
             --fwhm-trg 10
@@ -631,30 +630,30 @@ for x in lh rh; do
     fi
 
     # Register to conte69 and smooth
-    out_surf="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_${x}_10mm.mgh"
+    out_surf="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}_10mm.mgh"
     if [[ ! -f "$out_surf" ]] ; then
           # Register to conte69
           Do_cmd wb_command -metric-resample \
-              "${tmp}/${idBIDS}_rsfmri_space-fsnative_${x}.func.gii" \
-              "${dir_conte69}/${idBIDS}_${hemi}_sphereReg.surf.gii" \
+              "${tmp}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.func.gii" \
+              "${dir_conte69}/${idBIDS}_${hemisphere}_sphereReg.surf.gii" \
               "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii" \
               ADAP_BARY_AREA \
-              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" \
+              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}.func.gii" \
               -area-surfs \
-              "${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii" \
-              "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
+              "${dir_freesurfer}/surf/${hemisphere}.midthickness.surf.gii" \
+              "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}_midthickness.surf.gii"
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
               "${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii" \
-              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" \
+              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}.func.gii" \
               10 \
-              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}_10mm.func.gii"
+              "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}_10mm.func.gii"
 
-          Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}.func.gii" "${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_${x}.mgh"
-          Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${x}_10mm.func.gii" "${out_surf}"
+          Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}.func.gii" "${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}.mgh"
+          Do_cmd mri_convert "${tmp}/${idBIDS}_rsfmri_space-conte69-32k_${hemisphere}_10mm.func.gii" "${out_surf}"
           if [[ -f "$out_surf" ]] ; then ((Nsteps++)); fi
     else
-          Info "Subject ${id} has a singleecho fmri2fs ${x} on conte69-32k 10mm surface"; ((Nsteps++))
+          Info "Subject ${id} has a singleecho fmri2fs ${hemisphere} on conte69-32k 10mm surface"; ((Nsteps++))
     fi
 done
 else
