@@ -384,7 +384,7 @@ for (i in 1:14) {
       morph <- list(lh=freesurferformats::read.fs.morph(mpc.lh)*mask.lh,
                     rh=freesurferformats::read.fs.morph(mpc.rh)*mask.rh )
       # Calculate color range (quatile 20% to 95%) >>>> rgla <- list('trans_fun'=limit_fun(1200,2000), 'no_vis'=T);
-      Qt <- round(quantile(c(morph$lh[morph$lh!=0], morph$rh[morph$rh!=0]), probs = c(0.2,0.95)),0)
+      Qt <- round(quantile(c(morph$lh[morph$lh!=0], morph$rh[morph$rh!=0]), probs = c(0.05,0.95)),1)
       print(paste0("INFO.... Creating PNG of MPC-", i0))
       rgla <- list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T);
       cm <- vis.data.on.subject(dir_fs, BIDSid, morph_data_lh=morph$lh, morph_data_rh=morph$rh,
