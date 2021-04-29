@@ -619,8 +619,8 @@ echo "
           <tbody>" >> "$QC_html"
 
 # proc_dwi inputs Main DWI(s) and Reverse Phase Encoding
-if [ ! -f ${dir_QC}/micapipe_qc_proc-dwi.txt ]; then QC_proc-dwi; fi
-  cat ${dir_QC}/micapipe_qc_proc-dwi.txt >> "$QC_html"
+if [ ! -f ${dir_QC}/micapipe_QC_proc-dwi.txt ]; then QC_proc-dwi; fi
+  cat ${dir_QC}/micapipe_QC_proc-dwi.txt >> "$QC_html"
 
 # Other inputs
     echo -e "            <tr>
