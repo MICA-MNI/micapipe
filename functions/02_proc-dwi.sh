@@ -311,7 +311,6 @@ fod_gmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-gmNorm.mif"
 fod_csfN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-csfNorm.mif"
 if [[ ! -f "$fod_wmN" ]]; then
       Info "Calculating Multi-Shell Multi-Tissue, Response function and Fiber Orientation Distribution"
-      # if [ "${#shells[@]}" -ge 2 ]; then
             rf=dhollander
             # Response function
             rf_wm="${tmp}/${id}_response_wm_${rf}.txt"
@@ -334,15 +333,6 @@ if [[ ! -f "$fod_wmN" ]]; then
             Do_cmd mrinfo "$fod_gmN" -json_all "${fod_gmN/mif/json}"
             Do_cmd mrinfo "$fod_csfN" -json_all "${fod_csfN/mif/json}"
       else
-      #     Info "Calculating Single-Shell, Response function and Fiber Orientation Distribution"
-      #       Do_cmd dwi2response tournier -nthreads $threads $dwi_corr \
-      #           ${proc_dwi}/${id}_response_tournier.txt \
-      #           -mask $dwi_mask
-      #       Do_cmd dwi2fod -nthreads $threads csd \
-      #           $dwi_corr \
-      #           ${proc_dwi}/${id}_response_tournier.txt  \
-      #           ${tmp}/FOD.mif \
-      #           -mask $dwi_mask
             Do_cmd mtnormalise -nthreads "$threads" -mask "$dwi_mask" "$fod_wm" "$fod_wmN"
             Do_cmd mrinfo "$fod_wmN" -json_all "${fod_wmN/mif/json}"
       fi
