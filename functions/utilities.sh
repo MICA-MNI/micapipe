@@ -122,12 +122,12 @@ bids_print.variables() {
   Info "Processing directories:"
   Note "subject_dir     =" "$subject_dir"
   Note "proc_struct     =" "$proc_struct"
-  Note "dir_freesurfer  =" "$dir_freesurfer"
   Note "dir_conte69     =" "$dir_conte69"
   Note "dir_volum       =" "$dir_volum"
   Note "dir_warp        =" "$dir_warp"
   Note "dir_logs        =" "$dir_logs"
   Note "dir_QC          =" "$dir_QC"
+  Note "dir_freesurfer  =" "$dir_freesurfer"
 
   Info "Utilities directories:"
   Note "scriptDir         =" "$scriptDir"
