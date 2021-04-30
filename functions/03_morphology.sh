@@ -117,7 +117,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_thickness_10mm.mgh" ]]
             "${dir_freesurfer}/surf/${hemi}.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
 
-        Do_cmd mri_convert "${tmp}/${hemi}_thickness.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness.mgh"
+        Do_cmd mri_convert "${tmp}/${hemi}_thickness_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness.mgh"
 
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
@@ -179,7 +179,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_curvature_10mm.mgh" ]]
             "${dir_freesurfer}/surf/${hemi}.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
 
-        Do_cmd mri_convert "${tmp}/${hemi}_curv.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_curvature.mgh"
+        Do_cmd mri_convert "${tmp}/${hemi}_curv_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_curvature.mgh"
 
         # Smoothing
         Do_cmd wb_command -metric-smoothing \
