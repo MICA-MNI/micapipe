@@ -126,7 +126,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_thickness_10mm.mgh" ]]
             10 \
             "${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii"
 
-        Do_cmd "mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh"
+        Do_cmd mri_convert "${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh"
         if [[ -f "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh" ]]; then ((Nsteps++)); fi
     done
 else
