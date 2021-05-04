@@ -105,7 +105,7 @@ T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
 mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_t1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 
-if [[ ! -f "$T1_fsnative" ]]; then
+if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then
     Do_cmd mrconvert "$T1freesurfr" "$T1_in_fs"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$T1_in_fs" -t ["${T1_fsnative_affine}",1] -o "$T1_fsnative" -v -u int
@@ -185,9 +185,9 @@ done
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first
-Info "Native surfaces to conte69-64k vertices (both hemisphere)"
 if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf.gii" ]]; then
     for hemisphere in l r; do
+      Info "Native surfaces to conte69-64k vertices (${hemisphere}h hemisphere)"
       HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
         # Build the conte69-32k sphere and midthickness surface
         Do_cmd wb_shortcuts -freesurfer-resample-prep \
