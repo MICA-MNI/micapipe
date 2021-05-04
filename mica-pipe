@@ -491,7 +491,9 @@ fi
 
 # Pipeline description json
 micapipe_json
-
+if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then
+  echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"
+fi
 # -----------------------------------------------------------------------------------------------#
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
