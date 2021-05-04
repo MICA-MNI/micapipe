@@ -159,7 +159,9 @@ if [ -z "$tmp" ]; then tmp=/tmp; fi
 if [ -z "$tracts" ]; then tracts=40M; else tracts="$tracts"; fi
 
 # ---------------------------------------------------------------------------------------
-Title "MICA pipe cleanup \n\t\tSubject: $id"
+Title "MICA pipe cleanup
+\tSubject: $id
+\tSession: $SES"
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_structural
 if [ "$procVOL" = "TRUE" ]; then

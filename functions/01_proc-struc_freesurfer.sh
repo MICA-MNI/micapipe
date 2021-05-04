@@ -45,6 +45,9 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
+status="COMPLETED"; N=01
+grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 Warning "Subject ${id} has Freesurfer
                     > If you want to re-run for QC purposes try it manually
                     > If you want to run again this step first erase all the outputs with:
@@ -114,7 +117,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
-if [ -f "${dir_freesurfer}/mri/T1.mgz" ]; then status="COMPLETED"; else status="ERROR"; fi
+if [ -f "${dir_freesurfer}/mri/T1.mgz" ]; then status="COMPLETED"; N=01; else status="ERROR"; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -124,6 +127,6 @@ eri=$(echo print "$eri"/60 | perl)
 Title "Freesurfer recon-all processing ended:
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/proc_freesurfer*.txt)"
-
-echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
