@@ -165,7 +165,7 @@ fi
 # Register to fsa5
 for hemi in lh rh; do
     for n in $(seq 1 1 "$num_surfs"); do
-        MPC_fs5="${outDir}/${idBIDS}_space-fsaverage_desc-${hemi}_MPC-${n}.mgh"
+        MPC_fs5="${outDir}/${idBIDS}_space-fsaverage5_desc-${hemi}_MPC-${n}.mgh"
         if [[ ! -f "$MPC_fs5" ]]; then
             Do_cmd mri_surf2surf --hemi "$hemi" \
                 --srcsubject "$idBIDS" \
