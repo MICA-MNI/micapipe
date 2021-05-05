@@ -42,8 +42,10 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-# Check inputs: Freesurfer space T1
+# Check inputs
 if [ ! -f "$T1freesurfr" ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+Nc69=$(ls "${dir_conte69}"/*gii 2>/dev/null | wc -l)
+if [ "$Nc69" -lt 8 ]; then Error "Missing conte69 surfaces: run -post_structural"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
