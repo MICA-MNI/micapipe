@@ -128,9 +128,9 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++
 
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
+tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
 if [ ! -f "$tdi" ]; then
     Info "Building the ${tracts} streamlines connectome!!!"
-    tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
     export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
     weights=${tmp}/SIFT2_${tracts}.txt
     Do_cmd tckgen -nthreads "$threads" \
