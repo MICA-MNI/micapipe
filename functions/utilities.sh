@@ -605,6 +605,7 @@ function micapipe_group_QC() {
   #------------------------------------------------------------------------------#
   # Group QC html file
   here=$(pwd)
+  Title "MICAPIPE: group-level Quality Control"
   QC_html=${out}/micapipe_progress.html
   table_style=" <style type=\"text/css\">
       .tg  {border-collapse:collapse;border-spacing:0;}
@@ -689,6 +690,7 @@ function micapipe_group_QC() {
   pipecsv=${out}/micapipe_processed_sub.csv
   cd "$out"
   for Subj in sub*/*; do
+      Info "Processing $Subj"
       Nsub=$(echo ${Subj/sub-/} | awk -F '/' '{print $1}')
       Nses=$(echo ${Subj/ses-/} | awk -F '/' '{print $2}')
       sub_html="${out}/${Subj}/QC/sub-${Nsub}_ses-${Nses}_micapipe_qc.html"
