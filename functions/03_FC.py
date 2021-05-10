@@ -13,6 +13,7 @@ funcDir = sys.argv[2]
 labelDir = sys.argv[3]
 parcDir = sys.argv[4]
 volmDir = sys.argv[5]
+performNSR = sys.argv[6]
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -34,7 +35,7 @@ else:
 # Conte69 processing
 # ------------------------------------------
 
-# Find and load surface-registered ctx + sctx + cerebellum timeseries
+# Find and load surface-registered cortical timeseries
 os.chdir(funcDir+'/surfaces/')
 x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_lh_10mm*'))
 x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_rh_10mm*'))
@@ -108,6 +109,10 @@ x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD*'))
 x_dof = " ".join(glob.glob(funcDir+'/volumetric/'+'*singleecho.1D'))
 x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
 x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
+x_csf = " ".join(glob.glob(funcDir+'/volumetric/'+'*CSF*'))
+x_wm = " ".join(glob.glob(funcDir+'/volumetric/'+'*WM*'))
+
+# Nuisance signal regression: spikes and (optional) WM/CSF
 if x_spike:
     spike = np.loadtxt(x_spike)
     if spike.ndim == 1:
@@ -117,14 +122,26 @@ if x_spike:
     # regress out spikes from individual timeseries
     ones = np.ones((spike.shape[0], 1))
     mdl = []
-    mdl = np.append(ones, spike, axis=1)
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
+    else:
+        mdl = np.append(ones, spike, axis=1)
     # conte
     slm = LinearRegression().fit(data, mdl)
     data_corr = data-np.dot(mdl, slm.coef_)
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    data_corr = data
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
+        slm = LinearRegression().fit(data, mdl)
+        data_corr = data-np.dot(mdl, slm.coef_)
+    else:
+        data_corr = data
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
 np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-timeseries_clean.txt', data_corr, fmt='%.6f')
@@ -192,6 +209,7 @@ x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/' + subject + '_rsfmri_space-fs
 lh_data_nat = nib.load(x_lh_nat)
 lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
 
+# Nuisance signal regression: spikes and (optional) WM/CSF
 spike = []
 if x_spike:
     spike = np.loadtxt(x_spike)
@@ -202,7 +220,12 @@ if x_spike:
     # regress out spikes from individual timeseries
     ones = np.ones((spike.shape[0], 1))
     mdl = []
-    mdl = np.append(ones, spike, axis=1)
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
+    else:
+        mdl = np.append(ones, spike, axis=1)
     slm = LinearRegression().fit(lh_data_nat, mdl)
     lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
     del lh_data_nat
@@ -210,8 +233,17 @@ if x_spike:
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    lh_data_nat_corr = lh_data_nat
-    del lh_data_nat
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
+        slm = LinearRegression().fit(lh_data_nat, mdl)
+        lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
+        del lh_data_nat
+        del slm
+    else:
+        lh_data_nat_corr = lh_data_nat
+        del lh_data_nat
 
 # Process right hemisphere timeseries
 os.chdir(funcDir+'/surfaces/')
@@ -219,6 +251,7 @@ x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*_rsfmri_space-fsnative_rh_1
 rh_data_nat = nib.load(x_rh_nat)
 rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
 
+# Nuisance signal regression: spikes and (optional) WM/CSF
 spike = []
 if x_spike:
     spike = np.loadtxt(x_spike)
@@ -229,7 +262,12 @@ if x_spike:
     # regress out spikes from individual timeseries
     ones = np.ones((spike.shape[0], 1))
     mdl = []
-    mdl = np.append(ones, spike, axis=1)
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
+    else:
+        mdl = np.append(ones, spike, axis=1)
     slm = LinearRegression().fit(rh_data_nat, mdl)
     rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
     del rh_data_nat
@@ -237,8 +275,17 @@ if x_spike:
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    rh_data_nat_corr = rh_data_nat
-    del rh_data_nat
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
+        slm = LinearRegression().fit(rh_data_nat, mdl)
+        rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
+        del rh_data_nat
+        del slm
+    else:
+        rh_data_nat_corr = rh_data_nat
+        del rh_data_nat
 
 # Concatenate hemispheres and clean up
 dataNative_corr = np.append(lh_data_nat_corr, rh_data_nat_corr, axis=1)
@@ -247,6 +294,9 @@ del rh_data_nat_corr
 
 # Process subcortex and cerebellum
 spike = []
+sctx_cereb = np.append(sctx, cereb, axis=1)
+del sctx
+del cereb
 if x_spike:
     spike = np.loadtxt(x_spike)
     if spike.ndim == 1:
@@ -256,24 +306,29 @@ if x_spike:
     # regress out spikes from individual timeseries
     ones = np.ones((spike.shape[0], 1))
     mdl = []
-    mdl = np.append(ones, spike, axis=1)
-    # Subcortex
-    slm = LinearRegression().fit(sctx, mdl)
-    sctx_corr = sctx-np.dot(mdl, slm.coef_)
-    del sctx
-    # Cerebellum
-    slm = LinearRegression().fit(cereb, mdl)
-    cereb_corr = cereb-np.dot(mdl, slm.coef_)
-    del cereb
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
+    else:
+        mdl = np.append(ones, spike, axis=1)
+    slm = LinearRegression().fit(sctx_cereb, mdl)
+    sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
+    del sctx_cereb
 else:
     del spike
     print('no spikey, no spikey, will skippy')
-    # Subcortex
-    sctx_corr = sctx
-    del sctx
-    # Cerebellum
-    cereb_corr = cereb
-    del cereb
+    if performNSR == 1:
+        wm = np.loadtxt(x_wm)
+        csf = np.loadtxt(x_csf)
+        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
+        slm = LinearRegression().fit(sctx_cereb, mdl)
+        sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
+        del sctx_cereb
+        del slm
+    else:
+        sctx_cereb_corr = sctx_cereb
+        del sctx_cereb
 
 # Generate native surface connectomes
 for parcellation in parcellationList:
@@ -301,7 +356,7 @@ for parcellation in parcellationList:
         tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-    ts = np.append(np.append(sctx_corr, cereb_corr, axis=1), ts_native_ctx, axis=1)
+    ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
     np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
 
     ts_r = np.corrcoef(np.transpose(ts))
@@ -322,8 +377,7 @@ del native_parc
 del ts_r
 del ts
 del dataNative_corr
-del sctx_corr
-del cereb_corr
+del sctx_cereb_corr
 
 # ------------------------------------------
 # Additional QC
