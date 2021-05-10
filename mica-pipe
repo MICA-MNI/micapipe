@@ -18,6 +18,8 @@ echo -e "
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
 \t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
+\t\033[38;5;120m-QC\033[0m 	            : OPTIONAL flag for group level Quality Control (Requires -out)
+
    Flags for basic stages of processing:
 \t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
@@ -268,6 +270,10 @@ do
     input_dat=$2
     shift;shift
   ;;
+  -QC)
+    QCgroup=TRUE
+    shift
+  ;;
   -mica)
     mica=TRUE
     shift
@@ -340,6 +346,19 @@ do
     esac
 done
 
+# Argument check out & WARNINGS
+if [ "$QCgroup" = "TRUE" ]; then
+    if [ -z ${out} ]; then
+            Error "For Quality Control -out is mandatory!!!
+                   -out  : $out"
+            help; exit 1;
+    else
+            out=$(realpath $out)/micapipe
+            micapipe_group_QC
+            exit 0
+    fi
+fi
+
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
 if [ ${#arg[@]} -lt 3 ]; then
@@ -348,6 +367,7 @@ Error "One or more mandatory arguments are missing:
                -out  : $out
                -bids : $BIDS"
 help; exit 1; fi
+
 runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
@@ -507,7 +527,9 @@ fi
 
 # Pipeline description json
 micapipe_json
-
+if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then
+  echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"
+fi
 # -----------------------------------------------------------------------------------------------#
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#

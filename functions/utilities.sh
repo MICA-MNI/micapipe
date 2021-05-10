@@ -97,6 +97,8 @@ export idBIDS="${subject}${ses}"
   bids_dwis=($(ls "$subject_bids"/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
+  bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
+  bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
   dwi_reverse=$(ls "$subject_bids"/dwi/*"$ses"_acq-PA_dir-*_dwi.nii* 2>/dev/null)
 }
 
@@ -597,4 +599,131 @@ function QC_SC() {
                 <td class=\"tg-8pnm\">proc-dwi<br><br></td>
                 <td class=\"tg-8pnm\">$(find "$dti_FA" 2>/dev/null)</td>
               </tr>"   >> "$html"
+}
+
+function micapipe_group_QC() {
+  #------------------------------------------------------------------------------#
+  # Group QC html file
+  here=$(pwd)
+  Title "MICAPIPE: group-level Quality Control"
+  QC_html=${out}/micapipe_progress.html
+  table_style=" <style type=\"text/css\">
+      .tg  {border-collapse:collapse;border-spacing:0;}
+      .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+        overflow:hidden;padding:10px 5px;word-break:normal;}
+      .tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+        font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+      .tg .tg-lp92{background-color:#656565;border-color:#c0c0c0;color:#efefef;
+        font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:14px;font-weight:bold;text-align:center;
+        vertical-align:top}
+      .tg .tg-oq6h{background-color:#343434;border-color:#c0c0c0;color:#818181;font-family:\"Courier New\", Courier, monospace !important;;
+        text-align:center;vertical-align:top}
+      .tg .tg-e8zy{background-color:#343434;border-color:#c0c0c0;color:#efefef;font-family:\"Courier New\", Courier, monospace !important;;
+        font-weight:bold;text-align:center;vertical-align:top}
+      .tg .tg-sl9e{background-color:#ee7942;border-color:#c0c0c0;color:#efefef;font-family:\"Courier New\", Courier, monospace !important;;
+        text-align:center;vertical-align:top}
+      .tg .tg-8779{background-color:#039fd3;border-color:#c0c0c0;color:#efefef;
+        font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:12px;text-align:center;vertical-align:top}
+    </style>"
+
+  echo -e "<!doctype html>
+  <html>
+  <head>
+    <meta charset=\"utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+    <title> micapipe progress</title>
+
+    <!-- Headings format -->
+    <style>
+      h1 {color:#e9e9f7;font-family:\"Lucida Console\", Monaco, monospace !important;;text-align:center;}
+      h2 {color:#e9e9f7;font-family:\"Lucida Console\", Monaco, monospace !important;;}
+      a {color:#efefef;font-family:\"Lucida Console\";}
+    </style>
+
+    <!-- Sticky image -->
+    <style>
+    img.sticky {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      width: 200px;
+    }
+    </style>
+
+    <style>
+    body {
+      background-color: rgba(5, 5, 5, 0.95);
+    }
+    </style>
+
+  </head>
+  <body>" > $QC_html
+
+  #------------------------------------------------------------------------------#
+  # MICAPIPE progress table
+  echo -e "
+  <img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">
+  <h1>Pipeline progress</h1>
+  <h2>Last run: $(date)</h2>"  >> "$QC_html"
+
+  echo -e $table_style >> "$QC_html"
+  echo -e "
+      <table class=\"tg\">
+        <thead>
+          <tr>
+            <th class=\"tg-lp92\">Subject</th>
+            <th class=\"tg-lp92\">Session</th>
+            <th class=\"tg-lp92\">QC</th>
+            <th class=\"tg-lp92\">proc_structural</th>
+            <th class=\"tg-lp92\">proc_freesurfer</th>
+            <th class=\"tg-lp92\">post_structural</th>
+            <th class=\"tg-lp92\">Morphology</th>
+            <th class=\"tg-lp92\">GD</th>
+            <th class=\"tg-lp92\">proc_dwi</th>
+            <th class=\"tg-lp92\">SC</th>
+            <th class=\"tg-lp92\">proc_rsfmri</th>
+            <th class=\"tg-lp92\">MPC</th>
+          </tr>
+        </thead>
+        <tbody>" >> "$QC_html"
+
+  pipecsv=${out}/micapipe_processed_sub.csv
+  cd "$out"
+  for Subj in sub*/*; do
+      Info "Processing $Subj"
+      Nsub=$(echo ${Subj/sub-/} | awk -F '/' '{print $1}')
+      Nses=$(echo ${Subj/ses-/} | awk -F '/' '{print $2}')
+      sub_html="${out}/${Subj}/QC/sub-${Nsub}_ses-${Nses}_micapipe_qc.html"
+      echo -e "\n        <tr>" >> "$QC_html"
+      echo -e "              <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">sub-${Nsub}</span></td>
+                <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">ses-${Nses}</span></td>" >> "$QC_html"
+      if [ -f "$sub_html" ]; then
+          echo -e "              <td class=\"tg-8779\"><a href=\"${sub_html}\">Click here</a></td>" >> "$QC_html"
+      else
+          echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
+      fi
+      for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_rsfmri MPC; do
+          Status=$(grep "${Nsub}, ${Nses}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
+          Steps=$(grep "${Nsub}, ${Nses}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
+          if [[ "$Status" == "COMPLETED" ]]; then
+              echo -e "              <td class=\"tg-8779\">${Steps}</td>" >> "$QC_html"
+          elif [[ "$Status" == "INCOMPLETE" ]]; then
+              echo -e "              <td class=\"tg-sl9e\">${Steps}</td>" >> "$QC_html"
+          else
+              echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
+          fi
+      done
+      echo -e "        </tr>" >> "$QC_html"
+  done
+
+  echo -e "      </tbody>
+      </table>" >> "$QC_html"
+  #------------------------------------------------------------------------------#
+  # closes html document
+  echo "
+  </body>
+  </html>" >> "$QC_html"
+  cd "$here"
+  Title "micapipe group-level QC ended succesfully\033[38;5;141m:
+  \t\tOutput to file: $QC_html"
 }

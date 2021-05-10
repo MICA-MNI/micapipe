@@ -79,7 +79,6 @@ if [ "$N" -gt 3 ]; then Warning "
   Connectomes with $tracts streamlines already exist!!
   If you want to re-run the $tracts tractogram or add parcellations first clean the outpus:
     micapipe_cleanup -SC -sub $id -out ${out/"/micapipe"/} -bids $BIDS -tracts ${tracts}"; fi
-if [ -f "$tdi" ]; then Error "SC has been processed for Subject $id: TDI of ${tracts} was found, check the connectomes:\n\t\t${dwi_cnntm}"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Tractography and structural connectomes\n\t\tmicapipe $Version, $PROC"
@@ -129,37 +128,43 @@ else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++
 
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
-Info "Building the ${tracts} streamlines connectome!!!"
 tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
-export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
-weights=${tmp}/SIFT2_${tracts}.txt
-Do_cmd tckgen -nthreads "$threads" \
-    "$fod_wmN" \
-    "$tck" \
-    -act "$dwi_5tt" \
-    -crop_at_gmwmi \
-    -backtrack \
-    -seed_dynamic "$fod_wmN" \
-    -algorithm iFOD2 \
-    -step 0.5 \
-    -angle 22.5 \
-    -cutoff 0.06 \
-    -maxlength 400 \
-    -minlength 10 \
-    -select "$tracts"
+if [ ! -f "$tdi" ]; then
+    Info "Building the ${tracts} streamlines connectome!!!"
+    export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
+    weights=${tmp}/SIFT2_${tracts}.txt
+    Do_cmd tckgen -nthreads "$threads" \
+        "$fod_wmN" \
+        "$tck" \
+        -act "$dwi_5tt" \
+        -crop_at_gmwmi \
+        -backtrack \
+        -seed_dynamic "$fod_wmN" \
+        -algorithm iFOD2 \
+        -step 0.5 \
+        -angle 22.5 \
+        -cutoff 0.06 \
+        -maxlength 400 \
+        -minlength 10 \
+        -select "$tracts"
 
-# Exit if tractography fails
-if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
+    # Exit if tractography fails
+    if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
 
-# json file of tractogram
-tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
+    # json file of tractogram
+    tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
 
-# SIFT2
-Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
+    # SIFT2
+    Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
 
-# TDI for QC
-Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
+    # TDI for QC
+    Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
+    Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
+    ((Nparc++))
+else
+    Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nparc++))
+fi
+
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
@@ -171,66 +176,78 @@ for seg in "${parcellations[@]}"; do
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes
-    Info "Building $parc_name cortical connectome"
-    # Take parcellation into DWI space
-    Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_cortex" -v -u int
-    # Remove the medial wall
-    for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
+    if [[ ! -f "${connectome_str}_cor-connectome.txt" ]]; then
+        Info "Building $parc_name cortical connectome"
+        # Take parcellation into DWI space
+        Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_cortex" -v -u int
+        # Remove the medial wall
+        for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
 
-    # Build the Cortical connectomes
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_cortex" "${connectome_str}_cor-connectome.txt" \
-        -tck_weights_in "$weights" -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        # Build the Cortical connectomes
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_cortex" "${connectome_str}_cor-connectome.txt" \
+            -tck_weights_in "$weights" -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
-    # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_cortex" "${connectome_str}_cor-edgeLengths.txt" \
-        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-    if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nparc++)); fi
+        # Calculate the edge lenghts
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_cortex" "${connectome_str}_cor-edgeLengths.txt" \
+            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nparc++)); fi
+    else
+        ((Nparc++))
+    fi
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical connectomes (-sub)
-    Info "Building $parc_name cortical-subcortical connectome"
-    dwi_cortexSub="${tmp}/${id}_${parc_name}-sub_dwi.nii.gz"
-    Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_subc" -add "$dwi_cortex" "$dwi_cortexSub" -odt int # added the subcortical parcellation
+    if [[ ! -f "${connectome_str}_sub-connectome.txt" ]]; then
+        Info "Building $parc_name cortical-subcortical connectome"
+        dwi_cortexSub="${tmp}/${id}_${parc_name}-sub_dwi.nii.gz"
+        Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_subc" -add "$dwi_cortex" "$dwi_cortexSub" -odt int # added the subcortical parcellation
 
-    # Build the Cortical-Subcortical connectomes
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_cortexSub" "${connectome_str}_sub-connectome.txt" \
-        -tck_weights_in "$weights" -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        # Build the Cortical-Subcortical connectomes
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_cortexSub" "${connectome_str}_sub-connectome.txt" \
+            -tck_weights_in "$weights" -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
-    # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_cortexSub" "${connectome_str}_sub-edgeLengths.txt" \
-        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-    if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nparc++)); fi
+        # Calculate the edge lenghts
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_cortexSub" "${connectome_str}_sub-edgeLengths.txt" \
+            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nparc++)); fi
+    else
+        ((Nparc++))
+    fi
 
     # -----------------------------------------------------------------------------------------------
     # Build the Cortical-Subcortical-Cerebellar connectomes (-sub-cereb)
-    Info "Building $parc_name cortical-subcortical-cerebellum connectome"
-    dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
-    Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
+    if [[ ! -f "${connectome_str}_full-connectome.txt" ]]; then
+        Info "Building $parc_name cortical-subcortical-cerebellum connectome"
+        dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
+        Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
 
-    # Build the Cortical-Subcortical-Cerebellum connectomes
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_all" "${connectome_str}_full-connectome.txt" \
-        -tck_weights_in "$weights" -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        # Build the Cortical-Subcortical-Cerebellum connectomes
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_all" "${connectome_str}_full-connectome.txt" \
+            -tck_weights_in "$weights" -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
-    # Calculate the edge lenghts
-    Do_cmd tck2connectome -nthreads "$threads" \
-        "$tck" "$dwi_all" "${connectome_str}_full-edgeLengths.txt" \
-        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-    if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nparc++)); fi
+        # Calculate the edge lenghts
+        Do_cmd tck2connectome -nthreads "$threads" \
+            "$tck" "$dwi_all" "${connectome_str}_full-edgeLengths.txt" \
+            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
+        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nparc++)); fi
+    else
+        ((Nparc++))
+    fi
 done
 
 # Change connectome permissions
-chmod 770 -R "$dwi_cnntm"/*
+chmod 770 -R "$dwi_cnntm"/* 2>/dev/null
 
 # -----------------------------------------------------------------------------------------------
 # Compute Auto-Tractography
@@ -256,12 +273,13 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-N="$(( 2 + ${#parcellations[*]} * 3))"
-if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="ERROR missing a connectome: "; fi
+N="$(( 3 + ${#parcellations[*]} * 3))"
+if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \tSteps completed : $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-echo "${id}, ${SES/ses-/}, SC, ${status}-${tracts} N=$(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, SC-${tracts}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

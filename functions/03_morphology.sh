@@ -42,8 +42,10 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-# Check inputs: Freesurfer space T1
-if [ ! -f "$T1freesurfr" ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+# Check inputs
+if [ ! -f "$T1freesurfr" ]; then Error "T1 in freesurfer space not found for Subject $id : ${T1freesurfr}"; exit; fi
+Nc69=$(ls "${dir_conte69}"/*gii 2>/dev/null | wc -l)
+if [ "$Nc69" -lt 8 ]; then Error "Missing conte69 surfaces: run -post_structural"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
@@ -126,7 +128,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_thickness_10mm.mgh" ]]
             10 \
             "${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii"
 
-        Do_cmd "mri_convert ${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh"
+        Do_cmd mri_convert "${tmp}/${hemi}_thickness_10mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh"
         if [[ -f "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness_10mm.mgh" ]]; then ((Nsteps++)); fi
     done
 else
@@ -202,10 +204,11 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="ERROR Morphology is missing a processing step"; fi
+if [ "$Nsteps" -eq 8 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "Post-Morphology processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m.
 \tSteps completed : $(printf "%02d" "$Nsteps")/08
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/Morphology_*.txt)"
-echo "${id}, ${SES/ses-/}, Morphology, $status N=$(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, Morphology, $status, $(printf "%02d" "$Nsteps")/08, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
