@@ -304,7 +304,7 @@ if [[ ! -f "${singleecho}" ]]; then
     # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
     if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
-        statusTopUp="NO"
+        export statusTopUp="NO"
         Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
@@ -337,9 +337,9 @@ if [[ ! -f "${singleecho}" ]]; then
 
             # Check if it worked
             if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
-            statusTopUp="YES"
+            export statusTopUp="YES"
         else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; statusTopUp="YES"; ((Nsteps++))
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
         fi
     fi
 else
@@ -391,7 +391,7 @@ if  [[ -f $(which fix) ]]; then
           Info "Running melodic"
           Do_cmd cp "$fmri_HP" "$fmri_filtered"
           Do_cmd melodic --in="${fmri_filtered}" \
-                          --tr=$RepetitionTime \
+                          --tr="$RepetitionTime" \
                           --nobet \
                           --mask="${fmri_mask}" \
                           --bgthreshold=3 \
@@ -400,7 +400,7 @@ if  [[ -f $(which fix) ]]; then
                           --Oall \
                           --outdir="${rsfmri_ICA}/filtered_func_data.ica" \
                           --Omean="${rsfmri_ICA}/mean_func.nii.gz"
-          if [[ -f ${melodic_IC} ]]; then statusMel="YES"; else statusMel="FAILED"; fi
+          if [[ -f "${melodic_IC}" ]]; then export statusMel="YES"; else export statusMel="FAILED"; fi
       else
           Info "Subject ${id} has MELODIC outputs"
       fi

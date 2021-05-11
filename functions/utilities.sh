@@ -547,7 +547,7 @@ function QC_proc-dwi() {
     echo -e "        <tr>
             <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
             <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
-            <td class=\"tg-8pnm\">$(find $dwi_reverse 2>/dev/null)</td>
+            <td class=\"tg-8pnm\">${dwi_reverse}</td>
           </tr>"  >> "$html"
   fi
 }
@@ -558,25 +558,25 @@ function QC_proc-rsfmri() {
   echo -e "            <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $mainScan 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$mainScan" 2>/dev/null)</td>
               </tr>
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $mainScanJson 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$mainScanJson" 2>/dev/null)</td>
               </tr>" >> "$html"
             if [ -f "$mainPhaseScan" ]; then
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainPhaseScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $mainPhaseScan 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$mainPhaseScan" 2>/dev/null)</td>
               </tr>"  >> "$html"
             fi
             if [ -f "$reversePhaseScan" ]; then
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">reversePhaseScan</span></td>
                 <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find $reversePhaseScan 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find "$reversePhaseScan" 2>/dev/null)</td>
               </tr>"  >> "$html"
             fi
   echo -e "          <tr>
@@ -642,7 +642,7 @@ function micapipe_group_QC() {
   here=$(pwd)
   QC_html=${out}/micapipe_progress.html
   if [ ! -d "${out}" ]; then Error "Output path does not contain a /micapipe directory:\n \t${out}/micapipe "; exit; fi
-  DataName=$(grep "Name" ${out}/pipeline-description.json | awk -F '"' 'NR==1{print $4}')
+  DataName=$(grep "Name" "${out}/pipeline-description.json" | awk -F '"' 'NR==1{print $4}')
   Title "MICAPIPE: group-level Quality Control"
   table_style=" <style type=\"text/css\">\n
       .tg  {border-collapse:collapse;border-spacing:0;border-top: none;border-bottom: none;}\n
@@ -696,7 +696,7 @@ function micapipe_group_QC() {
 
   </head>
   <body>
-    <img class=\"sticky\", id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\"> " > $QC_html
+    <img class=\"sticky\", id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\"> " > "$QC_html"
 
   #------------------------------------------------------------------------------#
   # MICAPIPE progress table
@@ -705,7 +705,7 @@ function micapipe_group_QC() {
   <h2>Database: ${DataName}</h2>
   <h2>Last run: $(date)</h2>"  >> "$QC_html"
 
-  echo -e $table_style >> "$QC_html"
+  echo -e "$table_style" >> "$QC_html"
   echo -e "
   <div class=\"container\">
       <table class=\"tg\">
@@ -757,13 +757,13 @@ function micapipe_group_QC() {
   cd "$out"
   for Subj in sub*; do
       Info "Processing $Subj"
-      Nsub=$(echo ${Subj/sub-/} | awk -F '/' '{print $1}')
+      Nsub=$(echo "${Subj/sub-/}" | awk -F '/' '{print $1}')
       NumSes=($(ls "$Subj"/ses-* 2>/dev/null | wc -l))
       if [[ "$NumSes" -eq 0 ]]; then
           fill.table "SINGLE" "${out}/${Subj}/QC/sub-${Nsub}_micapipe_qc.html"
       elif [[ "$NumSes"  -gt 0 ]]; then
         for SubSes in "$Subj"/ses-*; do
-            Nses=$(echo ${SubSes/ses-/} | awk -F '/' '{print $2}')
+            Nses=$(echo "${SubSes/ses-/}" | awk -F '/' '{print $2}')
             fill.table "ses-${Nses}" "${out}/${SubSes}/QC/sub-${Nsub}_ses-${Nses}_micapipe_qc.html"
         done
       fi
