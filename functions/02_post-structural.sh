@@ -45,7 +45,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 cd "$util_parcelations"
 if [[ "$atlas" == "DEFAULT" ]]; then
   atlas_parc=($(ls lh.*annot))
-  N=${#atlas_parc[*]}
+  N="${#atlas_parc[*]}"
   Info "Selected parcellations: DEFAULT, N=${N}"
 else
   IFS=',' read -ra atlas_parc <<< "$atlas"
