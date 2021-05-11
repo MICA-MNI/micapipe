@@ -121,7 +121,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
-if [ -f "${dir_freesurfer}/mri/T1.mgz" ]; then status="COMPLETED"; N=01; else status="ERROR"; fi
+if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then status="COMPLETED"; N=01; else status="INCOMPLETE"; N=00; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
