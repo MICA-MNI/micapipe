@@ -607,6 +607,7 @@ function micapipe_group_QC() {
   here=$(pwd)
   QC_html=${out}/micapipe_progress.html
   if [ ! -d "${out}" ]; then Error "Output path does not contain a /micapipe directory:\n \t${out}/micapipe "; exit; fi
+  DataName=$(grep "Name" ${out}/pipeline-description.json | awk -F '"' 'NR==1{print $4}')
   Title "MICAPIPE: group-level Quality Control"
   table_style=" <style type=\"text/css\">\n
       .tg  {border-collapse:collapse;border-spacing:0;border-top: none;border-bottom: none;}\n
@@ -665,6 +666,7 @@ function micapipe_group_QC() {
   echo -e "
   <img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">
   <h1>Pipeline progress</h1>
+  <h2>Database: ${DataName}</h2>
   <h2>Last run: $(date)</h2>"  >> "$QC_html"
 
   echo -e $table_style >> "$QC_html"
