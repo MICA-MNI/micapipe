@@ -71,13 +71,17 @@ Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
-
-if [ -d "$FSdir" ]; then
-    Info "Copying from freesurfer_dir"
-    Do_cmd mkdir "$dir_freesurfer"
-    Do_cmd cp -Rf "$FSdir"/* "$dir_freesurfer"
-
-elif [[ "$FSdir" = "FALSE" ]]; then
+Info "$FSdir"
+if [[ "$FSdir" != "FALSE" ]]; then
+    if [[ -d "$FSdir" ]]; then
+        Info "Copying from freesurfer_dir"
+        Do_cmd mkdir "$dir_freesurfer"
+        Do_cmd cp -Rf "$FSdir"/* "$dir_freesurfer"
+    elif [[ ! -d "$FSdir" ]]; then
+        Error "The provided freesurfer directory does not exist: $FSdir"
+        exit
+    fi
+elif [[ "$FSdir" == "FALSE" ]]; then
     Info "Running Freesurfer"
     # BIDS T1w processing
     N=${#bids_T1ws[@]} # total number of T1w
