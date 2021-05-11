@@ -191,6 +191,7 @@ if [ "$postVOL" = "TRUE" ]; then
                   "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_t1w_* \
                   "${dir_conte69}"/* \
                   "${dir_freesurfer}"/label/*_mics* \
+                  "${dir_freesurfer}"/surf/*.midthickness.surf.gii \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
 fi
