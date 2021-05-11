@@ -54,7 +54,7 @@ echo -e "
 \t\t\033[38;5;120m-subcortical_seg\033[0m     : User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
-\t\t\033[38;5;120m-dwi_main\033[0m            : Path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
+\t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
 \t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
 \t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
@@ -64,9 +64,9 @@ echo -e "
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
-\t\t\033[38;5;120m-fmri_pe\033[0m             : String to manually identify the main phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_pe>.nii.gz)
+\t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for rsfMRI processing
 \t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m            : String to manually identify the reverse phase encoding scan for rsfMRI processing (eg. func/sub-001_<fmri_rpe>.nii.gz)
+\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)5666
 \t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
@@ -230,11 +230,11 @@ do
   ;;
   -nuisanceRegression)
     NSR=TRUE
-    shift  
+    shift
   ;;
   -noFIX)
     skipFIX=TRUE
-    shift     
+    shift
   ;;
   -smoothWithWB)
     smoothWB=TRUE
