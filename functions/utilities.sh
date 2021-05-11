@@ -605,8 +605,9 @@ function micapipe_group_QC() {
   #------------------------------------------------------------------------------#
   # Group QC html file
   here=$(pwd)
-  Title "MICAPIPE: group-level Quality Control"
   QC_html=${out}/micapipe_progress.html
+  if [ ! -d "${out}" ]; then Error "Output path does not contain a /micapipe directory:\n \t${out}/micapipe "; exit; fi
+  Title "MICAPIPE: group-level Quality Control"
   table_style=" <style type=\"text/css\">\n
       .tg  {border-collapse:collapse;border-spacing:0;border-top: none;border-bottom: none;}\n
       .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
@@ -688,33 +689,45 @@ function micapipe_group_QC() {
         </thead>
         <tbody>" >> "$QC_html"
 
+  function fill.table() {
+    sub_ses=$1
+    sub_html=$2
+    echo -e "\n        <tr>" >> "$QC_html"
+    echo -e "              <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">sub-${Nsub}</span></td>
+              <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">${sub_ses}</span></td>" >> "$QC_html"
+    if [ -f "$sub_html" ]; then
+        echo -e "              <td class=\"tg-8779\"><a href=\"${sub_html}\">Click here</a></td>" >> "$QC_html"
+    else
+        echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
+    fi
+    for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_rsfmri MPC; do
+        Status=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
+        Steps=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
+        if [[ "$Status" == "COMPLETED" ]]; then
+            echo -e "              <td class=\"tg-8779\">${Steps}</td>" >> "$QC_html"
+        elif [[ "$Status" == "INCOMPLETE" ]]; then
+            echo -e "              <td class=\"tg-sl9e\">${Steps}</td>" >> "$QC_html"
+        else
+            echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
+        fi
+    done
+    echo -e "        </tr>" >> "$QC_html"
+  }
+
   pipecsv=${out}/micapipe_processed_sub.csv
   cd "$out"
-  for Subj in sub*/*; do
+  for Subj in sub*; do
       Info "Processing $Subj"
       Nsub=$(echo ${Subj/sub-/} | awk -F '/' '{print $1}')
-      Nses=$(echo ${Subj/ses-/} | awk -F '/' '{print $2}')
-      sub_html="${out}/${Subj}/QC/sub-${Nsub}_ses-${Nses}_micapipe_qc.html"
-      echo -e "\n        <tr>" >> "$QC_html"
-      echo -e "              <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">sub-${Nsub}</span></td>
-                <td class=\"tg-e8zy\"><span style=\"font-weight:bold\">ses-${Nses}</span></td>" >> "$QC_html"
-      if [ -f "$sub_html" ]; then
-          echo -e "              <td class=\"tg-8779\"><a href=\"${sub_html}\">Click here</a></td>" >> "$QC_html"
-      else
-          echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
+      NumSes=($(ls "$Subj"/ses-* 2>/dev/null | wc -l))
+      if [[ "$NumSes" -eq 0 ]]; then
+          fill.table "SINGLE" "${out}/${Subj}/QC/sub-${Nsub}_micapipe_qc.html"
+      elif [[ "$NumSes"  -gt 0 ]]; then
+        for SubSes in "$Subj"/ses-*; do
+            Nses=$(echo ${SubSes/ses-/} | awk -F '/' '{print $2}')
+            fill.table "ses-${Nses}" "${out}/${SubSes}/QC/sub-${Nsub}_ses-${Nses}_micapipe_qc.html"
+        done
       fi
-      for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_rsfmri MPC; do
-          Status=$(grep "${Nsub}, ${Nses}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
-          Steps=$(grep "${Nsub}, ${Nses}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
-          if [[ "$Status" == "COMPLETED" ]]; then
-              echo -e "              <td class=\"tg-8779\">${Steps}</td>" >> "$QC_html"
-          elif [[ "$Status" == "INCOMPLETE" ]]; then
-              echo -e "              <td class=\"tg-sl9e\">${Steps}</td>" >> "$QC_html"
-          else
-              echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
-          fi
-      done
-      echo -e "        </tr>" >> "$QC_html"
   done
 
   echo -e "      </tbody>
