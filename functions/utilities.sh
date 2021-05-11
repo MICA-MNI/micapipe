@@ -411,6 +411,41 @@ function json_nativepro_mask() {
   }" > "$3"
 }
 
+function json_rsfmri() {
+  qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
+  echo -e "{
+    \"Class\": \"rsfMRI processed\",
+    \"Name\": \"${fmri_processed}\",
+    \"sform\": [
+\t\t\"${sform}\"
+      ],
+    \"qform\": [
+  \t\t\"${sform}\"
+      ],
+    \"Preprocess\": [
+      {
+        \"MainScan\": \"${mainScan}\",
+        \"Resample\": \"LPI\",
+        \"Reorient\": \"fslreorient2std\",
+        \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
+        \"MotionCorrection\": [\"${rsfmri_volum}/${idBIDS}_space-rsfmri_spikeRegressors_FD.1D\"],
+        \"MainPhaseScan\": \"${mainPhaseScan}\",
+        \"ReversePhaseScan\": \"${reversePhaseScan}\",
+        \"TOPUP\": \"${statusTopUp}\",
+        \"HighPassFilter\": \"${fmri_HP}\",
+        \"Passband\": \"0.01 666\",
+        \"RepetitionTime\": \"${RepetitionTime}\",
+        \"TotalReadoutTime\": \"${readoutTime}\",
+        \"Melodic\": \"${statusMel}\",
+        \"FIX\": \"${statusFIX}\",
+        \"NuisanceSignalRegression\": \"${performNSR}\",
+
+      }
+    ]
+  }" > "$1"
+}
+
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
 # This is optional on the pipelines
@@ -613,7 +648,7 @@ function micapipe_group_QC() {
       .tg  {border-collapse:collapse;border-spacing:0;border-top: none;border-bottom: none;}\n
       .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
         overflow:hidden;padding:10px 5px;word-break:normal;}\n
-      .tg th{position:sticky;top: 0px;border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+      .tg th{position:sticky; top:119px; border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
         font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}\n
       .tg .tg-lp92{background-color:#656565;border-color:#c0c0c0;color:#efefef;
         font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:14px;font-weight:bold;text-align:center;
@@ -633,7 +668,7 @@ function micapipe_group_QC() {
   <head>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-    <title> micapipe progress</title>
+    <title>micapipe progress</title>
 
     <!-- Headings format -->
     <style>
@@ -648,7 +683,8 @@ function micapipe_group_QC() {
       position: -webkit-sticky;
       position: sticky;
       top: 0;
-      width: 200px;
+      width: 250px;
+      height: 120px;
     }
     </style>
 
@@ -659,12 +695,12 @@ function micapipe_group_QC() {
     </style>
 
   </head>
-  <body>" > $QC_html
+  <body>
+    <img class=\"sticky\", id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\"> " > $QC_html
 
   #------------------------------------------------------------------------------#
   # MICAPIPE progress table
   echo -e "
-  <img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">
   <h1>Pipeline progress</h1>
   <h2>Database: ${DataName}</h2>
   <h2>Last run: $(date)</h2>"  >> "$QC_html"
@@ -705,10 +741,11 @@ function micapipe_group_QC() {
     for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_rsfmri MPC; do
         Status=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
         Steps=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
+        Date=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $8}')
         if [[ "$Status" == "COMPLETED" ]]; then
-            echo -e "              <td class=\"tg-8779\">${Steps}</td>" >> "$QC_html"
+            echo -e "              <td class=\"tg-8779\">${Steps}<br>${Date}</td>" >> "$QC_html"
         elif [[ "$Status" == "INCOMPLETE" ]]; then
-            echo -e "              <td class=\"tg-sl9e\">${Steps}</td>" >> "$QC_html"
+            echo -e "              <td class=\"tg-sl9e\">${Steps}<br>${Date}</td>" >> "$QC_html"
         else
             echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
         fi

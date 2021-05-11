@@ -64,10 +64,8 @@ Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
 if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
 Note "Main scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${mainScanStr}".nii* 2>/dev/null); fi
-if [[ "$fmri_pe" == DEFAULT ]]; then Note "Phase scan       :" "$fmri_pe"; else
-Note "Phase scan       :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
-if [[ "$fmri_rpe" == DEFAULT ]]; then Note "Reverse Phase    :" "$fmri_rpe"; else
-Note "Reverse Phase    :" $(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
+Note "Phase scan       :" "$fmri_pe"
+Note "Reverse Phase    :" "$fmri_rpe"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -142,13 +140,13 @@ else
 fi
 
 # Manually defined Phase scan and reverse phase scan
-if [[ "$fmri_pe" != DEFAULT ]]; then mainPhaseScan=$(ls "${subject_bids}/func/${idBIDS}"_"${fmri_pe}".nii* 2>/dev/null); fi
-if [[ "$fmri_rpe" != DEFAULT ]]; then reversePhaseScan=$(ls "${subject_bids}/func/${idBIDS}"_"${fmri_rpe}".nii* 2>/dev/null); fi
+if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then mainPhaseScan="$fmri_rpe"; fi
+if [[ "$fmri_rpe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then reversePhaseScan="$fmri_rpe"; fi
 
 # Check inputs
 if [ ! -f "$mainScan" ]; then Error "Couldn't find $id main rsfMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
 if [ ! -f "$mainScanJson" ]; then Error "Couldn't find $id main rsfMRI scan json file: \n\t ls ${mainScanJson}"; exit; fi #Last check to make sure file exists
-if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi #Last check to make sure file exists
+if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
@@ -168,20 +166,20 @@ fi
 # Check FIX: run or no?
 if [[ $noFIX == 1 ]]; then
     Info "ICA-FIX will be skipped! Consider performing white matter and CSF signal regression with <-nuisanceRegression>"
-    
+
     # Check ICA-FIX Training input
     if [[ ! ${changeIcaFixTraining} == "DEFAULT" ]]; then
-        Error "If ICA-FIX is skipped, <-icafixTraining> must remain empty"; exit; fi  
+        Error "If ICA-FIX is skipped, <-icafixTraining> must remain empty"; exit; fi
 else
     Info "ICA-FIX pipeline will be run!"
-    
+
     # Check ICA-FIX Training input
     if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then
         Info "Will use default training file for ICA-FIX: ${icafixTraining}"
     else
         icafixTraining=${changeIcaFixTraining}
         Info "Will use specified training file for ICA-FIX: ${icafixTraining}"
-    fi    
+    fi
 fi
 
 # Check smoothing
@@ -234,6 +232,7 @@ done
 # Begining of the REAL processing
 # gettin dat readout time mainScanJson
 readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
+RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
 
 # Scans to process
 toProcess=($mainScan $mainPhaseScan $reversePhaseScan)
@@ -293,10 +292,19 @@ if [[ ! -f "${singleecho}" ]]; then
         Info "Subject ${id} has a singleecho.1D with motion outliers"; ((Nsteps++))
     fi
 
+    # If ONLY Reverse phase scan is provided mainScan will be the mainPhaseScan
+    if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then;
+          main_pe="NO-main_pe"
+          Warning "reversePhaseScan was found but NO mainPhaseScan, using mainScan as mainPhaseScan"
+          mainPhaseScan="${tmp}/mainPhaseScan_mc.nii.gz"
+          Do_cmd cp "${tmp}/mainScan_mc.nii.gz" "$mainPhaseScan"
+          Do_cmd cp "${tmp}/mainScan_mcMean.nii.gz" "${tmp}/singleecho_mainPhaseAlignedMean.nii.gz"
+    fi
+
     # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
     if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
-        status="NO-topup"
+        statusTopUp="NO"
         Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
@@ -306,14 +314,15 @@ if [[ ! -f "${singleecho}" ]]; then
             reversePhaseScan=$(find "$tmp"     -maxdepth 1 -name "*reversePhaseScan*_mc.nii.gz")
             mainScan=$(find "$tmp"             -maxdepth 1 -name "*mainScan*_mc.nii.gz")
 
-            Do_cmd flirt -in "$mainPhaseScanMean" -ref "$tmp"/mainScan_mcMean.nii.gz -omat "$tmp"/singleecho_tmpXfmMain.omat
             Do_cmd flirt -in "$reversePhaseScanMean" -ref "$tmp"/mainScan_mcMean.nii.gz -omat "$tmp"/singleecho_tmpXfmSecondary.omat
-
-            Do_cmd flirt -in "$mainPhaseScan" -ref "$tmp"/mainScan_mcMean.nii.gz -applyxfm -init "$tmp"/singleecho_tmpXfmMain.omat -out "$tmp"/singleecho_mainPhaseAligned.nii.gz
             Do_cmd flirt -in "$reversePhaseScan" -ref "$tmp"/mainScan_mcMean.nii.gz -applyxfm -init "$tmp"/singleecho_tmpXfmSecondary.omat -out "$tmp"/singleecho_secondaryPhaseAligned.nii.gz
-
-            Do_cmd fslmaths "$tmp"/singleecho_mainPhaseAligned.nii.gz -Tmean "$tmp"/singleecho_mainPhaseAlignedMean.nii.gz
             Do_cmd fslmaths "$tmp"/singleecho_secondaryPhaseAligned.nii.gz -Tmean "$tmp"/singleecho_secondaryPhaseAlignedMean.nii.gz
+
+            if [[ "$main_pe" != "NO-main_pe" ]]; then
+                Do_cmd flirt -in "$mainPhaseScanMean" -ref "$tmp"/mainScan_mcMean.nii.gz -omat "$tmp"/singleecho_tmpXfmMain.omat
+                Do_cmd flirt -in "$mainPhaseScan" -ref "$tmp"/mainScan_mcMean.nii.gz -applyxfm -init "$tmp"/singleecho_tmpXfmMain.omat -out "$tmp"/singleecho_mainPhaseAligned.nii.gz
+                Do_cmd fslmaths "$tmp"/singleecho_mainPhaseAligned.nii.gz -Tmean "$tmp"/singleecho_mainPhaseAlignedMean.nii.gz
+            fi
 
             # Distortion correction
             echo -e "0 1 0 ${readoutTime} \n0 -1 0 ${readoutTime}" > "$tmp"/singleecho_topupDataIn.txt
@@ -328,16 +337,15 @@ if [[ ! -f "${singleecho}" ]]; then
 
             # Check if it worked
             if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
-            echo "${singleecho}, TOPUP, $(whoami), $(date)" >> "${rsfmri_volum}/TOPUP.txt"
-            status="TOPUP"
+            statusTopUp="YES"
         else
-              Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++))
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; statusTopUp="YES"; ((Nsteps++))
         fi
     fi
 else
       Info "Subject ${id} has a singleecho_fmrispace processed"; Nsteps=$((Nsteps + 2))
 fi
-
+json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 
 #------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
@@ -383,7 +391,7 @@ if  [[ -f $(which fix) ]]; then
           Info "Running melodic"
           Do_cmd cp "$fmri_HP" "$fmri_filtered"
           Do_cmd melodic --in="${fmri_filtered}" \
-                          --tr=0.6 \
+                          --tr=$RepetitionTime \
                           --nobet \
                           --mask="${fmri_mask}" \
                           --bgthreshold=3 \
@@ -392,7 +400,7 @@ if  [[ -f $(which fix) ]]; then
                           --Oall \
                           --outdir="${rsfmri_ICA}/filtered_func_data.ica" \
                           --Omean="${rsfmri_ICA}/mean_func.nii.gz"
-          if [[ -f ${melodic_IC} ]]; then status="${status}/melodic"; else status="${status}/FAILED-melodic"; fi
+          if [[ -f ${melodic_IC} ]]; then statusMel="YES"; else statusMel="FAILED"; fi
       else
           Info "Subject ${id} has MELODIC outputs"
       fi
@@ -471,7 +479,7 @@ if [[ $noFIX == 0 ]]; then
                     # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
                     if [ ! -d "${rsfmri_ICA}/mc" ]; then mkdir "${rsfmri_ICA}/mc"; fi
                     if [ ! -d "${rsfmri_ICA}/reg" ]; then mkdir "${rsfmri_ICA}/reg"; fi
-    
+
                     # $fmri_filtered                                                                                 preprocessed 4D data
                     # $melodic_IC                                                                                    melodic (command-line program) full output directory
                     Do_cmd cp "${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D" "${rsfmri_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
@@ -480,14 +488,14 @@ if [[ $noFIX == 0 ]]; then
                     middleSlice=$(mrinfo "$fmri_filtered" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
                     Do_cmd fslroi "$fmri_filtered" "${rsfmri_ICA}/reg/example_func.nii.gz" "$middleSlice" 1          # example middle image from 4D data
                     Do_cmd cp "$T1nativepro_brain" "${rsfmri_ICA}/reg/highres.nii.gz"                                  # brain-extracted structural
-    
+
                     # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
                     if [[ ! -f "${rsfmri_ICA}/reg/highres2example_func.mat" ]]; then
                         # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
                         Do_cmd antsApplyTransforms -v 1 -o Linear["$tmp/highres2example_func.mat",0] -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1]
                         # Transform matrix: ANTs (itk binary) to text
                         Do_cmd ConvertTransformFile 3 "$tmp/highres2example_func.mat" "$tmp/highres2example_func.txt"
-    
+
                         # Fixing the transformations incompatibility between ANTS and FSL
                         tmp_ants2fsl_mat="$tmp/itk2fsl_highres2example_func.mat"
                         # Transform matrix: ITK text to matrix (FSL format)
@@ -499,27 +507,27 @@ if [[ $noFIX == 0 ]]; then
                         # concatenate the matrices to fix the transformation matrix
                         Do_cmd convert_xfm -concat "$tmp"/ants2fsl_fixed.omat -omat "${rsfmri_ICA}/reg/highres2example_func.mat" "$tmp_ants2fsl_mat"
                     else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
-    
+
                     Info "Running ICA-FIX"
                     Do_cmd fix "$rsfmri_ICA" "$icafixTraining" 20 -m -h 100
-    
+
                     # Replace file if melodic ran correctly - Change single-echo files for clean ones
                     if [[ -f "$fix_output" ]]; then
                         yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
-                        status="${status}/FIX"
+                        statusFIX="YES"
                     else
                         Error "FIX failed, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-                    cp -rf "$fix_output" "$fmri_processed"
+                    cp -rf "$fix_output" "$fmri_processed"; statusFIX="YES"
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
               Do_cmd cp -rf "$fmri_HP" "$fmri_processed" # OR cp -rf  $singleecho $fmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
-              status="${status}/NO-fix"
+              statusFIX="$NO"
           fi
     else
         Info "Subject ${id} has singleecho_fmrispace_clean volume"
@@ -529,7 +537,7 @@ else
     Info "Further processing will be performed on distorsion corrected images."
     cp -rf "${singleecho}" "$fmri_processed"
 fi
-
+json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 #------------------------------------------------------------------------------#
 global_signal="${rsfmri_volum}/${idBIDS}_space-rsfmri_global.txt"
 if [[ ! -f "${global_signal}" ]] ; then
@@ -576,7 +584,7 @@ for hemisphere in lh rh; do
     Info "Mapping volumetric timeseries to native surface ${hemisphere}"
     vol2surfTS="${rsfmri_surf}/${idBIDS}"_rsfmri_space-fsnative_${hemisphere}.mgh
     if [[ ! -f "$vol2surfTS" ]] ; then
-          
+
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
               --mov "$singleecho" \
@@ -596,7 +604,7 @@ for hemisphere in lh rh; do
               --interp trilinear \
               --hemi "${hemisphere}" \
               --out "$vol2surfTS"
-          
+
           if [[ -f "$vol2surfTS" ]] ; then ((Nsteps++)); fi
     else
         Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"; ((Nsteps++))
