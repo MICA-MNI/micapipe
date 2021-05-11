@@ -607,23 +607,23 @@ function micapipe_group_QC() {
   here=$(pwd)
   Title "MICAPIPE: group-level Quality Control"
   QC_html=${out}/micapipe_progress.html
-  table_style=" <style type=\"text/css\">
-      .tg  {border-collapse:collapse;border-spacing:0;}
+  table_style=" <style type=\"text/css\">\n
+      .tg  {border-collapse:collapse;border-spacing:0;border-top: none;border-bottom: none;}\n
       .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-        overflow:hidden;padding:10px 5px;word-break:normal;}
-      .tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-        font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+        overflow:hidden;padding:10px 5px;word-break:normal;}\n
+      .tg th{position:sticky;top: 0px;border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+        font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}\n
       .tg .tg-lp92{background-color:#656565;border-color:#c0c0c0;color:#efefef;
         font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:14px;font-weight:bold;text-align:center;
-        vertical-align:top}
+        vertical-align:top}\n
       .tg .tg-oq6h{background-color:#343434;border-color:#c0c0c0;color:#818181;font-family:\"Courier New\", Courier, monospace !important;;
-        text-align:center;vertical-align:top}
+        text-align:center;vertical-align:top}\n
       .tg .tg-e8zy{background-color:#343434;border-color:#c0c0c0;color:#efefef;font-family:\"Courier New\", Courier, monospace !important;;
-        font-weight:bold;text-align:center;vertical-align:top}
+        font-weight:bold;text-align:center;vertical-align:top}\n
       .tg .tg-sl9e{background-color:#ee7942;border-color:#c0c0c0;color:#efefef;font-family:\"Courier New\", Courier, monospace !important;;
-        text-align:center;vertical-align:top}
+        text-align:center;vertical-align:top}\n
       .tg .tg-8779{background-color:#039fd3;border-color:#c0c0c0;color:#efefef;
-        font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:12px;text-align:center;vertical-align:top}
+        font-family:\"Lucida Console\", Monaco, monospace !important;;font-size:12px;text-align:center;vertical-align:top}\n
     </style>"
 
   echo -e "<!doctype html>
@@ -668,6 +668,7 @@ function micapipe_group_QC() {
 
   echo -e $table_style >> "$QC_html"
   echo -e "
+  <div class=\"container\">
       <table class=\"tg\">
         <thead>
           <tr>
@@ -717,7 +718,8 @@ function micapipe_group_QC() {
   done
 
   echo -e "      </tbody>
-      </table>" >> "$QC_html"
+      </table>
+</div>" >> "$QC_html"
   #------------------------------------------------------------------------------#
   # closes html document
   echo "
