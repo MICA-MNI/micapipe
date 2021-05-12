@@ -200,7 +200,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             dwi_reverse_str=$(echo "$dwi_reverse" | awk -F . '{print $1}')
 
             # Mean reverse phase b0
-            If [ -f "${dwi_reverse_str}.bvec" ] && [ -f "${dwi_reverse_str}.bval" ]; then
+            if [[ -f "${dwi_reverse_str}.bvec" ]] && [[ -f "${dwi_reverse_str}.bval" ]]; then
                 Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif"
                 dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
             else
