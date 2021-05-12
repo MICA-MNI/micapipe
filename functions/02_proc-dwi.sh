@@ -220,9 +220,14 @@ if [[ ! -f "$dwi_corr" ]]; then
             rpemat="${rpemat_str}0GenericAffine.mat"
             Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
             Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/b0_meanReversePhase.nii.gz" -f "${tmp}/b0_meanMainPhase.nii.gz"  -o "$rpemat_str" -t r -n "$threads" -p d
-            Do_cmd antsApplyTransforms -d 3 -e 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_meanReversePhase-reg.nii.gz" -v -u int
-            Do_cmd mrconvert "${tmp}/b0_meanReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif" -force -quiet
-            dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "$tmp/b0_meanReversePhase.mif" -axis 3 -nthreads "$threads"
+            if [[ "$rpe_dim" -gt 3 ]]; then
+                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_ReversePhase-reg.nii.gz" -v -u int
+                Do_cmd mrconvert "${tmp}/b0_ReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif" -force -quiet
+                dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "$tmp/b0_meanReversePhase.mif" -axis 3 -nthreads "$threads"
+            elif [[ "$rpe_dim" -eq 3 ]]; then
+                Do_cmd antsApplyTransforms -d 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_ReversePhase-reg.nii.gz" -v -u int
+                Do_cmd mrconvert "${tmp}/b0_ReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" "${tmp}/b0_meanReversePhase.mif" -force -quiet
+            fi
 
             # Concatenate the pe and rpe b0s
             Do_cmd mrcat "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanReversePhase.mif" "$b0_pair_tmp" -nthreads "$threads"
