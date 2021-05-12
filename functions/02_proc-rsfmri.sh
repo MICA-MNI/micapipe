@@ -514,20 +514,20 @@ if [[ $noFIX == 0 ]]; then
                     # Replace file if melodic ran correctly - Change single-echo files for clean ones
                     if [[ -f "$fix_output" ]]; then
                         yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
-                        statusFIX="YES"
+                        export statusFIX="YES"
                     else
                         Error "FIX failed, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-                    cp -rf "$fix_output" "$fmri_processed"; statusFIX="YES"
+                    cp -rf "$fix_output" "$fmri_processed"; export statusFIX="YES"
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
-              Do_cmd cp -rf "$fmri_HP" "$fmri_processed" # OR cp -rf  $singleecho $fmri_processed <<<<<<<<<<<<<<<<<<<<< NOT SURE YET
-              statusFIX="$NO"
+              Do_cmd cp -rf "$fmri_HP" "$fmri_processed"
+              export statusFIX="$NO"
           fi
     else
         Info "Subject ${id} has singleecho_fmrispace_clean volume"
