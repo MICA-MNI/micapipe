@@ -205,7 +205,7 @@ if [[ ! -f "$dwi_corr" ]]; then
                 dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
             else
                 rpe_dim=$(mrinfo "$dwi_reverse" -ndim)
-                if [[ "$rpe_dim" -eq 3 ]]; then;
+                if [[ "$rpe_dim" -eq 3 ]]; then
                   Do_cmd cp "$dwi_reverse" "${tmp}/b0_meanReversePhase.nii.gz"
                 elif [[ "$rpe_dim" -gt 3 ]]; then
                   Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" "${tmp}/b0_ReversePhase.mif"
