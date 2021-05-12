@@ -235,8 +235,8 @@ readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
 RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
 
 # Scans to process
-toProcess=($mainScan $mainPhaseScan $reversePhaseScan)
-tags=(mainScan mainPhaseScan reversePhaseScan)
+toProcess=($mainScan $reversePhaseScan $mainPhaseScan)
+tags=(mainScan reversePhaseScan mainPhaseScan)
 singleecho="${rsfmri_volum}/${idBIDS}"_space-rsfmri_desc-singleecho.nii.gz
 
 # scan for registration to T1
@@ -293,7 +293,7 @@ if [[ ! -f "${singleecho}" ]]; then
     fi
 
     # If ONLY Reverse phase scan is provided mainScan will be the mainPhaseScan
-    if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then;
+    if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then
           main_pe="NO-main_pe"
           Warning "reversePhaseScan was found but NO mainPhaseScan, using mainScan as mainPhaseScan"
           mainPhaseScan="${tmp}/mainPhaseScan_mc.nii.gz"
