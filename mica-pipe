@@ -393,8 +393,8 @@ if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
 if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
 if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
-if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; fi
-if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; fi
+if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else dwi_rpe=$(realpath $fmri_pe); fi
+if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else dwi_rpe=$(realpath $fmri_rpe); fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
