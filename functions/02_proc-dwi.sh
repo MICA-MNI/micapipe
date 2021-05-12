@@ -204,8 +204,13 @@ if [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif"
                 dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
             else
-                Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" "${tmp}/b0_ReversePhase.mif"
-                mrmath "${tmp}/b0_ReversePhase.mif" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                rpe_dim=$(mrinfo "$dwi_reverse" -ndim)
+                if [[ "$rpe_dim" -eq 3 ]]; then;
+                  Do_cmd cp "$dwi_reverse" "${tmp}/b0_meanReversePhase.nii.gz"
+                elif [[ "$rpe_dim" -gt 3 ]]; then
+                  Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" "${tmp}/b0_ReversePhase.mif"
+                  mrmath "${tmp}/b0_ReversePhase.mif" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                fi
             fi
             Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${tmp}/b0_meanReversePhase.nii.gz" --out="${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
