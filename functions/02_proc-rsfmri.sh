@@ -196,6 +196,11 @@ else
     Info "White matter and CSF signal regression will not be performed (default)"
 fi
 
+# gettin dat from mainScanJson exit if Not found
+readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
+RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
+if [[ -z "$readoutTime" ]]; then Warning "readoutTime is missing in $mainScanJson, if TOPUP was selected it will likely FAIL"; fi
+if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $mainScanJson $RepetitionTime"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Resting state fMRI processing\n\t\tmicapipe $Version, $PROC "
@@ -230,10 +235,6 @@ done
 
 #------------------------------------------------------------------------------#
 # Begining of the REAL processing
-# gettin dat readout time mainScanJson
-readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
-RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | grep -Eo [0-9].[0-9]+)
-
 # Scans to process
 toProcess=($mainScan $reversePhaseScan $mainPhaseScan)
 tags=(mainScan reversePhaseScan mainPhaseScan)
@@ -306,6 +307,7 @@ if [[ ! -f "${singleecho}" ]]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
         export statusTopUp="NO"
         Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
+        json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
             mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz")
@@ -338,14 +340,14 @@ if [[ ! -f "${singleecho}" ]]; then
             # Check if it worked
             if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
             export statusTopUp="YES"
+            json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
         else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++))
         fi
     fi
 else
       Info "Subject ${id} has a singleecho_fmrispace processed"; Nsteps=$((Nsteps + 2))
 fi
-json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 
 #------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
@@ -391,7 +393,7 @@ if  [[ -f $(which fix) ]]; then
           Info "Running melodic"
           Do_cmd cp "$fmri_HP" "$fmri_filtered"
           Do_cmd melodic --in="${fmri_filtered}" \
-                          --tr="$RepetitionTime" \
+                          --tr="${RepetitionTime}" \
                           --nobet \
                           --mask="${fmri_mask}" \
                           --bgthreshold=3 \
@@ -408,7 +410,7 @@ fi
 
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
-T1nativepro_in_fmri="${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"
+T1nativepro_in_fmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
 str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_"
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
@@ -419,7 +421,8 @@ SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
 
 # Registration to native pro
-if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
+Nreg=$(ls "$mat_rsfmri_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/dev/null | wc -l )
+if [[ "$Nreg" -lt 3 ]]; then
     # if [[ -f "$rsfmri4reg" ]]; then
     #     Do_cmd fslmaths "$rsfmri4reg" -mul "$fmri_mask" "$fmri_brain"
     # fi
@@ -448,7 +451,7 @@ if [[ ! -f "$mat_rsfmri_affine" ]] || [[ ! -f "$fmri_in_T1nativepro" ]]; then
 
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
-    Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+    if [[ -d "${rsfmri_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_rsfmri_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a rsfMRI volume and transformation matrix in T1nativepro space"; ((Nsteps++))
