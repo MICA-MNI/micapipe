@@ -70,7 +70,8 @@ export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HO
 #------------------------------------------------------------------------------#
 # Add the number of threads to use here. Note that this is overwritten by
 # $NSLOTS if it exists (i.e. when running on SGE).
-local_threads=10
+local_threads="$1"
+if [[ -z $local_threads ]]; then export local_threads=10; fi
 
 # Set basic global variables.
 # export MICAPIPE="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" # Note: As this file is sourced by mica-pipe, this will return the mica-pipe path NOT the path of this script.
