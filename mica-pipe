@@ -465,7 +465,7 @@ Title "MICA pipeline - (Version $Version) \n\t\tSubject: $id Session: $SES"
 # -----------------------------------------------------------------------------------------------#
 # Launch the init file for local processing at MICA lab
 if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
-    source "${MICAPIPE}/functions/init.sh"
+    source "${MICAPIPE}/functions/init.sh" "$threads"
 else
 
     # -----------------------------------------------------------------------------------------------#
