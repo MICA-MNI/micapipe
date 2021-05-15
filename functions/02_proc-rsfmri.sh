@@ -38,8 +38,9 @@ mainScanStr=${13}
 fmri_pe=${14}
 fmri_rpe=${15}
 performNSR=${16}
-noFIX=${17}
-PROC=${18}
+performGSR=${17}
+noFIX=${18}
+PROC=${19}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -165,7 +166,7 @@ fi
 
 # Check FIX: run or no?
 if [[ $noFIX == 1 ]]; then
-    Info "ICA-FIX will be skipped! Consider performing white matter and CSF signal regression with <-nuisanceRegression>"
+    Info "ICA-FIX will be skipped! Consider performing nuisance signal regression with <-regress_WM_CSF> or <-GSR>"
 
     # Check ICA-FIX Training input
     if [[ ! ${changeIcaFixTraining} == "DEFAULT" ]]; then
@@ -191,9 +192,11 @@ fi
 
 # Check nuisance signal regression
 if [[ $performNSR == 1 ]]; then
-    Info "White matter and CSF signal will be regressed from processed timeseries"
+    Info "White matter and CSF signals will be regressed from processed timeseries"
+elif [[ $performGSR == 1 ]]; then
+    Info "Global, white matter and CSF signals will be regressed from processed timeseries"
 else
-    Info "White matter and CSF signal regression will not be performed (default)"
+    Info "Global, white matter and CSF signal regression will not be performed (default)"
 fi
 
 # gettin dat from mainScanJson exit if Not found
@@ -744,7 +747,7 @@ cleanTS="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_desc-timeseries_clean
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running rsfMRI post processing"
     labelDirectory="${dir_freesurfer}/label/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_rsfmri" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_rsfmri" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
