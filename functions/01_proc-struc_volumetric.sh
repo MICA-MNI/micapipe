@@ -23,7 +23,8 @@ SES=$4
 nocleanup=$5
 threads=$6
 tmpDir=$7
-PROC=$8
+t1wStr=$8
+PROC=$9
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -38,6 +39,15 @@ source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Manage manual inputs: T1w images
+if [[ "$t1wStr" != "DEFAULT" ]]; then
+  IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
+  for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
+  bids_T1ws=("${bids_t1wStr[@]}")
+  N="${#bids_t1wStr[*]}"
+  Info "Manually selected T1w string(s): $t1wStr, N=${N}"
+fi
 
 #------------------------------------------------------------------------------#
 Title "Structural processing\n\t\tmicapipe $Version, $PROC"
