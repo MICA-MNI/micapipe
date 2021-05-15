@@ -44,14 +44,18 @@ echo -e "
 \t\t\t      ( Requires: -proc_freesurfer and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
+\t\033[38;5;197m-proc_structural\033[0m
+\t\t\033[38;5;120m-t1wStr\033[0m      : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces (eg. run-01_T1w,run-02_T1w).
+\t\t\t\t        ( By default the pipeline will select all the files that contain the string 'T1w.nii'.
+
 \t\033[38;5;197m-proc_freesurfer\033[0m
 \t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
 
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
-\t\t\033[38;5;120m-cerebellum_seg\033[0m      : User defined segmentation of the cerebellum on native T1w_run1 space.
-\t\t\033[38;5;120m-subcortical_seg\033[0m     : User defined segmentation of the subcortical structures on native T1w_run1 space.
+\t\t\033[38;5;120m-cerebellum_seg\033[0m      : WORK IN PROGRESS. User defined segmentation of the cerebellum on native T1w_run1 space.
+\t\t\033[38;5;120m-subcortical_seg\033[0m     : WORK IN PROGRESS. User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
@@ -294,6 +298,10 @@ do
     tmpDir=$2
     shift;shift;
   ;;
+  -t1wStr)
+    t1wStr="$2"
+    shift;shift;
+  ;;
   -atlas)
     atlas="$2"
     shift;shift;
@@ -449,6 +457,9 @@ if [ -z ${FSdir} ]; then FSdir="FALSE"; else  FSdir=$(realpath $FSdir); fi
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
+# T1w image to process (DEFAULT is *T1w.nii*)
+if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$atlas"; fi
+
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
 
@@ -535,7 +546,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
