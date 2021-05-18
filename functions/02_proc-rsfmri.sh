@@ -132,7 +132,7 @@ else
     mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
 fi
 # If no json is found search at the top BIDS directory
-if [[ ${#mainScanJson[@]} -eq 0 ]]; then mainScanJson="${BIDS}/task-rest_bold.json"; fi
+if [[ -z ${mainScanJson} ]]; then mainScanJson="${BIDS}/task-rest_bold.json"; fi
 
 #------------------------------------------------------------------------------#
 # Phase encoding
@@ -412,7 +412,7 @@ fmri_filtered="${rsfmri_ICA}/filtered_func_data.nii.gz"
 
 # melodic will run ONLY no FIX option is selected
 if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
-    [[ ! -d "${rsfmri_ICA}" ]] && mkdir -p "${rsfmri_ICA}/{mc,reg}"
+    [[ ! -d "${rsfmri_ICA}" ]] && Do_cmd mkdir -p "${rsfmri_ICA}"
     Info "Running melodic"
     Do_cmd cp "$fmri_HP" "$fmri_filtered"
     Do_cmd melodic --in="${fmri_filtered}" \
@@ -427,7 +427,7 @@ if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
           --Omean="${rsfmri_ICA}/mean_func.nii.gz"
     if [[ -f "${melodic_IC}" ]]; then export statusMel="YES"; else export statusMel="FAILED"; fi
 else
-    Info "Subject ${id} has MELODIC outputs"
+    Info "Subject ${id} has MELODIC outputs"; export statusMel="YES"
 fi
 
 #------------------------------------------------------------------------------#
@@ -500,6 +500,7 @@ if [[ "$noFIX" -eq 0 ]]; then
           if  [[ -f "${melodic_IC}" ]] && [[ -f $(which fix) ]]; then
               if [[ ! -f "${fix_output}" ]] ; then
                     Info "Getting ICA-FIX requirements"
+                    Do_cmd mkdir -p "${rsfmri_ICA}"/{reg,mc}
                     # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
                     # $fmri_filtered                                                                                 preprocessed 4D data
                     # $melodic_IC                                                                                    melodic (command-line program) full output directory
