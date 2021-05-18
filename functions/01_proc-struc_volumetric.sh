@@ -39,7 +39,6 @@ source $MICAPIPE/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-
 # Manage manual inputs: T1w images
 if [[ "$t1wStr" != "DEFAULT" ]]; then
   IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
@@ -145,8 +144,8 @@ else
 fi
 
 # FSL first on the t1w_nativepro
-unset SGE_ROOTs
-FSLPARALLEL=0; export FSLPARALLEL
+unset SGE_ROOT
+export FSLPARALLEL=0
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 if [ ! -f "$firstout" ]; then
     Info "FSL first is running, output file: ${T1str_nat}\n\t\t\t ${firstout}"
