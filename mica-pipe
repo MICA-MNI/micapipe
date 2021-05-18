@@ -424,14 +424,7 @@ if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 
 # Optional arguments proc_dwi
-if [ -z ${dwi_main} ]; then
-    dwi_main=DEFAULT
-else
-    IFS=',' read -ra dwi_main <<< $dwi_main
-    dwi_main=($dwi_main)
-    for i in "${!dwi_main[@]}"; do dwi_main[i]=$(realpath ${dwi_main[$i]}); done # Full path
-    dwi_main=$(IFS=',';echo "${dwi_main[*]}";IFS=$' \t\n')
-fi
+if [ -z ${dwi_main} ]; then dwi_main=DEFAULT else dwi_main="$dwi_main"; fi
 if [ -z ${dwi_rpe} ]; then dwi_rpe=DEFAULT; else dwi_rpe=$(realpath $dwi_rpe); fi
 
 # Get the real path of the Inputs
@@ -465,7 +458,7 @@ if [ -z ${FSdir} ]; then FSdir="FALSE"; else  FSdir=$(realpath $FSdir); fi
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
 # T1w image to process (DEFAULT is *T1w.nii*)
-if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$atlas"; fi
+if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$t1wStr"; fi
 
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
@@ -528,7 +521,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfm,QC,dwi,func,anat/{first,volumetric,surfaces/conte69}}
+    Do_cmd mkdir -p $subject_dir/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
     chmod -R 770 $subject_dir
 else
     Info "Subject ${id} directory exist"
