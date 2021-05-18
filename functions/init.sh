@@ -92,3 +92,5 @@ case $host in
     cassio*|varro*) export tmpDir="/host/$host/export02/data/temporaryLocalProcessing" ;;
     *) export tmpDir="/data/mica2/temporaryNetworkProcessing" ;;
 esac
+
+export SGE_ROOT=/opt/sge
