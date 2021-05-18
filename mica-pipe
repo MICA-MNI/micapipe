@@ -528,7 +528,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${id} directory doesn't exist"
-    Do_cmd mkdir -p $subject_dir/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
+    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
     chmod -R 770 $subject_dir
 else
     Info "Subject ${id} directory exist"
