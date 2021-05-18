@@ -35,8 +35,6 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     export MICAPIPE=/data_/mica1/01_programs/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
-# init file for local processing at MICA lab
-if [ "$PROC" = "LOCAL-MICA" ]; then source ${MICAPIPE}/functions/init.sh; fi
 
 # source utilities
 source "$MICAPIPE/functions/utilities.sh"
@@ -53,6 +51,8 @@ Note "Processing :" "$PROC"
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
+    for i in "${!bids_dwis[@]}"; do bids_dwis[i]=$(realpath ${bids_dwis[$i]}); done # Full path
+    bids_dwis=("${bids_dwis[@]}")
 fi
 # Manage manual inputs: DWI reverse phase encoding
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then dwi_reverse=$dwi_rpe; fi
@@ -79,9 +79,9 @@ if [ ! -f "${T15ttgen}" ]; then Error "Subject $id doesn't have a 5tt volume in 
 
 # CHECK if PhaseEncodingDirection and TotalReadoutTime exist
 for i in ${bids_dwis[*]}; do
-  json=$(echo "$i" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1 ".json"}')
-  ped=$(grep PhaseEncodingDirection\": "${subject_bids}/dwi/${json}" | awk -F "\"" '{print $4}')
-  trt=$(grep TotalReadoutTime "${subject_bids}/dwi/${json}" | awk -F " " '{print $2}')
+  json=$(echo "${i}" | awk -F ".nii" '{print $1 ".json"}')
+  ped=$(grep PhaseEncodingDirection\": "${json}" | awk -F "\"" '{print $4}')
+  trt=$(grep TotalReadoutTime "${json}" | awk -F " " '{print $2}')
   if [[ -z "$ped" ]]; then Error "PhaseEncodingDirection is missing in $json"; exit; fi
   if [[ -z "$trt" ]]; then Error "TotalReadoutTime is missing in $json"; exit; fi
 done
@@ -100,7 +100,7 @@ Nsteps=0
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_proc-dwi_${id}"
 Do_cmd mkdir -p "$tmp"
-
+[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir "$dir_QC_png"
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
@@ -115,29 +115,30 @@ dwi_dns="${tmp}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_n4="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_N4_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
-b0_refacq=$(echo "${bids_dwis[0]}" | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
+b0_refacq=$(echo "${bids_dwis[0]##*/}" | sed 's:_dwi.nii.gz::g'); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
 
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
     if [ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]; then Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${bids_dwis[0]}"  --out="${dir_QC_png}/${idBIDS}_space-dwi_pe.png"; fi
-    Info "DWI denoise, bias filed correction and concatenation"
+    Info "DWI denoise, bias field correction and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in "${bids_dwis[@]}"; do
-                dwi_nom=$(echo "$dwi" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+                dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
                 Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif"
-                dwiextract "${tmp}/${dwi_nom}.mif" - -bzero | mrmath - mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
+                Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
+                Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
 
           # Rigid registration between shells
           n=$((${#bids_dwis[*]} - 1))
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
-            b0_ref=${tmp}/$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz
+            b0_ref=${tmp}/$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz
             for ((i=1; i<=n; i++)); do
-                dwi_nom=$(echo "${bids_dwis[i]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+                dwi_nom=$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
-                b0_acq=$(echo "${bids_dwis[i]}" | awk -F 'acq-' '{print $2}'| sed 's:_dwi.nii.gz::g')
-                b0_nom="${tmp}/$(echo "${bids_dwis[i]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')_b0.nii.gz"
+                b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
+                b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
                 b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
@@ -150,7 +151,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           fi
 
           Info "Concatenatenating shells"
-          dwi_0=$(echo "${bids_dwis[0]}" | awk -F "dwi/" '{print $2}' | awk -F ".nii" '{print $1}')
+          dwi_0=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}')
           if [ "${#bids_dwis[@]}" -eq 1 ]; then
             cp "${tmp}/${dwi_0}.mif" "$dwi_cat"
           else
