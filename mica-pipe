@@ -424,7 +424,7 @@ if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 
 # Optional arguments proc_dwi
-if [ -z ${dwi_main} ]; then dwi_main=DEFAULT else dwi_main="$dwi_main"; fi
+if [ -z ${dwi_main} ]; then dwi_main=DEFAULT; else dwi_main="$dwi_main"; fi
 if [ -z ${dwi_rpe} ]; then dwi_rpe=DEFAULT; else dwi_rpe=$(realpath $dwi_rpe); fi
 
 # Get the real path of the Inputs
