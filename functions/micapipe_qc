@@ -186,7 +186,7 @@ Rscript ${MICAPIPE}/functions/micapipe_qc.R \
 --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
 --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
 
-# Do autotract only if dir exists
+# Do autotract only if dir exists <<<<<<<<<<<<<<<<<<<<<<<<<<< NOT WORKING
 if [ -d "$autoTract_dir" ]; then
   Ntracts=0 # 14 tracts tested for QC
   COMMAND_tract=""
