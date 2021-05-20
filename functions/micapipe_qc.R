@@ -158,7 +158,7 @@ module.col <- function() {
   # post_structural
   for (seg in parc) { files <- rbind(files, c("post_structural", paste0("t1w.annot",".",seg), paste0(dir_volum, "/", BIDSid, "_space-nativepro_t1w_atlas-",seg,".nii.gz")))}
   # GD
-  for (seg in parc) { files <- rbind(files, c("GD", paste0("GD",".",seg), paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-GD.txt")))}
+  for (seg in parc) { files <- rbind(files, c("GD", paste0("GD",".",seg), paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_GD.txt")))}
   # MPC
   for (seg in parc) { files <- rbind(files, c("MPC", paste0("MPC",".",seg), paste0(dir_surf,"/micro_profiles/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-MPC.txt")))}
   # SC
@@ -446,7 +446,7 @@ for (seg in parc) { subj_id <- paste0(BIDSid,"_atlas-",seg)
       } else { conn69.rsf <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "FC conte 69")) }
 
     # Geodesic distance
-    conn.geo <- paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_desc-GD.txt")
+    conn.geo <- paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_GD.txt")
       if (file.exists(conn.geo)==TRUE) { conn.geo <- load.conn(conn.geo, sym=FALSE); File <- ""; ColMap <- cmap.GD(256)
           png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_GD.png"))
           image(conn.geo, axes=FALSE, main=paste0(subj_id,"_GD"), col=ColMap ); dev.off()

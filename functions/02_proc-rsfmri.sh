@@ -73,7 +73,7 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-
+T1nativepro_csf="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_0.nii.gz"
 T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-subcortical.nii.gz"
 T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
 
@@ -82,9 +82,13 @@ Info "Inputs:"
 Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
 if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
-Note "Main scan        :" $(ls "${subject_bids}/func/${idBIDS}"_"${mainScanStr}".nii* 2>/dev/null); fi
+Note "Main scan        :" "$mainScanStr"; fi
 Note "Phase scan       :" "$fmri_pe"
 Note "Reverse Phase    :" "$fmri_rpe"
+Note "Smoothing        :" "$smooth"
+Note "Perform NSR      :" "$performNSR"
+Note "Perform GSR      :" "$performGSR"
+Note "No FIX           :" "$noFIX"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -366,7 +370,7 @@ if [[ ! -f "${singleecho}" ]]; then
             export statusTopUp="YES"
             json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
         else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++))
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++)); export statusTopUp="YES"
         fi
     fi
 else
@@ -458,7 +462,7 @@ if [[ "$Nreg" -lt 3 ]]; then
     # Match histograms values acording to rsfmri
     Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
     # Smoothing
-    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 1
+    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
 
     Info "Registering fmri space to nativepro"
     # Affine from rsfMRI to t1-nativepro
@@ -468,7 +472,7 @@ if [[ "$Nreg" -lt 3 ]]; then
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d -i "$mat_rsfmri_affine"
 
     # fmri to t1-nativepro
-    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$T1nativepro_brain" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
 
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
@@ -549,40 +553,40 @@ if [[ "$noFIX" -eq 0 ]]; then
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
               Do_cmd cp -rf "$fmri_HP" "$fmri_processed"
-              export statusFIX="$NO"
+              export statusFIX="NO"
           fi
     else
-        Info "Subject ${id} has singleecho_fmrispace_clean volume"
+        Info "Subject ${id} has singleecho_fmrispace_clean volume with FIX"; export statusFIX="YES"
     fi
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Further processing will be performed on distorsion corrected images."
-    cp -rf "${singleecho}" "$fmri_processed"
+    cp -rf "${fmri_HP}" "$fmri_processed"
 fi
 json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 
 #------------------------------------------------------------------------------#
 global_signal="${rsfmri_volum}/${idBIDS}_space-rsfmri_global.txt"
 if [[ ! -f "${global_signal}" ]] ; then
-      Info "Calculating tissue-specific and global signals changes"
-      tissues=(CSF GM WM)
-      for idx in {0..2}; do
-           tissue=${tissues[$idx]}
-           tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
-           tissue_series="${rsfmri_volum}/${idBIDS}_space-rsfmri_pve_${tissue}.txt"
-           if [[ ! -f "${tissue_series}" ]] ; then
-           Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -v -u int
-           Do_cmd fslmaths "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz"
-           Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -w
-         else
+    Info "Calculating tissue-specific and global signals changes"
+    tissues=(CSF GM WM)
+    for idx in {0..2}; do
+        tissue=${tissues[$idx]}
+        tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
+        tissue_series="${rsfmri_volum}/${idBIDS}_space-rsfmri_pve_${tissue}.txt"
+        if [[ ! -f "${tissue_series}" ]] ; then
+            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -v -u int
+            Do_cmd fslmaths "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz"
+            Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -w
+        else
              Info "Subject ${idBIDS} has $tissue time-series"
-         fi
-      done
-      # Global signal from brain mask
-      Do_cmd fslmeants -i "$fmri_processed" -o "$global_signal" -m "${fmri_mask}" -w
-      if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
+        fi
+    done
+    # Global signal from brain mask
+    Do_cmd fslmeants -i "$fmri_processed" -o "$global_signal" -m "${fmri_mask}" -w
+    if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has Global time-series"; ((Nsteps++))
+    Info "Subject ${id} has Global time-series"; ((Nsteps++))
 fi
 
 # Motion confound

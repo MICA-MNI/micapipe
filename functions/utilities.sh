@@ -94,12 +94,12 @@ export idBIDS="${subject}${ses}"
 
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
-  bids_dwis=($(ls "$subject_bids"/dwi/*acq-b*_dir-*_dwi.nii* 2>/dev/null))
+  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
-  dwi_reverse=$(ls "$subject_bids"/dwi/*"$ses"_acq-PA_dir-*_dwi.nii* 2>/dev/null)
+  dwi_reverse=$(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_dwi.nii* 2>/dev/null)
 }
 
 bids_print.variables() {
@@ -439,8 +439,8 @@ function json_rsfmri() {
         \"TotalReadoutTime\": \"${readoutTime}\",
         \"Melodic\": \"${statusMel}\",
         \"FIX\": \"${statusFIX}\",
-        \"NuisanceSignalRegression\": \"${performNSR}\",
-
+        \"GlobalSignalRegression\": \"${performGSR}\",
+        \"CSFWMSignalRegression\": \"${performNSR}\"
       }
     ]
   }" > "$1"
