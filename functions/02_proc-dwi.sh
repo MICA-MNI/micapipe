@@ -51,7 +51,7 @@ Note "Processing :" "$PROC"
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
-    for i in "${!bids_dwis[@]}"; do bids_dwis[i]=$(realpath ${bids_dwis[$i]}); done # Full path
+    for i in "${!bids_dwis[@]}"; do bids_dwis[i]=$(realpath "${bids_dwis[$i]}"); done # Full path
     bids_dwis=("${bids_dwis[@]}")
 fi
 # Manage manual inputs: DWI reverse phase encoding
