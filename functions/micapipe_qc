@@ -366,7 +366,7 @@ echo -e "<!doctype html>
 # Navigation bar
 echo -e "
 <div class=\"sidenav\">
-    <a href=\"#top\"><img src=\"${MICAPIPE}/docs/figures/micapipe_small_black.png\" style=\"width:100%\"  alt=\"micapipe\"></a>
+    <a href=\"${out}/micapipe_progress.html\"><img src=\"${MICAPIPE}/docs/figures/micapipe_small_black.png\" style=\"width:100%\"  alt=\"micapipe\"></a>
     <a href=\"#top\" style=\"color:white; font-size: 17px\">QC: $idBIDS</a>
     <a href=\"#workflow\">Workflow</a>
     <a href=\"#procStruct\">proc_structural</a>
@@ -386,10 +386,12 @@ echo -e "    <a href=\"#info\">Info</a>
 </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
-# MICAPIPE processing flowchart
+# MICAPIPE Title and processing flowchart
+DataName=$(grep "Name" "${out}/pipeline-description.json" | awk -F '"' 'NR==1{print $4}')
 echo -e "
 <img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">
 <h1>Subject: ${id}, session: ${SES}</h1>
+<h1>${DataName}</h1>
 <div class=\"main\">
       <div id=\"accordion\">
           <h3 id=\"workflow\">Workflow</h3>
@@ -948,8 +950,7 @@ echo -e "\n      <h2>Sagital view: QC segmentations of $Ntracts tracts</h2>
 fi
 
 #------------------------------------------------------------------------------#
-# Do autotract only if dir exists
-if [ -d "$autoTract_dir" ]; then
+# Info
   echo "
     <button class=\"accordion\" id=\"info\">Info</button>
     <div class=\"panel\">" >> "$QC_html"
@@ -961,7 +962,6 @@ echo -e "
       <b>Last run:</b> $(date)
       </p>
     </div>" >> "$QC_html"
-fi
 
 #------------------------------------------------------------------------------#
 # Accordion config
