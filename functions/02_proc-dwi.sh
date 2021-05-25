@@ -199,13 +199,12 @@ if [[ ! -f "$dwi_corr" ]]; then
             b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
             b0_pair="${tmp}/b0_pair.mif"
             dwi_reverse_str=$(echo "$dwi_reverse" | awk -F . '{print $1}')
-
+            rpe_dim=$(mrinfo "$dwi_reverse" -ndim)
             # Mean reverse phase b0
             if [[ -f "${dwi_reverse_str}.bvec" ]] && [[ -f "${dwi_reverse_str}.bval" ]]; then
                 Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif"
                 dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
             else
-                rpe_dim=$(mrinfo "$dwi_reverse" -ndim)
                 Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" "${tmp}/b0_ReversePhase.mif"
                 if [[ "$rpe_dim" -eq 3 ]]; then
                   Do_cmd mrconvert "${tmp}/b0_ReversePhase.mif" "${tmp}/b0_meanReversePhase.nii.gz"
@@ -216,7 +215,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${tmp}/b0_meanReversePhase.nii.gz" --out="${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
             # Linear registration between both b0
-            rpe=$(echo "${dwi_reverse##*/}" | awk -F ".nii" '{print $1}'); rpe=$(echo ${rpe/_dwi/})
+            rpe=$(echo "${dwi_reverse##*/}" | awk -F ".nii" '{print $1}'); rpe=$(echo ${rpe/_dwi/}); rpe=$(echo ${rpe/${idBIDS}_/})
             rpemat_str="${dir_warp}/${idBIDS}_from-${rpe}_to-${b0_refacq}_mode-image_desc-rigid_"
             rpemat="${rpemat_str}0GenericAffine.mat"
             Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
