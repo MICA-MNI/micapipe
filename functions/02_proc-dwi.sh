@@ -73,6 +73,7 @@ fi
 
 # Check inputs: DWI
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY <ls -l ${subject_bids}/dwi/>"; exit; fi
+if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI of $id doesn't not exist:\n\t\t TRY <ls -l ${bids_dwis[0]}>"; exit; fi
 if [ ! -f "${T1_MNI152_InvWarp}" ]; then Error "Subject $id doesn't have T1_nativepro warp to MNI152.\n\t\tRun -proc_structural"; exit; fi
 if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
 if [ ! -f "${T15ttgen}" ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
@@ -143,7 +144,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
-                Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref"  -o "$b0mat_str" -t r -n "$threads" -p d
+                Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
                 Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_Ralign.mif" -force -quiet
@@ -242,7 +243,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
             opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
       else
-            Info "Reverse phase encoding image was not found it will be omitted"
+            Warning "Reverse phase encoding image was not found it will be omitted"
             opt='-rpe_none'
       fi
 
@@ -299,11 +300,12 @@ if [[ ! -f "$T1nativepro_in_dwi" ]]; then
       #------------------------------------------------------------------------------#
       Info "Creating DWI binary mask of processed volumes"
       # Create a binary mask of the DWI
-      Do_cmd antsApplyTransforms -d 3 -i "$MNI152_mask" \
-              -r "$dwi_b0" \
-              -n GenericLabel -t ["$mat_dwi_affine",1] -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
-              -o "${tmp}"/dwi_mask.nii.gz -v
-      Do_cmd maskfilter "${tmp}"/dwi_mask.nii.gz erode -npass 1 "$dwi_mask"
+      # Do_cmd antsApplyTransforms -d 3 -i "$MNI152_mask" \
+      #         -r "$dwi_b0" \
+      #         -n GenericLabel -t ["$mat_dwi_affine",1] -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
+      #         -o "${tmp}"/dwi_mask.nii.gz -v
+      # Do_cmd maskfilter "${tmp}"/dwi_mask.nii.gz erode -npass 1 "$dwi_mask"
+      Do_cmd dwi2mask "$dwi_corr" "$dwi_mask" -nthreads "$threads"
       if [[ -f "$dwi_mask" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has an affine transformation from T1w to DWI-b0 space"; Nsteps=$((Nsteps + 2))
