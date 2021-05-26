@@ -469,13 +469,13 @@ if [[ "$Nreg" -lt 3 ]]; then
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
 
     # SyN from T1_nativepro to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d -i "$mat_rsfmri_affine"
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
 
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
 
     # t1-nativepro to fmri
-    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
     if [[ -d "${rsfmri_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_rsfmri_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
