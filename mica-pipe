@@ -420,9 +420,9 @@ if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
-if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$input_im
+if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$(realpath $input_im)
 else optarg_mpc[0]=DEFAULT; fi
-if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$input_dat
+if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_dat)
 else optarg_mpc[1]=DEFAULT; fi
 
 # Optional arguments SC
