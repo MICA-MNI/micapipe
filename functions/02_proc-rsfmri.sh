@@ -788,6 +788,6 @@ Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > tmpfile && mv tmpfile "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
