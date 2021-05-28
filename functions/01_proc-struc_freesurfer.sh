@@ -61,7 +61,7 @@ Warning "Subject ${id} has Freesurfer
 exit
 fi
 if [[ "$hires" = "TRUE" ]] && [[ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]]; then
-  Error "Submilimetric (hires) processing of fresurferrequires the T1_nativepro: RUN -proc_structural first"; exit
+  Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; exit
 fi
 
 #------------------------------------------------------------------------------#
