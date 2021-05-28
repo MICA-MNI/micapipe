@@ -121,6 +121,7 @@ fi
 ## Register qT1 intensity to surface
 num_surfs=14
 outDir="${subject_dir}/anat/surfaces/micro_profiles"
+json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC.json"
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
 
 if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
