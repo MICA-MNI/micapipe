@@ -446,6 +446,35 @@ function json_rsfmri() {
   }" > "$1"
 }
 
+function json_mpc() {
+  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+  Info "Creating MPC json file"
+  echo -e "{
+    \"Class\": \"Microstructural profile covariance\",
+    \"input\": \"${1}\",
+    \"freesurferTransformation\": \"${2}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"Transform\": \"${Transform}\",
+    \"sform\": [
+\"${qform}\"
+      ],
+    \"qform\": [
+\"${sform}\"
+      ]
+  }" > "$3"
+}
+
 #---------------- FUNCTION: PRINT ERROR & Note ----------------#
 # The following functions are only to print on the terminal colorful messages:
 # This is optional on the pipelines
@@ -713,7 +742,7 @@ function micapipe_group_QC() {
           <tr>
             <th class=\"tg-lp92\">Subject</th>
             <th class=\"tg-lp92\">Session</th>
-            <th class=\"tg-lp92\">QC</th>
+            <th class=\"tg-lp92\">Subject QC</th>
             <th class=\"tg-lp92\">proc_structural</th>
             <th class=\"tg-lp92\">proc_freesurfer</th>
             <th class=\"tg-lp92\">post_structural</th>
