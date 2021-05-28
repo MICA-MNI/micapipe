@@ -246,7 +246,8 @@ if [ "$postMPC" = "TRUE" ]; then
     Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
                   "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
                   "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
-                  "$dir_logs"/MPC_*
+                  "$dir_logs"/MPC_* \
+                  "${dir_QC_png}"/*desc-qc_MPC*
     grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
