@@ -97,8 +97,7 @@ export SUBJECTS_DIR="$dir_surf"
 
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
-# origImage=${bids_T1ws[0]}
-origImage="$T1nativepro"
+origImage=${bids_T1ws[0]}
 if [[ ${input_dat} == "DEFAULT" ]]; then
     fs_transform="${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat"
     if [[ ! -f "${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat" ]]; then
