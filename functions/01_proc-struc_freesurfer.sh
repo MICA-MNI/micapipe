@@ -27,7 +27,8 @@ nocleanup=$5
 export threads=$6
 tmpDir=$7
 FSdir=$8
-PROC=$9
+hires=$9
+PROC=${10}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -43,6 +44,11 @@ source "$MICAPIPE/functions/utilities.sh"
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
+# BIDS T1w processing
+N=${#bids_T1ws[@]} # total number of T1w
+# End script if no T1 are found
+if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
+
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
 status="COMPLETED"; N=01
@@ -53,6 +59,9 @@ Warning "Subject ${id} has Freesurfer
                     > If you want to run again this step first erase all the outputs with:
                       mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
 exit
+fi
+if [[ "$hires" = "TRUE" ]] && [[ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]]; then
+  Error "Submilimetric (hires) processing of fresurferrequires the T1_nativepro: RUN -proc_structural first"; exit
 fi
 
 #------------------------------------------------------------------------------#
@@ -83,12 +92,6 @@ if [[ "$FSdir" != "FALSE" ]]; then
     fi
 elif [[ "$FSdir" == "FALSE" ]]; then
     Info "Running Freesurfer"
-    # BIDS T1w processing
-    N=${#bids_T1ws[@]} # total number of T1w
-
-    # End script if no T1 are found
-    if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
-
     # Define SUBJECTS_DIR for freesurfer processing as a global variable
     # Will work on a temporal directory
     export SUBJECTS_DIR=${tmp}
@@ -108,7 +111,16 @@ elif [[ "$FSdir" == "FALSE" ]]; then
     fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
 
     # Perform recon-all surface registration
-    Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS"
+    if [[ "$hires" == "TRUE" ]]; then
+        Info "Running recon with native submillimeter resolution"
+        export EXPERT_FILE=${tmp}/expert.opts
+        echo "mris_inflate -n 100" > $EXPERT_FILE
+        Do_cmd recon-all -all -s "$idBIDS" -hires -i "$T1nativepro" -expert "$EXPERT_FILE"
+        # Fix the inflation
+        Do_cmd mris_inflate -n 15 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
+    else
+        Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS"
+    fi
 
     # Copy the recon-all log to our MICA-log Directory
     Do_cmd cp -v "${tmp}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"

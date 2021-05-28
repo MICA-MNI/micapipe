@@ -45,10 +45,11 @@ echo -e "
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
-\t\t\033[38;5;120m-t1wStr\033[0m      : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces (eg. run-01_T1w,run-02_T1w).
-\t\t\t\t        ( By default the pipeline will select all the files that contain the string 'T1w.nii'.
+\t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
+\t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
 
 \t\033[38;5;197m-proc_freesurfer\033[0m
+\t\t\033[38;5;120m-hires\033[0m               : Use this option for data with voxel sizes less than 1mm3 at native resolution (eg. isometric 7T acquisitions)
 \t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
 
 \t\033[38;5;197m-post_structural\033[0m
@@ -77,6 +78,7 @@ echo -e "
 \t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
 \t\t\t\t         you must specify which one to process ( e.g. '1' )
 \t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+
 \t\t\033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t\t         ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
 \t\t\033[38;5;120m-regress_WM_CSF\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
@@ -290,6 +292,10 @@ do
     QCgroup=TRUE
     shift
   ;;
+  -slim)
+    mica=TRUE
+    shift
+  ;;
   -mica)
     mica=TRUE
     shift
@@ -322,14 +328,18 @@ do
     FSdir=$2
     shift;shift;
   ;;
+  -hires)
+    hires=TRUE
+    shift
+  ;;
   -dwi_main)
     dwi_main="$2"
     shift;shift;
-    ;;
+  ;;
   -dwi_rpe)
     dwi_rpe="$2"
     shift;shift;
-    ;;
+  ;;
   -qsub)
     micaq=TRUE
     shift
@@ -388,7 +398,7 @@ Error "One or more mandatory arguments are missing:
                -bids : $BIDS"
 help; exit 1; fi
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -400,7 +410,8 @@ Error "A processing flag is missing:
                     -SC
                     -MPC
                     -GD
-                    -Morphology"
+                    -Morphology
+                    -slim"
 help; exit 1; fi
 
 # Optional arguments rs-fmri
@@ -467,6 +478,7 @@ if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); f
 
 # Freesurfer directory (if already exists)
 if [ -z ${FSdir} ]; then FSdir="FALSE"; else  FSdir=$(realpath $FSdir); fi
+if [ -z ${hires} ]; then hires="FALSE"; else hires="TRUE"; fi
 
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
@@ -585,7 +597,7 @@ fi
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_freesurfer_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir"
+    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Freesurfer"
