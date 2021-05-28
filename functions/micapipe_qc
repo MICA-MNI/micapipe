@@ -797,7 +797,7 @@ echo -e "
 
  #-------------------------------------
  # SC - Output connectomes
- echo -e "<h2>Structural Connectomes</h2>" >> "$QC_html"
+ echo -e "<h2>Structural Connectomes ${tracts}</h2>" >> "$QC_html"
  echo -e $table_style >> "$QC_html"
  echo -e "
        <table class=\"tg\">
@@ -936,7 +936,7 @@ if [ -d "$autoTract_dir" ]; then
     # Create png
     Info "Autotract QC found $Ntracts out of 14 tested bundles, creating png"
     cd $tmpDir
-    for plane in 0 1; do
+    for plane in 0 1 2; do
        COMMAND="mrview $autoTract_dir/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_atlas2fa.nii.gz -mode 1 -plane $plane -colourbar 0 -comments 0 -voxelinfo 0 -focus 0 -intensity_range 0,100000 -imagevisible 1 $COMMAND_tract -capture.grab -exit"
        $COMMAND
        mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png"
@@ -944,15 +944,17 @@ if [ -d "$autoTract_dir" ]; then
     cd $here
 
     echo "
-    <button class=\"accordion\" id=\"autoTract\">Automatic bundle segmentation</button>
+    <button class=\"accordion\" id=\"autoTract\">Automatic bundle segmentation: ${tracts} tracts</button>
     <div class=\"panel\">" >> "$QC_html"
     echo -e "\n      <h2>Outputs files</h2>" >> "$QC_html"
     auto_FAatlas="${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-5M-SIFT2_atlas2fa.nii.gz"
     nifti_check "FA atlas in native dwi" "$auto_FAatlas" "${dir_QC_png}/${idBIDS}_space-dwi_FAatlas.png"
-    echo -e "\n      <h2>Sagital view: QC segmentations of $Ntracts tracts</h2>
+    echo -e "\n      <h2>Sagital view: $Ntracts tracts</h2>
         <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane0.png\" width=\"625\" height=\"530\">
-      <h3>Coronal view: QC segmentations of $Ntracts tracts</h3>
+      <h2>Coronal view: $Ntracts tracts</h2>
         <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane1.png\"  width=\"625\" height=\"530\">
+      <h2>Axial view: $Ntracts tracts</h2>
+        <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane2.png\"  width=\"625\" height=\"530\">
     </div>" >> "$QC_html"
   fi
 fi
