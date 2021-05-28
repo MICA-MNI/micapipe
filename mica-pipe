@@ -49,7 +49,10 @@ echo -e "
 \t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
 
 \t\033[38;5;197m-proc_freesurfer\033[0m
+\t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
+\t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
 \t\t\033[38;5;120m-hires\033[0m               : Use this option for data with voxel sizes less than 1mm3 at native resolution (eg. isometric 7T acquisitions)
+\t\t\t      ( Requires: -proc_structural )
 \t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
 
 \t\033[38;5;197m-post_structural\033[0m
@@ -597,7 +600,7 @@ fi
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_freesurfer_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires"
+    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Freesurfer"

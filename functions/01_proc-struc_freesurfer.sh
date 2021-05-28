@@ -28,7 +28,8 @@ export threads=$6
 tmpDir=$7
 FSdir=$8
 hires=$9
-PROC=${10}
+t1wStr=${10}
+PROC=${11}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -43,6 +44,15 @@ source "$MICAPIPE/functions/utilities.sh"
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Manage manual inputs: T1w images
+if [[ "$t1wStr" != "DEFAULT" ]]; then
+  IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
+  for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
+  bids_T1ws=("${bids_t1wStr[@]}")
+  N="${#bids_t1wStr[*]}"
+  Info "Manually selected T1w string(s): $t1wStr, N=${N}"
+fi
 
 # BIDS T1w processing
 N=${#bids_T1ws[@]} # total number of T1w
@@ -97,19 +107,6 @@ elif [[ "$FSdir" == "FALSE" ]]; then
     export SUBJECTS_DIR=${tmp}
     if [ ! -d "$tmp/nii" ]; then Do_cmd mkdir "$tmp/nii"; fi
 
-    # Copy all the T1 from the BIDS directory to the TMP
-    # transform to NIFTI (if == NIFTI_GZ)
-    for t1 in ${bids_T1ws[@]}; do
-        t1_name=$(echo "$t1" | awk -F 'anat/' '{print $2}')
-        if [[ "$t1" == *'.gz'* ]]; then
-              Do_cmd fslchfiletype NIFTI "$t1" "$tmp/nii/${t1_name/.gz/}"
-        else  Do_cmd cp "$t1" "$tmp/nii/"
-        fi
-    done
-
-    # List of Files for processing
-    fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
-
     # Perform recon-all surface registration
     if [[ "$hires" == "TRUE" ]]; then
         Info "Running recon with native submillimeter resolution"
@@ -119,6 +116,18 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         # Fix the inflation
         Do_cmd mris_inflate -n 15 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
     else
+        # Copy all the T1 from the BIDS directory to the TMP
+        # transform to NIFTI (if == NIFTI_GZ)
+        for t1 in ${bids_T1ws[@]}; do
+            t1_name=$(echo "$t1" | awk -F 'anat/' '{print $2}')
+            if [[ "$t1" == *'.gz'* ]]; then
+                  Do_cmd fslchfiletype NIFTI "$t1" "$tmp/nii/${t1_name/.gz/}"
+            else  Do_cmd cp "$t1" "$tmp/nii/"
+            fi
+        done
+
+        # List of Files for processing
+        fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
         Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS"
     fi
 
