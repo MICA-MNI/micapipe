@@ -59,6 +59,10 @@ N=${#bids_T1ws[@]} # total number of T1w
 # End script if no T1 are found
 if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
 
+# # Create script specific temp directory
+tmp="${tmpDir}/${RANDOM}_micapipe_proc-freesurfer_${id}"
+Do_cmd mkdir -p "$tmp"
+
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
 status="COMPLETED"; N=01
@@ -83,10 +87,6 @@ Info "Saving temporal dir: $nocleanup\n\t\t\t\t\t${tmpDir}"
 
 #	Timer
 aloita=$(date +%s)
-
-# # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_proc-freesurfer_${id}"
-Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
