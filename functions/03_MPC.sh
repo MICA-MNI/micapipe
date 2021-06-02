@@ -114,7 +114,7 @@ if [[ ${input_dat} == "DEFAULT" ]]; then
     fi
 else
     Info "Using provided input .dat for vol2surf"
-    fs_transform="$input_dat"
+    fs_transform="$input_dat"; ((Nsteps++))
 fi
 
 ##------------------------------------------------------------------------------#

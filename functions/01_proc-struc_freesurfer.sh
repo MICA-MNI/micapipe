@@ -83,14 +83,15 @@ Title "Structural processing: Freesurfer\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 # print the names on the terminal
 bids_print.variables
-Info "Saving temporal dir: $nocleanup\n\t\t\t\t\t${tmpDir}"
+Info "Saving temporal dir: $nocleanup"
+Note "\t\ttmp:" "${tmpDir}"
 
 #	Timer
 aloita=$(date +%s)
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
-Info "$FSdir"
+Info "Preprocessed freesurfer directory: $FSdir"
 if [[ "$FSdir" != "FALSE" ]]; then
     if [[ -d "$FSdir" ]]; then
         Info "Copying from freesurfer_dir"
