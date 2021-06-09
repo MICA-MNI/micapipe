@@ -181,9 +181,9 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 cd $tmpDir
 
 # Create matrices and surfaces pngs
-# Rscript ${MICAPIPE}/functions/micapipe_qc.R \
-# --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
-# --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
+Rscript ${MICAPIPE}/functions/micapipe_qc.R \
+--BIDSid="$idBIDS" --subject_dir="$subject_dir" \
+--mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
 
 cd $here
 
