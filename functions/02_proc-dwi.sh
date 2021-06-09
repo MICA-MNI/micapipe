@@ -120,7 +120,6 @@ b0_refacq=$(echo "${bids_dwis[0]##*/}" | sed 's:_dwi.nii.gz::g'); b0_refacq=$(ec
 
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
-    if [ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]; then Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${bids_dwis[0]}"  --out="${dir_QC_png}/${idBIDS}_space-dwi_pe.png"; fi
     Info "DWI denoise, bias field correction and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in "${bids_dwis[@]}"; do
@@ -130,7 +129,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
-
+          if [ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]; then Do_cmd nifti_capture.py -img "${tmp}/${dwi_nom}_b0.nii.gz"  -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"; fi
           # Rigid registration between shells
           n=$((${#bids_dwis[*]} - 1))
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
@@ -213,7 +212,7 @@ if [[ ! -f "$dwi_corr" ]]; then
                   mrmath "${tmp}/b0_ReversePhase.mif" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
                 fi
             fi
-            Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="${tmp}/b0_meanReversePhase.nii.gz" --out="${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+            Do_cmd nifti_capture.py -img "${tmp}/b0_meanReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
             # Linear registration between both b0
             rpe=$(echo "${dwi_reverse##*/}" | awk -F ".nii" '{print $1}'); rpe=$(echo ${rpe/_dwi/}); rpe=$(echo ${rpe/${idBIDS}_/})
