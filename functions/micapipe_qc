@@ -181,9 +181,9 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 cd $tmpDir
 
 # Create matrices and surfaces pngs
-Rscript ${MICAPIPE}/functions/micapipe_qc.R \
---BIDSid="$idBIDS" --subject_dir="$subject_dir" \
---mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
+# Rscript ${MICAPIPE}/functions/micapipe_qc.R \
+# --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
+# --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
 
 cd $here
 
@@ -215,7 +215,7 @@ echo -e "<!doctype html>
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title> MICAPIPE QC - Subject: ${id} - Session: ${SES}</title>
+  <title> micapipe - sub-${id}_${SES}</title>
 
   <!-- Java accordion script -->
   <link rel=\"stylesheet\" type=\"text/css\" href=\"http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css\" />
@@ -427,21 +427,24 @@ T1_in_MNI152_08="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode
 MNI152_08_brain="${util_MNIvolumes}/MNI152_T1_0.8mm_brain.nii.gz"
 T1_in_MNI152_2="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_Warped.nii.gz"
 MNI152_2_brain="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
+Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/5tt_0.nii.gz"
 
 nifti_check() {
   echo -e "    <h3>$1</h3>" >> "$QC_html"
+  Info "$1"
   outname=${3/.png/_desc-qc.png}
   if [[ -f "$2" ]]; then
     if [[ ! -f "$outname" ]]; then
       if [ -f "$4" ]; then
-          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname" --overlay="$4"
+          if [[ "$5" == "YES" ]]; then ROI="-roi"; else ROI=""; fi
+          Do_cmd nifti_capture.py -img "$2" "$4" -out "$outname" "$ROI"
       else
-          Do_cmd Rscript ${MICAPIPE}/functions/nifti_capture.R --img="$2" --out="$outname"
+          Do_cmd nifti_capture.py -img "$2" -out "$outname"
       fi
     fi
       echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>
            <br>
-           <img src=\"$outname\"  alt=\"HTML5\" style=\"height:400px\"  class=\"center\">"  >> "$QC_html"
+           <img src=\"$outname\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\">"  >> "$QC_html"
   else echo -e " --- FILE NOT FOUND ---  " >> "$QC_html"
   fi
 }
@@ -450,11 +453,11 @@ echo -e "
           </table>
     <h2>Main outputs</h2>"  >> "$QC_html"
 nifti_check "T1w nativepro" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w.png"
-nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T15ttgen" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_5TT.png"
-nifti_check "T1w nativepro fast" "$T1fast_seg" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_fast.png"
+nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_5TT.png" "${tmpDir}/5tt_0.nii.gz" "YES"
+nifti_check "T1w nativepro fast" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_fast.png" "$T1fast_seg" "YES"
 nifti_check "T1w nativepro brain" "$T1nativepro_brain" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_brain.png"
-nifti_check "T1w nativepro in MNI152 0.8mm" "$T1_in_MNI152_08" "${dir_QC_png}/${idBIDS}_space-MNI152_0.8mm_nativepro_t1w.png" "$MNI152_08_brain"
-nifti_check "T1w nativepro in MNI152 2mm" "$T1_in_MNI152_2" "${dir_QC_png}/${idBIDS}_space-MNI152_2mm_nativepro_t1w.png" "$MNI152_2_brain"
+nifti_check "Registration: T1w nativepro in MNI152 0.8mm" "$T1_in_MNI152_08" "${dir_QC_png}/${idBIDS}_space-MNI152_0.8mm_nativepro_t1w.png" "$MNI152_08_brain"
+nifti_check "Registration: T1w nativepro in MNI152 2mm" "$T1_in_MNI152_2" "${dir_QC_png}/${idBIDS}_space-MNI152_2mm_nativepro_t1w.png" "$MNI152_2_brain"
 echo -e "    </div>"  >> "$QC_html"
 
 #------------------------------------------------------------------------------#
@@ -547,13 +550,15 @@ echo "
                 </tbody>
                 </table>"  >> "$QC_html"
 #------------------------------------------------------------------------------#
+T1fsnii=${tmpDir}/T1.nii.gz
+mrconvert "$T1freesurfr" "$T1fsnii"
 T1_fsnative="${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz"
 T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
 T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
-echo -e "<h2>Outputs</h2>"  >> "$QC_html"
-nifti_check "T1w nativepro in freesurfer space" "$T1_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png"
-nifti_check "T1w nativepro cerebellum atlas" "$T1_seg_cerebellum" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png"
-nifti_check "T1w nativepro subcortical atlas" "$T1_seg_subcortex" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png"
+echo -e "<h2>Main outputs</h2>"  >> "$QC_html"
+nifti_check "Registration: T1w nativepro in freesurfer space" "$T1fsnii" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png" "$T1_fsnative"
+nifti_check "T1w nativepro cerebellum atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png" "$T1_seg_cerebellum" "YES"
+nifti_check "T1w nativepro subcortical atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png" "$T1_seg_subcortex" "YES"
 #------------------------------------------------------------------------------#
 echo -e "<h2>Output parcellations</h2>" >> "$QC_html"
 echo -e $table_style >> "$QC_html"
@@ -626,9 +631,15 @@ if [ ! -f ${dir_QC}/micapipe_QC_proc-dwi.txt ]; then QC_proc-dwi; fi
             </tr>
           </tbody>
           </table>"  >> "$QC_html"
-nifti_check "DWI main phase encoding" "${bids_dwis[0]}" "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
-nifti_check "DWI reverse phase encoding" "$dwi_reverse" "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
+if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]]; then
+    Do_cmd mrmath "${bids_dwis[0]}" mean "${tmpDir}/dwi_pe.nii.gz" -axis 3
+    nifti_check "Input: DWI main phase encoding" "${tmpDir}/dwi_pe.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
+fi
+if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png" ]]; then
+    Do_cmd mrmath "$dwi_reverse" mean "${tmpDir}/dwi_rpe.nii.gz" -axis 3
+    nifti_check "Input: DWI reverse phase encoding" "${tmpDir}/dwi_rpe.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+fi
 # DWI main outputs
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
@@ -645,28 +656,30 @@ dwi_tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-1M_tdi.mif"
 dwi_adc="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
 dwi_fa="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 
-echo -e "\n        <h2>Outputs</h2>" >> "$QC_html"
+echo -e "\n        <h2>Main outputs</h2>" >> "$QC_html"
 if [ -f "$dwi_corr" ]; then
     Do_cmd mrmath "$dwi_res" mean "${tmpDir}/dwi_res.nii.gz" -axis 3
     Do_cmd mrmath "$dwi_corr" mean "${tmpDir}/dwi_corr.nii.gz" -axis 3
     Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_fod.nii.gz"
     Do_cmd mrconvert "$dwi_gmwmi" "${tmpDir}/dwi_gmwmi.nii.gz"
     Do_cmd mrconvert "$dwi_tdi" "${tmpDir}/dwi_tdi.nii.gz"
+    Do_cmd mrmath "${tmpDir}/dwi_tdi.nii.gz" mean "${tmpDir}/dwi_tdi_mean.nii.gz" -axis 3
     Do_cmd mrconvert "$dwi_adc" "${tmpDir}/dwi_adc.nii.gz"
     Do_cmd mrconvert "$dwi_fa" "${tmpDir}/dwi_fa.nii.gz"
+    Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_5tt.nii.gz"
 
     nifti_check "DWI MP-PCA mean residuals (mean)" "${tmpDir}/dwi_res.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_MP-PCA.png"
     nifti_check "DWI b0 pre-processed" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_b0.png"
     nifti_check "DWI pre-processed (mean)" "${tmpDir}/dwi_corr.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_preproc.png"
     nifti_check "White matter Fiber Orientation Distribution (FOD)" "${tmpDir}/dwi_fod.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_wmFOD.png"
-    nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M.png"
+    nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M.png"
     nifti_check "DTI ADC" "${tmpDir}/dwi_adc.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_adc.png"
     nifti_check "DTI FA" "${tmpDir}/dwi_fa.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_fa.png"
-    nifti_check "T1w in DWI space" "${dwi_t1wNL}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png"
-    nifti_check "Cerebellum atlas in DWI space" "${dwi_cereb}" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum.nii.png"
-    nifti_check "Subcortical atlas in DWI space" "${dwi_subco}" "${dir_QC_png}/${idBIDS}_space-dwi_subcortical.nii.png"
-    nifti_check "5TT in DWI space" "${dwi_5tt}" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii.png"
-    nifti_check "GMWMI in DWI space" "${tmpDir}/dwi_gmwmi.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi.nii.png"
+    nifti_check "Registration: T1w in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png" "${dwi_t1wNL}"
+    nifti_check "Cerebellum atlas in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum.nii.png" "${dwi_cereb}" "YES"
+    nifti_check "Subcortical atlas in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_subcortical.nii.png" "${dwi_subco}" "YES"
+    nifti_check "5TT in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii.png" "${tmpDir}/dwi_5tt.nii.gz" "YES"
+    nifti_check "GMWMI in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi.nii.png" "${tmpDir}/dwi_gmwmi.nii.gz" "YES"
 fi
 
 if [ -f "${dir_QC}/eddy_QC/qc.pdf" ]; then
@@ -709,6 +722,34 @@ echo -e "
             </tr>
           </tbody>
           </table>"  >> "$QC_html"
+
+# Main outputs rsfmri
+echo -e "\n      <h2>Main outputs</h2>" >> "$QC_html"
+fmri_mean="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mean.nii.gz"
+fmri_HP="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_HP.nii.gz"
+fmri_brain="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_brain.nii.gz"
+rsfmri_fsnative="${dir_warp}/${idBIDS}_from-rsfmri_to-fsnative_bbr_outbbreg_FIX.nii.gz"
+rsfmri_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_subcortical.nii.gz"
+rsfmri_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum.nii.gz"
+fmri_processed="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.nii.gz"
+fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
+t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
+t1_in_rsfmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+Warning $t1_in_rsfmri
+if [ -f "$fmri_processed" ]; then
+    Do_cmd mrmath "$fmri_HP" mean "${tmpDir}/fmri_HP_mean.nii.gz" -axis 3
+    Do_cmd mrmath "$fmri_processed" mean "${tmpDir}/fmri_clean_mean.nii.gz" -axis 3
+    nifti_check "rsfMRI (mean)" "$fmri_mean" "${dir_QC_png}/${idBIDS}_space-rsfmri_mean.png"
+    nifti_check "rsfMRI brain" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_brain.png"
+    nifti_check "rsfMRI High Pass filtered (mean)" "${tmpDir}/fmri_HP_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri_HP.png"
+    nifti_check "rsfMRI clean (mean)" "${tmpDir}/fmri_clean_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri-clean_mean.png"
+    nifti_check "Registration: rsfMRI in freesurfer space" "$rsfmri_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_rsfmri.png" "$T1fsnii"
+    nifti_check "Registration: rsfMRI over T1w nativepro space" "$fmri_in_T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_rsfmri.png" "$t1bold"
+    nifti_check "Registration: T1w over rsfMRI space" "$t1_in_rsfmri" "${dir_QC_png}/${idBIDS}_space-rsfmri_t1w.png" "$fmri_mean"
+    nifti_check "Cerebellum atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_cerebellum.nii.png" "${rsfmri_cerebellum}" "YES"
+    nifti_check "Subcortical atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_subcortical.nii.png" "${rsfmri_subcortex}" "YES"
+fi
+
 # rsfmri motion parameters
 rsfmri_motion=${rsfmri_surf}/${idBIDS}_rsfmri-framewiseDisplacement.png
 if [ -f ${rsfmri_motion} ]; then
@@ -717,7 +758,7 @@ if [ -f ${rsfmri_motion} ]; then
 fi
 
 # Fuctional Connectomes
-echo -e "\n      <h3 id=\"functionalConn\">Functional connectomes</h3>" >> "$QC_html"
+echo -e "\n      <h2 id=\"functionalConn\">Functional connectomes</h2>" >> "$QC_html"
 echo -e $table_style >> "$QC_html"
 echo -e "
     <table class=\"tg\">
@@ -790,14 +831,15 @@ echo -e "
          </table>"  >> "$QC_html"
    #-------------------------------------
    Do_cmd mrconvert "$tdi" "${tmpDir}/dwi_tdi-${tracts}.nii.gz"
-   nifti_check "Tract Density Imaging ${tracts} tracts" "${tmpDir}/dwi_tdi-${tracts}.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-${tracts}.png"
+   Do_cmd mrmath "${tmpDir}/dwi_tdi-${tracts}.nii.gz" mean "${tmpDir}/dwi_tdi-${tracts}_mean.nii.gz" -axis 3
+   nifti_check "Tract Density Imaging ${tracts} tracts" "${tmpDir}/dwi_tdi-${tracts}_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-${tracts}.png"
  else
    echo "  <p> ...Not processed yet... </p>" >> "$QC_html"
  fi
 
  #-------------------------------------
  # SC - Output connectomes
- echo -e "<h2>Structural Connectomes ${tracts}</h2>" >> "$QC_html"
+ echo -e "<h2>Structural Connectomes ${tracts} tracts</h2>" >> "$QC_html"
  echo -e $table_style >> "$QC_html"
  echo -e "
        <table class=\"tg\">
@@ -895,7 +937,7 @@ echo -e "
     <div class=\"panel\">" >> "$QC_html"
 echo -e "      <h2>Input</h2>" >> "$QC_html"
 microimg=$(grep input "${subject_dir}/anat/surfaces/micro_profiles/${idBIDS}_MPC.json" | awk -F '"' '{print $4}')
-nifti_check "Quantitative image" "${microimg}" "${dir_QC_png}/${idBIDS}_mpc.nii.png"
+nifti_check "Registration: Quantitative image over fsnative" "${microimg}" "${dir_QC_png}/${idBIDS}_mpc.nii.png" "$T1_fsnative"
 
 echo -e "      <h2>Surfaces</h2>" >> "$QC_html"
       for i in $(seq -f "%02g" 1 14); do
@@ -937,18 +979,21 @@ if [ -d "$autoTract_dir" ]; then
     Info "Autotract QC found $Ntracts out of 14 tested bundles, creating png"
     cd $tmpDir
     for plane in 0 1 2; do
-       COMMAND="mrview $autoTract_dir/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_atlas2fa.nii.gz -mode 1 -plane $plane -colourbar 0 -comments 0 -voxelinfo 0 -focus 0 -intensity_range 0,100000 -imagevisible 1 $COMMAND_tract -capture.grab -exit"
-       $COMMAND
-       mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png"
+        if [[ ! -f "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png" ]]; then
+           COMMAND="mrview $autoTract_dir/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-SIFT2_atlas2fa.nii.gz -mode 1 -plane $plane -colourbar 0 -comments 0 -voxelinfo 0 -focus 0 -intensity_range 0,100000 -imagevisible 1 $COMMAND_tract -capture.grab -exit"
+           $COMMAND
+           mv -v screenshot*.png "${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane${plane}.png"
+        fi
     done
     cd $here
 
     echo "
     <button class=\"accordion\" id=\"autoTract\">Automatic bundle segmentation: ${tracts} tracts</button>
     <div class=\"panel\">" >> "$QC_html"
-    echo -e "\n      <h2>Outputs files</h2>" >> "$QC_html"
+    echo -e "\n      <h2>Input files</h2>" >> "$QC_html"
+    if [[ ! -f "${tmpDir}/dwi_fa.nii.gz" ]]; then Do_cmd mrconvert "$dwi_fa" "${tmpDir}/dwi_fa.nii.gz"; fi
     auto_FAatlas="${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-5M-SIFT2_atlas2fa.nii.gz"
-    nifti_check "FA atlas in native dwi" "$auto_FAatlas" "${dir_QC_png}/${idBIDS}_space-dwi_FAatlas.png"
+    nifti_check "FA atlas in native dwi" "$auto_FAatlas" "${dir_QC_png}/${idBIDS}_space-dwi_FAatlas.png" "${tmpDir}/dwi_fa.nii.gz"
     echo -e "\n      <h2>Sagital view: $Ntracts tracts</h2>
         <img src=\"${dir_QC_png}/${idBIDS}_autotract_desc-qc_plane0.png\" width=\"625\" height=\"530\">
       <h2>Coronal view: $Ntracts tracts</h2>
