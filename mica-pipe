@@ -63,9 +63,9 @@ echo -e "
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii* )
 \t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii* )
 \t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
 
@@ -74,7 +74,7 @@ echo -e "
 \t\t\t\t         Default='task-rest_acq-AP_bold'
 \t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for rsfMRI processing
 \t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)5666
+\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)
 \t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
@@ -428,8 +428,8 @@ if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
 if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
 if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
-if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else dwi_rpe=$(realpath $fmri_pe); fi
-if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else dwi_rpe=$(realpath $fmri_rpe); fi
+if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
+if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
 
 # Optional arguments mpc
@@ -445,6 +445,7 @@ if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 
 # Optional arguments proc_dwi
+# User provided DWI main phase
 if [ -z ${dwi_main} ]; then
     dwi_main=DEFAULT
 else
@@ -453,7 +454,15 @@ else
     for i in "${!dwi_main[@]}"; do dwi_main[i]=$(realpath ${dwi_main[$i]}); done # Full path
     dwi_main=$(IFS=','; echo "${dwi_main[*]}")
 fi
-if [ -z ${dwi_rpe} ]; then dwi_rpe=DEFAULT; else dwi_rpe=$(realpath $dwi_rpe); fi
+# User provided DWI reverse phase encoded
+if [ -z ${dwi_rpe} ]; then
+    dwi_rpe=DEFAULT
+else
+    IFS=',' read -ra dwi_rpe <<< $dwi_rpe
+    dwi_rpe=($dwi_rpe)
+    for i in "${!dwi_rpe[@]}"; do dwi_rpe[i]=$(realpath ${dwi_rpe[$i]}); done # Full path
+    dwi_rpe=$(IFS=','; echo "${dwi_rpe[*]}")
+fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe
