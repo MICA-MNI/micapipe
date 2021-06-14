@@ -99,7 +99,7 @@ export idBIDS="${subject}${ses}"
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
-  dwi_reverse=$(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_dwi.nii* 2>/dev/null)
+  dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_dwi.nii* 2>/dev/null))
 }
 
 bids_print.variables() {
