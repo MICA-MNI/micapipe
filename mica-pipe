@@ -68,6 +68,8 @@ echo -e "
 \t\t\t\t        ( default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii* )
 \t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
+\t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
+\t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -343,6 +345,10 @@ do
     dwi_rpe="$2"
     shift;shift;
   ;;
+  -rpe_all)
+    rpe_all=TRUE
+    shift
+  ;;
   -qsub)
     micaq=TRUE
     shift
@@ -449,20 +455,19 @@ if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 if [ -z ${dwi_main} ]; then
     dwi_main=DEFAULT
 else
-    IFS=',' read -ra dwi_main <<< $dwi_main
-    dwi_main=($dwi_main)
-    for i in "${!dwi_main[@]}"; do dwi_main[i]=$(realpath ${dwi_main[$i]}); done # Full path
-    dwi_main=$(IFS=','; echo "${dwi_main[*]}")
+    IFS=',' read -ra dwis_main <<< $dwi_main
+    for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
+    dwi_main=$(IFS=','; echo "${dwis_main[*]}")
 fi
 # User provided DWI reverse phase encoded
 if [ -z ${dwi_rpe} ]; then
     dwi_rpe=DEFAULT
 else
-    IFS=',' read -ra dwi_rpe <<< $dwi_rpe
-    dwi_rpe=($dwi_rpe)
-    for i in "${!dwi_rpe[@]}"; do dwi_rpe[i]=$(realpath ${dwi_rpe[$i]}); done # Full path
+    IFS=',' read -ra dwis_rpe <<< $dwi_rpe
+    for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path
     dwi_rpe=$(IFS=','; echo "${dwi_rpe[*]}")
 fi
+if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe
@@ -636,7 +641,7 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
