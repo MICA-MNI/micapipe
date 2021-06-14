@@ -26,7 +26,8 @@ threads=$6
 tmpDir=$7
 input_im=$8
 input_dat=$9
-PROC=${10}
+mpc_reg=${10}
+PROC=${11}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -53,15 +54,27 @@ if [ "${#parcellations[*]}" -eq "0" ]; then Error "Subject $id doesn't have -pos
 # Check microstructural image input flag and set parameters accordingly
 if [[ "$input_im" == "DEFAULT" ]]; then
     Warning "MPC processing will be performed from default input image: qT1"
-    Note "qT1 =" "$bids_T1map"
     microImage="$bids_T1map"
-    regImage="$bids_inv1"
 else
     Warning "MPC processing will be performed from provided input file"
-    Note "Microstructural image =" "${input_im}"
     microImage="${input_im}"
-    regImage="${input_im}"
 fi
+Note "Microstructural image =" "$microImage"
+
+# Check microstructural image to registrer
+if [[ "$mpc_reg" != "DEFAULT" ]]; then
+    Warning "MPC will register the provided input image to the surface: \n\t$mpc_reg"
+    regImage="$mpc_reg"
+else
+    if [[ "$input_im" == "DEFAULT" ]]; then
+        Warning "MPC will register the default input image to the surface: inv1_T1map"
+        regImage="$bids_inv1"
+    else
+        Warning "MPC will register the provided input file"
+        microImage="$input_im"
+    fi
+fi
+Note "micro2fs registration image =" "$regImage"
 
 # Check .dat file input flag and set parameters accordingly
 if [[ "$input_dat" == "DEFAULT" ]]; then
@@ -69,10 +82,12 @@ if [[ "$input_dat" == "DEFAULT" ]]; then
 else
     Warning "Applying provided .dat file to perform registration to native freesurfer space"
     Note "micro2fs transform =" "$input_dat"
+    if [ -z "${input_dat}" ] || [ ! -f "${input_dat}" ]; then Error "Provided registration for MPC was not found or the path is wrong!!!"; exit; fi
 fi
 
-# Exit if microImage does not exists
+# Exit if microImage or Registration image do not exists
 if [ -z "${microImage}" ] || [ ! -f "${microImage}" ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
+if [ -z "${regImage}" ] || [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found or the path is wrong!!!"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Microstructural profiles and covariance\n\t\tmicapipe $Version, $PROC"

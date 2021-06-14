@@ -107,6 +107,9 @@ echo -e "
 \t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
 \t\t\t\t        If left blank or omitted, registration will be computed in the script.
 \t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
+\t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
+\t\t\t\t        It MUST be on the same space as the main microstructural image!!
+
 
 
 \033[38;5;141mOPTIONS:\033[0m
@@ -291,6 +294,10 @@ do
     input_dat=$2
     shift;shift
   ;;
+  -microstructural_reg)
+    mpc_reg=$2
+    shift;shift
+  ;;
   -QC)
     QCgroup=TRUE
     shift
@@ -438,6 +445,7 @@ if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$(realpath $input_im)
 else optarg_mpc[0]=DEFAULT; fi
 if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_dat)
 else optarg_mpc[1]=DEFAULT; fi
+if [ -z ${mpc_reg} ]; then mpc_reg=DEFAULT; else mpc_reg=$(realpath $mpc_reg); fi
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -717,7 +725,7 @@ fi
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg}"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
