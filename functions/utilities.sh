@@ -94,12 +94,12 @@ export idBIDS="${subject}${ses}"
 
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
-  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_dwi.nii* 2>/dev/null))
+  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
-  dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_dwi.nii* 2>/dev/null))
+  dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_*dwi.nii* 2>/dev/null))
 }
 
 bids_print.variables() {
@@ -162,7 +162,7 @@ bids_print.variables-dwi() {
   Info "mica-pipe variables for DWI processing:"
   Note "proc_dwi dir    =" "$proc_dwi"
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  file.exist "dwi_reverse     =" $dwi_reverse
+  Note "dwi_reverse     =" "N-${#dwi_reverse[@]}, $dwi_reverse"
 
   Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
@@ -472,6 +472,60 @@ function json_mpc() {
     \"qform\": [
 \"${sform}\"
       ]
+  }" > "$3"
+}
+
+function json_dwipreproc() {
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+
+  res_rpe=$(mrinfo "$4" -spacing)
+  Size_rpe=$(mrinfo "$4" -size)
+  Strides_rpe=$(mrinfo "$4" -strides)
+  Offset_rpe=$(mrinfo "$4" -offset)
+  Multiplier_rpe=$(mrinfo "$4" -multiplier)
+  Transform_rpe=$(mrinfo "$4" -transform)
+
+  Info "Creating DWI preproc json file"
+  echo -e "{
+    \"Class\": \"DWI preprocessing\",
+    \"DWIpe\": [
+        \"fileName\": \"${bids_dwis[*]}\",
+        \"NumberOfInputs\": \"${#bids_dwis[*]}\",
+        \"VoxelSizepe\": \"${res}\",
+        \"Dimensionspe\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": \"${Transform}\"
+    ],
+    \"DWIrpe\": [
+        \"fileName\": \"${dwi_reverse[*]}\",
+        \"NumberOfInputs\": \"${#dwi_reverse[*]}\",
+        \"VoxelSizepe\": \"${res_rpe}\",
+        \"Dimensionspe\": \"${Size_rpe}\",
+        \"Strides\": \"${Strides_rpe}\",
+        \"Offset\": \"${Offset_rpe}\",
+        \"Multiplier\": \"${Multiplier_rpe}\",
+        \"Transform\": \"${Transform_rpe}\",
+    ],
+    \"Denoising\": \"Marchenko-Pastur PCA denoising, dwidenoise\",
+    \"GibbsRingCorrection\": \"mrdegibbs\",
+    \"dwiflspreproc\": [
+        \"input\": \"${dwi_4proc}\",
+        \"output\": \"${dwi_corr}\",
+        \"Shells\": \"${shells[*]}\",
+        \"pe_dir\": \"${pe_dir}\",
+        \"ReadoutTime\": \"${ReadoutTime}\",
+        \"Options\": \"${opt}\",
+        \"slm\": \"linear\"
+    ],
+    \"B1fielCorrection\": \"ANTS N4BiasFieldCorrection\",
+    \"DWIprocessed\": \"$2\",
   }" > "$3"
 }
 
