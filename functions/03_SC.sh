@@ -75,8 +75,7 @@ if [ ! -f "$dti_FA" ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits and WARNING
 N=$(ls "${dwi_cnntm}"/"${idBIDS}"_space-dwi_atlas-*_desc-iFOD2-"${tracts}"-"${filter}"_full-connectome.txt 2>/dev/null | wc -l)
-if [ "$N" -gt 3 ]; then Warning "
-  Connectomes with $tracts streamlines already exist!!
+if [ "$N" -gt 3 ]; then Warning " Connectomes with $tracts streamlines already exist!!
   If you want to re-run the $tracts tractogram or add parcellations first clean the outpus:
     micapipe_cleanup -SC -sub $id -out ${out/"/micapipe"/} -bids $BIDS -tracts ${tracts}"; fi
 
