@@ -233,16 +233,16 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
 
           Info "DWI-rpe: concatenatenating shells"
           dwi_0=$(echo "${dwi_reverse[0]##*/}" | awk -F ".nii" '{print $1}')
+          rpe_dns_tmp="${tmp}/rpe-MP-PCA_dwi.mif"
           if [ "${#dwi_reverse[@]}" -eq 1 ]; then
-            cp "${tmp}/${dwi_0}.mif" "$rpe_cat"
+            cp "${tmp}/${dwi_0}.mif" "$rpe_dns_tmp"
           else
             Do_cmd mrcat "${tmp}/*_rpe_Ralign.mif" "$rpe_cat" -nthreads "$threads"
+            Do_cmd dwidenoise "$rpe_cat" "$rpe_dns_tmp" -nthreads "$threads"
           fi
 
           # Denoise DWI and calculate residuals
           Info "DWI-rpe: MP-PCA denoising and Gibbs ringing correction"
-          rpe_dns_tmp="${tmp}/rpe-MP-PCA_dwi.mif"
-          Do_cmd dwidenoise "$rpe_cat" "$rpe_dns_tmp" -nthreads "$threads"
           Do_cmd mrdegibbs "$rpe_dns_tmp" "$rpe_dns" -nthreads "$threads"
           Do_cmd mrinfo "$rpe_dns" -json_all "${rpe_dns/mif/json}"
     else
