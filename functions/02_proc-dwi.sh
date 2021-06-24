@@ -175,6 +175,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           Do_cmd mrcalc "$dwi_cat" "$dwi_dns" -subtract "$dwi_res" -nthreads "$threads"
           Do_cmd mrinfo "$dwi_dns" -json_all "${dwi_dns/mif/json}"
           Do_cmd mrinfo "$dwi_res" -json_all "${dwi_res/mif/json}"
+          ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++))
     fi
