@@ -302,6 +302,7 @@ function tck_json() {
   sform=$(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}')
   Info "Creating tractography json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
     \"fileName\": \"${8}\",
     \"inputNIFTI\": [
       {
@@ -346,6 +347,7 @@ function json_nativepro_t1w() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating T1w_nativepro json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -383,6 +385,7 @@ function json_nativepro_mask() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating T1natipro_brain json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -415,6 +418,7 @@ function json_rsfmri() {
   qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
   sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
     \"Class\": \"rsfMRI processed\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
@@ -457,6 +461,7 @@ function json_mpc() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating MPC json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
     \"Class\": \"Microstructural profile covariance\",
     \"input\": \"${1}\",
     \"freesurferTransformation\": \"${2}\",
@@ -492,6 +497,7 @@ function json_dwipreproc() {
 
   Info "Creating DWI preproc json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",  
     \"Class\": \"DWI preprocessing\",
     \"DWIpe\": [
         \"fileName\": \"${bids_dwis[*]}\",
@@ -524,7 +530,7 @@ function json_dwipreproc() {
         \"Options\": \"${opt}\",
         \"slm\": \"linear\"
     ],
-    \"B1fielCorrection\": \"ANTS N4BiasFieldCorrection\",
+    \"B1fieldCorrection\": \"ANTS N4BiasFieldCorrection\",
     \"DWIprocessed\": \"$2\",
   }" > "$3"
 }
