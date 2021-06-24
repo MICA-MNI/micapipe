@@ -465,7 +465,7 @@ if [ -z ${dwi_rpe} ]; then
 else
     IFS=',' read -ra dwis_rpe <<< $dwi_rpe
     for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path
-    dwi_rpe=$(IFS=','; echo "${dwi_rpe[*]}")
+    dwi_rpe=$(IFS=','; echo "${dwis_rpe[*]}")
 fi
 if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 
