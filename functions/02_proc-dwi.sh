@@ -260,8 +260,8 @@ if [[ ! -f "$dwi_corr" ]]; then
       ReadoutTime=$(mrinfo "$dwi_dns" -property TotalReadoutTime)
       pe_dir=$(mrinfo "$dwi_dns" -property PhaseEncodingDirection)
       shells=($(mrinfo "$dwi_dns" -shell_bvalues))
-      # Exclude shells with 0 value
-      for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
+      # Exclude shells with a threshold b-value lower than 15
+      for i in "${!shells[@]}"; do if [ ${shells[i]%.*} -le 15 ]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
       dwi_4proc=${tmp}/dwi_dns_even.mif
