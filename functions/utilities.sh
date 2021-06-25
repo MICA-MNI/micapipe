@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.0.2 'wobbly'"
+export Version="v1.0.0 'Roadrunner'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -497,7 +497,7 @@ function json_dwipreproc() {
 
   Info "Creating DWI preproc json file"
   echo -e "{
-    \"micapipeVersion\": \"${Version}\",  
+    \"micapipeVersion\": \"${Version}\",
     \"Class\": \"DWI preprocessing\",
     \"DWIpe\": [
         \"fileName\": \"${bids_dwis[*]}\",

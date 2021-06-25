@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2 'wobbly')\n"
+  echo -e "\nMICAPIPE June 2021 (Version v.1.0.0 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -58,8 +58,6 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
-\t\t\033[38;5;120m-cerebellum_seg\033[0m      : WORK IN PROGRESS. User defined segmentation of the cerebellum on native T1w_run1 space.
-\t\t\033[38;5;120m-subcortical_seg\033[0m     : WORK IN PROGRESS. User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
