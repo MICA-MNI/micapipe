@@ -316,7 +316,7 @@ if [[ ! -f "${singleecho}" ]]; then
         Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_sliceCut.nii.gz" \
                                    -o "${rsfmri_volum}/${idBIDS}_space-rsfmri_spikeRegressors_FD.1D" \
                                    -s "${rsfmri_volum}/${idBIDS}_space-rsfmri_metric_FD.1D" --fd
-        Do_cmd mv "${rsfmri_volum}/${idBIDS}_space-rsfmri_mainScan.1D ${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D"
+        Do_cmd mv "${rsfmri_volum}/${idBIDS}_space-rsfmri_mainScan.1D ${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D"; ((Nsteps++))
     else
         Info "Subject ${id} has a singleecho.1D with motion outliers"; ((Nsteps++))
     fi
@@ -335,7 +335,7 @@ if [[ ! -f "${singleecho}" ]]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
         export statusTopUp="NO"
         Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
-        json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+        json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"; ((Nsteps++))
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
             mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz")
@@ -366,11 +366,11 @@ if [[ ! -f "${singleecho}" ]]; then
             # Do_cmd fslmaths "${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz" -Tmean "$rsfmri4reg"
 
             # Check if it worked
-            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
+            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
             export statusTopUp="YES"
-            json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+            json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"; ((Nsteps++))
         else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++)); export statusTopUp="YES"
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
         fi
     fi
 else
@@ -441,7 +441,7 @@ str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-rsfmri_to-nativepro_mode-im
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
-str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_to-nativepro_mode-image_desc-SyN_"
+str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_"
 SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
 SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
@@ -467,15 +467,16 @@ if [[ "$Nreg" -lt 3 ]]; then
     Info "Registering fmri space to nativepro"
     # Affine from rsfMRI to t1-nativepro
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
 
     # SyN from T1_nativepro to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "${tmp}/T1bold_in_fmri.nii.gz" -m "$fmri_brain" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
 
     # fmri to t1-nativepro
-    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" -t "$mat_rsfmri_affine" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
 
     # t1-nativepro to fmri
-    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -t ["$mat_rsfmri_affine",1] -o "${T1nativepro_in_fmri}" -v -u int
     if [[ -d "${rsfmri_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_rsfmri_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
