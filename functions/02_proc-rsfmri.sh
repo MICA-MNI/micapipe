@@ -657,7 +657,7 @@ for hemisphere in lh rh; do
                 --hemi "${hemisphere}" \
                 --srcsubject "$BIDSanat" \
                 --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" \
-                --trgsubject "$idBIDS" \
+                --trgsubject "$BIDSanat" \
                 --tval "$out_surf_native" \
                 --fwhm-trg 10
           fi
