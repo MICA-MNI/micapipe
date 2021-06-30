@@ -443,6 +443,7 @@ function json_rsfmri() {
         \"TotalReadoutTime\": \"${readoutTime}\",
         \"Melodic\": \"${statusMel}\",
         \"FIX\": \"${statusFIX}\",
+        \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\"
       }
