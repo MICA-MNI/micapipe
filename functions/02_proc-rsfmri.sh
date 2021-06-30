@@ -473,11 +473,11 @@ if [[ "$Nreg" -lt 3 ]]; then
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -f "${tmp}/T1bold_in_fmri.nii.gz" -m "$fmri_brain" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
         export reg="Affine+SyN"
-        transformsInv="-t [${SyN_rsfmri_affine},1] -t ${SyN_rsfmri_Invwarp} -t [${mat_rsfmri_affine},1]"
-        transform="-t ${mat_rsfmri_affine} -t ${SyN_rsfmri_warp} -t ${SyN_rsfmri_affine}"
-        xfmat="-t [${SyN_rsfmri_affine},1] -t [${mat_rsfmri_affine},1]"
+        transformsInv="-t ${SyN_rsfmri_warp} -t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri
+        transform="-t ${mat_rsfmri_affine} -t [${SyN_rsfmri_affine},1] -t ${SyN_rsfmri_Invwarp}"  # rsfmri to T1nativepro
+        xfmat="-t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri only lineal
     elif [[ ${regAffine}  == "TRUE" ]]; then
         export reg="Affine"
         transformsInv="-t [${mat_rsfmri_affine},1]"
