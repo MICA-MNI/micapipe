@@ -89,6 +89,7 @@ Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
 Note "No FIX           :" "$noFIX"
+Note "Longitudinal ses :" "$sesAnat"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -132,6 +133,7 @@ if [[ "$mainScanStr" == DEFAULT ]]; then
         mainScanJson=${bids_mainScanJson[0]}
     fi
 else
+    Info "Using user provided main scan: ${subject_bids}/func/${idBIDS}_${mainScanStr}"
     mainScan=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".nii* 2>/dev/null)
     mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
 fi
