@@ -94,6 +94,8 @@ echo -e "
 \t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 \t\t\033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
 \t\t\t\t         ( default processing is independent )
+\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
+\t\t\t\t         ( default is non linear registration SyN )
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -254,6 +256,10 @@ do
   ;;
   -GSR)
     GSReg=TRUE
+    shift
+  ;;
+  -regAffine)
+    regAffine=TRUE
     shift
   ;;
   -noFIX)
@@ -442,6 +448,7 @@ if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
 if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
+if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
@@ -825,7 +832,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"

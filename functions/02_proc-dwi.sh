@@ -122,6 +122,7 @@ Do_cmd cd "$tmp"
 dwi_cat="${tmp}/dwi_concatenate.mif"
 dwi_dns="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
+dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
 b0_refacq=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}'); b0_refacq=$(echo "${b0_refacq/_dwi/}"); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
 
@@ -171,10 +172,12 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           Info "DWI MP-PCA denoising and Gibbs ringing correction"
           dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
           Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
+          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_res" -axis 3
           Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
-          Do_cmd mrcalc "$dwi_cat" "$dwi_dns" -subtract "$dwi_res" -nthreads "$threads"
+          mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
           Do_cmd mrinfo "$dwi_dns" -json_all "${dwi_dns/mif/json}"
           Do_cmd mrinfo "$dwi_res" -json_all "${dwi_res/mif/json}"
+          Do_cmd mrinfo "$dwi_resGibss" -json_all "${dwi_resGibss/mif/json}"
           ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++))
@@ -261,7 +264,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       pe_dir=$(mrinfo "$dwi_dns" -property PhaseEncodingDirection)
       shells=($(mrinfo "$dwi_dns" -shell_bvalues))
       # Exclude shells with a threshold b-value lower than 15
-      for i in "${!shells[@]}"; do if [ ${shells[i]%.*} -le 15 ]; then unset 'shells[i]'; fi; done
+      for i in "${!shells[@]}"; do if [ "${shells[i]%.*}" -le 15 ]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
       dwi_4proc=${tmp}/dwi_dns_even.mif
