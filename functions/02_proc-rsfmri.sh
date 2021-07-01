@@ -59,7 +59,7 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-if [[ "$sesAnat" != DEFAULT  ]]; then
+if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
@@ -337,8 +337,7 @@ if [[ ! -f "${singleecho}" ]]; then
     if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
         export statusTopUp="NO"
-        Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
-        json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"; ((Nsteps++))
+        Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"; ((Nsteps++))
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
             mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz")
@@ -370,8 +369,7 @@ if [[ ! -f "${singleecho}" ]]; then
 
             # Check if it worked
             if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
-            export statusTopUp="YES"
-            json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"; ((Nsteps++))
+            export statusTopUp="YES"; ((Nsteps++))
         else
             Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
         fi
@@ -558,7 +556,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                         yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
                         export statusFIX="YES"
                     else
-                        Error "FIX failed, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                        Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_rsfmri_*.txt)"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
@@ -572,15 +570,17 @@ if [[ "$noFIX" -eq 0 ]]; then
               export statusFIX="NO"
           fi
     else
-        Info "Subject ${id} has singleecho_fmrispace_clean volume with FIX"; export statusFIX="YES"
+        Info "Subject ${id} has singleecho_fmrispace_clean"; export statusFIX="YES"
     fi
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Further processing will be performed on distorsion corrected images."
     cp -rf "${fmri_HP}" "$fmri_processed"
+    if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 fi
-if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+
 
 #------------------------------------------------------------------------------#
 global_signal="${rsfmri_volum}/${idBIDS}_space-rsfmri_global.txt"

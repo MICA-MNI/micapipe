@@ -447,7 +447,7 @@ if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
 if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
-if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
+if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 
 # Optional arguments mpc
