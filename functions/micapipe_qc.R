@@ -167,7 +167,7 @@ module.col <- function() {
   }}
   # proc_rsfmri
   for (seg in parc) { for (space in c("fsnative", "conte69-32k")) {
-    files <- rbind(files, c("proc_rsfmri", paste0("FC",".",seg,".",space), paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-",space,"_atlas-",seg,"_desc-fc.txt")) )
+    files <- rbind(files, c("proc_rsfmri", paste0("FC",".",seg,".",space), paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-",space,"_atlas-",seg,"_desc-FC.txt")) )
   }}
   for (seg in parc) { files <- rbind(files, c("proc_rsfmri", paste0("FC",".",seg,".timeseries"), paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_atlas-",seg,"_desc-timeseries.txt")) )}
   # test existence of files
