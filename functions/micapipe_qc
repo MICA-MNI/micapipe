@@ -13,9 +13,9 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v.0.0.2 'wobbly')"
+Version="(Version v.1.0.0 'Roadrunner')"
 version() {
-  echo -e "\nMICAPIPE Feb 2021 ${Version}\n"
+  echo -e "\nMICAPIPE June 2021 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
@@ -632,6 +632,55 @@ if [ ! -f ${dir_QC}/micapipe_QC_proc-dwi.txt ]; then QC_proc-dwi; fi
           </tbody>
           </table>"  >> "$QC_html"
 
+#------------------------------------------------------------------------------#
+# DWI pre processing Options
+DWIpe=$(grep fileName "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==1 {print $4}')
+DWIrpe=$(grep fileName "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==2 {print $4}')
+Shells=$(grep Shells "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+DWIpe_dir=$(grep pe_dir "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+DWIReadoutTime=$(grep ReadoutTime "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+Options=$(grep Options "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+Info $DWIrpe
+Info $DWIpe
+echo "
+      <h2>DWI processing options</h2>" >> "$QC_html"
+    echo -e $table_style >> "$QC_html"
+    echo -e "
+        <table class=\"tg\">
+          <thead>
+            <tr>
+              <th class=\"tg-rkbl\">Variable</th>
+              <th class=\"tg-droi\">Descrition</th>
+            </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">DWI pe</span></td>
+            <td class=\"tg-8pnm\">${DWIpe}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">DWI rpe</span></td>
+            <td class=\"tg-8pnm\">${DWIrpe}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">Shells</span></td>
+            <td class=\"tg-8pnm\">${Shells}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">pe_dir</span></td>
+            <td class=\"tg-8pnm\">${DWIpe_dir}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">ReadoutTime</span></td>
+            <td class=\"tg-8pnm\">${DWIReadoutTime}</td>
+          </tr>
+          <tr>
+            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwifslpreproc options</span></td>
+            <td class=\"tg-8pnm\">${Options}</td>
+          </tr>
+    </tbody>
+    </table>" >> "$QC_html"
+
 # Input: DWI main phase encoding
 if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]]; then
     Do_cmd mrmath "${bids_dwis[0]}" mean "${tmpDir}/dwi_pe.nii.gz" -axis 3
@@ -655,6 +704,7 @@ fi
 # DWI main outputs
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
+dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
 dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
 
@@ -670,7 +720,8 @@ dwi_fa="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 
 echo -e "\n        <h2>Main outputs</h2>" >> "$QC_html"
 if [ -f "$dwi_corr" ]; then
-    Do_cmd mrmath "$dwi_res" mean "${tmpDir}/dwi_res.nii.gz" -axis 3
+    Do_cmd mrconvert "$dwi_res" "${tmpDir}/dwi_res.nii.gz"
+    Do_cmd mrconvert "$dwi_resGibss" "${tmpDir}/dwi_deGibbs.nii.gz"
     Do_cmd mrmath "$dwi_corr" mean "${tmpDir}/dwi_corr.nii.gz" -axis 3
     Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_fod.nii.gz"
     Do_cmd mrconvert "$dwi_gmwmi" "${tmpDir}/dwi_gmwmi.nii.gz"
@@ -681,6 +732,7 @@ if [ -f "$dwi_corr" ]; then
     Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_5tt.nii.gz"
 
     nifti_check "DWI MP-PCA mean residuals (mean)" "${tmpDir}/dwi_res.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_MP-PCA.png"
+    nifti_check "DWI Ring Gibbs mean residuals (mean)" "${tmpDir}/dwi_deGibbs.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_deGibbs.png"
     nifti_check "DWI b0 pre-processed" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_b0.png"
     nifti_check "DWI pre-processed (mean)" "${tmpDir}/dwi_corr.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_preproc.png"
     nifti_check "White matter Fiber Orientation Distribution (FOD)" "${tmpDir}/dwi_fod.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_wmFOD.png"
@@ -734,6 +786,33 @@ echo -e "
             </tr>
           </tbody>
           </table>"  >> "$QC_html"
+
+#------------------------------------------------------------------------------#
+# rsfMRI pre processing Options
+echo "                <h2>rsfMRI processing options</h2>" >> "$QC_html"
+              echo -e $table_style >> "$QC_html"
+              echo -e "
+                  <table class=\"tg\">
+                    <thead>
+                      <tr>
+                        <th class=\"tg-rkbl\">Variable</th>
+                        <th class=\"tg-droi\">Descrition</th>
+                      </tr>
+                    </thead>
+                    <tbody>"  >> "$QC_html"
+
+Opts=(MainScan MainPhaseScan ReversePhaseScan TOPUP Passband RepetitionTime TotalReadoutTime Melodic FIX Registration GlobalSignalRegression CSFWMSignalRegression)
+for i in ${Opts[*]}; do
+  opt=$(grep $i "${subject_dir}/func/volumetric/${idBIDS}_space-rsfmri_desc-singleecho_clean.json" | awk -F '"' 'NR==1 {print $4}')
+  echo -e "
+                      <tr>
+                        <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${i}</span></td>
+                        <td class=\"tg-8pnm\">${opt}</td>
+                      </tr>"   >> "$QC_html"
+done
+
+echo -e "              </tbody>
+              </table>" >> "$QC_html"
 
 # Main outputs rsfmri
 echo -e "\n      <h2>Main outputs</h2>" >> "$QC_html"

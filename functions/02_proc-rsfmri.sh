@@ -41,7 +41,8 @@ performNSR=${16}
 performGSR=${17}
 noFIX=${18}
 sesAnat=${19}
-PROC=${20}
+regAffine=${20}
+PROC=${21}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -58,7 +59,7 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-if [[ "$sesAnat" != DEFAULT  ]]; then
+if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
@@ -89,6 +90,7 @@ Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
 Note "No FIX           :" "$noFIX"
+Note "Longitudinal ses :" "$sesAnat"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -132,6 +134,7 @@ if [[ "$mainScanStr" == DEFAULT ]]; then
         mainScanJson=${bids_mainScanJson[0]}
     fi
 else
+    Info "Using user provided main scan: ${subject_bids}/func/${idBIDS}_${mainScanStr}"
     mainScan=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".nii* 2>/dev/null)
     mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
 fi
@@ -316,7 +319,7 @@ if [[ ! -f "${singleecho}" ]]; then
         Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_sliceCut.nii.gz" \
                                    -o "${rsfmri_volum}/${idBIDS}_space-rsfmri_spikeRegressors_FD.1D" \
                                    -s "${rsfmri_volum}/${idBIDS}_space-rsfmri_metric_FD.1D" --fd
-        Do_cmd mv "${rsfmri_volum}/${idBIDS}_space-rsfmri_mainScan.1D ${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D"
+        Do_cmd mv "${rsfmri_volum}/${idBIDS}_space-rsfmri_mainScan.1D ${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D"; ((Nsteps++))
     else
         Info "Subject ${id} has a singleecho.1D with motion outliers"; ((Nsteps++))
     fi
@@ -334,8 +337,7 @@ if [[ ! -f "${singleecho}" ]]; then
     if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
         Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
         export statusTopUp="NO"
-        Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"
-        json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+        Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"; ((Nsteps++))
     else
         if [[ ! -f "${rsfmri_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
             mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz")
@@ -366,11 +368,10 @@ if [[ ! -f "${singleecho}" ]]; then
             # Do_cmd fslmaths "${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz" -Tmean "$rsfmri4reg"
 
             # Check if it worked
-            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi; ((Nsteps++))
-            export statusTopUp="YES"
-            json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_rsfmri.txt"; exit; fi
+            export statusTopUp="YES"; ((Nsteps++))
         else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; ((Nsteps++)); export statusTopUp="YES"
+            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
         fi
     fi
 else
@@ -433,7 +434,7 @@ if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
 else
     Info "Subject ${id} has MELODIC outputs"; export statusMel="YES"
 fi
-
+if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
 T1nativepro_in_fmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
@@ -441,7 +442,7 @@ str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-rsfmri_to-nativepro_mode-im
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
-str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_to-nativepro_mode-image_desc-SyN_"
+str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_"
 SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
 SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
@@ -465,17 +466,30 @@ if [[ "$Nreg" -lt 3 ]]; then
     Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
 
     Info "Registering fmri space to nativepro"
+
     # Affine from rsfMRI to t1-nativepro
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_rsfmri_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
 
-    # SyN from T1_nativepro to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "${str_rsfmri_affine}Warped.nii.gz" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
+    if [[ ${regAffine}  == "FALSE" ]]; then
+        # SyN from T1_nativepro to t1-nativepro
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
+        export reg="Affine+SyN"
+        transformsInv="-t ${SyN_rsfmri_warp} -t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri
+        transform="-t ${mat_rsfmri_affine} -t [${SyN_rsfmri_affine},1] -t ${SyN_rsfmri_Invwarp}"  # rsfmri to T1nativepro
+        xfmat="-t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri only lineal
+    elif [[ ${regAffine}  == "TRUE" ]]; then
+        export reg="Affine"
+        transformsInv="-t [${mat_rsfmri_affine},1]"
+        transform="-t ${SyN_rsfmri_affine}"
+        xfmat="-t [${mat_rsfmri_affine},1]"
+    fi
 
     # fmri to t1-nativepro
-    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" -t "$SyN_rsfmri_warp" -t "$SyN_rsfmri_affine" -t "$mat_rsfmri_affine" -o "$fmri_in_T1nativepro" -v -u int
-
+    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
-    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${T1nativepro_in_fmri}" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_fmri}" -v -u int
+
     if [[ -d "${rsfmri_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${rsfmri_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_rsfmri_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
@@ -518,7 +532,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                     # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
                     if [[ ! -f "${rsfmri_ICA}/reg/highres2example_func.mat" ]]; then
                         # Get transformation matrix T1native to rsfMRI space (ICA-FIX requirement)
-                        Do_cmd antsApplyTransforms -v 1 -o Linear["$tmp/highres2example_func.mat",0] -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1]
+                        Do_cmd antsApplyTransforms -v 1 -o Linear["$tmp/highres2example_func.mat",0] "${xfmat}"
                         # Transform matrix: ANTs (itk binary) to text
                         Do_cmd ConvertTransformFile 3 "$tmp/highres2example_func.mat" "$tmp/highres2example_func.txt"
 
@@ -542,7 +556,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                         yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
                         export statusFIX="YES"
                     else
-                        Error "FIX failed, but MELODIC ran log file:\n\t${dir_logs}/proc_rsfmri.txt"; exit
+                        Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_rsfmri_*.txt)"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
@@ -556,14 +570,17 @@ if [[ "$noFIX" -eq 0 ]]; then
               export statusFIX="NO"
           fi
     else
-        Info "Subject ${id} has singleecho_fmrispace_clean volume with FIX"; export statusFIX="YES"
+        Info "Subject ${id} has singleecho_fmrispace_clean"; export statusFIX="YES"
     fi
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Further processing will be performed on distorsion corrected images."
     cp -rf "${fmri_HP}" "$fmri_processed"
+    if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
 fi
-json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+
 
 #------------------------------------------------------------------------------#
 global_signal="${rsfmri_volum}/${idBIDS}_space-rsfmri_global.txt"
@@ -656,7 +673,7 @@ for hemisphere in lh rh; do
                 --hemi "${hemisphere}" \
                 --srcsubject "$BIDSanat" \
                 --sval "${rsfmri_surf}/${idBIDS}_rsfmri_space-fsnative_${hemisphere}.mgh" \
-                --trgsubject "$idBIDS" \
+                --trgsubject "$BIDSanat" \
                 --tval "$out_surf_native" \
                 --fwhm-trg 10
           fi
@@ -732,7 +749,7 @@ timese_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_timeser
 
 if [[ ! -f "$timese_subcortex" ]] ; then
       Info "Getting subcortical timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "$rsfmri_subcortex" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel  "${transformsInv}" -o "$rsfmri_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$fmri_processed" --seg "$rsfmri_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
@@ -749,7 +766,7 @@ stats_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebel
 
 if [[ ! -f "$timese_cerebellum" ]] ; then
       Info "Getting cerebellar timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "$rsfmri_cerebellum" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$rsfmri_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$fmri_processed" --seg "$rsfmri_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"

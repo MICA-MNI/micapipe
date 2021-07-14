@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2 'wobbly')\n"
+  echo -e "\nMICAPIPE June 2021 (Version v.1.0.0 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -58,8 +58,6 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
-\t\t\033[38;5;120m-cerebellum_seg\033[0m      : WORK IN PROGRESS. User defined segmentation of the cerebellum on native T1w_run1 space.
-\t\t\033[38;5;120m-subcortical_seg\033[0m     : WORK IN PROGRESS. User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
@@ -68,6 +66,8 @@ echo -e "
 \t\t\t\t        ( default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii* )
 \t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
+\t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
+\t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -94,6 +94,8 @@ echo -e "
 \t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 \t\t\033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
 \t\t\t\t         ( default processing is independent )
+\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
+\t\t\t\t         ( default is non linear registration SyN )
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -256,6 +258,10 @@ do
     GSReg=TRUE
     shift
   ;;
+  -regAffine)
+    regAffine=TRUE
+    shift
+  ;;
   -noFIX)
     skipFIX=TRUE
     shift
@@ -350,6 +356,10 @@ do
     dwi_rpe="$2"
     shift;shift;
   ;;
+  -rpe_all)
+    rpe_all=TRUE
+    shift
+  ;;
   -qsub)
     micaq=TRUE
     shift
@@ -437,7 +447,8 @@ if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
 if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
-if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
+if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
+if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
@@ -457,20 +468,19 @@ if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 if [ -z ${dwi_main} ]; then
     dwi_main=DEFAULT
 else
-    IFS=',' read -ra dwi_main <<< $dwi_main
-    dwi_main=($dwi_main)
-    for i in "${!dwi_main[@]}"; do dwi_main[i]=$(realpath ${dwi_main[$i]}); done # Full path
-    dwi_main=$(IFS=','; echo "${dwi_main[*]}")
+    IFS=',' read -ra dwis_main <<< $dwi_main
+    for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
+    dwi_main=$(IFS=','; echo "${dwis_main[*]}")
 fi
 # User provided DWI reverse phase encoded
 if [ -z ${dwi_rpe} ]; then
     dwi_rpe=DEFAULT
 else
-    IFS=',' read -ra dwi_rpe <<< $dwi_rpe
-    dwi_rpe=($dwi_rpe)
-    for i in "${!dwi_rpe[@]}"; do dwi_rpe[i]=$(realpath ${dwi_rpe[$i]}); done # Full path
-    dwi_rpe=$(IFS=','; echo "${dwi_rpe[*]}")
+    IFS=',' read -ra dwis_rpe <<< $dwi_rpe
+    for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path
+    dwi_rpe=$(IFS=','; echo "${dwis_rpe[*]}")
 fi
+if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe
@@ -644,7 +654,7 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -822,7 +832,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"

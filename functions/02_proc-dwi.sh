@@ -26,7 +26,8 @@ tmpDir=$7
 dwi_main=$8
 dwi_rpe=$9
 dwi_processed=${10}
-PROC=${11}
+rpe_all=${11}
+PROC=${12}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -35,6 +36,10 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     export MICAPIPE=/data_/mica1/01_programs/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
+
+# mtrix configuration file
+mrconf="${HOME}/.mrtrix.conf"
+echo "BZeroThreshold: 61" > $mrconf
 
 # source utilities
 source "$MICAPIPE/functions/utilities.sh"
@@ -46,16 +51,19 @@ Info "Inputs of proc_dwi:"
 Note "tmpDir     :" "$tmpDir"
 Note "dwi_main   :" "$dwi_main"
 Note "dwi_rpe    :" "$dwi_rpe"
+Note "rpe_all    :" "$rpe_all"
 Note "Processing :" "$PROC"
 
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
-    for i in "${!bids_dwis[@]}"; do bids_dwis[i]=$(realpath "${bids_dwis[$i]}"); done # Full path
     bids_dwis=("${bids_dwis[@]}")
 fi
 # Manage manual inputs: DWI reverse phase encoding
-if [[ "$dwi_rpe" != "DEFAULT" ]]; then dwi_reverse=$dwi_rpe; fi
+if [[ "$dwi_rpe" != "DEFAULT" ]]; then
+    IFS=',' read -ra dwi_reverse <<< "$dwi_rpe"
+    dwi_reverse=("${dwi_reverse[@]}")
+fi
 
 # Manage manual inputs: DWI pre-processed
 if [[ "$dwi_processed" != "FALSE" ]]; then
@@ -103,7 +111,7 @@ tmp="${tmpDir}/${RANDOM}_micapipe_proc-dwi_${id}"
 Do_cmd mkdir -p "$tmp"
 [[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir "$dir_QC_png"
 # TRAP in case the script fails
-trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
+trap 'rm $mrconf; cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 Do_cmd cd "$tmp"
 #------------------------------------------------------------------------------#
@@ -112,15 +120,17 @@ Do_cmd cd "$tmp"
 # Interpolation or smoothing in other processing steps, such as motion and distortion correction,
 # may alter the noise characteristics and thus violate the assumptions upon which MP-PCA is based.
 dwi_cat="${tmp}/dwi_concatenate.mif"
-dwi_dns="${tmp}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
-dwi_n4="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_N4_dwi.mif"
+dwi_dns="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
+dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
-b0_refacq=$(echo "${bids_dwis[0]##*/}" | sed 's:_dwi.nii.gz::g'); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
+b0_refacq=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}'); b0_refacq=$(echo "${b0_refacq/_dwi/}"); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
 
+#------------------------------------------------------------------------------#
+# Main phase encoding processing
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
-    if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_n4" ]; then
-    Info "DWI denoise, bias field correction and concatenation"
+    if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then
+    Info "DWI denoise and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in "${bids_dwis[@]}"; do
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
@@ -129,7 +139,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
-          if [ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]; then Do_cmd nifti_capture.py -img "${tmp}/${dwi_nom}_b0.nii.gz"  -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"; fi
+
           # Rigid registration between shells
           n=$((${#bids_dwis[*]} - 1))
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
@@ -146,7 +156,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_Ralign.mif" -force -quiet
+                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}__Ralign.mif" -force -quiet
             done
           fi
 
@@ -159,19 +169,90 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           fi
 
           # Denoise DWI and calculate residuals
-          Do_cmd dwidenoise "$dwi_cat" "$dwi_dns" -nthreads "$threads"
-          Do_cmd mrcalc "$dwi_cat" "$dwi_dns" -subtract "$dwi_res" -nthreads "$threads"
+          Info "DWI MP-PCA denoising and Gibbs ringing correction"
+          dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
+          Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
+          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_res" -axis 3
+          Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
+          mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
+          Do_cmd mrinfo "$dwi_dns" -json_all "${dwi_dns/mif/json}"
           Do_cmd mrinfo "$dwi_res" -json_all "${dwi_res/mif/json}"
-
-          # Bias field correction DWI
-          Do_cmd dwibiascorrect ants "$dwi_dns" "$dwi_n4" -force -nthreads "$threads" -scratch "$tmp"
-          # Step QC
-          if [[ -f "$dwi_n4" ]]; then ((Nsteps++)); fi
+          Do_cmd mrinfo "$dwi_resGibss" -json_all "${dwi_resGibss/mif/json}"
+          ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++))
     fi
 else
-    Info "Subject ${id} has a DWI processed, skipping denoise and bias field correction"; ((Nsteps++))
+    Info "Subject ${id} has a DWI processed, skipping denoise and concatenation"; ((Nsteps++))
+fi
+
+#------------------------------------------------------------------------------#
+rpe_cat="${tmp}/dwi_rpe_concatenate.mif"
+rpe_dns="${proc_dwi}/${idBIDS}_space-dwi_dir-rpe_desc-MP-PCA_dwi.mif"
+if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
+    if [ ! -f "$rpe_dns" ] && [[ "${#dwi_reverse[@]}" -gt 0 ]]; then
+    # Concatenate shells -if only one shell then just convert to mif and rename.
+          for dwi in "${dwi_reverse[@]}"; do
+                dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
+                bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
+                Info "DWI reverse phase encoding processing: $dwi_nom"
+                if [[ -f "${bids_dwi_str}.bvec" ]] && [[ -f "${bids_dwi_str}.bval" ]]; then
+                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif"
+                    Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
+                else
+                    Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
+                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}.mif"
+                    Do_cmd cp "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif"
+                fi
+
+                # Get the reverse phase encoding mean b0
+                rpe_dim=$(mrinfo "${tmp}/${dwi_nom}_b0.mif" -ndim)
+                if [[ "$rpe_dim" -eq 3 ]]; then
+                    Do_cmd mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.nii.gz"
+                elif [[ "$rpe_dim" -gt 3 ]]; then
+                    Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
+                fi
+          done
+
+          # Rigid registration between shells
+          if [[ ${#dwi_reverse[*]} -gt 1 ]]; then
+            b0_ref=${tmp}/dwi_pe_b0-mean.nii.gz
+            dwiextract -nthreads "$threads" "$dwi_dns" - -bzero | mrmath - mean "$b0_ref" -axis 3
+            for i in "${!dwi_reverse[@]}"; do
+                dwi_nom=$(echo "${dwi_reverse[i]##*/}" | awk -F ".nii" '{print $1}')
+                bids_dwi_str=$(echo "${dwi_reverse[i]}" | awk -F . '{print $1}')
+                b0_nom="${tmp}/$(echo "${dwi_reverse[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
+                b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
+                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
+                b0mat="${b0mat_str}0GenericAffine.mat"
+
+                Info "DWI rpe - Registering ${b0_acq} to ${b0_refacq}"
+                Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
+                mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
+                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
+                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
+            done
+          fi
+
+          Info "DWI-rpe: concatenatenating shells"
+          dwi_0=$(echo "${dwi_reverse[0]##*/}" | awk -F ".nii" '{print $1}')
+          rpe_dns_tmp="${tmp}/rpe-MP-PCA_dwi.mif"
+          if [ "${#dwi_reverse[@]}" -eq 1 ]; then
+            cp "${tmp}/${dwi_0}.mif" "$rpe_dns_tmp"
+          else
+            Do_cmd mrcat "${tmp}/*_rpe_Ralign.mif" "$rpe_cat" -nthreads "$threads"
+            Do_cmd dwidenoise "$rpe_cat" "$rpe_dns_tmp" -nthreads "$threads"
+          fi
+
+          # Denoise DWI and calculate residuals
+          Info "DWI-rpe: MP-PCA denoising and Gibbs ringing correction"
+          Do_cmd mrdegibbs "$rpe_dns_tmp" "$rpe_dns" -nthreads "$threads"
+          Do_cmd mrinfo "$rpe_dns" -json_all "${rpe_dns/mif/json}"
+    else
+          Info "Subject ${id} has DWI-rpe in mif, denoised and concatenaded"
+    fi
+else
+    Info "Subject ${id} has a DWI processed, skipping denoise and concatenation"
 fi
 
 #------------------------------------------------------------------------------#
@@ -179,68 +260,63 @@ fi
 if [[ ! -f "$dwi_corr" ]]; then
       Info "DWI dwifslpreproc"
       # Get parameters
-      ReadoutTime=$(mrinfo "$dwi_n4" -property TotalReadoutTime)
-      pe_dir=$(mrinfo "$dwi_n4" -property PhaseEncodingDirection)
-      shells=($(mrinfo "$dwi_n4" -shell_bvalues))
-      # Exclude shells with 0 value
-      for i in "${!shells[@]}"; do if [[ ${shells[i]} = 0 ]]; then unset 'shells[i]'; fi; done
+      ReadoutTime=$(mrinfo "$dwi_dns" -property TotalReadoutTime)
+      pe_dir=$(mrinfo "$dwi_dns" -property PhaseEncodingDirection)
+      shells=($(mrinfo "$dwi_dns" -shell_bvalues))
+      # Exclude shells with a threshold b-value lower than 15
+      for i in "${!shells[@]}"; do if [ "${shells[i]%.*}" -le 15 ]; then unset 'shells[i]'; fi; done
 
       # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-      dwi_4proc=${tmp}/dwi_n4_even.mif
-      dim=$(mrinfo "$dwi_n4" -size)
+      dwi_4proc=${tmp}/dwi_dns_even.mif
+      dim=$(mrinfo "$dwi_dns" -size)
       dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-      mrconvert "$dwi_n4" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+      mrconvert "$dwi_dns" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
 
       # Get the mean b-zero (un-corrected)
-      dwiextract -nthreads "$threads" "$dwi_n4" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
+      dwiextract -nthreads "$threads" "$dwi_dns" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
+      # Mean rpe QC image
+      Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
+      Do_cmd nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
 
       # Processing the reverse encoding b0
-      if [ -f "$dwi_reverse" ]; then
-            b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
-            b0_pair="${tmp}/b0_pair.mif"
-            dwi_reverse_str=$(echo "$dwi_reverse" | awk -F . '{print $1}')
-            rpe_dim=$(mrinfo "$dwi_reverse" -ndim)
+      if [[ -f "$rpe_dns" ]]; then
+            rpe_dim=$(mrinfo "$rpe_dns" -ndim)
+            dwgrad=$(mrinfo "$rpe_dns" -dwgrad | wc -l)
+
             # Mean reverse phase b0
-            if [[ -f "${dwi_reverse_str}.bvec" ]] && [[ -f "${dwi_reverse_str}.bval" ]]; then
-                Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif"
-                dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
-            else
-                Do_cmd mrconvert "$dwi_reverse" -json_import "$dwi_reverse_str.json" "${tmp}/b0_ReversePhase.mif"
+            Info "Extracting the rpe b0(s)"
+            if [[ "${dwgrad}" -eq 0 ]]; then
+                Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
                 if [[ "$rpe_dim" -eq 3 ]]; then
-                  Do_cmd mrconvert "${tmp}/b0_ReversePhase.mif" "${tmp}/b0_meanReversePhase.nii.gz"
+                    Do_cmd mrconvert "$rpe_dns" "${tmp}/b0_meanReversePhase.nii.gz"
                 elif [[ "$rpe_dim" -gt 3 ]]; then
-                  mrmath "${tmp}/b0_ReversePhase.mif" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                    mrmath "$rpe_dns" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
                 fi
+            else
+                dwiextract "$rpe_dns" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
             fi
             Do_cmd nifti_capture.py -img "${tmp}/b0_meanReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
-            # Linear registration between both b0
-            rpe=$(echo "${dwi_reverse##*/}" | awk -F ".nii" '{print $1}'); rpe=$(echo ${rpe/_dwi/}); rpe=$(echo ${rpe/${idBIDS}_/})
-            rpemat_str="${dir_warp}/${idBIDS}_from-${rpe}_to-${b0_refacq}_mode-image_desc-rigid_"
-            rpemat="${rpemat_str}0GenericAffine.mat"
-            Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-            Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/b0_meanReversePhase.nii.gz" -f "${tmp}/b0_meanMainPhase.nii.gz"  -o "$rpemat_str" -t r -n "$threads" -p d
-            if [[ "$rpe_dim" -gt 3 ]]; then
-                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_ReversePhase-reg.nii.gz" -v -u int
-                if [[ -f "${dwi_reverse_str}.bvec" ]] && [[ -f "${dwi_reverse_str}.bval" ]]; then
-                    Do_cmd mrconvert "${tmp}/b0_ReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" -fslgrad "${dwi_reverse_str}.bvec" "${dwi_reverse_str}.bval" "${tmp}/b0_ReversePhase.mif" -force -quiet
-                    dwiextract "${tmp}/b0_ReversePhase.mif" - -bzero | mrmath - mean "$tmp/b0_meanReversePhase.mif" -axis 3 -nthreads "$threads"
-                else
-                    mrconvert "${tmp}/b0_ReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" - -force -quiet | mrmath - mean "$tmp/b0_meanReversePhase.mif" -axis 3 -nthreads "$threads"
-                fi
-            elif [[ "$rpe_dim" -eq 3 ]]; then
-                Do_cmd antsApplyTransforms -d 3 -i "${dwi_reverse}" -r "${tmp}/b0_meanMainPhase.nii.gz" -t "$rpemat" -o "${tmp}/b0_ReversePhase-reg.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/b0_ReversePhase-reg.nii.gz" -json_import "${dwi_reverse_str}.json" "${tmp}/b0_meanReversePhase.mif" -force -quiet
+            if [[ "$rpe_all" == TRUE ]]; then
+                # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
+                drpe_4proc=${tmp}/rpe_dns_even.mif
+                dwi_all=${tmp}/all_dwi_dns_even.mif
+                mrconvert "${rpe_dns}" "$drpe_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+                Do_cmd mrcat "${dwi_4proc}" "${drpe_4proc}" "$dwi_all"
+                dwi_4proc="$dwi_all"
+                opt="-rpe_all"
+
+            elif [[ "$rpe_all" == FALSE ]]; then
+                b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
+                b0_pair="${tmp}/b0_pair.mif"
+                # Concatenate the pe and rpe b0s
+                Do_cmd mrcat "${tmp}/b0_meanMainPhase.nii.gz" "${tmp}/b0_meanReversePhase.nii.gz" "$b0_pair_tmp" -nthreads "$threads"
+                # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
+                dim=$(mrinfo "$b0_pair_tmp" -size)
+                dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
+                mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+                opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
             fi
-
-            # Concatenate the pe and rpe b0s
-            Do_cmd mrcat "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanReversePhase.mif" "$b0_pair_tmp" -nthreads "$threads"
-
-            # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-            dim=$(mrinfo "$b0_pair_tmp" -size)
-            dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-            mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
-            opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
       else
             Warning "Reverse phase encoding image was not found it will be omitted"
             opt='-rpe_none'
@@ -248,30 +324,38 @@ if [[ ! -f "$dwi_corr" ]]; then
 
       Info "dwifslpreproc parameters:"
       Note "Shell values        :" "${shells[*]}"
-      Note "DWI main dimensions :" "$(mrinfo "$dwi_4proc" -size)"
-      if [ -f "$dwi_reverse" ]; then Note "DWI rpe dimensions  :" "$(mrinfo "$b0_pair" -size)"; fi
+      Note "DWI main dimensions :" "$(mrinfo "$dwi_dns" -size)"
+      if [ -f "${dwi_reverse[0]}" ]; then Note "DWI rpe dimensions  :" "$(mrinfo "$rpe_dns" -size)"; fi
       Note "pe_dir              :" "$pe_dir"
       Note "Readout Time        :" "$ReadoutTime"
+      Note "Options             :" "$opt"
 
       # Preprocess each shell
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
-      echo -e "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options \" --data_is_shelled --slm=linear\" -nthreads $threads -nocleanup -scratch $tmp -force"
-      dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear" -nthreads "$threads" -nocleanup -scratch "$tmp" -force
+      echo -e "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options \" --data_is_shelled --slm=linear --repol\" -nthreads $threads -nocleanup -scratch $tmp -force"
+      dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear --repol" -nthreads "$threads" -nocleanup -scratch "$tmp" -force
       # Step QC
       if [[ ! -f "$dwi_corr" ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
+          # Bias field correction DWI
+          dwi_n4="${tmp}/${idBIDS}_space-dwi_desc-dwi_preproc_N4.mif"
+          Do_cmd dwibiascorrect ants "$dwi_corr" "$dwi_n4" -force -nthreads "$threads" -scratch "$tmp"
+          Do_cmd mv "$dwi_n4" "$dwi_corr"
           Do_cmd mrinfo "$dwi_corr" -json_all "${dwi_corr/mif/json}"
-          Do_cmd rm "$dwi_n4"; ((Nsteps++))
+          json_dwipreproc $dwi_dns $dwi_corr ${proc_dwi}/${idBIDS}_desc-preproc_dwi.json ${rpe_dns}
+          Do_cmd rm "$dwi_dns"
           # eddy_quad Quality Check
           Do_cmd cd "$tmp"/dwifslpreproc*
           Do_cmd eddy_quad dwi_post_eddy -idx eddy_indices.txt -par eddy_config.txt -m eddy_mask.nii -b bvals -o "$dir_QC"/eddy_QC
           Do_cmd cd "$tmp"
+
           # Copy eddy parameters
           eddy_DIR=${proc_dwi}/eddy
           if [ ! -d "$eddy_DIR" ]; then Do_cmd mkdir "$eddy_DIR"; fi
           Do_cmd cp -rf "${tmp}"/dwifslpreproc*/*eddy.eddy* "$eddy_DIR"
           Do_cmd chmod 770 -R "$eddy_DIR"/*
+          ((Nsteps++))
       fi
 else
       Info "Subject ${id} has a DWI processed"; ((Nsteps++))
@@ -279,6 +363,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
+
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz" # This should be a NIFTI for compatibility with ANTS
 str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-"
@@ -299,12 +384,12 @@ if [[ ! -f "$T1nativepro_in_dwi" ]]; then
       #------------------------------------------------------------------------------#
       Info "Creating DWI binary mask of processed volumes"
       # Create a binary mask of the DWI
-      # Do_cmd antsApplyTransforms -d 3 -i "$MNI152_mask" \
-      #         -r "$dwi_b0" \
-      #         -n GenericLabel -t ["$mat_dwi_affine",1] -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
-      #         -o "${tmp}"/dwi_mask.nii.gz -v
-      # Do_cmd maskfilter "${tmp}"/dwi_mask.nii.gz erode -npass 1 "$dwi_mask"
-      Do_cmd dwi2mask "$dwi_corr" "$dwi_mask" -nthreads "$threads"
+      Do_cmd antsApplyTransforms -d 3 -i "$MNI152_mask" \
+              -r "$dwi_b0" \
+              -n GenericLabel -t ["$mat_dwi_affine",1] -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
+              -o "${tmp}"/dwi_mask.nii.gz -v
+      Do_cmd maskfilter "${tmp}"/dwi_mask.nii.gz erode -npass 1 "$dwi_mask"
+      # Do_cmd dwi2mask "$dwi_corr" "$dwi_mask" -nthreads "$threads"
       if [[ -f "$dwi_mask" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has an affine transformation from T1w to DWI-b0 space"; Nsteps=$((Nsteps + 2))
