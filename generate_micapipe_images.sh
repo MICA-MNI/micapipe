@@ -15,8 +15,8 @@ generate() {
     --matlabmcr version=2017b\
     --afni version=latest\
     --ants version=2.3.4 \
-    --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
-    --run-bash "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz && tar xvfz fix.tar.gz && rm fix.tar.gz" \
+    --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
+    --run-bash "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz" \
     --user=mica \
     --miniconda \
       conda_install="python=3.7 certifi==2020.6.20
@@ -25,8 +25,8 @@ generate() {
                      numpy==1.19.1 packaging==20.4 pandas==1.1.1
                      pillow==7.2.0 pyparsing==2.4.7 python-dateutil==2.8.1
                      pytz==2020.1 scikit-learn==0.23.2 scipy==1.5.2
-                     six==1.15.0 threadpoolctl==2.1.0 vtk==9.0.1" \
-      pip_install='brainspace==0.1.1' \
+                     six==1.15.0 threadpoolctl==2.1.0 vtk==9.0.1"\
+      pip_install='brainspace==0.1.1 argparse==1.1' \
       create_env="micapipe" \
       activate=true \
     --run-bash 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1 && pip install git+https://github.com/MICA-MNI/ENIGMA.git' \
@@ -39,10 +39,10 @@ generate() {
            apt update; \
            apt install -y r-base libblas-dev liblapack-dev gfortran g++; \
            rm -rf /var/lib/apt/lists/*;" \
-    --run-bash "wget https://www.dropbox.com/s/awuvntxe1v7bdul/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
+    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
     --copy . /opt/micapipe \
-    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/" \
+    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/" \
     --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects" \
     --workdir='/home/mica' \
     --env MICAPIPE='/opt/micapipe'\

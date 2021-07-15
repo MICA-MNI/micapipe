@@ -7,7 +7,7 @@
 # 
 #     https://github.com/ReproNim/neurodocker
 # 
-# Timestamp: 2021/06/02 13:12:39 UTC
+# Timestamp: 2021/06/20 15:45:44 UTC
 
 FROM ubuntu:bionic-20201119
 
@@ -212,9 +212,9 @@ RUN echo "Downloading ANTs ..." \
     && curl -fsSL --retry 5 https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz \
     | tar -xz -C /opt/ants-2.3.4 --strip-components 1
 
-RUN bash -c 'apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1'
+RUN bash -c 'apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1'
 
-RUN bash -c 'cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz && tar xvfz fix.tar.gz && rm fix.tar.gz'
+RUN bash -c 'cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz'
 
 RUN test "$(getent passwd mica)" || useradd --no-user-group --create-home --shell /bin/bash mica
 USER mica
@@ -256,7 +256,8 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
     && sync && conda clean -y --all && sync \
     && bash -c "source activate micapipe \
     &&   pip install --no-cache-dir  \
-             "brainspace==0.1.1"" \
+             "brainspace==0.1.1"\
+             "argparse==1.1"" \
     && rm -rf ~/.cache/pip/* \
     && sync \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
@@ -267,12 +268,12 @@ USER root
 
 RUN set -uex;            LD_LIBRARY_PATH=/lib64/:$PATH;            apt install -y software-properties-common apt-transport-https;            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9;            add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/';            apt update;            apt install -y r-base libblas-dev liblapack-dev gfortran g++;            rm -rf /var/lib/apt/lists/*;
 
-RUN bash -c 'wget https://www.dropbox.com/s/awuvntxe1v7bdul/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && \
+RUN bash -c 'wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && \
                     bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL'
 
 COPY [".", "/opt/micapipe"]
 
-RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/'
+RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/'
 
 RUN bash -c 'mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects'
 
@@ -282,6 +283,6 @@ ENV MICAPIPE="/opt/micapipe"
 
 RUN sed -i '$isource /opt/freesurfer-6.0.0/SetUpFreeSurfer.sh' $ND_ENTRYPOINT
 
-RUN sed -i '$iexport FIXPATH=/opt/fix && export PATH=:${PATH}' $ND_ENTRYPOINT
+RUN sed -i '$iexport FIXPATH=/opt/fix && export PATH="${FIXPATH}:${PATH}"' $ND_ENTRYPOINT
 
 ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/mica-pipe"]
