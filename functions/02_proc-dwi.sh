@@ -39,7 +39,7 @@ fi
 
 # mtrix configuration file
 mrconf="${HOME}/.mrtrix.conf"
-echo "BZeroThreshold: 61" > $mrconf
+echo "BZeroThreshold: 61" > "$mrconf"
 
 # source utilities
 source "$MICAPIPE/functions/utilities.sh"

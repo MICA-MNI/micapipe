@@ -66,7 +66,7 @@ Do_cmd mkdir -p "$tmp"
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
 status="COMPLETED"; N=01
-grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
 echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 Warning "Subject ${id} has Freesurfer
                     > If you want to re-run for QC purposes try it manually
@@ -75,7 +75,7 @@ Warning "Subject ${id} has Freesurfer
 exit
 fi
 if [[ "$hires" = "TRUE" ]] && [[ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]]; then
-  Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; rm -rf ${tmp}; exit
+  Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; rm -rf "${tmp}"; exit
 fi
 
 #------------------------------------------------------------------------------#
@@ -112,7 +112,7 @@ elif [[ "$FSdir" == "FALSE" ]]; then
     if [[ "$hires" == "TRUE" ]]; then
         Info "Running recon with native submillimeter resolution"
         export EXPERT_FILE=${tmp}/expert.opts
-        echo "mris_inflate -n 100" > $EXPERT_FILE
+        echo "mris_inflate -n 100" > "$EXPERT_FILE"
         Do_cmd recon-all -all -s "$idBIDS" -hires -i "$T1nativepro" -expert "$EXPERT_FILE"
         # Fix the inflation
         Do_cmd mris_inflate -n 15 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated

@@ -247,6 +247,6 @@ Title "Post-MPC processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") mi
 \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/MPC_*.txt)"
-grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
 echo "${id}, ${SES/ses-/}, MPC, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
