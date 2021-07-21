@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE June 2021 (Version v.1.0.0 'Roadrunner')\n"
+  echo -e "\nMICAPIPE July 2021 (Version v.0.1.0 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -18,7 +18,8 @@ echo -e "
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
 \t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
-\t\033[38;5;120m-QC\033[0m 	            : OPTIONAL flag for group level Quality Control (Requires -out)
+\t\033[38;5;120m-QC_subj\033[0m 	  : OPTIONAL flag for INDIVIDUAL level Quality Control
+\t\033[38;5;120m-QC\033[0m 	          : OPTIONAL flag for group level Quality Control (Requires -out)
 
    Flags for basic stages of processing:
 \t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
@@ -52,7 +53,7 @@ echo -e "
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
 \t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
 \t\t\033[38;5;120m-hires\033[0m               : Use this option for data with voxel sizes less than 1mm3 at native resolution (eg. isometric 7T acquisitions)
-\t\t\t      ( Requires: -proc_structural )
+\t\t\t                 ( Requires: -proc_structural )
 \t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
 
 \t\033[38;5;197m-post_structural\033[0m
@@ -308,6 +309,10 @@ do
     QCgroup=TRUE
     shift
   ;;
+  -QC_subj)
+    qcsubj=TRUE
+    shift
+  ;;
   -slim)
     mica=TRUE
     shift
@@ -418,7 +423,7 @@ Error "One or more mandatory arguments are missing:
                -bids : $BIDS"
 help; exit 1; fi
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -431,6 +436,7 @@ Error "A processing flag is missing:
                     -MPC
                     -GD
                     -Morphology
+                    -QC_subj
                     -slim"
 help; exit 1; fi
 
@@ -830,7 +836,7 @@ fi
 # # #        Resting state
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
-if [ "$procfMRI" = "TRUE" ]; then
+if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine}"
     # mica.q - Resting state fMRI processing
@@ -853,6 +859,17 @@ if [ "$procfMRI" = "TRUE" ]; then
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
     fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Individual QC
+# -----------------------------------------------------------------------------------------------#
+if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
+    log_file_str=$dir_logs/qc_$(date +'%d-%m-%Y')
+    if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
+    COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
+    # LOCAL - QC individual
+    $COMMAND 2>&1 | tee -a  ${log_file_str}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#

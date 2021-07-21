@@ -13,9 +13,9 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v.1.0.0 'Roadrunner')"
+Version="(Version v.0.1.0 'Roadrunner')"
 version() {
-  echo -e "\nMICAPIPE June 2021 ${Version}\n"
+  echo -e "\nMICAPIPE July 2021 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
@@ -180,11 +180,12 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Calculate everythin on a tmpDir dir
 cd $tmpDir
 
-# Create matrices and surfaces pngs
+# Create matrices and Sankey diagram
 Rscript ${MICAPIPE}/functions/micapipe_qc.R \
 --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
 --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
-
+# Create png of surfaces
+${MICAPIPE}/functions/qc_surf.py -subBIDS "$idBIDS" -subDir "$subject_dir"
 cd $here
 
 #------------------------------------------------------------------------------#
@@ -375,7 +376,7 @@ echo -e "
       <div id=\"accordion\">
           <h3 id=\"workflow\">Workflow</h3>
           <div>
-              <p>Modules already processed are shown as colored nodes.</p>
+              <p>Modules already processed are shown as colored nodes. Modules with error or incomplete are orange</p>
               <iframe width=\"600\" src=\"$workflow\" title=\"Processed modules\" style=\"border: none; overflow: hidden; height: 70%;
                 width: 80%; position: absolute;\"></iframe>
               <br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>
@@ -493,15 +494,15 @@ fi
           </table>
     <h2>Freesurfer native surfaces</h2>
     <h3>Thickness</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_thickness.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_thickness.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>Curvature</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_curv.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_curv.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>Sulcal depth</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_sulc.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_sulc.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>Destrieux Atlas (aparc.a2009s)</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_aparc.a2009s_desc-qc.png\" alt=\"HTML5\" style=\"height:140px\" class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_a2009s.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>Desikan-Killiany Atlas (aparc)</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_aparc_desc-qc.png\" alt=\"HTML5\" style=\"height:140px\" class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_aparc.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     </div>"  >> "$QC_html"
 
 #------------------------------------------------------------------------------#
@@ -577,14 +578,28 @@ for seg in $parcellations; do
     echo -e "
               <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${parc_name}</span></td>
-                <td class=\"tg-8pnm\"><img src=\"${dir_QC_png}/${idBIDS}_atlas-${parc_name}_mics_desc-qc.png\" alt=\"HTML5\" style=\"height:100px\" class=\"center\"></td>
+                <td class=\"tg-8pnm\"><img src=\"${dir_QC_png}/${idBIDS}_atlas-${parc_name}_mics_desc-surf.png\" alt=\"HTML5\" style=\"height:150px\" class=\"center\"></td>
                 <td class=\"tg-8pnm\">${seg}</td>
               </tr>"  >> "$QC_html"
 done
 echo -e "
       </tbody>
-      </table>
-    </div>" >> "$QC_html"
+      </table>" >> "$QC_html"
+#------------------------------------------------------------------------------#
+echo -e "
+  <h2>conte69 surfaces</h2>
+    <h3>native sphere</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_sphere.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>middle surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_mid.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>pial surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_pial.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>white surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_white.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    " >> "$QC_html"
+
+# Close post_structural QC
+echo -e "    </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
 # proc_dwi
@@ -1033,7 +1048,7 @@ nifti_check "Registration: Quantitative image over fsnative" "${microimg}" "${di
 echo -e "      <h2>Surfaces</h2>" >> "$QC_html"
       for i in $(seq -f "%02g" 1 14); do
         echo -e "<h3>MPC surface-${i}</h3>
-            <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_MPC-${i}.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">" >> "$QC_html"
+            <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_MPC-${i}.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">" >> "$QC_html"
       done
 echo "
     </div>"  >> "$QC_html"
@@ -1042,13 +1057,26 @@ echo "
 echo -e "\n  <button class=\"accordion\" id=\"morphology\">Cortical morphology</button>
   <div class=\"panel\">
     <h3>Curvature native surface</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_morphology-curvature.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_curv_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
     <h3>Curvature fsaverage5</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-qc_morphology-curvature.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-surf_curv_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Curvature fsaverage5 fwhm=10mm</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-surf_curv_10mm_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Curvature conte69</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_curv_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Curvature conte69 fwhm=10mm</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_curv_10mm_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+
     <h3>Thickness native surface</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-qc_morphology-thickness.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_th_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Thickness fsaverage5</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-surf_th_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
     <h3>Thickness fsaverage5 fwhm=10mm</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-qc_morphology-thickness.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsaverage5_desc-surf_th_10mm_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Thickness conte69</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_th_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
+    <h3>Thickness conte69 fwhm=10mm</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_th_10mm_morph.png\"  alt=\"HTML5\" style=\"height:${px}\"  class=\"center\">
   </div>" >> "$QC_html"
 
 #------------------------------------------------------------------------------#
