@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.0.2 'wobbly'"
+export Version="v0.1.0 'Roadrunner'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -94,12 +94,12 @@ export idBIDS="${subject}${ses}"
 
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
-  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_dwi.nii* 2>/dev/null))
+  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
-  dwi_reverse=$(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_dwi.nii* 2>/dev/null)
+  dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_*dwi.nii* 2>/dev/null))
 }
 
 bids_print.variables() {
@@ -162,7 +162,7 @@ bids_print.variables-dwi() {
   Info "mica-pipe variables for DWI processing:"
   Note "proc_dwi dir    =" "$proc_dwi"
   Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  file.exist "dwi_reverse     =" $dwi_reverse
+  Note "dwi_reverse     =" "N-${#dwi_reverse[@]}, $dwi_reverse"
 
   Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
@@ -302,6 +302,8 @@ function tck_json() {
   sform=$(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}')
   Info "Creating tractography json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
     \"fileName\": \"${8}\",
     \"inputNIFTI\": [
       {
@@ -346,6 +348,8 @@ function json_nativepro_t1w() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating T1w_nativepro json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -383,6 +387,8 @@ function json_nativepro_mask() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating T1natipro_brain json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -415,6 +421,8 @@ function json_rsfmri() {
   qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
   sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
     \"Class\": \"rsfMRI processed\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
@@ -439,6 +447,7 @@ function json_rsfmri() {
         \"TotalReadoutTime\": \"${readoutTime}\",
         \"Melodic\": \"${statusMel}\",
         \"FIX\": \"${statusFIX}\",
+        \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\"
       }
@@ -457,6 +466,8 @@ function json_mpc() {
   Transform=$(mrinfo "$1" -transform)
   Info "Creating MPC json file"
   echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
     \"Class\": \"Microstructural profile covariance\",
     \"input\": \"${1}\",
     \"freesurferTransformation\": \"${2}\",
@@ -472,6 +483,62 @@ function json_mpc() {
     \"qform\": [
 \"${sform}\"
       ]
+  }" > "$3"
+}
+
+function json_dwipreproc() {
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+
+  res_rpe=$(mrinfo "$4" -spacing)
+  Size_rpe=$(mrinfo "$4" -size)
+  Strides_rpe=$(mrinfo "$4" -strides)
+  Offset_rpe=$(mrinfo "$4" -offset)
+  Multiplier_rpe=$(mrinfo "$4" -multiplier)
+  Transform_rpe=$(mrinfo "$4" -transform)
+
+  Info "Creating DWI preproc json file"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"Class\": \"DWI preprocessing\",
+    \"DWIpe\": [
+        \"fileName\": \"${bids_dwis[*]}\",
+        \"NumberOfInputs\": \"${#bids_dwis[*]}\",
+        \"VoxelSizepe\": \"${res}\",
+        \"Dimensionspe\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": \"${Transform}\"
+    ],
+    \"DWIrpe\": [
+        \"fileName\": \"${dwi_reverse[*]}\",
+        \"NumberOfInputs\": \"${#dwi_reverse[*]}\",
+        \"VoxelSizepe\": \"${res_rpe}\",
+        \"Dimensionspe\": \"${Size_rpe}\",
+        \"Strides\": \"${Strides_rpe}\",
+        \"Offset\": \"${Offset_rpe}\",
+        \"Multiplier\": \"${Multiplier_rpe}\",
+        \"Transform\": \"${Transform_rpe}\",
+    ],
+    \"Denoising\": \"Marchenko-Pastur PCA denoising, dwidenoise\",
+    \"GibbsRingCorrection\": \"mrdegibbs\",
+    \"dwiflspreproc\": [
+        \"input\": \"${dwi_4proc}\",
+        \"output\": \"${dwi_corr}\",
+        \"Shells\": \"${shells[*]}\",
+        \"pe_dir\": \"${pe_dir}\",
+        \"ReadoutTime\": \"${ReadoutTime}\",
+        \"Options\": \"${opt}\",
+        \"slm\": \"linear\"
+    ],
+    \"B1fieldCorrection\": \"ANTS N4BiasFieldCorrection\",
+    \"DWIprocessed\": \"$2\",
   }" > "$3"
 }
 

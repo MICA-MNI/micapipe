@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2 'wobbly')\n"
+  echo -e "\nMICAPIPE July 2021 (Version v.0.1.0 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -18,7 +18,8 @@ echo -e "
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
 \t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
-\t\033[38;5;120m-QC\033[0m 	            : OPTIONAL flag for group level Quality Control (Requires -out)
+\t\033[38;5;120m-QC_subj\033[0m 	  : OPTIONAL flag for INDIVIDUAL level Quality Control
+\t\033[38;5;120m-QC\033[0m 	          : OPTIONAL flag for group level Quality Control (Requires -out)
 
    Flags for basic stages of processing:
 \t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
@@ -52,29 +53,29 @@ echo -e "
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
 \t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
 \t\t\033[38;5;120m-hires\033[0m               : Use this option for data with voxel sizes less than 1mm3 at native resolution (eg. isometric 7T acquisitions)
-\t\t\t      ( Requires: -proc_structural )
+\t\t\t                 ( Requires: -proc_structural )
 \t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
 
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
-\t\t\033[38;5;120m-cerebellum_seg\033[0m      : WORK IN PROGRESS. User defined segmentation of the cerebellum on native T1w_run1 space.
-\t\t\033[38;5;120m-subcortical_seg\033[0m     : WORK IN PROGRESS. User defined segmentation of the subcortical structures on native T1w_run1 space.
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*acq-b*_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii* )
 \t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/dwi/*_<ses>_acq-PA_dir-*_dwi.nii* )
+\t\t\t\t        ( default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii* )
 \t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
+\t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
+\t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
 \t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for rsfMRI processing
 \t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)5666
+\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)
 \t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
@@ -94,6 +95,8 @@ echo -e "
 \t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 \t\t\033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
 \t\t\t\t         ( default processing is independent )
+\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
+\t\t\t\t         ( default is non linear registration SyN )
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -107,6 +110,9 @@ echo -e "
 \t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
 \t\t\t\t        If left blank or omitted, registration will be computed in the script.
 \t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
+\t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
+\t\t\t\t        It MUST be on the same space as the main microstructural image!!
+
 
 
 \033[38;5;141mOPTIONS:\033[0m
@@ -253,6 +259,10 @@ do
     GSReg=TRUE
     shift
   ;;
+  -regAffine)
+    regAffine=TRUE
+    shift
+  ;;
   -noFIX)
     skipFIX=TRUE
     shift
@@ -291,8 +301,16 @@ do
     input_dat=$2
     shift;shift
   ;;
+  -microstructural_reg)
+    mpc_reg=$2
+    shift;shift
+  ;;
   -QC)
     QCgroup=TRUE
+    shift
+  ;;
+  -QC_subj)
+    qcsubj=TRUE
     shift
   ;;
   -slim)
@@ -342,6 +360,10 @@ do
   -dwi_rpe)
     dwi_rpe="$2"
     shift;shift;
+  ;;
+  -rpe_all)
+    rpe_all=TRUE
+    shift
   ;;
   -qsub)
     micaq=TRUE
@@ -401,7 +423,7 @@ Error "One or more mandatory arguments are missing:
                -bids : $BIDS"
 help; exit 1; fi
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -414,6 +436,7 @@ Error "A processing flag is missing:
                     -MPC
                     -GD
                     -Morphology
+                    -QC_subj
                     -slim"
 help; exit 1; fi
 
@@ -428,9 +451,10 @@ if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
 if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
 if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
-if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else dwi_rpe=$(realpath $fmri_pe); fi
-if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else dwi_rpe=$(realpath $fmri_rpe); fi
-if [ -z "$sesAnat" ]; then sesAnat=DEFAULT; fi
+if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
+if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
+if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
+if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
@@ -438,6 +462,7 @@ if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$(realpath $input_im)
 else optarg_mpc[0]=DEFAULT; fi
 if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_dat)
 else optarg_mpc[1]=DEFAULT; fi
+if [ -z ${mpc_reg} ]; then mpc_reg=DEFAULT; else mpc_reg=$(realpath $mpc_reg); fi
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -445,15 +470,23 @@ if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 
 # Optional arguments proc_dwi
+# User provided DWI main phase
 if [ -z ${dwi_main} ]; then
     dwi_main=DEFAULT
 else
-    IFS=',' read -ra dwi_main <<< $dwi_main
-    dwi_main=($dwi_main)
-    for i in "${!dwi_main[@]}"; do dwi_main[i]=$(realpath ${dwi_main[$i]}); done # Full path
-    dwi_main=$(IFS=','; echo "${dwi_main[*]}")
+    IFS=',' read -ra dwis_main <<< $dwi_main
+    for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
+    dwi_main=$(IFS=','; echo "${dwis_main[*]}")
 fi
-if [ -z ${dwi_rpe} ]; then dwi_rpe=DEFAULT; else dwi_rpe=$(realpath $dwi_rpe); fi
+# User provided DWI reverse phase encoded
+if [ -z ${dwi_rpe} ]; then
+    dwi_rpe=DEFAULT
+else
+    IFS=',' read -ra dwis_rpe <<< $dwi_rpe
+    for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path
+    dwi_rpe=$(IFS=','; echo "${dwis_rpe[*]}")
+fi
+if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe
@@ -627,7 +660,7 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -717,7 +750,7 @@ fi
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg}"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
@@ -803,9 +836,9 @@ fi
 # # #        Resting state
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
-if [ "$procfMRI" = "TRUE" ]; then
+if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
@@ -826,6 +859,17 @@ if [ "$procfMRI" = "TRUE" ]; then
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
     fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Individual QC
+# -----------------------------------------------------------------------------------------------#
+if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
+    log_file_str=$dir_logs/qc_$(date +'%d-%m-%Y')
+    if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
+    COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
+    # LOCAL - QC individual
+    $COMMAND 2>&1 | tee -a  ${log_file_str}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#
