@@ -94,7 +94,7 @@ def save_mesh_data(fname, surf_data):
         raise ValueError('fname must be a filename and surf_data must be a numpy array')
 
 
-   
+
 
 
 # function to read vtk files
@@ -416,7 +416,7 @@ def normalize_v3(arr):
     lens = np.sqrt( arr[:,0]**2 + arr[:,1]**2 + arr[:,2]**2 )
     arr[:,0] /= lens
     arr[:,1] /= lens
-    arr[:,2] /= lens                
+    arr[:,2] /= lens
     return arr
 
 def normal_vectors(vertices,faces):
@@ -428,4 +428,3 @@ def normal_vectors(vertices,faces):
     norm[ faces[:,1] ] += n
     norm[ faces[:,2] ] += n
     return normalize_v3(norm)
-   

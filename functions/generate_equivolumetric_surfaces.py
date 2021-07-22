@@ -2,10 +2,10 @@
 
 # Original code available here:
 # https://github.com/kwagstyl/surface_tools
-# 
+#
 # This function was slightly modified to take an additional argument: tmp
 # The user must define a temporary directory for processing
-# This directory is defined by micapipe. 
+# This directory is defined by micapipe.
 #
 # ------------------------------------------
 
@@ -96,8 +96,8 @@ def beta(alpha, aw, ap):
     volume fraction, alpha, given vertex areas in the white matter surface, aw,
     and on the pial surface, ap.
 
-    A surface with `alpha` fraction of the cortical volume below it and 
-    `1 - alpha` fraction above it can then be constructed from pial, px, and 
+    A surface with `alpha` fraction of the cortical volume below it and
+    `1 - alpha` fraction above it can then be constructed from pial, px, and
     white matter, pw, surface coordinates as `beta * px + (1 - beta) * pw`.
     """
     if alpha == 0:
