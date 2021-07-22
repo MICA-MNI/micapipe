@@ -7,7 +7,6 @@
 # 
 #     https://github.com/ReproNim/neurodocker
 # 
-# Timestamp: 2021/06/20 15:45:44 UTC
 
 FROM ubuntu:bionic-20201119
 
@@ -274,6 +273,7 @@ RUN bash -c 'wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=
 COPY [".", "/opt/micapipe"]
 
 RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/'
+
 
 RUN bash -c 'mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects'
 
