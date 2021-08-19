@@ -81,7 +81,7 @@ echo -e "
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
 \t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
 \t\t\t\t         you must specify which one to process ( e.g. '1' )
-\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distortion correction; eg. file.cnf )
 
 \t\t\033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t\t         ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
