@@ -52,6 +52,7 @@ http://mica-mni.github.io/
 # Source utilities functions from MICAPIPE
 MICAPIPE=$(dirname $(dirname $(realpath "$0")))
 source "${MICAPIPE}/functions/utilities.sh"
+umask 003
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
