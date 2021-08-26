@@ -60,38 +60,33 @@ This module performs all pre-processing of subject resting-state functional MRI 
 
         **Optional arguments:**
 
-        -mainScanStr        ``<str>`` String to manually identify the main scan for rsfMRI processing (eg. *func/sub-001_<mainScanStr>.nii.gz*).
-                            Default string is *task-rest_acq-AP_bold*.
-        -fmri_pe            ``<path>`` Full path to the main phase encoding scan for rsfMRI processing.
-                            Default string is *task-rest_acq-APse_bold*.
-        -fmri_rpe           ``<path>`` Full path to the reverse phase encoding scan for rsfMRI processing. If the path is wrong topup will be skipped!.
-                            Default string is *task-rest_acq-PAse_bold*.
-        -mainScanRun        ``<num>`` If multiple resting-state scan runs exist in the BIDS rawdata,
-                            you must specify which scan to process using this flag (e.g. '1').
-        -phaseReversalRun   ``<num>`` If multiple phase encoding runs exist in the BIDS directory (only main phase is checked),
-                            you must specify which file to process using this flag (e.g. '1').
-        -topupConfig        ``<path>`` Specify path to config file that should be used for distortion correction using topup.
-                            Default is *${FSLDIR}/etc/flirtsch/b02b0_1.cnf*.
-
-        -smoothWithWB       Specify this option to use workbench tools for surface-based smoothing (more memory intensive), The
-                            default smoothing is performed with freesurfer tools: *mri_surf2surf*.
-
-        -regress_WM_CSF     Specify this option to perform white matter and CSF signal regression of timeseries.
-                            Default = no white matter and CSF signal regression.
-        -GSR                Specify this option to perform global signal regression of timeseries.
-                            Default = no global regression.
-
-        -noFIX              Specify this option to skip ICA-FIX processing.
-                            Default = FIX runs with the default training file.
-        -icafixTraining     ``<path>`` Path to specified ICA-FIX training file for nuisance signal regression
-                            (file.RData). Default is *${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData*.
-
-        -regAffine          Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
-                            Default is non linear registration using ANTs-SyN.
-                            We recommend this option for rsfMRI acquisitions with low resolution and/or low SNR.
-
-        -sesAnat            ``<str>`` If longitudinal data is provided, this flag allows to register the current *functional* session to the desired *anatomical* session
-                            Default processing is independent.
+        -mainScanStr          ``<str>`` String to manually identify the main scan for rsfMRI processing (eg. *func/sub-001_<mainScanStr>.nii.gz*).
+                              Default string is *task-rest_acq-AP_bold*.
+        -fmri_pe              ``<path>`` Full path to the main phase encoding scan for rsfMRI processing.
+                              Default string is *task-rest_acq-APse_bold*.
+        -fmri_rpe             ``<path>`` Full path to the reverse phase encoding scan for rsfMRI processing. If the path is wrong topup will be skipped!.
+                              Default string is *task-rest_acq-PAse_bold*.
+        -mainScanRun          ``<num>`` If multiple resting-state scan runs exist in the BIDS rawdata,
+                              you must specify which scan to process using this flag (e.g. '1').
+        -phaseReversalRun     ``<num>`` If multiple phase encoding runs exist in the BIDS directory (only main phase is checked),
+                              you must specify which file to process using this flag (e.g. '1').
+        -topupConfig          ``<path>`` Specify path to config file that should be used for distortion correction using topup.
+                              Default is *${FSLDIR}/etc/flirtsch/b02b0_1.cnf*.
+        -smoothWithWB         Specify this option to use workbench tools for surface-based smoothing (more memory intensive), The
+                              default smoothing is performed with freesurfer tools: *mri_surf2surf*.
+        -regress_WM_CSF       Specify this option to perform white matter and CSF signal regression of timeseries.
+                              Default = no white matter and CSF signal regression.
+        -GSR                  Specify this option to perform global signal regression of timeseries.
+                              Default = no global regression.
+        -noFIX                Specify this option to skip ICA-FIX processing.
+                              Default = FIX runs with the default training file.
+        -icafixTraining       ``<path>`` Path to specified ICA-FIX training file for nuisance signal regression
+                              (file.RData). Default is *${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData*.
+        -regAffine            Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
+                              Default is non linear registration using ANTs-SyN.
+                              We recommend this option for rsfMRI acquisitions with low resolution and/or low SNR.
+        -sesAnat              ``<str>`` If longitudinal data is provided, this flag allows to register the current *functional* session to the desired *anatomical* session
+                              Default processing is independent.
 
         .. admonition:: Distortion correction ⚠️
 

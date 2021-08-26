@@ -119,6 +119,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases</a></li>
@@ -126,13 +133,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From raw to BIDS: mic2bids</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
@@ -222,7 +222,7 @@
 <blockquote>
 <div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-ses</strong> &lt;session-name&gt; <strong>-&lt;module-flag&gt;</strong></pre>
 </div></blockquote>
-<p>It’s not necessary to specify that <code class="docutils literal notranslate"><span class="pre">ses</span></code> if your database does not contain any, and the basic usage will look like:</p>
+<p>It’s not necessary to specify <code class="docutils literal notranslate"><span class="pre">ses</span></code> if your database does not contain any, and the basic usage will look like:</p>
 <blockquote>
 <div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-&lt;module-flag&gt;</strong></pre>
 </div></blockquote>
@@ -322,7 +322,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This flag might not be suitable for every databases, thus should be use with caution.</p>
+<p>This flag might not be suitable for every database, thus should be use with caution.</p>
 </div>
 </div>
 </div>
@@ -365,6 +365,10 @@
 <dd><p>Keep only crucial outputs and erase all the intermediary files</p>
 </dd>
 </dl>
+<div class="admonition-micapipe-cleanup admonition">
+<p class="admonition-title"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code>  🧹</p>
+<p>If you have to erase the outputs of a specific module, you don’t have to do this task manually. Check <a class="reference external" href="../05.micapipe_cleanup/index.html">micapipe_cleanup</a> for further information!!</p>
+</div>
 <div class="admonition-slim-run-work-on-progress admonition">
 <p class="admonition-title">Slim run 👙 (Work on progress!!)</p>
 <p>Including the <strong>-slim</strong> flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module’s section.</p>

@@ -46,16 +46,16 @@ Intracortical equivolumetric surfaces are generated using scripts from the `surf
 
         **Optional arguments:**
 
-        -microstructural_img   ``<path>`` specifies an input image on which to sample intensities for the MPC analysis.
-                               You must specify this flag if your dataset does not include a qT1 image, or if your microstructurally-sensitive
-                               imaging contrast is not stored in the *rawdata* branch of the BIDS directory
-                               (for example, T1-weighted divided by T2-weighted derivative file).
-        -microstructural_lta   ``<path>`` lets the user specify their own registration file to map the input
-                               image to native freesurfer space. The registration file must be in ``.lta`` format.
-                               If omitted, the registration will be performed in the script using `bbregister <https://surfer.nmr.mgh.harvard.edu/fswiki/bbregister/>`_.
-                               This option may be useful if registrations need to be optimized for specific subjects or datasets.
-        -microstructural_reg   ``<path>`` Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
-				                       It MUST be on the same space as the main microstructural image!!
+        -microstructural_img  ``<path>`` specifies an input image on which to sample intensities for the MPC analysis.
+                              You must specify this flag if your dataset does not include a qT1 image, or if your microstructurally-sensitive
+                              imaging contrast is not stored in the *rawdata* branch of the BIDS directory
+                              (for example, T1-weighted divided by T2-weighted derivative file).
+        -microstructural_lta  ``<path>`` lets the user specify their own registration file to map the input
+                              image to native freesurfer space. The registration file must be in ``.lta`` format.
+                              If omitted, the registration will be performed in the script using `bbregister <https://surfer.nmr.mgh.harvard.edu/fswiki/bbregister/>`_.
+                              This option may be useful if registrations need to be optimized for specific subjects or datasets.
+        -microstructural_reg  ``<path>`` Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
+				                      It MUST be on the same space as the main microstructural image!!
 
     .. tab:: Outputs
 

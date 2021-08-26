@@ -36,14 +36,16 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="From raw to BIDS: mic2bids" href="../05.mic2bids/index.html" />
-    <link rel="prev" title="FAQ" href="../04.faq/index.html" /> 
+    <link rel="next" title="micapipe_anonymize" href="../05.micapipe_anonymize/index.html" />
+    <link rel="prev" title="From DICOMS to BIDS: mic2bids" href="../05.mic2bids/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -106,6 +108,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases</a></li>
@@ -113,13 +122,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From raw to BIDS: mic2bids</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
@@ -192,7 +194,64 @@
            <div itemprop="articleBody">
             
   <div class="section" id="micapipe-cleanup">
-<span id="id1"></span><h1>Micapipe Cleanup<a class="headerlink" href="#micapipe-cleanup" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code><a class="headerlink" href="#micapipe-cleanup" title="Permalink to this headline">¶</a></h1>
+<p>This script was design to erase all the outputs including the <cite>log</cite> files of a module that was already processed.
+You could use this function in case you have had an error in the processing of a module, or you simply want to rerun a module that you have already started or that is completed,
+it is necessary to delete the already generated files.</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Warning</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<p>The basic usage requires the same inputs as in mica-pipe:</p>
+<p><strong>Terminal:</strong></p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>micapipe_cleanup -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; -ses &lt;session-name&gt;
+<span class="hll">-&lt;module-to-erase&gt;
+</span></pre></div>
+</td></tr></table></div>
+<p>The desired module(s) to erase should be specify with a flag(s).</p>
+<p><strong>Optional arguments:</strong></p>
+<dl class="option-list">
+<dt><kbd><span class="option">-s<var>es</var></span></kbd></dt>
+<dd><p>Optional flag that indicates the session name (if omitted will manage as SINGLE session)</p>
+</dd>
+<dt><kbd><span class="option">-p<var>roc_structural</var></span></kbd></dt>
+<dd><p>Deletes volumetric processing derivatives</p>
+</dd>
+<dt><kbd><span class="option">-p<var>roc_freesurfer</var></span></kbd></dt>
+<dd><p>Deletes Freesurfer recon-all processing outputs</p>
+</dd>
+<dt><kbd><span class="option">-p<var>roc_dwi</var></span></kbd></dt>
+<dd><p>Deletes DWI-Diffusion weighted images processing derivatives</p>
+</dd>
+<dt><kbd><span class="option">-p<var>roc_rsfmri</var></span></kbd></dt>
+<dd><p>Deletes Resting state Funtional MRI processing derivatives</p>
+</dd>
+<dt><kbd><span class="option">-p<var>ost_structural</var></span></kbd></dt>
+<dd><p>Deletes Post structural volumetric processing derivatives</p>
+</dd>
+<dt><kbd><span class="option">-S<var>C</var></span></kbd></dt>
+<dd><p>Deletes Post tractography files and connectomes</p>
+</dd>
+<dt><kbd><span class="option">-M<var>PC</var></span></kbd></dt>
+<dd><p>Deletes Microstructural profiles and covariance analysis derivatives</p>
+</dd>
+</dl>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p>If you want to erase and rerun a core processing module such as <code class="docutils literal notranslate"><span class="pre">post_structural</span></code> or <code class="docutils literal notranslate"><span class="pre">proc_structural</span></code> you must rerun all its dependent modules, to ensure outputs consistency.</p>
+</div>
+</div>
 </div>
 
 
@@ -203,10 +262,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../05.mic2bids/index.html" class="btn btn-neutral float-right" title="From raw to BIDS: mic2bids" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../05.micapipe_anonymize/index.html" class="btn btn-neutral float-right" title="micapipe_anonymize" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../04.faq/index.html" class="btn btn-neutral float-left" title="FAQ" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../05.mic2bids/index.html" class="btn btn-neutral float-left" title="From DICOMS to BIDS: mic2bids" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

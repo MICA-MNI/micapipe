@@ -71,15 +71,12 @@ Most of the results are mapped to three different surfaces: native, conte69 and 
 And all the outputs are hierarchically ordered with BIDS conformed naming.
 
 .. figure:: ./figures/workflow.png
-   :scale: 50 %
    :alt: alternate text
    :align: center
 
 .. raw:: html
 
    <br>
-
-
 
 Reproducibility 👯‍♀️
 --------------------------------------------------------
@@ -91,7 +88,7 @@ To encourage reproducibility and robustness of investigations using micapipe, we
 
 Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI  <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_ and `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_ and `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_.
 
 .. raw:: html
 
@@ -125,6 +122,16 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 .. toctree::
    :maxdepth: 1
    :hidden:
+   :caption: Additional tools
+
+   pages/05.mic2bids/index
+   pages/05.micapipe_cleanup/index
+   pages/05.micapipe_anonymize/index
+   pages/05.autotract/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Tutorials
 
    pages/04.databases/index
@@ -132,16 +139,6 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/04.surfaces/index
    pages/04.gradients/index
    pages/04.faq/index
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Additional tools
-
-   pages/05.micapipe_cleanup/index
-   pages/05.mic2bids/index
-   pages/05.micapipe_anonymize/index
-   pages/05.autotract/index
 
 .. toctree::
    :maxdepth: 1
@@ -159,6 +156,11 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    <br>
 
+.. figure:: ./figures/micapipe.png
+   :alt: alternate text
+   :align: center
+
+
 Core development team 🧠
 --------------------------------------------------------
 
@@ -173,9 +175,3 @@ Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
 - **Oualid Benkarim**, *MICA Lab - Montreal Neurological Institute*
 - **Boris Bernhardt**, *MICA Lab - Montreal Neurological Institute*
-
-
-.. figure:: ./figures/micapipe.png
-   :scale: 50 %
-   :alt: alternate text
-   :align: center

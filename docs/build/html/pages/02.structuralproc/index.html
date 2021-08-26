@@ -115,6 +115,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases</a></li>
@@ -122,13 +129,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html">Micapipe Cleanup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From raw to BIDS: mic2bids</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html">Micapipe Anonymize</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
@@ -266,7 +266,7 @@
 </pre></div>
 </div>
 <p><strong>Optional arguments</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> only have only one optional argument, which specifies the string name(s) of the T1w images you want to process.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> only have one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.</p>
 <dl class="simple">
 <dt>-t1wStr</dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> This option allows to manually select the main scan(s) for structural processing.
 It should be separated by a comma, with no blank spaces: eg. <em>-t1wStr run-02_T1w</em>.
@@ -274,7 +274,7 @@ By default the pipeline uses the string <em>T1w.nii</em></p>
 </dd>
 </dl>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">On the next example if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volumes containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">On the next example if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volume containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
 <span class="hll">           -proc_structural -t1wStr run-02_T1w
@@ -383,8 +383,7 @@ By default the pipeline uses the string <em>T1w.nii</em></p>
 <p><strong>Optional arguments</strong>:</p>
 <blockquote>
 <div><dl class="simple">
-<dt>-t1wStr</dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Same option as in <em>-proc_structural</em>, this will allow to manually
-select the main scan(s) for structural processing.</p>
+<dt><em>-t1wStr</em></dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Same option as in <em>-proc_structural</em>, this will allow to manually select the main scan(s) for structural processing.</p>
 </dd>
 </dl>
 <dl class="option-list">
@@ -394,7 +393,7 @@ location. This way, if the cortical segmentations of your dataset have already
 been quality controlled, results can be easily integrated within the pipeline’s directory structure.</p>
 </dd>
 <dt><kbd><span class="option">-h<var>ires</var></span></kbd></dt>
-<dd><p>Use this option for data with voxel sizes less than 1mm^3 at native resolution
+<dd><p>Use this option for data with voxel sizes less than 1mm3 at native resolution
 (eg. isometric 7T acquisitions. Requires <em>-proc_structural</em>). For further information see <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon">SubmillimeterRecon</a>.</p>
 </dd>
 </dl>
@@ -461,6 +460,8 @@ been quality controlled, results can be easily integrated within the pipeline’
 <dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Registers only selected parcellations to subject space (e.g. <em>economo,aparc</em>).
 By default, all 18 parcellations included in the pipeline will be registered
 to the subject’s native volumetric and surface space. Below is the list of all the possible options:</p>
+</dd>
+</dl>
 <table class="hlist"><tr><td><ul class="simple">
 <li><p>aparc-a2009s</p></li>
 <li><p>aparc</p></li>
@@ -486,8 +487,6 @@ to the subject’s native volumetric and surface space. Below is the list of all
 <li><p>vosdewael-400</p></li>
 </ul>
 </td></tr></table>
-</dd>
-</dl>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">The next example will only process the three selected parcellations (<code class="docutils literal notranslate"><span class="pre">schaefer-200,economo,aparc</span></code>)</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
 <div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -499,7 +498,7 @@ to the subject’s native volumetric and surface space. Below is the list of all
 <div class="admonition-important admonition">
 <p class="admonition-title">Important ⚠️</p>
 <p>Functional, structural and geodesic distance connectomes will be calculate only on the parcellations selected in this step.
-If another parcellation should be added after this module processing, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> and its dependent modules have to be re-run.</p>
+If another parcellation should be added after this module, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> and its dependent modules have to be re-run.</p>
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-2 docutils container">

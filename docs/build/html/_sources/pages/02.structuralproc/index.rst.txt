@@ -54,7 +54,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
 
         **Optional arguments**
 
-        ``-proc_structural`` only have only one optional argument, which specifies the string name(s) of the T1w images you want to process.
+        ``-proc_structural`` only have one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.
 
         -t1wStr
                     ``<str>`` This option allows to manually select the main scan(s) for structural processing.
@@ -62,7 +62,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
                     By default the pipeline uses the string *T1w.nii*
 
         .. code-block:: bash
-           :caption: On the next example if multiple T1w are found inside the *BIDS/<sub>/anat* directory, only the MRI volumes containing the string ``run-02_T1w`` will be processed:
+           :caption: On the next example if multiple T1w are found inside the *BIDS/<sub>/anat* directory, only the MRI volume containing the string ``run-02_T1w`` will be processed:
            :linenos:
            :emphasize-lines: 2
 
@@ -160,16 +160,16 @@ This modules performs cortical surface segmentation from all native T1w acquisit
 
         **Optional arguments**:
 
-          -t1wStr
-                           ``<str>`` Same option as in *-proc_structural*, this will allow to manually
-                           select the main scan(s) for structural processing.
 
-          -freesurfer_dir  ``<path>`` Will copy existing FreeSurfer outputs in the provided path to the appropriate
-                           location. This way, if the cortical segmentations of your dataset have already
-                           been quality controlled, results can be easily integrated within the pipeline's directory structure.
+          *-t1wStr*
+                            ``<str>`` Same option as in *-proc_structural*, this will allow to manually select the main scan(s) for structural processing.
 
-          -hires           Use this option for data with voxel sizes less than 1mm^3 at native resolution
-                           (eg. isometric 7T acquisitions. Requires *-proc_structural*). For further information see `SubmillimeterRecon <https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon>`_.
+          -freesurfer_dir   ``<path>`` Will copy existing FreeSurfer outputs in the provided path to the appropriate
+                            location. This way, if the cortical segmentations of your dataset have already
+                            been quality controlled, results can be easily integrated within the pipeline's directory structure.
+
+          -hires            Use this option for data with voxel sizes less than 1mm3 at native resolution
+                            (eg. isometric 7T acquisitions. Requires *-proc_structural*). For further information see `SubmillimeterRecon <https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon>`_.
 
     .. tab:: Outputs
 
@@ -228,27 +228,27 @@ This first structural post-processing module registers native FreeSurfer-space c
                   By default, all 18 parcellations included in the pipeline will be registered
                   to the subject's native volumetric and surface space. Below is the list of all the possible options:
 
-                  .. hlist::
-                      :columns: 3
+        .. hlist::
+            :columns: 3
 
-                      - aparc-a2009s
-                      - aparc
-                      - economo
-                      - glasser
-                      - schaefer-1000
-                      - schaefer-100
-                      - schaefer-200
-                      - schaefer-300
-                      - schaefer-400
-                      - schaefer-500
-                      - schaefer-600
-                      - schaefer-700
-                      - schaefer-800
-                      - schaefer-900
-                      - vosdewael-100
-                      - vosdewael-200
-                      - vosdewael-300
-                      - vosdewael-400
+            - aparc-a2009s
+            - aparc
+            - economo
+            - glasser
+            - schaefer-1000
+            - schaefer-100
+            - schaefer-200
+            - schaefer-300
+            - schaefer-400
+            - schaefer-500
+            - schaefer-600
+            - schaefer-700
+            - schaefer-800
+            - schaefer-900
+            - vosdewael-100
+            - vosdewael-200
+            - vosdewael-300
+            - vosdewael-400
 
         .. code-block:: python
            :caption: The next example will only process the three selected parcellations (``schaefer-200,economo,aparc``)
@@ -261,7 +261,7 @@ This first structural post-processing module registers native FreeSurfer-space c
         .. admonition:: Important ⚠️
 
              Functional, structural and geodesic distance connectomes will be calculate only on the parcellations selected in this step.
-             If another parcellation should be added after this module processing, ``-post_structural`` and its dependent modules have to be re-run.
+             If another parcellation should be added after this module, ``-post_structural`` and its dependent modules have to be re-run.
 
     .. tab:: Outputs
 

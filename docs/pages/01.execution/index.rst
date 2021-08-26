@@ -22,7 +22,7 @@ Basic usage of micapipe, with no options specified, will look like:
     .. parsed-literal::
         $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> **-<module-flag>**
 
-It's not necessary to specify that ``ses`` if your database does not contain any, and the basic usage will look like:
+It's not necessary to specify ``ses`` if your database does not contain any, and the basic usage will look like:
 
     .. parsed-literal::
         $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-<module-flag>**
@@ -92,7 +92,7 @@ Lastly, to run all processing steps while making sure module interdependencies a
 
 -all     Run all the modules! This could take a while...
 
-.. WARNING:: This flag might not be suitable for every databases, thus should be use with caution.
+.. WARNING:: This flag might not be suitable for every database, thus should be use with caution.
 
 More options
 --------------------------------------------------------
@@ -113,6 +113,10 @@ You can specify additional options when running micapipe:
 -tmpDir          Specify custom location in with temporary directory will be created (default = /tmp).
 -version         Print your currently installed software version.
 -slim            Keep only crucial outputs and erase all the intermediary files
+
+.. admonition:: ``micapipe_cleanup``  🧹
+
+	If you have to erase the outputs of a specific module, you don't have to do this task manually. Check `micapipe_cleanup <../05.micapipe_cleanup/index.html>`_ for further information!!
 
 .. admonition:: Slim run 👙 (Work on progress!!)
 

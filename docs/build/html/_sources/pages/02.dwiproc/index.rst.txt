@@ -65,6 +65,19 @@ This module performs required pre-processing of DWI scans, in addition to derivi
           -rpe_all        If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used.
                           (This option requires that both encoding contains the same number of directions, bvecs and bvals)
 
+        **Multiple inputs:** ``dwi_main`` **and** ``dwi_rpe``
+
+        If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the flags ``-dwi_main`` and ``-dwi_rpe``.
+        The later in case you have reverse phase encoding acquisitions. The inputs are the relative path to the DWI, comma separate without white space between them, for example:
+
+        .. code-block:: bash
+           :caption: On the next example the ``shell1`` and ``shell2`` of ``sub-01`` will be process:
+           :linenos:
+           :emphasize-lines: 2
+
+            mica-pipe -proc_dwi -sub 01 -out <outputDirectory> -bids <BIDS-directory> \
+                      -dwi_main <BIDS-directory>/sub-01/dwi/sub-01_acq-shell1_dwi.nii.gz,<BIDS-directory>/sub-01/dwi/sub-01_acq-shell2_dwi.nii.gz
+
         .. admonition:: WARNING: ⚠️ -dwi_rpe ⚠️
 
                 If you use the argument ``-dwi_rpe`` but your reverse phase encoding image does not contain a *bval* or *bvec* file, the module will
@@ -160,6 +173,28 @@ This module performs required pre-processing of DWI scans, in addition to derivi
             - All outputs from FSL eddy are stored in:
                 *<outputDirectory>/micapipe/<sub>/dwi/eddy*
 
+    .. tab:: TDI quality
+
+        A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the ``-SC`` module and,
+        can be used as a quick overview of the DWI processing quality.
+        We strongly recommend to take your time to check the quality of the processed DWI before generating the structural connectomes (``-SC``).
+        An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:
+
+         - Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc).
+         - Low signal to noise ratio (low quality or low resolution).
+         - Not enough diffusion directions.
+         - Registration errors.
+         - Bad encoding of the gradient direction tables (bvecs).
+         - Bad encoding of the shell values (bvals).
+         - Wrong assignation/encoding of the b0 images (bvals).
+         - Large motion artifacts.
+
+        File: ``<outputDirectory>/micapipe/<sub>/dwi/<sub>_space-dwi_desc-iFOD1-1M_tdi.mif``
+
+        .. figure:: tdi_qc.png
+            :align: center
+
+
 -SC
 --------------------------------------------------------
 
@@ -167,7 +202,7 @@ This module performs required pre-processing of DWI scans, in addition to derivi
     :align: left
     :scale: 25 %
 
-This modules computes tractography-based structural connectivity matrices and associated edge length matrices. We apply iFOD2 for this purpose, a probabilistic tractography algortihm.
+This modules computes tractography-based structural connectivity matrices and associated edge length matrices. We apply iFOD2 for this purpose, a probabilistic tractography algorithm.
 
 .. admonition:: Prerequisites 🖐🏼
 
