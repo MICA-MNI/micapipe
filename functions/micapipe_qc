@@ -181,11 +181,11 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Calculate everythin on a tmpDir dir
 cd $tmpDir
 
-# Create matrices and Sankey diagram
+Info "Creating matrices and Sankey diagram"
 Rscript ${MICAPIPE}/functions/micapipe_qc.R \
 --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
 --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
-# Create png of surfaces
+Info "Create surface visualizations"
 ${MICAPIPE}/functions/qc_surf.py -subBIDS "$idBIDS" -subDir "$subject_dir"
 cd $here
 
@@ -439,9 +439,9 @@ nifti_check() {
     # if [[ ! -f "$outname" ]]; then
       if [ -f "$4" ]; then
           if [[ "$5" == "YES" ]]; then ROI="-roi"; else ROI=""; fi
-          Do_cmd nifti_capture.py -img "$2" "$4" -out "$outname" "$ROI"
+          Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "$2" "$4" -out "$outname" "$ROI"
       else
-          Do_cmd nifti_capture.py -img "$2" -out "$outname"
+          Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "$2" -out "$outname"
       fi
     # fi
     echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>
