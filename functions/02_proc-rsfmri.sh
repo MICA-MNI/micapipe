@@ -168,7 +168,7 @@ else
 fi
 
 # Manually defined Phase scan and reverse phase scan
-if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then mainPhaseScan="$fmri_rpe"; fi
+if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_pe" ]]; then mainPhaseScan="$fmri_pe"; fi
 if [[ "$fmri_rpe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then reversePhaseScan="$fmri_rpe"; fi
 
 # Check inputs

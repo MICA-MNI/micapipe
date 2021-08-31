@@ -366,7 +366,7 @@ fi
 
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz" # This should be a NIFTI for compatibility with ANTS
-str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-"
+str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-affine_"
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
 

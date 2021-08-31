@@ -1,0 +1,752 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Structural processing &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Diffusion-weighted imaging processing" href="../02.dwiproc/index.html" />
+    <link rel="prev" title="What’s new?" href="../01.whatsnew/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Structural processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#proc-structural">-proc_structural</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proc-freesurfer">-proc_freesurfer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-structural">-post_structural</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gd">-GD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#morphology">-Morphology</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Structural processing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/pages/02.structuralproc/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="structural-processing">
+<span id="structproc"></span><h1><a class="toc-backref" href="#id3">Structural processing</a><a class="headerlink" href="#structural-processing" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#structural-processing" id="id3">Structural processing</a></p>
+<ul>
+<li><p><a class="reference internal" href="#proc-structural" id="id4">-proc_structural</a></p></li>
+<li><p><a class="reference internal" href="#proc-freesurfer" id="id5">-proc_freesurfer</a></p></li>
+<li><p><a class="reference internal" href="#post-structural" id="id6">-post_structural</a></p></li>
+<li><p><a class="reference internal" href="#gd" id="id7">-GD</a></p></li>
+<li><p><a class="reference internal" href="#morphology" id="id8">-Morphology</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>This section describes all structural processing modules, which include pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (<code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>) and surface-based (<code class="docutils literal notranslate"><span class="pre">-proc-freesurfer</span></code>, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code>, <code class="docutils literal notranslate"><span class="pre">-GD</span></code>, <code class="docutils literal notranslate"><span class="pre">-Morphology</span></code>) processing. These modules map subject data to volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to multiple parcellation schemes as well as vertexwise cortical thickness and curvature data.</p>
+<img alt="../../_images/sankey_struct.png" class="align-center" src="../../_images/sankey_struct.png" />
+<div class="section" id="proc-structural">
+<h2><a class="toc-backref" href="#id4">-proc_structural</a><a class="headerlink" href="#proc-structural" title="Permalink to this headline">¶</a></h2>
+<p>This module performs initial structural pre-processing, keeping data in volumetric format. Two main spaces are found in this stream: <em>nativepro</em> as well as <em>MNI152</em>.</p>
+<div class="admonition-nativepro admonition">
+<p class="admonition-title">Nativepro?! 🤨</p>
+<p>Nativepro stands for <strong>native</strong> <strong>pro</strong>cessing space. This denomination is used to distinguish the space occupied by the main scan from standard native space. Indeed, as micapipe supports the alignment and averaging of several distinct T1w acquisitions, we opted to refer to the resulting space using a different term, so not to confuse this space with the native space of each original T1w scan.</p>
+</div>
+<a class="reference internal image-reference" href="../../_images/proc_structural.png"><img alt="../../_images/proc_structural.png" class="align-center" src="../../_images/proc_structural.png" style="width: 353.59999999999997px; height: 614.55px;" /></a>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<ul class="simple">
+<li><p>Each T1-weighted run is LPI-reoriented, deobliqued, and oriented to standard space (MNI152).</p></li>
+<li><p>Create the T1-weighted image used in all downstream processing: T1_nativepro. If multiple T1w scans are found in the raw data, they are aligned to the first run and averaged.</p></li>
+<li><p>Intensity non-uniformity correction (N4)</p></li>
+<li><p>Intensity rescaling [100,0]</p></li>
+<li><p>Create brainmask (FSL-BET)</p></li>
+<li><p>Subcortical structure segmentation using FSL FIRST</p></li>
+<li><p>Tissue type segmentation (Gray matter, white matter, CSF) using FSL FAST</p></li>
+<li><p>Non-linear registration to MNI152 (0.8mm and 2mm resolutions)</p></li>
+<li><p>Five-tissue-type image segmentation (5ttgen, used for anatomically constrained tractography)</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p><strong>Terminal:</strong></p>
+<blockquote>
+<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong></pre>
+<p><strong>Docker command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_structural
+</pre></div>
+</div>
+<p><strong>Optional arguments</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> only have one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.</p>
+<dl class="simple">
+<dt>-t1wStr</dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> This option allows to manually select the main scan(s) for structural processing.
+It should be separated by a comma, with no blank spaces: eg. <em>-t1wStr run-02_T1w</em>.
+By default the pipeline uses the string <em>T1w.nii</em></p>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">On the next example if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volume containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="hll">           -proc_structural -t1wStr run-02_T1w
+</span></pre></div>
+</td></tr></table></div>
+</div>
+<div class="admonition-multiple-t1w-weighted-images admonition">
+<p class="admonition-title">Multiple T1w weighted images</p>
+<p>Be sure you use the same T1w images in <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> and <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code>. Although they are independent modules, when using the same image the registrations improves greatly.</p>
+</div>
+</div></blockquote>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<p>Directories created or populated by <strong>-proc_structural</strong> will be under each <code class="docutils literal notranslate"><span class="pre">SubjectDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">first</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">xfm</span>
+</pre></div>
+</div>
+<p>Files generated by <strong>-proc_structural</strong>:</p>
+<pre class="literal-block">- <strong>Main structural scan:</strong>
+    - &lt;SubjectDir&gt;/anat/&lt;sub&gt;_space-nativepro_t1w.nii.gz
+
+- <strong>Brain extracted main structural scan</strong>:
+    - <em>&lt;SubjectDir&gt;/anat/&lt;sub&gt;_space-nativepro_t1w_brain.nii.gz</em>
+
+- <strong>Brain-mask for main structural scan</strong>:
+    - <em>&lt;SubjectDir&gt;/anat/&lt;sub&gt;_space-nativepro_t1w_brain_mask.nii.gz</em>
+
+- <strong>FSL FAST outputs</strong> stored in <em>&lt;SubjectDir&gt;/anat/</em>:
+    - &lt;sub&gt;_space-nativepro_t1w_brain_seg.nii.gz
+    - &lt;sub&gt;_space-nativepro_t1w_brain_pve_0.nii.gz
+    - &lt;sub&gt;_space-nativepro_t1w_brain_pve_1.nii.gz
+    - &lt;sub&gt;_space-nativepro_t1w_brain_pve_2.nii.gz
+    - &lt;sub&gt;_space-nativepro_t1w_brain_pveseg.nii.gz
+    - &lt;sub&gt;_space-nativepro_t1w_brain_mixeltype.nii.gz
+
+- <strong>Main structural scan non-linear transformations to MNI152 0.8mm:</strong> <em>&lt;SubjectDir&gt;/xfm/</em>
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1InverseWarp.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_InverseWarped.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_Warped.nii.gz
+
+- <strong>Main structural scan non-linear transformations to MNI152 2mm:</strong> <em>&lt;SubjectDir&gt;/xfm/</em>
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_0GenericAffine.mat
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1InverseWarp.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_InverseWarped.nii.gz
+    - &lt;sub&gt;_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_Warped.nii.gz
+- <strong>Final 5ttgen output</strong>:
+    - <em>&lt;SubjectDir&gt;/anat/&lt;sub&gt;_space-nativepro_t1w_5TT.nii.gz</em>
+
+- <strong>FSL FIRST intermediary files</strong>:
+    - <em>&lt;SubjectDir&gt;/anat/first/</em>
+
+- If multiple T1w scans are found in the raw data directory, <strong>transformation files to generate nativepro image</strong> will be generated:
+    - &lt;SubjectDir&gt;/xfm/&lt;sub&gt;_t1w_from-run-2_to_run-1_0GenericAffine.mat
+    - &lt;SubjectDir&gt;/xfm/&lt;sub&gt;_t1w_from-run-2_to_run-1_InverseWarped.nii.gz
+    - &lt;SubjectDir&gt;/xfm/&lt;sub&gt;_t1w_from-run-2_to_run-1_Warped.nii.gz
+
+- <strong>Json cards</strong> are in <em>&lt;SubjectDir&gt;/anat/</em>:
+    - &lt;sub&gt;_space-nativepro_t1w_brain_mask.json
+    - &lt;sub&gt;_space-nativepro_t1w.json</pre>
+</div>
+</div>
+</div>
+<div class="section" id="proc-freesurfer">
+<h2><a class="toc-backref" href="#id5">-proc_freesurfer</a><a class="headerlink" href="#proc-freesurfer" title="Permalink to this headline">¶</a></h2>
+<p>This modules performs cortical surface segmentation from all native T1w acquisitions stored in the subject’s BIDS directory.</p>
+<div class="admonition-quality-control admonition">
+<p class="admonition-title">Quality control 💅🏻</p>
+<p>We recommend that users carefully inspect FreeSurfer-generated cortical surface segmentations. As micapipe relies heavily on surface-based processing, poor segmentation quality may compromise the validity of downstream results. FreeSurfer provides comprehensive tutorials for manual correction of surface segmentations: See tutorials <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/ControlPoints_freeview">‘Control Points’</a>, <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/WhiteMatterEdits_freeview">‘White matter’</a>, and <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview">‘Pial surfaces’</a> explaining different types of corrections that can be applied to cortical surfaces.</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-1-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-0 active docutils container">
+<ul class="simple">
+<li><p>Run FreeSurfer’s recon-all pipeline will all T1-weighted scans found in raw data directory</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
+<p><strong>Terminal:</strong></p>
+<blockquote>
+<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong> <strong>&lt;options&gt;</strong></pre>
+<p><strong>Docker command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_freesurfer -&lt;options&gt;
+</pre></div>
+</div>
+<p><strong>Optional arguments</strong>:</p>
+<blockquote>
+<div><dl class="simple">
+<dt><em>-t1wStr</em></dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Same option as in <em>-proc_structural</em>, this will allow to manually select the main scan(s) for structural processing.</p>
+</dd>
+</dl>
+<dl class="option-list">
+<dt><kbd><span class="option">-f<var>reesurfer_dir</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Will copy existing FreeSurfer outputs in the provided path to the appropriate
+location. This way, if the cortical segmentations of your dataset have already
+been quality controlled, results can be easily integrated within the pipeline’s directory structure.</p>
+</dd>
+<dt><kbd><span class="option">-h<var>ires</var></span></kbd></dt>
+<dd><p>Use this option for data with voxel sizes less than 1mm3 at native resolution
+(eg. isometric 7T acquisitions. Requires <em>-proc_structural</em>). For further information see <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon">SubmillimeterRecon</a>.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
+<p>Directories created or populated by <strong>-proc-freesurfer</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">freesurfer</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Files generated by <strong>-proc-freesurfer</strong>:</p>
+<pre class="literal-block">- A list of all recon-all output files can be found here: <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/ReconAllOutputFiles">ReconAllOutputFiles</a>.</pre>
+</div>
+</div>
+</div>
+<div class="section" id="post-structural">
+<h2><a class="toc-backref" href="#id6">-post_structural</a><a class="headerlink" href="#post-structural" title="Permalink to this headline">¶</a></h2>
+<p>This first structural post-processing module registers native FreeSurfer-space cortical surfaces to a standard template, in addition to mapping all cortical parcellation schemes to the subject’s native surface space and volumetric nativepro space.</p>
+<div class="admonition-prerequisites admonition">
+<p class="admonition-title">Prerequisites 🖐🏼</p>
+<p>You need to run <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> and <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code> before this stage.</p>
+</div>
+<a class="reference internal image-reference" href="../../_images/post_structural.png"><img alt="../../_images/post_structural.png" class="align-center" src="../../_images/post_structural.png" style="width: 614.55px; height: 283.9px;" /></a>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-2-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-2-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-2-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-0 active docutils container">
+<ul class="simple">
+<li><p>Compute affine registration from native FreeSurfer space to nativepro space</p></li>
+<li><p>Register cerebellar atlas (MNI152) to subject’s nativepro space using affine transformation</p></li>
+<li><p>Perform surface-based registration of fsaverage5 annotation labels to native surface</p></li>
+<li><p>Register native surface parcellations to native FreeSurfer volume</p></li>
+<li><p>Apply linear registrations to bring volumetric parcellations to nativepro space</p></li>
+<li><p>Build conte69-32k sphere and resample white and pial surfaces to conte69-32k template</p></li>
+<li><p>Create midthickness surface from native surface and resampled conte69-32k template</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-1 docutils container">
+<p><strong>Terminal:</strong></p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-post_structural</strong></pre>
+<p><strong>Docker command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -post_structural
+</pre></div>
+</div>
+<p><strong>Optional arguments</strong>:</p>
+<dl class="option-list">
+<dt><kbd><span class="option">-a<var>tlas</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Registers only selected parcellations to subject space (e.g. <em>economo,aparc</em>).
+By default, all 18 parcellations included in the pipeline will be registered
+to the subject’s native volumetric and surface space. Below is the list of all the possible options:</p>
+</dd>
+</dl>
+<table class="hlist"><tr><td><ul class="simple">
+<li><p>aparc-a2009s</p></li>
+<li><p>aparc</p></li>
+<li><p>economo</p></li>
+<li><p>glasser</p></li>
+<li><p>schaefer-1000</p></li>
+<li><p>schaefer-100</p></li>
+</ul>
+</td><td><ul class="simple">
+<li><p>schaefer-200</p></li>
+<li><p>schaefer-300</p></li>
+<li><p>schaefer-400</p></li>
+<li><p>schaefer-500</p></li>
+<li><p>schaefer-600</p></li>
+<li><p>schaefer-700</p></li>
+</ul>
+</td><td><ul class="simple">
+<li><p>schaefer-800</p></li>
+<li><p>schaefer-900</p></li>
+<li><p>vosdewael-100</p></li>
+<li><p>vosdewael-200</p></li>
+<li><p>vosdewael-300</p></li>
+<li><p>vosdewael-400</p></li>
+</ul>
+</td></tr></table>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">The next example will only process the three selected parcellations (<code class="docutils literal notranslate"><span class="pre">schaefer-200,economo,aparc</span></code>)</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="n">mica</span><span class="o">-</span><span class="n">pipe</span> <span class="o">-</span><span class="n">sub</span> <span class="o">&lt;</span><span class="n">subject_id</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">bids</span> <span class="o">&lt;</span><span class="n">BIDS</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span> \
+<span class="hll">           <span class="o">-</span><span class="n">post_structural</span> <span class="o">-</span><span class="n">atlas</span> <span class="n">schaefer</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span><span class="n">economo</span><span class="p">,</span><span class="n">aparc</span>
+</span></pre></div>
+</td></tr></table></div>
+</div>
+<div class="admonition-important admonition">
+<p class="admonition-title">Important ⚠️</p>
+<p>Functional, structural and geodesic distance connectomes will be calculate only on the parcellations selected in this step.
+If another parcellation should be added after this module, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> and its dependent modules have to be re-run.</p>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-2 docutils container">
+<p>Directories created or populated by <strong>-proc_structural</strong> will be under each <code class="docutils literal notranslate"><span class="pre">SubjectDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">freesurferDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/freesurfer/&lt;sub&gt;</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">conte69</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">label</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">volumetric</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">xfm</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">freesurferDir</span><span class="o">&gt;/</span><span class="n">surf</span>
+<span class="o">-</span> <span class="o">&lt;</span><span class="n">freesurferDir</span><span class="o">&gt;/</span><span class="n">label</span>
+</pre></div>
+</div>
+<p>Files generated by <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code>:</p>
+<pre class="literal-block">- Main structural scan (nativepro) in FreeSurfer space:
+    - <em>&lt;SubjectDir&gt;/anat/&lt;sub&gt;_space-fsnative_t1w.nii.gz</em>
+
+- Surface files resampled to Conte69 32k-vertex template, stored in &lt;SubjectDir&gt;/anat/surfaces/conte69:
+    - Pial
+        - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_pial.surf.gii</em>
+    - White matter
+        - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_white.surf.gii</em>
+    - Midsurface
+        - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_midthickness.surf.gii</em>
+    - Sphere
+        - <em>&lt;sub&gt;_&lt;hemi&gt;_sphereReg.surf.gii</em>
+
+- Native surface mapped annotation labels:
+    - <em>&lt;freesurferDir&gt;/labels/&lt;hemi&gt;.&lt;parcellation&gt;_mics.annot</em>
+
+- Native midsurface:
+    - <em>&lt;freesurferDir&gt;/surf/&lt;hemi&gt;.midthickness.surf.gii</em>
+
+- Volumetric parcellation files:
+    - <em>&lt;SubjectDir&gt;/anat/volumetric/&lt;sub&gt;_space-nativepro_t1w_atlas-&lt;parcellation&gt;.nii.gz</em>
+
+- Files generated for affine registration between native FreeSurfer space and nativepro:
+    - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_0GenericAffine.mat</em>
+    - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_InverseWarped.nii.gz</em>
+    - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_Warped.nii.gz</em></pre>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for each name of the 18 parcellations. <code class="docutils literal notranslate"><span class="pre">&lt;hemi&gt;</span></code> is either <code class="docutils literal notranslate"><span class="pre">lh</span></code> or <code class="docutils literal notranslate"><span class="pre">rh</span></code>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="gd">
+<h2><a class="toc-backref" href="#id7">-GD</a><a class="headerlink" href="#gd" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="../../_images/gd.png"><img alt="../../_images/gd.png" src="../../_images/gd.png" style="width: 81.60000000000001px; height: 82.0px;" /></a>
+</div>
+<p>This module calculates geodesic distance between all cortical parcels from the subject’s native midsurface mesh using Dijkstra’s algorithm.</p>
+<div class="admonition-prerequisites admonition">
+<p class="admonition-title">Prerequisites 🖐🏼</p>
+<p>You need to run <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>, <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code> and <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> before this stage</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-3-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-3-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-3-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
+<ul class="simple">
+<li><p>Identifies centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel</p></li>
+<li><p>Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using <a class="reference external" href="https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance">workbench -surface-geodesic-distance</a></p></li>
+<li><p>Average computed distances within parcels</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-1 docutils container">
+<p><strong>Terminal:</strong></p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-GD</strong></pre>
+<p><strong>Docker command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -GD
+</pre></div>
+</div>
+<p><strong>No optional arguments</strong></p>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-2 docutils container">
+<p>Directories created or populated by <strong>-GD</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">geo_dist</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>One file per parcellation is generated by <strong>-GD</strong>:</p>
+<pre class="literal-block">- Square matrix of average parcel-to-parcel geodesic distances:
+    - <em>&lt;sub&gt;_space-fsnative_atlas-&lt;parcellation&gt;_GD.txt</em></pre>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for each name of the 18 parcellations.</p>
+</div>
+</div>
+</div>
+<div class="section" id="morphology">
+<h2><a class="toc-backref" href="#id8">-Morphology</a><a class="headerlink" href="#morphology" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="../../_images/morph.png"><img alt="../../_images/morph.png" src="../../_images/morph.png" style="width: 114.6px; height: 75.3px;" /></a>
+</div>
+<p>Here, surface-based morphological features are registered and smoothed on two distinct templates.</p>
+<div class="admonition-prerequisites admonition">
+<p class="admonition-title">Prerequisites 🖐🏼</p>
+<p>You need to run <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>, <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code> and <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> before this stage</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-4-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-4-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-4-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-0 active docutils container">
+<ul class="simple">
+<li><p>Register cortical thickness and curvature to fsaverage5 and conte69 templates</p></li>
+<li><p>Apply 10mm gaussian smooth on template-mapped outputs</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-1 docutils container">
+<p><strong>Terminal:</strong></p>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-Morphology</strong></pre>
+<p><strong>Docker command:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -Morphology
+</pre></div>
+</div>
+<p><strong>No optional arguments</strong></p>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-2 docutils container">
+<p>Directories created or populated by <strong>-Morphology</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">morphology</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>Files generated by <strong>-Morphology</strong>:</p>
+<pre class="literal-block">- Native surface space cortical thickness and curvature:
+    - <em>&lt;sub&gt;_space-fsnative_desc-&lt;hemi&gt;_curvature.mgh</em>
+    - <em>&lt;sub&gt;_space-fsnative_desc-&lt;hemi&gt;_thickness.mgh</em>
+
+- fsaverage5-mapped cortical thickness and curvature:
+    - <em>&lt;sub&gt;_space-fsaverage5_desc-&lt;hemi&gt;_curvature.mgh</em>
+    - <em>&lt;sub&gt;_space-fsaverage5_desc-&lt;hemi&gt;_thickness.mgh</em>
+
+- Smoothed fsaverage5-mapped cortical thickness and curvature:
+    - <em>&lt;sub&gt;_space-fsaverage5_desc-&lt;hemi&gt;_curvature_10mm.mgh</em>
+    - <em>&lt;sub&gt;_space-fsaverage5_desc-&lt;hemi&gt;_thickness_10mm.mgh</em>
+
+- Conte69-mapped cortical thickness and curvature:
+    - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_curvature.mgh</em>
+    - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_thickness.mgh</em>
+
+- Smoothed Conte69-mapped cortical thickness and curvature:
+    - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_curvature_10mm.mgh</em>
+    - <em>&lt;sub&gt;_space-conte69-32k_desc-&lt;hemi&gt;_thickness_10mm.mgh</em></pre>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;hemi&gt;</span></code> is either <code class="docutils literal notranslate"><span class="pre">lh</span></code> or <code class="docutils literal notranslate"><span class="pre">rh</span></code></p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../02.dwiproc/index.html" class="btn btn-neutral float-right" title="Diffusion-weighted imaging processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../01.whatsnew/index.html" class="btn btn-neutral float-left" title="What’s new?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>
