@@ -167,10 +167,11 @@ Reference
 
             mica-pipe -bids rawdata -out derivatives -sub 00367 -ses 01
                       -proc_structural \
-                      -proc_freesurfer
+                      -proc_freesurfer \
                         -freesurfer_dir ./freesurfer_processed_00367 \
                       -post_structural \
-                      -proc_dwi -SC \
+                      -proc_dwi \
+                      -SC \
                       -proc_rsfmri \
                         -mainScanStr task-rest_bold \
                         -regress_WM_CSF \
@@ -283,7 +284,6 @@ Reference
 
         .. parsed-literal::
 
-            tree
             sub-010
             ├── anat
             │   ├── sub-010_T1w.json

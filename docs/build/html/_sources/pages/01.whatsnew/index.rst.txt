@@ -10,8 +10,21 @@ v0.1.1 (Roadrunner)
 
 - Documentation update
 
--
+- Added a missing string in the output names of 02_proc-dwi.sh "*space-dwi_from-dwi_to-nativepro_mode-image_desc-affine_*"
 
+- Added umask to micapipe_cleanup
+
+- Fix a typo in the mica-pipe help (distortion)
+
+- Rename flags and variables in ``micapipe_anonymize`` from *refacePro* to *warpface*
+
+- Update print version in mica-pipe
+
+- micapipe_qc: added print info for Sankey diagram and Surfaces visualization
+
+- micapipe_qc: added full path to nifti_capture.py
+
+- Fixed an error in 02_proc-rsfmri.sh, wrong assignation of fmri_pe!
 
 v0.1.0 (Roadrunner)
 ------------------------

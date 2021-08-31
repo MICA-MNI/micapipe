@@ -418,12 +418,14 @@ Main scan = <code class="docutils literal notranslate"><span class="pre">task-re
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">00367</span> -ses <span class="m">01</span>
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">00367</span> -ses <span class="m">01</span>
            -proc_structural <span class="se">\</span>
-           -proc_freesurfer
+           -proc_freesurfer <span class="se">\</span>
              -freesurfer_dir ./freesurfer_processed_00367 <span class="se">\</span>
            -post_structural <span class="se">\</span>
-           -proc_dwi -SC <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+           -SC <span class="se">\</span>
            -proc_rsfmri <span class="se">\</span>
              -mainScanStr task-rest_bold <span class="se">\</span>
              -regress_WM_CSF <span class="se">\</span>
@@ -584,8 +586,7 @@ Main scan = <code class="docutils literal notranslate"><span class="pre">task-re
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tree
-sub-010
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-010
 ├── anat
 │   ├── sub-010_T1w.json
 │   └── sub-010_T1w.nii.gz
