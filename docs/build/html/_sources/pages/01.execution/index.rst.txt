@@ -35,12 +35,15 @@ Let's break this down:
 -ses            This optional flag allows the user to specify a session name (e.g. 01, 02, pre, post...). If omitted, all processing will be managed as a single session.
 -module_flag    Specifies which submodule(s) to run (see next section).
 
+.. admonition:: WARNING: ⚠️ ``-ses`` ⚠️
+
+        if your data contains a session directory (eg. ``sub-01/ses-01``) but you don’t specify the session, the script by default assumes is a single session with the ``sub-01/anat`` structure instead of ``sub-01/ses-01/anat``, this will led to a bunch of errors!
+
 Module flags
 --------------------------------------------------------
 The processing modules composing micapipe can be run individually or bundled using specific flags. The modular structure of micapipe allows to process different databases with a wide variety of acquisitions. However the backbone of this modular structure is the structural processing. Below you can find a diagram with the processing workflow of micapipe.
 
 .. image:: ../../figures/workflowA.png
-   :scale: 50 %
    :alt: alternate text
    :align: center
 
@@ -118,6 +121,6 @@ You can specify additional options when running micapipe:
 
 	If you have to erase the outputs of a specific module, you don't have to do this task manually. Check `micapipe_cleanup <../05.micapipe_cleanup/index.html>`_ for further information!!
 
-.. admonition:: Slim run 👙 (Work on progress!!)
+.. admonition:: Slim run 👙 (Work in progress!!)
 
 	Including the **-slim** flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module's section.

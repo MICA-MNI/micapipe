@@ -128,7 +128,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
@@ -244,11 +244,15 @@
 <dd><p>Specifies which submodule(s) to run (see next section).</p>
 </dd>
 </dl>
+<div class="admonition-warning-ses admonition">
+<p class="admonition-title">WARNING: ⚠️ <code class="docutils literal notranslate"><span class="pre">-ses</span></code> ⚠️</p>
+<p>if your data contains a session directory (eg. <code class="docutils literal notranslate"><span class="pre">sub-01/ses-01</span></code>) but you don’t specify the session, the script by default assumes is a single session with the <code class="docutils literal notranslate"><span class="pre">sub-01/anat</span></code> structure instead of <code class="docutils literal notranslate"><span class="pre">sub-01/ses-01/anat</span></code>, this will led to a bunch of errors!</p>
+</div>
 </div>
 <div class="section" id="module-flags">
 <h2>Module flags<a class="headerlink" href="#module-flags" title="Permalink to this headline">¶</a></h2>
 <p>The processing modules composing micapipe can be run individually or bundled using specific flags. The modular structure of micapipe allows to process different databases with a wide variety of acquisitions. However the backbone of this modular structure is the structural processing. Below you can find a diagram with the processing workflow of micapipe.</p>
-<a class="reference internal image-reference" href="../../_images/workflowA.png"><img alt="alternate text" class="align-center" src="../../_images/workflowA.png" style="width: 977.0px; height: 270.5px;" /></a>
+<img alt="alternate text" class="align-center" src="../../_images/workflowA.png" />
 <div class="section" id="t1w-structural-processing">
 <h3>T1w Structural Processing<a class="headerlink" href="#t1w-structural-processing" title="Permalink to this headline">¶</a></h3>
 <p>Processing modules for <a class="reference internal" href="../02.structuralproc/index.html#structproc"><span class="std std-ref">T1-weighted structural imaging</span></a> consist of:</p>
@@ -369,8 +373,8 @@
 <p class="admonition-title"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code>  🧹</p>
 <p>If you have to erase the outputs of a specific module, you don’t have to do this task manually. Check <a class="reference external" href="../05.micapipe_cleanup/index.html">micapipe_cleanup</a> for further information!!</p>
 </div>
-<div class="admonition-slim-run-work-on-progress admonition">
-<p class="admonition-title">Slim run 👙 (Work on progress!!)</p>
+<div class="admonition-slim-run-work-in-progress admonition">
+<p class="admonition-title">Slim run 👙 (Work in progress!!)</p>
 <p>Including the <strong>-slim</strong> flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module’s section.</p>
 </div>
 </div>

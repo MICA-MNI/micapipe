@@ -92,19 +92,19 @@ Datasets
 ------------------------------------------------
 
 MICs
-    Royer, J., Rodriguez-Cruces, R., Tavakol, S., Lariviere, S., Herholz, P., Li, Q., ... & Bernhardt, B. C. (2021). An open MRI dataset for multiscale neuroscience. bioRxiv. https://doi.org/10.1101/2021.08.04.454795
+    Royer, J., Rodriguez-Cruces, R., Tavakol, S., Lariviere, S., Herholz, P., Li, Q, Vos de Wael, R., Paquola, C., Benkarim, O., Park, B., Lowe, A. J., Margulies, D., Smallwood, J., Bernasconi, A., Bernasconi, N., Frauscher, B., Bernhardt, B. C.. (2021). An open MRI dataset for multiscale neuroscience. bioRxiv. https://doi.org/10.1101/2021.08.04.454795
 
 EpiC
-    Work in progress ...
+    Rodríguez-Cruces, R., Bernhardt, B. C., & Concha, L. (2020). *Multidimensional associations between cognition and connectome organization in temporal lobe epilepsy.* NeuroImage, Volume 213, June 2020, 116706.
 
 Cam-CAN
     Shafto, M.A., Tyler, L.K., Dixon, M., Taylor, J.R., Rowe, J.B., Cusack, R., Calder, A.J., Marslen-Wilson, W.D., Duncan, J., Dalgleish, T., Henson, R.N., Brayne, C., Cam-CAN, & Matthews, F.E. (2014). The Cambridge Centre for Ageing and Neuroscience (Cam-CAN) study protocol: a cross-sectional, lifespan, multidisciplinary examination of healthy cognitive ageing. BMC Neurology, 14(204). doi:10.1186/s12883-014-0204-1
 
-Audiopath
+Midnight Scan Club
     Gordon, E. M., Laumann, T. O., Gilmore, A. W., Newbold, D. J., Greene, D. J., Berg, J. J., ... & Dosenbach, N. U. (2017). Precision functional mapping of individual human brains. Neuron, 95(4), 791-807. https://doi.org/10.1016/j.neuron.2017.07.011
 
-Midnight Scan Club
-    Sitek, K. R., Gulban, O. F., Calabrese, E., Johnson, G. A., Lage-Castellanos, A., Moerel, M., ... & De Martino, F. (2019). Mapping the human subcortical auditory system using histology, postmortem MRI and in vivo MRI at 7T. Elife, 8, e48932. 10.7554/eLife.48932
+Audiopath
+    Sitek, K. R., Gulban, O. F., Calabrese, E., Johnson, G. A., Lage-Castellanos, A., Moerel, M., Satrajit S Ghosh & De Martino, F. (2019). Mapping the human subcortical auditory system using histology, postmortem MRI and in vivo MRI at 7T. Elife, 8, e48932. 10.7554/eLife.48932. https://doi.org/10.7554/eLife.48932
 
 SUDMEX_CONN
     Garza-Villarreal, E., Chakravarty, M., Hansen, B. et al. The effect of crack cocaine addiction and age on the microstructure and morphology of the human striatum and thalamus using shape analysis and fast diffusion kurtosis imaging. Transl Psychiatry 7, e1122 (2017). https://doi.org/10.1038/tp.2017.92
