@@ -315,13 +315,12 @@ Reference
 SUDMEX_CONN
 --------------------------------------------------------
 Reference
-   Garza-Villarreal, E. A., M. M. Chakravarty, B. Hansen, S. F. Eskildsen, G. A. Devenyi, D. Castillo-Padilla, T. Balducci, et al. 2017.
-   *The Effect of Crack Cocaine Addiction and Age on the Microstructure and Morphology of the Human Striatum and Thalamus Using Shape Analysis and Fast Diffusion Kurtosis Imaging*. Translational Psychiatry 7 (5): e1122e1122.
+   Angeles-Valdez, D., Rasgado-Toledo, J., Issa-Garcia, V., Balducci, T., Villicana, V., Valencia, A., Gonzalez-Olvera, J. J., Reyes-Zamorano, E., Garza-Villarreal, E. A. 2021. *SUDMEX CONN: The Mexican MRI dataset of patients with cocaine use disorder*. medRxiv 2021.09.03.21263048
 
 +--------+--------------------------------------------------------------------------------------------------------------------------------------------+
 | Source | `Openneuro: SUDMEX_CONN: The Mexican dataset of cocaine use disorder patients. <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_  |
 +--------+--------------------------------------------------------------------------------------------------------------------------------------------+
-| doi    | https://doi.org/10.1038/tp.2017.92                                                                                                         |
+| doi    | https://doi.org/10.1101/2021.09.03.21263048                                                                                                         |
 +--------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. tabs::
