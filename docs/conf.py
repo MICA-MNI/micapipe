@@ -88,3 +88,6 @@ html_css_files = ['css/mica-pipe_colors.css']
 # add custom files that are stored in _static
 def setup(app):
    app.add_css_file("css/mica-pipe_tabs_tabs.css")
+
+def setup(app):
+    app.add_stylesheet('css/custom.css')

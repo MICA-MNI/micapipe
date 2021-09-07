@@ -9,7 +9,7 @@ Processing databases with ``micapipe``
 
 In this section you will find examples of how ``mica-pipe`` optional arguments where used to process a variety of databases with different acquisitions parameters.
 Under the tab ``database structure`` the files organization of each dataset is listed. However you'll only find those files relevant for pipeline, not the full structure.
-Further information about the datasets such as the Source, and references can be found here as well.
+Further information about the datasets such as the *source*, and *references* can be found here as well.
 
 Microstructure-Informed Connectomis (MICs)
 --------------------------------------------------------
@@ -72,6 +72,8 @@ Reference
     .. tab:: Usage
 
         MICs and micapipe were developed practically at the same time, therefore they are fully compatible and the default arguments are enough to process it.
+        Modalities include high-resolution anatomical (T1-weighted), microstructurally-sensitive (quantitative T1), diffusion-weighted (three shells, 140 directions in total) and resting-state functional imaging.
+        DWI and rsfMRI include a reverse phase encoding acquisition for geometric distortion correction.
 
         .. code-block:: bash
            :linenos:
@@ -110,18 +112,30 @@ Reference
            This section was processed with the default parameters.
 
         proc_dwi
-           This section was processed with the default parameters. Reverse phase encoding image = ``sub-HC001_ses-01_dir-PA_dwi.nii.gz``.
+           This section was processed with the default parameters.
+
            DWI shells to process: ``acq-b2000-91_dir-AP_dwi``, ``acq-b300-11_dir-AP_dwi`` and ``acq-b700-41_dir-AP_dwi``.
+
+           Reverse phase encoding image = ``sub-HC001_ses-01_dir-PA_dwi.nii.gz``.
 
         SC
            This section was processed with the default parameters.
 
         proc_rsfmri
            This section was processed with the default parameters. Using melodic and FIX for nuisance regression and non linear registration (SyN) to T1w-nativepro space.
-           Main scan = ``task-rest_acq-AP_bold``. Main phase encoding = ``task-rest_acq-APse``. Reverse phase encoding = ``task-rest_acq-PAse``.
+
+           Main scan = ``task-rest_acq-AP_bold``
+
+           Main phase encoding = ``task-rest_acq-APse``
+
+           Reverse phase encoding = ``task-rest_acq-PAse``
 
         MPC
-           This section was processed with the default parameters. Microstructural image = ``acq-mp2rage_T1map`` . Image for register = ``acq-inv1_T1map``.
+           This section was processed with the default parameters.
+
+           Microstructural image = ``acq-mp2rage_T1map``
+
+           Image for registration = ``acq-inv1_T1map``.
 
 Epilepsy and Cognition (EpiC-UNAM)
 --------------------------------------------------------
@@ -162,6 +176,9 @@ Reference
 
     .. tab:: Usage
 
+        This dataset contains T1 weighted images, a DWI single shell (b=2000, 60 directions) with a reverse phase encoding acquisition (``dir-PA_dwi``),
+        and a 5 minutes length resting state fMRI.
+
         .. code-block:: bash
            :linenos:
 
@@ -194,6 +211,22 @@ Reference
 
         GD
            This section was processed with the default parameters.
+
+        proc_dwi
+           This section was processed with the default parameters.
+
+           DWI shells to process: ``acq-b2000_dir-AP_dwi``
+
+           Reverse phase encoding image = ``sub-00367_ses-01_dir-PA_dwi.nii.gz``
+
+        SC
+           This section was processed with the default parameters.
+
+        proc_rsfmri
+           White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
+           No reverse phase encoding image was used.
+
+           Main scan = ``task-rest_bold`` (default)
 
 Cambridge Centre for Ageing and Neuroscience (Cam-CAN)
 --------------------------------------------------------
@@ -266,10 +299,23 @@ Reference
         GD
            This section was processed with the default parameters.
 
+        proc_dwi
+           This section was processed with the default parameters. No reverse phase encoding image was used.
+
+           DWI to process: ``sub-CC110045_dwi.nii.gz``
+
+        SC
+           This section was processed with the default parameters.
+
+        proc_rsfmri
+           White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
+           No reverse phase encoding image was used.
+           Main scan = ``task-Rest_bold``
+
 SUDMEX_CONN
 --------------------------------------------------------
 Reference
-   Garza-Villarreal, E. A., M. M. Chakravarty, B. Hansen, S. F. Eskildsen, G. A. Devenyi, D. Castillo-Padilla, T. Balducci, et al. 2017. â
+   Garza-Villarreal, E. A., M. M. Chakravarty, B. Hansen, S. F. Eskildsen, G. A. Devenyi, D. Castillo-Padilla, T. Balducci, et al. 2017.
    *The Effect of Crack Cocaine Addiction and Age on the Microstructure and Morphology of the Human Striatum and Thalamus Using Shape Analysis and Fast Diffusion Kurtosis Imaging*. Translational Psychiatry 7 (5): e1122e1122.
 
 +--------+--------------------------------------------------------------------------------------------------------------------------------------------+
@@ -304,6 +350,9 @@ Reference
 
     .. tab:: Usage
 
+        This dataset contains T1 weighted images, a HARDI-DWI single shell (b=3000, 120 directions) with a reverse phase encoding acquisition (``dir-PA_run-01_epi``),
+        and a resting state fMRI of 10 minutes with its respective reverse phase encoding acquisition (``dir-PA_run-02_epi``). Both phase encoding images are in the ``fmap`` directory.
+
         .. code-block:: bash
            :linenos:
 
@@ -321,6 +370,7 @@ Reference
                         -mainScanStr task-Rest_bold \
                         -fmri_rpe ${subjectDir}/fmap/sub-110_dir-PA_run-02_epi.nii.gz
                         -regress_WM_CSF \
+                        - GSR \
                         -noFIX \
                       -GD \
                       -Morphology \
@@ -340,6 +390,23 @@ Reference
 
         GD
            This section was processed with the default parameters.
+
+        proc_dwi
+           This section was processed with the default parameters.
+
+           DWI to process: ``sub-010_dwi.nii.gz``
+
+           Reverse phase encoding image = ``fmap/sub-110_dir-PA_run-01_epi.nii.gz``
+
+        SC
+           This section was processed with the default parameters.
+
+        proc_rsfmri
+           White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default). Global signal regression was applied.
+
+           Main scan = ``task-rest_bold`` (default)
+
+           Reverse phase encoding =  ``map/sub-110_dir-PA_run-02_epi.nii.gz``
 
 Midnight Scan Club MSC
 --------------------------------------------------------
@@ -414,8 +481,6 @@ Reference
                           -proc_rsfmri \
                             -regAffine -noFIX -regress_WM_CSF \
                             -mainScanStr task-rest_bold \
-                            -fmri_pe  ${subjectDir}/fmap/${sub}_acq-gre_dir-AP_run-01_epi.nii.gz \
-                            -fmri_rpe ${subjectDir}/fmap/${sub}_acq-gre_dir-PA_run-01_epi.nii.gz \
                           -GD \
                           -Morphology \
                           -QC_subj
@@ -448,6 +513,10 @@ Reference
 
             proc_rsfmri
                Each functional session was processed individually and registered to the anatomical session ``struct01``. In this example we use a ``for`` loop to iterate over each session.
+               White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
+               No reverse phase encoding image was used.
+
+               Main scan = ``task-rest_bold``
 
 Auditory localization with 7T fMRI (Audiopath)
 --------------------------------------------------------
@@ -470,7 +539,6 @@ Reference
 
         .. parsed-literal::
 
-            tree
             sub-S01
             └── ses-SES01
                 ├── anat
@@ -565,15 +633,22 @@ Reference
 
             proc_dwi
                DWI directions were acquired twice with opposite phase encoding directions, thus we used the option ``rpe_all`` for the processing.
-               Main DWI shells to process: ``dir-AP_run-01``, ``dir-AP_run-02`` and ``dir-AP_run-03``.
-               Reverse phase encoding images = ``dir-PA_run-01``, ``dir-PA_run-02`` and ``dir-PA_run-03``.
+
+                  Main DWI shells to process: ``dir-AP_run-01``, ``dir-AP_run-02`` and ``dir-AP_run-03``
+
+                  Reverse phase encoding DWI = ``dir-PA_run-01``, ``dir-PA_run-02`` and ``dir-PA_run-03``
 
             SC
                This section was processed with the default parameters.
 
             proc_rsfmri
                White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Only affine registration between the rsfMRI and T1-nativepro was performed.
-               Main scan = ``task-rest_bold``. Main phase encoding = ``fmap/${sub}_acq-gre_dir-AP_run-01_epi``. Reverse phase encoding = ``fmap/${sub}_acq-gre_dir-PA_run-01_epi``.
+
+                  Main scan = ``task-rest_bold``
+
+                  Main phase encoding = ``fmap/${sub}_acq-gre_dir-AP_run-01_epi``
+
+                  Reverse phase encoding = ``fmap/${sub}_acq-gre_dir-PA_run-01_epi``
 
             MPC
                The microstructural image as the image to register to freesurfer space were the same = ``acq-ShortInv_run-01_T1w``.

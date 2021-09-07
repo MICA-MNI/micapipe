@@ -54,7 +54,7 @@ Q: How do I process the rsfMRI If I have different runs in the same session?
     A:
 
 Q: Can I process multi-echo rsfMRI acquisition with micapipe?
-    A:
+    A: Right now micapipe can not handle in any way multi-echo acquisitions. Although is planned to be included in a future release.
 
 Q: What if my database already has Freesurfer outputs with Quality Check?
     A:
@@ -65,14 +65,17 @@ Q: What if I have more than one set of DWI acquisitions?
 Q: What if I already have DWI processed data?
     A:
 
-Q: What if I already have rsfMRI processed data? (eg. from fmriPREP)
-    A:
-
-Q: Why does micapipe not apply slice timing correction in the rsfMRI processing?
-    A:
+Q: Why does micapipe not apply slice timing correction in rsfMRI processing?
+    A: Micapipe was optimized for multi-band acquisitions which do not require slice timing correction.
 
 Q: How do I train an ICA-FIX RData file?
     A:
 
+Q: What if I already have rsfMRI processed data? (eg. from fmriPREP)
+    A:
+
 Q: Can I use a different Cortical / subcortical / cerebellar atlas  not included in the micapipe?
     A: At the present time this feature is not included in the latest release.
+
+Q: If my database has the field maps instead of the reverse phase encoding acquisition of rsfMRI and DWI, can micapipe use them for the geometric distrotion correction?
+    A: The usage of field maps ins not implemented in micapipe. However you could apply the field map based correction to the correspondent images and then run micapipe.

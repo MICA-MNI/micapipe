@@ -56,9 +56,12 @@ This module performs initial structural pre-processing, keeping data in volumetr
 
         ``-proc_structural`` only has one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.
 
+        .. tabularcolumns:: |>{\centering\arraybackslash}\X{1}{5}|>{\raggedleft\arraybackslash}\X{2}{5}|
+
         .. list-table:: 
-            :widths: 10 1000
+            :widths: 10 500
             :header-rows: 1
+            :class: tight-table
 
             * - **Optional argument**
               - **Description**
@@ -75,7 +78,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
             mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                       -proc_structural -t1wStr run-02_T1w
 
-        .. admonition:: Multiple T1w weighted images 🧠 🧠 🧠
+        .. admonition:: Multiple T1-weighted images 🧠 🧠 🧠
 
             Be sure you use the same T1w images in ``-proc_structural`` and ``-proc_freesurfer``. Although they are independent modules, when using the same image the registrations will be much better.
 
@@ -169,8 +172,9 @@ This modules performs cortical surface segmentation from all native T1w acquisit
         ``-proc_freesurfer`` has a few optional arguments, including an option for T1w scan selection as in ``proc_volumetric``.
 
         .. list-table:: 
-            :widths: 10 1000
+            :widths: 10 500
             :header-rows: 1
+            :class: tight-table
 
             * - **Optional argument**
               - **Description**
@@ -237,8 +241,9 @@ This first structural post-processing module registers native FreeSurfer-space c
         ``-post_structural`` only has one optional argument:
 
         .. list-table:: 
-            :widths: 10 1000
+            :widths: 10 500
             :header-rows: 1
+            :class: tight-table
 
             * - **Optional argument**
               - **Description**

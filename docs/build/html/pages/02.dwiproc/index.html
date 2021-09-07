@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
@@ -124,7 +124,7 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
@@ -260,44 +260,46 @@
 </pre></div>
 </div>
 <p><strong>Optional arguments:</strong></p>
-<blockquote>
-<div><dl class="option-list">
-<dt><kbd><span class="option">-d<var>wi_main</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Provide path to DWI scans with N number of directions and b0.
-This will override the default settings.
-Default = <em>&lt;bids&gt;/&lt;sub&gt;/dwi/*_dir-AP_dwi.nii*</em>.</p>
-</dd>
-<dt><kbd><span class="option">-d<var>wi_rpe</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Provide path to b0 DWI scan with reverse phase encoding direction.
-This will override the default settings.
-Default = <em>&lt;bids&gt;/&lt;subject&gt;/dwi/&lt;sub&gt;_dir-PA_dwi.nii*</em>.</p>
-</dd>
-<dt><kbd><span class="option">-d<var>wi_processed</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> The specified image will be used for further DWI processing, instead of performing pre-processing inside the script.
-This file must be in <em>.mif</em> (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded.</p>
-</dd>
-<dt><kbd><span class="option">-r<var>pe_all</var></span></kbd></dt>
-<dd><p>If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used.
-(This option requires that both encoding contains the same number of directions, bvecs and bvals)</p>
-</dd>
-</dl>
-</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_dwi</span></code> has several optional arguments:</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dwi_main</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Provide path to DWI scans with N number of directions and b0. This will override the default settings: <code class="docutils literal notranslate"><span class="pre">&lt;bids&gt;/&lt;sub&gt;/dwi/*_dir-AP_dwi.nii\*</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Provide path to b0 DWI scan with reverse phase encoding direction. This will override the default settings: <code class="docutils literal notranslate"><span class="pre">&lt;bids&gt;/&lt;subject&gt;/dwi/*_dir-PA_dwi.nii\*</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dwi_processed</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>The specified image will be used for further DWI processing, instead of performing pre-processing inside the script.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rpe_all</span></code></p></td>
+<td><p>If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used (This option requires that both encoding direction files contain the same number of directions, bvecs and bvals).</p></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Multiple inputs:</strong> <code class="docutils literal notranslate"><span class="pre">dwi_main</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">dwi_rpe</span></code></p>
-<p>If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the flags <code class="docutils literal notranslate"><span class="pre">-dwi_main</span></code> and <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code>.
-The later in case you have reverse phase encoding acquisitions. The inputs are the relative path to the DWI, comma separate without white space between them, for example:</p>
+<p>If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the <code class="docutils literal notranslate"><span class="pre">-dwi_main</span></code> and <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> flags. When multiple input scans are provided, seperate the filenames by commas, with no space. Don’t forget to specify the full path of the images, as shown below; In this example, the <code class="docutils literal notranslate"><span class="pre">shell1</span></code> and <code class="docutils literal notranslate"><span class="pre">shell2</span></code> scans of <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> will be processed:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">On the next example the <code class="docutils literal notranslate"><span class="pre">shell1</span></code> and <code class="docutils literal notranslate"><span class="pre">shell2</span></code> of <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> will be process:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -proc_dwi -sub <span class="m">01</span> -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
 <span class="hll">           -dwi_main &lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell1_dwi.nii.gz,&lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell2_dwi.nii.gz
 </span></pre></div>
 </td></tr></table></div>
 </div>
-<div class="admonition-warning-dwi-rpe admonition">
-<p class="admonition-title">WARNING: ⚠️ -dwi_rpe ⚠️</p>
+<div class="admonition-reverse-phase-encoding-flag admonition">
+<p class="admonition-title">Reverse phase encoding flag ⏮</p>
 <p>If you use the argument <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> but your reverse phase encoding image does not contain a <em>bval</em> or <em>bvec</em> file, the module will
-assume that all the images are b0s (if more than one). If the <em>dwi_rpe</em> file contains any weighted image, it will affect greatly most
-steps of the processing.</p>
+assume that all the images are b0s (if more than one). If the file specified under the <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> flag contains any weighted image, it will considerably affect most steps of the processing.</p>
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
@@ -384,20 +386,17 @@ steps of the processing.</p>
     *&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/eddy</em></pre>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-3 docutils container">
-<p>A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module and,
-can be used as a quick overview of the DWI processing quality.
-We strongly recommend to take your time to check the quality of the processed DWI before generating the structural connectomes (<code class="docutils literal notranslate"><span class="pre">-SC</span></code>).
-An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:</p>
+<p>A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module. It is useful in providing a quick overview of the DWI processing quality. We strongly recommend to take your time in checking the quality of the processed DWI before generating the structural connectomes (<code class="docutils literal notranslate"><span class="pre">-SC</span></code>). An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc).</p></li>
-<li><p>Low signal to noise ratio (low quality or low resolution).</p></li>
-<li><p>Not enough diffusion directions.</p></li>
-<li><p>Registration errors.</p></li>
-<li><p>Bad encoding of the gradient direction tables (bvecs).</p></li>
-<li><p>Bad encoding of the shell values (bvals).</p></li>
-<li><p>Wrong assignation/encoding of the b0 images (bvals).</p></li>
-<li><p>Large motion artifacts.</p></li>
+<li><p>Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc);</p></li>
+<li><p>Low signal to noise ratio (low quality or low resolution);</p></li>
+<li><p>Not enough diffusion directions;</p></li>
+<li><p>Registration errors;</p></li>
+<li><p>Bad encoding of the gradient direction tables (bvecs);</p></li>
+<li><p>Bad encoding of the shell values (bvals);</p></li>
+<li><p>Wrong assignation/encoding of the b0 images (bvals);</p></li>
+<li><p>Large motion artifacts…</p></li>
 </ul>
 </div></blockquote>
 <p>File: <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/&lt;sub&gt;_space-dwi_desc-iFOD1-1M_tdi.mif</span></code></p>
@@ -451,22 +450,29 @@ An abnormal TDI image is a reflection of many different issues with the DWI acqu
 </pre></div>
 </div>
 <p><strong>Optional arguments:</strong></p>
-<blockquote>
-<div><dl class="option-list">
-<dt><kbd><span class="option">-t<var>racts</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> Number of streamlines used when computing the tractogram
-(default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40000000</em>)</p>
-</dd>
-<dt><kbd><span class="option">-k<var>eep_tck</var></span></kbd></dt>
-<dd><p>If specified, the tractogram will be copied to <em>&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/</em>.
-By default the tractogram is erased at the end of this module.</p>
-</dd>
-<dt><kbd><span class="option">-a<var>utoTract</var></span></kbd></dt>
-<dd><p>Performs automatic bundle segmentation (optional).
-See <a class="reference external" href="../05.autotract/index.html">Automatic Bundle Segmentation</a> for further information.</p>
-</dd>
-</dl>
-</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">-SC</span></code> supports different optional arguments:</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tracts</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>Number of streamlines used when computing the tractogram (default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40,000,000</em>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-keep_tck</span></code></p></td>
+<td><p>If specified, the tractogram will be copied to <em>&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/</em>. By default the tractogram is erased at the end of this module given the large file size.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-autoTract</span></code></p></td>
+<td><p>Performs automatic bundle segmentation (optional). See <a class="reference external" href="../05.autotract/index.html">Automatic Bundle Segmentation</a> for further information.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
 <p>Directories created or populated by <strong>-SC</strong>:</p>

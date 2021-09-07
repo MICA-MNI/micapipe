@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
@@ -38,6 +38,8 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -45,7 +47,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Building gradients" href="../04.gradients/index.html" />
-    <link rel="prev" title="Output matrices" href="../04.matrices/index.html" /> 
+    <link rel="prev" title="Main output matrices" href="../04.matrices/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -118,11 +120,43 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Surface visualization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#morphology">Morphology</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mpc">MPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#different-surfaces">Different surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#morphology">Morphology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#thickness">Thickness</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#thickness-native-surface">Thickness: Native surface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#thickness-fsaverage5">Thickness: fsaverage5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#thickness-conte-69">Thickness: conte 69</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature">Curvature</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-native-surface">Curvature: Native surface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-fsaverage5">Curvature: fsaverage5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-conte-69">Curvature: conte 69</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#smoothed">Smoothed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#thickness-fsaverage5-fwhm-10mm">Thickness fsaverage5 fwhm=10mm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#thickness-conte69-fwhm-10mm">Thickness conte69 fwhm=10mm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-fsaverage5-fwhm-10mm">Curvature fsaverage5 fwhm=10mm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-conte69-fwhm-10mm">Curvature conte69 fwhm=10mm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#conte-69">Conte 69</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conte-69-pial-surface">Conte 69: Pial surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conte-69-middle-surface">Conte 69: Middle surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conte-69-white-surface">Conte 69: White surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#native-sphere">Native sphere</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rsfmri-on-surface">rsfMRI on surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mpc-native-surface">MPC native surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#schaefer-400-labels">Schaefer-400 labels</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#download-code-examples-surfaces">Download code examples: Surfaces</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
@@ -202,14 +236,552 @@
             
   <div class="section" id="surface-visualization">
 <span id="surfaces"></span><h1>Surface visualization<a class="headerlink" href="#surface-visualization" title="Permalink to this headline">¶</a></h1>
+<p>This section describes where are the main surfaces generated by the pipeline, and how you can visualized them using python or R.
+This example will use the subject <code class="docutils literal notranslate"><span class="pre">HC001</span></code>, session <cite>01</cite> from the MICs dataset, and all paths will be relative to the subject directory or <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-HC001_ses01/</span></code></p>
+<p>On the following examples we’ll load and visualize a single subject surfaces.
+The subject surfaces are distributed through different directories, they look like:</p>
+<pre class="literal-block">sub-HC001/
+└── ses-01
+    ├── anat
+    │   └── surfaces
+    │       ├── <strong>conte69          # conte69 surfaces</strong>
+    │       ├── <strong>micro_profiles   # MPC connectomes and surfaces</strong>
+    │       └── <strong>morphology       # Thickness and curvature surfaces</strong>
+    └── func
+        └── <strong>surfaces             # rsfMRI surfaces and connectomes</strong></pre>
+<p>Each native surface parcellation is found inside the subject’s freesurfer directory and contains the string <code class="docutils literal notranslate"><span class="pre">mics.annot</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>freesurfer/
+└── sub-S03_ses-SES01
+    └── label
+        ├── lh.schaefer-400_mics.annot
+        └── rh.schaefer-400_mics.annot
+</pre></div>
+</div>
+<p>This example uses the packages <code class="docutils literal notranslate"><span class="pre">nilearn</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> and <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> for <strong>python</strong>.
+<strong>R</strong> uses the libraries <code class="docutils literal notranslate"><span class="pre">RColorBrewer</span></code> and <code class="docutils literal notranslate"><span class="pre">viridis</span></code>.
+The first step in both languages is to set the environment:</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span> <span class="o">=</span> <span class="s1">&#39;sub-HC001_ses-01&#39;</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span> <span class="o">=</span> <span class="s1">&#39;schaefer-400&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="nf">library</span><span class="p">(</span><span class="s">&quot;RColorBrewer&quot;</span><span class="p">)</span>
+<span class="nf">library</span><span class="p">(</span><span class="s">&quot;viridis&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set the working directory to your subjec&#39;s directory</span>
+<span class="nf">setwd</span><span class="p">(</span><span class="s">&quot;out/micapipe/sub-HC001/ses-01&quot;</span><span class="p">)</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span> <span class="o">&lt;-</span> <span class="s">&#39;sub-HC001_ses-01&#39;</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span> <span class="o">&lt;-</span> <span class="s">&#39;schaefer-400&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="morphology">
 <h2>Morphology<a class="headerlink" href="#morphology" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="thickness">
+<h3>Thickness<a class="headerlink" href="#thickness" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="thickness-native-surface">
+<h4>Thickness: Native surface<a class="headerlink" href="#thickness-native-surface" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
 </div>
-<div class="section" id="mpc">
-<h2>MPC<a class="headerlink" href="#mpc" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="different-surfaces">
-<h2>Different surfaces<a class="headerlink" href="#different-surfaces" title="Permalink to this headline">¶</a></h2>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="thickness-fsaverage5">
+<h4>Thickness: fsaverage5<a class="headerlink" href="#thickness-fsaverage5" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="thickness-conte-69">
+<h4>Thickness: conte 69<a class="headerlink" href="#thickness-conte-69" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="curvature">
+<h3>Curvature<a class="headerlink" href="#curvature" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="curvature-native-surface">
+<h4>Curvature: Native surface<a class="headerlink" href="#curvature-native-surface" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="curvature-fsaverage5">
+<h4>Curvature: fsaverage5<a class="headerlink" href="#curvature-fsaverage5" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="curvature-conte-69">
+<h4>Curvature: conte 69<a class="headerlink" href="#curvature-conte-69" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="smoothed">
+<h3>Smoothed<a class="headerlink" href="#smoothed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="thickness-fsaverage5-fwhm-10mm">
+<h4>Thickness fsaverage5 fwhm=10mm<a class="headerlink" href="#thickness-fsaverage5-fwhm-10mm" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="thickness-conte69-fwhm-10mm">
+<h4>Thickness conte69 fwhm=10mm<a class="headerlink" href="#thickness-conte69-fwhm-10mm" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="curvature-fsaverage5-fwhm-10mm">
+<h4>Curvature fsaverage5 fwhm=10mm<a class="headerlink" href="#curvature-fsaverage5-fwhm-10mm" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="curvature-conte69-fwhm-10mm">
+<h4>Curvature conte69 fwhm=10mm<a class="headerlink" href="#curvature-conte69-fwhm-10mm" title="Permalink to this headline">¶</a></h4>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="conte-69">
+<h2>Conte 69<a class="headerlink" href="#conte-69" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="conte-69-pial-surface">
+<h3>Conte 69: Pial surface<a class="headerlink" href="#conte-69-pial-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="conte-69-middle-surface">
+<h3>Conte 69: Middle surface<a class="headerlink" href="#conte-69-middle-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="conte-69-white-surface">
+<h3>Conte 69: White surface<a class="headerlink" href="#conte-69-white-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="native-sphere">
+<h3>Native sphere<a class="headerlink" href="#native-sphere" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="rsfmri-on-surface">
+<h2>rsfMRI on surface<a class="headerlink" href="#rsfmri-on-surface" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="mpc-native-surface">
+<h2>MPC native surface<a class="headerlink" href="#mpc-native-surface" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="schaefer-400-labels">
+<h2>Schaefer-400 labels<a class="headerlink" href="#schaefer-400-labels" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="download-code-examples-surfaces">
+<h3>Download code examples: Surfaces<a class="headerlink" href="#download-code-examples-surfaces" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference download internal" download="" href="../../_downloads/3ea93a2761914230d50f1a0695e1c70e/tutorial_surface_visualization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_surface_visualization.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/6b4c22b3a6f152b912e9ea212d5b9f41/tutorial_surface_visualization.R"><code class="xref download docutils literal notranslate"><span class="pre">R</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_surface_visualization.R'</span></code></a></p>
+</div>
 </div>
 </div>
 
@@ -224,7 +796,7 @@
         <a href="../04.gradients/index.html" class="btn btn-neutral float-right" title="Building gradients" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../04.matrices/index.html" class="btn btn-neutral float-left" title="Output matrices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../04.matrices/index.html" class="btn btn-neutral float-left" title="Main output matrices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
