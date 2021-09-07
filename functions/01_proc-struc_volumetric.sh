@@ -119,6 +119,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
 
     # If only one T1w is provided
     elif [ "$N" -eq 1 ]; then
+      Do_cmd fslchfiletype NIFTI_GZ "$t1_reo"
       Do_cmd cp -v "$t1_reo"* "$T1n4"
     fi
 

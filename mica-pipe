@@ -857,7 +857,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
              $COMMAND $PROC
     else
         # LOCAL - Resting state fMRI processing
-        $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -869,7 +869,7 @@ if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
     if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
     COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
     # LOCAL - QC individual
-    $COMMAND 2>&1 | tee -a  ${log_file_str}.txt
+    $COMMAND 2>&1 | tee ${log_file_str}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#

@@ -10,16 +10,19 @@
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
 [![version](https://img.shields.io/badge/version-v0.1.0.RC-blue)](https://github.com/MICA-MNI/micapipe)
 [![Docker Pulls](https://img.shields.io/docker/pulls/micalab/micapipe)](https://hub.docker.com/r/micalab/micapipe)
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version) 
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version)
 
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    
-> The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory. 
+> The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory.
 > The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
 ## Documentation ##
-You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/) 
-  
+You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/)
+
+## Container ##
+You can find the latest version of the container in [Docker](https://hub.docker.com/r/micalab/micapipe/)
+
 ## Advantages ##
 -   Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)).  
 -   Multiple parcellations (18 x 3).  
@@ -29,7 +32,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 -   Ready to use outputs.  
 -   Easy to use.  
 -   Standardized format (BIDS).  
- 
+
 ## Dependencies ##
 | *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
@@ -57,6 +60,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | kiwisolver      | 1.2.0     |
 | matplotlib      | 3.3.1     |
 | nibabel         | 3.1.1     |
+| nilearn         | 0.6.2     |
 | numpy           | 1.19.1    |
 | packaging       | 20.4      |
 | pandas          | 1.1.1     |
