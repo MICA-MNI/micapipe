@@ -5,7 +5,7 @@
 What's new?
 ================================================
 
-v0.1.1 (Roadrunner)
+v0.1.1
 ------------------------
 
 - Documentation update
@@ -16,7 +16,7 @@ v0.1.1 (Roadrunner)
 
 - Fix a typo in the mica-pipe help (distortion)
 
-- Rename flags and variables in ``micapipe_anonymize`` from *refacePro* to *warpface*
+- Rename flags and variables in *micapipe_anonymize* from *refacePro* to *warpface*
 
 - Update print version in mica-pipe
 
@@ -24,7 +24,7 @@ v0.1.1 (Roadrunner)
 
 - micapipe_qc: added full path to nifti_capture.py
 
-- Fixed an error in 02_proc-rsfmri.sh, wrong assignation of fmri_pe!
+- Fixed an error in *02_proc-rsfmri.sh*, wrong assignation of fmri_pe!
 
 v0.1.0 (Roadrunner)
 ------------------------

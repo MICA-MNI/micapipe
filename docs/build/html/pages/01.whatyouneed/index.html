@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Getting started &mdash; micapipe  documentation</title>
   
@@ -22,7 +22,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -35,7 +38,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -171,6 +173,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -182,7 +186,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/pages/01.whatyouneed/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -203,7 +207,7 @@
 <p>Micapipe requires that your data be formatted in accordance with the <a class="reference external" href="https://bids.neuroimaging.io">Brain Imaging Data Structure (BIDS)</a> format. You can find the information about the BIDS specification <a class="reference external" href="https://bids-specification.readthedocs.io/en/stable/">here</a>. We strongly recommend that you validate your data structure after the conversion, notably using the <a class="reference external" href="https://bids-standard.github.io/bids-validator/">BIDS Validator</a>.</p>
 <div class="admonition-dicom-to-bids-need-some-help admonition">
 <p class="admonition-title">DICOM to BIDS: need some help? 🤓</p>
-<p>You can find the function used for BIDS conversion of the MICs dataset on our repository (<a class="reference external" href="https://github.com/MICA-LAB/micapipe/blob/master/functions/mic2bids">mic2bids</a>) and further information here: <a class="reference external" href="../05.mic2bids/index.html">From raw to BIDS</a>. As dicom naming and sorting can be quite unique to each imaging protocol, you may have to adapt this script to be compatible with your own dataset. First, your dicoms should be sorted into unique directories for each sequence before running this script. You can then modify the filename strings listed in the script (line 140-146) to correspond to the specific naming scheme of your dicom directories and their associated BIDS naming convention. Note that you will need <a class="reference external" href="https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage">dcm2niix</a> to convert sorted dicoms into NifTI files.</p>
+<p>You can find the function used for BIDS conversion of the MICs dataset on our repository (<a class="reference external" href="https://github.com/MICA-LAB/micapipe/blob/master/functions/mic2bids">mic2bids</a>) and further information here: <a class="reference external" href="../05.mic2bids/index.html">From DICOMS to BIDS</a>. As DICOM naming and sorting can be quite unique to each imaging protocol, you may have to adapt this script to be compatible with your own dataset. First, your DICOMs should be sorted into unique directories for each sequence before running this script. You can then modify the filename strings listed in the script (line 140-146) to correspond to the specific naming scheme of your DICOM directories and their associated BIDS naming convention. Note that you will need <a class="reference external" href="https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage">dcm2niix</a> to convert sorted DICOMs into NifTI files.</p>
 </div>
 </div>
 <div class="section" id="set-the-environment">
@@ -226,7 +230,7 @@ export PATH
 </pre></div>
 </div>
 <p>You can define distinct DIR variables for each dependency, and add them to the PATH.</p>
-<p>The best example of how to set your local environment can be found in our <a class="reference external" href="https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh">init.sh</a> script.</p>
+<p>An example of how to set your local environment can be found in our <a class="reference external" href="https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh">init.sh</a> script.</p>
 <div class="admonition-why-we-love-containers admonition">
 <p class="admonition-title">Why we love containers 😍</p>
 <p>No need to make changes to your local environment if you are going for a Docker or Singularity installation! This is all handled within the container.</p>
