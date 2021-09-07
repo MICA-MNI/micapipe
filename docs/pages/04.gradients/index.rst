@@ -90,9 +90,7 @@ Geodesic distance gradient
 
 
 
-Download code examples
+Download code examples: Gradients
 --------------------------------------------------------
 
-:download:`Python Jupyter notebook <>`
-
-:download:`R source code <>`
+:download:`Python Jupyter notebook: 'tutorial_gradients.ipynb' <tutorial_gradients.ipynb>`

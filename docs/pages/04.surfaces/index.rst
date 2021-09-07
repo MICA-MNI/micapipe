@@ -306,11 +306,11 @@ Schaefer-400 labels
    .. code-tab:: r R
 
     # Load the surface
-    
 
-Download code examples
+
+Download code examples: Surfaces
 --------------------------------------------------------
 
-:download:`Python Jupyter notebook <>`
+:download:`Python Jupyter notebook: 'tutorial_surface_visualization.ipynb' <tutorial_surface_visualization.ipynb>`
 
-:download:`R source code <>`
+:download:`R source code: 'tutorial_surface_visualization.R' <tutorial_surface_visualization.R>`

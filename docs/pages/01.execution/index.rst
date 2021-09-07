@@ -30,7 +30,7 @@ If your dataset contains multiple scanning sessions for each subject, you may sp
 
 Let's break this down:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 1
 
@@ -49,7 +49,7 @@ Let's break this down:
 
 .. admonition:: Don't forget to specify ``-ses`` is needed! 💡
 
-        If the dataset contains a session directory (eg. ``/dataset/rawdata/sub-01/ses-01``) but the session flag is omitted during processing, micapipe will assume that the dataset consists of a single session. It will thus use the ``/sub-01/anat`` structure instead of ``/sub-01/ses-01/anat``, and lead to a bunch of errors! 
+        If the dataset contains a session directory (eg. ``/dataset/rawdata/sub-01/ses-01``) but the session flag is omitted during processing, micapipe will assume that the dataset consists of a single session. It will thus use the ``/sub-01/anat`` structure instead of ``/sub-01/ses-01/anat``, and lead to a bunch of errors!
 
 
 Module flags
@@ -65,7 +65,7 @@ T1w Structural Processing
 
 Processing modules for :ref:`T1-weighted structural imaging<structproc>` consist of:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -86,7 +86,7 @@ Microstructure-sensitive Image Processing
 
 Processing module for :ref:`quantitative T1 imaging<microstructproc>`:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -99,7 +99,7 @@ DWI Processing
 
 Processing modules for :ref:`diffusion-weighted imaging<dwiproc>` processing steps:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -109,12 +109,12 @@ Processing modules for :ref:`diffusion-weighted imaging<dwiproc>` processing ste
     - Diffusion tractography and generate structural connectomes.
 
 
-Resting-State fMRI Processing
+Resting-State fMRI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Processing module for :ref:`resting-state functional MRI data<restingstateproc>`:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -127,7 +127,7 @@ Integrated Quality Control
 
 Flags for :ref:`quality control<qc>`:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -142,7 +142,7 @@ Run all the modules
 
 Lastly, to run all processing steps while making sure module interdependencies are respected:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
@@ -161,7 +161,7 @@ More options
 
 You can specify additional options when running micapipe:
 
-.. list-table:: 
+.. list-table::
   :widths: 10 1000
   :header-rows: 0
 
