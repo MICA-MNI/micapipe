@@ -1,0 +1,1052 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Processing databases &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Output matrices" href="../04.matrices/index.html" />
+    <link rel="prev" title="Automatic Bundle Segmentation" href="../05.autotract/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#microstructure-informed-connectomis-mics">Microstructure-Informed Connectomis (MICs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#epilepsy-and-cognition-epic-unam">Epilepsy and Cognition (EpiC-UNAM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cambridge-centre-for-ageing-and-neuroscience-cam-can">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sudmex-conn">SUDMEX_CONN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#midnight-scan-club-msc">Midnight Scan Club MSC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#auditory-localization-with-7t-fmri-audiopath">Auditory localization with 7T fMRI (Audiopath)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Processing databases</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/04.databases/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="processing-databases-with-micapipe">
+<span id="databases"></span><h1><a class="toc-backref" href="#id2">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a><a class="headerlink" href="#processing-databases-with-micapipe" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#processing-databases-with-micapipe" id="id2">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#microstructure-informed-connectomis-mics" id="id3">Microstructure-Informed Connectomis (MICs)</a></p></li>
+<li><p><a class="reference internal" href="#epilepsy-and-cognition-epic-unam" id="id4">Epilepsy and Cognition (EpiC-UNAM)</a></p></li>
+<li><p><a class="reference internal" href="#cambridge-centre-for-ageing-and-neuroscience-cam-can" id="id5">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a></p></li>
+<li><p><a class="reference internal" href="#sudmex-conn" id="id6">SUDMEX_CONN</a></p></li>
+<li><p><a class="reference internal" href="#midnight-scan-club-msc" id="id7">Midnight Scan Club MSC</a></p></li>
+<li><p><a class="reference internal" href="#auditory-localization-with-7t-fmri-audiopath" id="id8">Auditory localization with 7T fMRI (Audiopath)</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>In this section you will find examples of how <code class="docutils literal notranslate"><span class="pre">mica-pipe</span></code> optional arguments where used to process a variety of databases with different acquisitions parameters.
+Under the tab <code class="docutils literal notranslate"><span class="pre">database</span> <span class="pre">structure</span></code> the files organization of each dataset is listed. However you’ll only find those files relevant for pipeline, not the full structure.
+Further information about the datasets such as the Source, and references can be found here as well.</p>
+<div class="section" id="microstructure-informed-connectomis-mics">
+<h2><a class="toc-backref" href="#id3">Microstructure-Informed Connectomis (MICs)</a><a class="headerlink" href="#microstructure-informed-connectomis-mics" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="../../_images/mics_logo.png"><img alt="../../_images/mics_logo.png" src="../../_images/mics_logo.png" style="width: 120.0px; height: 113.2px;" /></a>
+</div>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Royer, J., Rodriguez-Cruces, R., Tavakol, S., Lariviere, S., Herholz, P., Li, Q, Vos de Wael, R., Paquola, C., Benkarim, O., Park, B., Lowe, A. J., Margulies, D., Smallwood, J., Bernasconi, A., Bernasconi, N., Frauscher, B., Bernhardt, B. C.
+<em>An Open MRI Dataset for Multiscale Neuroscience</em>. bioRxiv 2021.08.04.454795</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p><a class="reference external" href="https://portal.conp.ca/dataset?id=projects/mica-mics">CONP Portal: MICA-MICs</a></p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">https://doi.org/10.1101/2021.08.04.454795</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-HC001
+└── ses-01
+    ├── anat
+    │   ├── sub-HC001_ses-01_acq-inv1_T1map.json
+    │   ├── sub-HC001_ses-01_acq-inv1_T1map.nii.gz
+    │   ├── sub-HC001_ses-01_acq-mp2rage_T1map.json
+    │   ├── sub-HC001_ses-01_acq-mp2rage_T1map.nii.gz
+    │   ├── sub-HC001_ses-01_T1w.json
+    │   └── sub-HC001_ses-01_T1w.nii.gz
+    ├── dwi
+    │   ├── sub-HC001_ses-01_acq-b2000-91_dir-AP_dwi.bval
+    │   ├── sub-HC001_ses-01_acq-b2000-91_dir-AP_dwi.bvec
+    │   ├── sub-HC001_ses-01_acq-b2000-91_dir-AP_dwi.json
+    │   ├── sub-HC001_ses-01_acq-b2000-91_dir-AP_dwi.nii.gz
+    │   ├── sub-HC001_ses-01_acq-b300-11_dir-AP_dwi.bval
+    │   ├── sub-HC001_ses-01_acq-b300-11_dir-AP_dwi.bvec
+    │   ├── sub-HC001_ses-01_acq-b300-11_dir-AP_dwi.json
+    │   ├── sub-HC001_ses-01_acq-b300-11_dir-AP_dwi.nii.gz
+    │   ├── sub-HC001_ses-01_acq-b700-41_dir-AP_dwi.bval
+    │   ├── sub-HC001_ses-01_acq-b700-41_dir-AP_dwi.bvec
+    │   ├── sub-HC001_ses-01_acq-b700-41_dir-AP_dwi.json
+    │   ├── sub-HC001_ses-01_acq-b700-41_dir-AP_dwi.nii.gz
+    │   ├── sub-HC001_ses-01_dir-PA_dwi.bval
+    │   ├── sub-HC001_ses-01_dir-PA_dwi.bvec
+    │   ├── sub-HC001_ses-01_dir-PA_dwi.json
+    │   └── sub-HC001_ses-01_dir-PA_dwi.nii.gz
+    └── func
+        ├── sub-HC001_ses-01_task-rest_acq-AP_bold.json
+        ├── sub-HC001_ses-01_task-rest_acq-AP_bold.nii.gz
+        ├── sub-HC001_ses-01_task-rest_acq-APse_bold.json
+        ├── sub-HC001_ses-01_task-rest_acq-APse_bold.nii.gz
+        ├── sub-HC001_ses-01_task-rest_acq-PAse_bold.json
+        └── sub-HC001_ses-01_task-rest_acq-PAse_bold.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p>MICs and micapipe were developed practically at the same time, therefore they are fully compatible and the default arguments are enough to process it.</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> -all
+</pre></div>
+</td></tr></table></div>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Using the -all flag is the same as using all the processing flags!</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> <span class="se">\</span>
+           -proc_structural <span class="se">\</span>
+           -proc_freesurfer <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+           -SC <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -MPC <span class="se">\</span>
+           -QC_subj
+</pre></div>
+</td></tr></table></div>
+</div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-HC001_ses-01_T1w.nii.gz</span></code>).</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-HC001_ses-01_T1w.nii.gz</span></code>).</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>proc_dwi</dt><dd><p>This section was processed with the default parameters. Reverse phase encoding image = <code class="docutils literal notranslate"><span class="pre">sub-HC001_ses-01_dir-PA_dwi.nii.gz</span></code>.
+DWI shells to process: <code class="docutils literal notranslate"><span class="pre">acq-b2000-91_dir-AP_dwi</span></code>, <code class="docutils literal notranslate"><span class="pre">acq-b300-11_dir-AP_dwi</span></code> and <code class="docutils literal notranslate"><span class="pre">acq-b700-41_dir-AP_dwi</span></code>.</p>
+</dd>
+<dt>SC</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>proc_rsfmri</dt><dd><p>This section was processed with the default parameters. Using melodic and FIX for nuisance regression and non linear registration (SyN) to T1w-nativepro space.
+Main scan = <code class="docutils literal notranslate"><span class="pre">task-rest_acq-AP_bold</span></code>. Main phase encoding = <code class="docutils literal notranslate"><span class="pre">task-rest_acq-APse</span></code>. Reverse phase encoding = <code class="docutils literal notranslate"><span class="pre">task-rest_acq-PAse</span></code>.</p>
+</dd>
+<dt>MPC</dt><dd><p>This section was processed with the default parameters. Microstructural image = <code class="docutils literal notranslate"><span class="pre">acq-mp2rage_T1map</span></code> . Image for register = <code class="docutils literal notranslate"><span class="pre">acq-inv1_T1map</span></code>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="epilepsy-and-cognition-epic-unam">
+<h2><a class="toc-backref" href="#id4">Epilepsy and Cognition (EpiC-UNAM)</a><a class="headerlink" href="#epilepsy-and-cognition-epic-unam" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Rodríguez-Cruces R., Bernhardt B. C., &amp; Concha L. (2020). <em>Multidimensional associations between cognition and connectome organization in temporal lobe epilepsy.</em> NeuroImage, Volume 213, June 2020, 116706.</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p>Unpublished</p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2020.116706">https://doi.org/10.1016/j.neuroimage.2020.116706</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-1-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-1-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-00367
+└── ses-01
+    ├── anat
+    │   ├── sub-00367_ses-01_T1w.json
+    │   └── sub-00367_ses-01_T1w.nii.gz
+    ├── dwi
+    │   ├── sub-00367_ses-01_acq-b2000_dir-AP_dwi.bval
+    │   ├── sub-00367_ses-01_acq-b2000_dir-AP_dwi.bvec
+    │   ├── sub-00367_ses-01_acq-b2000_dir-AP_dwi.json
+    │   ├── sub-00367_ses-01_acq-b2000_dir-AP_dwi.nii.gz
+    │   ├── sub-00367_ses-01_dir-PA_dwi.bval
+    │   ├── sub-00367_ses-01_dir-PA_dwi.bvec
+    │   ├── sub-00367_ses-01_dir-PA_dwi.json
+    │   └── sub-00367_ses-01_dir-PA_dwi.nii.gz
+    └── func
+        ├── sub-00367_ses-01_task-rest_bold.json
+        └── sub-00367_ses-01_task-rest_bold.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">00367</span> -ses <span class="m">01</span>
+           -proc_structural <span class="se">\</span>
+           -proc_freesurfer <span class="se">\</span>
+             -freesurfer_dir ./freesurfer_processed_00367 <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+           -SC <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+             -mainScanStr task-rest_bold <span class="se">\</span>
+             -regress_WM_CSF <span class="se">\</span>
+             -noFIX <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -QC_subj
+</pre></div>
+</td></tr></table></div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-00367_ses-01_T1w.nii.gz</span></code>).</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>This section was already processed, therefore we used the flag <code class="docutils literal notranslate"><span class="pre">-freesurfer_dir</span></code> to copy the already processed freesurfer files inside the <code class="docutils literal notranslate"><span class="pre">derivatives/freesurfer/sub-00367_ses-01</span></code> directory</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="cambridge-centre-for-ageing-and-neuroscience-cam-can">
+<h2><a class="toc-backref" href="#id5">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a><a class="headerlink" href="#cambridge-centre-for-ageing-and-neuroscience-cam-can" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Shafto M.A., Tyler L.K., Dixon M., Taylor J.R., Rowe J.B., Cusack R., Calder A.J., Marslen-Wilson W.D., Duncan J., Dalgleish T., Henson R.N., Brayne C., Cam-CAN, &amp; Matthews F.E. (2014).
+<em>The Cambridge Centre for Ageing and Neuroscience (Cam-CAN) study protocol: a cross-sectional, lifespan, multidisciplinary examination of healthy cognitive ageing</em>. BMC Neurology, 14 (204)</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p><a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cam-CAN Data repository</a></p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1186/s12883-014-0204-1">https://doi.org/10.1186/s12883-014-0204-1</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-2-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-2-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-CC110045
+└── ses-pre
+    ├── anat
+    │   ├── mti_MTR.nii
+    │   ├── sub-CC110045_T1w.json
+    │   └── sub-CC110045_T1w.nii.gz
+    ├── dwi
+    │   ├── sub-CC110045_dwi.bval
+    │   ├── sub-CC110045_dwi.bvec
+    │   ├── sub-CC110045_dwi.json
+    │   └── sub-CC110045_dwi.nii.gz
+    └── func
+        ├── sub-CC110045_ses-pre_ses-pre_task-Rest_bold.json
+        └── sub-CC110045_ses-pre_ses-pre_task-Rest_bold.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-1 docutils container">
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub CC110045 -ses pre <span class="se">\</span>
+           -proc_structural <span class="se">\</span>
+           -proc_freesurfer <span class="se">\</span>
+             -freesurfer_dir ./freesurfer_processed_CC110045 <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+           -SC <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+             -mainScanStr task-Rest_bold <span class="se">\</span>
+             -regress_WM_CSF <span class="se">\</span>
+             -noFIX <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -MPC <span class="se">\</span>
+             -microstructural_img sub-CC110045/ses-pre/mti_MTR.nii <span class="se">\</span>
+           -QC_subj <span class="se">\</span>
+</pre></div>
+</td></tr></table></div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-CC110045_T1w.nii.gz</span></code>).</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>This section was already processed, therefore we used the flag <code class="docutils literal notranslate"><span class="pre">-freesurfer_dir</span></code> to copy the already processed freesurfer files inside the <code class="docutils literal notranslate"><span class="pre">derivatives/freesurfer/sub-CC110045_ses-pre</span></code> directory</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="sudmex-conn">
+<h2><a class="toc-backref" href="#id6">SUDMEX_CONN</a><a class="headerlink" href="#sudmex-conn" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Garza-Villarreal, E. A., M. M. Chakravarty, B. Hansen, S. F. Eskildsen, G. A. Devenyi, D. Castillo-Padilla, T. Balducci, et al. 2017. â
+<em>The Effect of Crack Cocaine Addiction and Age on the Microstructure and Morphology of the Human Striatum and Thalamus Using Shape Analysis and Fast Diffusion Kurtosis Imaging</em>. Translational Psychiatry 7 (5): e1122e1122.</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 95%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p><a class="reference external" href="https://openneuro.org/datasets/ds003346/versions/1.1.1">Openneuro: SUDMEX_CONN: The Mexican dataset of cocaine use disorder patients.</a></p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1038/tp.2017.92">https://doi.org/10.1038/tp.2017.92</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-3-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-3-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-010
+├── anat
+│   ├── sub-010_T1w.json
+│   └── sub-010_T1w.nii.gz
+├── dwi
+│   ├── sub-010_dwi.bval
+│   ├── sub-010_dwi.bvec
+│   ├── sub-010_dwi.json
+│   └── sub-010_dwi.nii.gz
+├── fmap
+│   ├── sub-010_dir-PA_run-01_epi.json
+│   ├── sub-010_dir-PA_run-01_epi.nii.gz
+│   ├── sub-010_dir-PA_run-02_epi.json
+│   └── sub-010_dir-PA_run-02_epi.nii.gz
+└── func
+    ├── sub-010_task-rest_bold.json
+    └── sub-010_task-rest_bold.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-1 docutils container">
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="nv">subjectDir</span><span class="o">=</span>ds003346/sub-010
+
+ mica-pipe -bids ds003346 -out derivatives -sub <span class="m">010</span> <span class="se">\</span>
+           -proc_structural <span class="se">\</span>
+           -proc_freesurfer <span class="se">\</span>
+             -freesurfer_dir ./freesurfer_processed_010 <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+             -dwi_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
+           -SC <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+             -mainScanStr task-Rest_bold <span class="se">\</span>
+             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-02_epi.nii.gz
+             -regress_WM_CSF <span class="se">\</span>
+             -noFIX <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -QC_subj <span class="se">\</span>
+</pre></div>
+</td></tr></table></div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-010_T1w.nii.gz</span></code>).</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>This section was already processed, therefore we used the flag <code class="docutils literal notranslate"><span class="pre">-freesurfer_dir</span></code> to copy the already processed freesurfer files inside the <code class="docutils literal notranslate"><span class="pre">derivatives/freesurfer/sub-010</span></code> directory</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="midnight-scan-club-msc">
+<h2><a class="toc-backref" href="#id7">Midnight Scan Club MSC</a><a class="headerlink" href="#midnight-scan-club-msc" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Gordon E. M., Laumann T. O., Gilmore A. W., Newbold D. J., Greene D. J., Berg J. J., Ortega M., Hoyt-Drazen C., Gratton C., Sun H., Hampton J. M., oalson R. S., Nguyen A. L., McDermott K. B., Shimony J. S., Snyder A. Z. Schlaggar B. L., Petersen S. E., Nelson S. M., Dosenbach N. U. (2017).
+<em>Precision functional mapping of individual human brains.</em> Neuron, 95(4), 791-807.</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 93%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p><a class="reference external" href="https://openneuro.org/datasets/ds000224/versions/1.0.3">Openneuro: The Midnight Scan Club (MSC) dataset</a></p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1016/j.neuron.2017.07.011">https://doi.org/10.1016/j.neuron.2017.07.011</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-4-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-4-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-MSC01
+├── ses-func01
+│   └── func
+│       └── sub-MSC01_ses-func01_task-rest_bold.nii.gz
+├── ses-func02
+│   └── func
+│       └── sub-MSC01_ses-func02_task-rest_bold.nii.gz
+├── ses-func03
+│   └── func
+│   │   └── sub-MSC01_ses-func03_task-rest_bold.nii.gz
+├── ses-func04
+│   └── func
+│       └── sub-MSC01_ses-func04_task-rest_bold.nii.gz
+├── ses-func05
+│   └── func
+│       └── sub-MSC01_ses-func05_task-rest_bold.nii.gz
+├── ses-func06
+│   └── func
+│       └── sub-MSC01_ses-func06_task-rest_bold.nii.gz
+├── ses-func07
+│   └── func
+│       └── sub-MSC01_ses-func07_task-rest_bold.nii.gz
+├── ses-func08
+│   └── func
+│       └── sub-MSC01_ses-func08_task-rest_bold.nii.gz
+├── ses-func09
+│   └── func
+│       └── sub-MSC01_ses-func09_task-rest_bold.nii.gz
+├── ses-func10
+│   └── func
+│       └── sub-MSC01_ses-func10_task-rest_bold.nii.gz
+└── ses-struct01
+    └── anat
+        ├── sub-MSC01_ses-struct01_run-01_T1w.nii.gz
+        ├── sub-MSC01_ses-struct01_run-02_T1w.nii.gz
+        └── sub-MSC01_ses-struct01_run-01_T2w.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-1 docutils container">
+<p>This dataset contains two sessions of structural imaging, (<code class="docutils literal notranslate"><span class="pre">struct01</span></code> and <code class="docutils literal notranslate"><span class="pre">struct02</span></code>). However we only used the first one for processing. It does not contain DWI images, thus this step was omitted.
+Resting state functional acquisitions were acquired in different sessions (<code class="docutils literal notranslate"><span class="pre">func01</span></code> to <code class="docutils literal notranslate"><span class="pre">func10</span></code>), hence each session was register to the first anatomical image (<code class="docutils literal notranslate"><span class="pre">struct01</span></code>).</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Pipeline for the anatomical images struct01</span>
+mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 <span class="se">\</span>
+           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
+           -proc_freesurfer <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
+             -mainScanStr task-rest_bold <span class="se">\</span>
+             -fmri_pe  <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-AP_run-01_epi.nii.gz <span class="se">\</span>
+             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -QC_subj
+
+<span class="c1"># Pipeline for the functional images</span>
+<span class="k">for</span> N in <span class="o">{</span><span class="m">01</span>..10<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func<span class="si">${</span><span class="nv">N</span><span class="si">}</span> <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+           -mainScanStr task-rest_bold <span class="se">\</span>
+           -regress_WM_CSF <span class="se">\</span>
+           -noFIX <span class="se">\</span>
+           -sesAnat struct01 <span class="se">\</span>
+           -QC_subj <span class="se">\</span>
+<span class="k">done</span>
+</pre></div>
+</td></tr></table></div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>Structural processing used the files <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T1w.nii.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T2w.nii.gz</span></code> to generate the nativepro file</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>Freesurfer used <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T1w.nii.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T2w.nii.gz</span></code> to generate the native surfaces.</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>proc_rsfmri</dt><dd><p>Each functional session was processed individually and registered to the anatomical session <code class="docutils literal notranslate"><span class="pre">struct01</span></code>. In this example we use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop to iterate over each session.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="auditory-localization-with-7t-fmri-audiopath">
+<h2><a class="toc-backref" href="#id8">Auditory localization with 7T fMRI (Audiopath)</a><a class="headerlink" href="#auditory-localization-with-7t-fmri-audiopath" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Reference</dt><dd><p>Sitek, K. R., Gulban, O. F., Calabrese, E., Johnson, G. A., Lage-Castellanos, A., Moerel, M., Ghosh S. S. &amp; De Martino, F. (2019).
+<em>Mapping the human subcortical auditory system using histology, postmortem MRI and in vivo MRI at 7T</em>. Elife, 8, e48932. 10.7554/eLife.48932.</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 93%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p><a class="reference external" href="https://openneuro.org/datasets/ds001942/versions/1.2.0">Openneuro: Auditory localization with 7T fMRI</a></p></td>
+</tr>
+<tr class="row-even"><td><p>doi</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.7554/eLife.48932">https://doi.org/10.7554/eLife.48932</a></p></td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="https://openneuro.org/datasets/ds001942/versions/1.2.0">Audiopath</a></p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-5-0 docutils container">
+<div class="docutils container">
+<p>Database structure</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-5-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-5-0 active docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tree
+sub-S01
+└── ses-SES01
+    ├── anat
+    │   ├── sub-S01_ses-SES01_acq-ShortInv_run-01_T1w.json
+    │   ├── sub-S01_ses-SES01_acq-ShortInv_run-01_T1w.nii.gz
+    │   ├── sub-S01_ses-SES01_run-01_T1w.json
+    │   ├── sub-S01_ses-SES01_run-01_T1w.nii.gz
+    │   ├── sub-S01_ses-SES01_run-02_T1w.json
+    │   └── sub-S01_ses-SES01_run-02_T1w.nii.gz
+    ├── dwi
+    │   ├── sub-S01_ses-SES01_dir-AP_run-01_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-AP_run-01_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-AP_run-01_dwi.json
+    │   ├── sub-S01_ses-SES01_dir-AP_run-01_dwi.nii.gz
+    │   ├── sub-S01_ses-SES01_dir-AP_run-02_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-AP_run-02_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-AP_run-02_dwi.json
+    │   ├── sub-S01_ses-SES01_dir-AP_run-02_dwi.nii.gz
+    │   ├── sub-S01_ses-SES01_dir-AP_run-03_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-AP_run-03_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-AP_run-03_dwi.json
+    │   ├── sub-S01_ses-SES01_dir-AP_run-03_dwi.nii.gz
+    │   ├── sub-S01_ses-SES01_dir-PA_run-01_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-PA_run-01_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-PA_run-01_dwi.json
+    │   ├── sub-S01_ses-SES01_dir-PA_run-01_dwi.nii.gz
+    │   ├── sub-S01_ses-SES01_dir-PA_run-02_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-PA_run-02_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-PA_run-02_dwi.json
+    │   ├── sub-S01_ses-SES01_dir-PA_run-02_dwi.nii.gz
+    │   ├── sub-S01_ses-SES01_dir-PA_run-03_dwi.bval
+    │   ├── sub-S01_ses-SES01_dir-PA_run-03_dwi.bvec
+    │   ├── sub-S01_ses-SES01_dir-PA_run-03_dwi.json
+    │   └── sub-S01_ses-SES01_dir-PA_run-03_dwi.nii.gz
+    ├── fmap
+    │   ├── sub-S01_ses-SES01_acq-gre_dir-AP_run-01_epi.json
+    │   ├── sub-S01_ses-SES01_acq-gre_dir-AP_run-01_epi.nii.gz
+    │   ├── sub-S01_ses-SES01_acq-gre_dir-PA_run-01_epi.json
+    │   └── sub-S01_ses-SES01_acq-gre_dir-PA_run-01_epi.nii.gz
+    └── func
+        ├── sub-S01_ses-SES01_task-rest_bold.json
+        └── sub-S01_ses-SES01_task-rest_bold.nii.gz
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-5-1 docutils container">
+<p>This 7T in vivo dataset contains high resolution anatomical MRI, diffusion-weighted MRI and resting state fMRI. DWI images were acquired twice with the phase encoding direction of the second acquisition reversed with respect to the first.
+No real quantitative image was acquired, instead we used the T1w ShortInv for the MPC even though is not ideal.
+Additionally, it contains rsfMRI reverse phase encoding acquisitions for geometric distortion corrections.</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="nv">subjectDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01
+ <span class="nv">dwiDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01/dwi
+ <span class="nv">sub</span><span class="o">=</span>sub-S02_ses-SES01
+
+ mica-pipe -bids ds001942/ -out . -sub S01 -ses SES01 <span class="se">\</span>
+           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
+           -proc_freesurfer -hires <span class="se">\</span>
+           -post_structural <span class="se">\</span>
+           -proc_dwi <span class="se">\</span>
+             -dwi_main <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-03_dwi.nii.gz <span class="se">\</span>
+             -dwi_rpe <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-03_dwi.nii.gz <span class="se">\</span>
+             -rpe_all <span class="se">\</span>
+           -SC <span class="se">\</span>
+           -proc_rsfmri <span class="se">\</span>
+             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
+             -mainScanStr task-rest_bold <span class="se">\</span>
+             -fmri_pe  <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-AP_run-01_epi.nii.gz <span class="se">\</span>
+             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
+           -GD <span class="se">\</span>
+           -Morphology <span class="se">\</span>
+           -MPC <span class="se">\</span>
+             -microstructural_img <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
+             -microstructural_reg <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
+           -QC_subj
+</pre></div>
+</td></tr></table></div>
+<dl class="simple">
+<dt>proc_structural</dt><dd><p>Structural processing used the files <code class="docutils literal notranslate"><span class="pre">sub-S01_ses-SES01_run-01_T1w.nii.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">sub-S01_ses-SES01_run-02_T1w.nii.gz</span></code> to generate the nativepro file</p>
+</dd>
+<dt>proc_freesurfer</dt><dd><p>Freesurfer used <code class="docutils literal notranslate"><span class="pre">sub-S01_ses-SES01_run-02_T1w.nii.gz</span></code> to generate the native surfaces. We used the <code class="docutils literal notranslate"><span class="pre">hires</span></code> option as is recommended for 7T isometric acquisition with high resolution or below, in this case the voxel size is 0.3x0.3x0.3 mm3.</p>
+</dd>
+<dt>post_structural</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>Morphology</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>GD</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>proc_dwi</dt><dd><p>DWI directions were acquired twice with opposite phase encoding directions, thus we used the option <code class="docutils literal notranslate"><span class="pre">rpe_all</span></code> for the processing.
+Main DWI shells to process: <code class="docutils literal notranslate"><span class="pre">dir-AP_run-01</span></code>, <code class="docutils literal notranslate"><span class="pre">dir-AP_run-02</span></code> and <code class="docutils literal notranslate"><span class="pre">dir-AP_run-03</span></code>.
+Reverse phase encoding images = <code class="docutils literal notranslate"><span class="pre">dir-PA_run-01</span></code>, <code class="docutils literal notranslate"><span class="pre">dir-PA_run-02</span></code> and <code class="docutils literal notranslate"><span class="pre">dir-PA_run-03</span></code>.</p>
+</dd>
+<dt>SC</dt><dd><p>This section was processed with the default parameters.</p>
+</dd>
+<dt>proc_rsfmri</dt><dd><p>White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Only affine registration between the rsfMRI and T1-nativepro was performed.
+Main scan = <code class="docutils literal notranslate"><span class="pre">task-rest_bold</span></code>. Main phase encoding = <code class="docutils literal notranslate"><span class="pre">fmap/${sub}_acq-gre_dir-AP_run-01_epi</span></code>. Reverse phase encoding = <code class="docutils literal notranslate"><span class="pre">fmap/${sub}_acq-gre_dir-PA_run-01_epi</span></code>.</p>
+</dd>
+<dt>MPC</dt><dd><p>The microstructural image as the image to register to freesurfer space were the same = <code class="docutils literal notranslate"><span class="pre">acq-ShortInv_run-01_T1w</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../04.matrices/index.html" class="btn btn-neutral float-right" title="Output matrices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../05.autotract/index.html" class="btn btn-neutral float-left" title="Automatic Bundle Segmentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

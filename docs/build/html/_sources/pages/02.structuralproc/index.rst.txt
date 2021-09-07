@@ -31,10 +31,10 @@ This module performs initial structural pre-processing, keeping data in volumetr
     .. tab:: Processing steps
 
         - Each T1-weighted run is LPI-reoriented, deobliqued, and oriented to standard space (MNI152).
-        - Create the T1-weighted image used in all downstream processing: T1_nativepro. If multiple T1w scans are found in the raw data, they are aligned to the first run and averaged.
+        - Create the T1-weighted image used in all downstream processing: ``T1_nativepro``. If multiple T1w scans are found in the raw data, they are aligned to the first run and averaged.
         - Intensity non-uniformity correction (N4)
         - Intensity rescaling [100,0]
-        - Create brainmask (FSL-BET)
+        - Create brain mask (FSL-BET)
         - Subcortical structure segmentation using FSL FIRST
         - Tissue type segmentation (Gray matter, white matter, CSF) using FSL FAST
         - Non-linear registration to MNI152 (0.8mm and 2mm resolutions)
@@ -45,7 +45,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
        **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_structural**
+            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_structural** **<options>**
 
         **Docker command:**
 
@@ -54,24 +54,30 @@ This module performs initial structural pre-processing, keeping data in volumetr
 
         **Optional arguments**
 
-        ``-proc_structural`` only have one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.
+        ``-proc_structural`` only has one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.
 
-        -t1wStr
-                    ``<str>`` This option allows to manually select the main scan(s) for structural processing.
-                    It should be separated by a comma, with no blank spaces: eg. *-t1wStr run-02_T1w*.
-                    By default the pipeline uses the string *T1w.nii*
+        .. list-table:: 
+            :widths: 10 1000
+            :header-rows: 1
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-t1wStr`` ``<str>``
+              - This option allows manual selection of the main scan(s) for structural processing. It should be separated by a comma, with no blank spaces: eg. ``-t1wStr`` ``run-02_T1w``. By default the pipeline uses the string ``T1w.nii``. This option can be useful if the user wishes to exclude one or several T1w scans from further processing. 
+
+        In the following example, if multiple T1w are found inside the *BIDS/<sub>/anat* directory, only the MRI volume containing the string ``run-02_T1w`` will be processed:
 
         .. code-block:: bash
-           :caption: On the next example if multiple T1w are found inside the *BIDS/<sub>/anat* directory, only the MRI volume containing the string ``run-02_T1w`` will be processed:
+           :caption: Example
            :linenos:
            :emphasize-lines: 2
 
             mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                       -proc_structural -t1wStr run-02_T1w
 
-        .. admonition:: Multiple T1w weighted images
+        .. admonition:: Multiple T1w weighted images 🧠 🧠 🧠
 
-            Be sure you use the same T1w images in ``-proc_structural`` and ``-proc_freesurfer``. Although they are independent modules, when using the same image the registrations improves greatly.
+            Be sure you use the same T1w images in ``-proc_structural`` and ``-proc_freesurfer``. Although they are independent modules, when using the same image the registrations will be much better.
 
     .. tab:: Outputs
 
@@ -138,7 +144,7 @@ This modules performs cortical surface segmentation from all native T1w acquisit
 
 .. admonition:: Quality control 💅🏻
 
-    We recommend that users carefully inspect FreeSurfer-generated cortical surface segmentations. As micapipe relies heavily on surface-based processing, poor segmentation quality may compromise the validity of downstream results. FreeSurfer provides comprehensive tutorials for manual correction of surface segmentations: See tutorials `'Control Points' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/ControlPoints_freeview>`_, `'White matter' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/WhiteMatterEdits_freeview>`_, and `'Pial surfaces' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview>`_ explaining different types of corrections that can be applied to cortical surfaces.
+    We recommend that users carefully inspect FreeSurfer-generated cortical surface segmentations. As micapipe relies heavily on surface-based processing, poor segmentation quality may compromise the validity of downstream results. FreeSurfer provides comprehensive tutorials for manual correction of surface segmentations: See tutorials `'Control Points' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/ControlPoints_freeview>`_, `'White matter' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/WhiteMatterEdits_freeview>`_, and `'Pial edits' <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview>`_ explaining different types of corrections that can be applied to cortical surfaces.
 
 .. tabs::
 
@@ -158,18 +164,22 @@ This modules performs cortical surface segmentation from all native T1w acquisit
         .. parsed-literal::
             $ docker -proc_freesurfer -<options>
 
-        **Optional arguments**:
+        **Optional arguments**
 
+        ``-proc_freesurfer`` has a few optional arguments, including an option for T1w scan selection as in ``proc_volumetric``.
 
-          *-t1wStr*
-                            ``<str>`` Same option as in *-proc_structural*, this will allow to manually select the main scan(s) for structural processing.
+        .. list-table:: 
+            :widths: 10 1000
+            :header-rows: 1
 
-          -freesurfer_dir   ``<path>`` Will copy existing FreeSurfer outputs in the provided path to the appropriate
-                            location. This way, if the cortical segmentations of your dataset have already
-                            been quality controlled, results can be easily integrated within the pipeline's directory structure.
-
-          -hires            Use this option for data with voxel sizes less than 1mm3 at native resolution
-                            (eg. isometric 7T acquisitions. Requires *-proc_structural*). For further information see `SubmillimeterRecon <https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon>`_.
+            * - **Optional argument**
+              - **Description**
+            * - ``-t1wStr`` ``<str>``
+              - Same option as in ``-proc_structural``, this will allow to manually select the main scan(s) for structural processing.
+            * - ``-freesurfer_dir`` ``<path>``
+              - This option will copy existing FreeSurfer outputs in the provided path to the appropriate location. This way, if the cortical segmentations of your dataset have already been quality controlled, results can be easily integrated within the pipeline's directory structure.
+            * - ``-hires``
+              - Use this option for data with voxel sizes less than 1mm3 at native resolution (e.g. isometric 7T acquisitions. Requires ``-proc_structural``). For further information see `SubmillimeterRecon <https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon>`_.
 
     .. tab:: Outputs
 
@@ -215,7 +225,7 @@ This first structural post-processing module registers native FreeSurfer-space c
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-post_structural**
+            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-post_structural** **<options>**
 
         **Docker command:**
 
@@ -224,9 +234,18 @@ This first structural post-processing module registers native FreeSurfer-space c
 
         **Optional arguments**:
 
-        -atlas    ``<str>`` Registers only selected parcellations to subject space (e.g. *economo,aparc*).
-                  By default, all 18 parcellations included in the pipeline will be registered
-                  to the subject's native volumetric and surface space. Below is the list of all the possible options:
+        ``-post_structural`` only has one optional argument:
+
+        .. list-table:: 
+            :widths: 10 1000
+            :header-rows: 1
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-atlas`` ``<str>``
+              - Registers only selected parcellations to subject space (e.g. *economo,aparc*). By default, all 18 parcellations included in the pipeline will be registered to the subject's native volumetric and surface space. Below is the list of all the possible options:
+
+        The following parcellations are available in micapipe:
 
         .. hlist::
             :columns: 3
@@ -250,22 +269,23 @@ This first structural post-processing module registers native FreeSurfer-space c
             - vosdewael-300
             - vosdewael-400
 
-        .. code-block:: python
-           :caption: The next example will only process the three selected parcellations (``schaefer-200,economo,aparc``)
+        The next example will only process the three selected parcellations (``schaefer-200,economo,aparc``)
+
+        .. code-block:: bash
+           :caption: Example
            :linenos:
            :emphasize-lines: 2
 
             mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                       -post_structural -atlas schaefer-200,economo,aparc
 
-        .. admonition:: Important ⚠️
+        .. admonition:: Thinking ahead ☂️
 
-             Functional, structural and geodesic distance connectomes will be calculate only on the parcellations selected in this step.
-             If another parcellation should be added after this module, ``-post_structural`` and its dependent modules have to be re-run.
+             Functional and structural connectomes, microstructural profile covariance, and geodesic distance matrices will be calculated only on the parcellations selected in this step. If another parcellation should be added after this module, ``-post_structural`` and its dependent modules have to be re-run.
 
     .. tab:: Outputs
 
-        Directories created or populated by **-proc_structural** will be under each ``SubjectDir`` which is ``<outputDirectory>/micapipe/<sub>`` and ``freesurferDir`` which is ``<outputDirectory>/freesurfer/<sub>``:
+        Directories created or populated by ``-post_structural`` will be under each ``SubjectDir`` which is ``<outputDirectory>/micapipe/<sub>`` and ``freesurferDir`` which is ``<outputDirectory>/freesurfer/<sub>``:
 
         .. parsed-literal::
 
@@ -307,7 +327,7 @@ This first structural post-processing module registers native FreeSurfer-space c
                 - *<SubjectDir>/xfms/<sub>_from-fsnative_to_nativepro_t1w_InverseWarped.nii.gz*
                 - *<SubjectDir>/xfms/<sub>_from-fsnative_to_nativepro_t1w_Warped.nii.gz*
 
-        ``<parcellation>`` stands for each name of the 18 parcellations. ``<hemi>`` is either ``lh`` or ``rh``.
+        ``<parcellation>`` stands for the name of each of the 18 parcellations. ``<hemi>`` is either ``lh`` or ``rh``.
 
 
 -GD
@@ -327,7 +347,7 @@ This module calculates geodesic distance between all cortical parcels from the s
 
     .. tab:: Processing steps
 
-        - Identifies centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel
+        - Identify centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel
         - Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using `workbench -surface-geodesic-distance <https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance>`_
         - Average computed distances within parcels
 
@@ -359,7 +379,7 @@ This module calculates geodesic distance between all cortical parcels from the s
             - Square matrix of average parcel-to-parcel geodesic distances:
                 - *<sub>_space-fsnative_atlas-<parcellation>_GD.txt*
 
-        ``<parcellation>`` stands for each name of the 18 parcellations.
+        ``<parcellation>`` stands for the name of each of the 18 parcellations.
 
 
 -Morphology

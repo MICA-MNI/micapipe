@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Automatic Bundle Segmentation &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Processing databases with micapipe" href="../04.databases/index.html" />
+    <link rel="prev" title="micapipe_anonymize" href="../05.micapipe_anonymize/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Automatic Bundle Segmentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/05.autotract/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="automatic-bundle-segmentation">
+<span id="autotract"></span><h1>Automatic Bundle Segmentation<a class="headerlink" href="#automatic-bundle-segmentation" title="Permalink to this headline">¶</a></h1>
+<p>This section describe the integrated automatic virtual dissection of the main brain tracts, which is based in <a class="reference external" href="https://github.com/rcruces/auto_tracto/blob/master/Readme.md">auto_tracto</a>, and was implemented using ANTs registration tools.
+The script <code class="docutils literal notranslate"><span class="pre">03_auto_tracts.sh</span></code> main purpose is to split a tck tractogram into <a class="reference external" href="https://github.com/lconcha/auto_tracto/blob/master/tract_definitions.md">35 white matter tracts</a>, using already stablished automatic dissection protocols, which were manually tuned for optimal performance.</p>
+<p>Derived from a full brain tractogram 35 bundles are virtually dissected using the <a class="reference external" href="https://github.com/rcruces/auto_tracto/tree/master/lanirem/protocols">LANIREM protocols</a>. The quality of the full brain tractogram will determine the quality of bundle separation. It is highly recommended to provide a tractogram with more than one million streamlines, and one that has been checked for errors. Strategies such as anatomically-contstrained tractography (ACT) and spherical deconvolution informed filtering of tractograms (SIFT), both available in MRTrix3 should aid in obtaining such high-quality tractograms.</p>
+<img alt="../../_images/autotract.png" class="align-center" src="../../_images/autotract.png" />
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<ul class="simple">
+<li><p>Non-linear (SyN) registration of the native FA map to the FA atlas (FMRIB58_FA_1mm)</p></li>
+<li><p>Apply transformation to each bundle protocols to register them to the native FA space (DWI).</p></li>
+<li><p>Verify stop criterion conditionals.</p></li>
+<li><p>Filter each white matter bundle according to the dissection protocols.</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p>There are two ways to run the <em>automatic bundle segmentation</em>, one is integrated within the main script <code class="docutils literal notranslate"><span class="pre">mica-pipe</span></code> under the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module, and second is using the stand alone script <code class="docutils literal notranslate"><span class="pre">03_auto_tracts.sh</span></code>.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Stand alone script requires that all inputs are in DWI space.</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span></span>03_auto_tracts.sh <span class="se">\</span>
+     -tck sub-01_full_brain_tractogram.tck <span class="se">\</span>
+     -outbase sub-01_tract <span class="se">\</span>
+     -mask sub-01_binary_brain_mask.nii.gz <span class="se">\</span>
+     -fa sub-01_FA_map.nii.gz <span class="se">\</span>
+     -weights sub-01_full_brain_tractogram_weights.txt
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Integrated usage within <code class="docutils literal notranslate"><span class="pre">mica-pipe</span> <span class="pre">-SC</span></code></span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe  <span class="se">\</span>
+     -sub &lt;subject&gt; <span class="se">\</span>
+     -ses &lt;session&gt; <span class="se">\</span>
+     -out &lt;outputDirectory&gt; <span class="se">\</span>
+     -bids &lt;BIDS&gt; <span class="se">\</span>
+<span class="hll">     -SC -autoTract <span class="se">\</span>
+</span>     -tracts 40M
+</pre></div>
+</td></tr></table></div>
+</div>
+<dl>
+<dt><strong>Mandatory Arguments</strong></dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-t<var>ck</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> full tractogram file <em>tck</em> (ideally SIFTED).</p>
+</dd>
+<dt><kbd><span class="option">-o<var>utbase</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">str</span></code> base name for all your outputs.</p>
+</dd>
+<dt><kbd><span class="option">-m<var>ask</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> Binary mask in subject dwi space.</p>
+</dd>
+<dt><kbd><span class="option">-f<var>a</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> FA map in subject dwi space. Used for registration to template.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>Optional Arguments</strong></dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-k<var>eep_tmp</var></span></kbd></dt>
+<dd><p>Do not delete temporary directory</p>
+</dd>
+<dt><kbd><span class="option">-t<var>mpDir</var></span></kbd></dt>
+<dd><p>Specify location of temporary directory.</p>
+</dd>
+<dt><kbd><span class="option">-m<var>inStreamlinesPerVoxel</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">num</span></code> Streamlines are truncated if voxel contains less than this number of streamlines. Default is 1</p>
+</dd>
+<dt><kbd><span class="option">-r<var>obust</var></span></kbd></dt>
+<dd><p>This option to runs a more ROBUST SyN registration ( More computation time )</p>
+</dd>
+<dt><kbd><span class="option">-w<var>eights</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> Use this option if you calculated a weights file from SIFT2</p>
+</dd>
+<dt><kbd><span class="option">-t<var>hreads</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">num</span></code> Number of threads (Default is 6)</p>
+</dd>
+<dt><kbd><span class="option">-v<var>ersion</var></span></kbd></dt>
+<dd><p>Print software version</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<p>Directories created by this script will be in the selected <code class="docutils literal notranslate"><span class="pre">outbase</span></code>.
+The outputs generate by the micapipe integrated script are in <em>&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/auto_tract</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dwi/auto_tract/
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_AC.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_AF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_AF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_atlas2fa.nii.gz
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CC_MID.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGFP_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGFP_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGH_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGH_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CG_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGR_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CGR_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CG_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CST_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_CST_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FA_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FA_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FMA.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FMI.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FX_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_FX_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_IFOF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_IFOF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_ILF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_ILF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_MLF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_MLF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_OR_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_OR_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_SLF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_SLF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_summary.txt
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_TAPETUM.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_UF_L.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_UF_R.tck
+├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_VOF_L.tck
+└── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_VOF_R.tck
+</pre></div>
+</div>
+<p>The description refers to the algorithm used to generate the tractogram (<em>iFOD2</em>), its number of streamlines (<em>40M</em>) and the filtering algorithm (<em>SIFT2</em>).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Acronym</p></th>
+<th class="head"><p>Tract name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AC</p></td>
+<td><p>Anterior Commissure</p></td>
+</tr>
+<tr class="row-odd"><td><p>AF</p></td>
+<td><p>Arcuate Fasciculus</p></td>
+</tr>
+<tr class="row-even"><td><p>CC_MID</p></td>
+<td><p>Corpus Callosum middle portion</p></td>
+</tr>
+<tr class="row-odd"><td><p>CGFP</p></td>
+<td><p>Cingulum, fronto-parietal portion</p></td>
+</tr>
+<tr class="row-even"><td><p>CGH</p></td>
+<td><p>Cingulum, parahippocampal portion</p></td>
+</tr>
+<tr class="row-odd"><td><p>CG</p></td>
+<td><p>Cingulum, whole</p></td>
+</tr>
+<tr class="row-even"><td><p>CGR</p></td>
+<td><p>Cingulum, rostral and subgenual</p></td>
+</tr>
+<tr class="row-odd"><td><p>CST</p></td>
+<td><p>Corticospinal tract</p></td>
+</tr>
+<tr class="row-even"><td><p>FA</p></td>
+<td><p>Frontal aslant</p></td>
+</tr>
+<tr class="row-odd"><td><p>FMA</p></td>
+<td><p>Forceps major of corpus callosum</p></td>
+</tr>
+<tr class="row-even"><td><p>FMI</p></td>
+<td><p>Forceps minor of corpus callosum</p></td>
+</tr>
+<tr class="row-odd"><td><p>FX</p></td>
+<td><p>Fornix</p></td>
+</tr>
+<tr class="row-even"><td><p>IFOF</p></td>
+<td><p>Inferior fronto-occipital fasciculus</p></td>
+</tr>
+<tr class="row-odd"><td><p>ILF</p></td>
+<td><p>Inferior longitudinal fasciculus</p></td>
+</tr>
+<tr class="row-even"><td><p>MLF</p></td>
+<td><p>Middle longitudinal fasciculus</p></td>
+</tr>
+<tr class="row-odd"><td><p>OR</p></td>
+<td><p>Optic radiation</p></td>
+</tr>
+<tr class="row-even"><td><p>SLF</p></td>
+<td><p>Superior longitudinal fasciculus</p></td>
+</tr>
+<tr class="row-odd"><td><p>UF</p></td>
+<td><p>Uncinate fasciculus</p></td>
+</tr>
+<tr class="row-even"><td><p>VOF</p></td>
+<td><p>Vertical occipital fasciculus</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../04.databases/index.html" class="btn btn-neutral float-right" title="Processing databases with micapipe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../05.micapipe_anonymize/index.html" class="btn btn-neutral float-left" title="micapipe_anonymize" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

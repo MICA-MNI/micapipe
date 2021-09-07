@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Mic2bids &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="micapipe_cleanup" href="../05.micapipe_cleanup/index.html" />
+    <link rel="prev" title="Quality control" href="../02.qc/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Mic2bids</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/05.mic2bids/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="from-dicoms-to-bids-mic2bids">
+<span id="mic2bids"></span><h1>From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code><a class="headerlink" href="#from-dicoms-to-bids-mic2bids" title="Permalink to this headline">¶</a></h1>
+<p>This section was meant to be an example of how to organize a database from sorted <em>DICOMS</em> to <a class="reference external" href="https://bids.neuroimaging.io">BIDS</a>. As dicom naming and sorting can be quite unique to each imaging protocol,
+the MRI sequence names and outputs must be adapted to be compatible with each dataset.</p>
+<p>The first step starts by looking at the organization of the sorted <em>DICOMS</em> directory. You must identify the protocol names that you want to transform to <em>NIFTI</em>, and which will populate the BIDS directory.
+Let’s suppose that your sorted <em>DICOMS</em> directory looks like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S1_02_AAHead_Scout_64ch</span><span class="o">-</span><span class="n">head</span><span class="o">-</span><span class="n">coil_MPR_sag</span>
+<span class="n">S1_03_AAHead_Scout_64ch</span><span class="o">-</span><span class="n">head</span><span class="o">-</span><span class="n">coil_MPR_cor</span>
+<span class="n">S1_04_AAHead_Scout_64ch</span><span class="o">-</span><span class="n">head</span><span class="o">-</span><span class="n">coil_MPR_tra</span>
+<span class="n">S1_08_mprage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso_ORIG</span>
+<span class="n">S1_10_dwi_b2000_90</span>
+<span class="n">S1_11_dwi_b700_40</span>
+<span class="n">S1_12_dwi_b300_10</span>
+<span class="n">S1_13_dwi_b0_5PA</span>
+<span class="n">S1_16_rsfmri</span><span class="o">-</span><span class="mi">3</span><span class="n">mm</span><span class="o">-</span><span class="n">bold_AP</span>
+<span class="n">S1_17_rsfmri</span><span class="o">-</span><span class="mi">3</span><span class="n">mm_se_AP</span>
+<span class="n">S1_18_rsfmri</span><span class="o">-</span><span class="mi">3</span><span class="n">mm_se_PA</span>
+<span class="n">S1_20_mprage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso_ORIG</span>
+<span class="n">S1_29_mp2rage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso</span><span class="o">-</span><span class="n">sess2_INV1</span>
+<span class="n">S1_30_mp2rage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso</span><span class="o">-</span><span class="n">sess2_T1_Images</span>
+<span class="n">S1_31_mp2rage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso</span><span class="o">-</span><span class="n">sess2_UNI_Images</span>
+<span class="n">S1_32_mp2rage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso</span><span class="o">-</span><span class="n">sess2_INV2</span>
+</pre></div>
+</div>
+<p>From this example you won’t include those dicom directories with the string <cite>AAHead_Scout_64ch-head-coil_MPR</cite> in the BIDS directory, because those acquisitions are for calibration purposes only.</p>
+<p>Once you’ve determined the directories you want to transform to <em>NIFTI</em>, you should identify their correspondence MRI sequence, for example:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 52%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Sequence</p></th>
+<th class="head"><p>DICOM directory name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>T1 weighted (T1w)</p></td>
+<td><ul class="simple">
+<li><p>S1_08_mprage-0.8iso_ORIG</p></li>
+<li><p>S1_20_mprage-0.8iso_ORIG</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Quantitative T1 weighted (qT1w)</p></td>
+<td><ul class="simple">
+<li><p>S1_29_mp2rage-0.8iso-sess2_INV1</p></li>
+<li><p>S1_30_mp2rage-0.8iso-sess2_T1_Images</p></li>
+<li><p>S1_31_mp2rage-0.8iso-sess2_UNI_Images</p></li>
+<li><p>S1_32_mp2rage-0.8iso-sess2_INV2</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Diffusion weighted Imaging (DWI)</p></td>
+<td><ul class="simple">
+<li><p>S1_10_dwi_b2000_90</p></li>
+<li><p>S1_11_dwi_b700_40</p></li>
+<li><p>S1_12_dwi_b300_10</p></li>
+<li><p>S1_13_dwi_b0_5PA</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Blood-oxygen-level dependent imaging (bold)</p></td>
+<td><ul class="simple">
+<li><p>S1_16_rsfmri-3mm-bold_AP</p></li>
+<li><p>S1_17_rsfmri-3mm_se_AP</p></li>
+<li><p>S1_18_rsfmri-3mm_se_PA</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Next, you should determine the BIDS naming equivalent for each of the unique sequences on your dataset. In other words you should match the string of the DICOM directory to a BIDS string
+that will identify the correspondent files, in this example it would be as follows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 48%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Sequence</p></th>
+<th class="head"><p>DICOM string</p></th>
+<th class="head"><p>BIDS string</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>T1w</p></td>
+<td><p>mprage-0.8iso_ORIG</p></td>
+<td><p>_T1w</p></td>
+</tr>
+<tr class="row-odd"><td><p>qT1w</p></td>
+<td><p>mp2rage-0.8iso-sess2_INV1</p></td>
+<td><p>_acq-inv1_T1map</p></td>
+</tr>
+<tr class="row-even"><td><p>qT1w</p></td>
+<td><p>mp2rage-0.8iso-sess2_T1_Images</p></td>
+<td><p>_acq-mp2rage_T1map</p></td>
+</tr>
+<tr class="row-odd"><td><p>qT1w</p></td>
+<td><p>mp2rage-0.8iso-sess2_UNI_Images</p></td>
+<td><p>_acq-uni_T1map</p></td>
+</tr>
+<tr class="row-even"><td><p>qT1w</p></td>
+<td><p>mp2rage-0.8iso-sess2_INV2</p></td>
+<td><p>_acq-inv2_T1map</p></td>
+</tr>
+<tr class="row-odd"><td><p>DWI</p></td>
+<td><p>dwi_b2000_90</p></td>
+<td><p>_acq-b2000_dir-AP_dwi</p></td>
+</tr>
+<tr class="row-even"><td><p>DWI</p></td>
+<td><p>dwi_b700_40</p></td>
+<td><p>_acq-b700_dir-AP_dwi</p></td>
+</tr>
+<tr class="row-odd"><td><p>DWI</p></td>
+<td><p>dwi_b300_10</p></td>
+<td><p>_acq-b300_dir-AP_dwi</p></td>
+</tr>
+<tr class="row-even"><td><p>DWI</p></td>
+<td><p>dwi_b0_5PA</p></td>
+<td><p>_acq-b0_dir-PA_dwi</p></td>
+</tr>
+<tr class="row-odd"><td><p>bold</p></td>
+<td><p>rsfmri-3mm-bold_AP</p></td>
+<td><p>_task-rest_acq-AP_bold</p></td>
+</tr>
+<tr class="row-even"><td><p>bold</p></td>
+<td><p>rsfmri-3mm_se_AP</p></td>
+<td><p>_task-rest_acq-APse_bold</p></td>
+</tr>
+<tr class="row-odd"><td><p>bold</p></td>
+<td><p>rsfmri-3mm_se_PA</p></td>
+<td><p>_task-rest_acq-PAse_bold</p></td>
+</tr>
+</tbody>
+</table>
+<p>Take a look at the <a class="reference external" href="https://bids-specification.readthedocs.io/en/stable/">BIDS specifications</a>, if you have any doubts about what is the correct BIDS string, which best matches to your MRI acquisition name.</p>
+<p>The next step is to transform your <em>DICOMS</em> directory to a <em>NIFTI</em> file with the matching BIDS naming, and under the correspondent BIDS directory.
+There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI</em>, for example we used <cite>dcm2niix`</cite> with the flag <code class="docutils literal notranslate"><span class="pre">-b</span></code>, which creates a json card for each NIFTI file.</p>
+<p>Let’s suppose we are organizing the directories of <code class="docutils literal notranslate"><span class="pre">sub-01_ses-01</span></code>, the main BIDS structure should be as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-01
+└── ses-01
+    ├── anat
+    ├── dwi
+    └── func
+</pre></div>
+</div>
+<p>On the next table you can find the corresponding BIDS names for each DICOM directory. This example uses <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> as subject’s identification and
+<code class="docutils literal notranslate"><span class="pre">ses-01</span></code> as the session name. As we had two T1w images, using the string <code class="docutils literal notranslate"><span class="pre">-run</span></code> will identify each one of them.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 35%" />
+<col style="width: 14%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Sequence</p></th>
+<th class="head"><p>From DICOM directory</p></th>
+<th class="head"><p>BIDS directory</p></th>
+<th class="head"><p>To BIDS name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>T1w</p></td>
+<td><p>S1_08_mprage-0.8iso_ORIG</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_run-1_T1w.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>T1w</p></td>
+<td><p>S1_20_mprage-0.8iso_ORIG</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_run-2_T1w.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>DWI</p></td>
+<td><p>S1_10_dwi_b2000_90</p></td>
+<td><p>dwi</p></td>
+<td><p>sub-01_ses-01_acq-b2000_dir-AP_dwi.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>DWI</p></td>
+<td><p>S1_11_dwi_b700_40</p></td>
+<td><p>dwi</p></td>
+<td><p>sub-01_ses-01_acq-b700_dir-AP_dwi.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>DWI</p></td>
+<td><p>S1_12_dwi_b300_10</p></td>
+<td><p>dwi</p></td>
+<td><p>sub-01_ses-01_acq-b300_dir-AP_dwi.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>DWI</p></td>
+<td><p>S1_13_dwi_b0_5PA</p></td>
+<td><p>dwi</p></td>
+<td><p>sub-01_ses-01_acq-b0_dir-PA_dwi.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>bold</p></td>
+<td><p>S1_16_rsfmri-3mm-bold_AP</p></td>
+<td><p>func</p></td>
+<td><p>sub-01_ses-01_task-rest_acq-AP_bold.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>bold</p></td>
+<td><p>S1_17_rsfmri-3mm_se_AP</p></td>
+<td><p>func</p></td>
+<td><p>sub-01_ses-01_task-rest_acq-APse_bold.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>bold</p></td>
+<td><p>S1_18_rsfmri-3mm_se_PA</p></td>
+<td><p>func</p></td>
+<td><p>sub-01_ses-01_task-rest_acq-PAse_bold.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>qT1w</p></td>
+<td><p>S1_29_mp2rage-0.8iso-sess2_INV1</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_acq-inv1_T1map.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>qT1w</p></td>
+<td><p>S1_30_mp2rage-0.8iso-sess2_T1_Images</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_acq-mp2rage_T1map.nii.gz</p></td>
+</tr>
+<tr class="row-odd"><td><p>qT1w</p></td>
+<td><p>S1_31_mp2rage-0.8iso-sess2_UNI_Images</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_acq-uni_T1map.nii.gz</p></td>
+</tr>
+<tr class="row-even"><td><p>qT1w</p></td>
+<td><p>S1_32_mp2rage-0.8iso-sess2_INV2</p></td>
+<td><p>anat</p></td>
+<td><p>sub-01_ses-01_acq-inv2_T1map.nii.gz</p></td>
+</tr>
+</tbody>
+</table>
+<p>The final BIDS structure should look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-HC001
+└── ses-01
+    ├── anat
+    │   ├── sub-01_ses-01_acq-inv1_T1map.json
+    │   ├── sub-01_ses-01_acq-inv1_T1map.nii.gz
+    │   ├── sub-01_ses-01_acq-inv2_T1map.json
+    │   ├── sub-01_ses-01_acq-inv2_T1map.nii.gz
+    │   ├── sub-01_ses-01_acq-mp2rage_T1map.json
+    │   ├── sub-01_ses-01_acq-mp2rage_T1map.nii.gz
+    │   ├── sub-01_ses-01_acq-uni_T1map.json
+    │   ├── sub-01_ses-01_acq-uni_T1map.nii.gz
+    │   ├── sub-01_ses-01_T1w.json
+    │   └── sub-01_ses-01_T1w.nii.gz
+    ├── dwi
+    │   ├── sub-01_ses-01_acq-b2000_dir-AP_dwi.bval
+    │   ├── sub-01_ses-01_acq-b2000_dir-AP_dwi.bvec
+    │   ├── sub-01_ses-01_acq-b2000_dir-AP_dwi.json
+    │   ├── sub-01_ses-01_acq-b2000_dir-AP_dwi.nii.gz
+    │   ├── sub-01_ses-01_acq-b300_dir-AP_dwi.bval
+    │   ├── sub-01_ses-01_acq-b300_dir-AP_dwi.bvec
+    │   ├── sub-01_ses-01_acq-b300_dir-AP_dwi.json
+    │   ├── sub-01_ses-01_acq-b300_dir-AP_dwi.nii.gz
+    │   ├── sub-01_ses-01_acq-b700_dir-AP_dwi.bval
+    │   ├── sub-01_ses-01_acq-b700_dir-AP_dwi.bvec
+    │   ├── sub-01_ses-01_acq-b700_dir-AP_dwi.json
+    │   ├── sub-01_ses-01_acq-b700_dir-AP_dwi.nii.gz
+    │   ├── sub-01_ses-01_dir-PA_dwi.bval
+    │   ├── sub-01_ses-01_dir-PA_dwi.bvec
+    │   ├── sub-01_ses-01_dir-PA_dwi.json
+    │   └── sub-01_ses-01_dir-PA_dwi.nii.gz
+    └── func
+        ├── sub-01_ses-01_task-rest_acq-AP_bold.json
+        ├── sub-01_ses-01_task-rest_acq-AP_bold.nii.gz
+        ├── sub-01_ses-01_task-rest_acq-APse_bold.json
+        ├── sub-01_ses-01_task-rest_acq-APse_bold.nii.gz
+        ├── sub-01_ses-01_task-rest_acq-PAse_bold.json
+        └── sub-01_ses-01_task-rest_acq-PAse_bold.nii.gz
+</pre></div>
+</div>
+<p>It is the same procedure for each subject in your dataset.
+The bash script <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code> does all the previous steps automatically using <code class="docutils literal notranslate"><span class="pre">dcm2niix</span></code>, however it was written to match the naming from the <a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">MICs dataset</a> DICOMS to its corresponding BIDS conform.
+Feel free to adapt it to your own necessities, by modifying the DICOMS string and BIDS names in the lines 138-146.</p>
+<pre class="literal-block"># -----------------------------------------------------------------------------------------------
+# CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
+orig=(&quot;<em>mprage-0.8iso</em>&quot; &quot;<em>_INV1&quot; &quot;*_INV2&quot; &quot;*_T1_Images&quot; &quot;*UNI_Images&quot; &quot;*FLAIR</em>&quot; &quot;<em>rsfmri-3mm-bold_AP&quot; &quot;*rsfmri-3mm_se_AP&quot; &quot;*rsfmri-3mm_se_PA&quot;)
+origDWI=(&quot;*dwi_b700_40&quot; &quot;*dwi_b300_10&quot; &quot;*dwi_b0_5PA&quot; &quot;*_dwi_b2000</em>&quot;)
+
+# New BIDS-naming, follow the BIDS specification:
+# <a class="reference external" href="https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html">https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html</a>
+bids=(T1w acq-inv1_T1map acq-inv2_T1map acq-mp2rage_T1map acq-uni_T1map FLAIR task-rest_acq-AP_bold task-rest_acq-APse_bold task-rest_acq-PAse_bold)
+bidsDWI=(acq-b700-NUM_dir-AP_dwi acq-b300-NUM_dir-AP_dwi dir-PA_dwi acq-b2000-NUM_dir-AP_dwi)</pre>
+<p>Once you’ve done all the necessary modifications you can run the scrip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mic2bids</span>  <span class="o">-</span><span class="ow">in</span> <span class="o">&lt;</span><span class="n">DICOMS_directory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">bids</span> <span class="o">&lt;</span><span class="n">BIDS</span> <span class="n">directory</span> <span class="n">path</span><span class="o">&gt;</span> <span class="o">-</span><span class="nb">id</span> <span class="o">&lt;</span><span class="n">subject</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">ses</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><strong>Arguments:</strong></p>
+<blockquote>
+<div><dl class="option-list">
+<dt><kbd><span class="option">-i<var>n</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> Input directory with the subject’s DICOMS directories (FULL PATH)</p>
+</dd>
+<dt><kbd><span class="option">-i<var>d</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">string</span></code> Subject identification for the new BIDS directory
+<em>-id</em> CAN be different than <em>-in</em> (DICOMS directory name)</p>
+</dd>
+<dt><kbd><span class="option">-s<var>es</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">string</span></code> flag to specify the session name (Default is ‘ses-pre’)</p>
+</dd>
+<dt><kbd><span class="option">-b<var>ids</var></span></kbd></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">path</span></code> Path to BIDS directory ( . or FULL PATH)</p>
+</dd>
+<dt><kbd><span class="option">-f<var>orce</var></span></kbd></dt>
+<dd><p>flag that will overwrite the directory</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Once you have ordered all your subjects, add the rest of the mandatory files to your BIDS directory:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>CHANGES</p></li>
+<li><p>dataset_description.json</p></li>
+<li><p>participants.json</p></li>
+<li><p>participants.tsv</p></li>
+<li><p>README</p></li>
+</ul>
+</div></blockquote>
+<p>Finally, remember to validate your dataset with the <a class="reference external" href="https://bids-standard.github.io/bids-validator/">BIDS validator</a> tool!</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../05.micapipe_cleanup/index.html" class="btn btn-neutral float-right" title="micapipe_cleanup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../02.qc/index.html" class="btn btn-neutral float-left" title="Quality control" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

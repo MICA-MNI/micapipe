@@ -35,7 +35,7 @@ Then, you will need to also add the all dependencies (see next section for a com
 
 You can define distinct DIR variables for each dependency, and add them to the PATH.
 
-An example of how to set your local environment can be found in our `init.sh <https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh>`_ script.
+An example of how to set your local environment can be found in the `init.sh <https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh>`_ script provided in the micapipe repository.
 
 .. admonition:: Why we love containers 😍
 

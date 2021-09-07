@@ -47,7 +47,7 @@ Let's break this down:
   * - ``-module_flag``
     - Specifies which submodule(s) to run (see next section).
 
-.. admonition:: Don't forget to specify ``-ses`` is needed! 💡
+.. admonition:: Don't forget to specify ``-ses`` if needed! 💡
 
         If the dataset contains a session directory (eg. ``/dataset/rawdata/sub-01/ses-01``) but the session flag is omitted during processing, micapipe will assume that the dataset consists of a single session. It will thus use the ``/sub-01/anat`` structure instead of ``/sub-01/ses-01/anat``, and lead to a bunch of errors! 
 
