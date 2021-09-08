@@ -54,35 +54,40 @@ This module performs required pre-processing of DWI scans, in addition to derivi
 
         **Optional arguments:**
 
-          -dwi_main       ``<path>`` Provide path to DWI scans with N number of directions and b0.
-                          This will override the default settings.
-                          Default = *<bids>/<sub>/dwi/*_dir-AP_dwi.nii\**.
-          -dwi_rpe        ``<path>`` Provide path to b0 DWI scan with reverse phase encoding direction.
-                          This will override the default settings.
-                          Default = *<bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii\**.
-          -dwi_processed  ``<path>`` The specified image will be used for further DWI processing, instead of performing pre-processing inside the script.
-                          This file must be in *.mif* (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded.
-          -rpe_all        If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used.
-                          (This option requires that both encoding contains the same number of directions, bvecs and bvals)
+        ``-proc_dwi`` has several optional arguments:
+
+        .. list-table:: 
+            :widths: 75 750
+            :header-rows: 1
+            :class: tight-table
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-dwi_main`` ``<path>``
+              - Provide path to DWI scans with N number of directions and b0. This will override the default settings: ``<bids>/<sub>/dwi/*_dir-AP_dwi.nii\*``.
+            * - ``-dwi_rpe`` ``<path>``
+              - Provide path to b0 DWI scan with reverse phase encoding direction. This will override the default settings: ``<bids>/<subject>/dwi/*_dir-PA_dwi.nii\*``
+            * - ``-dwi_processed`` ``<path>``
+              - The specified image will be used for further DWI processing, instead of performing pre-processing inside the script.
+            * - ``-rpe_all``
+              - If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used (This option requires that both encoding direction files contain the same number of directions, bvecs and bvals).
 
         **Multiple inputs:** ``dwi_main`` **and** ``dwi_rpe``
 
-        If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the flags ``-dwi_main`` and ``-dwi_rpe``.
-        The later in case you have reverse phase encoding acquisitions. The inputs are the relative path to the DWI, comma separate without white space between them, for example:
+        If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the ``-dwi_main`` and ``-dwi_rpe`` flags. When multiple input scans are provided, seperate the filenames by commas, with no space. Don't forget to specify the full path of the images, as shown below; In this example, the ``shell1`` and ``shell2`` scans of ``sub-01`` will be processed:
 
         .. code-block:: bash
-           :caption: On the next example the ``shell1`` and ``shell2`` of ``sub-01`` will be process:
+           :caption: Example
            :linenos:
            :emphasize-lines: 2
 
             mica-pipe -proc_dwi -sub 01 -out <outputDirectory> -bids <BIDS-directory> \
                       -dwi_main <BIDS-directory>/sub-01/dwi/sub-01_acq-shell1_dwi.nii.gz,<BIDS-directory>/sub-01/dwi/sub-01_acq-shell2_dwi.nii.gz
 
-        .. admonition:: WARNING: ⚠️ -dwi_rpe ⚠️
+        .. admonition:: Reverse phase encoding flag ⏮
 
                 If you use the argument ``-dwi_rpe`` but your reverse phase encoding image does not contain a *bval* or *bvec* file, the module will
-                assume that all the images are b0s (if more than one). If the *dwi_rpe* file contains any weighted image, it will affect greatly most
-                steps of the processing.
+                assume that all the images are b0s (if more than one). If the file specified under the ``-dwi_rpe`` flag contains any weighted image, it will considerably affect most steps of the processing.
 
 
     .. tab:: Outputs
@@ -175,19 +180,16 @@ This module performs required pre-processing of DWI scans, in addition to derivi
 
     .. tab:: TDI quality
 
-        A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the ``-SC`` module and,
-        can be used as a quick overview of the DWI processing quality.
-        We strongly recommend to take your time to check the quality of the processed DWI before generating the structural connectomes (``-SC``).
-        An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:
+        A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the ``-SC`` module. It is useful in providing a quick overview of the DWI processing quality. We strongly recommend to take your time in checking the quality of the processed DWI before generating the structural connectomes (``-SC``). An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:
 
-         - Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc).
-         - Low signal to noise ratio (low quality or low resolution).
-         - Not enough diffusion directions.
-         - Registration errors.
-         - Bad encoding of the gradient direction tables (bvecs).
-         - Bad encoding of the shell values (bvals).
-         - Wrong assignation/encoding of the b0 images (bvals).
-         - Large motion artifacts.
+         - Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc);
+         - Low signal to noise ratio (low quality or low resolution);
+         - Not enough diffusion directions;
+         - Registration errors;
+         - Bad encoding of the gradient direction tables (bvecs);
+         - Bad encoding of the shell values (bvals);
+         - Wrong assignation/encoding of the b0 images (bvals);
+         - Large motion artifacts...
 
         File: ``<outputDirectory>/micapipe/<sub>/dwi/<sub>_space-dwi_desc-iFOD1-1M_tdi.mif``
 
@@ -234,12 +236,21 @@ This modules computes tractography-based structural connectivity matrices and as
 
         **Optional arguments:**
 
-          -tracts      ``<num>`` Number of streamlines used when computing the tractogram
-                       (default is *40M*, where 'M' stands for millions, same as *40000000*)
-          -keep_tck    If specified, the tractogram will be copied to *<outputDirectory>/micapipe/<sub>/dwi/*.
-                       By default the tractogram is erased at the end of this module.
-          -autoTract   Performs automatic bundle segmentation (optional).
-                       See `Automatic Bundle Segmentation <../05.autotract/index.html>`_ for further information.
+        ``-SC`` supports different optional arguments:
+
+        .. list-table:: 
+            :widths: 10 500
+            :header-rows: 1
+            :class: tight-table
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-tracts`` ``<num>``
+              - Number of streamlines used when computing the tractogram (default is *40M*, where 'M' stands for millions, same as *40,000,000*)
+            * - ``-keep_tck``
+              - If specified, the tractogram will be copied to *<outputDirectory>/micapipe/<sub>/dwi/*. By default the tractogram is erased at the end of this module given the large file size.
+            * - ``-autoTract``
+              - Performs automatic bundle segmentation (optional). See `Automatic Bundle Segmentation <../05.autotract/index.html>`_ for further information.
 
     .. tab:: Outputs
 

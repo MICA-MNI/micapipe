@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
@@ -127,7 +127,7 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
@@ -251,10 +251,10 @@
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
 <ul class="simple">
 <li><p>Each T1-weighted run is LPI-reoriented, deobliqued, and oriented to standard space (MNI152).</p></li>
-<li><p>Create the T1-weighted image used in all downstream processing: T1_nativepro. If multiple T1w scans are found in the raw data, they are aligned to the first run and averaged.</p></li>
+<li><p>Create the T1-weighted image used in all downstream processing: <code class="docutils literal notranslate"><span class="pre">T1_nativepro</span></code>. If multiple T1w scans are found in the raw data, they are aligned to the first run and averaged.</p></li>
 <li><p>Intensity non-uniformity correction (N4)</p></li>
 <li><p>Intensity rescaling [100,0]</p></li>
-<li><p>Create brainmask (FSL-BET)</p></li>
+<li><p>Create brain mask (FSL-BET)</p></li>
 <li><p>Subcortical structure segmentation using FSL FIRST</p></li>
 <li><p>Tissue type segmentation (Gray matter, white matter, CSF) using FSL FAST</p></li>
 <li><p>Non-linear registration to MNI152 (0.8mm and 2mm resolutions)</p></li>
@@ -264,30 +264,41 @@
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
 <p><strong>Terminal:</strong></p>
 <blockquote>
-<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong></pre>
+<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong> <strong>&lt;options&gt;</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_structural
 </pre></div>
 </div>
 <p><strong>Optional arguments</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> only have one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.</p>
-<dl class="simple">
-<dt>-t1wStr</dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> This option allows to manually select the main scan(s) for structural processing.
-It should be separated by a comma, with no blank spaces: eg. <em>-t1wStr run-02_T1w</em>.
-By default the pipeline uses the string <em>T1w.nii</em></p>
-</dd>
-</dl>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> only has one optional argument, which specifies the string name(s) of the T1w image(s) you want to process.</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t1wStr</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>This option allows manual selection of the main scan(s) for structural processing. It should be separated by a comma, with no blank spaces: eg. <code class="docutils literal notranslate"><span class="pre">-t1wStr</span></code> <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code>. By default the pipeline uses the string <code class="docutils literal notranslate"><span class="pre">T1w.nii</span></code>. This option can be useful if the user wishes to exclude one or several T1w scans from further processing.</p></td>
+</tr>
+</tbody>
+</table>
+<p>In the following example, if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volume containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">On the next example if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volume containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
 <span class="hll">           -proc_structural -t1wStr run-02_T1w
 </span></pre></div>
 </td></tr></table></div>
 </div>
-<div class="admonition-multiple-t1w-weighted-images admonition">
-<p class="admonition-title">Multiple T1w weighted images</p>
-<p>Be sure you use the same T1w images in <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> and <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code>. Although they are independent modules, when using the same image the registrations improves greatly.</p>
+<div class="admonition-multiple-t1-weighted-images admonition">
+<p class="admonition-title">Multiple T1-weighted images 🧠 🧠 🧠</p>
+<p>Be sure you use the same T1w images in <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> and <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code>. Although they are independent modules, when using the same image the registrations will be much better.</p>
 </div>
 </div></blockquote>
 </div>
@@ -351,7 +362,7 @@ By default the pipeline uses the string <em>T1w.nii</em></p>
 <p>This modules performs cortical surface segmentation from all native T1w acquisitions stored in the subject’s BIDS directory.</p>
 <div class="admonition-quality-control admonition">
 <p class="admonition-title">Quality control 💅🏻</p>
-<p>We recommend that users carefully inspect FreeSurfer-generated cortical surface segmentations. As micapipe relies heavily on surface-based processing, poor segmentation quality may compromise the validity of downstream results. FreeSurfer provides comprehensive tutorials for manual correction of surface segmentations: See tutorials <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/ControlPoints_freeview">‘Control Points’</a>, <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/WhiteMatterEdits_freeview">‘White matter’</a>, and <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview">‘Pial surfaces’</a> explaining different types of corrections that can be applied to cortical surfaces.</p>
+<p>We recommend that users carefully inspect FreeSurfer-generated cortical surface segmentations. As micapipe relies heavily on surface-based processing, poor segmentation quality may compromise the validity of downstream results. FreeSurfer provides comprehensive tutorials for manual correction of surface segmentations: See tutorials <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/ControlPoints_freeview">‘Control Points’</a>, <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/WhiteMatterEdits_freeview">‘White matter’</a>, and <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview">‘Pial edits’</a> explaining different types of corrections that can be applied to cortical surfaces.</p>
 </div>
 <div class="sphinx-tabs docutils container">
 <div class="ui top attached tabular menu sphinx-menu docutils container">
@@ -384,24 +395,30 @@ By default the pipeline uses the string <em>T1w.nii</em></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_freesurfer -&lt;options&gt;
 </pre></div>
 </div>
-<p><strong>Optional arguments</strong>:</p>
-<blockquote>
-<div><dl class="simple">
-<dt><em>-t1wStr</em></dt><dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Same option as in <em>-proc_structural</em>, this will allow to manually select the main scan(s) for structural processing.</p>
-</dd>
-</dl>
-<dl class="option-list">
-<dt><kbd><span class="option">-f<var>reesurfer_dir</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Will copy existing FreeSurfer outputs in the provided path to the appropriate
-location. This way, if the cortical segmentations of your dataset have already
-been quality controlled, results can be easily integrated within the pipeline’s directory structure.</p>
-</dd>
-<dt><kbd><span class="option">-h<var>ires</var></span></kbd></dt>
-<dd><p>Use this option for data with voxel sizes less than 1mm3 at native resolution
-(eg. isometric 7T acquisitions. Requires <em>-proc_structural</em>). For further information see <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon">SubmillimeterRecon</a>.</p>
-</dd>
-</dl>
-</div></blockquote>
+<p><strong>Optional arguments</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code> has a few optional arguments, including an option for T1w scan selection as in <code class="docutils literal notranslate"><span class="pre">proc_volumetric</span></code>.</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t1wStr</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>Same option as in <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>, this will allow to manually select the main scan(s) for structural processing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-freesurfer_dir</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>This option will copy existing FreeSurfer outputs in the provided path to the appropriate location. This way, if the cortical segmentations of your dataset have already been quality controlled, results can be easily integrated within the pipeline’s directory structure.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-hires</span></code></p></td>
+<td><p>Use this option for data with voxel sizes less than 1mm3 at native resolution (e.g. isometric 7T acquisitions. Requires <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>). For further information see <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon">SubmillimeterRecon</a>.</p></td>
+</tr>
+</tbody>
+</table>
 </div></blockquote>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
@@ -453,19 +470,30 @@ been quality controlled, results can be easily integrated within the pipeline’
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-1 docutils container">
 <p><strong>Terminal:</strong></p>
-<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-post_structural</strong></pre>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-post_structural</strong> <strong>&lt;options&gt;</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -post_structural
 </pre></div>
 </div>
 <p><strong>Optional arguments</strong>:</p>
-<dl class="option-list">
-<dt><kbd><span class="option">-a<var>tlas</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> Registers only selected parcellations to subject space (e.g. <em>economo,aparc</em>).
-By default, all 18 parcellations included in the pipeline will be registered
-to the subject’s native volumetric and surface space. Below is the list of all the possible options:</p>
-</dd>
-</dl>
+<p><code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> only has one optional argument:</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-atlas</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>Registers only selected parcellations to subject space (e.g. <em>economo,aparc</em>). By default, all 18 parcellations included in the pipeline will be registered to the subject’s native volumetric and surface space. Below is the list of all the possible options:</p></td>
+</tr>
+</tbody>
+</table>
+<p>The following parcellations are available in micapipe:</p>
 <table class="hlist"><tr><td><ul class="simple">
 <li><p>aparc-a2009s</p></li>
 <li><p>aparc</p></li>
@@ -491,22 +519,22 @@ to the subject’s native volumetric and surface space. Below is the list of all
 <li><p>vosdewael-400</p></li>
 </ul>
 </td></tr></table>
+<p>The next example will only process the three selected parcellations (<code class="docutils literal notranslate"><span class="pre">schaefer-200,economo,aparc</span></code>)</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">The next example will only process the three selected parcellations (<code class="docutils literal notranslate"><span class="pre">schaefer-200,economo,aparc</span></code>)</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="n">mica</span><span class="o">-</span><span class="n">pipe</span> <span class="o">-</span><span class="n">sub</span> <span class="o">&lt;</span><span class="n">subject_id</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">bids</span> <span class="o">&lt;</span><span class="n">BIDS</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;</span> \
-<span class="hll">           <span class="o">-</span><span class="n">post_structural</span> <span class="o">-</span><span class="n">atlas</span> <span class="n">schaefer</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span><span class="n">economo</span><span class="p">,</span><span class="n">aparc</span>
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="hll">           -post_structural -atlas schaefer-200,economo,aparc
 </span></pre></div>
 </td></tr></table></div>
 </div>
-<div class="admonition-important admonition">
-<p class="admonition-title">Important ⚠️</p>
-<p>Functional, structural and geodesic distance connectomes will be calculate only on the parcellations selected in this step.
-If another parcellation should be added after this module, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> and its dependent modules have to be re-run.</p>
+<div class="admonition-thinking-ahead admonition">
+<p class="admonition-title">Thinking ahead ☂️</p>
+<p>Functional and structural connectomes, microstructural profile covariance, and geodesic distance matrices will be calculated only on the parcellations selected in this step. If another parcellation should be added after this module, <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> and its dependent modules have to be re-run.</p>
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-2 docutils container">
-<p>Directories created or populated by <strong>-proc_structural</strong> will be under each <code class="docutils literal notranslate"><span class="pre">SubjectDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">freesurferDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/freesurfer/&lt;sub&gt;</span></code>:</p>
+<p>Directories created or populated by <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> will be under each <code class="docutils literal notranslate"><span class="pre">SubjectDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">freesurferDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/freesurfer/&lt;sub&gt;</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">conte69</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">SubjectDir</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">label</span>
@@ -543,7 +571,7 @@ If another parcellation should be added after this module, <code class="docutils
     - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_0GenericAffine.mat</em>
     - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_InverseWarped.nii.gz</em>
     - <em>&lt;SubjectDir&gt;/xfms/&lt;sub&gt;_from-fsnative_to_nativepro_t1w_Warped.nii.gz</em></pre>
-<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for each name of the 18 parcellations. <code class="docutils literal notranslate"><span class="pre">&lt;hemi&gt;</span></code> is either <code class="docutils literal notranslate"><span class="pre">lh</span></code> or <code class="docutils literal notranslate"><span class="pre">rh</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for the name of each of the 18 parcellations. <code class="docutils literal notranslate"><span class="pre">&lt;hemi&gt;</span></code> is either <code class="docutils literal notranslate"><span class="pre">lh</span></code> or <code class="docutils literal notranslate"><span class="pre">rh</span></code>.</p>
 </div>
 </div>
 </div>
@@ -577,7 +605,7 @@ If another parcellation should be added after this module, <code class="docutils
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
 <ul class="simple">
-<li><p>Identifies centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel</p></li>
+<li><p>Identify centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel</p></li>
 <li><p>Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using <a class="reference external" href="https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance">workbench -surface-geodesic-distance</a></p></li>
 <li><p>Average computed distances within parcels</p></li>
 </ul>
@@ -599,7 +627,7 @@ If another parcellation should be added after this module, <code class="docutils
 <p>One file per parcellation is generated by <strong>-GD</strong>:</p>
 <pre class="literal-block">- Square matrix of average parcel-to-parcel geodesic distances:
     - <em>&lt;sub&gt;_space-fsnative_atlas-&lt;parcellation&gt;_GD.txt</em></pre>
-<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for each name of the 18 parcellations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;parcellation&gt;</span></code> stands for the name of each of the 18 parcellations.</p>
 </div>
 </div>
 </div>

@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
@@ -118,7 +118,7 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
@@ -334,7 +334,7 @@ that will identify the correspondent files, in this example it would be as follo
 </table>
 <p>Take a look at the <a class="reference external" href="https://bids-specification.readthedocs.io/en/stable/">BIDS specifications</a>, if you have any doubts about what is the correct BIDS string, which best matches to your MRI acquisition name.</p>
 <p>The next step is to transform your <em>DICOMS</em> directory to a <em>NIFTI</em> file with the matching BIDS naming, and under the correspondent BIDS directory.
-There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI</em>, for example we used <cite>dcm2niix`</cite> with the flag <code class="docutils literal notranslate"><span class="pre">-b</span></code>, which creates a json card for each NIFTI file.</p>
+There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI</em>, for example we used <cite>dcm2niix</cite> with the flag <code class="docutils literal notranslate"><span class="pre">-b</span></code>, which creates a json card for each NIFTI file.</p>
 <p>Let’s suppose we are organizing the directories of <code class="docutils literal notranslate"><span class="pre">sub-01_ses-01</span></code>, the main BIDS structure should be as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-01
 └── ses-01

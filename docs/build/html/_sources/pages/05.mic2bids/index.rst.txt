@@ -89,7 +89,7 @@ that will identify the correspondent files, in this example it would be as follo
 Take a look at the `BIDS specifications <https://bids-specification.readthedocs.io/en/stable/>`_, if you have any doubts about what is the correct BIDS string, which best matches to your MRI acquisition name.
 
 The next step is to transform your *DICOMS* directory to a *NIFTI* file with the matching BIDS naming, and under the correspondent BIDS directory.
-There are different tools you can use to transform *DICOMS* to *NIFTI*, for example we used `dcm2niix`` with the flag ``-b``, which creates a json card for each NIFTI file.
+There are different tools you can use to transform *DICOMS* to *NIFTI*, for example we used `dcm2niix` with the flag ``-b``, which creates a json card for each NIFTI file.
 
 Let's suppose we are organizing the directories of ``sub-01_ses-01``, the main BIDS structure should be as follows:
 
