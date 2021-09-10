@@ -264,10 +264,46 @@ do_cmd antsApplyTransforms -d <span class="m">3</span> -i <span class="si">${</s
 </pre></div>
 </td></tr></table></div>
 </div>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">From T1nativepro to rsfMRI space</span><a class="headerlink" href="#id3" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span></span>antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
+    -i anat/sub-CC110045_ses-pre_space-nativepro_t1w_brain.nii.gz <span class="se">\</span>
+    -r func/volumetric/sub-CC110045_ses-pre_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
+    -t xfm/sub-CC110045_ses-pre_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+    -t xfm/sub-CC110045_ses-pre_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
+    -t <span class="o">[</span>xfm/sub-CC110045_ses-pre_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+    -o func/volumetric/sub-CC110045_ses-pre_space-rsfmri_t1w.nii.gz -v -u int
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">From rsfMRI to T1nativepro space</span><a class="headerlink" href="#id4" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span></span>antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
+    -i func/volumetric/sub-CC110045_ses-pre_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
+    -r anat/sub-CC110045_ses-pre_space-nativepro_desc-t1wbold.nii.gz <span class="se">\</span>
+    -t xfm/sub-CC110045_ses-pre_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat <span class="se">\</span>
+    -t <span class="o">[</span>xfm/sub-CC110045_ses-pre_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+    -t xfm/sub-CC110045_ses-pre_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
+    -o anat/sub-CC110045_ses-pre_space-nativepro_desc-rsfmri_bold.nii.gz -v -u int
+</pre></div>
+</td></tr></table></div>
+</div>
 </dd>
 <dt>Q: How do I modify the smoothing on the surfaces?</dt><dd><p>A: By default micapipe -Morphology only applies a smoothing of 10mm over the surfaces</p>
 </dd>
-<dt>Q: How do I process the rsfMRI If I have different runs in the same session?</dt><dd><p>A:</p>
+<dt>Q: How do I process the rsfMRI If I have different runs in the same session?</dt><dd><p>A: Right now the pipeline does not manages multiple runs on the same session. We recomend to concatenate all the runs and process the output file.</p>
 </dd>
 <dt>Q: Can I process multi-echo rsfMRI acquisition with micapipe?</dt><dd><p>A: Right now micapipe can not handle in any way multi-echo acquisitions. Although is planned to be included in a future release.</p>
 </dd>

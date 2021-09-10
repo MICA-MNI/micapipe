@@ -127,8 +127,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#full-structural-connectome-edge-lengths">Full structural connectome edge lengths</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#functional-connectome">Functional connectome</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#time-series">Time series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resting-state-functional-connectome">Resting state Functional connectome</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#resting-state-time-series">Resting state time series</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#mpc-connectome">MPC connectome</a><ul>
@@ -302,15 +302,20 @@ The first step in both languages is to set the environment:</p>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
 
+<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+
 <span class="c1"># This variable will be different for each subject</span>
-<span class="n">subjectID</span> <span class="o">=</span> <span class="s1">&#39;sub-HC001_ses-01&#39;</span>
+<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
 
 <span class="c1"># Here we define the atlas</span>
-<span class="n">atlas</span> <span class="o">=</span> <span class="s1">&#39;schaefer-400&#39;</span>
+<span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
 </pre></div>
 </div>
 </div>
@@ -454,8 +459,8 @@ The first step in both languages is to set the environment:</p>
 </div>
 </div>
 </div>
-<div class="section" id="functional-connectome">
-<h2>Functional connectome<a class="headerlink" href="#functional-connectome" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="resting-state-functional-connectome">
+<h2>Resting state Functional connectome<a class="headerlink" href="#resting-state-functional-connectome" title="Permalink to this headline">¶</a></h2>
 <p>For each atlas, two files are generated: the functional connectome (<code class="docutils literal notranslate"><span class="pre">desc-FC.txt</span></code>) and the time-series of that atlas (<code class="docutils literal notranslate"><span class="pre">desc-timeseries.txt</span></code>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func/surfaces/
 ├── sub-HC005_ses-01_rsfmri_space-fsnative_atlas-schaefer-400_desc-FC.txt
@@ -509,8 +514,8 @@ The first step in both languages is to set the environment:</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="../../_images/FC_py.png"><img alt="alternate text" src="../../_images/FC_py.png" style="width: 358.5px; height: 297.5px;" /></a>
 </div>
-<div class="section" id="time-series">
-<h3>Time series<a class="headerlink" href="#time-series" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="resting-state-time-series">
+<h3>Resting state time series<a class="headerlink" href="#resting-state-time-series" title="Permalink to this headline">¶</a></h3>
 <div class="sphinx-tabs docutils container">
 <div class="ui top attached tabular menu sphinx-menu docutils container">
 <div class="active item sphinx-data-tab-UHl0aG9u docutils container">
@@ -706,6 +711,7 @@ The first step in both languages is to set the environment:</p>
 <div class="section" id="download-code-examples-matrices">
 <h2>Download code examples: matrices<a class="headerlink" href="#download-code-examples-matrices" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference download internal" download="" href="../../_downloads/f590d96f7e78de4acd514b907abb6fc2/tutorial_main_output_matrices.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_main_output_matrices.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/d190f358c7ecbc0c49390a51cfc2e6f3/tutorial_main_output_matrices.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.py'</span></code></a></p>
 <p><a class="reference download internal" download="" href="../../_downloads/f5d683d82fae8ef9221785414c0a48e6/tutorial_main_output_matrices.R"><code class="xref download docutils literal notranslate"><span class="pre">R</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.R'</span></code></a></p>
 </div>
 </div>
