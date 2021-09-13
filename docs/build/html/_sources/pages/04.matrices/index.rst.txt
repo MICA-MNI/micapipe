@@ -93,15 +93,20 @@ The first step in both languages is to set the environment:
    .. code-tab:: py
 
     # Set the environment
+    import os
     import numpy as np
     from nilearn import plotting
     import matplotlib as plt
 
+    # Set the working directory to the 'out' directory
+    os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+
     # This variable will be different for each subject
-    subjectID = 'sub-HC001_ses-01'
+    subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+    subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
     # Here we define the atlas
-    atlas = 'schaefer-400'
+    atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
    .. code-tab:: r R
 
@@ -218,7 +223,7 @@ Full structural connectome edge lengths
     :align: center
     :scale: 50 %
 
-Functional connectome
+Resting state Functional connectome
 --------------------------------------------------------
 
 For each atlas, two files are generated: the functional connectome (``desc-FC.txt``) and the time-series of that atlas (``desc-timeseries.txt``).
@@ -264,7 +269,7 @@ For each atlas, two files are generated: the functional connectome (``desc-FC.tx
     :align: center
     :scale: 50 %
 
-Time series
+Resting state time series
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tabs::
@@ -418,5 +423,7 @@ Download code examples: matrices
 --------------------------------------------------------
 
 :download:`Python Jupyter notebook: 'tutorial_main_output_matrices.ipynb' <tutorial_main_output_matrices.ipynb>`
+
+:download:`Python source code: 'tutorial_main_output_matrices.py' <tutorial_main_output_matrices.py>`
 
 :download:`R source code: 'tutorial_main_output_matrices.R' <tutorial_main_output_matrices.R>`

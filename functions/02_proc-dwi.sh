@@ -270,10 +270,10 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwi_4proc=${tmp}/dwi_dns_even.mif
       dim=$(mrinfo "$dwi_dns" -size)
       dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-      mrconvert "$dwi_dns" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+      Do_cmd mrconvert "$dwi_dns" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
 
       # Get the mean b-zero (un-corrected)
-      dwiextract -nthreads "$threads" "$dwi_dns" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
+      dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
       Do_cmd nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
@@ -285,6 +285,8 @@ if [[ ! -f "$dwi_corr" ]]; then
 
             # Mean reverse phase b0
             Info "Extracting the rpe b0(s)"
+            Note "    rpe dwgrad :" "${dwgrad}"
+            Note "    rpe ndim   :" "${rpe_dim}"
             if [[ "${dwgrad}" -eq 0 ]]; then
                 Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
                 if [[ "$rpe_dim" -eq 3 ]]; then
@@ -293,9 +295,15 @@ if [[ ! -f "$dwi_corr" ]]; then
                     mrmath "$rpe_dns" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
                 fi
             else
-                dwiextract "$rpe_dns" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                if [[ "$rpe_dim" -eq 3 ]]; then
+                    Do_cmd mrconvert "$rpe_dns" "${tmp}/b0_meanReversePhase.nii.gz"
+                elif [[ "$rpe_dim" -gt 3 ]]; then
+                    dwiextract "$rpe_dns" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                fi
             fi
-            Do_cmd nifti_capture.py -img "${tmp}/b0_meanReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+            Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
+
+            Do_cmd nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
@@ -307,14 +315,9 @@ if [[ ! -f "$dwi_corr" ]]; then
                 opt="-rpe_all"
 
             elif [[ "$rpe_all" == FALSE ]]; then
-                b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
                 b0_pair="${tmp}/b0_pair.mif"
                 # Concatenate the pe and rpe b0s
-                Do_cmd mrcat "${tmp}/b0_meanMainPhase.nii.gz" "${tmp}/b0_meanReversePhase.nii.gz" "$b0_pair_tmp" -nthreads "$threads"
-                # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-                dim=$(mrinfo "$b0_pair_tmp" -size)
-                dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-                mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+                Do_cmd mrcat "${tmp}/b0_meanMainPhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" "$b0_pair" -nthreads "$threads"
                 opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
             fi
       else
@@ -326,6 +329,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       Note "Shell values        :" "${shells[*]}"
       Note "DWI main dimensions :" "$(mrinfo "$dwi_dns" -size)"
       if [ -f "${dwi_reverse[0]}" ]; then Note "DWI rpe dimensions  :" "$(mrinfo "$rpe_dns" -size)"; fi
+      Note "DWI to process dim  :" "$(mrinfo "$dwi_4proc" -size)"
       Note "pe_dir              :" "$pe_dir"
       Note "Readout Time        :" "$ReadoutTime"
       Note "Options             :" "$opt"

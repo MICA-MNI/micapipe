@@ -221,15 +221,24 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+<span class="kn">from</span> <span class="nn">nibabel.freesurfer.mghformat</span> <span class="kn">import</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
+<span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
+<span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
+
+<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
 
 <span class="c1"># This variable will be different for each subject</span>
-<span class="n">subjectID</span> <span class="o">=</span> <span class="s1">&#39;sub-HC001_ses-01&#39;</span>
+<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
 
 <span class="c1"># Here we define the atlas</span>
-<span class="n">atlas</span> <span class="o">=</span> <span class="s1">&#39;schaefer-400&#39;</span>
+<span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
 </pre></div>
 </div>
 </div>
@@ -329,6 +338,7 @@
 <div class="section" id="download-code-examples-gradients">
 <h3>Download code examples: Gradients<a class="headerlink" href="#download-code-examples-gradients" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference download internal" download="" href="../../_downloads/b8772668db0e7348345acda5f91c05a2/tutorial_gradients.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_gradients.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/84ee4bb7e2e8a4cdb8d8c72dd8dfe333/tutorial_gradients.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_gradients.py'</span></code></a></p>
 </div>
 </div>
 </div>

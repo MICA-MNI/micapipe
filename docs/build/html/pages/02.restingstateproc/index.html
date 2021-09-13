@@ -202,7 +202,7 @@
             
   <div class="section" id="resting-state-fmri-processing">
 <span id="restingstateproc"></span><h1>Resting-state fMRI processing<a class="headerlink" href="#resting-state-fmri-processing" title="Permalink to this headline">¶</a></h1>
-<p>This module performs all pre-processing of subject resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized to leverage spin-echo images with reverse phase encoding for distortion correction. For increased functionality, our pipeline can also handle protocols in which a single fieldmap is acquired.</p>
+<p>This module performs all pre-processing of subject resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.</p>
 <img alt="../../_images/sankey_rsfmri.png" class="align-center" src="../../_images/sankey_rsfmri.png" />
 <div class="section" id="proc-rsfmri">
 <h2>-proc_rsfmri<a class="headerlink" href="#proc-rsfmri" title="Permalink to this headline">¶</a></h2>
@@ -236,7 +236,7 @@
 <li><p>Perform motion correction within rsfMRI scan and provided fieldmaps by registering each volume to the scan’s own average</p></li>
 <li><p>Calculate motion outliers</p></li>
 <li><p>Apply distortion correction on motion-corrected images</p></li>
-<li><p>Calculates binary mask from motion and distortion corrected volume</p></li>
+<li><p>Calculate binary mask from motion and distortion corrected volume</p></li>
 <li><p>High-pass filtering of rsfMRI timeseries to remove frequencies below 0.01Hz</p></li>
 <li><p>Run Multivariate Exploratory Linear Optimized Decomposition into Independent Components (MELODIC) on filtered timeseries</p></li>
 <li><p>Compute linear and non-linear registrations between fMRI and T1-nativepro space, as well as boundary-based registration between fMRI and native Freesurfer space</p></li>
@@ -247,7 +247,7 @@
 <li><p>Surface-template registration of native surface timeseries (fsaverage5, conte69)</p></li>
 <li><p>Native surface, fsaverage5, and conte69-mapped timeseries are each smoothed with a 10mm Gaussian kernel</p></li>
 <li><p>Use previously computed registrations to align cerebellar and subcortical parcellation to fMRI space</p></li>
-<li><p>Regress motion spikes from cerebellar, subcortical, and cortical timeseries in linear model</p></li>
+<li><p>Regress motion spikes (and tissue-specific or global signal variables, if specified by user) from cerebellar, subcortical, and cortical timeseries in linear model</p></li>
 <li><p>Concatenate cerebellar, subcortical, and parcellated cortical timeseries and compute correlation matrix</p></li>
 </ul>
 </div>
@@ -259,66 +259,62 @@
 </pre></div>
 </div>
 <p><strong>Optional arguments:</strong></p>
-<dl class="option-list">
-<dt><kbd><span class="option">-m<var>ainScanStr</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> String to manually identify the main scan for rsfMRI processing (eg. <em>func/sub-001_&lt;mainScanStr&gt;.nii.gz</em>).
-Default string is <em>task-rest_acq-AP_bold</em>.</p>
-</dd>
-<dt><kbd><span class="option">-f<var>mri_pe</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Full path to the main phase encoding scan for rsfMRI processing.
-Default string is <em>task-rest_acq-APse_bold</em>.</p>
-</dd>
-<dt><kbd><span class="option">-f<var>mri_rpe</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Full path to the reverse phase encoding scan for rsfMRI processing. If the path is wrong topup will be skipped!.
-Default string is <em>task-rest_acq-PAse_bold</em>.</p>
-</dd>
-<dt><kbd><span class="option">-m<var>ainScanRun</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> If multiple resting-state scan runs exist in the BIDS rawdata,
-you must specify which scan to process using this flag (e.g. ‘1’).</p>
-</dd>
-<dt><kbd><span class="option">-p<var>haseReversalRun</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> If multiple phase encoding runs exist in the BIDS directory (only main phase is checked),
-you must specify which file to process using this flag (e.g. ‘1’).</p>
-</dd>
-<dt><kbd><span class="option">-t<var>opupConfig</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Specify path to config file that should be used for distortion correction using topup.
-Default is <em>${FSLDIR}/etc/flirtsch/b02b0_1.cnf</em>.</p>
-</dd>
-<dt><kbd><span class="option">-s<var>moothWithWB</var></span></kbd></dt>
-<dd><p>Specify this option to use workbench tools for surface-based smoothing (more memory intensive), The
-default smoothing is performed with freesurfer tools: <em>mri_surf2surf</em>.</p>
-</dd>
-<dt><kbd><span class="option">-r<var>egress_WM_CSF</var></span></kbd></dt>
-<dd><p>Specify this option to perform white matter and CSF signal regression of timeseries.
-Default = no white matter and CSF signal regression.</p>
-</dd>
-<dt><kbd><span class="option">-G<var>SR</var></span></kbd></dt>
-<dd><p>Specify this option to perform global signal regression of timeseries.
-Default = no global regression.</p>
-</dd>
-<dt><kbd><span class="option">-n<var>oFIX</var></span></kbd></dt>
-<dd><p>Specify this option to skip ICA-FIX processing.
-Default = FIX runs with the default training file.</p>
-</dd>
-<dt><kbd><span class="option">-i<var>cafixTraining</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> Path to specified ICA-FIX training file for nuisance signal regression
-(file.RData). Default is <em>${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData</em>.</p>
-</dd>
-<dt><kbd><span class="option">-r<var>egAffine</var></span></kbd></dt>
-<dd><p>Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
-Default is non linear registration using ANTs-SyN.
-We recommend this option for rsfMRI acquisitions with low resolution and/or low SNR.</p>
-</dd>
-<dt><kbd><span class="option">-s<var>esAnat</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code> If longitudinal data is provided, this flag allows to register the current <em>functional</em> session to the desired <em>anatomical</em> session
-Default processing is independent.</p>
-</dd>
-</dl>
+<p><code class="docutils literal notranslate"><span class="pre">-proc_rsfmri</span></code> has several optional arguments:</p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-mainScanStr</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>String to manually identify the main scan for rsfMRI processing (eg. <em>func/sub-001_&lt;mainScanStr&gt;.nii.gz</em>). Default string is <em>task-rest_acq-AP_bold</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fmri_pe</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Full path to the main phase encoding scan for rsfMRI processing. Default string is <em>task-rest_acq-APse_bold</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fmri_rpe</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Full path to the reverse phase encoding scan for rsfMRI processing. If the path is wrong topup will be skipped! Default string is <em>task-rest_acq-PAse_bold</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-mainScanRun</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>If multiple resting-state scan runs exist in the BIDS rawdata, you must specify which scan to process using this flag (e.g. ‘1’).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-phaseReversalRun</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>If multiple phase encoding runs exist in the BIDS directory (only main phase is checked), you must specify which file to process using this flag (e.g. ‘1’).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-topupConfig</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Specify path to config file that should be used for distortion correction using topup. Default is <em>${FSLDIR}/etc/flirtsch/b02b0_1.cnf</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-smoothWithWB</span></code></p></td>
+<td><p>Specify this option to use workbench tools for surface-based smoothing (more memory intensive), The default smoothing is performed with freesurfer tools: <em>mri_surf2surf</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-regress_WM_CSF</span></code></p></td>
+<td><p>Specify this option to perform white matter and CSF signal regression of timeseries. Default = no white matter and CSF signal regression.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-GSR</span></code></p></td>
+<td><p>Specify this option to perform global signal regression of timeseries. By default, no global regression is performed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-noFIX</span></code></p></td>
+<td><p>Specify this option to skip ICA-FIX processing. By default, FIX will run with the default training file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-icafixTraining</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Path to specified ICA-FIX training file for nuisance signal regression (file.RData). Default is <em>${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-regAffine</span></code></p></td>
+<td><p>Specify this option to perform an Affine registration ONLY from rsfMRI to T1w. By default, rsfMRI processing in micapipe performs a non linear registration using ANTs-SyN. We recommend this option for rsfMRI acquisitions with low resolution and/or low SNR.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sesAnat</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>If longitudinal data is provided, this flag allows to register the current <em>functional</em> session to the desired <em>anatomical</em> session</p></td>
+</tr>
+</tbody>
+</table>
 <div class="admonition-distortion-correction admonition">
-<p class="admonition-title">Distortion correction ⚠️</p>
-<p>If the script can’t find the <em>fmri_rpe</em> (reverse phase encoding), or <em>fmri_pe</em> (phase encoding) images,
-the distortion correction will be skipped. If you provided the path to the <em>fmri_pe</em> and <em>fmri_rpe</em> images,
-ensured that the paths are correct!!! On the following table you can see the possible scenarios:</p>
+<p class="admonition-title">Distortion correction ✅</p>
+<p>If the script can’t find the <em>fmri_rpe</em> (reverse phase encoding), or <em>fmri_pe</em> (phase encoding) images, distortion correction will be skipped. If you provide the path to the <em>fmri_pe</em> and <em>fmri_rpe</em> images, make sure the paths are correct! The possible scenarios and conditions in which topup is run (or skipped) are presented in the table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 23%" />
@@ -350,18 +346,11 @@ ensured that the paths are correct!!! On the following table you can see the pos
 </tbody>
 </table>
 </div>
-<div class="admonition-warning-melodic-and-fix admonition">
-<p class="admonition-title">WARNING: ⚠️ Melodic and FIX ⚠️</p>
-<p>FIX and Melodic are used by default to remove nuisance variable signal. However our default parameters might not suit all databases.
-Our default training file used for FIX was trained in-house, on a subset of 30 participants.
-Scans were acquire on a 3T Siemens Magnetom Prisma-Fit equipped with a 64-channel head coil.
-rs-fMRI scans of 7 minutes were acquired using multiband accelerated 2D-BOLD echo-planar imaging
-(3mm isotropic voxels, TR=600ms, TE=30ms, flip angle=52°, FOV=240×240mm2, slice thickness=3mm, mb factor=6, echo spacing=0.54ms).
-If your acquisition parameters are similar, feel free to use the defaults options in <code class="docutils literal notranslate"><span class="pre">-proc_rsfmri</span></code>.</p>
-<p>Otherwise we recommend you to <a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide#Training_datasets">train your own dataset for FIX</a>,
-or do not use fix and try a different method for nuisance variable signal removal, e.g.:</p>
+<div class="admonition-notes-on-ica-melodic-and-ica-fix admonition">
+<p class="admonition-title">Notes on ICA-Melodic and ICA-FIX 🛁</p>
+<p>FIX and Melodic are used by default to remove nuisance variable signal. However, our default parameters might not suit all databases. Our default training file used for FIX was trained in-house, on a subset of 30 participants (15 healthy controls, 15 patients with drug-resistant epilepsy). Scans were acquires on a 3T Siemens Magnetom Prisma-Fit equipped with a 64-channel head coil. rs-fMRI scans of 7 minutes were acquired using multiband accelerated 2D-BOLD echo-planar imaging (3mm isotropic voxels, TR=600ms, TE=30ms, flip angle=52°, FOV=240×240mm2, slice thickness=3mm, mb factor=6, echo spacing=0.54ms). If your acquisition parameters are similar to this, it may be appropriate for you to use the defaults options in <code class="docutils literal notranslate"><span class="pre">-proc_rsfmri</span></code>. Otherwise, if your acquisition parameters are drastically different, we recommend you to <a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide#Training_datasets">train your own dataset for FIX</a>, or do not use FIX and try a different method for nuisance variable signal removal. In the next example,FIX and Melodic will be skipped, but global signal, white matter and CSF regressions will be applied:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">On the next example FIX and Melodic will be skipped, but global signal, white matter and CSF regressions will be applied:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
           -proc_rsfmri -noFIX -regress_WM_CSF -GSR
@@ -370,7 +359,7 @@ or do not use fix and try a different method for nuisance variable signal remova
 </div>
 </div>
 <div class="admonition-longitudinal-acquisitions admonition">
-<p class="admonition-title">Longitudinal acquisitions ⚠️</p>
+<p class="admonition-title">Longitudinal acquisitions 👶 👦 👨 👨‍🦳</p>
 <p>If your database contains multiple sessions (different days) and you wish to register the rsfMRI to the same
 anatomical session, you should use the <code class="docutils literal notranslate"><span class="pre">-sesAnat</span></code> flag. For example if you database looks like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-01
@@ -382,9 +371,9 @@ anatomical session, you should use the <code class="docutils literal notranslate
     └── anat
 </pre></div>
 </div>
-<p>You should specify the <code class="docutils literal notranslate"><span class="pre">-sesAnat</span> <span class="pre">struct01</span></code> to register each session to the same anatomical volume.</p>
+<p>You should specify <code class="docutils literal notranslate"><span class="pre">-sesAnat</span></code> <code class="docutils literal notranslate"><span class="pre">struct01</span></code> to register each session to the same anatomical volume. In the next example, sessions <code class="docutils literal notranslate"><span class="pre">func01</span></code> and <code class="docutils literal notranslate"><span class="pre">func02</span></code> will be registered to the anatomical image in <code class="docutils literal notranslate"><span class="pre">struct01</span></code>:</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">On the next example, func01 and func02 will be registered to the anatomical image in struct01:</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub <span class="m">01</span> -ses func01 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
  mica-pipe -sub <span class="m">01</span> -ses func02 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
