@@ -91,7 +91,7 @@ Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
           -t xfm/${subjectID}_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat \
           -t [xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1] \
           -t xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz \
-          -o anat/${subjectID}_space-nativepro_desc-rsfmri_bold.nii.gz -v -u int
+          -o ${Output} -v -u int
 
 
 Surface issues
