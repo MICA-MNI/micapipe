@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Computing gradients from output matrices &mdash; micapipe  documentation</title>
+  <title>Computing gradient from output matrices &mdash; micapipe  documentation</title>
   
 
   
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
@@ -38,6 +38,8 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -118,14 +120,17 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Building gradients</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#structural-gradients">Structural gradients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functional-gradients">Functional gradients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mpc-gradients">MPC gradients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#geodesic-distance-gradients">Geodesic distance gradients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#thickness-covariance-gradients">Thickness covariance gradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-the-enviroment">Set the enviroment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structural-gradient">Structural gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functional-gradient">Functional gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mpc-gradient">MPC gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#geodesic-distance-gradient">Geodesic distance gradient</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#download-code-examples-gradients">Download code examples: Gradients</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
@@ -183,7 +188,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Computing gradients from output matrices</li>
+      <li>Computing gradient from output matrices</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -203,21 +208,138 @@
            <div itemprop="articleBody">
             
   <div class="section" id="building-gradients">
-<span id="gradients"></span><h1>Building gradients<a class="headerlink" href="#building-gradients" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="structural-gradients">
-<h2>Structural gradients<a class="headerlink" href="#structural-gradients" title="Permalink to this headline">¶</a></h2>
+<span id="gradient"></span><h1>Building gradients<a class="headerlink" href="#building-gradients" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="set-the-enviroment">
+<h2>Set the enviroment<a class="headerlink" href="#set-the-enviroment" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
 </div>
-<div class="section" id="functional-gradients">
-<h2>Functional gradients<a class="headerlink" href="#functional-gradients" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="mpc-gradients">
-<h2>MPC gradients<a class="headerlink" href="#mpc-gradients" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="geodesic-distance-gradients">
-<h2>Geodesic distance gradients<a class="headerlink" href="#geodesic-distance-gradients" title="Permalink to this headline">¶</a></h2>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+<span class="kn">from</span> <span class="nn">nibabel.freesurfer.mghformat</span> <span class="kn">import</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
+<span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
+<span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
+
+<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
+</pre></div>
 </div>
-<div class="section" id="thickness-covariance-gradients">
-<h2>Thickness covariance gradients<a class="headerlink" href="#thickness-covariance-gradients" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="section" id="structural-gradient">
+<h2>Structural gradient<a class="headerlink" href="#structural-gradient" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the connectome</span>
+
+<span class="c1"># Calculate the gradients</span>
+
+<span class="c1"># Visualize the G1, G2 y G3</span>
+
+<span class="c1"># Visualize the values on surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="functional-gradient">
+<h2>Functional gradient<a class="headerlink" href="#functional-gradient" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the connectome</span>
+
+<span class="c1"># Calculate the gradients</span>
+
+<span class="c1"># Visualize the G1, G2 y G3</span>
+
+<span class="c1"># Visualize the values on surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="mpc-gradient">
+<h2>MPC gradient<a class="headerlink" href="#mpc-gradient" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the connectome</span>
+
+<span class="c1"># Calculate the gradients</span>
+
+<span class="c1"># Visualize the G1, G2 y G3</span>
+
+<span class="c1"># Visualize the values on surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="geodesic-distance-gradient">
+<h2>Geodesic distance gradient<a class="headerlink" href="#geodesic-distance-gradient" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the connectome</span>
+
+<span class="c1"># Calculate the gradients</span>
+
+<span class="c1"># Visualize the G1, G2 y G3</span>
+
+<span class="c1"># Visualize the values on surface</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="download-code-examples-gradients">
+<h3>Download code examples: Gradients<a class="headerlink" href="#download-code-examples-gradients" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference download internal" download="" href="../../_downloads/b8772668db0e7348345acda5f91c05a2/tutorial_gradients.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_gradients.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/84ee4bb7e2e8a4cdb8d8c72dd8dfe333/tutorial_gradients.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_gradients.py'</span></code></a></p>
+</div>
 </div>
 </div>
 
