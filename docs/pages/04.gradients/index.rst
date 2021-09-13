@@ -6,6 +6,8 @@
 Building gradients
 ******************
 
+`BrainSpace tutorials <https://brainspace.readthedocs.io/en/latest/python_doc/auto_examples/index.html>`_
+
 Set the enviroment
 ============================================================
 

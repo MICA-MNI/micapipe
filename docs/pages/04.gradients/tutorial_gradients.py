@@ -4,7 +4,7 @@
 # # Building gradients
 # ## Set the enviroment
 
-# In[5]:
+# In[1]:
 
 
 # python notebook
@@ -25,7 +25,7 @@ from brainspace.mesh.mesh_io import read_surface
 from brainspace.datasets import load_conte69
 
 # Set the working directory to the 'out' directory
-os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+# os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
 
 # This variable will be different for each subject
 subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
@@ -37,7 +37,7 @@ atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
 # ## Structural gradient
 
-# In[ ]:
+# In[2]:
 
 
 # Set the path to the the structural cortical connectome
@@ -52,7 +52,7 @@ mtx_scSym = np.triu(mtx_sc,1)+mtx_sc.T
 
 # ## Functional gradient
 
-# In[ ]:
+# In[3]:
 
 
 # Set the path to the the functional cortical connectome
@@ -67,7 +67,7 @@ mtx_fcSym = np.triu(mtx_fs,1)+mtx_fs.T
 
 # ## MPC gradient
 
-# In[ ]:
+# In[4]:
 
 
 # Set the path to the the MPC cortical connectome

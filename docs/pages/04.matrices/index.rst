@@ -111,8 +111,8 @@ The first step in both languages is to set the environment:
    .. code-tab:: r R
 
     # Set the environment
-    library("RColorBrewer")
-    library("viridis")
+    require("RColorBrewer")
+    require("viridis")
 
     # Set the working directory to your subjec's directory
     setwd("out/micapipe/sub-HC001/ses-01")

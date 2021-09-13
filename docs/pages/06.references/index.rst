@@ -58,6 +58,12 @@ networkD3
 htmlwidgets
     Vaidyanathan, Ramnath, Yihui Xie, JJ Allaire, Joe Cheng, Carson Sievert, and Kenton Russell. 2020. Htmlwidgets: HTML Widgets for r. https://github.com/ramnathv/htmlwidgets.
 
+freesurferformats
+    Tim Schäfer, T., (2020). freesurferformats: Read and Write 'FreeSurfer' Neuroimaging File Formats. R package version 0.1.9. `CRAN <https://CRAN.R-project.org/package=freesurferformats>`_, `github <https://github.com/dfsp-spirit/freesurferformats>`_
+
+fsbrain
+   Schäfer, T., & Ecker, C. (2020). fsbrain: an R package for the visualization of structural neuroimaging data. bioRxiv. https://doi.org/10.1101/2020.09.18.302935
+
 ``python`` packages
 ------------------------------------------------
 
