@@ -27,7 +27,8 @@ dwi_main=$8
 dwi_rpe=$9
 dwi_processed=${10}
 rpe_all=${11}
-PROC=${12}
+regAffine=${12}
+PROC=${13}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -48,11 +49,12 @@ source "$MICAPIPE/functions/utilities.sh"
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 Info "Inputs of proc_dwi:"
-Note "tmpDir     :" "$tmpDir"
-Note "dwi_main   :" "$dwi_main"
-Note "dwi_rpe    :" "$dwi_rpe"
-Note "rpe_all    :" "$rpe_all"
-Note "Processing :" "$PROC"
+Note "tmpDir     : " "$tmpDir"
+Note "dwi_main   : " "$dwi_main"
+Note "dwi_rpe    : " "$dwi_rpe"
+Note "rpe_all    : " "$rpe_all"
+Note "Affine only: " "$regAffine"
+Note "Processing : " "$PROC"
 
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
@@ -375,7 +377,7 @@ mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
 
 if [[ ! -f "$T1nativepro_in_dwi" ]]; then
-      Info "Linear registration from DWI-b0 to T1nativepro"
+      Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
 
@@ -459,27 +461,40 @@ dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 
+
 if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
-    Info "Non-linear registration from T1w_dwi-space to DWI"
     dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
     T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro-brain.nii.gz"
-    T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_NL.nii.gz"
     fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
     Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
-    Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
-    if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
+
+    if [[ ${regAffine}  == "FALSE" ]]; then
+        Info "Non-linear registration from T1w_dwi-space to DWI"
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
+        export reg="Affine+SyN"
+        trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
+        trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro
+        if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
+
+    elif [[ ${regAffine}  == "TRUE" ]]; then
+        Info "Only affine registration from T1w_dwi-space to DWI"; ((Nsteps++))
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"
+        trans_T12dwi="-t [${mat_dwi_affine},1]"
+        trans_dwi2T1="-t ${mat_dwi_affine}"
+    fi
+
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
     # Apply transformation DWI-b0 space to T1nativepro
-    Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" -t "$mat_dwi_affine" -t ["$dwi_SyN_affine",1] -t "$dwi_SyN_Invwarp" -o "$dwi_in_T1nativepro" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int
     # Apply transformation T1nativepro to DWI space
-    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$T1nativepro_in_dwi_NL" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" "$trans_T12dwi" -o "$T1nativepro_in_dwi_NL" -v -u int
     # Apply transformation 5TT to DWI space
-    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_5tt" -v -e 3 -n linear
+    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" "$trans_T12dwi" -o "$dwi_5tt" -v -e 3 -n linear
     if [[ -f "$dwi_5tt" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a non-linear registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
+    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
 fi
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask

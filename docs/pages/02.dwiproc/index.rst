@@ -56,7 +56,7 @@ This module performs required pre-processing of DWI scans, in addition to derivi
 
         ``-proc_dwi`` has several optional arguments:
 
-        .. list-table:: 
+        .. list-table::
             :widths: 75 750
             :header-rows: 1
             :class: tight-table
@@ -71,6 +71,9 @@ This module performs required pre-processing of DWI scans, in addition to derivi
               - The specified image will be used for further DWI processing, instead of performing pre-processing inside the script.
             * - ``-rpe_all``
               - If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used (This option requires that both encoding direction files contain the same number of directions, bvecs and bvals).
+            * - ``-regAffine``
+              - Specify this option to perform an Affine registration ONLY from DWI to T1w. By default, DWI processing in micapipe performs a non linear registration using ANTs-SyN. We recommend this option for DWI acquisitions with low resolution and/or low SNR. Or if the non-linear registration is not optimal.
+
 
         **Multiple inputs:** ``dwi_main`` **and** ``dwi_rpe``
 
@@ -238,7 +241,7 @@ This modules computes tractography-based structural connectivity matrices and as
 
         ``-SC`` supports different optional arguments:
 
-        .. list-table:: 
+        .. list-table::
             :widths: 10 500
             :header-rows: 1
             :class: tight-table
