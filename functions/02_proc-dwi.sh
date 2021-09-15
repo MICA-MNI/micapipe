@@ -278,7 +278,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-      Do_cmd nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
+      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
 
       # Processing the reverse encoding b0
       if [[ -f "$rpe_dns" ]]; then
@@ -305,7 +305,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             fi
             Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
 
-            Do_cmd nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
