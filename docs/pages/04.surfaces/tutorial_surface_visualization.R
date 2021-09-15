@@ -27,8 +27,8 @@ dir_morph <- paste0(subjectDir, '/anat/surfaces/morphology/')
 dir_mpc <- paste0(subjectDir, '/anat/surfaces/micro_profiles/')
 
 # Helper function
-plot_surface <-function(brainMesh, legend='', view_angles=c('sd_lateral_lh', 'sd_medial_lh', 'sd_medial_rh', 'sd_lateral_rh'), img_only=FALSE) {
-  try(img <- vis.export.from.coloredmeshes(brainMesh, colorbar_legend = legend, grid_like = FALSE, view_angles = view_angles, img_only = img_only, horizontal=TRUE))
+plot_surface <-function(brainMesh, legend='', view_angles=c('sd_lateral_lh', 'sd_medial_lh', 'sd_medial_rh', 'sd_lateral_rh'), img_only=FALSE, horizontal=TRUE) {
+  try(img <- vis.export.from.coloredmeshes(brainMesh, colorbar_legend = legend, grid_like = FALSE, view_angles = view_angles, img_only = img_only, horizontal=horizontal))
   while (rgl.cur() > 0) { rgl.close() }; file.remove(list.files(path = getwd(), pattern = 'fsbrain'))
   return(img)
 }
@@ -79,7 +79,7 @@ cv.rh <- paste0(dir_morph, subjectID, '_space-fsnative_desc-rh_curvature.mgh')
 # Plot the surface
 cv_nat <- vis.data.on.subject('freesurfer/', subjectID, morph_data_lh=cv.lh, morph_data_rh=cv.rh, surface='inflated', draw_colorbar = TRUE, 
                               views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-plot_surface(cv_nat, 'Curvature')
+plot_surface(cv_nat, 'Curvature [1/mm]')
 
 
 ####  Curvature: fsaverage5
@@ -90,7 +90,7 @@ cv.rh.fs5 <- paste0(dir_morph, subjectID, '_space-fsaverage5_desc-rh_curvature.m
 # Plot the surface
 cv_fs5 <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=cv.lh.fs5, morph_data_rh=cv.rh.fs5, surface='inflated', draw_colorbar = TRUE, 
                               views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-plot_surface(cv_fs5, 'Curvature')
+plot_surface(cv_fs5, 'Curvature [1/mm]')
 
 
 #### Curvature: conte 69
@@ -101,7 +101,7 @@ cv.rh.c69 <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_curvature.
 # Plot the surface
 cv_c69 <- vis.data.on.subject('freesurfer', 'conte69', morph_data_lh=cv.lh.c69, morph_data_rh=cv.rh.c69, surface='conte69.gii', draw_colorbar = TRUE, 
                               views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-plot_surface(cv_c69, 'Curvature')
+plot_surface(cv_c69, 'Curvature [1/mm]')
 
 
 # ------------------------------------------------------------------------ # 
@@ -136,7 +136,7 @@ cv.rh.fs5.10mm <- paste0(dir_morph, subjectID, '_space-fsaverage5_desc-rh_curvat
 # Plot the surface
 cv_fs5.10mm <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=cv.lh.fs5.10mm, morph_data_rh=cv.rh.fs5.10mm, surface='pial', draw_colorbar = TRUE, 
                               views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-plot_surface(cv_fs5.10mm, 'Curvature')
+plot_surface(cv_fs5.10mm, 'Curvature [1/mm]')
 
 
 # Curvature conte69 fwhm=10mm
@@ -147,7 +147,7 @@ cv.rh.c69.10mm <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_curva
 # Plot the surface
 cv_c69.10mm <- vis.data.on.subject('freesurfer', 'conte69', morph_data_lh=cv.lh.c69.10mm, morph_data_rh=cv.rh.c69.10mm, surface='conte69.gii', draw_colorbar = TRUE, 
                                    views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-plot_surface(cv_c69.10mm, 'Curvature')
+plot_surface(cv_c69.10mm, 'Curvature [1/mm]')
 
 
 # ------------------------------------------------------------------------ # 
@@ -157,50 +157,59 @@ plot_surface(cv_c69.10mm, 'Curvature')
 grays <- colorRampPalette(c('gray65', 'gray65', 'gray65'))
 
 # Set the path to the surface
-c69.pial.lh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_pial.surf.gii') )
-c69.pial.rh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_pial.surf.gii') )
+c69.pial.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_pial.surf.gii') )
+c69.pial.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_pial.surf.gii') )
 
 # Plot the surface
-cml = coloredmesh.from.preloaded.data(c69.pial.lh, morph_data = rep(0, nrow(c69.pial.lh$vertices)), makecmap_options = list('colFn'=grays) )
-cmr = coloredmesh.from.preloaded.data(c69.pial.rh, morph_data = rep(0, nrow(c69.pial.rh$vertices)), makecmap_options = list('colFn'=grays) )
-brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
-           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
+cml = coloredmesh.from.preloaded.data(c69.pial.lh, morph_data = rnorm(nrow(c69.pial.lh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+cmr = coloredmesh.from.preloaded.data(c69.pial.rh, morph_data = rnorm(nrow(c69.pial.rh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+c69.pial <- brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
+           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=T))
+plot_surface(c69.pial, 'conte69 pial')
 
 ### Conte 69: Middle surface  ### 
 # Set the path to the surface
-c69.mid.lh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_midthickness.surf.gii') )
-c69.mid.rh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_midthickness.surf.gii') )
+c69.mid.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_midthickness.surf.gii') )
+c69.mid.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_midthickness.surf.gii') )
 
 # Plot the surface
-cml = coloredmesh.from.preloaded.data(c69.mid.lh, morph_data = rep(0, nrow(c69.mid.lh$vertices)), makecmap_options = list('colFn'=grays) )
-cmr = coloredmesh.from.preloaded.data(c69.mid.rh, morph_data = rep(0, nrow(c69.mid.rh$vertices)), makecmap_options = list('colFn'=grays) )
-brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
-           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
+cml = coloredmesh.from.preloaded.data(c69.mid.lh, morph_data = rnorm(nrow(c69.mid.lh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+cmr = coloredmesh.from.preloaded.data(c69.mid.rh, morph_data = rnorm(nrow(c69.mid.rh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+c69.mid <- brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
+           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=T))
+plot_surface(c69.mid, 'conte69 mid')
 
 ### Conte 69: White surface  ### 
 # Set the path to the surface
-c69.wm.lh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_white.surf.gii') )
-c69.wm.rh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_white.surf.gii') )
+c69.wm.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_white.surf.gii') )
+c69.wm.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_white.surf.gii') )
 
 # Plot the surface
-cml = coloredmesh.from.preloaded.data(c69.wm.lh, morph_data = rep(0, nrow(c69.wm.lh$vertices)), makecmap_options = list('colFn'=grays) )
-cmr = coloredmesh.from.preloaded.data(c69.wm.rh, morph_data = rep(0, nrow(c69.wm.rh$vertices)), makecmap_options = list('colFn'=grays) )
-brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
-           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
+cml = coloredmesh.from.preloaded.data(c69.wm.lh, morph_data = rnorm(nrow(c69.wm.lh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+cmr = coloredmesh.from.preloaded.data(c69.wm.rh, morph_data = rnorm(nrow(c69.wm.rh$vertices),5,1), makecmap_options = list('colFn'=grays) )
+c69.wm <- brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
+           rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=T))
+plot_surface(c69.wm, 'conte69 white')
 
 # ------------------------------------------------------------------------ # 
 #### Native sphere ####
+# Colormap
+grays <- colorRampPalette(c('white', 'gray65','black'))
 
 # Set the path to the surface
-sph.lh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_lh_sphereReg.surf.gii'))
-sph.rh <- read.fs.surface.gii(filepath = paste0(dir_conte, subjectID,'_rh_sphereReg.surf.gii'))
+sph.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_lh_sphereReg.surf.gii'))
+sph.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_rh_sphereReg.surf.gii'))
+
+# Set the color limits
+lf= limit_fun(-0.2, 0.2)
+
+# Create the coloredmeshes
+cml = coloredmesh.from.preloaded.data(sph.lh, morph_data = lf(read.fs.mgh(cv.lh)), hemi = 'lh', makecmap_options = list('colFn'=grays))
+cmr = coloredmesh.from.preloaded.data(sph.rh, morph_data = lf(read.fs.mgh(cv.rh)), hemi = 'rh', makecmap_options = list('colFn'=grays))
+sph.nat <- brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), rglactions = list('no_vis'=T))
 
 # Plot the surface
-cml = coloredmesh.from.preloaded.data(sph.lh, morph_data = c(read.fs.mgh(cv.lh)), hemi = 'lh')
-cmr = coloredmesh.from.preloaded.data(sph.rh, morph_data = c(read.fs.mgh(cv.rh)), hemi = 'rh')
-brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
-           rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=F))
-
+plot_surface(sph.nat, 'Native sphere curvature [1/mm]')
 
 # ------------------------------------------------------------------------ # 
 #### Microstructural profile covariance ####
