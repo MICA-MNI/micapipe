@@ -45,6 +45,7 @@ If you are interested in plotting surfaces with BrainSpace check its amazing `do
 **R** libraries are ``RColorBrewer``, ``viridis``, ``fsbrain``, ``freesurferformats`` and ``rgl``.
 For further information about managing and visualizing surfaces with **R**, check the `fsbrain vignettes <https://cran.r-project.org/web/packages/fsbrain/vignettes/fsbrain.html>`_, `fsbrain github repository <https://github.com/dfsp-spirit/fsbrain>`_, and
 `freesurferformats <https://github.com/dfsp-spirit/freesurferformats>`_
+
 The first step in both languages is to set the environment.
 
 .. tabs::
@@ -105,7 +106,6 @@ Load the surfaces
 
    .. code-tab:: py
 
-    # Load native pial surface
     # Load native pial surface
     pial_lh = read_surface(dir_FS+'/surf/lh.pial', itype='fs')
     pial_rh = read_surface(dir_FS+'/surf/rh.pial', itype='fs')
