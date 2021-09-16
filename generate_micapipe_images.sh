@@ -37,7 +37,7 @@ generate() {
            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
            add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
            apt update; \
-           apt install -y r-base libblas-dev liblapack-dev gfortran g++; \
+           apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
            rm -rf /var/lib/apt/lists/*;" \
     --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \

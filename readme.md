@@ -8,7 +8,9 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
 [![GitHub stars](https://img.shields.io/github/stars/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
-[![version](https://img.shields.io/badge/version-v1.0.0.RC-blue)](https://github.com/MICA-MNI/micapipe)
+[![version](https://img.shields.io/badge/version-v0.1.0.RC-blue)](https://github.com/MICA-MNI/micapipe)
+[![Docker Pulls](https://img.shields.io/docker/pulls/micalab/micapipe)](https://hub.docker.com/r/micalab/micapipe)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version) 
 
 [`micapipe`](micapipe.readthedocs.io) is developed by [MICA-lab](https://mica-mni.github.io) at McGill University for use at [the Neuro](https://www.mcgill.ca/neuro/), McConnell Brain Imaging Center ([BIC](https://www.mcgill.ca/bic/)).  
 > The main goal of this pipeline is to provide a semi-flexible and robust framework to process MRI images and generate ready to use modality based connectomes.    
@@ -50,7 +52,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 | brainspace      | 0.1.1     |
 | certifi         | 2020.6.20 |
 | cycler          | 0.10.0    |
-| enigmatoolbox   | 0.0.1     |
+| argparse        | 0.1.1     |
 | joblib          | 0.16.0    |
 | kiwisolver      | 1.2.0     |
 | matplotlib      | 3.3.1     |
@@ -88,82 +90,7 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 |          class |  7.3-17  |        matrixStats |  0.56.0  |           ellipsis |  0.3.0    |
 |           ROCR |  1.0-11  |           multcomp |  1.4-13  |            libcoin |  1.0-6    |
 |        kernlab |  0.9-29  |          lifecycle |  0.2.0   |             Matrix |  1.2-18   |
-|                |          |            munsell |  0.5.0   |         data.table |  1.12.8   |
+|      networkD3 |    0.4   |            munsell |  0.5.0   |         data.table |  1.12.8   |
 |                |          |             gtable |  0.3.0   |               httr |  1.4.1    |
 |                |          |        htmlwidgets |  1.5.1   |                 R6 |  2.4.1    |
 |                |          |          codetools |  0.2-16  |           compiler |  3.6.3    |
-
-## `micapipe` usage examples ##
-### Optional Flags ###
-Will keep the temporal directory, and the session name is defined as "ses-01"
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -ses 01 -nocleanup -proc_structural
-```
-
-### First stage basic processing ###
-#### Volumetric processing ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural
-```
-
-#### Freesurfer recon-all processing ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_freesurfer
-```
-
-#### Runs both modules of first stage: *volumetric* and *freesurfer* ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_structural -proc_freesurfer
-```
-
-### Second stage processing (requires stage 1 completed) ###
-#### Post structural volumetric processing ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_structural
-```
-
-#### DWI-Diffusion weighted images processing with MRtrix3 ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_dwi
-```
-
-### Third stage processing (requires stage 1 and 2 completed) ###
-#### Resting state Funtional MRI processing and functional connectome ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -proc_rsfmri
-```
-
-#### Structural connectome generation ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -SC
-```
-
-#### Microstructural profiles and covariance analysis ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -MPC
-```
-
-#### Geodesic distance analysis ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -GD
-```
-
-### Further analysis (requires stages 1,2 and 3 completed) ###
-#### Cortical morphology analysis ####
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -post_morph
-```
-
-### Run all processing stages ###
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -all
-```
-### Quality check (under development) ###
-This module can be used at any stage of processing
-``` bash
-mica-pipe  -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> -QC
-```  
-
-## Acknowledgements ##
-
-## License information ##

@@ -242,10 +242,10 @@ if x_spike:
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
         gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)        
+        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
     else:
         mdl = np.append(ones, spike, axis=1)
-    
+
     slm = LinearRegression().fit(lh_data_nat, mdl)
     lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
     del lh_data_nat
@@ -269,7 +269,7 @@ else:
         slm = LinearRegression().fit(lh_data_nat, mdl)
         lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
         del lh_data_nat
-        del slm        
+        del slm
     else:
         lh_data_nat_corr = lh_data_nat
         del lh_data_nat
@@ -299,7 +299,7 @@ if x_spike:
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
         gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)  
+        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
     else:
         mdl = np.append(ones, spike, axis=1)
     slm = LinearRegression().fit(rh_data_nat, mdl)
@@ -325,7 +325,7 @@ else:
         slm = LinearRegression().fit(rh_data_nat, mdl)
         rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
         del rh_data_nat
-        del slm        
+        del slm
     else:
         rh_data_nat_corr = rh_data_nat
         del rh_data_nat
@@ -357,7 +357,7 @@ if x_spike:
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
         gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)         
+        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
     else:
         mdl = np.append(ones, spike, axis=1)
     slm = LinearRegression().fit(sctx_cereb, mdl)
@@ -382,7 +382,7 @@ else:
         slm = LinearRegression().fit(sctx_cereb, mdl)
         sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
         del sctx_cereb
-        del slm            
+        del slm
     else:
         sctx_cereb_corr = sctx_cereb
         del sctx_cereb

@@ -74,7 +74,6 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-T1nativepro_csf="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_0.nii.gz"
 T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-subcortical.nii.gz"
 T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
 
@@ -169,7 +168,7 @@ else
 fi
 
 # Manually defined Phase scan and reverse phase scan
-if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then mainPhaseScan="$fmri_rpe"; fi
+if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_pe" ]]; then mainPhaseScan="$fmri_pe"; fi
 if [[ "$fmri_rpe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then reversePhaseScan="$fmri_rpe"; fi
 
 # Check inputs
@@ -805,6 +804,6 @@ Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
 echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

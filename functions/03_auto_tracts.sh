@@ -2,14 +2,14 @@
 #
 # Automatic bundle segmentation
 #
-version() {
-  echo -e "\nMICAPIPE Feb 2021 (Version v.0.0.2)\n"
-}
 umask 003
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=$(dirname $(realpath "$0"))
 MICAPIPE=$(dirname $(realpath "$dir_functions"))
 source "${MICAPIPE}/functions/utilities.sh"
+version() {
+  echo -e "\nMICAPIPE July 2021 (${Version})\n"
+}
 
 help() {
 echo -e "
@@ -43,7 +43,7 @@ COMMAND:
 
 ARGUMENTS:
     Compulsory:
-      -tck <file>       : .tck file (SIFTED, preferraly.)
+      -tck <file>       : .tck file (ideally SIFTED)
       -outbase <string> : base name for all your outputs.
       -mask <file>      : Binary mask in subject dwi space.
       -fa <file>        : FA map in subject dwi space. Used for registration to template.
@@ -54,12 +54,11 @@ OPTIONS:
       -keep_tmp         : Do not delete temporary directory
       -tmpDir <path>    : Specify location of temporary directory.
       -minStreamlinesPerVoxel <int>  Streamlines are truncated if voxel contains
-                                     less than this number of streamlines.
-                                     Default is $minStreamlinesPerVoxel
+                                     less than this number of streamlines. Default is 1
       -robust           : This option to runs a more ROBUST SyN registration ( More computation time )
-      -weights <file>   : Add this option if you calculated obtained a weights file from SIFT2
+      -weights <file>   : Use this option if you calculated a weights file from SIFT2
       -threads <int>    : Number of threads (Default is 6)
-      -version      	  : Print software version
+      -v|-version      	  : Print software version
 
 
 USAGE:
@@ -71,7 +70,7 @@ Modified by rcruces, McGill University, MNI, MICA-lab Nov 2020
 "
 }
 
-if [ "$#" -lt 2 ]; then Error "Not enough arguments\033[0m"; help; exit 2; fi
+if [ "$#" -lt 1 ]; then Error "Not enough arguments\033[0m"; help; exit 2; fi
 
 for arg in "$@"
 do
@@ -80,7 +79,7 @@ do
     help
     exit 1
   ;;
-  -version)
+  -v|-version)
     version
     exit 1
   ;;

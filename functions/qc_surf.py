@@ -2,25 +2,25 @@
 # -*- coding: utf-8 -*-
 
 """
-Generates PNG surface images for Quality Check in micapipe
+micapipe surface QC.
 
+Generates PNG surface images for Quality Check in micapipe.
 
     Parameters
     ----------
 
-    subBIDS     : str, BIDS id (including ses if necessary, eg. sub-01_ses-01)
+    subBIDS  :  str
+                BIDS id (including ses if necessary, eg. sub-01_ses-01).
 
-    subDir   : str, Path to subject derivatives directory
+    subDir   :  str
+                Path to subject derivatives directory.
 
+    Examples
+    --------
+    >>> qc_surf.py -subBIDS sub-00_ses-01 -subDir ~/derivatives/micapipe/sub-00/ses-01
 
-    Usage
-    -----
-    qc_surf.py -subBIDS sub-00_ses-01 -subDir ~/derivatives/micapipe/sub-00/ses-01
-
-
-Created on Tue July 9  2021 (the second year of the pademic)
-
-@author: rcruces
+Created on Tue July 9 2021 (the second year of the pademic).
+@author: rcruces.
 """
 
 # packages
@@ -32,9 +32,7 @@ from nibabel.freesurfer.mghformat import load
 import numpy as np
 import matplotlib as plt
 import matplotlib.pyplot as pltpy
-import matplotlib.cm as cm
-from brainspace.plotting import plot_hemispheres, plot_surf
-from brainspace.utils.parcellation import map_to_labels
+from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
 from brainspace.vtk_interface import wrap_vtk, serial_connect
@@ -42,20 +40,21 @@ from brainspace.datasets import load_conte69
 from vtk import vtkPolyDataNormals
 
 def load_surface(lh, rh, with_normals=True, join=False):
-    """ Loads surfaces.
+    """
+    Loads surfaces.
 
     Parameters
     ----------
     with_normals : bool, optional
         Whether to compute surface normals. Default is True.
-    join : bool, optional
+    join : bool, optional.
         If False, return one surface for left and right hemispheres. Otherwise,
-        return a single surface as a combination of both left and right
+        return a single surface as a combination of both left and right.
         surfaces. Default is False.
 
     Returns
     -------
-    surf : tuple of BSPolyData or BSPolyData
+    surf : tuple of BSPolyData or BSPolyData.
         Surfaces for left and right hemispheres. If ``join == True``, one
         surface with both hemispheres.
     """
@@ -73,7 +72,8 @@ def load_surface(lh, rh, with_normals=True, join=False):
     return surfs[0], surfs[1]
 
 def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
-    """ Creates a gradient color map of a defined lenght
+    """
+    Creates a gradient color map of a defined lenght.
 
     Parameters
     ----------
@@ -88,10 +88,9 @@ def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
         Surfaces for left and right hemispheres. If ``join == True``, one
         surface with both hemispheres.
     """
-    N = 75 # number
-    #base_cmaps = ['inferno', 'Dark2', 'Set1', 'Set2']
+    # number of colors
+    N = 75
 
-    n_base = len(base_cmaps)
     # we go from 0.2 to 0.8 below to avoid having several whites and blacks in the resulting cmaps
     colors = np.concatenate([pltpy.get_cmap(name)(np.linspace(0,1,N)) for name in base_cmaps])
     cmap = plt.colors.ListedColormap(colors)
@@ -190,7 +189,7 @@ try:
     plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
                      screenshot = True, filename = dir_QC_png + subBIDS + '_space-fsnative_desc-surf_aparc.png')
-except:
+except ValueError:
     print("[WARNING].... some freesurfer processing is missing")
 else:
     print("[INFO].... Creating PNGs of freesurfer data")
@@ -324,7 +323,7 @@ try:
         plot_hemispheres(c69_lh, c69_rh, array_name=th_c69S, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False,
                          screenshot = True, filename = dir_QC_png + subBIDS + '_space-conte69_desc-surf_th_10mm_morph.png')
-except:
+except ValueError:
     print("[WARNING].... some Morphology surfaces are missing")
 else:
     print("[INFO].... Creating PNGs of -Morphology")
@@ -362,7 +361,7 @@ try:
     plot_hemispheres(c69_lhW, c69_rhW, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
                      screenshot = True, filename = dir_QC_png + subBIDS + '_space-conte69_desc-surf_white.png')
-except:
+except ValueError:
     print("[WARNING].... some post_structural conte69 files are missing")
 else:
     print("[INFO].... Creating PNGs of conte69 surfaces")

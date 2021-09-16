@@ -80,7 +80,6 @@ print(f'  -title :  "{args.title}"')
 # Mandatory inputs
 if Nimg < 1 :
     print("\nERROR at least one image is mandatory\n")
-    exit
 elif Nimg > 2 :
     print("\nWARING the scripts only will use the first 2 images\n")
 
