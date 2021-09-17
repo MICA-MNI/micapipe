@@ -38,8 +38,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -113,7 +111,10 @@
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
@@ -202,20 +203,12 @@
 <p>This script was design to erase all the outputs including the <cite>log</cite> files of a module that was already processed.
 You could use this function in case you have had an error in the processing of a module, or you simply want to rerun a module that you have already started or that is completed,
 it is necessary to delete the already generated files.</p>
-<div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-0-0 docutils container">
-<div class="docutils container">
-<p>Usage</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you want to erase and rerun a core processing module such as <code class="docutils literal notranslate"><span class="pre">post_structural</span></code> or <code class="docutils literal notranslate"><span class="pre">proc_structural</span></code> you must rerun all its dependent modules, to ensure outputs consistency.</p>
 </div>
-</div>
-<div class="item sphinx-data-tab-0-1 docutils container">
-<div class="docutils container">
-<p>Warning</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>The basic usage requires the same inputs as in mica-pipe:</p>
 <p><strong>Terminal:</strong></p>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -251,10 +244,6 @@ it is necessary to delete the already generated files.</p>
 <dd><p>Deletes Microstructural profiles and covariance analysis derivatives</p>
 </dd>
 </dl>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
-<p>If you want to erase and rerun a core processing module such as <code class="docutils literal notranslate"><span class="pre">post_structural</span></code> or <code class="docutils literal notranslate"><span class="pre">proc_structural</span></code> you must rerun all its dependent modules, to ensure outputs consistency.</p>
-</div>
 </div>
 </div>
 

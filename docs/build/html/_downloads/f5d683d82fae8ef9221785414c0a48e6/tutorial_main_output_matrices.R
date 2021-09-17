@@ -2,12 +2,13 @@
 #
 # Tutorial 0 - Main output matrices 
 # micapipe v0.1.1
+# R version 3.6.3
 #
 # Created by RRC on September 2021 (the second year of the pademic)
 
 # Set the environment
-library("RColorBrewer")
-library("viridis")
+require('RColorBrewer')      # version 1.1-2
+require('viridis')           # version 0.5.1
 
 # Set the working directory to the out directory
 setwd("~/tmp/micaConn/micapipe_tutorials") # <<<<<<<<<<<< CHANGE THIS PATH

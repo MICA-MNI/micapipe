@@ -284,6 +284,9 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rpe_all</span></code></p></td>
 <td><p>If all DWI directions and b-values are acquired twice with opposite phase encoding directions this option can be used (This option requires that both encoding direction files contain the same number of directions, bvecs and bvals).</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-regAffine</span></code></p></td>
+<td><p>Specify this option to perform an Affine registration ONLY from DWI to T1w. By default, DWI processing in micapipe performs a non linear registration using ANTs-SyN. We recommend this option for DWI acquisitions with low resolution and/or low SNR. Or if the non-linear registration is not optimal.</p></td>
+</tr>
 </tbody>
 </table>
 <p><strong>Multiple inputs:</strong> <code class="docutils literal notranslate"><span class="pre">dwi_main</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">dwi_rpe</span></code></p>

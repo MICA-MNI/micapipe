@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Tutorial 1 - Main output matrices
+# # Organization of the outputs
+
+# In[1]:
+
+
+# python notebook
+#
+# Tutorial 1 - Main output matrices 
 # micapipe v0.1.1
 #
 # Created by RRC on September 2021 (the second year of the pademic)
 
-# ------------------------------------------------------------------------ #
-# Set the environment
+# Load required packages
 import os
 import numpy as np
 from nilearn import plotting
@@ -20,12 +26,17 @@ os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
 subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
 subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
-# Here we define the atlas
+# Here we define the atlas 
 atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
-# ------------------------------------------------------------------------ #
+
 # ## Structural connectomes
+# 
 # ### Full structural connectome
+
+# In[4]:
+
+
 # Set the path to the the structural cortical connectome
 cnt_sc_cor = subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-connectome.txt'
 
@@ -40,6 +51,10 @@ corr_plot = plotting.plot_matrix(np.log(mtx_scSym), figure=(10, 10), labels=None
 
 
 # ### Full structural connectome edge lengths
+
+# In[5]:
+
+
 # Set the path to the the structural cortical connectome
 cnt_sc_EL = cnt_sc_cor= subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt'
 
@@ -53,8 +68,11 @@ mtx_scELSym = np.triu(mtx_scEL,1)+mtx_scEL.T
 corr_plot = plotting.plot_matrix(mtx_scELSym, figure=(10, 10), labels=None, cmap='Purples', vmin=0, vmax=200)
 
 
-# ------------------------------------------------------------------------ #
 # ## Resting state functional connectome
+
+# In[6]:
+
+
 # Set the path to the the functional cortical connectome
 cnt_fs = subjectDir + '/func/surfaces/' + subjectID + '_rsfmri_space-fsnative_atlas-' + atlas + '_desc-FC.txt'
 
@@ -68,7 +86,11 @@ mtx_fcSym = np.triu(mtx_fs,1)+mtx_fs.T
 corr_plot = plotting.plot_matrix(mtx_fcSym, figure=(10, 10), labels=None, cmap='Reds', vmin=0, vmax=1)
 
 
-# ### Resting state time series (ROI x time)
+# ### Time series (ROI x time)
+
+# In[7]:
+
+
 # Set the path to the the time series file
 cnt_time = subjectDir + '/func/surfaces/' + subjectID + '_rsfmri_space-fsnative_atlas-' + atlas + '_desc-timeseries.txt'
 
@@ -79,8 +101,11 @@ mtx_time = np.loadtxt(cnt_time, dtype=np.float, delimiter=' ')
 corr_plot = plotting.plot_matrix(mtx_time.T, figure=(12, 5), labels=None, cmap='plasma', vmin=-100, vmax=100)
 
 
-# ------------------------------------------------------------------------ #
 # ## MPC connectomes
+
+# In[8]:
+
+
 # Set the path to the the MPC cortical connectome
 cnt_mpc = subjectDir + '/anat/surfaces/micro_profiles/' + subjectID + '_space-fsnative_atlas-' + atlas + '_desc-MPC.txt'
 
@@ -95,6 +120,10 @@ corr_plot = plotting.plot_matrix(mtx_mpcSym, figure=(10, 10), labels=None, cmap=
 
 
 # ### Intensity profiles (Profile x ROI)
+
+# In[9]:
+
+
 # Set the path to the the time series file
 cnt_int = subjectDir + '/anat/surfaces/micro_profiles/' + subjectID + '_space-fsnative_atlas-' + atlas + '_desc-intensity_profiles.txt'
 
@@ -105,8 +134,11 @@ mtx_int = np.loadtxt(cnt_int, dtype=np.float, delimiter=' ')
 corr_plot = plotting.plot_matrix(mtx_int, figure=(20,10), labels=None, cmap='Greens', colorbar=False)
 
 
-# ------------------------------------------------------------------------ #
 # ## Geodesic distance connectomes
+
+# In[10]:
+
+
 # Set the path to the the geodesic distance connectome
 cnt_gd = subjectDir + '/anat/surfaces/geo_dist/' + subjectID + '_space-fsnative_atlas-' + atlas + '_GD.txt'
 
@@ -115,3 +147,10 @@ mtx_gd = np.loadtxt(cnt_gd, dtype=np.float, delimiter=' ')
 
 # Plot the matrix
 corr_plot = plotting.plot_matrix(mtx_gd, figure=(10, 10), labels=None, cmap='Blues')
+
+
+# In[ ]:
+
+
+
+

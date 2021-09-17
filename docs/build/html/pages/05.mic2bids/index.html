@@ -219,7 +219,7 @@ Let’s suppose that your sorted <em>DICOMS</em> directory looks like the follow
 <span class="n">S1_32_mp2rage</span><span class="o">-</span><span class="mf">0.8</span><span class="n">iso</span><span class="o">-</span><span class="n">sess2_INV2</span>
 </pre></div>
 </div>
-<p>From this example you won’t include those dicom directories with the string <cite>AAHead_Scout_64ch-head-coil_MPR</cite> in the BIDS directory, because those acquisitions are for calibration purposes only.</p>
+<p>In this example you won’t include those dicom directories with the string <cite>AAHead_Scout_64ch-head-coil_MPR</cite> in the BIDS directory, because those acquisitions are for calibration purposes only.</p>
 <p>Once you’ve determined the directories you want to transform to <em>NIFTI</em>, you should identify their correspondence MRI sequence, for example:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -267,7 +267,7 @@ Let’s suppose that your sorted <em>DICOMS</em> directory looks like the follow
 </tr>
 </tbody>
 </table>
-<p>Next, you should determine the BIDS naming equivalent for each of the unique sequences on your dataset. In other words you should match the string of the DICOM directory to a BIDS string
+<p>Next, you should determine the BIDS naming equivalent of each unique sequence on your dataset. In other words you should match the string of the DICOM directory to a BIDS string
 that will identify the correspondent files, in this example it would be as follows:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -334,7 +334,7 @@ that will identify the correspondent files, in this example it would be as follo
 </table>
 <p>Take a look at the <a class="reference external" href="https://bids-specification.readthedocs.io/en/stable/">BIDS specifications</a>, if you have any doubts about what is the correct BIDS string, which best matches to your MRI acquisition name.</p>
 <p>The next step is to transform your <em>DICOMS</em> directory to a <em>NIFTI</em> file with the matching BIDS naming, and under the correspondent BIDS directory.
-There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI</em>, for example we used <cite>dcm2niix</cite> with the flag <code class="docutils literal notranslate"><span class="pre">-b</span></code>, which creates a json card for each NIFTI file.</p>
+There are different tools online you can use to transform <em>DICOMS</em> to <em>NIFTI</em>, for example we used <a class="reference external" href="https://github.com/rordenlab/dcm2niix">dcm2niix</a> with the flag <code class="docutils literal notranslate"><span class="pre">-b</span></code>, which creates a json card for each NIFTI file.</p>
 <p>Let’s suppose we are organizing the directories of <code class="docutils literal notranslate"><span class="pre">sub-01_ses-01</span></code>, the main BIDS structure should be as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sub-01
 └── ses-01
@@ -343,8 +343,8 @@ There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI<
     └── func
 </pre></div>
 </div>
-<p>On the next table you can find the corresponding BIDS names for each DICOM directory. This example uses <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> as subject’s identification and
-<code class="docutils literal notranslate"><span class="pre">ses-01</span></code> as the session name. As we had two T1w images, using the string <code class="docutils literal notranslate"><span class="pre">-run</span></code> will identify each one of them.</p>
+<p>On the next table you can find the corresponding BIDS naming of each DICOM directory. This example uses <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> as subject’s identification and
+<code class="docutils literal notranslate"><span class="pre">ses-01</span></code> as the session name. As we had two T1w images, using the string <code class="docutils literal notranslate"><span class="pre">-run</span></code> we will differentiate them.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 9%" />
@@ -468,8 +468,9 @@ There are different tools you can use to transform <em>DICOMS</em> to <em>NIFTI<
 </pre></div>
 </div>
 <p>It is the same procedure for each subject in your dataset.
-The bash script <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code> does all the previous steps automatically using <code class="docutils literal notranslate"><span class="pre">dcm2niix</span></code>, however it was written to match the naming from the <a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">MICs dataset</a> DICOMS to its corresponding BIDS conform.
-Feel free to adapt it to your own necessities, by modifying the DICOMS string and BIDS names in the lines 138-146.</p>
+The bash script <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code> does all the previous steps automatically using <code class="docutils literal notranslate"><span class="pre">dcm2niix</span></code>,
+however it was written to match the name of the DICOMS in the <a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">MICs dataset</a> with their corresponding BIDS name.
+Feel free to adapt it to your own necessities, by modifying the DICOMS string and BIDS names in the lines 138-146 of <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code>, or to use it as a guideline.</p>
 <pre class="literal-block"># -----------------------------------------------------------------------------------------------
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
 orig=(&quot;<em>mprage-0.8iso</em>&quot; &quot;<em>_INV1&quot; &quot;*_INV2&quot; &quot;*_T1_Images&quot; &quot;*UNI_Images&quot; &quot;*FLAIR</em>&quot; &quot;<em>rsfmri-3mm-bold_AP&quot; &quot;*rsfmri-3mm_se_AP&quot; &quot;*rsfmri-3mm_se_PA&quot;)
