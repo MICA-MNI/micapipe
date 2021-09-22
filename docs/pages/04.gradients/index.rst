@@ -10,7 +10,7 @@ Building gradients
 
 This section describes how to generate macroscale gradient mapping from the output matrices of micapipe. The matrices are the same as in the `Main output matrices <../04.matrices/index.html>`_ tutorial.
 
-For this tutorial we will map each each modality of a single subject using `BrainSpace <https://brainspace.readthedocs.io/en/latest/python_doc/auto_examples/index.html>`_, a ``python`` based library.
+For this tutorial we will map each modality of a single subject using `BrainSpace <https://brainspace.readthedocs.io/en/latest/python_doc/auto_examples/index.html>`_, a ``python`` based library.
 Additionally the libraries ``os``, ``numpy``, ``nibabel`` and ``nibabel`` will be used.
 
 As in previous examples, we will use the subject ``HC001``, session ``01`` from the MICs dataset, and all paths will be relative to the subject directory or ``out/micapipe/sub-HC001_ses01/`` and the atlas ``schaefer-400``.
@@ -18,6 +18,8 @@ As in previous examples, we will use the subject ``HC001``, session ``01`` from 
 
 python environment
 ============================================================
+
+The first step is to set the python environment and all the variables relative to the subject you're interested to visualize.
 
 .. tabs::
 
