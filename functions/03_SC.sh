@@ -71,6 +71,7 @@ if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebella
 if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f "$dwi_mask" ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f "$dti_FA" ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE" fi
 
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits and WARNING
@@ -110,8 +111,15 @@ parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -
 dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
 dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
 
+# Transformations from T1nativepro to DWI
+if [[ ${regAffine}  == "FALSE" ]]; then
+    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
+elif [[ ${regAffine}  == "TRUE" ]]; then
+    trans_T12dwi="-t [${mat_dwi_affine},1]"
+fi
+
 if [[ ! -f "$dwi_cere" ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$dwi_b0" -n GenericLabel -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_cere" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
       if [[ -f "$dwi_cere" ]]; then ((Nparc++)); fi
       # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
       # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
@@ -119,7 +127,7 @@ if [[ ! -f "$dwi_cere" ]]; then Info "Registering Cerebellar parcellation to DWI
 else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nparc++)); fi
 
 if [[ ! -f "$dwi_subc" ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
-    Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$dwi_b0" -n GenericLabel -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_subc" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
     # Remove brain-stem (label 16)
     Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
     if [[ -f "$dwi_subc" ]]; then ((Nparc++)); fi
@@ -178,7 +186,7 @@ for seg in "${parcellations[@]}"; do
     if [[ ! -f "${connectome_str}_cor-connectome.txt" ]]; then
         Info "Building $parc_name cortical connectome"
         # Take parcellation into DWI space
-        Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_cortex" -v -u int
+        Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cortex" -v -u int
         # Remove the medial wall
         for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
 
