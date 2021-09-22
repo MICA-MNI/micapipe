@@ -352,7 +352,7 @@ This module calculates geodesic distance between all cortical parcels from the s
 
     .. tab:: Processing steps
 
-        - Identify centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel
+        - Identify centre vertex for each parcel, based on the vertex with the shortest summed Euclidean distance to all other vertices in the same parcel
         - Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using `workbench -surface-geodesic-distance <https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance>`_
         - Average computed distances within parcels
 
@@ -405,7 +405,7 @@ Here, surface-based morphological features are registered and smoothed on two di
     .. tab:: Processing steps
 
         - Register cortical thickness and curvature to fsaverage5 and conte69 templates
-        - Apply 10mm gaussian smooth on template-mapped outputs
+        - Apply 10mm Gaussian smooth on template-mapped outputs
 
     .. tab:: Usage
 
