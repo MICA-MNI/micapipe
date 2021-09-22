@@ -5,8 +5,8 @@
 From DICOMS to BIDS: ``mic2bids``
 ================================================
 
-This section was meant to be an example of how to organize a database from sorted *DICOMS* to `BIDS <https://bids.neuroimaging.io>`_. As dicom naming and sorting can be quite unique to each imaging protocol,
-the MRI sequence names and outputs must be adapted to be compatible with each dataset.
+This section illustrates of how to organize a database from sorted *DICOMS* to `BIDS <https://bids.neuroimaging.io>`_. As DICOM naming and sorting can be quite unique to each imaging protocol,
+ MRI sequence names and outputs must be adapted to be compatible with each dataset.
 
 The first step starts by looking at the organization of the sorted *DICOMS* directory. You must identify the protocol names that you want to transform to *NIFTI*, and which will populate the BIDS directory.
 Let's suppose that your sorted *DICOMS* directory looks like the following:
@@ -32,7 +32,7 @@ Let's suppose that your sorted *DICOMS* directory looks like the following:
 In this example you won't include those dicom directories with the string `AAHead_Scout_64ch-head-coil_MPR` in the BIDS directory, because those acquisitions are for calibration purposes only.
 
 
-Once you've determined the directories you want to transform to *NIFTI*, you should identify their correspondence MRI sequence, for example:
+Once you've determined the directories you want to transform to *NIFTI*, you should identify their corresponding MRI sequence, for example:
 
 +---------------------------------------------+------------------------------------------+
 |                   Sequence                  |     DICOM directory name                 |
@@ -100,8 +100,8 @@ Let's suppose we are organizing the directories of ``sub-01_ses-01``, the main B
         ├── dwi
         └── func
 
-On the next table you can find the corresponding BIDS naming of each DICOM directory. This example uses ``sub-01`` as subject's identification and
-``ses-01`` as the session name. As we had two T1w images, using the string ``-run`` we will differentiate them.
+In the next table you can find the corresponding BIDS naming of each DICOM directory. This example uses ``sub-01`` as subject's identification and
+``ses-01`` as the session name. As we had two T1w images, using the string ``-run`` will differentiate them.
 
 +----------+---------------------------------------+----------------+----------------------------------------------+
 | Sequence | From DICOM directory                  | BIDS directory | To BIDS name                                 |
@@ -213,4 +213,4 @@ Once you have ordered all your subjects, add the rest of the mandatory files to 
   - participants.tsv
   - README
 
-Finally, remember to validate your dataset with the `BIDS validator <https://bids-standard.github.io/bids-validator/>`_ tool!
+Finally, remember to validate your dataset with the `BIDS validator <https://bids-standard.github.io/bids-validator/>`_ tool prior to running micapipe!

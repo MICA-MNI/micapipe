@@ -5,10 +5,10 @@
 Automatic Bundle Segmentation
 ================================================
 
-This section describe the integrated automatic virtual dissection of the main brain tracts, which is based in `auto_tracto <https://github.com/rcruces/auto_tracto/blob/master/Readme.md>`_, and was implemented using ANTs registration tools.
+This section describes the integrated automatic virtual dissection of the main brain tracts, which is based in `auto_tracto <https://github.com/rcruces/auto_tracto/blob/master/Readme.md>`_, and was implemented using ANTs registration tools.
 The script ``03_auto_tracts.sh`` main purpose is to split a tck tractogram into `35 white matter tracts <https://github.com/lconcha/auto_tracto/blob/master/tract_definitions.md>`_, using already stablished automatic dissection protocols, which were manually tuned for optimal performance.
 
-Derived from a full brain tractogram 35 bundles are virtually dissected using the `LANIREM protocols <https://github.com/rcruces/auto_tracto/tree/master/lanirem/protocols>`_. The quality of the full brain tractogram will determine the quality of bundle separation. It is highly recommended to provide a tractogram with more than one million streamlines, and one that has been checked for errors. Strategies such as anatomically-contstrained tractography (ACT) and spherical deconvolution informed filtering of tractograms (SIFT), both available in MRTrix3 should aid in obtaining such high-quality tractograms.
+Derived from a full brain tractogram, 35 bundles are virtually dissected using the `LANIREM protocols <https://github.com/rcruces/auto_tracto/tree/master/lanirem/protocols>`_. The quality of the full brain tractogram will determine the quality of bundle separation. It is highly recommended to provide a tractogram with more than one million streamlines, and one that has been checked for errors. Strategies such as anatomically-contstrained tractography (ACT) and spherical deconvolution informed filtering of tractograms (SIFT), available in MRTrix3, should aid in obtaining such high-quality tractograms.
 
 .. image:: autotract.png
    :align: center
