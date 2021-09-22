@@ -91,7 +91,7 @@ Processing module for :ref:`quantitative T1 imaging<microstructproc>`:
   :header-rows: 0
 
   * - ``-MPC``
-    - Equivolumetric surface mapping and computation of microstructural profile covariance matrices `(Paquola et al., 2019) <https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284>`_.
+    - Equivolumetric surface mapping and computation of microstructural profile covariance matrices `(Paquola et al., 2019) <https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284>` and `(Wagstyl et al., 2018) <https://doi.org/10.5281/zenodo.141205>`_.
 
 
 DWI Processing
