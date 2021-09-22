@@ -7,8 +7,8 @@ Processing databases with ``micapipe``
 
 .. contents:: Table of Contents
 
-In this section you will find examples of how ``mica-pipe`` optional arguments where used to process a variety of databases with different acquisitions parameters.
-Under the tab ``database structure`` the files organization of each dataset is listed. However you'll only find those files relevant for pipeline, not the full structure.
+In this section, you will find examples of how ``mica-pipe`` optional arguments where used to process a variety of databases with different acquisitions parameters.
+Under the tab ``database structure`` the file organization of each dataset is listed. However you'll only find those files relevant for the pipeline, not the full structure.
 Further information about the datasets such as the *source*, and *references* can be found here as well.
 
 Microstructure-Informed Connectomis (MICs)
