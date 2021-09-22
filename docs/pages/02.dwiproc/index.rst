@@ -5,7 +5,7 @@
 Diffusion-weighted imaging processing
 ============================================================
 
-This section describes all DWI-related pre-processing steps implemented in micapipe, which heavily relies on tools from `mrtrix <https://mrtrix.readthedocs.io/en/latest/>`. This includes image processing in preparation for the construction of tractography-based structural connectivity matrices, as well as associated edge length matrices. This processing pipeline has been optimized for multi-shell DWI, but can also handle single-shell data.
+This section describes all DWI-related pre-processing steps implemented in micapipe, which heavily relies on tools from `mrtrix <https://mrtrix.readthedocs.io/en/latest/>`_. This includes image processing in preparation for the construction of tractography-based structural connectivity matrices, as well as associated edge length matrices. This processing pipeline has been optimized for multi-shell DWI, but can also handle single-shell data.
 
 .. image:: sankey_dwi.png
    :align: center
