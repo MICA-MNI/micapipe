@@ -119,7 +119,8 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
 
     # If only one T1w is provided
     elif [ "$N" -eq 1 ]; then
-      Do_cmd cp -v "$t1_reo" "$T1n4"
+      Do_cmd fslchfiletype NIFTI_GZ "$t1_reo"
+      Do_cmd cp -v "$t1_reo"* "$T1n4"
     fi
 
     Info "T1w_nativepro biasfield correction and intensity rescaling"
@@ -254,7 +255,7 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 if [ "$Nsteps" -eq 7 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "Volumetric tructural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+Title "Volumetric structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 \tSteps completed : $(printf "%02d" "$Nsteps")/07
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/proc_structural_*.txt)"

@@ -11,7 +11,7 @@ Micapipe requires that your data be formatted in accordance with the `Brain Imag
 
 .. admonition:: DICOM to BIDS: need some help? 🤓
 
-     You can find the function used for BIDS conversion of the MICs dataset on our repository (`mic2bids <https://github.com/MICA-LAB/micapipe/blob/master/functions/mic2bids>`_) and further information here: `From raw to BIDS <../05.mic2bids/index.html>`_. As dicom naming and sorting can be quite unique to each imaging protocol, you may have to adapt this script to be compatible with your own dataset. First, your dicoms should be sorted into unique directories for each sequence before running this script. You can then modify the filename strings listed in the script (line 140-146) to correspond to the specific naming scheme of your dicom directories and their associated BIDS naming convention. Note that you will need `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`_ to convert sorted dicoms into NifTI files.
+     You can find the function used for BIDS conversion of the MICs dataset on our repository (`mic2bids <https://github.com/MICA-LAB/micapipe/blob/master/functions/mic2bids>`_) and further information here: `From DICOMS to BIDS <../05.mic2bids/index.html>`_. As DICOM naming and sorting can be quite unique to each imaging protocol, you may have to adapt this script to be compatible with your own dataset. First, your DICOMs should be sorted into unique directories for each sequence before running this script. You can then modify the filename strings listed in the script (line 140-146) to correspond to the specific naming scheme of your DICOM directories and their associated BIDS naming convention. Note that you will need `dcm2niix <https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage>`_ to convert sorted DICOMs into NifTI files.
 
 Set the environment
 --------------------------------------------------------
@@ -35,7 +35,7 @@ Then, you will need to also add the all dependencies (see next section for a com
 
 You can define distinct DIR variables for each dependency, and add them to the PATH.
 
-The best example of how to set your local environment can be found in our `init.sh <https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh>`_ script.
+An example of how to set your local environment can be found in the `init.sh <https://github.com/MICA-MNI/micapipe/blob/master/functions/init.sh>`_ script provided in the micapipe repository.
 
 .. admonition:: Why we love containers 😍
 

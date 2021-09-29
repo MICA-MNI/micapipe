@@ -4,14 +4,13 @@
 
 Quality control
 ============================================================
-*micapipe* includes an integrated processing for quality control of the outputs, which can be run at any point during processing.
-This module generates group and individual quality control reports, that will allow you to quickly identify missing files, registration performance, as well as outputs requiring further inspection (workflow).
+*micapipe* includes an integrated module for quality control of the outputs, which can be run at any point during processing. This step generates group and individual quality control reports, that will allow you to quickly identify missing files, verify registration performance, and check outputs requiring further inspection.
 
 
 Individual QC
 --------------------------------------------------------
 
-This module generates an individual html report with detailed information of each processing step, which can be use for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.
+This module generates an individual html report with detailed information of each processing step, which can be used for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.
 
 .. figure:: qc_subj.png
    :scale: 40 %
@@ -31,10 +30,19 @@ There are two ways to run the *individual quality control* module, one is integr
 
         **Optional arguments:**
 
-        -tracts      ``<num>`` Number of streamlines used when computing the tractogram
-                     (default is *40M*, where 'M' stands for millions, same as *40000000*).
-                     If you used a different number of streamlines you should use this flag for the QC.
-        -ses         Specify the session name with this flag (default: processing is performed as a single session).
+        .. list-table::
+            :widths: 75 750
+            :header-rows: 1
+            :class: tight-table
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-tracts`` ``<num>``
+              - Number of streamlines used when computing the tractograms in ``-SC`` (default is *40M*, where 'M' stands for millions, same as *40,000,000*). If you used a different number of streamlines in your data processing, you should use this flag for the QC and input the same number of streamlines as you previously requested.
+            * - ``-ses`` ``<num>`` or ``<str>``
+              - Specify the session name with this flag (default: processing is performed as a single session).
+            * - ``-tmpDir`` ``<path>``
+              - Specify directory for temporary processing outputs.
 
     .. tab:: micapipe_qc
 
@@ -47,10 +55,29 @@ There are two ways to run the *individual quality control* module, one is integr
 
         **Optional arguments:**
 
-        -tracts      ``<num>`` Number of streamlines used when computing the tractogram
-                     (default is *40M*, where 'M' stands for millions, same as *40000000*).
-                     If you used a different number of streamlines you should use this flag for the QC.
-        -ses         Specify the session name with this flag (default: processing is performed as a single session).
+        Additional flags can be specified when running the quality control using ``micapipe_qc``
+
+        .. list-table::
+            :widths: 75 750
+            :header-rows: 1
+            :class: tight-table
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-tracts`` ``<num>``
+              - Number of streamlines used when computing the tractograms in ``-SC`` (default is *40M*, where 'M' stands for millions, same as *40,000,000*). If you used a different number of streamlines in your data processing, you should use this flag for the QC and input the same number of streamlines as you previously requested.
+            * - ``-ses`` ``<num>`` or ``<str>``
+              - Specify the session name with this flag (default: processing is performed as a single session).
+            * - ``-tmpDir`` ``<path>``
+              - Specify directory for temporary processing outputs.
+            * - ``-h`` or ``-help``
+              - Print help with list of options
+            * - ``-quiet``
+              - Specify this flag to not print comments while processing
+            * - ``-nocleanup``
+              - When including this flag, the temporary directory will not be deleted at script completion
+            * - ``-version``
+              - Print software version
 
     .. tab:: Output
 
@@ -63,18 +90,18 @@ There are two ways to run the *individual quality control* module, one is integr
 
         **Main output:** ``<outputDirectory>/micapipe/<sub>/QC/<sub>_micapipe_qc.html``
 
-        The subject QC html report contains different tabs, one per module. Under each tab you can find:
-          - Main inputs and outputs of each module.
+        The subject QC html report contains different tabs, specifically one per module. Under each tab you can find:
+          - Main inputs and outputs of each module
           - Main parameters of the processing steps (obtained from the json files)
-          - Volume visualization of the main outputs.
-          - Visualization of the main registrations.
+          - Volume visualization of the main outputs
+          - Visualization of the main registrations
           - Different surfaces generated by the pipeline
-          - Parcellation plotted on surface
-          - Structural connectomes
-          - Functional connectomes
+          - Atlas parcellations plotted on native surface
+          - Structural connectome matrices
+          - Functional connectome matrices
           - Geodesic distance matrices
           - Microstructural Intensity profiles and connectomes
-          - 14 MPC profiles plotted on native surface
+          - Microstructural profiles (image intensities at each cortical depth) plotted on native surface
 
         .. figure:: qc_subj_html.png
           :height: 420
@@ -83,7 +110,7 @@ There are two ways to run the *individual quality control* module, one is integr
 Group level QC
 --------------------------------------------------------
 
-The group level quality control, generates a report with all the completed and processed modules by subjects. The report is a color coded table with rows as subjects and columns as the pipeline modules.
+The group level quality control generates a report with all completed and processed modules by subjects. The report consists of a color coded table with rows as subjects and columns as the pipeline modules.
 
 - Blue: Completed
 - Orange: Either incomplete or error
@@ -101,6 +128,12 @@ The group level quality control, generates a report with all the completed and p
 
            mica-pipe -out <outputDirectory> -QC
 
+        **Optional arguments:**
+
+        There are no optional arguments for this command. 
+
     .. tab:: Output
+
+        The QC table output by ``-QC`` can be found here:
 
         **Main output:** ``<outputDirectory>/micapipe/micapipe_progress.html``

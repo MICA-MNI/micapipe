@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Quality control report &mdash; micapipe  documentation</title>
   
@@ -17,12 +17,15 @@
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
 
   
   
+
   
+  
+
   
 
   
@@ -35,7 +38,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
         <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
         <script src="../../_static/sphinx_tabs/tabs.js"></script>
     
@@ -122,7 +124,7 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
@@ -172,6 +174,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -183,7 +187,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/pages/02.qc/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -199,11 +203,10 @@
             
   <div class="section" id="quality-control">
 <span id="qc"></span><h1>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this headline">¶</a></h1>
-<p><em>micapipe</em> includes an integrated processing for quality control of the outputs, which can be run at any point during processing.
-This module generates group and individual quality control reports, that will allow you to quickly identify missing files, registration performance, as well as outputs requiring further inspection (workflow).</p>
+<p><em>micapipe</em> includes an integrated module for quality control of the outputs, which can be run at any point during processing. This step generates group and individual quality control reports, that will allow you to quickly identify missing files, registration performance, as well as outputs requiring further inspection (workflow).</p>
 <div class="section" id="individual-qc">
 <h2>Individual QC<a class="headerlink" href="#individual-qc" title="Permalink to this headline">¶</a></h2>
-<p>This module generates an individual html report with detailed information of each processing step, which can be use for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.</p>
+<p>This module generates an individual html report with detailed information of each processing step, which can be used for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.</p>
 <div class="figure align-default">
 <a class="reference internal image-reference" href="../../_images/qc_subj.png"><img alt="../../_images/qc_subj.png" src="../../_images/qc_subj.png" style="width: 563.6px; height: 561.2px;" /></a>
 </div>
@@ -233,16 +236,28 @@ This module generates group and individual quality control reports, that will al
 </span></pre></div>
 </td></tr></table></div>
 <p><strong>Optional arguments:</strong></p>
-<dl class="option-list">
-<dt><kbd><span class="option">-t<var>racts</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> Number of streamlines used when computing the tractogram
-(default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40000000</em>).
-If you used a different number of streamlines you should use this flag for the QC.</p>
-</dd>
-<dt><kbd><span class="option">-s<var>es</var></span></kbd></dt>
-<dd><p>Specify the session name with this flag (default: processing is performed as a single session).</p>
-</dd>
-</dl>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tracts</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>Number of streamlines used when computing the tractograms in <code class="docutils literal notranslate"><span class="pre">-SC</span></code> (default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40,000,000</em>). If you used a different number of streamlines in your data processing, you should use this flag for the QC and input the same number of streamlines as you previously requested.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ses</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>Specify the session name with this flag (default: processing is performed as a single session).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tmpDir</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Specify directory for temporary processing outputs.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -251,16 +266,41 @@ If you used a different number of streamlines you should use this flag for the Q
 </span></pre></div>
 </td></tr></table></div>
 <p><strong>Optional arguments:</strong></p>
-<dl class="option-list">
-<dt><kbd><span class="option">-t<var>racts</var></span></kbd></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> Number of streamlines used when computing the tractogram
-(default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40000000</em>).
-If you used a different number of streamlines you should use this flag for the QC.</p>
-</dd>
-<dt><kbd><span class="option">-s<var>es</var></span></kbd></dt>
-<dd><p>Specify the session name with this flag (default: processing is performed as a single session).</p>
-</dd>
-</dl>
+<p>Additional flags can be specified when running the quality control using <code class="docutils literal notranslate"><span class="pre">micapipe_qc</span></code></p>
+<table class="colwidths-given tight-table docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 91%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tracts</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code></p></td>
+<td><p>Number of streamlines used when computing the tractograms in <code class="docutils literal notranslate"><span class="pre">-SC</span></code> (default is <em>40M</em>, where ‘M’ stands for millions, same as <em>40,000,000</em>). If you used a different number of streamlines in your data processing, you should use this flag for the QC and input the same number of streamlines as you previously requested.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ses</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;num&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;str&gt;</span></code></p></td>
+<td><p>Specify the session name with this flag (default: processing is performed as a single session).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tmpDir</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code></p></td>
+<td><p>Specify directory for temporary processing outputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code> or <code class="docutils literal notranslate"><span class="pre">-help</span></code></p></td>
+<td><p>Print help with list of options</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-quiet</span></code></p></td>
+<td><p>Specify this flag to not print comments while processing</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-nocleanup</span></code></p></td>
+<td><p>When including this flag, the temporary directory will not be deleted at script completion</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-version</span></code></p></td>
+<td><p>Print software version</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
 <p>Directories created or populated by <strong>-QC_subj</strong>:</p>
@@ -270,18 +310,18 @@ If you used a different number of streamlines you should use this flag for the Q
 </div>
 <p><strong>Main output:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/QC/&lt;sub&gt;_micapipe_qc.html</span></code></p>
 <dl class="simple">
-<dt>The subject QC html report contains different tabs, one per module. Under each tab you can find:</dt><dd><ul class="simple">
-<li><p>Main inputs and outputs of each module.</p></li>
+<dt>The subject QC html report contains different tabs, specifically one per module. Under each tab you can find:</dt><dd><ul class="simple">
+<li><p>Main inputs and outputs of each module</p></li>
 <li><p>Main parameters of the processing steps (obtained from the json files)</p></li>
-<li><p>Volume visualization of the main outputs.</p></li>
-<li><p>Visualization of the main registrations.</p></li>
+<li><p>Volume visualization of the main outputs</p></li>
+<li><p>Visualization of the main registrations</p></li>
 <li><p>Different surfaces generated by the pipeline</p></li>
-<li><p>Parcellation plotted on surface</p></li>
-<li><p>Structural connectomes</p></li>
-<li><p>Functional connectomes</p></li>
+<li><p>Atlas parcellations plotted on native surface</p></li>
+<li><p>Structural connectome matrices</p></li>
+<li><p>Functional connectome matrices</p></li>
 <li><p>Geodesic distance matrices</p></li>
 <li><p>Microstructural Intensity profiles and connectomes</p></li>
-<li><p>14 MPC profiles plotted on native surface</p></li>
+<li><p>Microstructural profiles (image intensities at each cortical depth) plotted on native surface</p></li>
 </ul>
 </dd>
 </dl>
@@ -293,7 +333,7 @@ If you used a different number of streamlines you should use this flag for the Q
 </div>
 <div class="section" id="group-level-qc">
 <h2>Group level QC<a class="headerlink" href="#group-level-qc" title="Permalink to this headline">¶</a></h2>
-<p>The group level quality control, generates a report with all the completed and processed modules by subjects. The report is a color coded table with rows as subjects and columns as the pipeline modules.</p>
+<p>The group level quality control generates a report with all completed and processed modules by subjects. The report consists of a color coded table with rows as subjects and columns as the pipeline modules.</p>
 <ul class="simple">
 <li><p>Blue: Completed</p></li>
 <li><p>Orange: Either incomplete or error</p></li>
@@ -319,8 +359,11 @@ If you used a different number of streamlines you should use this flag for the Q
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe -out &lt;outputDirectory&gt; -QC
 </pre></div>
 </td></tr></table></div>
+<p><strong>Optional arguments:</strong></p>
+<p>There are no optional arguments for this command.</p>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
+<p>The QC table output by <code class="docutils literal notranslate"><span class="pre">-QC</span></code> can be found here:</p>
 <p><strong>Main output:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/micapipe_progress.html</span></code></p>
 </div>
 </div>

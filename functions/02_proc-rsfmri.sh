@@ -591,7 +591,7 @@ if [[ ! -f "${global_signal}" ]] ; then
         tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
         tissue_series="${rsfmri_volum}/${idBIDS}_space-rsfmri_pve_${tissue}.txt"
         if [[ ! -f "${tissue_series}" ]] ; then
-            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" -t ["$mat_rsfmri_affine",1] -t ["$SyN_rsfmri_affine",1] -t "$SyN_rsfmri_Invwarp" -o "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -v -u int
+            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" "${transformsInv}" -o "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -v -u int
             Do_cmd fslmaths "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz"
             Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}_space-rsfmri_${tissue}.nii.gz" -w
         else

@@ -204,7 +204,8 @@ if [ "$procDWI" = "TRUE" ]; then
     Do_cmd rm -rf "$proc_dwi"/eddy/* \
                   "${dwifiles[*]}" \
                   "${proc_dwi}/${idBIDS}"_space-dwi_model-* \
-                  "${proc_dwi}/${idBIDS}"_space-dwi_desc-MP-* \
+                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-MP-PCA_* \
+                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-deGibbs_* \
                   "${proc_struct}/${idBIDS}"_space-nativepro_desc-dwi.nii.gz \
                   "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
                   "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
