@@ -43,6 +43,7 @@ noFIX=${18}
 sesAnat=${19}
 regAffine=${20}
 PROC=${21}
+fmri_acq=${22}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -254,6 +255,11 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR="$dir_surf"
 
 # rsfMRI directories
+if [[ ${fmri_acq} == "TRUE" ]]; then
+  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1)
+  proc_rsfmri="$subject_dir/func/${fmri_tag}"
+  Info "Outputs will be store in: ${proc_rsfmri}"
+fi
 rsfmri_volum="${proc_rsfmri}/volumetric"   # volumetricOutputDirectory
 rsfmri_surf="${proc_rsfmri}/surfaces"      # surfaceOutputDirectory
 rsfmri_ICA="$proc_rsfmri/ICA_MELODIC"      # ICAOutputDirectory
