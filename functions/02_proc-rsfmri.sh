@@ -42,8 +42,8 @@ performGSR=${17}
 noFIX=${18}
 sesAnat=${19}
 regAffine=${20}
-PROC=${21}
-fmri_acq=${22}
+fmri_acq=${21}
+PROC=${22}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -91,6 +91,7 @@ Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
+Note "fmri acq         :" "$fmri_acq"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -240,7 +241,17 @@ bids_print.variables-rsfmri
 Info "Saving temporal dir: $nocleanup"
 Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
-
+# rsfMRI directories
+if [[ ${fmri_acq} == "TRUE" ]]; then
+  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag=${fmri_tag/_bold/}
+  tagMRI="${fmri_tag}"
+  proc_rsfmri="$subject_dir/func/${fmri_tag}"
+  Info "Outputs will be stored in:"
+  Note "fMRI path:" "${proc_rsfmri}"
+else
+  tagMRI="rsfmri"
+fi
+Note "tagMRI:      " "${tagMRI}"
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
@@ -254,12 +265,6 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Define directories
 export SUBJECTS_DIR="$dir_surf"
 
-# rsfMRI directories
-if [[ ${fmri_acq} == "TRUE" ]]; then
-  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1)
-  proc_rsfmri="$subject_dir/func/${fmri_tag}"
-  Info "Outputs will be store in: ${proc_rsfmri}"
-fi
 rsfmri_volum="${proc_rsfmri}/volumetric"   # volumetricOutputDirectory
 rsfmri_surf="${proc_rsfmri}/surfaces"      # surfaceOutputDirectory
 rsfmri_ICA="$proc_rsfmri/ICA_MELODIC"      # ICAOutputDirectory
@@ -441,13 +446,13 @@ else
 fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
-fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
-T1nativepro_in_fmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
-str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_"
+fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_bold.nii.gz"
+T1nativepro_in_fmri="${rsfmri_volum}/${idBIDS}_space-${tagMRI}_t1w.nii.gz"
+str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
-str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_"
+str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_${tagMRI}_to-${tagMRI}_mode-image_desc-SyN_"
 SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
 SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
@@ -458,17 +463,21 @@ if [[ "$Nreg" -lt 3 ]]; then
     # if [[ -f "$rsfmri4reg" ]]; then
     #     Do_cmd fslmaths "$rsfmri4reg" -mul "$fmri_mask" "$fmri_brain"
     # fi
-    Info "Creating a synthetic BOLD image for registration"
-    # Inverse T1w
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
-    # Dilate the T1-mask
-    #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
-    # Masked the inverted T1w
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
-    # Match histograms values acording to rsfmri
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
-    # Smoothing
-    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
+    if [[! -f "${t1bold}" ]]; then
+        Info "Creating a synthetic BOLD image for registration"
+        # Inverse T1w
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
+        # Dilate the T1-mask
+        #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
+        # Masked the inverted T1w
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
+        # Match histograms values acording to rsfmri
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
+        # Smoothing
+        Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
+    else
+        Info "Subject ${id} has a synthetic BOLD image for registration"
+    fi
 
     Info "Registering fmri space to nativepro"
 
@@ -503,10 +512,10 @@ fi
 
 #------------------------------------------------------------------------------#
 # Register rsfMRI to Freesurfer space with Freesurfer
-fmri2fs_dat="${dir_warp}/${idBIDS}_from-rsfmri_to-fsnative_bbr.dat"
+fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-rsfmri_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold
+    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
@@ -783,7 +792,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # QC: rsfmri processing Input files
-QC_proc-rsfmri
+if [[ ${fmri_acq} == "FALSE" ]]; then QC_proc-rsfmri; fi
 
 #------------------------------------------------------------------------------#
 # run post-rsfmri
@@ -810,6 +819,8 @@ Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_rsfmri_*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+if [[ ${fmri_acq} == "FALSE" ]]; then
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
+    echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+fi
 cleanup "$tmp" "$nocleanup" "$here"
