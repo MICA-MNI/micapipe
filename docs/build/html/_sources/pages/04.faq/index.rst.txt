@@ -97,8 +97,8 @@ Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
 Surface issues
 ------------------------------------------------
 
-Q: What if my database already has *Freesurfer* outputs with Quality Check?
-    **A:** I you have an already processed and QC freesurfer directory remember to use the flag ``-freesurfer_dir`` when you run the pipeline!!
+Q: What if my database already has quality checked *Freesurfer* outputs?
+    **A:** If you have an already processed and QC-ed freesurfer directory remember to use the flag ``-freesurfer_dir`` when you run the pipeline!!
     It will make a copy of your data with a compatible naming inside ``out/freesurfer/``. It's up to you to keep the original *freesurfer* directory or erase it.
 
     .. code-block:: bash
@@ -140,7 +140,7 @@ Q: How do I modify the smoothing on the surfaces?
 
        MICAPIPE_DIR=<path to the micapipe repository>
 
-       # For WorkBench the first step is to convent mgh to GIFTI
+       # For WorkBench the first step is to convent the mgh surface file to GIFTI
         mri_convert "${outDir}/sub-01_ses01_space-conte69-32k_desc-lh_thickness.mgh" "/tmp/lh_curv_c69-32k_thickness.func.gii"
 
         wb_command -metric-smoothing \
@@ -149,7 +149,7 @@ Q: How do I modify the smoothing on the surfaces?
             20 \
             "/tmp/lh_curv_20mm_c69-32k.func.gii"     # This is the 20 mm FWHM surface
 
-        # Convert from GIFTI to MGH
+        # Convert from GIFTI back to MGH
         mri_convert "/tmp/lh_curv_10mm_c69-32k.func.gii" "${outDir}/sub-01_ses01_space-conte69-32k_desc-lh_thickness_20mm.mgh"
 
 
@@ -162,7 +162,7 @@ Q: How do I process multiple rsfMRI If I have different runs in the same session
     Using ``mrcat`` from MRtrix3 for example:
 
     .. code-block:: bash
-       :caption:  Concatenates all rsfmri runs and process the output
+       :caption:  Concatenates all rsfMRI runs and process the output
        :linenos:
 
         # Inside the func directory contatenate all the runs
@@ -217,5 +217,5 @@ Q: Can I save the tractogram (tck file) generated in ``-SC`` ?
 Parcellation issues
 ------------------------------------------------
 
-Q: Can I use a different Cortical / subcortical / cerebellar atlas  not included in the micapipe?
-    **A:** At the present moment this feature is not included in the latest release. If you wan't to help us implementing this new feature you are very welcome.
+Q: Can I use a different cortical / subcortical / cerebellar atlas not included in the micapipe?
+    **A:** At the present moment this feature is not included. If you wan't to help us implementing this new feature you are very welcome.

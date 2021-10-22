@@ -5,7 +5,7 @@
 Resting-state fMRI processing
 ============================================================
 
-This module performs all pre-processing of subject resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.
+This module performs all pre-processing of a subject's resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. The pipeline is mainly based on tools from FSL and AFNI for volumetric processing, and FreeSurfer and Workbench for surface-based mapping. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.
 
 .. image:: sankey_rsfmri.png
    :align: center

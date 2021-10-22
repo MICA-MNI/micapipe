@@ -57,7 +57,7 @@
   :target: https://hub.docker.com/r/micalab/micapipe
   :alt: Docker Image Version (latest by date)
 
-*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streamlines for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.
+*Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streams for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.
 
 .. raw:: html
 
@@ -161,7 +161,7 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 Core development team 🧠
 --------------------------------------------------------
 
-Micapipe is developed by MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Center of the Montreal Neurological Institute.
+Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Centre of the Montreal Neurological Institute.
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
