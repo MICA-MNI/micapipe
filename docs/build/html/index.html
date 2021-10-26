@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Welcome to micapipe’s documentation! &mdash; micapipe  documentation</title>
   
@@ -17,12 +17,15 @@
   <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/mica-pipe_tabs_tabs.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/mica-pipe_colors.css" type="text/css" />
 
   
   
+
   
+  
+
   
 
   
@@ -35,7 +38,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -115,7 +117,7 @@
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pages/04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="pages/04.matrices/index.html">Output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/04.surfaces/index.html">Surface visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/04.faq/index.html">FAQ</a></li>
@@ -165,6 +167,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -176,7 +180,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -211,10 +215,7 @@
 <p><em>Micapipe</em> is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streamlines for <em>T1-weighted</em>, <em>microstructure-sensitive</em>, <em>diffusion-weighted</em>, and <em>resting-state functional imaging</em> to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.</p>
 <br><div class="section" id="about">
 <h2>About 👁️‍🗨️<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
-<p><em>Micapipe</em> generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, as well as proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales.
-The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations.
-Most of the results are mapped to three different surfaces: native, conte69 and fsaverage5.
-And all the outputs are hierarchically ordered with BIDS conformed naming.</p>
+<p><em>Micapipe</em> generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. Most results are mapped to three different surfaces spaces: native, conte69 and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.</p>
 <div class="figure align-center">
 <img alt="alternate text" src="_images/workflow.png" />
 </div>
@@ -225,7 +226,7 @@ And all the outputs are hierarchically ordered with BIDS conformed naming.</p>
 <br></div>
 <div class="section" id="datasets">
 <h2>Datasets 🕵️‍♀️<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
-<p>Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as <a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">Microstructure-Informed Connectomis (MICs)</a> <a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a>, <a class="reference external" href="https://github.com/rcruces/2020_cognition_connectomics_TLE">EpiC-UNAM</a>, <a class="reference external" href="https://openneuro.org/datasets/ds000224/versions/1.0.3">Midnight Scan Club</a>, <a class="reference external" href="https://openneuro.org/datasets/ds001942/versions/1.2.0">Auditory localization with 7T fMRI</a> and <a class="reference external" href="https://openneuro.org/datasets/ds003346/versions/1.1.1">SUDMEX_CONN</a>.</p>
+<p>Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as <a class="reference external" href="https://doi.org/10.1101/2021.08.04.454795">Microstructure-Informed Connectomis (MICA-MICs)</a> <a class="reference external" href="https://www.cam-can.org/index.php?content=dataset">Cambridge Centre for Ageing and Neuroscience (Cam-CAN)</a>, <a class="reference external" href="https://github.com/rcruces/2020_cognition_connectomics_TLE">EpiC-UNAM</a>, <a class="reference external" href="https://openneuro.org/datasets/ds000224/versions/1.0.3">Midnight Scan Club</a>, <a class="reference external" href="https://openneuro.org/datasets/ds001942/versions/1.2.0">Auditory localization with 7T fMRI</a> and <a class="reference external" href="https://openneuro.org/datasets/ds003346/versions/1.1.1">SUDMEX_CONN</a>.</p>
 <br></div>
 <div class="section" id="development-and-getting-involved">
 <h2>Development and getting involved 🙋‍♀️<a class="headerlink" href="#development-and-getting-involved" title="Permalink to this headline">¶</a></h2>

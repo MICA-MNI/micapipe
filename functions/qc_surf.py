@@ -284,7 +284,7 @@ try:
     th_rh = dir_morph + subBIDS + '_space-fsnative_desc-rh_thickness.mgh'
     if os.path.exists(th_lh) and os.path.exists(th_rh):
         TH = np.hstack(np.concatenate((np.array(load(th_lh).get_fdata()), np.array(load(th_rh).get_fdata())), axis=0))*mask
-        plot_hemispheres(inf_lh, inf_rh, array_name=th, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+        plot_hemispheres(inf_lh, inf_rh, array_name=TH, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False,
                          screenshot = True, filename = dir_QC_png + subBIDS + '_space-fsnative_desc-surf_th_morph.png')
 

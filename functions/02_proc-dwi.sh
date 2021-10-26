@@ -27,7 +27,8 @@ dwi_main=$8
 dwi_rpe=$9
 dwi_processed=${10}
 rpe_all=${11}
-PROC=${12}
+regAffine=${12}
+PROC=${13}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -48,11 +49,12 @@ source "$MICAPIPE/functions/utilities.sh"
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 Info "Inputs of proc_dwi:"
-Note "tmpDir     :" "$tmpDir"
-Note "dwi_main   :" "$dwi_main"
-Note "dwi_rpe    :" "$dwi_rpe"
-Note "rpe_all    :" "$rpe_all"
-Note "Processing :" "$PROC"
+Note "tmpDir     : " "$tmpDir"
+Note "dwi_main   : " "$dwi_main"
+Note "dwi_rpe    : " "$dwi_rpe"
+Note "rpe_all    : " "$rpe_all"
+Note "Affine only: " "$regAffine"
+Note "Processing : " "$PROC"
 
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
@@ -270,13 +272,13 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwi_4proc=${tmp}/dwi_dns_even.mif
       dim=$(mrinfo "$dwi_dns" -size)
       dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-      mrconvert "$dwi_dns" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+      Do_cmd mrconvert "$dwi_dns" "$dwi_4proc" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
 
       # Get the mean b-zero (un-corrected)
-      dwiextract -nthreads "$threads" "$dwi_dns" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
+      dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-      Do_cmd nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
+      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
 
       # Processing the reverse encoding b0
       if [[ -f "$rpe_dns" ]]; then
@@ -285,6 +287,8 @@ if [[ ! -f "$dwi_corr" ]]; then
 
             # Mean reverse phase b0
             Info "Extracting the rpe b0(s)"
+            Note "    rpe dwgrad :" "${dwgrad}"
+            Note "    rpe ndim   :" "${rpe_dim}"
             if [[ "${dwgrad}" -eq 0 ]]; then
                 Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
                 if [[ "$rpe_dim" -eq 3 ]]; then
@@ -293,9 +297,15 @@ if [[ ! -f "$dwi_corr" ]]; then
                     mrmath "$rpe_dns" mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
                 fi
             else
-                dwiextract "$rpe_dns" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                if [[ "$rpe_dim" -eq 3 ]]; then
+                    Do_cmd mrconvert "$rpe_dns" "${tmp}/b0_meanReversePhase.nii.gz"
+                elif [[ "$rpe_dim" -gt 3 ]]; then
+                    dwiextract "$rpe_dns" - -bzero | mrmath - mean "${tmp}/b0_meanReversePhase.nii.gz" -axis 3 -nthreads "$threads"
+                fi
             fi
-            Do_cmd nifti_capture.py -img "${tmp}/b0_meanReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+            Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
+
+            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
@@ -307,14 +317,9 @@ if [[ ! -f "$dwi_corr" ]]; then
                 opt="-rpe_all"
 
             elif [[ "$rpe_all" == FALSE ]]; then
-                b0_pair_tmp="${tmp}/b0_pair_tmp.mif"
                 b0_pair="${tmp}/b0_pair.mif"
                 # Concatenate the pe and rpe b0s
-                Do_cmd mrcat "${tmp}/b0_meanMainPhase.nii.gz" "${tmp}/b0_meanReversePhase.nii.gz" "$b0_pair_tmp" -nthreads "$threads"
-                # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
-                dim=$(mrinfo "$b0_pair_tmp" -size)
-                dimNew=($(echo "$dim" | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i-1}}'))
-                mrconvert "$b0_pair_tmp" "$b0_pair" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -coord 3 0:end -force
+                Do_cmd mrcat "${tmp}/b0_meanMainPhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" "$b0_pair" -nthreads "$threads"
                 opt="-rpe_pair -align_seepi -se_epi ${b0_pair}"
             fi
       else
@@ -326,6 +331,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       Note "Shell values        :" "${shells[*]}"
       Note "DWI main dimensions :" "$(mrinfo "$dwi_dns" -size)"
       if [ -f "${dwi_reverse[0]}" ]; then Note "DWI rpe dimensions  :" "$(mrinfo "$rpe_dns" -size)"; fi
+      Note "DWI to process dim  :" "$(mrinfo "$dwi_4proc" -size)"
       Note "pe_dir              :" "$pe_dir"
       Note "Readout Time        :" "$ReadoutTime"
       Note "Options             :" "$opt"
@@ -371,7 +377,7 @@ mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
 
 if [[ ! -f "$T1nativepro_in_dwi" ]]; then
-      Info "Linear registration from DWI-b0 to T1nativepro"
+      Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
 
@@ -455,27 +461,40 @@ dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 
+
 if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
-    Info "Non-linear registration from T1w_dwi-space to DWI"
     dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
     T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro-brain.nii.gz"
-    T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_NL.nii.gz"
     fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
     Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
-    Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
-    if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
+
+    if [[ ${regAffine}  == "FALSE" ]]; then
+        Info "Non-linear registration from T1w_dwi-space to DWI"
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
+        export reg="Affine+SyN"
+        trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
+        trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro
+        if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
+
+    elif [[ ${regAffine}  == "TRUE" ]]; then
+        Info "Only affine registration from T1w_dwi-space to DWI"; ((Nsteps++))
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"
+        trans_T12dwi="-t [${mat_dwi_affine},1]"
+        trans_dwi2T1="-t ${mat_dwi_affine}"
+    fi
+
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
     # Apply transformation DWI-b0 space to T1nativepro
-    Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" -t "$mat_dwi_affine" -t ["$dwi_SyN_affine",1] -t "$dwi_SyN_Invwarp" -o "$dwi_in_T1nativepro" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int
     # Apply transformation T1nativepro to DWI space
-    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$T1nativepro_in_dwi_NL" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" "$trans_T12dwi" -o "$T1nativepro_in_dwi_NL" -v -u int
     # Apply transformation 5TT to DWI space
-    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" -t "$dwi_SyN_warp" -t "$dwi_SyN_affine" -t ["$mat_dwi_affine",1] -o "$dwi_5tt" -v -e 3 -n linear
+    Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" "$trans_T12dwi" -o "$dwi_5tt" -v -e 3 -n linear
     if [[ -f "$dwi_5tt" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a non-linear registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
+    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
 fi
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask

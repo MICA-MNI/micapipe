@@ -240,6 +240,7 @@ RUN export PATH="/opt/miniconda-latest/bin:$PATH" \
            "kiwisolver==1.2.0" \
            "matplotlib==3.3.1" \
            "nibabel==3.1.1" \
+           "nilearn" \
            "numpy==1.19.1" \
            "packaging==20.4" \
            "pandas==1.1.1" \

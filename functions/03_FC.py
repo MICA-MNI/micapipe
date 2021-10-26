@@ -66,7 +66,11 @@ del rh_data
 # Load subcortical and cerebellar timeseries
 # Subcortex
 sctx = np.loadtxt(funcDir+'/volumetric/' + subject + '_space-rsfmri_desc-singleecho_timeseries_subcortical.txt')
-n_sctx = sctx.shape[1]
+if sctx.shape:
+    n_sctx = sctx.shape[1]
+else:
+    print('Uh oh, your subcortical timeseries file is empty; exiting. Bye-bye')
+    exit()
 
 # Cerebellum
 # A little hacky because the co-registration to fMRI space make some cerebellar ROIs disappear
