@@ -25,9 +25,10 @@ echo -e "
 \t\033[38;5;197m-sub\033[0m 	        : Subject identification (no 'sub-')
 \t\033[38;5;197m-out\033[0m      	: Output directory for the processed files <anat ORIG and face-warps>.
 \t\033[38;5;197m-bids\033[0m      	: Path to BIDS directory
+\t\033[38;5;120m-ses\033[0m 	        : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
    Methods:
-\t\033[38;5;197m-refacePro\033[0m 	: Method to anonymize the anat images by creating a new Warped-face
+\t\033[38;5;197m-warpface\033[0m 	: Method to anonymize the anat images by creating a new Warped-face
 \t\033[38;5;197m-reface\033[0m 	: Method to anonymize the anat images by creating a new face
 \t\033[38;5;197m-deface\033[0m 	: Method to anonymize the anat images by erasing the face
 \t\033[38;5;197m-all\033[0m 	        : Runs all the previous algorithms
@@ -39,7 +40,7 @@ echo -e "
 \t\033[38;5;197m-threads\033[0m        : Number of threads (Default is 6)
 
 \033[38;5;141mUSAGE:\033[0m
-\033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+\033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n \033[38;5;197m-all\033[0m
 
 \033[38;5;141mDEPENDENCIES:\033[0m
     > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
@@ -89,8 +90,8 @@ do
     METHOD="reface"
     shift
   ;;
-  -refacePro)
-    METHOD="reface-pro"
+  -warpface)
+    METHOD="warpface"
     shift
   ;;
   -all)
@@ -135,7 +136,7 @@ Error "One or more mandatory arguments are missing:
 help; exit 1; fi
 
 # Number of session (Default is "ses-pre")
-if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -refacePro or -all"; help; exit; fi
+if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -warpface or -all"; help; exit; fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)
@@ -234,7 +235,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # REFACE
-if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "all" ]; then
+if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all" ]; then
     Info "REFACING $t1w_run1"
     # Apply NEW face to native T1w volume
     T1w_mask_brain=${tmp}/mask-brainNeck.nii.gz
@@ -254,7 +255,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "reface-pro" ] || [ "$METHOD" = "a
 
     # # -----------------------------------------------------------------------------------------------
     # # WARPFACE
-    if [ "$METHOD" == "reface-pro" ] || [ "$METHOD" = "all" ]; then
+    if [ "$METHOD" == "warpface" ] || [ "$METHOD" = "all" ]; then
         Info "WARP-FACING $t1w_run1"
         # Binary mask over original t1w_run
         T1w_mask_dil=${tmp}/mask_dil.nii.gz
@@ -344,7 +345,7 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
   fi
 
   # -----------------------------------------------------------------------------------------------
-  if [ "$METHOD" == "reface-pro" ] || [ "$METHOD" = "all" ]; then
+  if [ "$METHOD" == "warpface" ] || [ "$METHOD" = "all" ]; then
       Info "Applying Warp-Facing method to $nii"
       nii_warped=${out_warps}/${nii/.nii.gz/_}warpfaced.nii.gz
 

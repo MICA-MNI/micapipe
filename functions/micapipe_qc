@@ -13,9 +13,9 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v.0.1.0 'Roadrunner')"
+Version="(Version v.0.1.1 'Roadrunner')"
 version() {
-  echo -e "\nMICAPIPE July 2021 ${Version}\n"
+  echo -e "\nMICAPIPE August 2021 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
@@ -52,6 +52,7 @@ http://mica-mni.github.io/
 # Source utilities functions from MICAPIPE
 MICAPIPE=$(dirname $(dirname $(realpath "$0")))
 source "${MICAPIPE}/functions/utilities.sh"
+umask 003
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -180,11 +181,11 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Calculate everythin on a tmpDir dir
 cd $tmpDir
 
-# Create matrices and Sankey diagram
+Info "Creating matrices and Sankey diagram"
 Rscript ${MICAPIPE}/functions/micapipe_qc.R \
 --BIDSid="$idBIDS" --subject_dir="$subject_dir" \
 --mica="$MICAPIPE" --dir_fs="$dir_surf" --tracts="$tracts"
-# Create png of surfaces
+Info "Create surface visualizations"
 ${MICAPIPE}/functions/qc_surf.py -subBIDS "$idBIDS" -subDir "$subject_dir"
 cd $here
 
@@ -438,9 +439,9 @@ nifti_check() {
     # if [[ ! -f "$outname" ]]; then
       if [ -f "$4" ]; then
           if [[ "$5" == "YES" ]]; then ROI="-roi"; else ROI=""; fi
-          Do_cmd nifti_capture.py -img "$2" "$4" -out "$outname" "$ROI"
+          Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "$2" "$4" -out "$outname" "$ROI"
       else
-          Do_cmd nifti_capture.py -img "$2" -out "$outname"
+          Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "$2" -out "$outname"
       fi
     # fi
     echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"$2\" </p>
@@ -588,14 +589,14 @@ echo -e "
 #------------------------------------------------------------------------------#
 echo -e "
   <h2>conte69 surfaces</h2>
-    <h3>native sphere</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_sphere.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
-    <h3>middle surface</h3>
-        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_mid.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>pial surface</h3>
         <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_pial.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>middle surface</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_mid.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     <h3>white surface</h3>
         <img src=\"${dir_QC_png}/${idBIDS}_space-conte69_desc-surf_white.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
+    <h3>native sphere</h3>
+        <img src=\"${dir_QC_png}/${idBIDS}_space-fsnative_desc-surf_sphere.png\" alt=\"HTML5\" style=\"height:${px}\" class=\"center\">
     " >> "$QC_html"
 
 # Close post_structural QC
@@ -722,8 +723,8 @@ dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
 dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
 dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
-
-dwi_t1wNL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_NL.nii.gz"
+dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
+if [[ ! -f "${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz" ]]; then dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"; fi
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 dwi_cereb="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
 dwi_subco="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
@@ -754,7 +755,7 @@ if [ -f "$dwi_corr" ]; then
     nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M.png"
     nifti_check "DTI ADC" "${tmpDir}/dwi_adc.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_adc.png"
     nifti_check "DTI FA" "${tmpDir}/dwi_fa.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_fa.png"
-    nifti_check "Registration: T1w in DWI space" "${dwi_t1wNL}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png" "$dwi_b0"
+    nifti_check "Registration: T1w in DWI space" "${dwi_t1w}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png" "$dwi_b0"
     nifti_check "5TT in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii.png" "${tmpDir}/dwi_5tt.nii.gz" "YES"
     nifti_check "GMWMI in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi.nii.png" "${tmpDir}/dwi_gmwmi.nii.gz" "YES"
     nifti_check "Cerebellum atlas in DWI space (-SC)" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum.nii.png" "${dwi_cereb}" "YES"

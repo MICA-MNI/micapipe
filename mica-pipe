@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE July 2021 (Version v.0.1.0 'Roadrunner')\n"
+  echo -e "\nMICAPIPE August 2021 (Version v.0.1.1 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -69,6 +69,8 @@ echo -e "
 \t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
 \t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
 \t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
+\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
+\t\t\t\t         ( default is non linear registration SyN )
 
 \t\033[38;5;197m-proc_rsfmri\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -81,7 +83,7 @@ echo -e "
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
 \t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
 \t\t\t\t         you must specify which one to process ( e.g. '1' )
-\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distorsion correction; eg. file.cnf )
+\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup ( distortion correction; eg. file.cnf )
 
 \t\t\033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t\t         ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
@@ -589,9 +591,10 @@ else
     Info "Subject ${id} directory exist"
 fi
 
-# freesurfer Directory
+# freesurfer Directories
 if [ ! -d "$dir_surf" ]; then mkdir "$dir_surf" && chmod -R 770 "$dir_surf"; fi
 if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
+if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surfaces/*conte69.gii "${dir_surf}"/conte69/surf; fi
 
 # print directory organization
 if [[ ! -z $(which tree) ]]; then
@@ -660,7 +663,7 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -857,7 +860,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
              $COMMAND $PROC
     else
         # LOCAL - Resting state fMRI processing
-        $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -869,7 +872,7 @@ if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
     if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
     COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
     # LOCAL - QC individual
-    $COMMAND 2>&1 | tee -a  ${log_file_str}.txt
+    $COMMAND 2>&1 | tee ${log_file_str}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#

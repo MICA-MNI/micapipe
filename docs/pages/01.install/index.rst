@@ -19,7 +19,7 @@ Similarly, to pull the micapipe Singularity image, simply run the following comm
 
     singularity pull shub://todo/todo
 
-Note that these containers are quite large (XX GB), given the large number of dependencies for micapipe. 
+Note that these containers are quite large (13+ GB), given the considerable number of dependencies for micapipe.
 
 "Bare-metal" installation
 --------------------------------------------------------

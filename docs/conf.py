@@ -58,8 +58,12 @@ exclude_patterns = []
 #
 html_theme = 'sphinx_rtd_theme'
 
-html_theme_options = { 'style_nav_header_background': '#261F4A'}
+html_theme_options = {
+    'style_nav_header_background': '#261F4A',
+    'logo_only': 'True'
+}
 
+html_logo = 'figures/html_logo.png'
 
 # The name of the Pygments (syntax highlighting) style to use.
 import os
@@ -84,3 +88,6 @@ html_css_files = ['css/mica-pipe_colors.css']
 # add custom files that are stored in _static
 def setup(app):
    app.add_css_file("css/mica-pipe_tabs_tabs.css")
+
+def setup(app):
+    app.add_css_file('css/custom.css')

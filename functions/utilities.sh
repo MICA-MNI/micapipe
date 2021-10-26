@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.1.0 'Roadrunner'"
+export Version="v0.1.1 'Roadrunner'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -838,10 +838,11 @@ function micapipe_group_QC() {
         Status=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
         Steps=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
         Date=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $8}')
+        RunV=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $11}')
         if [[ "$Status" == "COMPLETED" ]]; then
-            echo -e "              <td class=\"tg-8779\">${Steps}<br>${Date}</td>" >> "$QC_html"
+            echo -e "              <td class=\"tg-8779\">${Steps}<br>${Date}<br>${RunV}</td>" >> "$QC_html"
         elif [[ "$Status" == "INCOMPLETE" ]]; then
-            echo -e "              <td class=\"tg-sl9e\">${Steps}<br>${Date}</td>" >> "$QC_html"
+            echo -e "              <td class=\"tg-sl9e\">${Steps}<br>${Date}<br>${RunV}</td>" >> "$QC_html"
         else
             echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
         fi

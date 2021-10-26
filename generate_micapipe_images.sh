@@ -22,7 +22,7 @@ generate() {
       conda_install="python=3.7 certifi==2020.6.20
                      cycler==0.10.0 joblib==0.16.0
                      kiwisolver==1.2.0 matplotlib==3.3.1 nibabel==3.1.1
-                     numpy==1.19.1 packaging==20.4 pandas==1.1.1
+                     numpy==1.19.1 packaging==20.4 pandas==1.1.1 nilearn
                      pillow==7.2.0 pyparsing==2.4.7 python-dateutil==2.8.1
                      pytz==2020.1 scikit-learn==0.23.2 scipy==1.5.2
                      six==1.15.0 threadpoolctl==2.1.0 vtk==9.0.1"\
@@ -37,7 +37,7 @@ generate() {
            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
            add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
            apt update; \
-           apt install -y r-base libblas-dev liblapack-dev gfortran g++; \
+           apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
            rm -rf /var/lib/apt/lists/*;" \
     --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
