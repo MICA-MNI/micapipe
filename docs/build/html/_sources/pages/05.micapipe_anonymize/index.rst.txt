@@ -5,52 +5,77 @@
 ``micapipe_anonymize``
 ================================================
 
-This function anonymizes the anatomical images from the BIDS directory for data sharing, using three different methods. It uses a custom template and a set of ROI specially developed to identify the face and skull.
-The full head template was created using 60 randomly selected healthy subjects T1w images with a resolution of 0.8x0.8x0.8mm (*MICs60_T1_0.8mm.nii.gz*). An inter-subject non-linear registration was performed without any mask, then the template was built using the mean of the normalized images.
-Three masks were generated: a ROI that covers the face, a brain mask, and a brain and neck mask. Derived from the inverted brain-neck mask an image of the face and skull was generated, which is used to replace the native face.
-Unlike other algorithms *micapipe_anonymize* supports different anatomical modalities, and it has shown good performance.
+This function anonymizes the anatomical images from the BIDS directory for data sharing. Three different methods are available for defacing/refacing. This tool uses a custom template and a set of ROIs specifically developed to identify the face and skull.
+
+The full head template was created using the T1w images (resolution of 0.8x0.8x0.8mm) of 60 randomly selected healthy individuals from the MICA-MICs dataset (*MICs60_T1_0.8mm.nii.gz*). An inter-subject non-linear registration was performed without any mask, then the template was built using the mean of the normalized images. Three masks were generated: an ROI that covers the face, a brain mask, and a brain and neck mask. 
+
+Unlike other algorithms, ``micapipe_anonymize`` supports different anatomical modalities, and has shown good performance across datasets and modalities.
 
 .. image:: anonymize.png
    :align: center
    :scale: 70 %
 
 .. tabs::
-       .. tab:: Processing steps
 
-        - Identify the T1w (run-1 in case of multiple acquisitions).
-        - Affine registration from the T1w to the face atlas.
-        - Deface:
-           - Apply the affine transformation to the face mask and crop the native T1w with it.
-        - Reface:
-           - Apply the affine transformation to the brainNeck mask, use its inverse to crop the native T1w face, and replace with the atlas face.
-        - Warpface:
-           - Create a non-linear warpfield from the T1w native face to the refaced atlas.
-           - Apply the warpfield to the face.
-        - An affine registration from each anatomical acquisition to the main T1w is calculated. Then the atlas face, the face mask and the warp field are register to the native anatomical volume and applied.
 
-       .. tab:: Usage
+      .. tab:: Processing steps
 
-        The basic usage requires the same inputs as in mica-pipe:
+         - Identify the T1w image for registration (run-1 in case of multiple acquisitions)
+         - Affine registration from the T1w image to the face atlas
+         - Anonymize images according to selected method(s):
 
-        -sub            Corresponds to subject ID. Even if your data is in BIDS, we exclude the "sub-" substring from the ID code (e.g. sub-HC001 is entered as -sub HC001). However if you forget the ``sub-`` micapipe will manage it.
-        -out            Output directory path. Following BIDS, this corresponds to the "derivatives" directory associated with your dataset. Inside this directory the pipeline will create a new folder called ``micapipe``, containing all the derivatives.
-        -bids           Path to rawdata BIDS directory.
-        -ses            This optional flag allows the user to specify a session name (e.g. 01, 02, pre, post...). If omitted, all processing will be managed as a single session.
+            - Deface: Apply the affine transformation to the face mask and crop the native T1w by applying the mask
+            - Reface: Apply the affine transformation to the brain-neck mask, use its inverse to crop the native T1w face, and replace with the atlas face.
+            - Warpface: Create a non-linear warpfield from the T1w native face to the refaced atlas and apply the warpfield to the face.
+         - An affine registration from each anatomical acquisition (e.g. quantitative T1, T2w...) to the main T1w is calculated. Then, the atlas face, the face mask and the warp field are registered to the native anatomical volume and applied.
 
-        And one or more methods:
 
-        -warpface 	     Method to anonymize the anat images by creating a new Warped-face
-        -reface 	       Method to anonymize the anat images by creating a new face
-        -deface 	       Method to anonymize the anat images by erasing the face
-        -all             Runs all the previous algorithms
+      .. tab:: Usage
 
-        **Example:**
+         The basic usage of ``micapipe_anonymize`` requires the same inputs as ``mica-pipe``:
 
-        Let's suppose you have  a BIDS directory called ``dataset`` and an empty directory called ``dataset_anonymized``.
-        Under the ``dataset`` directory we'll use the anatomical images from subject 01 ``sub-01`` session 01 ``ses-01``.
-        In this case it contains three types of acquisitions: T1w, FLAIR and T2map.
+         .. parsed-literal::
+            $ micapipe_anonymize **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-method** **<options>**
 
-        .. parsed-literal::
+         .. list-table::
+            :widths: 10 1000
+            :header-rows: 1
+
+            * - **Options**
+              - **Description**
+            * - ``-sub``
+              - Corresponds to subject ID. Even if your data is in BIDS, we exclude the ``sub-`` substring from the ID code (e.g. to process data for ``sub-HC001``, you would specify ``-sub HC001``). However if you forget the ``sub-`` micapipe-anonymize will manage it.
+            * - ``-out``
+              - Output directory path. Inside this directory the pipeline will create a new folder for each processed subject, containing the anonymized outputs.
+            * - ``-bids``
+              - Path to **rawdata** BIDS directory.
+            * - method
+              - Specify one or more methods to anonymize the structural images: ``-warpface``, ``-reface``, ``-deface``, or ``-all``
+
+         This tool can also handle a number of **optional arguments**:
+
+         .. list-table::
+            :widths: 10 1000
+            :header-rows: 1
+
+            * - **Optional argument**
+              - **Description**
+            * - ``-ses`` ``string``
+              - This optional flag allows the user to specify a session name (e.g. 01, 02, pre, post...). If omitted, all processing will be managed as a single session.
+            * - ``-dilate`` ``num``
+              - Dilation of the refaced mask (default is 6, set higher if the brain gets cropped during processing)
+            * - ``-robust``
+              - If reface-warped yields poor results, try running with this flag. This option to run a ROBUST registration, at the expense of more computation time
+            * - ``-nocleanup``
+              - Include this flag to keep (i.e. not delete) the temporary directory at script completion.
+            * - ``-threads`` ``num``
+              - Number of threads to use during processing (Default is 6)
+
+         **Example:**
+
+         Suppose you have a BIDS directory called ``dataset`` alongside an empty directory called ``dataset_anonymized``. Under the ``dataset`` directory, we see a number of anatomical images from subject 01 ``sub-01``, session 01 ``ses-01``. In this case, the participant completed three types of structural acquisitions: T1w, FLAIR and T2map.
+
+         .. parsed-literal::
             dataset/sub-01/ses-01/anat/
             ├── sub-01_ses-01_FLAIR.json
             ├── sub-01_ses-01_FLAIR.nii.gz
@@ -60,27 +85,20 @@ Unlike other algorithms *micapipe_anonymize* supports different anatomical modal
             └── sub-01_ses-01_T2map.nii.gz
             dataset_anonymized
 
-        .. code-block:: bash
-          :linenos:
-          :caption: In this example the script will run the three methods for anonymize
-          :emphasize-lines: 2
+         We can run ``micapipe_anonymize`` (all methods) on these acquisitions using the following command:
 
-          micapipe_anonymize -sub 01 -ses 01 -out dataset_anonymized -bids dataset
-          -all
+         .. code-block:: bash
+            :linenos:
+            :caption: Example
+            :emphasize-lines: 2
 
-        **Optional arguments:**
+            micapipe_anonymize -sub 01 -ses 01 -out dataset_anonymized -bids dataset
+            -all
 
-        -ses 	             ``str`` Optional flag that indicates the session name (if omitted will manage as SINGLE session)
-        -dilate 	         ``num`` Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
-        -robust 	         If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
-        -nocleanup 	       Do NOT DELETE temporal directory at script completion.
-        -threads           ``num`` Number of threads (Default is 6)
 
-       .. tab:: Outputs
+      .. tab:: Outputs
 
-        Directories created by this script will be ``<out>/<sub>``. In our example the output directory is ``dataset_anonymized/sub-01/``.
-
-        Each output file contains a string that identifies it with the method used to anonymized.
+         Directories created by this script will be contained in ``<out>/<sub>``. In our example, the output directory would then consist of ``dataset_anonymized/sub-01/``. Each output file contains a string that identifies it with the method used to anonymize it.
 
         .. parsed-literal::
               dataset/sub-01/ses-01/anat/
