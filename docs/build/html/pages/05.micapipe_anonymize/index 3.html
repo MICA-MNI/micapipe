@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Micapipe Anonymize &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Automatic Bundle Segmentation" href="../05.autotract/index.html" />
+    <link rel="prev" title="micapipe_cleanup" href="../05.micapipe_cleanup/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Micapipe Anonymize</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/05.micapipe_anonymize/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="micapipe-anonymize">
+<span id="id1"></span><h1><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code><a class="headerlink" href="#micapipe-anonymize" title="Permalink to this headline">¶</a></h1>
+<p>This function anonymizes the anatomical images from the BIDS directory for data sharing. Three different methods are available for defacing/refacing. This tool uses a custom template and a set of ROIs specifically developed to identify the face and skull.</p>
+<p>The full head template was created using the T1w images (resolution of 0.8x0.8x0.8mm) of 60 randomly selected healthy individuals from the MICA-MICs dataset (<em>MICs60_T1_0.8mm.nii.gz</em>). An inter-subject non-linear registration was performed without any mask, then the template was built using the mean of the normalized images. Three masks were generated: an ROI that covers the face, a brain mask, and a brain and neck mask.</p>
+<p>Unlike other algorithms, <code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code> supports different anatomical modalities, and has shown good performance across datasets and modalities.</p>
+<a class="reference internal image-reference" href="../../_images/anonymize.png"><img alt="../../_images/anonymize.png" class="align-center" src="../../_images/anonymize.png" style="width: 616.0px; height: 362.59999999999997px;" /></a>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-0-0 docutils container">
+<div class="docutils container">
+<p>Processing steps</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-1 docutils container">
+<div class="docutils container">
+<p>Usage</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-0-2 docutils container">
+<div class="docutils container">
+<p>Outputs</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
+<ul>
+<li><p>Identify the T1w image for registration (run-1 in case of multiple acquisitions)</p></li>
+<li><p>Affine registration from the T1w image to the face atlas</p></li>
+<li><p>Anonymize images according to selected method(s):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Deface: Apply the affine transformation to the face mask and crop the native T1w by applying the mask</p></li>
+<li><p>Reface: Apply the affine transformation to the brain-neck mask, use its inverse to crop the native T1w face, and replace with the atlas face.</p></li>
+<li><p>Warpface: Create a non-linear warpfield from the T1w native face to the refaced atlas and apply the warpfield to the face.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>An affine registration from each anatomical acquisition (e.g. quantitative T1, T2w…) to the main T1w is calculated. Then, the atlas face, the face mask and the warp field are registered to the native anatomical volume and applied.</p></li>
+</ul>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
+<p>The basic usage of <code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code> requires the same inputs as <code class="docutils literal notranslate"><span class="pre">mica-pipe</span></code>:</p>
+<pre class="literal-block">$ micapipe_anonymize <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-method</strong> <strong>&lt;options&gt;</strong></pre>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 1%" />
+<col style="width: 99%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Options</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sub</span></code></p></td>
+<td><p>Corresponds to subject ID. Even if your data is in BIDS, we exclude the <code class="docutils literal notranslate"><span class="pre">sub-</span></code> substring from the ID code (e.g. to process data for <code class="docutils literal notranslate"><span class="pre">sub-HC001</span></code>, you would specify <code class="docutils literal notranslate"><span class="pre">-sub</span> <span class="pre">HC001</span></code>). However if you forget the <code class="docutils literal notranslate"><span class="pre">sub-</span></code> micapipe-anonymize will manage it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-out</span></code></p></td>
+<td><p>Output directory path. Inside this directory the pipeline will create a new folder for each processed subject, containing the anonymized outputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-bids</span></code></p></td>
+<td><p>Path to <strong>rawdata</strong> BIDS directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p>method</p></td>
+<td><p>Specify one or more methods to anonymize the structural images: <code class="docutils literal notranslate"><span class="pre">-warpface</span></code>, <code class="docutils literal notranslate"><span class="pre">-reface</span></code>, <code class="docutils literal notranslate"><span class="pre">-deface</span></code>, or <code class="docutils literal notranslate"><span class="pre">-all</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>This tool can also handle a number of <strong>optional arguments</strong>:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 1%" />
+<col style="width: 99%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Optional argument</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ses</span></code> <code class="docutils literal notranslate"><span class="pre">string</span></code></p></td>
+<td><p>This optional flag allows the user to specify a session name (e.g. 01, 02, pre, post…). If omitted, all processing will be managed as a single session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-dilate</span></code> <code class="docutils literal notranslate"><span class="pre">num</span></code></p></td>
+<td><p>Dilation of the refaced mask (default is 6, set higher if the brain gets cropped during processing)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-robust</span></code></p></td>
+<td><p>If reface-warped yields poor results, try running with this flag. This option to run a ROBUST registration, at the expense of more computation time</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-nocleanup</span></code></p></td>
+<td><p>Include this flag to keep (i.e. not delete) the temporary directory at script completion.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-threads</span></code> <code class="docutils literal notranslate"><span class="pre">num</span></code></p></td>
+<td><p>Number of threads to use during processing (Default is 6)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<p>Suppose you have a BIDS directory called <code class="docutils literal notranslate"><span class="pre">dataset</span></code> alongside an empty directory called <code class="docutils literal notranslate"><span class="pre">dataset_anonymized</span></code>. Under the <code class="docutils literal notranslate"><span class="pre">dataset</span></code> directory, we see a number of anatomical images from subject 01 <code class="docutils literal notranslate"><span class="pre">sub-01</span></code>, session 01 <code class="docutils literal notranslate"><span class="pre">ses-01</span></code>. In this case, the participant completed three types of structural acquisitions: T1w, FLAIR and T2map.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/sub-01/ses-01/anat/
+├── sub-01_ses-01_FLAIR.json
+├── sub-01_ses-01_FLAIR.nii.gz
+├── sub-01_ses-01_T1w.json
+├── sub-01_ses-01_T1w.nii.gz
+├── sub-01_ses-01_T2map.json
+└── sub-01_ses-01_T2map.nii.gz
+dataset_anonymized
+</pre></div>
+</div>
+<p>We can run <code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code> (all methods) on these acquisitions using the following command:</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>micapipe_anonymize -sub <span class="m">01</span> -ses <span class="m">01</span> -out dataset_anonymized -bids dataset
+<span class="hll">-all
+</span></pre></div>
+</td></tr></table></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
+<blockquote>
+<div><p>Directories created by this script will be contained in <code class="docutils literal notranslate"><span class="pre">&lt;out&gt;/&lt;sub&gt;</span></code>. In our example, the output directory would then consist of <code class="docutils literal notranslate"><span class="pre">dataset_anonymized/sub-01/</span></code>. Each output file contains a string that identifies it with the method used to anonymize it.</p>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset/sub-01/ses-01/anat/
+├── sub-01_ses-01_FLAIR.json
+├── sub-01_ses-01_FLAIR.nii.gz
+├── sub-01_ses-01_T1w.json
+├── sub-01_ses-01_T1w.nii.gz
+├── sub-01_ses-01_T2map.json
+└── sub-01_ses-01_T2map.nii.gz
+dataset_anonymized/sub-01/
+├── sub-01_ses-01_FLAIR_defaced.nii.gz
+├── sub-01_ses-01_FLAIR_refaced.nii.gz
+├── sub-01_ses-01_FLAIR_warpfaced.nii.gz
+├── sub-01_ses-01_T1w_defaced.nii.gz
+├── sub-01_ses-01_T1w_refaced.nii.gz
+├── sub-01_ses-01_T1w_warpfaced.nii.gz
+├── sub-01_ses-01_T2map_defaced.nii.gz
+├── sub-01_ses-01_T2map_refaced.nii.gz
+└── sub-01_ses-01_T2map_warpfaced.nii.gz
+</pre></div>
+</div>
+</div>
+</div>
+<a class="reference internal image-reference" href="../../_images/sagittal.gif"><img alt="../../_images/sagittal.gif" class="align-center" src="../../_images/sagittal.gif" style="width: 302.0px; height: 284.0px;" /></a>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../05.autotract/index.html" class="btn btn-neutral float-right" title="Automatic Bundle Segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../05.micapipe_cleanup/index.html" class="btn btn-neutral float-left" title="micapipe_cleanup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

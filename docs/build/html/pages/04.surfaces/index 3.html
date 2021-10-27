@@ -1,0 +1,1443 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Visualization &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Building gradients" href="../04.gradients/index.html" />
+    <link rel="prev" title="Main output matrices" href="../04.matrices/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Surface visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-the-environment">Setting the environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#load-the-surfaces">Load the surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#morphology">Morphology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#thickness-inflated-native-surface">Thickness: Inflated native surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thickness-inflated-fsaverage5">Thickness: Inflated fsaverage5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thickness-conte69">Thickness: conte69</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature-native-inflated-surface">Curvature: Native inflated surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature-fsaverage5">Curvature: fsaverage5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature-conte69">Curvature: conte69</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#morphology-smoothed">Morphology Smoothed</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#thickness-fsaverage5-fwhm-10mm">Thickness fsaverage5 fwhm=10mm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thickness-conte69-fwhm-10mm">Thickness conte69 fwhm=10mm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature-fsaverage5-fwhm-10mm">Curvature fsaverage5 fwhm=10mm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#curvature-conte69-fwhm-10mm">Curvature conte69 fwhm=10mm</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#conte69">Conte69</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conte69-pial-surface">conte69: Pial surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conte69-middle-surface">conte69: Middle surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conte69-white-matter-surface">conte69: White matter surface</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#native-sphere">Native sphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#microstructural-profile">Microstructural profile</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mpc-native-surface-10">MPC native surface-10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mpc-fsaverage5-surface-10">MPC fsaverage5 surface-10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mpc-conte69-surface-10">MPC conte69 surface-10</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#atlas-labels-on-surface">Atlas labels on surface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#schaefer-400-labels">Schaefer-400 labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extra-economo-labels">Extra: Economo labels</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#download-code-examples-surfaces">Download code examples: Surfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Visualization</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/04.surfaces/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="surface-visualization">
+<span id="surfaces"></span><h1><a class="toc-backref" href="#id1">Surface visualization</a><a class="headerlink" href="#surface-visualization" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#surface-visualization" id="id1">Surface visualization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#setting-the-environment" id="id2">Setting the environment</a></p></li>
+<li><p><a class="reference internal" href="#load-the-surfaces" id="id3">Load the surfaces</a></p></li>
+<li><p><a class="reference internal" href="#morphology" id="id4">Morphology</a></p>
+<ul>
+<li><p><a class="reference internal" href="#thickness-inflated-native-surface" id="id5">Thickness: Inflated native surface</a></p></li>
+<li><p><a class="reference internal" href="#thickness-inflated-fsaverage5" id="id6">Thickness: Inflated fsaverage5</a></p></li>
+<li><p><a class="reference internal" href="#thickness-conte69" id="id7">Thickness: conte69</a></p></li>
+<li><p><a class="reference internal" href="#curvature-native-inflated-surface" id="id8">Curvature: Native inflated surface</a></p></li>
+<li><p><a class="reference internal" href="#curvature-fsaverage5" id="id9">Curvature: fsaverage5</a></p></li>
+<li><p><a class="reference internal" href="#curvature-conte69" id="id10">Curvature: conte69</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#morphology-smoothed" id="id11">Morphology Smoothed</a></p>
+<ul>
+<li><p><a class="reference internal" href="#thickness-fsaverage5-fwhm-10mm" id="id12">Thickness fsaverage5 fwhm=10mm</a></p></li>
+<li><p><a class="reference internal" href="#thickness-conte69-fwhm-10mm" id="id13">Thickness conte69 fwhm=10mm</a></p></li>
+<li><p><a class="reference internal" href="#curvature-fsaverage5-fwhm-10mm" id="id14">Curvature fsaverage5 fwhm=10mm</a></p></li>
+<li><p><a class="reference internal" href="#curvature-conte69-fwhm-10mm" id="id15">Curvature conte69 fwhm=10mm</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#conte69" id="id16">Conte69</a></p>
+<ul>
+<li><p><a class="reference internal" href="#conte69-pial-surface" id="id17">conte69: Pial surface</a></p></li>
+<li><p><a class="reference internal" href="#conte69-middle-surface" id="id18">conte69: Middle surface</a></p></li>
+<li><p><a class="reference internal" href="#conte69-white-matter-surface" id="id19">conte69: White matter surface</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#native-sphere" id="id20">Native sphere</a></p></li>
+<li><p><a class="reference internal" href="#microstructural-profile" id="id21">Microstructural profile</a></p>
+<ul>
+<li><p><a class="reference internal" href="#mpc-native-surface-10" id="id22">MPC native surface-10</a></p></li>
+<li><p><a class="reference internal" href="#mpc-fsaverage5-surface-10" id="id23">MPC fsaverage5 surface-10</a></p></li>
+<li><p><a class="reference internal" href="#mpc-conte69-surface-10" id="id24">MPC conte69 surface-10</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#atlas-labels-on-surface" id="id25">Atlas labels on surface</a></p>
+<ul>
+<li><p><a class="reference internal" href="#schaefer-400-labels" id="id26">Schaefer-400 labels</a></p></li>
+<li><p><a class="reference internal" href="#extra-economo-labels" id="id27">Extra: Economo labels</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#download-code-examples-surfaces" id="id28">Download code examples: Surfaces</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>This section describes the whereabouts of the main surfaces generated by the pipeline, and how you can visualized them using <code class="docutils literal notranslate"><span class="pre">python</span></code> or <code class="docutils literal notranslate"><span class="pre">R</span></code>.
+This example will use the subject <code class="docutils literal notranslate"><span class="pre">HC001</span></code> and session <code class="docutils literal notranslate"><span class="pre">01</span></code> from the MICs dataset, and all paths will be relative to the subject directory or <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-HC001_ses01/</span></code></p>
+<p>In the following examples, we’ll load and visualize single subject surfaces. Surfaces are distributed across different directories, namely:</p>
+<pre class="literal-block">sub-HC001/
+└── ses-01
+    ├── anat
+    │   └── surfaces
+    │       ├── <strong>conte69          # conte69 surfaces</strong>
+    │       ├── <strong>micro_profiles   # MPC connectomes and surfaces</strong>
+    │       └── <strong>morphology       # Thickness and curvature surfaces</strong>
+    └── func
+        └── <strong>surfaces             # rsfMRI surfaces and connectomes</strong></pre>
+<p>Each native surface parcellation is found inside the subject’s freesurfer directory and contains the string <code class="docutils literal notranslate"><span class="pre">mics.annot</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>freesurfer/
+└── sub-S03_ses-SES01
+    └── label
+        ├── lh.schaefer-400_**mics.annot**
+        └── rh.schaefer-400_**mics.annot**
+</pre></div>
+</div>
+<div class="section" id="setting-the-environment">
+<h2><a class="toc-backref" href="#id2">Setting the environment</a><a class="headerlink" href="#setting-the-environment" title="Permalink to this headline">¶</a></h2>
+<p>This example uses the packages the python packages <code class="docutils literal notranslate"><span class="pre">os</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">nibabel</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> and <code class="docutils literal notranslate"><span class="pre">brainspace</span></code>.
+If you are interested in plotting surfaces with BrainSpace, check the corresponding <a class="reference external" href="https://brainspace.readthedocs.io/en/latest/">documentation</a>!!</p>
+<p><strong>R</strong> libraries are <code class="docutils literal notranslate"><span class="pre">RColorBrewer</span></code>, <code class="docutils literal notranslate"><span class="pre">viridis</span></code>, <code class="docutils literal notranslate"><span class="pre">fsbrain</span></code>, <code class="docutils literal notranslate"><span class="pre">freesurferformats</span></code> and <code class="docutils literal notranslate"><span class="pre">rgl</span></code>.
+For further information about managing and visualizing surfaces with <strong>R</strong>, check the <a class="reference external" href="https://cran.r-project.org/web/packages/fsbrain/vignettes/fsbrain.html">fsbrain vignettes</a>, <a class="reference external" href="https://github.com/dfsp-spirit/fsbrain">fsbrain github repository</a>, and
+<a class="reference external" href="https://github.com/dfsp-spirit/freesurferformats">freesurferformats</a></p>
+<p>The first step in both languages is to set the environment.</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+<span class="kn">from</span> <span class="nn">nibabel.freesurfer.mghformat</span> <span class="kn">import</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
+<span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
+<span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
+
+<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
+
+<span class="c1"># Set paths and variables</span>
+<span class="n">dir_FS</span> <span class="o">=</span> <span class="s1">&#39;freesurfer/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span>
+<span class="n">dir_conte</span> <span class="o">=</span> <span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/conte69/&#39;</span>
+<span class="n">dir_morph</span> <span class="o">=</span> <span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/morphology/&#39;</span>
+<span class="n">dir_mpc</span> <span class="o">=</span> <span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/micro_profiles/&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment        &#39;R 3.6.3&#39;</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&#39;RColorBrewer&#39;</span><span class="p">)</span>      <span class="c1"># version 1.1-2</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&#39;viridis&#39;</span><span class="p">)</span>           <span class="c1"># version 0.5.1</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&#39;fsbrain&#39;</span><span class="p">)</span>           <span class="c1"># version 0.4.2</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&#39;freesurferformats&#39;</span><span class="p">)</span> <span class="c1"># version 0.1.14</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&#39;rgl&#39;</span><span class="p">)</span>               <span class="c1"># version 0.100.54</span>
+
+<span class="c1"># Set the working directory to the out directory</span>
+<span class="nf">setwd</span><span class="p">(</span><span class="s">&quot;~/tmp/micaConn/micapipe_tutorials&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span> <span class="o">&lt;-</span> <span class="s">&#39;sub-HC001_ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span> <span class="o">&lt;-</span> <span class="s">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span> <span class="o">&lt;-</span> <span class="s">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
+
+<span class="c1"># Set paths and variables</span>
+<span class="n">dir_conte</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">subjectDir</span><span class="p">,</span> <span class="s">&#39;/anat/surfaces/conte69/&#39;</span><span class="p">)</span>
+<span class="n">dir_morph</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">subjectDir</span><span class="p">,</span> <span class="s">&#39;/anat/surfaces/morphology/&#39;</span><span class="p">)</span>
+<span class="n">dir_mpc</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">subjectDir</span><span class="p">,</span> <span class="s">&#39;/anat/surfaces/micro_profiles/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="load-the-surfaces">
+<h2><a class="toc-backref" href="#id3">Load the surfaces</a><a class="headerlink" href="#load-the-surfaces" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load native pial surface</span>
+<span class="n">pial_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/lh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="n">pial_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/rh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load native mid surface</span>
+<span class="n">mid_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/lh.midthickness.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+<span class="n">mid_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/rh.midthickness.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load native white matter surface</span>
+<span class="n">wm_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/lh.white&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="n">wm_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/rh.white&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load native inflated surface</span>
+<span class="n">inf_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/lh.inflated&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="n">inf_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_FS</span><span class="o">+</span><span class="s1">&#39;/surf/rh.inflated&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load fsaverage5</span>
+<span class="n">fs5_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/lh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="n">fs5_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer//fsaverage5/surf/rh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load fsaverage5 inflated</span>
+<span class="n">fs5_inf_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/lh.inflated&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="n">fs5_inf_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer//fsaverage5/surf/rh.inflated&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load conte69</span>
+<span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span> <span class="o">=</span> <span class="n">load_conte69</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Helper function</span>
+<span class="n">plot_surface</span> <span class="o">&lt;-</span><span class="nf">function</span><span class="p">(</span><span class="n">brainMesh</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">view_angles</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;sd_lateral_lh&#39;</span><span class="p">,</span> <span class="s">&#39;sd_medial_lh&#39;</span><span class="p">,</span> <span class="s">&#39;sd_medial_rh&#39;</span><span class="p">,</span> <span class="s">&#39;sd_lateral_rh&#39;</span><span class="p">),</span> <span class="n">img_only</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nf">try</span><span class="p">(</span><span class="n">img</span> <span class="o">&lt;-</span> <span class="nf">vis.export.from.coloredmeshes</span><span class="p">(</span><span class="n">brainMesh</span><span class="p">,</span> <span class="n">colorbar_legend</span> <span class="o">=</span> <span class="n">legend</span><span class="p">,</span> <span class="n">grid_like</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="n">view_angles</span> <span class="o">=</span> <span class="n">view_angles</span><span class="p">,</span> <span class="n">img_only</span> <span class="o">=</span> <span class="n">img_only</span><span class="p">,</span> <span class="n">horizontal</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">))</span>
+  <span class="nf">while </span><span class="p">(</span><span class="nf">rgl.cur</span><span class="p">()</span> <span class="o">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span> <span class="nf">rgl.close</span><span class="p">()</span> <span class="p">};</span> <span class="nf">file.remove</span><span class="p">(</span><span class="nf">list.files</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="nf">getwd</span><span class="p">(),</span> <span class="n">pattern</span> <span class="o">=</span> <span class="s">&#39;fsbrain&#39;</span><span class="p">))</span>
+  <span class="nf">return</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="morphology">
+<h2><a class="toc-backref" href="#id4">Morphology</a><a class="headerlink" href="#morphology" title="Permalink to this headline">¶</a></h2>
+<p>Two surface based morphological features are plotted here: cortical thickness and curvature. Both measurements are generates in three main surfaces, native, fsaverage5 and conte69.
+The curvature and thickness in fsaverage5 and conte69 are smoothed with a 10mm gaussian kernel.</p>
+<div class="section" id="thickness-inflated-native-surface">
+<h3><a class="toc-backref" href="#id5">Thickness: Inflated native surface</a><a class="headerlink" href="#thickness-inflated-native-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load data</span>
+<span class="n">th_lh</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-lh_thickness.mgh&#39;</span>
+<span class="n">th_rh</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-rh_thickness.mgh&#39;</span>
+<span class="n">th_nat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_lh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_rh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">inf_lh</span><span class="p">,</span> <span class="n">inf_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">th_nat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">th.lh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-lh_thickness.mgh&quot;</span><span class="p">)</span>
+<span class="n">th.rh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-rh_thickness.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">th_nat</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">th.lh</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">th.rh</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;inflated&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">1.5</span><span class="p">,</span> <span class="m">4</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">inferno</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">th_nat</span><span class="p">,</span> <span class="s">&#39;Thickness [mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/th_inf_nat.png" />
+</div>
+</div>
+<div class="section" id="thickness-inflated-fsaverage5">
+<h3><a class="toc-backref" href="#id6">Thickness: Inflated fsaverage5</a><a class="headerlink" href="#thickness-inflated-fsaverage5" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load data</span>
+<span class="n">th_lh_fs5</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-lh_thickness.mgh&#39;</span>
+<span class="n">th_rh_fs5</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-rh_thickness.mgh&#39;</span>
+<span class="n">th_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_lh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_rh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_inf_lh</span><span class="p">,</span> <span class="n">fs5_inf_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">th_fs5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">th.lh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-lh_thickness.mgh&quot;</span><span class="p">)</span>
+<span class="n">th.rh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-rh_thickness.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">th_fs5</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;fsaverage5&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">th.lh.fs5</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">th.rh.fs5</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;inflated&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">1.5</span><span class="p">,</span> <span class="m">4</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">inferno</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">th_fs5</span><span class="p">,</span> <span class="s">&#39;Thickness [mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/th_inf_fs5.png" />
+</div>
+</div>
+<div class="section" id="thickness-conte69">
+<h3><a class="toc-backref" href="#id7">Thickness: conte69</a><a class="headerlink" href="#thickness-conte69" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">th_lh_c69</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-lh_thickness.mgh&#39;</span>
+<span class="n">th_rh_c69</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-rh_thickness.mgh&#39;</span>
+<span class="n">th_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_lh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_rh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">th_c69</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">th.lh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-lh_thickness.mgh&#39;</span><span class="p">)</span>
+<span class="n">th.rh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-rh_thickness.mgh&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">th_c69</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;conte69&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">th.lh.c69</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">th.rh.c69</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;conte69.gii&#39;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">1.5</span><span class="p">,</span> <span class="m">4</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">inferno</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">th_c69</span><span class="p">,</span> <span class="s">&#39;Thickness [mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/th_c69.png" />
+</div>
+</div>
+<div class="section" id="curvature-native-inflated-surface">
+<h3><a class="toc-backref" href="#id8">Curvature: Native inflated surface</a><a class="headerlink" href="#curvature-native-inflated-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">cv_lh</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-lh_curvature.mgh&#39;</span>
+<span class="n">cv_rh</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-rh_curvature.mgh&#39;</span>
+<span class="n">cv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_lh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_rh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">inf_lh</span><span class="p">,</span> <span class="n">inf_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlGn&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Colormap</span>
+<span class="n">RdYlGn</span> <span class="o">&lt;-</span> <span class="nf">colorRampPalette</span><span class="p">(</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">11</span><span class="p">,</span><span class="s">&quot;RdYlGn&quot;</span><span class="p">))</span>
+
+<span class="c1">####  Curvature: Native surface</span>
+<span class="c1"># Set the path to the surface</span>
+<span class="n">cv.lh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-lh_curvature.mgh&quot;</span><span class="p">)</span>
+<span class="n">cv.rh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-rh_curvature.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cv_nat</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">cv.lh</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">cv.rh</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;inflated&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">RdYlGn</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">cv_nat</span><span class="p">,</span> <span class="s">&#39;Curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/cv_inf_nat.png" />
+</div>
+</div>
+<div class="section" id="curvature-fsaverage5">
+<h3><a class="toc-backref" href="#id9">Curvature: fsaverage5</a><a class="headerlink" href="#curvature-fsaverage5" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">cv_lh_fs5</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-lh_curvature.mgh&#39;</span>
+<span class="n">cv_rh_fs5</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-rh_curvature.mgh&#39;</span>
+<span class="n">cv_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_lh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_rh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_inf_lh</span><span class="p">,</span> <span class="n">fs5_inf_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">cv_fs5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlGn&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">cv.lh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-lh_curvature.mgh&quot;</span><span class="p">)</span>
+<span class="n">cv.rh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-rh_curvature.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cv_fs5</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;fsaverage5&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">cv.lh.fs5</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">cv.rh.fs5</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;inflated&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">RdYlGn</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">cv_fs5</span><span class="p">,</span> <span class="s">&#39;Curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/cv_inf_fs5.png" />
+</div>
+</div>
+<div class="section" id="curvature-conte69">
+<h3><a class="toc-backref" href="#id10">Curvature: conte69</a><a class="headerlink" href="#curvature-conte69" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">cv_lh_c69</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-lh_curvature.mgh&#39;</span>
+<span class="n">cv_rh_c69</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-rh_curvature.mgh&#39;</span>
+<span class="n">cv_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_lh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_rh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">cv_c69</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlGn&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">cv.lh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-lh_curvature.mgh&#39;</span><span class="p">)</span>
+<span class="n">cv.rh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-rh_curvature.mgh&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cv_c69</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer&#39;</span><span class="p">,</span> <span class="s">&#39;conte69&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">cv.lh.c69</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">cv.rh.c69</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;conte69.gii&#39;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">RdYlGn</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">cv_c69</span><span class="p">,</span> <span class="s">&#39;Curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/cv_c69.png" />
+</div>
+</div>
+</div>
+<div class="section" id="morphology-smoothed">
+<h2><a class="toc-backref" href="#id11">Morphology Smoothed</a><a class="headerlink" href="#morphology-smoothed" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="thickness-fsaverage5-fwhm-10mm">
+<h3><a class="toc-backref" href="#id12">Thickness fsaverage5 fwhm=10mm</a><a class="headerlink" href="#thickness-fsaverage5-fwhm-10mm" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">th_lh_fs5_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-lh_thickness_10mm.mgh&#39;</span>
+<span class="n">th_rh_fs5_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-rh_thickness_10mm.mgh&#39;</span>
+<span class="n">th_fs5_10mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_lh_fs5_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_rh_fs5_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">th_fs5_10mm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">th.lh.fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-lh_thickness_10mm.mgh&quot;</span><span class="p">)</span>
+<span class="n">th.rh.fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-rh_thickness_10mm.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">th_fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;fsaverage5&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">th.lh.fs5.10mm</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">th.rh.fs5.10mm</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;pial&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">1.5</span><span class="p">,</span> <span class="m">4</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">inferno</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">th_fs5.10mm</span><span class="p">,</span> <span class="s">&#39;Thickness [mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/thS10_fs5.png" />
+</div>
+</div>
+<div class="section" id="thickness-conte69-fwhm-10mm">
+<h3><a class="toc-backref" href="#id13">Thickness conte69 fwhm=10mm</a><a class="headerlink" href="#thickness-conte69-fwhm-10mm" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">th_lh_c69_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-lh_thickness_10mm.mgh&#39;</span>
+<span class="n">th_rh_c69_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-rh_thickness_10mm.mgh&#39;</span>
+<span class="n">th_c69_10mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_lh_c69_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">th_rh_c69_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">th_c69_10mm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">th.lh.c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-lh_thickness_10mm.mgh&#39;</span><span class="p">)</span>
+<span class="n">th.rh.c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-rh_thickness_10mm.mgh&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">th_c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;conte69&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">th.lh.c69.10mm</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">th.rh.c69.10mm</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;conte69.gii&#39;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                                   <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">1.5</span><span class="p">,</span> <span class="m">4</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">inferno</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">th_c69.10mm</span><span class="p">,</span> <span class="s">&#39;Thickness [mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/thS10_c69.png" />
+</div>
+</div>
+<div class="section" id="curvature-fsaverage5-fwhm-10mm">
+<h3><a class="toc-backref" href="#id14">Curvature fsaverage5 fwhm=10mm</a><a class="headerlink" href="#curvature-fsaverage5-fwhm-10mm" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">cv_lh_fs5_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-lh_curvature_10mm.mgh&#39;</span>
+<span class="n">cv_rh_fs5_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-rh_curvature_10mm.mgh&#39;</span>
+<span class="n">cv_fs5_10mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_lh_fs5_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_rh_fs5_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">cv_fs5_10mm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlGn&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">cv.lh.fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-lh_curvature_10mm.mgh&quot;</span><span class="p">)</span>
+<span class="n">cv.rh.fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-rh_curvature_10mm.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cv_fs5.10mm</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;fsaverage5&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">cv.lh.fs5.10mm</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">cv.rh.fs5.10mm</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;pial&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">RdYlGn</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">cv_fs5.10mm</span><span class="p">,</span> <span class="s">&#39;Curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/cvS10_fs5.png" />
+</div>
+</div>
+<div class="section" id="curvature-conte69-fwhm-10mm">
+<h3><a class="toc-backref" href="#id15">Curvature conte69 fwhm=10mm</a><a class="headerlink" href="#curvature-conte69-fwhm-10mm" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the data</span>
+<span class="n">cv_lh_c69_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-lh_curvature_10mm.mgh&#39;</span>
+<span class="n">cv_rh_c69_10mm</span> <span class="o">=</span> <span class="n">dir_morph</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-rh_curvature_10mm.mgh&#39;</span>
+<span class="n">cv_c69_10mm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_lh_c69_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">cv_rh_c69_10mm</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">cv_c69_10mm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                         <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;RdYlGn&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">cv.lh.c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-lh_curvature_10mm.mgh&#39;</span><span class="p">)</span>
+<span class="n">cv.rh.c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_morph</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-rh_curvature_10mm.mgh&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cv_c69.10mm</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer&#39;</span><span class="p">,</span> <span class="s">&#39;conte69&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">cv.lh.c69.10mm</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">cv.rh.c69.10mm</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;conte69.gii&#39;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                              <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">RdYlGn</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">cv_c69.10mm</span><span class="p">,</span> <span class="s">&#39;Curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/cvS10_c69.png" />
+</div>
+</div>
+</div>
+<div class="section" id="conte69">
+<h2><a class="toc-backref" href="#id16">Conte69</a><a class="headerlink" href="#conte69" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="conte69-pial-surface">
+<h3><a class="toc-backref" href="#id17">conte69: Pial surface</a><a class="headerlink" href="#conte69-pial-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a vector of zeros</span>
+<span class="n">Val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">c69_pial_lh_c69</span><span class="o">.</span><span class="n">n_points</span> <span class="o">+</span> <span class="n">c69_pial_rh_c69</span><span class="o">.</span><span class="n">n_points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># Surface color</span>
+<span class="n">grey</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">256</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+
+<span class="c1"># Native conte69 pial surface</span>
+<span class="n">c69_pial_lh_c69</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-lh_pial.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+<span class="n">c69_pial_rh_c69</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-rh_pial.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_pial_lh_c69</span><span class="p">,</span> <span class="n">c69_pial_rh_c69</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">Val</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">grey</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Colormap</span>
+<span class="n">grays</span> <span class="o">&lt;-</span> <span class="nf">colorRampPalette</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;gray65&#39;</span><span class="p">,</span> <span class="s">&#39;gray65&#39;</span><span class="p">,</span> <span class="s">&#39;gray65&#39;</span><span class="p">))</span>
+
+<span class="c1"># Set the path to the surface</span>
+<span class="n">c69.pial.lh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-lh_pial.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">c69.pial.rh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-rh_pial.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cml</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.pial.lh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.pial.lh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">cmr</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.pial.rh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.pial.rh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="nf">brainviews</span><span class="p">(</span><span class="n">views</span> <span class="o">=</span> <span class="s">&#39;t4&#39;</span><span class="p">,</span> <span class="n">coloredmeshes</span><span class="o">=</span><span class="nf">list</span><span class="p">(</span><span class="s">&#39;lh&#39;</span><span class="o">=</span><span class="n">cml</span><span class="p">,</span> <span class="s">&#39;rh&#39;</span><span class="o">=</span><span class="n">cmr</span><span class="p">),</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span>
+           <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span> <span class="m">1</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">F</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/c69_pial.png" />
+</div>
+</div>
+<div class="section" id="conte69-middle-surface">
+<h3><a class="toc-backref" href="#id18">conte69: Middle surface</a><a class="headerlink" href="#conte69-middle-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Native conte69 midsurface</span>
+<span class="n">c69_mid_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-lh_midthickness.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+<span class="n">c69_mid_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-rh_midthickness.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_mid_lh</span><span class="p">,</span> <span class="n">c69_mid_lh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">Val</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">grey</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">c69.mid.lh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-lh_midthickness.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">c69.mid.rh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-rh_midthickness.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cml</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.mid.lh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.mid.lh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">cmr</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.mid.rh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.mid.rh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="nf">brainviews</span><span class="p">(</span><span class="n">views</span> <span class="o">=</span> <span class="s">&#39;t4&#39;</span><span class="p">,</span> <span class="n">coloredmeshes</span><span class="o">=</span><span class="nf">list</span><span class="p">(</span><span class="s">&#39;lh&#39;</span><span class="o">=</span><span class="n">cml</span><span class="p">,</span> <span class="s">&#39;rh&#39;</span><span class="o">=</span><span class="n">cmr</span><span class="p">),</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span>
+           <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span> <span class="m">1</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">F</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/c69_mid.png" />
+</div>
+</div>
+<div class="section" id="conte69-white-matter-surface">
+<h3><a class="toc-backref" href="#id19">conte69: White matter surface</a><a class="headerlink" href="#conte69-white-matter-surface" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Native conte69 white matter</span>
+<span class="n">c69_wm_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-lh_white.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+<span class="n">c69_wm_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="n">dir_conte</span><span class="o">+</span><span class="n">subjectID</span><span class="o">+</span><span class="s1">&#39;_space-conte69-32k_desc-rh_white.surf.gii&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;gii&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_wm_lh</span><span class="p">,</span> <span class="n">c69_wm_lh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">Val</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">grey</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the surface</span>
+<span class="n">c69.wm.lh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-lh_white.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">c69.wm.rh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_space-conte69-32k_desc-rh_white.surf.gii&#39;</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">cml</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.wm.lh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.wm.lh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">cmr</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">c69.wm.rh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="nf">nrow</span><span class="p">(</span><span class="n">c69.wm.rh</span><span class="o">$</span><span class="n">vertices</span><span class="p">)),</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">)</span> <span class="p">)</span>
+<span class="nf">brainviews</span><span class="p">(</span><span class="n">views</span> <span class="o">=</span> <span class="s">&#39;t4&#39;</span><span class="p">,</span> <span class="n">coloredmeshes</span><span class="o">=</span><span class="nf">list</span><span class="p">(</span><span class="s">&#39;lh&#39;</span><span class="o">=</span><span class="n">cml</span><span class="p">,</span> <span class="s">&#39;rh&#39;</span><span class="o">=</span><span class="n">cmr</span><span class="p">),</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">,</span>
+           <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="m">-1</span><span class="p">,</span> <span class="m">1</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">F</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/c69_wm.png" />
+</div>
+</div>
+</div>
+<div class="section" id="native-sphere">
+<h2><a class="toc-backref" href="#id20">Native sphere</a><a class="headerlink" href="#native-sphere" title="Permalink to this headline">¶</a></h2>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">sph_lh</span><span class="p">,</span> <span class="n">sph_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">CV</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Colormap</span>
+<span class="n">grays</span> <span class="o">&lt;-</span> <span class="nf">colorRampPalette</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;white&#39;</span><span class="p">,</span> <span class="s">&#39;gray65&#39;</span><span class="p">,</span><span class="s">&#39;black&#39;</span><span class="p">))</span>
+
+<span class="c1"># Set the path to the surface</span>
+<span class="n">sph.lh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_lh_sphereReg.surf.gii&#39;</span><span class="p">))</span>
+<span class="n">sph.rh</span> <span class="o">&lt;-</span> <span class="nf">read.fs.surface</span><span class="p">(</span><span class="n">filepath</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_conte</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span><span class="s">&#39;_rh_sphereReg.surf.gii&#39;</span><span class="p">))</span>
+
+<span class="c1"># Set the color limits</span>
+<span class="n">lf</span><span class="o">=</span> <span class="nf">limit_fun</span><span class="p">(</span><span class="m">-0.2</span><span class="p">,</span> <span class="m">0.2</span><span class="p">)</span>
+
+<span class="c1"># Create the coloredmeshes</span>
+<span class="n">cml</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">sph.lh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">lf</span><span class="p">(</span><span class="nf">read.fs.mgh</span><span class="p">(</span><span class="n">cv.lh</span><span class="p">)),</span> <span class="n">hemi</span> <span class="o">=</span> <span class="s">&#39;lh&#39;</span><span class="p">,</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">))</span>
+<span class="n">cmr</span> <span class="o">=</span> <span class="nf">coloredmesh.from.preloaded.data</span><span class="p">(</span><span class="n">sph.rh</span><span class="p">,</span> <span class="n">morph_data</span> <span class="o">=</span> <span class="nf">lf</span><span class="p">(</span><span class="nf">read.fs.mgh</span><span class="p">(</span><span class="n">cv.rh</span><span class="p">)),</span> <span class="n">hemi</span> <span class="o">=</span> <span class="s">&#39;rh&#39;</span><span class="p">,</span> <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">grays</span><span class="p">))</span>
+<span class="n">sph.nat</span> <span class="o">&lt;-</span> <span class="nf">brainviews</span><span class="p">(</span><span class="n">views</span> <span class="o">=</span> <span class="s">&#39;t4&#39;</span><span class="p">,</span> <span class="n">coloredmeshes</span><span class="o">=</span><span class="nf">list</span><span class="p">(</span><span class="s">&#39;lh&#39;</span><span class="o">=</span><span class="n">cml</span><span class="p">,</span> <span class="s">&#39;rh&#39;</span><span class="o">=</span><span class="n">cmr</span><span class="p">),</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">))</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">sph.nat</span><span class="p">,</span> <span class="s">&#39;Native sphere curvature [1/mm]&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/nat_sph.png" />
+</div>
+</div>
+<div class="section" id="microstructural-profile">
+<h2><a class="toc-backref" href="#id21">Microstructural profile</a><a class="headerlink" href="#microstructural-profile" title="Permalink to this headline">¶</a></h2>
+<p>The intracortical intensities are generated across 14 different surface layer from the white mater surface to the pial surface.
+Furthermore they are available in the native surface, in fsaverage5 and conte69. In this example we will only plot the 10th surface.</p>
+<div class="section" id="mpc-native-surface-10">
+<h3><a class="toc-backref" href="#id22">MPC native surface-10</a><a class="headerlink" href="#mpc-native-surface-10" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a mask</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">th_nat</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Load the MPC</span>
+<span class="n">mpc_lh</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-lh_MPC-10.mgh&#39;</span>
+<span class="n">mpc_rh</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_desc-rh_MPC-10.mgh&#39;</span>
+<span class="n">mpc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_lh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_rh</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">*</span><span class="n">mask</span>
+
+<span class="c1"># Set color range based on MPC distribution</span>
+<span class="n">Qt</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">mpc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mpc</span><span class="p">)],</span><span class="mf">0.05</span><span class="p">),</span><span class="mi">0</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">mpc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mpc</span><span class="p">)],</span><span class="mf">0.95</span><span class="p">),</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="c1"># Plot MPC on surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">pial_lh</span><span class="p">,</span> <span class="n">pial_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">mpc</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+            <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="n">Qt</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span><span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a mask</span>
+<span class="n">mask.lh</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.lh</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+<span class="n">mask.rh</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.rh</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+
+<span class="c1"># Set the path to the surface</span>
+<span class="n">mpc.lh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-lh_MPC-10.mgh&quot;</span><span class="p">)</span>
+<span class="n">mpc.rh</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsnative_desc-rh_MPC-10.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load the data</span>
+<span class="n">mpc</span> <span class="o">&lt;-</span> <span class="nf">list</span><span class="p">(</span><span class="n">lh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.lh</span><span class="p">)</span><span class="o">*</span><span class="n">mask.lh</span><span class="p">,</span>  <span class="n">rh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.rh</span><span class="p">)</span><span class="o">*</span><span class="n">mask.rh</span> <span class="p">)</span>
+
+<span class="c1"># Set color range based on MPC distribution</span>
+<span class="n">Qt</span> <span class="o">&lt;-</span> <span class="nf">round</span><span class="p">(</span><span class="nf">quantile</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="n">mpc</span><span class="o">$</span><span class="n">lh[mpc</span><span class="o">$</span><span class="n">lh</span><span class="o">!=</span><span class="m">0</span><span class="n">]</span><span class="p">,</span> <span class="n">mpc</span><span class="o">$</span><span class="n">rh[mpc</span><span class="o">$</span><span class="n">rh</span><span class="o">!=</span><span class="m">0</span><span class="n">]</span><span class="p">),</span> <span class="n">probs</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="m">0.05</span><span class="p">,</span><span class="m">0.95</span><span class="p">)),</span><span class="m">1</span><span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">mpc.nat</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">mpc</span><span class="o">$</span><span class="n">lh</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">mpc</span><span class="o">$</span><span class="n">rh</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;pial&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                               <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="n">Qt[1]</span><span class="p">,</span><span class="n">Qt[2]</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">viridis</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">mpc.nat</span><span class="p">,</span> <span class="s">&#39;MPC-10&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/mpc_pial.png" />
+</div>
+</div>
+<div class="section" id="mpc-fsaverage5-surface-10">
+<h3><a class="toc-backref" href="#id23">MPC fsaverage5 surface-10</a><a class="headerlink" href="#mpc-fsaverage5-surface-10" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a mask</span>
+<span class="n">mask_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">th_fs5</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Load the MPC</span>
+<span class="n">mpc_lh_fs5</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-lh_MPC-10.mgh&#39;</span>
+<span class="n">mpc_rh_fs5</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsaverage5_desc-rh_MPC-10.mgh&#39;</span>
+<span class="n">mpc_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_lh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_rh_fs5</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">*</span><span class="n">mask_fs5</span>
+
+<span class="c1"># Plot MPC on surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">mpc_fs5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+            <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="n">Qt</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span><span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the surface</span>
+<span class="c1"># Create a mask</span>
+<span class="n">mask.lh.fs5</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.lh.fs5</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+<span class="n">mask.rh.fs5</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.rh.fs5</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+
+<span class="c1"># Set the path to the surface</span>
+<span class="n">mpc.lh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-lh_MPC-10.mgh&quot;</span><span class="p">)</span>
+<span class="n">mpc.rh.fs5</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&quot;_space-fsaverage5_desc-rh_MPC-10.mgh&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load the data</span>
+<span class="n">mpc.fs5</span> <span class="o">&lt;-</span> <span class="nf">list</span><span class="p">(</span><span class="n">lh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.lh.fs5</span><span class="p">)</span><span class="o">*</span><span class="n">mask.lh.fs5</span><span class="p">,</span>  <span class="n">rh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.rh.fs5</span><span class="p">)</span><span class="o">*</span><span class="n">mask.rh.fs5</span> <span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">mpc.fs5</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;fsaverage5&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">mpc.fs5</span><span class="o">$</span><span class="n">lh</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">mpc.fs5</span><span class="o">$</span><span class="n">rh</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&quot;pial&quot;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                               <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="n">Qt[1]</span><span class="p">,</span><span class="n">Qt[2]</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">viridis</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">mpc.fs5</span><span class="p">,</span> <span class="s">&#39;MPC-10&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/mpc_fs5.png" />
+</div>
+</div>
+<div class="section" id="mpc-conte69-surface-10">
+<h3><a class="toc-backref" href="#id24">MPC conte69 surface-10</a><a class="headerlink" href="#mpc-conte69-surface-10" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a mask</span>
+<span class="n">mask_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">th_c69</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Load the MPC</span>
+<span class="n">mpc_lh_c69</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-lh_MPC-10.mgh&#39;</span>
+<span class="n">mpc_rh_c69</span> <span class="o">=</span> <span class="n">dir_mpc</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-conte69-32k_desc-rh_MPC-10.mgh&#39;</span>
+<span class="n">mpc_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_lh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()),</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">mpc_rh_c69</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">())),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">*</span><span class="n">mask_c69</span>
+
+<span class="c1"># Plot MPC on surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">mpc_c69</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+            <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">color_range</span><span class="o">=</span><span class="n">Qt</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span><span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a mask</span>
+<span class="n">mask.lh.c69</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.lh.c69</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+<span class="n">mask.rh.c69</span> <span class="o">&lt;-</span> <span class="nf">ifelse</span><span class="p">(</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">th.rh.c69</span><span class="p">)</span><span class="o">&lt;</span><span class="m">0.5</span><span class="p">,</span><span class="m">0</span><span class="p">,</span><span class="m">1</span><span class="p">)</span>
+
+<span class="c1"># Set the path to the surface</span>
+<span class="n">mpc.lh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-lh_MPC-10.mgh&#39;</span><span class="p">)</span>
+<span class="n">mpc.rh.c69</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">dir_mpc</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-conte69-32k_desc-rh_MPC-10.mgh&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the data</span>
+<span class="n">mpc.c69</span> <span class="o">&lt;-</span> <span class="nf">list</span><span class="p">(</span><span class="n">lh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.lh.c69</span><span class="p">)</span><span class="o">*</span><span class="n">mask.lh.c69</span><span class="p">,</span>  <span class="n">rh</span><span class="o">=</span><span class="nf">read.fs.morph</span><span class="p">(</span><span class="n">mpc.rh.c69</span><span class="p">)</span><span class="o">*</span><span class="n">mask.rh.c69</span> <span class="p">)</span>
+
+<span class="c1"># Plot the surface</span>
+<span class="n">mpc.c69</span> <span class="o">&lt;-</span> <span class="nf">vis.data.on.subject</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="s">&#39;conte69&#39;</span><span class="p">,</span> <span class="n">morph_data_lh</span><span class="o">=</span><span class="n">mpc.c69</span><span class="o">$</span><span class="n">lh</span><span class="p">,</span> <span class="n">morph_data_rh</span><span class="o">=</span><span class="n">mpc.c69</span><span class="o">$</span><span class="n">rh</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;conte69.gii&#39;</span><span class="p">,</span> <span class="n">draw_colorbar</span> <span class="o">=</span> <span class="kc">TRUE</span><span class="p">,</span>
+                               <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;trans_fun&#39;</span><span class="o">=</span><span class="nf">limit_fun</span><span class="p">(</span><span class="n">Qt[1]</span><span class="p">,</span><span class="n">Qt[2]</span><span class="p">),</span> <span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">),</span>  <span class="n">makecmap_options</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;colFn&#39;</span><span class="o">=</span><span class="n">viridis</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">mpc.c69</span><span class="p">,</span> <span class="s">&#39;MPC-10&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/mpc_c691.png" />
+</div>
+</div>
+</div>
+<div class="section" id="atlas-labels-on-surface">
+<h2><a class="toc-backref" href="#id25">Atlas labels on surface</a><a class="headerlink" href="#atlas-labels-on-surface" title="Permalink to this headline">¶</a></h2>
+<p>All the native surface labels geberate by <em>micapipe</em> are stored inside the subject’s freesurfer directory.</p>
+<div class="section" id="schaefer-400-labels">
+<h3><a class="toc-backref" href="#id26">Schaefer-400 labels</a><a class="headerlink" href="#schaefer-400-labels" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load annotation file</span>
+<span class="n">annot</span> <span class="o">=</span> <span class="s1">&#39;schaefer-400&#39;</span>
+<span class="n">annot_lh</span><span class="o">=</span> <span class="n">dir_FS</span> <span class="o">+</span> <span class="s1">&#39;/label/lh.&#39;</span> <span class="o">+</span> <span class="n">annot</span> <span class="o">+</span> <span class="s1">&#39;_mics.annot&#39;</span>
+<span class="n">annot_rh</span><span class="o">=</span> <span class="n">dir_FS</span> <span class="o">+</span> <span class="s1">&#39;/label/rh.&#39;</span> <span class="o">+</span> <span class="n">annot</span> <span class="o">+</span> <span class="s1">&#39;_mics.annot&#39;</span>
+<span class="n">label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">annot_lh</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">annot_rh</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># plot labels on surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">pial_lh</span><span class="p">,</span> <span class="n">pial_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">label</span><span class="o">*</span><span class="n">mask</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;nipy_spectral&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the surface</span>
+<span class="n">schaefer.400</span> <span class="o">&lt;-</span> <span class="nf">vis.subject.annot</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;schaefer-400_mics&#39;</span><span class="p">,</span> <span class="s">&#39;both&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;pial&#39;</span><span class="p">,</span>
+                           <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">schaefer.400</span><span class="p">,</span> <span class="s">&#39;Schaefer-400&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/atlas_schaefer-400.png" />
+</div>
+</div>
+<div class="section" id="extra-economo-labels">
+<h3><a class="toc-backref" href="#id27">Extra: Economo labels</a><a class="headerlink" href="#extra-economo-labels" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load annotation file</span>
+<span class="n">annot</span> <span class="o">=</span> <span class="s1">&#39;economo&#39;</span>
+<span class="n">annot_lh</span><span class="o">=</span> <span class="n">dir_FS</span> <span class="o">+</span> <span class="s1">&#39;/label/lh.&#39;</span> <span class="o">+</span> <span class="n">annot</span> <span class="o">+</span> <span class="s1">&#39;_mics.annot&#39;</span>
+<span class="n">annot_rh</span><span class="o">=</span> <span class="n">dir_FS</span> <span class="o">+</span> <span class="s1">&#39;/label/rh.&#39;</span> <span class="o">+</span> <span class="n">annot</span> <span class="o">+</span> <span class="s1">&#39;_mics.annot&#39;</span>
+<span class="n">label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">annot_lh</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">annot_rh</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># plot labels on surface</span>
+<span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">pial_lh</span><span class="p">,</span> <span class="n">pial_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">label</span><span class="o">*</span><span class="n">mask</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">900</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">share</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span>
+                 <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;nipy_spectral&#39;</span><span class="p">,</span> <span class="n">transparent_bg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the surface</span>
+<span class="n">economo</span> <span class="o">&lt;-</span> <span class="nf">vis.subject.annot</span><span class="p">(</span><span class="s">&#39;freesurfer/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;economo_mics&#39;</span><span class="p">,</span> <span class="s">&#39;both&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;pial&#39;</span><span class="p">,</span>
+                           <span class="n">views</span><span class="o">=</span><span class="kc">NULL</span><span class="p">,</span> <span class="n">rglactions</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="s">&#39;no_vis&#39;</span><span class="o">=</span><span class="bp">T</span><span class="p">))</span>
+<span class="nf">plot_surface</span><span class="p">(</span><span class="n">economo</span><span class="p">,</span> <span class="s">&#39;economo&#39;</span><span class="p">,</span> <span class="n">img_only</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<img alt="alternate text" src="../../_images/atlas-economo.png" />
+</div>
+</div>
+</div>
+<div class="section" id="download-code-examples-surfaces">
+<h2><a class="toc-backref" href="#id28">Download code examples: Surfaces</a><a class="headerlink" href="#download-code-examples-surfaces" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference download internal" download="" href="../../_downloads/3ea93a2761914230d50f1a0695e1c70e/tutorial_surface_visualization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_surface_visualization.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/e1109449b7ed54ef80d5b3867eb1a7e1/tutorial_surface_visualization.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_surface_visualization.py'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/6b4c22b3a6f152b912e9ea212d5b9f41/tutorial_surface_visualization.R"><code class="xref download docutils literal notranslate"><span class="pre">R</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_surface_visualization.R'</span></code></a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../04.gradients/index.html" class="btn btn-neutral float-right" title="Building gradients" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../04.matrices/index.html" class="btn btn-neutral float-left" title="Main output matrices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>

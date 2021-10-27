@@ -1,0 +1,795 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Output matrices &mdash; micapipe  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
+        <script src="../../_static/sphinx_tabs/tabs.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Surface visualization" href="../04.surfaces/index.html" />
+    <link rel="prev" title="Processing databases with micapipe" href="../04.databases/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #261F4A" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Processing modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Additional tools</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Main output matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#organization-of-the-outputs">Organization of the outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structural-connectome">Structural connectome</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#full-structural-connectome">Full structural connectome</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#full-structural-connectome-edge-lengths">Full structural connectome edge lengths</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#resting-state-functional-connectome">Resting state Functional connectome</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#resting-state-time-series">Resting state time series</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mpc-connectome">MPC connectome</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#intensity-profiles">Intensity profiles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#geodesic-distance-connectome">Geodesic distance connectome</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#download-code-examples-matrices">Download code examples: matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
+</ul>
+<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">micapipe</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Output matrices</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/pages/04.matrices/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="main-output-matrices">
+<span id="matrices"></span><h1>Main output matrices<a class="headerlink" href="#main-output-matrices" title="Permalink to this headline">¶</a></h1>
+<p>This section describes where are the main connectomes generated by the pipeline, and how you can visualize them using python or R.
+All the outputs are BIDS conform and stored under their correspondent directory (e.g. <code class="docutils literal notranslate"><span class="pre">anat</span></code>, <code class="docutils literal notranslate"><span class="pre">func</span></code> <code class="docutils literal notranslate"><span class="pre">dwi</span></code>).
+This example will use the subject <code class="docutils literal notranslate"><span class="pre">HC001</span></code>, session <code class="docutils literal notranslate"><span class="pre">01</span></code> from the MICs dataset, and all paths will be relative to the subject directory or <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-HC001_ses01/</span></code></p>
+<div class="section" id="organization-of-the-outputs">
+<h2>Organization of the outputs<a class="headerlink" href="#organization-of-the-outputs" title="Permalink to this headline">¶</a></h2>
+<p>If you are inside the <code class="docutils literal notranslate"><span class="pre">out</span></code> directory, where the pipeline’s outputs are stored, two folders can be found inside, one for each pipeline used.
+For this dataset, the main structure should look like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>out
+├── freesurfer
+└── micapipe
+</pre></div>
+</div>
+<p>Inside the directory called <em>micapipe</em> a new directory will be created for each subject processed, defined with the string <em>sub-</em> and the subject’s identification. Three more files can be found:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pipeline-description.json</span></code>: This file contains the last version of micapipe that was used and, the inherited information about the dataset used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micapipe_processed_sub.csv</span></code>: This is a csv table stores information about the modules processed by subject, date of last run and the status (complete or incomplete).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micapipe_progress.html</span></code>: This file is generated with the option <code class="docutils literal notranslate"><span class="pre">-QC</span></code>, it is a html that eases the visualization of the processed subjects.</p></li>
+</ul>
+</div></blockquote>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">The subject list is truncated to the first three subjects</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>micapipe/
+├── micapipe_processed_sub.csv
+├── pipeline-description.json
+├── micapipe_progress.html
+├── sub-HC001
+├── sub-HC002
+├── sub-HC003
+...
+</pre></div>
+</div>
+</div>
+<p>Inside each subject’s directory you’ll find the session folders, unless you have a single session and you don’t specify the <code class="docutils literal notranslate"><span class="pre">ses-</span></code> in your dataset.
+Six main directories are inside each subject folder: <em>anat</em>, <em>dwi</em>, <em>func</em>, <em>logs</em>, <em>QC</em> and <em>xfm</em>. The connectomes are stored in four main directories:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Geodesic distance connectome: <code class="docutils literal notranslate"><span class="pre">anat/surfaces/geo_dist</span></code></p></li>
+<li><p>Microstructural profile connectome: <code class="docutils literal notranslate"><span class="pre">anat/surfaces/micro_profiles</span></code></p></li>
+<li><p>Structural connectome (DWI): <code class="docutils literal notranslate"><span class="pre">dwi/connectomes</span></code></p></li>
+<li><p>Functional connectome (rsfMRI): <code class="docutils literal notranslate"><span class="pre">func/surfaces</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The structure of the subject <code class="docutils literal notranslate"><span class="pre">HC001</span></code> directories is shown below:</p>
+<pre class="literal-block">sub-HC001/
+└── ses-01
+    ├── <strong>anat</strong>
+    │   ├── first                # fsl first outputs
+    │   ├── surfaces
+    │   │   ├── conte69          # conte69 surfaces
+    │   │   ├── <strong>geo_dist         # Geodesic distance connectomes</strong>
+    │   │   ├── <strong>micro_profiles   # MPC connectomes and surfaces</strong>
+    │   │   └── morphology       # Thickness and curvature surfaces
+    │   └── volumetric           # Parceellations in nativepro space
+    ├── <strong>dwi</strong>
+    │   ├── <strong>connectomes          # DWI connectomes</strong>
+    │   └── eddy                 # fsl eddy outputs
+    ├── <strong>func</strong>
+    │   ├── <strong>surfaces             # rsfMRI surfaces and connectomes</strong>
+    │   └── volumetric           # rsfMRI volumes
+    ├── logs                     # log files
+    ├── QC
+    │   ├── eddy_QC              # fsl eddy_quad outputs
+    │   └── png                  # PNG images for QC
+    └── xfm                      # Trasnformation matrices and warpfields</pre>
+<p>In the following examples we’ll focus on how to load and visualize the connectome matrices of a single subject.
+Even though we generate up to 18 connectomes, we’ll only use the atlas <code class="docutils literal notranslate"><span class="pre">schaefer-400</span></code> for visualization and practicality purposes.
+All the paths are relative to the subject’s directory, which in our case is <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-HC001/ses-01</span></code>.</p>
+<p>This example uses the packages <code class="docutils literal notranslate"><span class="pre">nilearn</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> and <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> for <strong>python</strong>, and <code class="docutils literal notranslate"><span class="pre">RColorBrewer</span></code> and <code class="docutils literal notranslate"><span class="pre">viridis</span></code> for <strong>R</strong>.
+The first step in both languages is to set the environment:</p>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&quot;RColorBrewer&quot;</span><span class="p">)</span>
+<span class="nf">require</span><span class="p">(</span><span class="s">&quot;viridis&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set the working directory to your subjec&#39;s directory</span>
+<span class="nf">setwd</span><span class="p">(</span><span class="s">&quot;out/micapipe/sub-HC001/ses-01&quot;</span><span class="p">)</span>
+
+<span class="c1"># This variable will be different for each subject</span>
+<span class="n">subjectID</span> <span class="o">&lt;-</span> <span class="s">&#39;sub-HC001_ses-01&#39;</span>
+
+<span class="c1"># Here we define the atlas</span>
+<span class="n">atlas</span> <span class="o">&lt;-</span> <span class="s">&#39;schaefer-400&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="structural-connectome">
+<h2>Structural connectome<a class="headerlink" href="#structural-connectome" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Structural connectomes are stored in the <code class="docutils literal notranslate"><span class="pre">dwi/connectomes</span></code> directory. Three main connectomes are generated per atlas, and are identified with a specific string:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cor-connectome</span></code>: Contains only cortical nodes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sub-connectome</span></code>: This connectome contains the cortical nodes and subcortical structures.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">full-connectome</span></code>: Full connectome has cerebellar, subcortical and cortical nodes.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Additionally, the edge lengths of each of the previous connectomes are stored in different files with the string <code class="docutils literal notranslate"><span class="pre">edgeLengths</span></code>.</p>
+<p>A total of 6 files per atlas are generated by the pipeline, the main organization is shown below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dwi/connectomes/
+├── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_cor-connectome.txt
+├── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_cor-edgeLengths.txt
+├── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_full-connectome.txt
+├── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt
+├── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_sub-connectome.txt
+└── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_sub-edgeLengths.txt
+</pre></div>
+</div>
+<div class="section" id="full-structural-connectome">
+<h3>Full structural connectome<a class="headerlink" href="#full-structural-connectome" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<span class="n">cnt_sc_cor</span> <span class="o">=</span> <span class="s1">&#39;dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_full-connectome.txt&#39;</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_sc_cor</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_scSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mtx_scSym</span><span class="p">),</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<span class="n">cnt_sc_cor</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;dwi/connectomes/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-dwi_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-iFOD2-40M-SIFT2_full-connectome.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_sc</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_sc_cor</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">&lt;-</span> <span class="kc">FALSE</span><span class="p">,))</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_sc</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="n">]</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/SC_py.png"><img alt="alternate text" src="../../_images/SC_py.png" style="width: 357.0px; height: 297.5px;" /></a>
+</div>
+</div>
+<div class="section" id="full-structural-connectome-edge-lengths">
+<h3>Full structural connectome edge lengths<a class="headerlink" href="#full-structural-connectome-edge-lengths" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<span class="n">cnt_sc_EL</span> <span class="o">=</span> <span class="n">cnt_sc_cor</span><span class="o">=</span><span class="s1">&#39;dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt&#39;</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_scEL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_sc_EL</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_scELSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_scELSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<span class="n">cnt_sc_EL</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;dwi/connectomes/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-dwi_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_scEL</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_sc_EL</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,))</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_scEL</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="n">]</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/SC_EL_py.png"><img alt="alternate text" src="../../_images/SC_EL_py.png" style="width: 360.0px; height: 297.5px;" /></a>
+</div>
+</div>
+</div>
+<div class="section" id="resting-state-functional-connectome">
+<h2>Resting state Functional connectome<a class="headerlink" href="#resting-state-functional-connectome" title="Permalink to this headline">¶</a></h2>
+<p>For each atlas, two files are generated: the functional connectome (<code class="docutils literal notranslate"><span class="pre">desc-FC.txt</span></code>) and the time-series of that atlas (<code class="docutils literal notranslate"><span class="pre">desc-timeseries.txt</span></code>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func/surfaces/
+├── sub-HC005_ses-01_rsfmri_space-fsnative_atlas-schaefer-400_desc-FC.txt
+└── sub-HC005_ses-01_rsfmri_space-fsnative_atlas-schaefer-400_desc-timeseries.txt
+</pre></div>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
+<span class="n">cnt_fs</span> <span class="o">=</span> <span class="s1">&#39;func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-FC.txt&#39;</span>
+
+<span class="c1"># Load the connectome</span>
+<span class="n">mtx_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_fs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_fcSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_fs</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_fcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
+<span class="n">cnt_fs</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;func/surfaces/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_rsfmri_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-FC.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_fs</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_fs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_fs</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="n">]</span>
+
+<span class="c1"># Plot the matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;FC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Reds&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/FC_py.png"><img alt="alternate text" src="../../_images/FC_py.png" style="width: 358.5px; height: 297.5px;" /></a>
+</div>
+<div class="section" id="resting-state-time-series">
+<h3>Resting state time series<a class="headerlink" href="#resting-state-time-series" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<span class="n">cnt_time</span> <span class="o">=</span> <span class="s1">&#39;func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-timeseries.txt&#39;</span>
+
+<span class="c1"># Load the time series</span>
+<span class="n">mtx_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_time</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot as a matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_time</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<span class="n">cnt_time</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;func/surfaces/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_rsfmri_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-timeseries.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the time series</span>
+<span class="n">mtx_time</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_time</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
+
+<span class="c1"># Plot as a matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="n">mtx_time</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;Time series &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">plasma</span><span class="p">(</span><span class="m">64</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/timeseries_py.png"><img alt="alternate text" src="../../_images/timeseries_py.png" style="width: 390.0px; height: 186.0px;" /></a>
+</div>
+</div>
+</div>
+<div class="section" id="mpc-connectome">
+<h2>MPC connectome<a class="headerlink" href="#mpc-connectome" title="Permalink to this headline">¶</a></h2>
+<p>For each atlas, two files are generated: the microstructural profile covariance connectome (<code class="docutils literal notranslate"><span class="pre">desc-MPC.txt</span></code>) and the intensity profile of that atlas (<code class="docutils literal notranslate"><span class="pre">desc-intensity_profiles.txt</span></code>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>anat/surfaces/micro_profiles/
+├── sub-HC005_ses-01_space-fsnative_atlas-schaefer-400_desc-intensity_profiles.txt
+└── sub-HC005_ses-01_space-fsnative_atlas-schaefer-400_desc-MPC.txt
+</pre></div>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
+<span class="n">cnt_mpc</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-MPC.txt&#39;</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_mpc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_mpc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_mpcSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_mpc</span><span class="o">.</span><span class="n">T</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_mpcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
+<span class="n">cnt_mpc</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/micro_profiles/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-MPC.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_mpc</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_mpc</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
+
+<span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="n">mtx_mpc</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="n">]</span>
+
+<span class="c1"># Plot the matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;MPC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Greens&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/MPC_py.png"><img alt="alternate text" src="../../_images/MPC_py.png" style="width: 358.0px; height: 296.0px;" /></a>
+</div>
+<div class="section" id="intensity-profiles">
+<h3>Intensity profiles<a class="headerlink" href="#intensity-profiles" title="Permalink to this headline">¶</a></h3>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<span class="n">cnt_int</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-intensity_profiles.txt&#39;</span>
+
+<span class="c1"># Load the time series</span>
+<span class="n">mtx_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_int</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot as a matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<span class="n">cnt_int</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/micro_profiles/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-intensity_profiles.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the time series</span>
+<span class="n">mtx_int</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_int</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
+
+<span class="c1"># Plot as a matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;Intensity profiles&quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Greens&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/intensity_py.png"><img alt="alternate text" src="../../_images/intensity_py.png" style="width: 726.0px; height: 33.5px;" /></a>
+</div>
+</div>
+</div>
+<div class="section" id="geodesic-distance-connectome">
+<h2>Geodesic distance connectome<a class="headerlink" href="#geodesic-distance-connectome" title="Permalink to this headline">¶</a></h2>
+<p>Only one file per atlas is generated by this module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>anat/surfaces/geo_dist/
+└── sub-HC005_ses-01_space-fsnative_atlas-schaefer-400_GD.txt
+</pre></div>
+</div>
+<div class="sphinx-tabs docutils container">
+<div class="ui top attached tabular menu sphinx-menu docutils container">
+<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
+<div class="docutils container">
+<p>Python</p>
+</div>
+</div>
+<div class="item sphinx-data-tab-Ug== docutils container">
+<div class="docutils container">
+<p>R</p>
+</div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
+<span class="n">cnt_gd</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/geo_dist/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_GD.txt&#39;</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_gd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot the log matrix</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
+<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
+<span class="n">cnt_gd</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/geo_dist/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_GD.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the cortical connectome</span>
+<span class="n">mtx_gd</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_gd</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
+
+<span class="c1"># Plot the matrix</span>
+<span class="nf">image</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;GD &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Blues&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="../../_images/GD_py.png"><img alt="alternate text" src="../../_images/GD_py.png" style="width: 360.0px; height: 296.5px;" /></a>
+</div>
+</div>
+<div class="section" id="download-code-examples-matrices">
+<h2>Download code examples: matrices<a class="headerlink" href="#download-code-examples-matrices" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference download internal" download="" href="../../_downloads/f590d96f7e78de4acd514b907abb6fc2/tutorial_main_output_matrices.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_main_output_matrices.ipynb'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/d190f358c7ecbc0c49390a51cfc2e6f3/tutorial_main_output_matrices.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.py'</span></code></a></p>
+<p><a class="reference download internal" download="" href="../../_downloads/f5d683d82fae8ef9221785414c0a48e6/tutorial_main_output_matrices.R"><code class="xref download docutils literal notranslate"><span class="pre">R</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.R'</span></code></a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../04.surfaces/index.html" class="btn btn-neutral float-right" title="Surface visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../04.databases/index.html" class="btn btn-neutral float-left" title="Processing databases with micapipe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, micapipe
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a> and modified by SL and RRC 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+         .wy-nav-content { max-width: none; }
+  </style>
+
+
+  <footer>
+    
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a 
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. Modified by SL 🤠 
+
+  </footer>
+
+
+
+</body>
+</html>
