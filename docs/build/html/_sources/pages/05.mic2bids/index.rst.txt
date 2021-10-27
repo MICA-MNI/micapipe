@@ -44,7 +44,7 @@ We can refer to to the following table to see the DICOM and BIDS naming of each 
 ``ses-01`` as the session name. As we acquired two distinct T1w images, using the string ``-run`` will differentiate them.
 
 .. list-table:: DICOM to BIDS
-    :widths: 15 15 10 5 15
+    :widths: 30 20 10 5 20
     :header-rows: 1
     :class: tight-table
 
