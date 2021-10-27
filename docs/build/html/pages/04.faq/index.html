@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Frequent Asked Questions &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -93,14 +93,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -108,14 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
@@ -130,7 +130,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -175,8 +175,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -188,7 +186,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/04.faq/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -227,131 +225,79 @@ this procedure is not implemented at any point in the pipeline.</p>
 The paths are relative to the subject directory (e.g. <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-01/ses-01</span></code>)</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">Map from MNI152 0.8mm space to DWI native space</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Subjects identification</span>
-<span class="nv">subjectID</span><span class="o">=</span>sub-01_ses-01
-
-<span class="c1"># Map from MNI152 0.8mm to DWI space</span>
-<span class="nv">Input</span><span class="o">=</span>file_in_space-MNI152_0.8mm.nii.gz
-<span class="nv">Output</span><span class="o">=</span>file_from_MNI152_0.8mm_in_space-dwi.nii.gz
-
-antsApplyTransforms -d <span class="m">3</span> -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
-          -r dwi/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_desc-b0.nii.gz <span class="se">\</span>
-          -n GenericLabel <span class="se">\ </span>  <span class="c1"># Interpolation!</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
-          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-nativepro_mode-image_desc-0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
-          -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Subjects identification</span>
+<span class="lineno"> 2 </span><span class="nv">subjectID</span><span class="o">=</span>sub-01_ses-01
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span><span class="c1"># Map from MNI152 0.8mm to DWI space</span>
+<span class="lineno"> 5 </span><span class="nv">Input</span><span class="o">=</span>file_in_space-MNI152_0.8mm.nii.gz
+<span class="lineno"> 6 </span><span class="nv">Output</span><span class="o">=</span>file_from_MNI152_0.8mm_in_space-dwi.nii.gz
+<span class="lineno"> 7 </span>
+<span class="lineno"> 8 </span>antsApplyTransforms -d <span class="m">3</span> -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
+<span class="lineno"> 9 </span>          -r dwi/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_desc-b0.nii.gz <span class="se">\</span>
+<span class="lineno">10 </span>          -n GenericLabel <span class="se">\ </span>  <span class="c1"># Interpolation!</span>
+<span class="lineno">11 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+<span class="lineno">12 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">13 </span>          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-nativepro_mode-image_desc-0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">14 </span>          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">15 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
+<span class="lineno">16 </span>          -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Map from DWI native space to MNI152 0.8mm</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Map from DWI space to MNI152 0.8mm</span>
-<span class="nv">Input</span><span class="o">=</span>file_in_space-dwi.nii.gz
-<span class="nv">Output</span><span class="o">=</span>file_from_dwi_in_space-MNI152_0.8mm.nii.gz
-
-antsApplyTransforms -d <span class="m">3</span> -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
-          -r <span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span>/MNI152Volumes/MNI152_T1_0.8mm_brain.nii.gz <span class="se">\</span>
-          -n GenericLabel <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-nativepro_mode-image_desc-0GenericAffine.mat <span class="se">\</span>
-          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
-          -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
-<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Map from DWI space to MNI152 0.8mm</span>
+<span class="lineno"> 2 </span><span class="nv">Input</span><span class="o">=</span>file_in_space-dwi.nii.gz
+<span class="lineno"> 3 </span><span class="nv">Output</span><span class="o">=</span>file_from_dwi_in_space-MNI152_0.8mm.nii.gz
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span>antsApplyTransforms -d <span class="m">3</span> -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
+<span class="lineno"> 6 </span>          -r <span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span>/MNI152Volumes/MNI152_T1_0.8mm_brain.nii.gz <span class="se">\</span>
+<span class="lineno"> 7 </span>          -n GenericLabel <span class="se">\</span>
+<span class="lineno"> 8 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+<span class="lineno"> 9 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">10 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-nativepro_mode-image_desc-0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">11 </span>          -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">12 </span>          -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+<span class="lineno">13 </span>          -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
+<span class="lineno">14 </span><span class="o">}</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">From MNI152 to rsfMRI space</span><a class="headerlink" href="#id3" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Map from MNI152 0.8mm to rsfMRI space</span>
-<span class="nv">Input</span><span class="o">=</span>file_in_space-MNI152_0.8mm.nii.gz
-<span class="nv">Output</span><span class="o">=</span>file_from_MNI152_0.8mm_in_space-rsfMRI.nii.gz
-
-antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
-    -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
-    -r func/volumetric/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
-    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
-    -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Map from MNI152 0.8mm to rsfMRI space</span>
+<span class="lineno"> 2 </span><span class="nv">Input</span><span class="o">=</span>file_in_space-MNI152_0.8mm.nii.gz
+<span class="lineno"> 3 </span><span class="nv">Output</span><span class="o">=</span>file_from_MNI152_0.8mm_in_space-rsfMRI.nii.gz
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span>antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
+<span class="lineno"> 6 </span>    -i <span class="si">${</span><span class="nv">Input</span><span class="si">}</span> <span class="se">\</span>
+<span class="lineno"> 7 </span>    -r func/volumetric/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
+<span class="lineno"> 8 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+<span class="lineno"> 9 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">10 </span>    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">11 </span>    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">12 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
+<span class="lineno">13 </span>    -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id4">
 <div class="code-block-caption"><span class="caption-text">From rsfMRI to T1nativepro space</span><a class="headerlink" href="#id4" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Map from rsfMRI space to MNI152 0.8mm</span>
-<span class="nv">Input</span><span class="o">=</span>file_in_space-rsfMRI.nii.gz
-<span class="nv">Output</span><span class="o">=</span>file_from_rsfMRI_in_space-MNI152_0.8mm.nii.gz
-
-antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
-    -i func/volumetric/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
-    -r <span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span>/MNI152Volumes/MNI152_T1_0.8mm_brain.nii.gz <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat <span class="se">\</span>
-    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
-    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
-    -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v -u int
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Map from rsfMRI space to MNI152 0.8mm</span>
+<span class="lineno"> 2 </span><span class="nv">Input</span><span class="o">=</span>file_in_space-rsfMRI.nii.gz
+<span class="lineno"> 3 </span><span class="nv">Output</span><span class="o">=</span>file_from_rsfMRI_in_space-MNI152_0.8mm.nii.gz
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span>antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
+<span class="lineno"> 6 </span>    -i func/volumetric/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_space-rsfmri_desc-singleecho_brain.nii.gz <span class="se">\</span>
+<span class="lineno"> 7 </span>    -r <span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span>/MNI152Volumes/MNI152_T1_0.8mm_brain.nii.gz <span class="se">\</span>
+<span class="lineno"> 8 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz <span class="se">\</span>
+<span class="lineno"> 9 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">10 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat <span class="se">\</span>
+<span class="lineno">11 </span>    -t <span class="o">[</span>xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1<span class="o">]</span> <span class="se">\</span>
+<span class="lineno">12 </span>    -t xfm/<span class="si">${</span><span class="nv">subjectID</span><span class="si">}</span>_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz <span class="se">\</span>
+<span class="lineno">13 </span>    -o <span class="si">${</span><span class="nv">Output</span><span class="si">}</span> -v -u int
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </dd>
 </dl>
@@ -363,13 +309,11 @@ antsApplyTransforms -d <span class="m">3</span> <span class="se">\</span>
 It will make a copy of your data with a compatible naming inside <code class="docutils literal notranslate"><span class="pre">out/freesurfer/</span></code>. It’s up to you to keep the original <em>freesurfer</em> directory or erase it.</p>
 <div class="literal-block-wrapper docutils container" id="id5">
 <div class="code-block-caption"><span class="caption-text">Usage example of -freesurfer_dir flag</span><a class="headerlink" href="#id5" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Run micapipe</span>
- mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
-       -proc_freesurfer -freesurfer_dir &lt;path_to_my_subject_freesurfer_dir&gt; <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Run micapipe</span>
+<span class="lineno">2 </span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
+<span class="lineno">3 </span>       -proc_freesurfer -freesurfer_dir &lt;path_to_my_subject_freesurfer_dir&gt; <span class="se">\</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </dd>
 <dt>Q: How do I modify the smoothing on the surfaces?</dt><dd><p><strong>A:</strong> By default micapipe <code class="docutils literal notranslate"><span class="pre">-Morphology</span></code> only applies a smoothing of 10mm over the surfaces.
@@ -377,63 +321,39 @@ If you need a different FWHM you can use either: <code class="docutils literal n
 <p>In the next examples we’ll use the subject <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> session <code class="docutils literal notranslate"><span class="pre">ses-01</span></code>:</p>
 <div class="literal-block-wrapper docutils container" id="id6">
 <div class="code-block-caption"><span class="caption-text">20mm smoothing of the left hemisphere using <em>freesurfer</em> tools</span><a class="headerlink" href="#id6" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># OutDir is the directory with -Morphology outpus</span>
- <span class="nv">outDir</span><span class="o">=</span>out/micapipe/sub-01/ses01/anat/surfaces/morphology
-
- <span class="c1"># Declare the micapipe&#39;s freesurfer directory variable</span>
- <span class="nb">export</span> <span class="nv">SUBJECTS_DIR</span><span class="o">=</span>out/freesurfer
-
- mri_surf2surf --hemi lh <span class="se">\</span>
-     --fwhm-trg <span class="m">20</span> <span class="se">\</span>
-     --srcsubject sub-01_ses01 <span class="se">\</span>
-     --srcsurfval <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-fsnative_desc-lh_thickness.mgh&quot;</span> <span class="se">\</span>
-     --trgsubject fsaverage5 <span class="se">\</span>
-     --trgsurfval <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-fsaverage5_desc-lh_thickness_20mm.mgh&quot;</span>
-     <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/lh_curv_20mm_c69-32k.func.gii&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># OutDir is the directory with -Morphology outpus</span>
+<span class="lineno"> 2 </span> <span class="nv">outDir</span><span class="o">=</span>out/micapipe/sub-01/ses01/anat/surfaces/morphology
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Declare the micapipe&#39;s freesurfer directory variable</span>
+<span class="lineno"> 5 </span> <span class="nb">export</span> <span class="nv">SUBJECTS_DIR</span><span class="o">=</span>out/freesurfer
+<span class="lineno"> 6 </span>
+<span class="lineno"> 7 </span> mri_surf2surf --hemi lh <span class="se">\</span>
+<span class="lineno"> 8 </span>     --fwhm-trg <span class="m">20</span> <span class="se">\</span>
+<span class="lineno"> 9 </span>     --srcsubject sub-01_ses01 <span class="se">\</span>
+<span class="lineno">10 </span>     --srcsurfval <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-fsnative_desc-lh_thickness.mgh&quot;</span> <span class="se">\</span>
+<span class="lineno">11 </span>     --trgsubject fsaverage5 <span class="se">\</span>
+<span class="lineno">12 </span>     --trgsurfval <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-fsaverage5_desc-lh_thickness_20mm.mgh&quot;</span>
+<span class="lineno">13 </span>     <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/lh_curv_20mm_c69-32k.func.gii&quot;</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id7">
 <div class="code-block-caption"><span class="caption-text">20mm smoothing of the left hemisphere using <em>WorkBench</em> tools</span><a class="headerlink" href="#id7" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nv">MICAPIPE_DIR</span><span class="o">=</span>&lt;path to the micapipe repository&gt;
-
-<span class="c1"># For WorkBench the first step is to convent the mgh surface file to GIFTI</span>
- mri_convert <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-conte69-32k_desc-lh_thickness.mgh&quot;</span> <span class="s2">&quot;/tmp/lh_curv_c69-32k_thickness.func.gii&quot;</span>
-
- wb_command -metric-smoothing <span class="se">\</span>
-     <span class="s2">&quot;</span><span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span><span class="s2">/surfaces/fsaverage.L.midthickness_orig.32k_fs_LR.surf.gii&quot;</span> <span class="se">\</span>
-     <span class="s2">&quot;/tmp/lh_curv_c69-32k_thickness.func.gii&quot;</span> <span class="se">\</span>
-     <span class="m">20</span> <span class="se">\</span>
-     <span class="s2">&quot;/tmp/lh_curv_20mm_c69-32k.func.gii&quot;</span>     <span class="c1"># This is the 20 mm FWHM surface</span>
-
- <span class="c1"># Convert from GIFTI back to MGH</span>
- mri_convert <span class="s2">&quot;/tmp/lh_curv_10mm_c69-32k.func.gii&quot;</span> <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-conte69-32k_desc-lh_thickness_20mm.mgh&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="nv">MICAPIPE_DIR</span><span class="o">=</span>&lt;path to the micapipe repository&gt;
+<span class="lineno"> 2 </span>
+<span class="lineno"> 3 </span><span class="c1"># For WorkBench the first step is to convent the mgh surface file to GIFTI</span>
+<span class="lineno"> 4 </span> mri_convert <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-conte69-32k_desc-lh_thickness.mgh&quot;</span> <span class="s2">&quot;/tmp/lh_curv_c69-32k_thickness.func.gii&quot;</span>
+<span class="lineno"> 5 </span>
+<span class="lineno"> 6 </span> wb_command -metric-smoothing <span class="se">\</span>
+<span class="lineno"> 7 </span>     <span class="s2">&quot;</span><span class="si">${</span><span class="nv">MICAPIPE_DIR</span><span class="si">}</span><span class="s2">/surfaces/fsaverage.L.midthickness_orig.32k_fs_LR.surf.gii&quot;</span> <span class="se">\</span>
+<span class="lineno"> 8 </span>     <span class="s2">&quot;/tmp/lh_curv_c69-32k_thickness.func.gii&quot;</span> <span class="se">\</span>
+<span class="lineno"> 9 </span>     <span class="m">20</span> <span class="se">\</span>
+<span class="lineno">10 </span>     <span class="s2">&quot;/tmp/lh_curv_20mm_c69-32k.func.gii&quot;</span>     <span class="c1"># This is the 20 mm FWHM surface</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span> <span class="c1"># Convert from GIFTI back to MGH</span>
+<span class="lineno">13 </span> mri_convert <span class="s2">&quot;/tmp/lh_curv_10mm_c69-32k.func.gii&quot;</span> <span class="s2">&quot;</span><span class="si">${</span><span class="nv">outDir</span><span class="si">}</span><span class="s2">/sub-01_ses01_space-conte69-32k_desc-lh_thickness_20mm.mgh&quot;</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </dd>
 </dl>
@@ -446,25 +366,17 @@ We recommend to concatenate all the runs into one file and process it.
 Using <code class="docutils literal notranslate"><span class="pre">mrcat</span></code> from MRtrix3 for example:</p>
 <div class="literal-block-wrapper docutils container" id="id8">
 <div class="code-block-caption"><span class="caption-text">Concatenates all rsfMRI runs and process the output</span><a class="headerlink" href="#id8" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Inside the func directory contatenate all the runs</span>
- mrcat sub-01_task-rest_run-1_bold.nii.gz sub-01_task-rest_run-2_bold.nii.gz sub-01_task-rest_desc-cat_bold.nii.gz
-
- <span class="c1"># Copy the json file from run-1</span>
- cp sub-01_task-rest_run-1_bold.json sub-01_task-rest_desc-cat_bold.json
-
- <span class="c1"># Run micapipe and specify the name of the concatenated rsfmri</span>
- mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
-       -proc_rsfmri -mainScanStr task-rest_desc-cat_bold <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Inside the func directory contatenate all the runs</span>
+<span class="lineno">2 </span> mrcat sub-01_task-rest_run-1_bold.nii.gz sub-01_task-rest_run-2_bold.nii.gz sub-01_task-rest_desc-cat_bold.nii.gz
+<span class="lineno">3 </span>
+<span class="lineno">4 </span> <span class="c1"># Copy the json file from run-1</span>
+<span class="lineno">5 </span> cp sub-01_task-rest_run-1_bold.json sub-01_task-rest_desc-cat_bold.json
+<span class="lineno">6 </span>
+<span class="lineno">7 </span> <span class="c1"># Run micapipe and specify the name of the concatenated rsfmri</span>
+<span class="lineno">8 </span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
+<span class="lineno">9 </span>       -proc_rsfmri -mainScanStr task-rest_desc-cat_bold <span class="se">\</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </dd>
 <dt>Q: Can I process multi-echo rsfMRI acquisition with micapipe?</dt><dd><p><strong>A:</strong> Although is planned to be included in a future release, right now <cite>micapipe</cite> cannot handle in any way multi-echo acquisitions.</p>
@@ -489,13 +401,11 @@ However you could apply the field map based correction to their correspondent im
 it must be in <code class="docutils literal notranslate"><span class="pre">mif</span></code> format with <em>bvals</em>, <em>bvecs</em>, <em>PhaseEncodingDirection</em> and <em>ReadoutTime</em> encoded.</p>
 <div class="literal-block-wrapper docutils container" id="id9">
 <div class="code-block-caption"><span class="caption-text">Usage example of -dwi_processed flag</span><a class="headerlink" href="#id9" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Run micapipe</span>
- mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
-       -proc_dwi -dwi_processed &lt;path&gt;/dwi_preprocessed.mif <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Run micapipe</span>
+<span class="lineno">2 </span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">01</span> <span class="se">\</span>
+<span class="lineno">3 </span>       -proc_dwi -dwi_processed &lt;path&gt;/dwi_preprocessed.mif <span class="se">\</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </dd>
 <dt>Q: Can I save the tractogram (tck file) generated in <code class="docutils literal notranslate"><span class="pre">-SC</span></code> ?</dt><dd><p><strong>A:</strong> Yes, you need to use the flag <code class="docutils literal notranslate"><span class="pre">-keep_tck</span></code> to keep the connectome generated by the pipeline, which is erased by default.</p>

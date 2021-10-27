@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Output matrices &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -95,14 +95,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -110,14 +110,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Main output matrices</a><ul>
@@ -143,7 +143,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -188,8 +188,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -201,7 +199,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/04.matrices/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -303,9 +301,9 @@ The first step in both languages is to set the environment:</p>
 <div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
@@ -384,7 +382,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_scSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span>
 
 <span class="c1"># Plot the log matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mtx_scSym</span><span class="p">),</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mtx_scSym</span><span class="p">),</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -396,7 +394,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_sc</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_sc_cor</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">&lt;-</span> <span class="kc">FALSE</span><span class="p">,))</span>
 
 <span class="c1"># Fill the lower triangle of the matrix</span>
-<span class="n">mtx_sc</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)</span><span class="n">]</span>
+<span class="n">mtx_sc</span><span class="p">[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)]</span>
 
 <span class="c1"># Plot the log matrix</span>
 <span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
@@ -434,7 +432,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_scELSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span>
 
 <span class="c1"># Plot the log matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_scELSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_scELSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -446,7 +444,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_scEL</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_sc_EL</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,))</span>
 
 <span class="c1"># Fill the lower triangle of the matrix</span>
-<span class="n">mtx_scEL</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)</span><span class="n">]</span>
+<span class="n">mtx_scEL</span><span class="p">[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">)]</span>
 
 <span class="c1"># Plot the log matrix</span>
 <span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
@@ -491,7 +489,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_fcSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_fs</span><span class="o">.</span><span class="n">T</span>
 
 <span class="c1"># Plot the matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_fcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_fcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -503,7 +501,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_fs</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_fs</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
 
 <span class="c1"># Fill the lower triangle of the matrix</span>
-<span class="n">mtx_fs</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)</span><span class="n">]</span>
+<span class="n">mtx_fs</span><span class="p">[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">)]</span>
 
 <span class="c1"># Plot the matrix</span>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;FC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Reds&quot;</span><span class="p">))</span>
@@ -537,7 +535,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_time</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 
 <span class="c1"># Plot as a matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_time</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_time</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -591,7 +589,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_mpcSym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_mpc</span><span class="o">.</span><span class="n">T</span>
 
 <span class="c1"># Plot the log matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_mpcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_mpcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -603,7 +601,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_mpc</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="nf">read.csv</span><span class="p">(</span><span class="n">cnt_mpc</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">))</span>
 
 <span class="c1"># Fill the lower triangle of the matrix</span>
-<span class="n">mtx_mpc</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="n">]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="nf">[lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)</span><span class="n">]</span>
+<span class="n">mtx_mpc</span><span class="p">[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)]</span> <span class="o">&lt;-</span> <span class="nf">t</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)[</span><span class="nf">lower.tri</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">)]</span>
 
 <span class="c1"># Plot the matrix</span>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;MPC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Greens&quot;</span><span class="p">))</span>
@@ -637,7 +635,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_int</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 
 <span class="c1"># Plot as a matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -687,7 +685,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">cnt_gd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 
 <span class="c1"># Plot the log matrix</span>
-<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
+<span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

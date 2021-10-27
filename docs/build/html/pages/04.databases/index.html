@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Processing databases &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -95,14 +95,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -110,14 +110,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#microstructure-informed-connectomis-mics">Microstructure-Informed Connectomis (MICs)</a></li>
@@ -133,7 +133,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -178,8 +178,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -191,7 +189,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/04.databases/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -303,34 +301,24 @@ Further information about the datasets such as the <em>source</em>, and <em>refe
 <p>MICs and micapipe were developed practically at the same time, therefore they are fully compatible and the default arguments are enough to process it.
 Modalities include high-resolution anatomical (T1-weighted), microstructurally-sensitive (quantitative T1), diffusion-weighted (three shells, 140 directions in total) and resting-state functional imaging.
 DWI and rsfMRI include a reverse phase encoding acquisition for geometric distortion correction.</p>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> -all
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> -all
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">Using the -all flag is the same as using all the processing flags!</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> <span class="se">\</span>
-           -proc_structural <span class="se">\</span>
-           -proc_freesurfer <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_dwi <span class="se">\</span>
-           -SC <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -MPC <span class="se">\</span>
-           -QC_subj
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> mica-pipe -bids rawdata -out derivatives -sub HC001 -ses <span class="m">01</span> <span class="se">\</span>
+<span class="lineno"> 2 </span>           -proc_structural <span class="se">\</span>
+<span class="lineno"> 3 </span>           -proc_freesurfer <span class="se">\</span>
+<span class="lineno"> 4 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 5 </span>           -proc_dwi <span class="se">\</span>
+<span class="lineno"> 6 </span>           -SC <span class="se">\</span>
+<span class="lineno"> 7 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno"> 8 </span>           -GD <span class="se">\</span>
+<span class="lineno"> 9 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">10 </span>           -MPC <span class="se">\</span>
+<span class="lineno">11 </span>           -QC_subj
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <dl>
 <dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-HC001_ses-01_T1w.nii.gz</span></code>).</p>
@@ -419,35 +407,22 @@ DWI and rsfMRI include a reverse phase encoding acquisition for geometric distor
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
 <p>This dataset contains T1 weighted images, a DWI single shell (b=2000, 60 directions) with a reverse phase encoding acquisition (<code class="docutils literal notranslate"><span class="pre">dir-PA_dwi</span></code>),
 and a 5 minutes length resting state fMRI.</p>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">00367</span> -ses <span class="m">01</span>
-           -proc_structural <span class="se">\</span>
-           -proc_freesurfer <span class="se">\</span>
-             -freesurfer_dir ./freesurfer_processed_00367 <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_dwi <span class="se">\</span>
-           -SC <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-             -mainScanStr task-rest_bold <span class="se">\</span>
-             -regress_WM_CSF <span class="se">\</span>
-             -noFIX <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -QC_subj
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> mica-pipe -bids rawdata -out derivatives -sub <span class="m">00367</span> -ses <span class="m">01</span>
+<span class="lineno"> 2 </span>           -proc_structural <span class="se">\</span>
+<span class="lineno"> 3 </span>           -proc_freesurfer <span class="se">\</span>
+<span class="lineno"> 4 </span>             -freesurfer_dir ./freesurfer_processed_00367 <span class="se">\</span>
+<span class="lineno"> 5 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 6 </span>           -proc_dwi <span class="se">\</span>
+<span class="lineno"> 7 </span>           -SC <span class="se">\</span>
+<span class="lineno"> 8 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno"> 9 </span>             -mainScanStr task-rest_bold <span class="se">\</span>
+<span class="lineno">10 </span>             -regress_WM_CSF <span class="se">\</span>
+<span class="lineno">11 </span>             -noFIX <span class="se">\</span>
+<span class="lineno">12 </span>           -GD <span class="se">\</span>
+<span class="lineno">13 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">14 </span>           -QC_subj
 </pre></div>
-</td></tr></table></div>
+</div>
 <dl>
 <dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-00367_ses-01_T1w.nii.gz</span></code>).</p>
 </dd>
@@ -526,39 +501,24 @@ No reverse phase encoding image was used.</p>
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-1 docutils container">
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -bids rawdata -out derivatives -sub CC110045 -ses pre <span class="se">\</span>
-           -proc_structural <span class="se">\</span>
-           -proc_freesurfer <span class="se">\</span>
-             -freesurfer_dir ./freesurfer_processed_CC110045 <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_dwi <span class="se">\</span>
-           -SC <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-             -mainScanStr task-Rest_bold <span class="se">\</span>
-             -regress_WM_CSF <span class="se">\</span>
-             -noFIX <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -MPC <span class="se">\</span>
-             -microstructural_img sub-CC110045/ses-pre/mti_MTR.nii <span class="se">\</span>
-           -QC_subj <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> mica-pipe -bids rawdata -out derivatives -sub CC110045 -ses pre <span class="se">\</span>
+<span class="lineno"> 2 </span>           -proc_structural <span class="se">\</span>
+<span class="lineno"> 3 </span>           -proc_freesurfer <span class="se">\</span>
+<span class="lineno"> 4 </span>             -freesurfer_dir ./freesurfer_processed_CC110045 <span class="se">\</span>
+<span class="lineno"> 5 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 6 </span>           -proc_dwi <span class="se">\</span>
+<span class="lineno"> 7 </span>           -SC <span class="se">\</span>
+<span class="lineno"> 8 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno"> 9 </span>             -mainScanStr task-Rest_bold <span class="se">\</span>
+<span class="lineno">10 </span>             -regress_WM_CSF <span class="se">\</span>
+<span class="lineno">11 </span>             -noFIX <span class="se">\</span>
+<span class="lineno">12 </span>           -GD <span class="se">\</span>
+<span class="lineno">13 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">14 </span>           -MPC <span class="se">\</span>
+<span class="lineno">15 </span>             -microstructural_img sub-CC110045/ses-pre/mti_MTR.nii <span class="se">\</span>
+<span class="lineno">16 </span>           -QC_subj <span class="se">\</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <dl>
 <dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-CC110045_T1w.nii.gz</span></code>).</p>
 </dd>
@@ -640,45 +600,27 @@ Main scan = <code class="docutils literal notranslate"><span class="pre">task-Re
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-1 docutils container">
 <p>This dataset contains T1 weighted images, a HARDI-DWI single shell (b=3000, 120 directions) with a reverse phase encoding acquisition (<code class="docutils literal notranslate"><span class="pre">dir-PA_run-01_epi</span></code>),
 and a resting state fMRI of 10 minutes with its respective reverse phase encoding acquisition (<code class="docutils literal notranslate"><span class="pre">dir-PA_run-02_epi</span></code>). Both phase encoding images are in the <code class="docutils literal notranslate"><span class="pre">fmap</span></code> directory.</p>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="nv">subjectDir</span><span class="o">=</span>ds003346/sub-010
-
- mica-pipe -bids ds003346 -out derivatives -sub <span class="m">010</span> <span class="se">\</span>
-           -proc_structural <span class="se">\</span>
-           -proc_freesurfer <span class="se">\</span>
-             -freesurfer_dir ./freesurfer_processed_010 <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_dwi <span class="se">\</span>
-             -dwi_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
-           -SC <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-             -mainScanStr task-Rest_bold <span class="se">\</span>
-             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-02_epi.nii.gz
-             -regress_WM_CSF <span class="se">\</span>
-             - GSR <span class="se">\</span>
-             -noFIX <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -QC_subj <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="nv">subjectDir</span><span class="o">=</span>ds003346/sub-010
+<span class="lineno"> 2 </span>
+<span class="lineno"> 3 </span> mica-pipe -bids ds003346 -out derivatives -sub <span class="m">010</span> <span class="se">\</span>
+<span class="lineno"> 4 </span>           -proc_structural <span class="se">\</span>
+<span class="lineno"> 5 </span>           -proc_freesurfer <span class="se">\</span>
+<span class="lineno"> 6 </span>             -freesurfer_dir ./freesurfer_processed_010 <span class="se">\</span>
+<span class="lineno"> 7 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 8 </span>           -proc_dwi <span class="se">\</span>
+<span class="lineno"> 9 </span>             -dwi_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
+<span class="lineno">10 </span>           -SC <span class="se">\</span>
+<span class="lineno">11 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno">12 </span>             -mainScanStr task-Rest_bold <span class="se">\</span>
+<span class="lineno">13 </span>             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/sub-110_dir-PA_run-02_epi.nii.gz
+<span class="lineno">14 </span>             -regress_WM_CSF <span class="se">\</span>
+<span class="lineno">15 </span>             - GSR <span class="se">\</span>
+<span class="lineno">16 </span>             -noFIX <span class="se">\</span>
+<span class="lineno">17 </span>           -GD <span class="se">\</span>
+<span class="lineno">18 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">19 </span>           -QC_subj <span class="se">\</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <dl>
 <dt>proc_structural</dt><dd><p>This section was processed with the default parameters (T1w = <code class="docutils literal notranslate"><span class="pre">sub-010_T1w.nii.gz</span></code>).</p>
 </dd>
@@ -782,51 +724,30 @@ and a resting state fMRI of 10 minutes with its respective reverse phase encodin
 <p>This dataset contains two sessions of structural imaging, (<code class="docutils literal notranslate"><span class="pre">struct01</span></code> and <code class="docutils literal notranslate"><span class="pre">struct02</span></code>). However we only used the first one for processing. It does not contain DWI images, thus this step was omitted.
 Resting state functional acquisitions were acquired in different sessions (<code class="docutils literal notranslate"><span class="pre">func01</span></code> to <code class="docutils literal notranslate"><span class="pre">func10</span></code>), hence each session was register to the first anatomical image (<code class="docutils literal notranslate"><span class="pre">struct01</span></code>).</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Pipeline for the anatomical images struct01</span>
-mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 <span class="se">\</span>
-           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
-           -proc_freesurfer <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
-             -mainScanStr task-rest_bold <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -QC_subj
-
-<span class="c1"># Pipeline for the functional images</span>
-<span class="k">for</span> N in <span class="o">{</span><span class="m">01</span>..10<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
-mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func<span class="si">${</span><span class="nv">N</span><span class="si">}</span> <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-           -mainScanStr task-rest_bold <span class="se">\</span>
-           -regress_WM_CSF <span class="se">\</span>
-           -noFIX <span class="se">\</span>
-           -sesAnat struct01 <span class="se">\</span>
-           -QC_subj <span class="se">\</span>
-<span class="k">done</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Pipeline for the anatomical images struct01</span>
+<span class="lineno"> 2 </span>mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 <span class="se">\</span>
+<span class="lineno"> 3 </span>           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
+<span class="lineno"> 4 </span>           -proc_freesurfer <span class="se">\</span>
+<span class="lineno"> 5 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 6 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno"> 7 </span>             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
+<span class="lineno"> 8 </span>             -mainScanStr task-rest_bold <span class="se">\</span>
+<span class="lineno"> 9 </span>           -GD <span class="se">\</span>
+<span class="lineno">10 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">11 </span>           -QC_subj
+<span class="lineno">12 </span>
+<span class="lineno">13 </span><span class="c1"># Pipeline for the functional images</span>
+<span class="lineno">14 </span><span class="k">for</span> N in <span class="o">{</span><span class="m">01</span>..10<span class="o">}</span><span class="p">;</span> <span class="k">do</span>
+<span class="lineno">15 </span>mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func<span class="si">${</span><span class="nv">N</span><span class="si">}</span> <span class="se">\</span>
+<span class="lineno">16 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno">17 </span>           -mainScanStr task-rest_bold <span class="se">\</span>
+<span class="lineno">18 </span>           -regress_WM_CSF <span class="se">\</span>
+<span class="lineno">19 </span>           -noFIX <span class="se">\</span>
+<span class="lineno">20 </span>           -sesAnat struct01 <span class="se">\</span>
+<span class="lineno">21 </span>           -QC_subj <span class="se">\</span>
+<span class="lineno">22 </span><span class="k">done</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <dl>
 <dt>proc_structural</dt><dd><p>Structural processing used the files <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T1w.nii.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">sub-MSC01_ses-struct01_run-01_T2w.nii.gz</span></code> to generate the nativepro file</p>
 </dd>
@@ -934,55 +855,32 @@ No reverse phase encoding image was used.</p>
 No real quantitative image was acquired, instead we used the T1w ShortInv for the MPC even though is not ideal.
 Additionally, it contains rsfMRI reverse phase encoding acquisitions for geometric distortion corrections.</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="nv">subjectDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01
- <span class="nv">dwiDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01/dwi
- <span class="nv">sub</span><span class="o">=</span>sub-S02_ses-SES01
-
- mica-pipe -bids ds001942/ -out . -sub S01 -ses SES01 <span class="se">\</span>
-           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
-           -proc_freesurfer -hires <span class="se">\</span>
-           -post_structural <span class="se">\</span>
-           -proc_dwi <span class="se">\</span>
-             -dwi_main <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-03_dwi.nii.gz <span class="se">\</span>
-             -dwi_rpe <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-03_dwi.nii.gz <span class="se">\</span>
-             -rpe_all <span class="se">\</span>
-           -SC <span class="se">\</span>
-           -proc_rsfmri <span class="se">\</span>
-             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
-             -mainScanStr task-rest_bold <span class="se">\</span>
-             -fmri_pe  <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-AP_run-01_epi.nii.gz <span class="se">\</span>
-             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
-           -GD <span class="se">\</span>
-           -Morphology <span class="se">\</span>
-           -MPC <span class="se">\</span>
-             -microstructural_img <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
-             -microstructural_reg <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
-           -QC_subj
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="nv">subjectDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01
+<span class="lineno"> 2 </span> <span class="nv">dwiDir</span><span class="o">=</span>./ds001942/sub-S01/ses-SES01/dwi
+<span class="lineno"> 3 </span> <span class="nv">sub</span><span class="o">=</span>sub-S02_ses-SES01
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span> mica-pipe -bids ds001942/ -out . -sub S01 -ses SES01 <span class="se">\</span>
+<span class="lineno"> 6 </span>           -proc_structural -t1wStr run-01_T1w,run-02_T1w <span class="se">\</span>
+<span class="lineno"> 7 </span>           -proc_freesurfer -hires <span class="se">\</span>
+<span class="lineno"> 8 </span>           -post_structural <span class="se">\</span>
+<span class="lineno"> 9 </span>           -proc_dwi <span class="se">\</span>
+<span class="lineno">10 </span>             -dwi_main <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-AP_run-03_dwi.nii.gz <span class="se">\</span>
+<span class="lineno">11 </span>             -dwi_rpe <span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-01_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-02_dwi.nii.gz,<span class="si">${</span><span class="nv">dwiDir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_dir-PA_run-03_dwi.nii.gz <span class="se">\</span>
+<span class="lineno">12 </span>             -rpe_all <span class="se">\</span>
+<span class="lineno">13 </span>           -SC <span class="se">\</span>
+<span class="lineno">14 </span>           -proc_rsfmri <span class="se">\</span>
+<span class="lineno">15 </span>             -regAffine -noFIX -regress_WM_CSF <span class="se">\</span>
+<span class="lineno">16 </span>             -mainScanStr task-rest_bold <span class="se">\</span>
+<span class="lineno">17 </span>             -fmri_pe  <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-AP_run-01_epi.nii.gz <span class="se">\</span>
+<span class="lineno">18 </span>             -fmri_rpe <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/fmap/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-gre_dir-PA_run-01_epi.nii.gz <span class="se">\</span>
+<span class="lineno">19 </span>           -GD <span class="se">\</span>
+<span class="lineno">20 </span>           -Morphology <span class="se">\</span>
+<span class="lineno">21 </span>           -MPC <span class="se">\</span>
+<span class="lineno">22 </span>             -microstructural_img <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
+<span class="lineno">23 </span>             -microstructural_reg <span class="si">${</span><span class="nv">subjectDir</span><span class="si">}</span>/anat/<span class="si">${</span><span class="nv">sub</span><span class="si">}</span>_acq-ShortInv_run-01_T1w.nii.gz <span class="se">\</span>
+<span class="lineno">24 </span>           -QC_subj
 </pre></div>
-</td></tr></table></div>
+</div>
 <dl>
 <dt>proc_structural</dt><dd><p>Structural processing used the files <code class="docutils literal notranslate"><span class="pre">sub-S01_ses-SES01_run-01_T1w.nii.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">sub-S01_ses-SES01_run-02_T1w.nii.gz</span></code> to generate the nativepro file</p>
 </dd>

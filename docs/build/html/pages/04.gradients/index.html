@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Computing gradient from output matrices &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -95,14 +95,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -110,14 +110,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
@@ -134,7 +134,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -179,8 +179,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -192,7 +190,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/04.gradients/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -240,53 +238,31 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
-<span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
-<span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
-<span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
-<span class="kn">from</span> <span class="nn">brainspace.gradient</span> <span class="kn">import</span> <span class="n">GradientMaps</span>
-<span class="kn">from</span> <span class="nn">brainspace.utils.parcellation</span> <span class="kn">import</span> <span class="n">map_to_labels</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-
-<span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
-<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span>     <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
-
-<span class="c1"># Path to micapipe repository</span>
-<span class="n">micapipe</span><span class="o">=</span><span class="s1">&#39;~/micapipe&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
-
-<span class="c1"># This variable will be different for each subject</span>
-<span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
-<span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
-
-<span class="c1"># Here we define the atlas</span>
-<span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span><span class="c1"># Set the environment</span>
+<span class="lineno"> 2 </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="lineno"> 3 </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="lineno"> 4 </span><span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
+<span class="lineno"> 5 </span><span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
+<span class="lineno"> 6 </span><span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
+<span class="lineno"> 7 </span><span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
+<span class="lineno"> 8 </span><span class="kn">from</span> <span class="nn">brainspace.gradient</span> <span class="kn">import</span> <span class="n">GradientMaps</span>
+<span class="lineno"> 9 </span><span class="kn">from</span> <span class="nn">brainspace.utils.parcellation</span> <span class="kn">import</span> <span class="n">map_to_labels</span>
+<span class="lineno">10 </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span><span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
+<span class="lineno">13 </span><span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span>     <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+<span class="lineno">14 </span>
+<span class="lineno">15 </span><span class="c1"># Path to micapipe repository</span>
+<span class="lineno">16 </span><span class="n">micapipe</span><span class="o">=</span><span class="s1">&#39;~/micapipe&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
+<span class="lineno">17 </span>
+<span class="lineno">18 </span><span class="c1"># This variable will be different for each subject</span>
+<span class="lineno">19 </span><span class="n">subjectID</span><span class="o">=</span><span class="s1">&#39;sub-HC001_ses-01&#39;</span>           <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s ID</span>
+<span class="lineno">20 </span><span class="n">subjectDir</span><span class="o">=</span><span class="s1">&#39;micapipe/sub-HC001/ses-01&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS SUBJECT&#39;s DIRECTORY</span>
+<span class="lineno">21 </span>
+<span class="lineno">22 </span><span class="c1"># Here we define the atlas</span>
+<span class="lineno">23 </span><span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </div>
 </div>
@@ -301,45 +277,27 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Load conte69</span>
- <span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span> <span class="o">=</span> <span class="n">load_conte69</span><span class="p">()</span>
-
- <span class="c1"># Load fsaverage5</span>
- <span class="n">fs5_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/lh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
- <span class="n">fs5_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/rh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
-
- <span class="c1"># Load annotation file in fsaverage5</span>
- <span class="n">annot_lh_fs5</span><span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/lh.schaefer-400_mics.annot&#39;</span><span class="p">)</span>
- <span class="n">annot_rh_fs5</span><span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/rh.schaefer-400_mics.annot&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">200</span>
-
- <span class="c1"># replace with 0 the medial wall of the right labels</span>
- <span class="n">annot_rh_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">annot_rh_fs5</span><span class="o">==</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">annot_rh_fs5</span><span class="p">)</span>
-
- <span class="c1"># fsaverage5 labels</span>
- <span class="n">labels_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">annot_lh_fs5</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">annot_rh_fs5</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
- <span class="c1"># Read label for conte69</span>
- <span class="n">labels_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/schaefer-400_conte69.csv&#39;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Load conte69</span>
+<span class="lineno"> 2 </span> <span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span> <span class="o">=</span> <span class="n">load_conte69</span><span class="p">()</span>
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Load fsaverage5</span>
+<span class="lineno"> 5 </span> <span class="n">fs5_lh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/lh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="lineno"> 6 </span> <span class="n">fs5_rh</span> <span class="o">=</span> <span class="n">read_surface</span><span class="p">(</span><span class="s1">&#39;freesurfer/fsaverage5/surf/rh.pial&#39;</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="lineno"> 7 </span>
+<span class="lineno"> 8 </span> <span class="c1"># Load annotation file in fsaverage5</span>
+<span class="lineno"> 9 </span> <span class="n">annot_lh_fs5</span><span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/lh.schaefer-400_mics.annot&#39;</span><span class="p">)</span>
+<span class="lineno">10 </span> <span class="n">annot_rh_fs5</span><span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">read_annot</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/rh.schaefer-400_mics.annot&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">200</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span> <span class="c1"># replace with 0 the medial wall of the right labels</span>
+<span class="lineno">13 </span> <span class="n">annot_rh_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">annot_rh_fs5</span><span class="o">==</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">annot_rh_fs5</span><span class="p">)</span>
+<span class="lineno">14 </span>
+<span class="lineno">15 </span> <span class="c1"># fsaverage5 labels</span>
+<span class="lineno">16 </span> <span class="n">labels_fs5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">annot_lh_fs5</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">annot_rh_fs5</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="lineno">17 </span>
+<span class="lineno">18 </span> <span class="c1"># Read label for conte69</span>
+<span class="lineno">19 </span> <span class="n">labels_c69</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">micapipe</span> <span class="o">+</span> <span class="s1">&#39;/parcellations/schaefer-400_conte69.csv&#39;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </div>
 </div>
@@ -355,149 +313,90 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-2-0 active docutils container">
 <p><strong>Load and slice the functional matrix</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Load the cortical connectome</span>
- <span class="n">mtx_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-FC.txt&#39;</span><span class="p">,</span>
-                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-
- <span class="c1"># slice the matrix</span>
- <span class="n">FC</span> <span class="o">=</span> <span class="n">mtx_fs</span><span class="p">[</span><span class="mi">49</span><span class="p">:,</span> <span class="mi">49</span><span class="p">:]</span>
- <span class="n">FC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">FC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
- <span class="c1"># Fischer transformation</span>
- <span class="n">FCz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">FC</span><span class="p">)</span>
-
- <span class="c1"># replace inf with 0</span>
- <span class="n">FCz</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">FCz</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-
- <span class="c1"># Mirror the matrix</span>
- <span class="n">FCz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">FCz</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">FCz</span><span class="o">.</span><span class="n">T</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Load the cortical connectome</span>
+<span class="lineno"> 2 </span> <span class="n">mtx_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-FC.txt&#39;</span><span class="p">,</span>
+<span class="lineno"> 3 </span>                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span> <span class="c1"># slice the matrix</span>
+<span class="lineno"> 6 </span> <span class="n">FC</span> <span class="o">=</span> <span class="n">mtx_fs</span><span class="p">[</span><span class="mi">49</span><span class="p">:,</span> <span class="mi">49</span><span class="p">:]</span>
+<span class="lineno"> 7 </span> <span class="n">FC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">FC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Fischer transformation</span>
+<span class="lineno">10 </span> <span class="n">FCz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">FC</span><span class="p">)</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span> <span class="c1"># replace inf with 0</span>
+<span class="lineno">13 </span> <span class="n">FCz</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">FCz</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="lineno">14 </span>
+<span class="lineno">15 </span> <span class="c1"># Mirror the matrix</span>
+<span class="lineno">16 </span> <span class="n">FCz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">FCz</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">FCz</span><span class="o">.</span><span class="n">T</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Calculate the functional gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Number of gradients</span>
- <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
-
- <span class="c1"># Calculate the gradients</span>
- <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
- <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">FCz</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Number of gradients</span>
+<span class="lineno">2 </span> <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="lineno">3 </span>
+<span class="lineno">4 </span> <span class="c1"># Calculate the gradients</span>
+<span class="lineno">5 </span> <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+<span class="lineno">6 </span> <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">FCz</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Plot the functional gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Plot the gradients</span>
- <span class="n">g1</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
- <span class="c1"># Creating figure</span>
- <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
- <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-
- <span class="c1"># Creating plot</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Functional gradient&quot;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
-
- <span class="c1"># show plot</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Plot the gradients</span>
+<span class="lineno"> 2 </span> <span class="n">g1</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 3 </span> <span class="n">g2</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 4 </span> <span class="n">g3</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 5 </span>
+<span class="lineno"> 6 </span> <span class="c1"># Creating figure</span>
+<span class="lineno"> 7 </span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="lineno"> 8 </span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+<span class="lineno"> 9 </span>
+<span class="lineno">10 </span> <span class="c1"># Creating plot</span>
+<span class="lineno">11 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="lineno">12 </span> <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Functional gradient&quot;</span><span class="p">)</span>
+<span class="lineno">13 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
+<span class="lineno">14 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
+<span class="lineno">15 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
+<span class="lineno">16 </span>
+<span class="lineno">17 </span> <span class="c1"># show plot</span>
+<span class="lineno">18 </span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/fc_scatter.png" src="../../_images/fc_scatter.png" />
 </div>
 <p><strong>Functional gradients to fsaverage5 surface</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Mask of the medial wall on fsaverage 5</span>
- <span class="n">mask_fs5</span> <span class="o">=</span> <span class="n">labels_fs5</span> <span class="o">!=</span> <span class="mi">0</span>
-
- <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
- <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
-     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_fs5</span><span class="p">,</span>  <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_fs5</span><span class="p">)</span>
-
- <span class="c1"># Plot Gradients RdYlBu</span>
- <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
-                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Mask of the medial wall on fsaverage 5</span>
+<span class="lineno"> 2 </span> <span class="n">mask_fs5</span> <span class="o">=</span> <span class="n">labels_fs5</span> <span class="o">!=</span> <span class="mi">0</span>
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Map gradients to original parcels</span>
+<span class="lineno"> 5 </span> <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="lineno"> 6 </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
+<span class="lineno"> 7 </span>     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_fs5</span><span class="p">,</span>  <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_fs5</span><span class="p">)</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Plot Gradients RdYlBu</span>
+<span class="lineno">10 </span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
+<span class="lineno">11 </span>                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+<span class="lineno">12 </span>                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/fc_fs5.png" src="../../_images/fc_fs5.png" />
 </div>
 <p><strong>Functional gradients to conte69 surface</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># mask of the medial wall</span>
- <span class="n">mask_c69</span> <span class="o">=</span> <span class="n">labels_c69</span> <span class="o">!=</span> <span class="mi">0</span>
-
- <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
- <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
-     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
-
- <span class="c1"># Plot Gradients coolwarm</span>
- <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
-                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># mask of the medial wall</span>
+<span class="lineno"> 2 </span> <span class="n">mask_c69</span> <span class="o">=</span> <span class="n">labels_c69</span> <span class="o">!=</span> <span class="mi">0</span>
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Map gradients to original parcels</span>
+<span class="lineno"> 5 </span> <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="lineno"> 6 </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
+<span class="lineno"> 7 </span>     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Plot Gradients coolwarm</span>
+<span class="lineno">10 </span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
+<span class="lineno">11 </span>                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+<span class="lineno">12 </span>                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/fc_c69.png" src="../../_images/fc_c69.png" />
 </div>
@@ -516,124 +415,74 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
 <p><strong>Load and slice the structural matrix</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Load the cortical connectome</span>
- <span class="n">mtx_sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_cor-connectome.txt&#39;</span><span class="p">,</span>
-                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-
- <span class="c1"># Fill the lower triangle of the matrix</span>
- <span class="n">mtx_sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
- <span class="n">mtx_sc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-
- <span class="c1"># Slice the connectome to use only cortical nodes</span>
- <span class="n">SC</span> <span class="o">=</span> <span class="n">mtx_sc</span><span class="p">[</span><span class="mi">49</span><span class="p">:,</span> <span class="mi">49</span><span class="p">:]</span>
- <span class="n">SC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">SC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Load the cortical connectome</span>
+<span class="lineno"> 2 </span> <span class="n">mtx_sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_cor-connectome.txt&#39;</span><span class="p">,</span>
+<span class="lineno"> 3 </span>                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span> <span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="lineno"> 6 </span> <span class="n">mtx_sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_sc</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="lineno"> 7 </span> <span class="n">mtx_sc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Slice the connectome to use only cortical nodes</span>
+<span class="lineno">10 </span> <span class="n">SC</span> <span class="o">=</span> <span class="n">mtx_sc</span><span class="p">[</span><span class="mi">49</span><span class="p">:,</span> <span class="mi">49</span><span class="p">:]</span>
+<span class="lineno">11 </span> <span class="n">SC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">SC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Calculate the structural gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># SC Left hemi</span>
- <span class="n">gm_SC_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
- <span class="n">gm_SC_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">SC</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
- <span class="c1"># SC Right hemi</span>
- <span class="n">gm_SC_R</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;procrustes&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">);</span> <span class="c1"># align right hemi to left hemi</span>
- <span class="n">gm_SC_R</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">SC</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># SC Left hemi</span>
+<span class="lineno">2 </span> <span class="n">gm_SC_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+<span class="lineno">3 </span> <span class="n">gm_SC_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">SC</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="lineno">4 </span>
+<span class="lineno">5 </span> <span class="c1"># SC Right hemi</span>
+<span class="lineno">6 </span> <span class="n">gm_SC_R</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;procrustes&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">);</span> <span class="c1"># align right hemi to left hemi</span>
+<span class="lineno">7 </span> <span class="n">gm_SC_R</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">SC</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Plot the structural gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># plot the left gradients</span>
- <span class="n">g1</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
- <span class="c1"># plot the right gradients</span>
- <span class="n">g1R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
- <span class="c1"># Creating figure</span>
- <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
- <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-
- <span class="c1"># Creating plot</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;purple&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1R</span><span class="p">,</span> <span class="n">g2R</span><span class="p">,</span> <span class="n">g3R</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;slateblue&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Structural gradient&quot;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;Left SC&#39;</span><span class="p">,</span> <span class="s1">&#39;Right SC&#39;</span><span class="p">])</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
-
- <span class="c1"># show plot</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># plot the left gradients</span>
+<span class="lineno"> 2 </span> <span class="n">g1</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 3 </span> <span class="n">g2</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 4 </span> <span class="n">g3</span><span class="o">=</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 5 </span> <span class="c1"># plot the right gradients</span>
+<span class="lineno"> 6 </span> <span class="n">g1R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 7 </span> <span class="n">g2R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 8 </span> <span class="n">g3R</span><span class="o">=</span><span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 9 </span>
+<span class="lineno">10 </span> <span class="c1"># Creating figure</span>
+<span class="lineno">11 </span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="lineno">12 </span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+<span class="lineno">13 </span>
+<span class="lineno">14 </span> <span class="c1"># Creating plot</span>
+<span class="lineno">15 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;purple&#39;</span><span class="p">)</span>
+<span class="lineno">16 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1R</span><span class="p">,</span> <span class="n">g2R</span><span class="p">,</span> <span class="n">g3R</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;slateblue&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+<span class="lineno">17 </span> <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Structural gradient&quot;</span><span class="p">)</span>
+<span class="lineno">18 </span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;Left SC&#39;</span><span class="p">,</span> <span class="s1">&#39;Right SC&#39;</span><span class="p">])</span>
+<span class="lineno">19 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
+<span class="lineno">20 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
+<span class="lineno">21 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
+<span class="lineno">22 </span>
+<span class="lineno">23 </span> <span class="c1"># show plot</span>
+<span class="lineno">24 </span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/sc_scatter.png" src="../../_images/sc_scatter.png" />
 </div>
 <p><strong>Structural gradients to conte69 surface</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Left and right gradients concatenated</span>
- <span class="n">SC_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
- <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
- <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">SC_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
-     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
-
- <span class="c1"># Plot Gradients</span>
- <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
-                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Left and right gradients concatenated</span>
+<span class="lineno"> 2 </span> <span class="n">SC_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Map gradients to original parcels</span>
+<span class="lineno"> 5 </span> <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="lineno"> 6 </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">SC_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
+<span class="lineno"> 7 </span>     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Plot Gradients</span>
+<span class="lineno">10 </span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
+<span class="lineno">11 </span>                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+<span class="lineno">12 </span>                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/sc_c69.png" src="../../_images/sc_c69.png" />
 </div>
@@ -652,96 +501,60 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-0 active docutils container">
 <p><strong>Load and slice the MPC matrix</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Load the cortical connectome</span>
- <span class="n">mtx_mpc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-MPC.txt&#39;</span><span class="p">,</span>
-                      <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-
- <span class="c1"># Fill the lower triangle of the matrix</span>
- <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_mpc</span><span class="o">.</span><span class="n">T</span>
-
- <span class="c1"># Renove the medial wall</span>
- <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
- <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Load the cortical connectome</span>
+<span class="lineno"> 2 </span> <span class="n">mtx_mpc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-MPC.txt&#39;</span><span class="p">,</span>
+<span class="lineno"> 3 </span>                      <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span> <span class="c1"># Fill the lower triangle of the matrix</span>
+<span class="lineno"> 6 </span> <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">mtx_mpc</span><span class="o">.</span><span class="n">T</span>
+<span class="lineno"> 7 </span>
+<span class="lineno"> 8 </span> <span class="c1"># Renove the medial wall</span>
+<span class="lineno"> 9 </span> <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno">10 </span> <span class="n">MPC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Calculate the MPC gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Calculate the gradients</span>
- <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
- <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Calculate the gradients</span>
+<span class="lineno">2 </span> <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+<span class="lineno">3 </span> <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Plot the MPC gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Plot the gradients</span>
- <span class="n">g1</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
- <span class="c1"># Creating figure</span>
- <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
- <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-
- <span class="c1"># Creating plot</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;MPC gradient&quot;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
-
- <span class="c1"># show plot</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Plot the gradients</span>
+<span class="lineno"> 2 </span> <span class="n">g1</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 3 </span> <span class="n">g2</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 4 </span> <span class="n">g3</span><span class="o">=</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 5 </span>
+<span class="lineno"> 6 </span> <span class="c1"># Creating figure</span>
+<span class="lineno"> 7 </span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="lineno"> 8 </span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+<span class="lineno"> 9 </span>
+<span class="lineno">10 </span> <span class="c1"># Creating plot</span>
+<span class="lineno">11 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+<span class="lineno">12 </span> <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;MPC gradient&quot;</span><span class="p">)</span>
+<span class="lineno">13 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
+<span class="lineno">14 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
+<span class="lineno">15 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
+<span class="lineno">16 </span>
+<span class="lineno">17 </span> <span class="c1"># show plot</span>
+<span class="lineno">18 </span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/mpc_scatter.png" src="../../_images/mpc_scatter.png" />
 </div>
 <p><strong>MPC gradients to conte69 surface</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
- <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
-     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
-
- <span class="c1"># Plot Gradients</span>
- <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;MPC-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;MPC-G2&#39;</span><span class="p">,</span><span class="s1">&#39;MPC-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
-                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Map gradients to original parcels</span>
+<span class="lineno">2 </span> <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="lineno">3 </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
+<span class="lineno">4 </span>     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
+<span class="lineno">5 </span>
+<span class="lineno">6 </span> <span class="c1"># Plot Gradients</span>
+<span class="lineno">7 </span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
+<span class="lineno">8 </span>                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;MPC-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;MPC-G2&#39;</span><span class="p">,</span><span class="s1">&#39;MPC-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+<span class="lineno">9 </span>                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/mpc_c69.png" src="../../_images/mpc_c69.png" />
 </div>
@@ -760,116 +573,70 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-5-0 active docutils container">
 <p><strong>Load and slice the GD matrix</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Load the cortical connectome</span>
- <span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/geo_dist/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_GD.txt&#39;</span><span class="p">,</span>
-                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-
- <span class="c1"># Remove the Mediall Wall</span>
- <span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
- <span class="n">GD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># Load the cortical connectome</span>
+<span class="lineno">2 </span> <span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">subjectDir</span> <span class="o">+</span> <span class="s1">&#39;/anat/surfaces/geo_dist/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_GD.txt&#39;</span><span class="p">,</span>
+<span class="lineno">3 </span>                     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+<span class="lineno">4 </span>
+<span class="lineno">5 </span> <span class="c1"># Remove the Mediall Wall</span>
+<span class="lineno">6 </span> <span class="n">mtx_gd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno">7 </span> <span class="n">GD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Calculate the GD gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># GD Left hemi</span>
- <span class="n">gm_GD_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
- <span class="n">gm_GD_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GD</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-
- <span class="c1"># GD Right hemi</span>
- <span class="n">gm_GD_R</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;procrustes&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">);</span> <span class="c1"># align right hemi to left hemi</span>
- <span class="n">gm_GD_R</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GD</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="c1"># GD Left hemi</span>
+<span class="lineno">2 </span> <span class="n">gm_GD_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+<span class="lineno">3 </span> <span class="n">gm_GD_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GD</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="lineno">4 </span>
+<span class="lineno">5 </span> <span class="c1"># GD Right hemi</span>
+<span class="lineno">6 </span> <span class="n">gm_GD_R</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="s1">&#39;procrustes&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">);</span> <span class="c1"># align right hemi to left hemi</span>
+<span class="lineno">7 </span> <span class="n">gm_GD_R</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GD</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">:</span><span class="mi">400</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">)</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Plot the GD gradients</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># plot the gradients</span>
- <span class="n">g1</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
- <span class="c1"># plot the gradients</span>
- <span class="n">g1R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
- <span class="n">g2R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
- <span class="n">g3R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-
- <span class="c1"># Creating figure</span>
- <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
- <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
-
- <span class="c1"># Creating plot</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;dodgerblue&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1R</span><span class="p">,</span> <span class="n">g2R</span><span class="p">,</span> <span class="n">g3R</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;teal&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Structural gradient&quot;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;Left GD&#39;</span><span class="p">,</span> <span class="s1">&#39;Right GD&#39;</span><span class="p">])</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
- <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
-
- <span class="c1"># show plot</span>
- <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># plot the gradients</span>
+<span class="lineno"> 2 </span> <span class="n">g1</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 3 </span> <span class="n">g2</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 4 </span> <span class="n">g3</span><span class="o">=</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 5 </span> <span class="c1"># plot the gradients</span>
+<span class="lineno"> 6 </span> <span class="n">g1R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="lineno"> 7 </span> <span class="n">g2R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="lineno"> 8 </span> <span class="n">g3R</span><span class="o">=</span><span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="lineno"> 9 </span>
+<span class="lineno">10 </span> <span class="c1"># Creating figure</span>
+<span class="lineno">11 </span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="lineno">12 </span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+<span class="lineno">13 </span>
+<span class="lineno">14 </span> <span class="c1"># Creating plot</span>
+<span class="lineno">15 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">g3</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;dodgerblue&#39;</span><span class="p">)</span>
+<span class="lineno">16 </span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="n">g1R</span><span class="p">,</span> <span class="n">g2R</span><span class="p">,</span> <span class="n">g3R</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;teal&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+<span class="lineno">17 </span> <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Structural gradient&quot;</span><span class="p">)</span>
+<span class="lineno">18 </span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;Left GD&#39;</span><span class="p">,</span> <span class="s1">&#39;Right GD&#39;</span><span class="p">])</span>
+<span class="lineno">19 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Grad 1&#39;</span><span class="p">)</span>
+<span class="lineno">20 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Grad 2&#39;</span><span class="p">)</span>
+<span class="lineno">21 </span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Grad 3&#39;</span><span class="p">)</span>
+<span class="lineno">22 </span>
+<span class="lineno">23 </span> <span class="c1"># show plot</span>
+<span class="lineno">24 </span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/gd_scatter.png" src="../../_images/gd_scatter.png" />
 </div>
 <p><strong>GD gradients to conte69 surface</strong></p>
-<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Left and right gradients concatenated</span>
- <span class="n">GD_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
- <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
- <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">GD_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
-     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
-
- <span class="c1"># Plot Gradients</span>
- <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span><span class="s1">&#39;GD-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
-                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="c1"># Left and right gradients concatenated</span>
+<span class="lineno"> 2 </span> <span class="n">GD_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="lineno"> 3 </span>
+<span class="lineno"> 4 </span> <span class="c1"># Map gradients to original parcels</span>
+<span class="lineno"> 5 </span> <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="lineno"> 6 </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">GD_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
+<span class="lineno"> 7 </span>     <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
+<span class="lineno"> 8 </span>
+<span class="lineno"> 9 </span> <span class="c1"># Plot Gradients</span>
+<span class="lineno">10 </span> <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
+<span class="lineno">11 </span>                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span><span class="s1">&#39;GD-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+<span class="lineno">12 </span>                  <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
-</td></tr></table></div>
+</div>
 <div class="figure align-default">
 <img alt="../../_images/gd_c69.png" src="../../_images/gd_c69.png" />
 </div>
