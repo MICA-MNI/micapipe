@@ -13,11 +13,7 @@ You will need to download `Docker <https://docs.docker.com/engine/install/>`_ or
 
 To pull the micapipe Docker image, simply run the following command from a terminal: ::
 
-    docker pull MICA-MNI/micapipe:latest
-
-Similarly, to pull the micapipe Singularity image, simply run the following command from a terminal: ::
-
-    singularity pull shub://todo/todo
+    docker pull micalab/micapipe:v0.1.2
 
 Note that these containers are quite large (13+ GB), given the considerable number of dependencies for micapipe.
 
