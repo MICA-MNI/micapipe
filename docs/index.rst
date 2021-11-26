@@ -153,13 +153,14 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    <br>
 
-.. figure:: ./figures/micapipe.png
-   :alt: alternate text
-   :align: center
-
 
 Core development team 🧠
 --------------------------------------------------------
+
+.. figure:: ./figures/micapipe.png
+   :alt: alternate text
+   :align: left
+   :scale: 20 %
 
 Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Centre of the Montreal Neurological Institute.
 
