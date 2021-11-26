@@ -42,7 +42,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
 
     .. tab:: Usage
 
-       **Terminal:**
+        **Terminal:**
 
         .. parsed-literal::
             $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_structural** **<options>**
@@ -157,7 +157,7 @@ This modules performs cortical surface segmentation from all native T1w acquisit
 
     .. tab:: Usage
 
-       **Terminal:**
+        **Terminal:**
 
         .. parsed-literal::
             $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_freesurfer** **<options>**

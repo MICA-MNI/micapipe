@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>References &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -93,14 +93,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -108,14 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
@@ -123,7 +123,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">References</a><ul>
@@ -131,6 +131,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#r-packages"><code class="docutils literal notranslate"><span class="pre">R</span></code> Packages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python-packages"><code class="docutils literal notranslate"><span class="pre">python</span></code> packages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parcellations">Parcellations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#other-sources">Other sources</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
 </ul>
@@ -176,8 +177,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -189,7 +188,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/06.references/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -207,7 +206,7 @@
 <span id="ref"></span><h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="software">
 <h2>Software<a class="headerlink" href="#software" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
+<dl>
 <dt>dcm2niix</dt><dd><p>Li X, Morgan PS, Ashburner J, Smith J, Rorden C (2016) The first step for neuroimaging data analysis: DICOM to NIfTI conversion. J Neurosci Methods. 264:47-56. doi: 10.1016/j.jneumeth.2016.03.001. PMID: 26945974</p>
 </dd>
 <dt>Freesurfer</dt><dd><p>Fischl, B. (2012). FreeSurfer. Neuroimage, 62(2), 774-781. <a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2012.01.021">https://doi.org/10.1016/j.neuroimage.2012.01.021</a></p>
@@ -216,21 +215,21 @@
 </dd>
 <dt>AFNI</dt><dd><p>Cox, R. W. (1996). AFNI: software for analysis and visualization of functional magnetic resonance neuroimages. Computers and Biomedical research, 29(3), 162-173. <a class="reference external" href="https://doi.org/10.1006/cbmr.1996.0014">https://doi.org/10.1006/cbmr.1996.0014</a></p>
 </dd>
-<dt>MRtrix3</dt><dd><p>Tournier, J.-D.; Smith, R. E.; Raffelt, D.; Tabbara, R.; Dhollander, T., Pietsch, M.; Christiaens, D.; Jeurissen, B.; Yeh, C.-H. &amp; Connelly, A. MRtrix3: A fast, flexible and open software framework for medical image processing and visualisation. NeuroImage, 2019, 202, 116137. <a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2019.116137">https://doi.org/10.1016/j.neuroimage.2019.116137</a></p>
+<dt>MRtrix3</dt><dd><p>Tournier, J.-D.; Smith, R. E.; Raffelt, D.; Tabbara, R.; Dhollander, T., Pietsch, M.; Christiaens, D.; Jeurissen, B.; Yeh, C.-H. &amp; Connelly, A. (2019). MRtrix3: A fast, flexible and open software framework for medical image processing and visualisation. NeuroImage, 202, 116137. <a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2019.116137">https://doi.org/10.1016/j.neuroimage.2019.116137</a></p>
 </dd>
 <dt>ANTs</dt><dd><p>Avants, B. B., Tustison, N. J., Song, G., Cook, P. A., Klein, A., &amp; Gee, J. C. (2011). A reproducible evaluation of ANTs similarity metric performance in brain image registration. Neuroimage, 54(3), 2033-2044. <a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2010.09.025">https://doi.org/10.1016/j.neuroimage.2010.09.025</a></p>
 </dd>
 <dt>Workbench</dt><dd><p>Marcus DS, Harwell J, Olsen T, Hodge M, Glasser MF, Prior F, Jenkinson M, Laumann T, Curtiss SW, and Van Essen DC. (2011). Informatics and data mining: Tools and strategies for the Human Connectome Project. Frontiers in Neuroinformatics 5:4. <a class="reference external" href="https://doi.org/10.3389/fninf.2011.00004">https://doi.org/10.3389/fninf.2011.00004</a></p>
 </dd>
-<dt>FSL-FIX</dt><dd><p>G. Salimi-Khorshidi, G. Douaud, C.F. Beckmann, M.F. Glasser, L. Griffanti S.M. Smith. Automatic denoising of functional MRI data: Combining independent component analysis and hierarchical fusion of classifiers. NeuroImage, 90:449-68, 2014
-L. Griffanti, G. Salimi-Khorshidi, C.F. Beckmann, E.J. Auerbach, G. Douaud, C.E. Sexton, E. Zsoldos, K. Ebmeier, N. Filippini, C.E. Mackay, S. Moeller, J.G. Xu, E. Yacoub, G. Baselli, K. Ugurbil, K.L. Miller, and S.M. Smith. ICA-based artefact removal and accelerated fMRI acquisition for improved resting state network imaging. NeuroImage, 95:232-47, 2014</p>
+<dt>FSL-FIX</dt><dd><p>Salimi-Khorshidi G, G. Douaud, C.F. Beckmann, M.F. Glasser, L. Griffanti S.M. Smith. (2014). Automatic denoising of functional MRI data: Combining independent component analysis and hierarchical fusion of classifiers. NeuroImage, 90:449-68</p>
+<p>Griffanti, L., G. Salimi-Khorshidi, C.F. Beckmann, E.J. Auerbach, G. Douaud, C.E. Sexton, E. Zsoldos, K. Ebmeier, N. Filippini, C.E. Mackay, S. Moeller, J.G. Xu, E. Yacoub, G. Baselli, K. Ugurbil, K.L. Miller, and S.M. Smith. (2014). ICA-based artefact removal and accelerated fMRI acquisition for improved resting state network imaging. NeuroImage, 95:232-47</p>
 </dd>
 </dl>
 </div>
 <div class="section" id="r-packages">
 <h2><code class="docutils literal notranslate"><span class="pre">R</span></code> Packages<a class="headerlink" href="#r-packages" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt><a class="reference external" href="https://www.r-project.org">R 3.6.3</a></dt><dd><p>Team, R. C. (2020). R: A language and environment for statistical computing [Internet]. R Foundation for Statistical Computing; 2018. Available from: _ <a class="reference external" href="http://www">http://www</a>. R-project. org/_.</p>
+<dt><a class="reference external" href="https://www.r-project.org">R 3.6.3</a></dt><dd><p>Team, R. C. (2020). R: A language and environment for statistical computing [Internet]. (2018). R Foundation for Statistical Computing. Available from: _ <a class="reference external" href="http://www">http://www</a>. R-project. org/_.</p>
 </dd>
 <dt>ggplot2</dt><dd><p>Villanueva, R. A. M., &amp; Chen, Z. J. (2019). ggplot2: elegant graphics for data analysis. <a class="reference external" href="https://doi.org/10.1080/15366367.2019.1565254">https://doi.org/10.1080/15366367.2019.1565254</a></p>
 </dd>
@@ -242,7 +241,7 @@ L. Griffanti, G. Salimi-Khorshidi, C.F. Beckmann, E.J. Auerbach, G. Douaud, C.E.
 </dd>
 <dt>networkD3</dt><dd><p>Allaire, J. J., Ellis, P., Gandrud, C., Kuo, K., Lewis, B. W., Owen, J., … &amp; Gandrud, M. C. (2017). Package ‘networkD3’. D3 JavaScript Network Graphs from R. <a class="reference external" href="https://cran.irsn.fr/web/packages/networkD3/networkD3.pdf">https://cran.irsn.fr/web/packages/networkD3/networkD3.pdf</a></p>
 </dd>
-<dt>htmlwidgets</dt><dd><p>Vaidyanathan, Ramnath, Yihui Xie, JJ Allaire, Joe Cheng, Carson Sievert, and Kenton Russell. 2020. Htmlwidgets: HTML Widgets for r. <a class="reference external" href="https://github.com/ramnathv/htmlwidgets">https://github.com/ramnathv/htmlwidgets</a>.</p>
+<dt>htmlwidgets</dt><dd><p>Vaidyanathan, Ramnath, Yihui Xie, JJ Allaire, Joe Cheng, Carson Sievert, and Kenton Russell. (2020). Htmlwidgets: HTML Widgets for r. <a class="reference external" href="https://github.com/ramnathv/htmlwidgets">https://github.com/ramnathv/htmlwidgets</a>.</p>
 </dd>
 <dt>freesurferformats</dt><dd><p>Tim Schäfer, T., (2020). freesurferformats: Read and Write ‘FreeSurfer’ Neuroimaging File Formats. R package version 0.1.9. <a class="reference external" href="https://CRAN.R-project.org/package=freesurferformats">CRAN</a>, <a class="reference external" href="https://github.com/dfsp-spirit/freesurferformats">github</a></p>
 </dd>
@@ -253,15 +252,15 @@ L. Griffanti, G. Salimi-Khorshidi, C.F. Beckmann, E.J. Auerbach, G. Douaud, C.E.
 <div class="section" id="python-packages">
 <h2><code class="docutils literal notranslate"><span class="pre">python</span></code> packages<a class="headerlink" href="#python-packages" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>brainspace</dt><dd><p>Vos de Wael R, Benkarim O, Paquola C, Lariviere S, Royer J, Tavakol S, Xu T, Hong S, Langs G, Valk S, Misic B, Milham M, Margulies D, Smallwood J, Bernhardt B (2020). BrainSpace: a toolbox for the analysis of macroscale gradients in neuroimaging and connectomics datasets. Commun Biol 3, 103.</p>
+<dt>brainspace</dt><dd><p>Vos de Wael R, Benkarim O, Paquola C, Lariviere S, Royer J, Tavakol S, Xu T, Hong S, Langs G, Valk S, Misic B, Milham M, Margulies D, Smallwood J, Bernhardt B. (2020). BrainSpace: a toolbox for the analysis of macroscale gradients in neuroimaging and connectomics datasets. Commun Biol 3, 103.</p>
 </dd>
 <dt>numpy</dt><dd><p>Van Der Walt, S., Colbert, S. C., &amp; Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in science &amp; engineering, 13(2), 22-30. 10.1109/MCSE.2011.37</p>
 </dd>
-<dt>nibabel</dt><dd><p>Matthew Brett (MB), Chris Markiewicz (CM), Michael Hanke (MH), Marc-Alexandre Côté (MC), Ben Cipollini (BC), Paul McCarthy (PM), Chris Cheng (CC), Yaroslav Halchenko (YOH), Satra Ghosh (SG), Eric Larson (EL), Demian Wassermann, Stephan Gerhard and Ross Markello (RM). NiBabel 3.1.1. Jun 30, 2020. <a class="reference external" href="https://nipy.org/nibabel/">https://nipy.org/nibabel/</a></p>
+<dt>nibabel</dt><dd><p>Matthew Brett (MB), Chris Markiewicz (CM), Michael Hanke (MH), Marc-Alexandre Côté (MC), Ben Cipollini (BC), Paul McCarthy (PM), Chris Cheng (CC), Yaroslav Halchenko (YOH), Satra Ghosh (SG), Eric Larson (EL), Demian Wassermann, Stephan Gerhard and Ross Markello (RM). (2020). NiBabel 3.1.1. Jun 30. <a class="reference external" href="https://nipy.org/nibabel/">https://nipy.org/nibabel/</a></p>
 </dd>
 <dt>sklearn</dt><dd><p>Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., … &amp; Duchesnay, E. (2011). Scikit-learn: Machine learning in Python. the Journal of machine Learning research, 12, 2825-2830. <a class="reference external" href="https://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf">https://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf</a></p>
 </dd>
-<dt>scipy</dt><dd><p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., … &amp; Van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. Nat Methods 17, 261–272 (2020). <a class="reference external" href="https://doi.org/10.1038/s41592-019-0686-2">https://doi.org/10.1038/s41592-019-0686-2</a></p>
+<dt>scipy</dt><dd><p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., … &amp; Van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. Nat Methods 17, 261–272. <a class="reference external" href="https://doi.org/10.1038/s41592-019-0686-2">https://doi.org/10.1038/s41592-019-0686-2</a></p>
 </dd>
 <dt>argparse</dt><dd><p><a class="reference external" href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.491.1897&amp;rep=rep1&amp;type=pdf">Davis, M. T. L. (2015). Package ‘argparse’.</a></p>
 </dd>
@@ -286,15 +285,32 @@ L. Griffanti, G. Salimi-Khorshidi, C.F. Beckmann, E.J. Auerbach, G. Douaud, C.E.
 </dd>
 <dt>Audiopath</dt><dd><p>Sitek, K. R., Gulban, O. F., Calabrese, E., Johnson, G. A., Lage-Castellanos, A., Moerel, M., Satrajit S Ghosh &amp; De Martino, F. (2019). Mapping the human subcortical auditory system using histology, postmortem MRI and in vivo MRI at 7T. Elife, 8, e48932. 10.7554/eLife.48932. <a class="reference external" href="https://doi.org/10.7554/eLife.48932">https://doi.org/10.7554/eLife.48932</a></p>
 </dd>
-<dt>SUDMEX_CONN</dt><dd><p>Garza-Villarreal, E., Chakravarty, M., Hansen, B. et al. The effect of crack cocaine addiction and age on the microstructure and morphology of the human striatum and thalamus using shape analysis and fast diffusion kurtosis imaging. Transl Psychiatry 7, e1122 (2017). <a class="reference external" href="https://doi.org/10.1038/tp.2017.92">https://doi.org/10.1038/tp.2017.92</a></p>
+<dt>SUDMEX_CONN</dt><dd><p>Angeles-Valdez, D., Rasgado-Toledo, J., Issa-Garcia, V., Balducci, T., Villicana, V., Valencia, A., Gonzalez-Olvera, J. J., Reyes-Zamorano, E., Garza-Villarreal, E. A. (2021). <em>SUDMEX CONN: The Mexican MRI dataset of patients with cocaine use disorder</em>. medRxiv 2021.09.03.21263048</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="parcellations">
+<h2>Parcellations<a class="headerlink" href="#parcellations" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Desikan-Killiany (aparc)</dt><dd><p>Desikan, R. S., Ségonne, F., Fischl, B., Quinn, B. T., Dickerson, B. C., Blacker, D., … &amp; Killiany, R. J. (2006). An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. Neuroimage, 31(3), 968-980.</p>
+</dd>
+<dt>Destrieux (aparc-a2009s)</dt><dd><p>Destrieux, C., Fischl, B., Dale, A., &amp; Halgren, E. (2010). Automatic parcellation of human cortical gyri and sulci using standard anatomical nomenclature. Neuroimage, 53(1), 1-15.</p>
+</dd>
+<dt>Economo</dt><dd><p>Scholtens, L. H., de Reus, M. A., de Lange, S. C., Schmidt, R., &amp; van den Heuvel, M. P. (2018). An mri von economo–koskinas atlas. NeuroImage, 170, 249-256.</p>
+</dd>
+<dt>Glasser</dt><dd><p>Glasser, M. F., Coalson, T. S., Robinson, E. C., Hacker, C. D., Harwell, J., Yacoub, E., … &amp; Van Essen, D. C. (2016). A multi-modal parcellation of human cerebral cortex. Nature, 536(7615), 171-178.</p>
+</dd>
+<dt>Schaefer 100-1000</dt><dd><p>Schaefer, A., Kong, R., Gordon, E. M., Laumann, T. O., Zuo, X. N., Holmes, A. J., … &amp; Yeo, B. T. (2018). Local-global parcellation of the human cerebral cortex from intrinsic functional connectivity MRI. Cerebral cortex, 28(9), 3095-3114.</p>
+</dd>
+<dt>vosdewael 100-400</dt><dd><p>Vos de Wael, R., Benkarim, O., Paquola, C., Lariviere, S., Royer, J., Tavakol, S., … &amp; Bernhardt, B. C. (2020). BrainSpace: a toolbox for the analysis of macroscale gradients in neuroimaging and connectomics datasets. Communications biology, 3(1), 1-10.</p>
 </dd>
 </dl>
 </div>
 <div class="section" id="other-sources">
 <h2>Other sources<a class="headerlink" href="#other-sources" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Microstructural markers</dt><dd><p>Paquola C, Vos de Wael R, Wagstyl K, Bethlehem R, Seidlitz J, Hong S, Bullmore ET, Evans AC, Misic B, Margulies DS, Smallwood J, Bernhardt BC (2019) Dissociations between microstructural and functional hierarchies within regions of transmodal cortex. PLoS Biology, in press.
-Paquola C, Bethlehem RAI, Seidlitz J, Wagstyl K, Romero-Garcia, Whitaker KJ, Vos de Wael R, Williams GB, NSPN Consortium, Vertes PE, Bernhardt BC, Bullmore ET (2019). A moment of change: shifts in myeloarchitecture profiles characterize adolescent development of cortical gradients. Preprint: <a class="reference external" href="https://www.biorxiv.org/content/10.1101/706341v1">https://www.biorxiv.org/content/10.1101/706341v1</a></p>
+<dl>
+<dt>Microstructural profile covariance</dt><dd><p>Paquola C, Vos de Wael R, Wagstyl K, Bethlehem R, Seidlitz J, Hong S, Bullmore ET, Evans AC, Misic B, Margulies DS, Smallwood J, Bernhardt BC (2019) Dissociations between microstructural and functional hierarchies within regions of transmodal cortex. PLoS Biology, in press</p>
+<p>Paquola C, Bethlehem RAI, Seidlitz J, Wagstyl K, Romero-Garcia, Whitaker KJ, Vos de Wael R, Williams GB, NSPN Consortium, Vertes PE, Bernhardt BC, Bullmore ET (2019). A moment of change: shifts in myeloarchitecture profiles characterize adolescent development of cortical gradients. Preprint: <a class="reference external" href="https://www.biorxiv.org/content/10.1101/706341v1">https://www.biorxiv.org/content/10.1101/706341v1</a></p>
 </dd>
 <dt>BIDS</dt><dd><p>Gorgolewski, K. J., Alfaro-Almagro, F., Auer, T., Bellec, P., Capotă, M., Chakravarty, M. M., … &amp; Poldrack, R. A. (2017). BIDS apps: Improving ease of use, accessibility, and reproducibility of neuroimaging data analysis methods. PLoS computational biology, 13(3), e1005209. <a class="reference external" href="https://doi.org/10.1371/journal.pcbi.1005209">https://doi.org/10.1371/journal.pcbi.1005209</a></p>
 </dd>
@@ -302,7 +318,7 @@ Paquola C, Bethlehem RAI, Seidlitz J, Wagstyl K, Romero-Garcia, Whitaker KJ, Vos
 </div>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
+<dl>
 <dt>ANTs - antsRegistrationSyN.sh</dt><dd><p>Tustison, N. J. (2013). Explicit B-spline regularization in diffeomorphic image registration. Frontiers in neuroinformatics, 7, 39. <a class="reference external" href="https://doi.org/10.3389/fninf.2013.00039">https://doi.org/10.3389/fninf.2013.00039</a></p>
 </dd>
 <dt>ANTs - N4BiasFieldCorrection</dt><dd><ol class="upperalpha simple" start="14">
@@ -311,51 +327,52 @@ Paquola C, Bethlehem RAI, Seidlitz J, Wagstyl K, Romero-Garcia, Whitaker KJ, Vos
 </dd>
 <dt>FSL - bet</dt><dd><p>Smith, S. M. (2000). BET: Brain extraction tool. FMRIB TR00SMS2b, Oxford Centre for Functional Magnetic Resonance Imaging of the Brain), Department of Clinical Neurology, Oxford University, John Radcliffe Hospital, Headington, UK.</p>
 </dd>
-<dt>FSL - flirt</dt><dd><p>Jenkinson, M., Bannister, P., Brady, J. M. and Smith, S. M. Improved Optimisation for the Robust and Accurate Linear Registration and Motion Correction of Brain Images. NeuroImage, 17(2), 825-841, 2002.
-Jenkinson, M. and Smith, S. M. A Global Optimisation Method for Robust Affine Registration of Brain Images. Medical Image Analysis, 5(2), 143-156, 2001.
-Greve, D.N. and Fischl, B. Accurate and robust brain image alignment using boundary-based registration. NeuroImage, 48(1):63-72, 2009.</p>
+<dt>FSL - flirt</dt><dd><p>Jenkinson, M., Bannister, P., Brady, J. M. and Smith, S. M. (2002). Improved Optimisation for the Robust and Accurate Linear Registration and Motion Correction of Brain Images. NeuroImage, 17(2), 825-841</p>
+<p>Jenkinson, M. and Smith, S. M. A. (2001). Global Optimisation Method for Robust Affine Registration of Brain Images. Medical Image Analysis, 5(2), 143-156</p>
+<p>Greve, D.N. and Fischl, B. (2009). Accurate and robust brain image alignment using boundary-based registration. NeuroImage, 48(1):63-72.</p>
 </dd>
-<dt>FSL - fast</dt><dd><p>Zhang, Y. and Brady, M. and Smith, S. Segmentation of brain MR images through a hidden Markov random field model and the expectation-maximization algorithm. IEEE Trans Med Imag, 20(1):45-57, 2001.</p>
+<dt>FSL - fast</dt><dd><p>Zhang, Y. and Brady, M. and Smith, S. (2001). Segmentation of brain MR images through a hidden Markov random field model and the expectation-maximization algorithm. IEEE Trans Med Imag, 20(1):45-57.</p>
 </dd>
-<dt>FSL - first</dt><dd><p>Patenaude, B., Smith, S.M., Kennedy, D., and Jenkinson M. A Bayesian Model of Shape and Appearance for Subcortical Brain NeuroImage, 56(3):907-922, 2011.</p>
+<dt>FSL - first</dt><dd><p>Patenaude, B., Smith, S.M., Kennedy, D., and Jenkinson M. (2011). A Bayesian Model of Shape and Appearance for Subcortical Brain NeuroImage, 56(3):907-922.</p>
 </dd>
-<dt>FSL - eddy_quad</dt><dd><p>Bastiani, M., Cottaar, M., Fitzgibbon, S.P., Suri, S., Alfaro-Almagro, F., Sotiropoulos, S.N., Jbabdi, S., and Andersson, J.L.R. Automated quality control for within and between diffusion MRI studies using a non-parametric framework for movement and distortion correction. NeuroImage, 184:801-812, 2019.</p>
+<dt>FSL - eddy_quad</dt><dd><p>Bastiani, M., Cottaar, M., Fitzgibbon, S.P., Suri, S., Alfaro-Almagro, F., Sotiropoulos, S.N., Jbabdi, S., and Andersson, J.L.R. (2019). Automated quality control for within and between diffusion MRI studies using a non-parametric framework for movement and distortion correction. NeuroImage, 184:801-812.</p>
 </dd>
-<dt>FSL - eddy</dt><dd><p>Andersson, J.L.R. and Sotiropoulos, S.N. An integrated approach to correction for off-resonance effects and subject movement in diffusion MR imaging. NeuroImage, 125:1063-1078, 2016.</p>
+<dt>FSL - eddy</dt><dd><p>Andersson, J.L.R. and Sotiropoulos, S.N. (2016). An integrated approach to correction for off-resonance effects and subject movement in diffusion MR imaging. NeuroImage, 125:1063-1078.</p>
 </dd>
-<dt>FSL - eddy <code class="docutils literal notranslate"><span class="pre">--repol</span></code></dt><dd><p>Andersson, J.L.R., Graham, M.S., Zsoldos, E., and Sotiropoulos, S.N. Incorporating outlier detection and replacement into a non-parametric framework for movement and distortion correction of diffusion MR images. NeuroImage, 141:556-572, 2016.</p>
+<dt>FSL - eddy <code class="docutils literal notranslate"><span class="pre">--repol</span></code></dt><dd><p>Andersson, J.L.R., Graham, M.S., Zsoldos, E., and Sotiropoulos, S.N. (2016). Incorporating outlier detection and replacement into a non-parametric framework for movement and distortion correction of diffusion MR images. NeuroImage, 141:556-572.</p>
 </dd>
-<dt>FSL - topup description</dt><dd><p>Andersson 2003] J.L.R. Andersson, S. Skare, J. Ashburner. How to correct susceptibility distortions in spin-echo echo-planar images: application to diffusion tensor imaging. NeuroImage, 20(2):870-888, 2003.</p>
+<dt>FSL - topup description</dt><dd><p>Andersson 2003] J.L.R. Andersson, S. Skare, J. Ashburner. (2003). How to correct susceptibility distortions in spin-echo echo-planar images: application to diffusion tensor imaging. NeuroImage, 20(2):870-888.</p>
 </dd>
-<dt>FSL - topup implementation</dt><dd><p>[Smith 2004] S.M. Smith, M. Jenkinson, M.W. Woolrich, C.F. Beckmann, T.E.J. Behrens, H. Johansen-Berg, P.R. Bannister, M. De Luca, I. Drobnjak, D.E. Flitney, R. Niazy, J. Saunders, J. Vickers, Y. Zhang, N. De Stefano, J.M. Brady, and P.M. Matthews. Advances in functional and structural MR image analysis and implementation as FSL. NeuroImage, 23(S1):208-219, 2004.</p>
+<dt>FSL - topup implementation</dt><dd><p>Smith S.M. , M. Jenkinson, M.W. Woolrich, C.F. Beckmann, T.E.J. Behrens, H. Johansen-Berg, P.R. Bannister, M. De Luca, I. Drobnjak, D.E. Flitney, R. Niazy, J. Saunders, J. Vickers, Y. Zhang, N. De Stefano, J.M. Brady, and P.M. Matthews. (2004). Advances in functional and structural MR image analysis and implementation as FSL. NeuroImage, 23(S1):208-219.</p>
 </dd>
-<dt>MRtrix3 - tckgen <code class="docutils literal notranslate"><span class="pre">-act</span></code></dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. Anatomically-constrained tractography: Improved diffusion MRI streamlines tractography through effective use of anatomical information. NeuroImage, 2012, 62, 1924-1938</p>
+<dt>MRtrix3 - tckgen <code class="docutils literal notranslate"><span class="pre">-act</span></code></dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. (2012). Anatomically-constrained tractography: Improved diffusion MRI streamlines tractography through effective use of anatomical information. NeuroImage, 62, 1924-1938</p>
 </dd>
-<dt>MRtrix3 - dwidenoise</dt><dd><p>Veraart, J.; Novikov, D.S.; Christiaens, D.; Ades-aron, B.; Sijbers, J. &amp; Fieremans, E. Denoising of diffusion MRI using random matrix theory. NeuroImage, 2016, 142, 394-406, doi: 10.1016/j.neuroimage.2016.08.016
-Veraart, J.; Fieremans, E. &amp; Novikov, D.S. Diffusion MRI noise mapping using random matrix theory. Magn. Res. Med., 2016, 76(5), 1582-1593, doi:10.1002/mrm.26059
-Cordero-Grande, L.; Christiaens, D.; Hutter, J.; Price, A.N.; Hajnal, J.V. Complex diffusion-weighted image estimation via matrix recovery under general noise models. NeuroImage, 2019, 200, 391-404, doi:10.1016/j.neuroimage.2019.06.039</p>
+<dt>MRtrix3 - dwidenoise</dt><dd><p>Veraart, J.; Novikov, D.S.; Christiaens, D.; Ades-aron, B.; Sijbers, J. &amp; Fieremans, E. (2016). Denoising of diffusion MRI using random matrix theory. NeuroImage, 142, 394-406, doi: 10.1016/j.neuroimage.2016.08.016</p>
+<p>Veraart, J.; Fieremans, E. &amp; Novikov, D.S. (2016). Diffusion MRI noise mapping using random matrix theory. Magn. Res. Med., 76(5), 1582-1593, doi:10.1002/mrm.26059</p>
+<p>Cordero-Grande, L.; Christiaens, D.; Hutter, J.; Price, A.N.; Hajnal, J.V. (2019). Complex diffusion-weighted image estimation via matrix recovery under general noise models. NeuroImage, 200, 391-404, doi:10.1016/j.neuroimage.2019.06.039</p>
 </dd>
-<dt>MRtrix3 - mrdegibbs</dt><dd><p>Kellner, E; Dhital, B; Kiselev, V.G &amp; Reisert, M. Gibbs-ringing artifact removal based on local subvoxel-shifts. Magnetic Resonance in Medicine, 2016, 76, 1574–1581.</p>
+<dt>MRtrix3 - mrdegibbs</dt><dd><p>Kellner, E; Dhital, B; Kiselev, V.G &amp; Reisert, M. (2016). Gibbs-ringing artifact removal based on local subvoxel-shifts. Magnetic Resonance in Medicine, 76, 1574–1581.</p>
 </dd>
-<dt>MRtrix3 - wi2fod</dt><dd><p>Jeurissen, B; Tournier, J-D; Dhollander, T; Connelly, A &amp; Sijbers, J. Multi-tissue constrained spherical deconvolution for improved analysis of multi-shell diffusion MRI data. NeuroImage, 2014, 103, 411-426
-Tournier, J.-D.; Calamante, F., Gadian, D.G. &amp; Connelly, A. Direct estimation of the fiber orientation density function from diffusion-weighted MRI data using spherical deconvolution. NeuroImage, 2004, 23, 1176-1185</p>
+<dt>MRtrix3 - dwi2fod</dt><dd><p>Jeurissen, B; Tournier, J-D; Dhollander, T; Connelly, A &amp; Sijbers, J. (2014). Multi-tissue constrained spherical deconvolution for improved analysis of multi-shell diffusion MRI data. NeuroImage, 103, 411-426</p>
+<p>Tournier, J.-D.; Calamante, F., Gadian, D.G. &amp; Connelly, A. (2004). Direct estimation of the fiber orientation density function from diffusion-weighted MRI data using spherical deconvolution. NeuroImage, 23, 1176-1185</p>
 </dd>
-<dt>MRtrix3 - mtnormalise</dt><dd><p>Raffelt, D.; Dhollander, T.; Tournier, J.-D.; Tabbara, R.; Smith, R. E.; Pierre, E. &amp; Connelly, A. Bias Field Correction and Intensity Normalisation for Quantitative Analysis of Apparent Fibre Density. In Proc. ISMRM, 2017, 26, 3541</p>
+<dt>MRtrix3 - mtnormalise</dt><dd><p>Raffelt, D.; Dhollander, T.; Tournier, J.-D.; Tabbara, R.; Smith, R. E.; Pierre, E. &amp; Connelly, (2017). A. Bias Field Correction and Intensity Normalisation for Quantitative Analysis of Apparent Fibre Density. In Proc. ISMRM, 26, 3541</p>
 </dd>
-<dt>MRtrix3 - 5tt2gmwmi</dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. Anatomically-constrained tractography:Improved diffusion MRI streamlines tractography through effective use of anatomical information. NeuroImage, 2012, 62, 1924-1938</p>
+<dt>MRtrix3 - 5tt2gmwmi</dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. (2012). Anatomically-constrained tractography:Improved diffusion MRI streamlines tractography through effective use of anatomical information. NeuroImage, 62, 1924-1938</p>
 </dd>
-<dt>MRtrix3 - tckmap <code class="docutils literal notranslate"><span class="pre">-tdi</span></code></dt><dd><p>Calamante, F.; Tournier, J.-D.; Jackson, G. D. &amp; Connelly, A. Track-density imaging (TDI): Super-resolution white matter imaging using whole-brain track-density mapping. NeuroImage, 2010, 53, 1233-1243</p>
+<dt>MRtrix3 - tckmap <code class="docutils literal notranslate"><span class="pre">-tdi</span></code></dt><dd><p>Calamante, F.; Tournier, J.-D.; Jackson, G. D. &amp; Connelly, A. (2010). Track-density imaging (TDI): Super-resolution white matter imaging using whole-brain track-density mapping. NeuroImage, 53, 1233-1243</p>
 </dd>
-<dt>MRtrix3 - tckgen iFOD1 or SD_STREAM:</dt><dd><p>Tournier, J.-D.; Calamante, F. &amp; Connelly, A. MRtrix: Diffusion tractography in crossing fiber regions. Int. J. Imaging Syst. Technol., 2012, 22, 53-66</p>
+<dt>MRtrix3 - tckgen iFOD1 or SD_STREAM:</dt><dd><p>Tournier, J.-D.; Calamante, F. &amp; Connelly, A. (2012). MRtrix: Diffusion tractography in crossing fiber regions. Int. J. Imaging Syst. Technol., 22, 53-66</p>
 </dd>
-<dt>MRtrix3 - tckgen iFOD2:</dt><dd><p>Tournier, J.-D.; Calamante, F. &amp; Connelly, A. Improved probabilistic streamlines tractography by 2nd order integration over fibre orientation distributions. Proceedings of the International Society for Magnetic Resonance in Medicine, 2010, 1670</p>
+<dt>MRtrix3 - tckgen iFOD2:</dt><dd><p>Tournier, J.-D.; Calamante, F. &amp; Connelly, A. (2010). Improved probabilistic streamlines tractography by 2nd order integration over fibre orientation distributions. Proceedings of the International Society for Magnetic Resonance in Medicine, 1670</p>
 </dd>
-<dt>MRtrix3 - dwifslpreproc</dt><dd><p>Smith, S. M.; Jenkinson, M.; Woolrich, M. W.; Beckmann, C. F.; Behrens, T. E.; Johansen-Berg, H.; Bannister, P. R.; De Luca, M.; Drobnjak, I.; Flitney, D. E.; Niazy, R. K.; Saunders, J.; Vickers, J.; Zhang, Y.; De Stefano, N.; Brady, J. M. &amp; Matthews, P. M. Advances in functional and structural MR image analysis and implementation as FSL. NeuroImage, 2004, 23, S208-S219
-Skare, S. &amp; Bammer, R. Jacobian weighting of distortion corrected EPI data. Proceedings of the International Society for Magnetic Resonance in Medicine, 2010, 5063</p>
+<dt>MRtrix3 - dwifslpreproc</dt><dd><p>Smith, S. M.; Jenkinson, M.; Woolrich, M. W.; Beckmann, C. F.; Behrens, T. E.; Johansen-Berg, H.; Bannister, P. R.; De Luca, M.; Drobnjak, I.; Flitney, D. E.; Niazy, R. K.; Saunders, J.; Vickers, J.; Zhang, Y.; De Stefano, N.; Brady, J. M. &amp; Matthews, P. M. (2004). Advances in functional and structural MR image analysis and implementation as FSL. NeuroImage, 23, S208-S219</p>
+<p>Skare, S. &amp; Bammer, R. (2010). Jacobian weighting of distortion corrected EPI data. Proceedings of the International Society for Magnetic Resonance in Medicine, 5063</p>
 </dd>
 <dt>MRtrix3 - tck2sift2</dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. SIFT2: Enabling dense quantitative assessment of brain white matter connectivity using streamlines tractography. NeuroImage, 2015, 119, 338-351</p>
 </dd>
 <dt>MRtrix3 - tck2connectome</dt><dd><p>Smith, R. E.; Tournier, J.-D.; Calamante, F. &amp; Connelly, A. The effects of SIFT on the reproducibility and biological accuracy of the structural connectome. NeuroImage, 2015, 104, 253-265</p>
+<p>Skare, S. &amp; Bammer, R. (2010). Jacobian weighting of distortion corrected EPI data. Proceedings of the International Society for Magnetic Resonance in Medicine, 5063</p>
 </dd>
 </dl>
 </div>

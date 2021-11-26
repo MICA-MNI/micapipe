@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Structural processing &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -95,14 +95,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Structural processing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#proc-structural">-proc_structural</a></li>
@@ -117,14 +117,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
@@ -132,7 +132,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -177,8 +177,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -190,7 +188,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/02.structuralproc/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -263,8 +261,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
 <p><strong>Terminal:</strong></p>
-<blockquote>
-<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong> <strong>&lt;options&gt;</strong></pre>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_structural</strong> <strong>&lt;options&gt;</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_structural
 </pre></div>
@@ -290,17 +287,15 @@
 <p>In the following example, if multiple T1w are found inside the <em>BIDS/&lt;sub&gt;/anat</em> directory, only the MRI volume containing the string <code class="docutils literal notranslate"><span class="pre">run-02_T1w</span></code> will be processed:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-<span class="hll">           -proc_structural -t1wStr run-02_T1w
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="lineno">2 </span><span class="hll">           -proc_structural -t1wStr run-02_T1w
 </span></pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="admonition-multiple-t1-weighted-images admonition">
 <p class="admonition-title">Multiple T1-weighted images 🧠 🧠 🧠</p>
 <p>Be sure you use the same T1w images in <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code> and <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code>. Although they are independent modules, when using the same image the registrations will be much better.</p>
 </div>
-</div></blockquote>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
 <p>Directories created or populated by <strong>-proc_structural</strong> will be under each <code class="docutils literal notranslate"><span class="pre">SubjectDir</span></code> which is <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;</span></code>.</p>
@@ -389,8 +384,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
 <p><strong>Terminal:</strong></p>
-<blockquote>
-<div><pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong> <strong>&lt;options&gt;</strong></pre>
+<pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_freesurfer</strong> <strong>&lt;options&gt;</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_freesurfer -&lt;options&gt;
 </pre></div>
@@ -419,7 +413,6 @@
 </tr>
 </tbody>
 </table>
-</div></blockquote>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
 <p>Directories created or populated by <strong>-proc-freesurfer</strong>:</p>
@@ -522,11 +515,10 @@
 <p>The next example will only process the three selected parcellations (<code class="docutils literal notranslate"><span class="pre">schaefer-200,economo,aparc</span></code>)</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-<span class="hll">           -post_structural -atlas schaefer-200,economo,aparc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="lineno">2 </span><span class="hll">           -post_structural -atlas schaefer-200,economo,aparc
 </span></pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="admonition-thinking-ahead admonition">
 <p class="admonition-title">Thinking ahead ☂️</p>
@@ -605,7 +597,7 @@
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-3-0 active docutils container">
 <ul class="simple">
-<li><p>Identify centre vertex for each parcel, based on the vertex with the shortest summed euclidean distance to all other vertices in the same parcel</p></li>
+<li><p>Identify centre vertex for each parcel, based on the vertex with the shortest summed Euclidean distance to all other vertices in the same parcel</p></li>
 <li><p>Calculate geodesic distance from centre vertex to all other vertices on the midsurface mesh using <a class="reference external" href="https://www.humanconnectome.org/software/workbench-command/-surface-geodesic-distance">workbench -surface-geodesic-distance</a></p></li>
 <li><p>Average computed distances within parcels</p></li>
 </ul>
@@ -662,7 +654,7 @@
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-0 active docutils container">
 <ul class="simple">
 <li><p>Register cortical thickness and curvature to fsaverage5 and conte69 templates</p></li>
-<li><p>Apply 10mm gaussian smooth on template-mapped outputs</p></li>
+<li><p>Apply 10mm Gaussian smooth on template-mapped outputs</p></li>
 </ul>
 </div>
 <div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-4-1 docutils container">

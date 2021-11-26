@@ -4,7 +4,7 @@
 
 Quality control
 ============================================================
-*micapipe* includes an integrated module for quality control of the outputs, which can be run at any point during processing. This step generates group and individual quality control reports, that will allow you to quickly identify missing files, registration performance, as well as outputs requiring further inspection (workflow).
+*micapipe* includes an integrated module for quality control of the outputs, which can be run at any point during processing. This step generates group and individual quality control reports, that will allow you to quickly identify missing files, verify registration performance, and check outputs requiring further inspection.
 
 
 Individual QC

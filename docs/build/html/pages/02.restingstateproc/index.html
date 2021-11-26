@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>rs-fMRI &mdash; micapipe  documentation</title>
   
@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
@@ -22,10 +24,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -35,6 +34,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
@@ -95,14 +95,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.execution/index.html">Micapipe usage overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
@@ -113,14 +113,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
@@ -128,7 +128,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.gradients/index.html">Building gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
@@ -173,8 +173,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -186,7 +184,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/02.restingstateproc/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -202,7 +200,7 @@
             
   <div class="section" id="resting-state-fmri-processing">
 <span id="restingstateproc"></span><h1>Resting-state fMRI processing<a class="headerlink" href="#resting-state-fmri-processing" title="Permalink to this headline">¶</a></h1>
-<p>This module performs all pre-processing of subject resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.</p>
+<p>This module performs all pre-processing of a subject’s resting-state functional MRI (rsfMRI) scans, in preparation for the construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. The pipeline is mainly based on tools from FSL and AFNI for volumetric processing, and FreeSurfer and Workbench for surface-based mapping. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.</p>
 <img alt="../../_images/sankey_rsfmri.png" class="align-center" src="../../_images/sankey_rsfmri.png" />
 <div class="section" id="proc-rsfmri">
 <h2>-proc_rsfmri<a class="headerlink" href="#proc-rsfmri" title="Permalink to this headline">¶</a></h2>
@@ -351,11 +349,10 @@
 <p>FIX and Melodic are used by default to remove nuisance variable signal. However, our default parameters might not suit all databases. Our default training file used for FIX was trained in-house, on a subset of 30 participants (15 healthy controls, 15 patients with drug-resistant epilepsy). Scans were acquires on a 3T Siemens Magnetom Prisma-Fit equipped with a 64-channel head coil. rs-fMRI scans of 7 minutes were acquired using multiband accelerated 2D-BOLD echo-planar imaging (3mm isotropic voxels, TR=600ms, TE=30ms, flip angle=52°, FOV=240×240mm2, slice thickness=3mm, mb factor=6, echo spacing=0.54ms). If your acquisition parameters are similar to this, it may be appropriate for you to use the defaults options in <code class="docutils literal notranslate"><span class="pre">-proc_rsfmri</span></code>. Otherwise, if your acquisition parameters are drastically different, we recommend you to <a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide#Training_datasets">train your own dataset for FIX</a>, or do not use FIX and try a different method for nuisance variable signal removal. In the next example,FIX and Melodic will be skipped, but global signal, white matter and CSF regressions will be applied:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-          -proc_rsfmri -noFIX -regress_WM_CSF -GSR
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span>mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="lineno">2 </span>          -proc_rsfmri -noFIX -regress_WM_CSF -GSR
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </div>
 <div class="admonition-longitudinal-acquisitions admonition">
@@ -374,11 +371,10 @@ anatomical session, you should use the <code class="docutils literal notranslate
 <p>You should specify <code class="docutils literal notranslate"><span class="pre">-sesAnat</span></code> <code class="docutils literal notranslate"><span class="pre">struct01</span></code> to register each session to the same anatomical volume. In the next example, sessions <code class="docutils literal notranslate"><span class="pre">func01</span></code> and <code class="docutils literal notranslate"><span class="pre">func02</span></code> will be registered to the anatomical image in <code class="docutils literal notranslate"><span class="pre">struct01</span></code>:</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -sub <span class="m">01</span> -ses func01 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
- mica-pipe -sub <span class="m">01</span> -ses func02 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> mica-pipe -sub <span class="m">01</span> -ses func01 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
+<span class="lineno">2 </span> mica-pipe -sub <span class="m">01</span> -ses func02 -proc_rsfmri -sesAnat struct01 -bids &lt;bidsDir&gt; -out &lt;outDir&gt;
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 </div>
 </div>
