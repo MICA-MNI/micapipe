@@ -21,7 +21,7 @@
 **Welcome to micapipe's documentation!**
 ========================================================
 
-.. image:: https://img.shields.io/badge/version-v0.1.0.RC-blue
+.. image:: https://img.shields.io/badge/version-v0.1.2.RC-blue
   :target: https://github.com/MICA-MNI/micapipe
   :alt: version
 
