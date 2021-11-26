@@ -140,7 +140,7 @@ vosdewael 100-400
 Other sources
 ------------------------------------------------
 
-Microstructural markers
+Microstructural profile covariance
     Paquola C, Vos de Wael R, Wagstyl K, Bethlehem R, Seidlitz J, Hong S, Bullmore ET, Evans AC, Misic B, Margulies DS, Smallwood J, Bernhardt BC (2019) Dissociations between microstructural and functional hierarchies within regions of transmodal cortex. PLoS Biology, in press  
 
     Paquola C, Bethlehem RAI, Seidlitz J, Wagstyl K, Romero-Garcia, Whitaker KJ, Vos de Wael R, Williams GB, NSPN Consortium, Vertes PE, Bernhardt BC, Bullmore ET (2019). A moment of change: shifts in myeloarchitecture profiles characterize adolescent development of cortical gradients. Preprint: https://www.biorxiv.org/content/10.1101/706341v1
