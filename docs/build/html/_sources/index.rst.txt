@@ -102,7 +102,6 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    pages/01.install/index
    pages/01.whatyouneed/index
-   pages/01.execution/index
    pages/01.whatsnew/index
 
 .. toctree::
