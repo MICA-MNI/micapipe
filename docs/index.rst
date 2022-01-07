@@ -21,7 +21,7 @@
 **Welcome to micapipe's documentation!**
 ========================================================
 
-.. image:: https://img.shields.io/badge/version-v0.1.0.RC-blue
+.. image:: https://img.shields.io/badge/version-v0.1.2.RC-blue
   :target: https://github.com/MICA-MNI/micapipe
   :alt: version
 
@@ -102,7 +102,6 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    pages/01.install/index
    pages/01.whatyouneed/index
-   pages/01.execution/index
    pages/01.whatsnew/index
 
 .. toctree::
@@ -153,13 +152,14 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    <br>
 
-.. figure:: ./figures/micapipe.png
-   :alt: alternate text
-   :align: center
-
 
 Core development team 🧠
 --------------------------------------------------------
+
+.. figure:: ./figures/micapipe.png
+   :alt: alternate text
+   :align: left
+   :scale: 20 %
 
 Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Centre of the Montreal Neurological Institute.
 

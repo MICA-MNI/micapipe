@@ -5,11 +5,12 @@
 From DICOMS to BIDS: ``mic2bids``
 ================================================
 
-This section was meant to be an example of how to organize a database from sorted *DICOMS* to `BIDS <https://bids.neuroimaging.io>`_. As dicom naming and sorting can be quite unique to each imaging protocol,
-the MRI sequence names and outputs must be adapted to be compatible with each dataset.
+This section describes how to organize a database from sorted *DICOMs* files to `BIDS format <https://bids.neuroimaging.io>`_. As the naming and sorting of DICOMs can be quite unique to each imaging protocol,
+ MRI sequence names and outputs must be adapted to be compatible with each dataset.
 
-The first step starts by looking at the organization of the sorted *DICOMS* directory. You must identify the protocol names that you want to transform to *NIFTI*, and which will populate the BIDS directory.
-Let's suppose that your sorted *DICOMS* directory looks like the following:
+First, you will have to look at the organization of the sorted DICOM directory. This directory should contain subdirectories in which the DICOM images are sorted according to each sequence completed by the participant. You must identify the sequences in the protocol that you want to transform to NIfTI: These sequences will then populate the BIDS directory.
+
+Let's suppose that your sorted DICOM directory looks like the following:
 
 .. parsed-literal::
     S1_02_AAHead_Scout_64ch-head-coil_MPR_sag
@@ -29,67 +30,95 @@ Let's suppose that your sorted *DICOMS* directory looks like the following:
     S1_31_mp2rage-0.8iso-sess2_UNI_Images
     S1_32_mp2rage-0.8iso-sess2_INV2
 
-In this example you won't include those dicom directories with the string `AAHead_Scout_64ch-head-coil_MPR` in the BIDS directory, because those acquisitions are for calibration purposes only.
+In this example, we don't want images in the DICOM directories containing the string `AAHead_Scout_64ch-head-coil_MPR` to be included in the BIDS directory, because those acquisitions are for calibration purposes only.
 
+Once you've determined which directories you want to transform to NIfTI and organize into BIDS, you should identify their corresponding MRI sequence. You should determine the BIDS naming equivalent of each unique sequence in your dataset. In other words, you should match the string of each DICOM directory to a BIDS string that will identify the corresponding sequence.
 
-Once you've determined the directories you want to transform to *NIFTI*, you should identify their correspondence MRI sequence, for example:
+.. admonition:: BIDS naming 🗄
 
-+---------------------------------------------+------------------------------------------+
-|                   Sequence                  |     DICOM directory name                 |
-+=============================================+==========================================+
-| T1 weighted (T1w)                           | - S1_08_mprage-0.8iso_ORIG               |
-|                                             | - S1_20_mprage-0.8iso_ORIG               |
-+---------------------------------------------+------------------------------------------+
-| Quantitative T1 weighted (qT1w)             | - S1_29_mp2rage-0.8iso-sess2_INV1        |
-|                                             | - S1_30_mp2rage-0.8iso-sess2_T1_Images   |
-|                                             | - S1_31_mp2rage-0.8iso-sess2_UNI_Images  |
-|                                             | - S1_32_mp2rage-0.8iso-sess2_INV2        |
-+---------------------------------------------+------------------------------------------+
-| Diffusion weighted Imaging (DWI)            | - S1_10_dwi_b2000_90                     |
-|                                             | - S1_11_dwi_b700_40                      |
-|                                             | - S1_12_dwi_b300_10                      |
-|                                             | - S1_13_dwi_b0_5PA                       |
-+---------------------------------------------+------------------------------------------+
-| Blood-oxygen-level dependent imaging (bold) | - S1_16_rsfmri-3mm-bold_AP               |
-|                                             | - S1_17_rsfmri-3mm_se_AP                 |
-|                                             | - S1_18_rsfmri-3mm_se_PA                 |
-+---------------------------------------------+------------------------------------------+
+    Take a look at the `BIDS specifications <https://bids-specification.readthedocs.io/en/stable/>`_ if you have any doubts about the BIDS string that best matches your MRI acquisition.
 
-Next, you should determine the BIDS naming equivalent of each unique sequence on your dataset. In other words you should match the string of the DICOM directory to a BIDS string
-that will identify the correspondent files, in this example it would be as follows:
+The next step is to transform your DICOM directory to a NIfTI file with the matching BIDS naming, and place it under its corresponding BIDS directory. Different online tools can transform DICOMs to NIfTI. For example, we use `dcm2niix <https://github.com/rordenlab/dcm2niix>`_ with the flag ``-b``, which creates a json card for each NIfTI file.
 
-+----------+---------------------------------+--------------------------+
-| Sequence | DICOM string                    | BIDS string              |
-+==========+=================================+==========================+
-| T1w      | mprage-0.8iso_ORIG              | _T1w                     |
-+----------+---------------------------------+--------------------------+
-| qT1w     | mp2rage-0.8iso-sess2_INV1       | _acq-inv1_T1map          |
-+----------+---------------------------------+--------------------------+
-| qT1w     | mp2rage-0.8iso-sess2_T1_Images  | _acq-mp2rage_T1map       |
-+----------+---------------------------------+--------------------------+
-| qT1w     | mp2rage-0.8iso-sess2_UNI_Images | _acq-uni_T1map           |
-+----------+---------------------------------+--------------------------+
-| qT1w     | mp2rage-0.8iso-sess2_INV2       | _acq-inv2_T1map          |
-+----------+---------------------------------+--------------------------+
-| DWI      | dwi_b2000_90                    | _acq-b2000_dir-AP_dwi    |
-+----------+---------------------------------+--------------------------+
-| DWI      | dwi_b700_40                     | _acq-b700_dir-AP_dwi     |
-+----------+---------------------------------+--------------------------+
-| DWI      | dwi_b300_10                     | _acq-b300_dir-AP_dwi     |
-+----------+---------------------------------+--------------------------+
-| DWI      | dwi_b0_5PA                      | _acq-b0_dir-PA_dwi       |
-+----------+---------------------------------+--------------------------+
-| bold     | rsfmri-3mm-bold_AP              | _task-rest_acq-AP_bold   |
-+----------+---------------------------------+--------------------------+
-| bold     | rsfmri-3mm_se_AP                | _task-rest_acq-APse_bold |
-+----------+---------------------------------+--------------------------+
-| bold     | rsfmri-3mm_se_PA                | _task-rest_acq-PAse_bold |
-+----------+---------------------------------+--------------------------+
+We can refer to to the following table to see the DICOM and BIDS naming of each sequence, and which BIDS subdirectory it will store each file. This example uses ``sub-01`` as subject's identification and
+``ses-01`` as the session name. As we acquired two distinct T1w images, using the string ``-run`` will differentiate them.
 
-Take a look at the `BIDS specifications <https://bids-specification.readthedocs.io/en/stable/>`_, if you have any doubts about what is the correct BIDS string, which best matches to your MRI acquisition name.
+.. list-table:: DICOM to BIDS
+    :widths: 30 20 10 5 20
+    :header-rows: 1
+    :class: tight-table
 
-The next step is to transform your *DICOMS* directory to a *NIFTI* file with the matching BIDS naming, and under the correspondent BIDS directory.
-There are different tools online you can use to transform *DICOMS* to *NIFTI*, for example we used `dcm2niix <https://github.com/rordenlab/dcm2niix>`_ with the flag ``-b``, which creates a json card for each NIFTI file.
+    * - **Sequence**
+      - **DICOM directory name**
+      - **BIDS string**
+      - **BIDS directory**
+      - **Example subject naming**
+    * - T1 weighted (T1w)
+      - S1_08_mprage-0.8iso_ORIG
+      - ``_T1w``
+      - /anat
+      - ``sub-01_ses-01_run-1_T1w.nii.gz``
+    * - T1 weighted (T1w)
+      - S1_20_mprage-0.8iso_ORIG
+      - ``_T1w``
+      - /anat
+      - ``sub-01_ses-01_run-2_T1w.nii.gz``      
+    * - Quantitative T1 (qT1), first inversion time
+      - S1_29_mp2rage-0.8iso-sess2_INV1
+      - ``_acq-inv1_T1map``
+      - /anat
+      - ``sub-01_ses-01_acq-inv1_T1map.nii.gz``
+    * - Quantitative T1 (qT1), second inversion time
+      - S1_32_mp2rage-0.8iso-sess2_INV2
+      - ``_acq-inv2_T1map``
+      - /anat
+      - ``sub-01_ses-01_acq-inv2_T1map.nii.gz``
+    * - Quantitative T1 (qT1), T1 map
+      - S1_30_mp2rage-0.8iso-sess2_T1_Images
+      - ``_acq-mp2rage_T1map``
+      - /anat
+      - ``sub-01_ses-01_acq-mp2rage_T1map.nii.gz``
+    * - Quantitative T1 (qT1), synthetic T1
+      - S1_31_mp2rage-0.8iso-sess2_UNI_Images
+      - ``_acq-uni_T1map``
+      - /anat
+      - ``sub-01_ses-01_acq-uni_T1map.nii.gz``
+    * - Diffusion weighted Imaging (DWI), b=2000
+      - S1_10_dwi_b2000_90
+      - ``_acq-b2000_dir-AP_dwi``
+      - /dwi
+      - ``sub-01_ses-01_acq-b2000_dir-AP_dwi.nii.gz``
+    * - Diffusion weighted Imaging (DWI), b=700
+      - S1_11_dwi_b700_40
+      - ``_acq-b700_dir-AP_dwi``
+      - /dwi
+      - ``sub-01_ses-01_acq-b700_dir-AP_dwi.nii.gz``
+    * - Diffusion weighted Imaging (DWI), b=300
+      - S1_12_dwi_b300_10
+      - ``_acq-b300_dir-AP_dwi``
+      - /dwi
+      - ``sub-01_ses-01_acq-b300_dir-AP_dwi.nii.gz``
+    * - Diffusion weighted Imaging (DWI), b=0
+      - S1_13_dwi_b0_5PA
+      - ``_acq-b0_dir-PA_dwi``
+      - /dwi
+      - ``sub-01_ses-01_acq-b0_dir-PA_dwi.nii.gz``
+    * - Blood-oxygen-level dependent imaging (BOLD)
+      - S1_16_rsfmri-3mm-bold_AP
+      - ``_task-rest_acq-AP_bold``
+      - /func
+      - ``sub-01_ses-01_task-rest_acq-AP_bold.nii.gz``
+    * - Fieldmap for BOLD (AP)
+      - S1_17_rsfmri-3mm_se_AP
+      - ``_task-rest_acq-APse_bold``
+      - /func
+      - ``sub-01_ses-01_task-rest_acq-APse_bold.nii.gz``
+    * - Fieldmap for BOLD (PA)
+      - S1_18_rsfmri-3mm_se_PA
+      - ``_task-rest_acq-PAse_bold``
+      - /func
+      - ``sub-01_ses-01_task-rest_acq-PAse_bold.nii.gz``
+
 
 Let's suppose we are organizing the directories of ``sub-01_ses-01``, the main BIDS structure should be as follows:
 
@@ -99,39 +128,6 @@ Let's suppose we are organizing the directories of ``sub-01_ses-01``, the main B
         ├── anat
         ├── dwi
         └── func
-
-On the next table you can find the corresponding BIDS naming of each DICOM directory. This example uses ``sub-01`` as subject's identification and
-``ses-01`` as the session name. As we had two T1w images, using the string ``-run`` we will differentiate them.
-
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| Sequence | From DICOM directory                  | BIDS directory | To BIDS name                                 |
-+==========+=======================================+================+==============================================+
-| T1w      | S1_08_mprage-0.8iso_ORIG              | anat           | sub-01_ses-01_run-1_T1w.nii.gz               |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| T1w      | S1_20_mprage-0.8iso_ORIG              | anat           | sub-01_ses-01_run-2_T1w.nii.gz               |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| DWI      | S1_10_dwi_b2000_90                    | dwi            | sub-01_ses-01_acq-b2000_dir-AP_dwi.nii.gz    |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| DWI      | S1_11_dwi_b700_40                     | dwi            | sub-01_ses-01_acq-b700_dir-AP_dwi.nii.gz     |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| DWI      | S1_12_dwi_b300_10                     | dwi            | sub-01_ses-01_acq-b300_dir-AP_dwi.nii.gz     |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| DWI      | S1_13_dwi_b0_5PA                      | dwi            | sub-01_ses-01_acq-b0_dir-PA_dwi.nii.gz       |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| bold     | S1_16_rsfmri-3mm-bold_AP              | func           | sub-01_ses-01_task-rest_acq-AP_bold.nii.gz   |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| bold     | S1_17_rsfmri-3mm_se_AP                | func           | sub-01_ses-01_task-rest_acq-APse_bold.nii.gz |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| bold     | S1_18_rsfmri-3mm_se_PA                | func           | sub-01_ses-01_task-rest_acq-PAse_bold.nii.gz |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| qT1w     | S1_29_mp2rage-0.8iso-sess2_INV1       | anat           | sub-01_ses-01_acq-inv1_T1map.nii.gz          |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| qT1w     | S1_30_mp2rage-0.8iso-sess2_T1_Images  | anat           | sub-01_ses-01_acq-mp2rage_T1map.nii.gz       |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| qT1w     | S1_31_mp2rage-0.8iso-sess2_UNI_Images | anat           | sub-01_ses-01_acq-uni_T1map.nii.gz           |
-+----------+---------------------------------------+----------------+----------------------------------------------+
-| qT1w     | S1_32_mp2rage-0.8iso-sess2_INV2       | anat           | sub-01_ses-01_acq-inv2_T1map.nii.gz          |
-+----------+---------------------------------------+----------------+----------------------------------------------+
 
 The final BIDS structure should look like:
 
@@ -174,11 +170,9 @@ The final BIDS structure should look like:
             ├── sub-01_ses-01_task-rest_acq-PAse_bold.json
             └── sub-01_ses-01_task-rest_acq-PAse_bold.nii.gz
 
-
 It is the same procedure for each subject in your dataset.
-The bash script ``mic2bids`` does all the previous steps automatically using ``dcm2niix``,
-however it was written to match the name of the DICOMS in the `MICs dataset <https://doi.org/10.1101/2021.08.04.454795>`_ with their corresponding BIDS name.
-Feel free to adapt it to your own necessities, by modifying the DICOMS string and BIDS names in the lines 138-146 of ``mic2bids``, or to use it as a guideline.
+
+The bash script ``mic2bids`` completes all the previous steps automatically using ``dcm2niix``. However it was written to match the name of the DICOMs in the `MICA-MICs dataset <https://doi.org/10.1101/2021.08.04.454795>`_ with their corresponding BIDS name. Feel free to adapt it to your own needs, by modifying the DICOM strings and BIDS names in the lines 138-146 of ``mic2bids``, or use it as a guideline to build your own script.
 
 .. parsed-literal::
     # -----------------------------------------------------------------------------------------------
@@ -196,14 +190,23 @@ Once you've done all the necessary modifications you can run the scrip:
 .. parsed-literal::
    mic2bids  -in <DICOMS_directory> -bids <BIDS directory path> -id <subject> -ses <session>
 
-**Arguments:**
+.. list-table::
+    :widths: 75 750
+    :header-rows: 1
+    :class: tight-table
 
-		-in 	  ``path`` Input directory with the subject's DICOMS directories (FULL PATH)
-		-id 	  ``string`` Subject identification for the new BIDS directory
-			      *-id* CAN be different than *-in* (DICOMS directory name)
-		-ses 	  ``string`` flag to specify the session name (Default is 'ses-pre')
-		-bids   ``path`` Path to BIDS directory ( . or FULL PATH)
-		-force 	flag that will overwrite the directory
+    * - **Argument**
+      - **Description**
+    * - ``-in`` ``<path>``
+      - Input directory with the subject's DICOMS directories (FULL PATH)
+    * - ``-id`` ``string``
+      - Subject identification for the new BIDS directory ``-id`` CAN be different than ``-in`` (DICOMS directory name)
+    * - ``-ses`` ``string``
+      - Flag to specify the session name (Default is ``ses-pre``)
+    * - ``-bids`` ``<path>``
+      - Path to BIDS directory ( . or FULL PATH)
+    * - ``-force``
+      - This flag will overwrite the existing BIDS directory for that subject
 
 Once you have ordered all your subjects, add the rest of the mandatory files to your BIDS directory:
 
@@ -213,4 +216,4 @@ Once you have ordered all your subjects, add the rest of the mandatory files to 
   - participants.tsv
   - README
 
-Finally, remember to validate your dataset with the `BIDS validator <https://bids-standard.github.io/bids-validator/>`_ tool!
+Finally, remember to validate your dataset with the `BIDS validator <https://bids-standard.github.io/bids-validator/>`_ tool prior to running micapipe!

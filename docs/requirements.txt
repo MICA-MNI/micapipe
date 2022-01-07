@@ -3,3 +3,4 @@ sphinx_rtd_theme
 sphinx-gallery
 sphinx_tabs
 https://github.com/saratheriver/enigma-pygments/releases/download/v2020.7.8.2/enigma-pygments-style-2020.7.8.2.tar.gz
+docutils==0.17.1
