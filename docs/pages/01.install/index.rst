@@ -59,7 +59,7 @@ If the version of Singularity on your HPC is modern enough you can create a ``Si
 
     $ singularity build /my_images/micapipe-<version>.simg docker://micalab/micapipe:<version>
 
-Where ``<version>`` should be replaced with the desired version of micapipe that you want to download. For example, if you want to use ``micapipe v0.0.2``, the command would look as follows.
+Where ``<version>`` should be replaced with the desired version of micapipe that you want to download. For example, if you want to use ``micapipe v0.1.2``, the command would look as follows.
 
 .. code-block:: bash
 
@@ -78,7 +78,7 @@ In this case, start with a machine (e.g., your personal computer) with ``Docker`
         singularityware/docker2singularity \
         micalab/micapipe:<version>
 
-Where ``<version>`` should be replaced with the desired version of micapipe that you want to download and ``/absolute/path/to/output/folder`` with the absolute path where the created ``Singularity image`` should be stored. Sticking with the example of ``micapipe v0.0.2``, this would look as follows:
+Where ``<version>`` should be replaced with the desired version of micapipe that you want to download and ``/absolute/path/to/output/folder`` with the absolute path where the created ``Singularity image`` should be stored. Sticking with the example of ``micapipe v0.1.2``, this would look as follows:
 
 .. code-block:: bash
 
