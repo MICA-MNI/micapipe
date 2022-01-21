@@ -22,11 +22,11 @@ Where ``version`` is the specific version of ``micapipe`` you would like to use.
 
     docker pull micalab/micapipe:latest
 
-or the same command without the ``:latest`` tag, as Docker searches for the ``latest`` tag by default. However, as the ``latest`` version is subject to changes and not necessarily in sync with the most recent ``numbered version``, it is recommend to utilize the latter to ensure reproducibility. For example, if you want to employ ``micapipe v0.0.2`` the command would look as follows:
+or the same command without the ``:latest`` tag, as Docker searches for the ``latest`` tag by default. However, as the ``latest`` version is subject to changes and not necessarily in sync with the most recent ``numbered version``, it is recommend to utilize the latter to ensure reproducibility. For example, if you want to employ ``micapipe v0.1.2`` the command would look as follows:
 
 .. code-block:: bash
 
-    docker pull micalab/micapipe:v0.0.2
+    docker pull micalab/micapipe:v0.1.2
 
 After the command finished (it may take a while depending on your internet connection), you can run micapipe like this:
 
@@ -63,7 +63,7 @@ Where ``<version>`` should be replaced with the desired version of micapipe that
 
 .. code-block:: bash
 
-    $ singularity build /my_images/micapipe-v0.0.2.simg docker://micalab/micapipe:v0.0.2
+    $ singularity build /my_images/micapipe-v0.1.2.simg docker://micalab/micapipe:v0.1.2
 
 
 Preparing a Singularity image (Singularity version < 2.5)
@@ -86,7 +86,7 @@ Where ``<version>`` should be replaced with the desired version of micapipe that
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /absolute/path/to/output/folder:/output \
         singularityware/docker2singularity \
-        micalab/micapipe:v0.0.2
+        micalab/micapipe:v0.1.2
 
 Beware of the back slashes, expected for Windows systems. The above command would translate to Windows systems as follows:
 
