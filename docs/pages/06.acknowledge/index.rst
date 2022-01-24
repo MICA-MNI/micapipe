@@ -2,7 +2,7 @@
 
 .. title:: Many thanks to your funders and collaborators
 
-Acknowlegdements
+Acknowledgements
 ================================================
 
 The authors would like to express their gratitude to the open science initiatives that made this work possible:
@@ -50,6 +50,3 @@ The authors would like to express their gratitude to the open science initiative
 
    **Foundation**
 
-.. figure:: logo_hf.png
-   :align: left
-   :scale: 20 %
