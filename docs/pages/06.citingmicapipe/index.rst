@@ -10,9 +10,10 @@ If you used micapipe to process any part of your dataset, please cite the follow
 
 .. admonition:: Reference 🤓
 
-	Rodriguez-Cruces R, Royer J, Herholz P, Larivière S, Vos de Wael R, Paquola C, Benkarim O, Park BY, Degré-Pelletier J, Concha L, Bernhardt B. *Presenting the micapipe: a standardized processing pipeline for multiscale imaging and connectome analysis*. 2021. Work in progress
+	Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022). *Micapipe: A Pipeline for Multimodal Neuroimaging and Connectome Analysis*. bioRxiv 2022.01.31.478189. doi: https://doi.org/10.1101/2022.01.31.478189
 
 
 .. admonition:: DOI 🌐
 
-	http//:
+	`10.1101/2022.01.31.478189 <https://doi.org/10.1101/2022.01.31.478189>`_
+
