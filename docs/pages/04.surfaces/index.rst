@@ -81,7 +81,7 @@ The first step in both languages is to set the environment.
     require('viridis')           # version 0.5.1
     require('fsbrain')           # version 0.4.2
     require('freesurferformats') # version 0.1.14
-    require('rgl')               # version 0.100.54
+    require('rgl')               # version 0.1.54
 
     # Set the working directory to the out directory
     setwd("~/tmp/micaConn/micapipe_tutorials") # <<<<<<<<<<<< CHANGE THIS PATH
