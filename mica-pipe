@@ -35,6 +35,8 @@ echo -e "
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-proc_rsfmri\033[0m      : Resting state Funtional MRI processing and functional connectome
 \t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
+\t\033[38;5;197m-proc_task\033[0m      : Task Funtional MRI processing
+\t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
 \t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
@@ -72,7 +74,7 @@ echo -e "
 \t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
 \t\t\t\t         ( default is non linear registration SyN )
 
-\t\033[38;5;197m-proc_rsfmri\033[0m
+\t\033[38;5;197m-proc_rsfmri | -proc_task\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
 \t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for rsfMRI processing
@@ -101,6 +103,9 @@ echo -e "
 \t\t\t\t         ( default is non linear registration SyN )
 \t\t\033[38;5;120m-fmri_acq\033[0m            : Use this flag if you have a rsfMRI already processed and you wish to process a new fMRI volume.
 \t\t\t\t         ( this will create a new directory with the outputs func/acq-<fMRI> )
+
+\t\t\033[38;5;120m-taskScanStr\033[0m         : String(s) to manually identify the main scan(s) for task-fMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
+\t\t\t\t         eg. 'task-spatial_acq-AP_bold'
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -219,6 +224,10 @@ do
     procfMRI=TRUE
     shift
   ;;
+  -proc_task)
+    procTask=TRUE
+    shift
+  ;;
   -topupConfig)
     configFileInput=TRUE
     configFile=$2
@@ -236,6 +245,10 @@ do
   ;;
   -mainScanStr)
     mainScanStr=$2
+    shift;shift
+  ;;
+  -taskScanStr)
+    taskScanStr=$2
     shift;shift
   ;;
   -fmri_pe)
@@ -464,6 +477,9 @@ if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 if [ -z "${fmri_acq}" ]; then fmri_acq=FALSE; else fmri_acq=TRUE; fi
+
+# Optional arguments task-fmri
+if [ -z "$taskScanStr" ]; then taskScanStr=FALSE; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
@@ -867,6 +883,35 @@ if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
              $COMMAND $PROC
     else
         # LOCAL - Resting state fMRI processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Task fMRI
+# -----------------------------------------------------------------------------------------------#
+#  Task fMRI
+if [ "$ALL" = "TRUE" ] || [ "$procTask" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/02_proc-task.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${taskScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq}"
+    # mica.q - Task fMRI processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Task fMRI processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - ReTask fMRI processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Task fMRI processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+        # LOCAL - Task fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi

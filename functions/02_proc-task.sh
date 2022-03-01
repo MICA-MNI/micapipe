@@ -19,7 +19,7 @@ changeIcaFixTraining=$9
 thisMainScan=${10}
 thisPhase=${11}
 smooth=${12}
-mainScanStr=${13}
+taskScanStr=${13}
 fmri_pe=${14}
 fmri_rpe=${15}
 performNSR=${16}
@@ -67,8 +67,7 @@ T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-cerebellum
 Info "Inputs:"
 Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
-if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
-Note "Main scan        :" "$mainScanStr"; fi
+Note "fMRI task scan   :" "$taskScanStr"
 Note "Phase scan       :" "$fmri_pe"
 Note "Reverse Phase    :" "$fmri_rpe"
 Note "Smoothing        :" "$smooth"
@@ -79,53 +78,15 @@ Note "Longitudinal ses :" "$sesAnat"
 Note "fmri acq         :" "$fmri_acq"
 
 #------------------------------------------------------------------------------#
-if [[ "$mainScanStr" == DEFAULT ]]; then
-    # Main scan
-    N_mainScan=${#bids_mainScan[@]}
-    if [ "$N_mainScan" -gt 1 ]; then
-        if [[ "${thisMainScan}" == "DEFAULT" ]]; then
-            Error "Multiple rsfMRI runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
-        elif [ "$thisMainScan" -gt "$N_mainScan" ]; then
-            Warning "Specified run number (${thisMainScan}) is greater than number of rsfMRI scans scans found ($N_mainScan). Using first filename in list as default";
-            mainScan=${bids_mainScan[0]}
-        else
-            Info "Found $N_mainScan rsfMRI scans, processing specified scan # $thisMainScan"
-            mainScan=${bids_mainScan[$thisMainScan-1]}
-        fi
-    else
-        mainScan=${bids_mainScan[0]}
-        if [[ "$thisMainScan" == "DEFAULT" ]]; then
-            Info "No run number specified for rsfMRI scan and did not find more than one run for main scan - all good!"
-        else
-            if [ "$thisMainScan" -gt "$N_mainScan" ]; then
-                Warning "Found one or less rsfMRI scan, but specified run number = $thisMainScan). Using first filename in list as default";
-            fi
-        fi
-    fi
-
-    # Main scan json
-    N_mainScanJson=${#bids_mainScanJson[@]}
-    if [ "$N_mainScanJson" -gt 1 ]; then
-        if [[ "${thisMainScan}" == "DEFAULT" ]]; then
-            Error "Found multiple .json files for main rsfMRI scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
-        elif [ "$thisMainScan" -gt "$N_mainScanJson" ]; then
-            Warning "Specified run number (${thisMainScan}) is greater than number of rsfMRI json files found for main scan ($N_mainScan). Using first filename in list as default";
-            mainScanJson=${bids_mainScan[0]}
-        else
-            Info "Found ${N_mainScanJson} rsfMRI scan json files, using specified run # ${thisMainScan}"
-            mainScanJson=${bids_mainScanJson[$thisMainScan-1]}
-        fi
-    else
-        Info "Using default json scan: ${bids_mainScanJson[0]}"
-        mainScanJson=${bids_mainScanJson[0]}
-    fi
+if [[ "$taskScanStr" == FALSE ]]; then
+  Error "No task fMRI string was provided"; exit;
 else
-    Info "Using user provided main scan: ${subject_bids}/func/${idBIDS}_${mainScanStr}"
-    mainScan=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".nii* 2>/dev/null)
-    mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
+    Info "Using user provided main scan: ${subject_bids}/func/${idBIDS}_${taskScanStr}"
+    mainScan=$(ls "${subject_bids}/func/${idBIDS}_${taskScanStr}".nii* 2>/dev/null)
+    taskScanJson=$(ls "${subject_bids}/func/${idBIDS}_${taskScanStr}".json 2>/dev/null)
 fi
 # If no json is found search at the top BIDS directory
-if [[ -z ${mainScanJson} ]]; then mainScanJson="${BIDS}/task-rest_bold.json"; fi
+if [[ -z ${taskScanJson} ]]; then taskScanJson="${BIDS}/task-rest_bold.json"; fi
 
 #------------------------------------------------------------------------------#
 # Phase encoding
@@ -159,8 +120,8 @@ if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_pe" ]]; then mainPhaseScan="$fmri
 if [[ "$fmri_rpe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then reversePhaseScan="$fmri_rpe"; fi
 
 # Check inputs
-if [ ! -f "$mainScan" ]; then Error "Couldn't find $id main rsfMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
-if [ ! -f "$mainScanJson" ]; then Error "Couldn't find $id main rsfMRI scan json file: \n\t ls ${mainScanJson}"; exit; fi #Last check to make sure file exists
+if [ ! -f "$mainScan" ]; then Error "Couldn't find $id main task fMRI scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
+if [ ! -f "$taskScanJson" ]; then Error "Couldn't find $id main rsfMRI scan json file: \n\t ls ${taskScanJson}"; exit; fi #Last check to make sure file exists
 if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
@@ -213,11 +174,11 @@ else
     Info "Global, white matter and CSF signal regression will not be performed (default)"
 fi
 
-# gettin dat from mainScanJson exit if Not found
-readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
-RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
-if [[ -z "$readoutTime" ]]; then Warning "readoutTime is missing in $mainScanJson, if TOPUP was selected it will likely FAIL"; fi
-if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $mainScanJson $RepetitionTime"; exit; fi
+# gettin dat from taskScanJson exit if Not found
+readoutTime=$(grep TotalReadoutTime "${taskScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
+RepetitionTime=$(grep RepetitionTime "${taskScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
+if [[ -z "$readoutTime" ]]; then Warning "readoutTime is missing in $taskScanJson, if TOPUP was selected it will likely FAIL"; fi
+if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $taskScanJson $RepetitionTime"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Resting state fMRI processing\n\t\tmicapipe $Version, $PROC "
