@@ -444,7 +444,7 @@ Error "One or more mandatory arguments are missing:
                -bids : $BIDS"
 help; exit 1; fi
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -453,6 +453,7 @@ Error "A processing flag is missing:
                     -post_structural
                     -proc_dwi
                     -proc_rsfmri
+                    -proc_task
                     -SC
                     -MPC
                     -GD
