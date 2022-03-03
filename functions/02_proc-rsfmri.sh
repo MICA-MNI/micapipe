@@ -43,7 +43,8 @@ noFIX=${18}
 sesAnat=${19}
 regAffine=${20}
 fmri_acq=${21}
-PROC=${22}
+dropTR=${22}
+PROC=${23}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -297,7 +298,7 @@ if [[ ! -f "${singleecho}" ]]; then
               Note "RAWNIFTI:" "$rawNifti"
 
               # Drop first five TRs and reorient to standard
-              if [ "$tag" == "mainScan" ]; then
+              if [ "$tag" == "mainScan" ] && [ "$dropTR" == "TRUE" ]; then
                   Do_cmd nifti_tool -cbl -prefix "${tmp}/${tag}_trDrop.nii.gz" -infiles "$rawNifti"'[5..$]'
                   Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
                   Do_cmd fslreorient2std "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_reorient.nii.gz"

@@ -449,7 +449,8 @@ function json_rsfmri() {
         \"FIX\": \"${statusFIX}\",
         \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
-        \"CSFWMSignalRegression\": \"${performNSR}\"
+        \"CSFWMSignalRegression\": \"${performNSR}\",
+        \"dropTR\": \"${dropTR}\"
       }
     ]
   }" > "$1"
