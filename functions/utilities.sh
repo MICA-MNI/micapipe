@@ -423,7 +423,7 @@ function json_rsfmri() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"Class\": \"rsfMRI processed\",
+    \"Class\": \"fMRI processed\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
 \t\t\"${sform}\"
