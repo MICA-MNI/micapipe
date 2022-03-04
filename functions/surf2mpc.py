@@ -63,7 +63,7 @@ else:
     bids_id="sub-{sub}_{ses}".format(sub=sub, ses=ses_num)
 
 # setting output directory
-OPATH = "{subject_dir}/anat/surfaces/micro_profiles/{acq}".format(subject_dir=ses_str, acq=acq)
+OPATH = "{subject_dir}/anat/surfaces/micro_profiles/{acq}/".format(subject_dir=ses_str, acq=acq)
 
 if os.path.exists(OPATH):
     try:
