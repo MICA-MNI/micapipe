@@ -1,5 +1,5 @@
 roi,mics,label,R,G,B,A,side, coor.x, coor.y, coor.z
-1000,1000,medial_wall,,,,,,,
+1000,1000,medial_wall,,,,,,,,
 1001,1001,ctx-lh-bankssts,25,100,40,0,,,,
 1002,1002,ctx-lh-caudalanteriorcingulate,125,100,160,0,,,,
 1003,1003,ctx-lh-caudalmiddlefrontal,100,25,0,0,,,,
@@ -35,7 +35,7 @@ roi,mics,label,R,G,B,A,side, coor.x, coor.y, coor.z
 1033,1033,ctx-lh-temporalpole,70,70,70,0,,,,
 1034,1034,ctx-lh-transversetemporal,150,150,200,0,,,,
 1035,1035,ctx-lh-insula,255,192,32,0,,,,
-2000,2000,medial_wall,,,,,,,
+2000,2000,medial_wall,,,,,,,,
 2001,2001,ctx-rh-bankssts,25,100,40,0,,,,
 2002,2002,ctx-rh-caudalanteriorcingulate,125,100,160,0,,,,
 2003,2003,ctx-rh-caudalmiddlefrontal,100,25,0,0,,,,
