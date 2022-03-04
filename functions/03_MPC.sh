@@ -27,7 +27,8 @@ tmpDir=$7
 input_im=$8
 input_dat=$9
 mpc_reg=${10}
-PROC=${11}
+mpc_str=${11}
+PROC=${12}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -110,20 +111,28 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR="$dir_surf"
 
+# Variables naming for multiple acquisitions
+if [[ "${mpc_str}" == DEFAULT ]]; then
+  mpc_str="micro"
+  outDir="${subject_dir}/anat/surfaces/micro_profiles"
+else
+  outDir="${subject_dir}/anat/surfaces/micro_profiles/acq-${mpc_str}"
+fi
+
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
 origImage=${bids_T1ws[0]}
 if [[ ${input_dat} == "DEFAULT" ]]; then
-    fs_transform="${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat"
-    if [[ ! -f "${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat" ]]; then
+    fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
+    if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then
         Info "Running microstructural -> freesurfer registration for Subject ${id}"
         Do_cmd bbregister --s "$idBIDS" \
             --mov "$regImage" \
             --int "$origImage" \
             --reg "$fs_transform" \
-            --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
+            --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" \
             --init-header --t1
-        if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" ]]; then ((Nsteps++)); fi
+        if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" ]]; then ((Nsteps++)); fi
     else
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"; ((Nsteps++))
     fi
@@ -135,7 +144,6 @@ fi
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
 num_surfs=14
-outDir="${subject_dir}/anat/surfaces/micro_profiles"
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
 json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC.json"
 

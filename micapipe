@@ -121,6 +121,8 @@ echo -e "
 \t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
 \t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
 \t\t\t\t        It MUST be on the same space as the main microstructural image!!
+\t\t\033[38;5;120m-mpc_acq\033[0m            : Provide a string with this this flag to process new quantitative map.
+\t\t\t\t         ( this will create a new directory with the outputs anat/surfaces/micro_profiles/acq-<mpc_acq> )
 
 
 
@@ -330,6 +332,11 @@ do
     mpc_reg=$2
     shift;shift
   ;;
+  -mpc_acq)
+    mpc_acq=TRUE
+    mpc_str=$2
+    shift;shift
+  ;;
   -QC)
     QCgroup=TRUE
     shift
@@ -494,6 +501,7 @@ else optarg_mpc[0]=DEFAULT; fi
 if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_dat)
 else optarg_mpc[1]=DEFAULT; fi
 if [ -z ${mpc_reg} ]; then mpc_reg=DEFAULT; else mpc_reg=$(realpath $mpc_reg); fi
+if [[ $mpc_acq == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -782,7 +790,7 @@ fi
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
