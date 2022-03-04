@@ -376,7 +376,7 @@ str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
 
-if [[ ! -f "$T1nativepro_in_dwi" ]]; then
+if [[ ! -f "$T1nativepro_in_dwi" ]] && [[ ! -f "$mat_dwi_affine"]]; then
       Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
