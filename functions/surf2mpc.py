@@ -45,6 +45,7 @@ ses_num = sys.argv[3]
 num_surf = sys.argv[4]
 parc_name = sys.argv[5]
 dir_fs = sys.argv[6]
+acq = sys.argv[7]
 
 # Define default input if none given
 if len(sys.argv) < 5:
@@ -62,7 +63,7 @@ else:
     bids_id="sub-{sub}_{ses}".format(sub=sub, ses=ses_num)
 
 # setting output directory
-OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
+OPATH = "{subject_dir}/anat/surfaces/micro_profiles/{acq}".format(subject_dir=ses_str, acq=acq)
 
 if os.path.exists(OPATH):
     try:

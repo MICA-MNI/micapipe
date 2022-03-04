@@ -114,10 +114,12 @@ export SUBJECTS_DIR="$dir_surf"
 # Variables naming for multiple acquisitions
 if [[ "${mpc_str}" == DEFAULT ]]; then
   mpc_str="micro"
-  outDir="${subject_dir}/anat/surfaces/micro_profiles"
+  mpc_p=""
 else
-  outDir="${subject_dir}/anat/surfaces/micro_profiles/acq-${mpc_str}"
+  mpc_p="acq-${mpc_str}"
+
 fi
+outDir="${subject_dir}/anat/surfaces/micro_profiles/${mpc_p}"
 
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
@@ -237,7 +239,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_space-fsnative_atlas-${parc}_desc-intensity_profiles.txt"
     if [[ ! -f "$MPC_int" ]]; then
         Info "Running MPC on $parc"
-        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_freesurfer"
+        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_freesurfer" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); fi
 done
