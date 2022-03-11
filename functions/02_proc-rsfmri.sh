@@ -51,7 +51,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -244,7 +244,7 @@ Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 # rsfMRI directories
 if [[ ${fmri_acq} == "TRUE" ]]; then
-  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag=${fmri_tag/_bold/}
+  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag/_bold/}"
   tagMRI="${fmri_tag}"
   proc_rsfmri="$subject_dir/func/${fmri_tag}"
   Info "Outputs will be stored in:"
