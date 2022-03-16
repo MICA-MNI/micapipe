@@ -26,14 +26,15 @@ tmpDir=$7
 tracts=$8
 autoTract=$9
 keep_tck=${10}
+dwi_str=${11}
 filter=SIFT2
-PROC=${11}
+PROC=${12}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -42,6 +43,17 @@ source "$MICAPIPE/functions/utilities.sh"
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Update path for multiple acquisitions processing
+if [[ "${dwi_str}" != "DEFAULT" ]]; then
+  dwi_str="acq-${dwi_str/acq-/}"
+  dwi_str_="_${dwi_str}"
+  export proc_dwi=$subject_dir/dwi/"${dwi_str}"
+  export dwi_cnntm=$proc_dwi/connectomes
+  export autoTract_dir=$proc_dwi/auto_tract
+else
+  dwi_str=""; dwi_str_=""
+fi
 
 # Check inputs: DWI post TRACTOGRAPHY
 fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
@@ -83,11 +95,12 @@ if [ "$N" -gt 3 ]; then Warning " Connectomes with $tracts streamlines already e
 #------------------------------------------------------------------------------#
 Title "Tractography and structural connectomes\n\t\tmicapipe $Version, $PROC"
 micapipe_software
-Info "Number of streamlines: $tracts"
-Info "Auto-tractograms: $autoTract"
-Info "Saving tractography: $keep_tck"
-Info "Saving temporal dir: $nocleanup"
-Info "MRtrix will use $threads threads"
+Note "Number of streamlines:" "${tracts}"
+Note "Auto-tractograms     :" "${autoTract}"
+Note "Saving tractography  :" "${keep_tck}"
+Note "Saving temporal dir  :" "${nocleanup}"
+Note "MRtrix will use      :" "${threads} threads"
+Note "DWi acquisition      :" "${dwi_str}"
 
 #	Timer
 aloita=$(date +%s)
@@ -102,7 +115,6 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Create Connectomes directory for the outpust
 [[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm" && chmod -R 770 "$dwi_cnntm"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 Do_cmd cd "$tmp"
 
 # -----------------------------------------------------------------------------------------------
@@ -274,7 +286,7 @@ if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; Do_cmd mv "$wei
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
-QC_SC
+QC_SC "${dir_QC}/micapipe_QC_SC${dwi_str_}.txt"
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
@@ -287,6 +299,6 @@ Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, SC-${tracts}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, SC-${tracts}${dwi_str_}" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, SC-${tracts}${dwi_str_}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

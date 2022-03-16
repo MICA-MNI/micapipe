@@ -631,7 +631,7 @@ function cleanup() {
 }
 
 function QC_proc-dwi() {
-  html=${dir_QC}/micapipe_QC_proc-dwi.txt
+  html=$1
   if [ -f "$html" ]; then rm "$html"; fi
   for i in "${!bids_dwis[@]}"; do
     echo "        <tr>
@@ -691,7 +691,7 @@ function QC_proc-rsfmri() {
 }
 
 function QC_SC() {
-  html=${dir_QC}/micapipe_QC_SC.txt
+  html=$1
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "          <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>

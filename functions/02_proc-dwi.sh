@@ -28,13 +28,14 @@ dwi_rpe=$9
 dwi_processed=${10}
 rpe_all=${11}
 regAffine=${12}
-PROC=${13}
+dwi_str=${13}
+PROC=${14}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe
+    export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -53,6 +54,7 @@ Note "tmpDir     : " "$tmpDir"
 Note "dwi_main   : " "$dwi_main"
 Note "dwi_rpe    : " "$dwi_rpe"
 Note "rpe_all    : " "$rpe_all"
+Note "dwi_acq    : " "$dwi_str"
 Note "Affine only: " "$regAffine"
 Note "Processing : " "$PROC"
 
@@ -97,12 +99,22 @@ for i in ${bids_dwis[*]}; do
   if [[ -z "$trt" ]]; then Error "TotalReadoutTime is missing in $json"; exit; fi
 done
 
+# Update path for multiple acquisitions processing
+if [[ "${dwi_str}" != "DEFAULT" ]]; then
+  dwi_str="acq-${dwi_str/acq-/}"
+  dwi_str_="_${dwi_str}"
+  export proc_dwi=$subject_dir/dwi/"${dwi_str}"
+  [[ ! -d "$proc_dwi" ]] && Do_cmd mkdir -p "$proc_dwi" && chmod -R 770 "$proc_dwi"
+else
+  dwi_str=""; dwi_str_=""
+fi
+
 #------------------------------------------------------------------------------#
 Title "Diffusion Weighted Imaging processing\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-dwi
-Info "Saving temporal dir: $nocleanup"
-Info "ANTs and MRtrix will use $threads threads"
+Note "Saving temporal dir     :" "$nocleanup"
+Note "ANTs and MRtrix will use: " "$threads threads"
 
 #	Timer
 aloita=$(date +%s)
@@ -111,7 +123,8 @@ Nsteps=0
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_proc-dwi_${id}"
 Do_cmd mkdir -p "$tmp"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir "$dir_QC_png"
+[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
+
 # TRAP in case the script fails
 trap 'rm $mrconf; cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
@@ -278,7 +291,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
+      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe${dwi_str_}.png"
 
       # Processing the reverse encoding b0
       if [[ -f "$rpe_dns" ]]; then
@@ -305,7 +318,7 @@ if [[ ! -f "$dwi_corr" ]]; then
             fi
             Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
 
-            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
+            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe${dwi_str_}.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
@@ -353,7 +366,7 @@ if [[ ! -f "$dwi_corr" ]]; then
           Do_cmd rm "$dwi_dns"
           # eddy_quad Quality Check
           Do_cmd cd "$tmp"/dwifslpreproc*
-          Do_cmd eddy_quad dwi_post_eddy -idx eddy_indices.txt -par eddy_config.txt -m eddy_mask.nii -b bvals -o "$dir_QC"/eddy_QC
+          Do_cmd eddy_quad dwi_post_eddy -idx eddy_indices.txt -par eddy_config.txt -m eddy_mask.nii -b bvals -o "${dir_QC}/eddy_QC${dwi_str_}"
           Do_cmd cd "$tmp"
 
           # Copy eddy parameters
@@ -540,7 +553,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # QC: Input files
-QC_proc-dwi
+QC_proc-dwi "${dir_QC}/micapipe_QC_proc-dwi${dwi_str_}.txt"
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -555,6 +568,6 @@ Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes
 \tCheck logs:
 $(ls "${dir_logs}"/proc_dwi_*.txt)"
 # Print QC stamp
-grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_dwi, ${status}, $(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, proc_dwi${dwi_str_}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, proc_dwi${dwi_str_}, ${status}, $(printf "%02d" "$Nsteps")/10, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"
