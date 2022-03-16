@@ -423,7 +423,7 @@ function json_rsfmri() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"Class\": \"fMRI processed\",
+    \"Tag\": \"${tagMRI}\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
 \t\t\"${sform}\"
@@ -651,7 +651,8 @@ function QC_proc-dwi() {
 }
 
 function QC_proc-rsfmri() {
-  html="$dir_QC"/micapipe_QC_proc-rsfmri.txt
+  outname=$1
+  html="$dir_QC/${outname}"
   if [ -f "$html" ]; then rm "$html"; fi
   echo -e "            <tr>
                 <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>

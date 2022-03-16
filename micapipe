@@ -93,6 +93,8 @@ echo -e "
 \t\t\t\t         ( default = no white matter and CSF signal regression )
 \t\t\033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
 \t\t\t\t         ( default = no global, white matter and CSF signal regression )
+\t\t\033[38;5;120m-GSRtag\033[0m              : Specify this option in addition to -GSR, to perform GSR and generate new outputs
+\t\t\t\t         ( the new output files will contain the tag 'desc-gsr' )
 \t\t\033[38;5;120m-noFIX\033[0m               : Specify this option to skip ICA-FIX processing.
 \t\t\t\t         ( default = FIX is run with specified training file )
 \t\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
@@ -141,6 +143,7 @@ echo -e "
 
 
 \033[38;5;141mUSAGE:\033[0m
+    For more examples see: https://micapipe.readthedocs.io/en/latest/pages/04.databases/index.html
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-all\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_freesurfer\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
@@ -276,6 +279,10 @@ do
   ;;
   -GSR)
     GSReg=TRUE
+    shift
+  ;;
+  -GSRtag)
+    GSRtag=TRUE
     shift
   ;;
   -regAffine)
@@ -490,6 +497,7 @@ if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 if [ -z "${fmri_acq}" ]; then fmri_acq=FALSE; else fmri_acq=TRUE; fi
+if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments task-fmri
 if [ -z "$taskScanStr" ]; then taskScanStr=FALSE; fi
@@ -878,7 +886,7 @@ fi
 #  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"

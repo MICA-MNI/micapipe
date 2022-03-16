@@ -15,6 +15,13 @@ parcDir = sys.argv[4]
 volmDir = sys.argv[5]
 performNSR = sys.argv[6]
 performGSR = sys.argv[7]
+GSRtag = sys.argv[8]
+
+# Rename outputs with GSR
+if GSRtag == 'TRUE':
+    gsr='_gsr'
+else:
+    gsr=''
 
 # check if surface directory exist; exit if false
 if os.listdir(funcDir+'/surfaces/'):
@@ -162,7 +169,7 @@ else:
         data_corr = data
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-timeseries_clean.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_space-conte69-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
@@ -206,7 +213,7 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC.txt',
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC' + gsr + '.txt',
                ts_r, fmt='%.6f')
 
 # Clean up
@@ -418,7 +425,7 @@ for parcellation in parcellationList:
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
     ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
 
     ts_r = np.corrcoef(np.transpose(ts))
 
@@ -430,7 +437,7 @@ for parcellation in parcellationList:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-FC.txt', ts_r, fmt='%.6f')
+    np.savetxt(funcDir + '/surfaces/' + subject + '_rsfmri_space-fsnative_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
 
 # Clean up
 del ts_native_ctx
@@ -477,4 +484,4 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_desc-tSNR.txt', tSNR, fmt='%.12f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_rsfmri_desc-tSNR' + gsr + '.txt', tSNR, fmt='%.12f')

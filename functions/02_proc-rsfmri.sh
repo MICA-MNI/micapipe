@@ -44,7 +44,8 @@ sesAnat=${19}
 regAffine=${20}
 fmri_acq=${21}
 dropTR=${22}
-PROC=${23}
+GSRtag=${23}
+PROC=${24}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -90,6 +91,7 @@ Note "Reverse Phase    :" "$fmri_rpe"
 Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
+Note "Tag GSR files    :" "$GSRtag"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
 Note "fmri acq         :" "$fmri_acq"
@@ -228,7 +230,12 @@ elif [[ $performGSR == 1 ]]; then
 else
     Info "Global, white matter and CSF signal regression will not be performed (default)"
 fi
-
+if [[ $GSRtag == TRUE ]]; then
+  Info "Clean output series will have the tag 'desc-gsr'"
+  gsr="_desc-gsr"
+else
+  gsr=""
+fi
 # gettin dat from mainScanJson exit if Not found
 readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
 RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
@@ -244,7 +251,7 @@ Info "ANTs will use $threads threads"
 Info "wb_command will use $OMP_NUM_THREADS threads"
 # rsfMRI directories
 if [[ ${fmri_acq} == "TRUE" ]]; then
-  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag/_bold/}"
+  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag}"
   tagMRI="${fmri_tag}"
   proc_rsfmri="$subject_dir/func/${fmri_tag}"
   Info "Outputs will be stored in:"
@@ -453,7 +460,7 @@ str_rsfmri_affine="${dir_warp}/${idBIDS}_rsfmri_from-${tagMRI}_to-nativepro_mode
 mat_rsfmri_affine="${str_rsfmri_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
-str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_${tagMRI}_to-${tagMRI}_mode-image_desc-SyN_"
+str_rsfmri_SyN="${dir_warp}/${idBIDS}_rsfmri_from-nativepro_fmri_to-${tagMRI}_mode-image_desc-SyN_"
 SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
 SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
@@ -587,13 +594,13 @@ if [[ "$noFIX" -eq 0 ]]; then
     else
         Info "Subject ${id} has singleecho_fmrispace_clean"; export statusFIX="YES"
     fi
-    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean${gsr}.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Further processing will be performed on distorsion corrected images."
     cp -rf "${fmri_HP}" "$fmri_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.json"
+    json_rsfmri "${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean${gsr}.json"
 fi
 
 
@@ -793,15 +800,19 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # QC: rsfmri processing Input files
-if [[ ${fmri_acq} == "FALSE" ]]; then QC_proc-rsfmri; fi
+if [[ ${fmri_acq} == "FALSE" ]]; then
+    QC_proc-rsfmri "micapipe_QC_proc-rsfmri.txt";
+else
+    QC_proc-rsfmri "micapipe_QC_proc-rsfmri_${tagMRI}.txt";
+fi
 
 #------------------------------------------------------------------------------#
 # run post-rsfmri
-cleanTS="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_desc-timeseries_clean.txt"
+cleanTS="${rsfmri_surf}/${idBIDS}_rsfmri_space-conte69-32k_desc-timeseries_clean${gsr}.txt"
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running rsfMRI post processing"
     labelDirectory="${dir_freesurfer}/label/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_rsfmri" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_rsfmri" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$GSRtag"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
@@ -823,5 +834,8 @@ Title "rsfMRI processing and post processing ended in \033[38;5;220m $(printf "%
 if [[ ${fmri_acq} == "FALSE" ]]; then
     grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
     echo "${id}, ${SES/ses-/}, proc_rsfmri, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+else
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri_${tagMRI}" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
+    echo "${id}, ${SES/ses-/}, proc_rsfmri_${tagMRI}, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 fi
 cleanup "$tmp" "$nocleanup" "$here"
