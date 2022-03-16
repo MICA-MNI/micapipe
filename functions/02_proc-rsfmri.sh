@@ -232,7 +232,7 @@ else
 fi
 if [[ $GSRtag == TRUE ]]; then
   Info "Clean output series will have the tag 'desc-gsr'"
-  gsr="_desc-gsr"
+  gsr="_gsr"
 else
   gsr=""
 fi
@@ -246,9 +246,10 @@ if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $mainSca
 Title "Resting state fMRI processing\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 bids_print.variables-rsfmri
-Info "Saving temporal dir: $nocleanup"
-Info "ANTs will use $threads threads"
-Info "wb_command will use $OMP_NUM_THREADS threads"
+Note "Saving temporal dir:" "$nocleanup"
+Note "ANTs will use      :" "${threads} threads"
+Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
+
 # rsfMRI directories
 if [[ ${fmri_acq} == "TRUE" ]]; then
   fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag}"
@@ -259,7 +260,7 @@ if [[ ${fmri_acq} == "TRUE" ]]; then
 else
   tagMRI="rsfmri"
 fi
-Note "tagMRI:      " "${tagMRI}"
+Note "tagMRI             :" "${tagMRI}"
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
