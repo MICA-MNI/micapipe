@@ -164,7 +164,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
+                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
@@ -238,7 +238,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${dwi_reverse[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${dwi_reverse[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}_mode-image_desc-rigid_"
+                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "DWI rpe - Registering ${b0_acq} to ${b0_refacq}"
@@ -385,11 +385,11 @@ fi
 
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz" # This should be a NIFTI for compatibility with ANTS
-str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-affine_"
+str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro_mode-image_desc-affine_"
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
 
-if [[ ! -f "$T1nativepro_in_dwi" ]] && [[ ! -f "$mat_dwi_affine"]]; then
+if [[ ! -f "$T1nativepro_in_dwi" ]] || [[ ! -f "$mat_dwi_affine" ]]; then
       Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
@@ -468,7 +468,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Non-linear registration between DWI space and T1w
-dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_"
+dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-dwi_mode-image_desc-SyN_"
 dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
 dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
