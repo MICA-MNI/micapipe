@@ -151,7 +151,7 @@ N_mainPhase=${#bids_mainPhase[@]}
 N_revPhase=${#bids_reversePhase[@]}
 if [ "$N_mainPhase" -gt 1 ] || [ "$N_revPhase" -gt 1 ]; then
     if [[ "$thisPhase" == "DEFAULT" ]]; then
-        Error "Found multiple phase reversal runs in BIDS rawdata directory! Please specify which run should be processed using flag -phaseReversalRun"; exit;
+        Error "Found multiple phase reversal runs in BIDS rawdata directory! Please specify which run should be processed using flag -phaseReversalRun:\n ${bids_reversePhase[*]}"; exit;
     elif [ "$thisPhase" -gt "$N_mainPhase" ] || [ "$thisPhase" -gt "$N_revPhase" ]; then
         Warning "Specified run number ($thisPhase) is greater than number of phase reversal scans scans found ($N_mainPhase and $N_revPhase). Using first filename in list as default";
         mainPhaseScan=${bids_mainPhase[$thisPhase-1]}
