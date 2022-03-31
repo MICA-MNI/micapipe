@@ -254,7 +254,7 @@ Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
 if [[ "${fmri_acq}" == "FALSE" ]]; then
   tagMRI="rsfmri"
 else
-  fmri_tag="acq-${fmri_tag/${idBIDS}_/}"
+  fmri_acq="${fmri_acq/acq-/}"; fmri_tag="acq-${fmri_acq/${idBIDS}_/}"
   tagMRI="${fmri_tag}"
   proc_rsfmri="$subject_dir/func/${fmri_tag}"
   Info "Outputs will be stored in:"
@@ -323,7 +323,7 @@ if [[ ! -f "${singleecho}" ]]; then
               # Skipping fslroi step. Rename files for simplicity
               mv "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_sliceCut.nii.gz"
 
-              # Motion correction within scans
+              # Motion correction within scans <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Only first echo for tedana
               Do_cmd fslmaths "${tmp}/${tag}_sliceCut.nii.gz" -Tmean "${tmp}/${tag}_sliceCutMean.nii.gz"
               Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_sliceCutMean.nii.gz" \
                               -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
@@ -332,6 +332,8 @@ if [[ ! -f "${singleecho}" ]]; then
               Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
         fi
     done
+
+# Here goes tedana
 
     # Calculate motion outliers with FSL
     if [[ ! -f "${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D" ]]; then
