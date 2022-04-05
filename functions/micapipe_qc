@@ -450,6 +450,32 @@ nifti_check() {
   else echo -e " --- FILE NOT FOUND ---  " >> "$QC_html"
   fi
 }
+
+print_path() { echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> Real path: \"$1\" </p>"  >> "$QC_html"}
+
+print_row3() {
+  # this function will write a row on the html QC file
+  Title=$1
+  Module=$2
+  File=$3
+  echo "        <tr>
+          <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${Title}</span></td>
+          <td class=\"tg-8pnm\">${Module}<br><br></td>
+          <td class=\"tg-8pnm\">${File}</td>
+        </tr>" >> "$QC_html"
+}
+
+print_row2() {
+  # this function will write a row on the html QC file
+  Title=$1
+  Module=$2
+  File=$3
+  echo "        <tr>
+          <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${Title}</span></td>
+          <td class=\"tg-8pnm\">${Module}<br><br></td>
+        </tr>" >> "$QC_html"
+}
+
 echo -e "
           </tbody>
           </table>
@@ -478,18 +504,14 @@ echo "
             </tr>
           </thead>
           <tbody>" >> "$QC_html"
-N=${#bids_T1ws[@]}
-n=$((${N} - 1))
-if [ "$N" -gt 1 ]; then
-  for ((i=0; i<=$n; i++)); do
+for i in "${!bids_T1ws[@]}";; do
     echo "
             <tr>
               <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_T1ws[${i}]</span></td>
               <td class=\"tg-8pnm\">BIDS anat<br><br></td>
               <td class=\"tg-8pnm\">${bids_T1ws[$i]}</td>
             </tr>" >> "$QC_html"
-  done
-fi
+done
     echo -e "
           </tbody>
           </table>
@@ -518,39 +540,16 @@ echo "
       <h2>Input files</h2>" >> "$QC_html"
   echo -e $table_style >> "$QC_html"
   echo -e "      <table class=\"tg\">
-        <thead>
-          <tr>
-            <th class=\"tg-rkbl\">Variable name</th>
-            <th class=\"tg-droi\">Origin</th>
-            <th class=\"tg-droi\">Path to file</th>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
-            <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
-            <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
-            <td class=\"tg-8pnm\">proc_structural<br><br></td>
-            <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
-          </tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1fast_seg</span></td>
-            <td class=\"tg-8pnm\">proc_structural<br><br></td>
-            <td class=\"tg-8pnm\">$(find $T1fast_seg 2>/dev/null)</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_InvWarp</span></td>
-            <td class=\"tg-8pnm\">proc_structural<br><br></td>
-            <td class=\"tg-8pnm\">$(find $T1_MNI152_InvWarp 2>/dev/null)</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_affine</span></td>
-            <td class=\"tg-8pnm\">proc_structural<br><br></td>
-            <td class=\"tg-8pnm\">$(find $T1_MNI152_affine 2>/dev/null)</td>
-          </tr>" >> "$QC_html"
+        <thead> " >> "$QC_html"
+          print_row3 "T1freesurfr" "proc_freesurfer" $(find $T1freesurfr 2>/dev/null)
+          print_row3 "T1nativepro" "proc_structural" $(find $T1nativepro 2>/dev/null)
+          print_row3 "T1fast_seg" "proc_structural" $(find $T1fast_seg 2>/dev/null)
+          print_row3 "T1_MNI152_InvWarp" "proc_structural" $(find $T1_MNI152_InvWarp 2>/dev/null)
+          print_row3 "T1_MNI152_affine" "proc_structural" $(find $T1_MNI152_affine 2>/dev/null)
           echo -e "
                 </tbody>
                 </table>"  >> "$QC_html"
+
 #------------------------------------------------------------------------------#
 T1fsnii=${tmpDir}/T1.nii.gz
 mrconvert "$T1freesurfr" "$T1fsnii"
@@ -559,6 +558,7 @@ T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.n
 T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
 echo -e "<h2>Main outputs</h2>"  >> "$QC_html"
 nifti_check "Registration: T1w nativepro in freesurfer space" "$T1fsnii" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png" "$T1_fsnative"
+print_path "$T1freesurfr"
 nifti_check "T1w nativepro cerebellum atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png" "$T1_seg_cerebellum" "YES"
 nifti_check "T1w nativepro subcortical atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png" "$T1_seg_subcortex" "YES"
 #------------------------------------------------------------------------------#
@@ -602,171 +602,205 @@ echo -e "
 # Close post_structural QC
 echo -e "    </div>" >> "$QC_html"
 
-#------------------------------------------------------------------------------#
-# proc_dwi
-echo "
-    <button class=\"accordion\" id=\"diffusion\">Diffusion MRI processing: -proc_dwi</button>
-    <div class=\"panel\">
-      <h2>Input files</h2>" >> "$QC_html"
-    echo -e $table_style >> "$QC_html"
-    echo -e "
-        <table class=\"tg\">
-          <thead>
-            <tr>
-              <th class=\"tg-rkbl\">Variable name</th>
-              <th class=\"tg-droi\">Origin</th>
-              <th class=\"tg-droi\">Path to file</th>
-            </tr>
-          </thead>
-          <tbody>" >> "$QC_html"
+find_json() {
+  # Finds a line on the json files and prints the rows
+  str=$1
+  json=$2
+  l=$(grep "${str}" -n "${json}" | cut -d : -f 1)
+  l=$((l+1))
+  dwis=($(awk -v line=$l -F "\"" '{if(NR==line) print $4}' "${json}"))
+  for i in "${!dwis[@]}"; do
+    print_row3 "${str}[${i}]" "rawdata" ${dwis[$i]}
+  done
+}
 
-# proc_dwi inputs Main DWI(s) and Reverse Phase Encoding
-if [ ! -f ${dir_QC}/micapipe_QC_proc-dwi.txt ]; then QC_proc-dwi; fi
-  cat ${dir_QC}/micapipe_QC_proc-dwi.txt >> "$QC_html"
+accordion_dwi() {
+    #------------------------------------------------------------------------------#
+    # QC of the dwi processing
+    # proc_dwi
+    if [ -z $1 ]; then dwi_str=""; dwi_acq=""; proc_dwi="${subject_dir}/dwi${dwi_str}"; else dwi_acq="_${1}", dwi_str="/${1}"; fi
+    #------------------------------------------------------------------------------#
+    # Inputs table
+    echo "
+        <button class=\"accordion\" id=\"diffusion\">Diffusion MRI processing${dwi_acq}: -proc_dwi</button>
+        <div class=\"panel\">
+          <h2>Input files</h2>" >> "$QC_html"
+        echo -e $table_style >> "$QC_html"
+        echo -e "
+            <table class=\"tg\">
+              <thead>
+                <tr>
+                  <th class=\"tg-rkbl\">Variable name</th>
+                  <th class=\"tg-droi\">Origin</th>
+                  <th class=\"tg-droi\">Path to file</th>
+                </tr>
+              </thead>
+              <tbody>" >> "$QC_html"
 
-# Other inputs
-    echo -e "            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
-              <td class=\"tg-8pnm\">proc_structural<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_InvWarp</span></td>
-              <td class=\"tg-8pnm\">proc_structural<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T1_MNI152_InvWarp 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_MNI152_affine</span></td>
-              <td class=\"tg-8pnm\">proc_structural<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T1_MNI152_affine 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T15ttgen</span></td>
-              <td class=\"tg-8pnm\">proc_structural<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T15ttgen 2>/dev/null)</td>
-            </tr>
-          </tbody>
-          </table>"  >> "$QC_html"
+    # proc_dwi inputs Main DWI(s) and Reverse Phase Encoding
+    find_json "DWIpe" "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json"
+    find_json "DWIrpe" "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json"
 
-#------------------------------------------------------------------------------#
-# DWI pre processing Options
-DWIpe=$(grep fileName "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==1 {print $4}')
-DWIrpe=$(grep fileName "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==2 {print $4}')
-Shells=$(grep Shells "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
-DWIpe_dir=$(grep pe_dir "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
-DWIReadoutTime=$(grep ReadoutTime "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
-Options=$(grep Options "${subject_dir}/dwi/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
-Info $DWIrpe
-Info $DWIpe
-echo "
-      <h2>DWI processing options</h2>" >> "$QC_html"
-    echo -e $table_style >> "$QC_html"
-    echo -e "
-        <table class=\"tg\">
-          <thead>
-            <tr>
-              <th class=\"tg-rkbl\">Variable</th>
-              <th class=\"tg-droi\">Descrition</th>
-            </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">DWI pe</span></td>
-            <td class=\"tg-8pnm\">${DWIpe}</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">DWI rpe</span></td>
-            <td class=\"tg-8pnm\">${DWIrpe}</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">Shells</span></td>
-            <td class=\"tg-8pnm\">${Shells}</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">pe_dir</span></td>
-            <td class=\"tg-8pnm\">${DWIpe_dir}</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">ReadoutTime</span></td>
-            <td class=\"tg-8pnm\">${DWIReadoutTime}</td>
-          </tr>
-          <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwifslpreproc options</span></td>
-            <td class=\"tg-8pnm\">${Options}</td>
-          </tr>
-    </tbody>
-    </table>" >> "$QC_html"
+    # Other inputs
+    print_row3 "T1nativepro" "proc_structural" $(find $T1nativepro 2>/dev/null)
+    print_row3 "T1_MNI152_InvWarp" "proc_structural" $(find $T1_MNI152_InvWarp 2>/dev/null)
+    print_row3 "T1_MNI152_affine" "proc_structural" $(find $T1_MNI152_affine 2>/dev/null)
+    print_row3 "T15ttgen" "proc_structural" $(find $T15ttgen 2>/dev/null)
 
-# Input: DWI main phase encoding
-if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe.png" ]]; then
-    Do_cmd mrmath "${bids_dwis[0]}" mean "${tmpDir}/dwi_pe.nii.gz" -axis 3
-    nifti_check "Input: DWI main phase encoding" "${tmpDir}/dwi_pe.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_pe.png"
-else
-    echo -e "\n        <h3>DWI main phase encoding</h3>
-         <br>
-         <img src=\"${dir_QC_png}/${idBIDS}_space-dwi_pe.png\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\">"  >> "$QC_html"
-fi
+    # Close inputs table
+    echo -e "</tbody>
+              </table>"  >> "$QC_html"
 
-# Input: DWI reverse phase encoding
-if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png" ]]; then
-    Do_cmd mrmath "$dwi_reverse" mean "${tmpDir}/dwi_rpe.nii.gz" -axis 3
-    nifti_check "Input: DWI reverse phase encoding" "${tmpDir}/dwi_rpe.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_rpe.png"
-else
-      echo -e "\n        <h3>DWI reverse phase encoding</h3>
-           <br>
-           <img src=\"${dir_QC_png}/${idBIDS}_space-dwi_rpe.png\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\">"  >> "$QC_html"
-fi
+    #------------------------------------------------------------------------------#
+    # DWI pre processing Options
+    DWIpe=$(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==1 {print $4}')
+    DWIrpe=$(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==2 {print $4}')
+    Shells=$(grep Shells "${proc_dwi}/idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+    DWIpe_dir=$(grep pe_dir "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+    DWIReadoutTime=$(grep ReadoutTime "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+    Options=$(grep Options "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
 
-# DWI main outputs
-dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
-dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
-dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
-dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
-dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
-dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
-if [[ ! -f "${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz" ]]; then dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"; fi
-dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
-dwi_cereb="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
-dwi_subco="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
+    echo "
+          <h2>DWI processing options</h2>" >> "$QC_html"
+        echo -e $table_style >> "$QC_html"
+        echo -e "
+            <table class=\"tg\">
+              <thead>
+                <tr>
+                  <th class=\"tg-rkbl\">Variable</th>
+                  <th class=\"tg-droi\">Descrition</th>
+                </tr>
+              </thead>
+              <tbody>" >> "$QC_html"
+        print_row2 "DWI pe" "${DWIpe}"
+        print_row2 "DWI rpe" "${DWIrpe}"
+        print_row2 "Shells" "${Shells}"
+        print_row2 "pe_dir" "${DWIpe_dir}"
+        print_row2 "ReadoutTime" "${DWIReadoutTime}"
+        print_row2 "dwifslpreproc options" "${Options}"
+    echo -e "</tbody>
+        </table>" >> "$QC_html"
+    #------------------------------------------------------------------------------#
+    # Input: DWI main phase encoding
+    for i in "${!DWIpe[@]}"; do
+        if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe${i}${dwi_acq}.png" ]]; then
+            Do_cmd mrmath "${DWIpe[$i]}" mean "${tmpDir}/dwi_pe${i}${dwi_acq}.nii.gz" -axis 3
+            echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"${DWIpe[$i]}\" </p> \n \t\t<br>"
+            nifti_check "DWI main phase encoding [${i}]" "${tmpDir}/dwi_pe${i}${dwi_acq}.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_pe${i}${dwi_acq}.png"
+        else
+            echo -e "\n        <h3>DWI main phase encoding [${i}]</h3>
+                 <br>
+                 <img src=\"${dir_QC_png}/${idBIDS}_space-dwi_pe${i}${dwi_acq}.png\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\">"  >> "$QC_html"
+        fi
+    done
+    #------------------------------------------------------------------------------#
+    # Input: DWI reverse phase encoding
+    for i in "${!DWIrpe[@]}"; do
+        if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_rpe${i}${dwi_acq}.png" ]]; then
+            Do_cmd mrmath "${DWIrpe[$i]}" mean "${tmpDir}/dwi_rpe${i}${dwi_acq}.nii.gz" -axis 3
+            echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"${DWIpe[$i]}\" </p> \n \t\t<br>"
+            nifti_check "DWI reverse phase encoding [${i}]" "${tmpDir}/dwi_rpe${i}${dwi_acq}.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_rpe${i}${dwi_acq}.png"
+        else
+            echo -e "\n        <h3>DWI reverse phase encoding [${i}]</h3>
+                 <br>
+                 <img src=\"${dir_QC_png}/${idBIDS}_space-dwi_rpe${i}${dwi_acq}.png\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\">"  >> "$QC_html"
+        fi
+    done
 
-dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
-dwi_tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-1M_tdi.mif"
-dwi_adc="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
-dwi_fa="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+    #------------------------------------------------------------------------------#
+    # DWI main outputs
+    echo -e "\n        <h2>Main outputs</h2>" >> "$QC_html"
 
-echo -e "\n        <h2>Main outputs</h2>" >> "$QC_html"
-if [ -f "$dwi_corr" ]; then
-    Do_cmd mrconvert "$dwi_res" "${tmpDir}/dwi_res.nii.gz"
-    Do_cmd mrconvert "$dwi_resGibss" "${tmpDir}/dwi_deGibbs.nii.gz"
-    Do_cmd mrmath "$dwi_corr" mean "${tmpDir}/dwi_corr.nii.gz" -axis 3
-    Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_fod.nii.gz"
-    Do_cmd mrconvert "$dwi_gmwmi" "${tmpDir}/dwi_gmwmi.nii.gz"
-    Do_cmd mrconvert "$dwi_tdi" "${tmpDir}/dwi_tdi.nii.gz"
-    Do_cmd mrmath "${tmpDir}/dwi_tdi.nii.gz" mean "${tmpDir}/dwi_tdi_mean.nii.gz" -axis 3
-    Do_cmd mrconvert "$dwi_adc" "${tmpDir}/dwi_adc.nii.gz"
-    Do_cmd mrconvert "$dwi_fa" "${tmpDir}/dwi_fa.nii.gz"
-    Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_5tt.nii.gz"
+    dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
+    if [ -f "$dwi_res" ]; then
+        Do_cmd mrconvert "$dwi_res" "${tmpDir}/dwi_res.nii.gz"
+        nifti_check "DWI MP-PCA mean residuals (mean)" "${tmpDir}/dwi_res.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_MP-PCA${dwi_acq}.png"
+        print_path "$dwi_res"
+    fi
 
-    nifti_check "DWI MP-PCA mean residuals (mean)" "${tmpDir}/dwi_res.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_MP-PCA.png"
-    nifti_check "DWI Ring Gibbs mean residuals (mean)" "${tmpDir}/dwi_deGibbs.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_deGibbs.png"
-    nifti_check "DWI b0 pre-processed" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_b0.png"
-    nifti_check "DWI pre-processed (mean)" "${tmpDir}/dwi_corr.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_preproc.png"
-    nifti_check "White matter Fiber Orientation Distribution (FOD)" "${tmpDir}/dwi_fod.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_wmFOD.png"
-    nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M.png"
-    nifti_check "DTI ADC" "${tmpDir}/dwi_adc.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_adc.png"
-    nifti_check "DTI FA" "${tmpDir}/dwi_fa.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_fa.png"
-    nifti_check "Registration: T1w in DWI space" "${dwi_t1w}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro_NL.nii.png" "$dwi_b0"
-    nifti_check "5TT in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii.png" "${tmpDir}/dwi_5tt.nii.gz" "YES"
-    nifti_check "GMWMI in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi.nii.png" "${tmpDir}/dwi_gmwmi.nii.gz" "YES"
-    nifti_check "Cerebellum atlas in DWI space (-SC)" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum.nii.png" "${dwi_cereb}" "YES"
-    nifti_check "Subcortical atlas in DWI space (-SC)" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_subcortical.nii.png" "${dwi_subco}" "YES"
-fi
+    dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
+    if [ -f "$dwi_resGibss" ]; then
+        Do_cmd mrconvert "$dwi_resGibss" "${tmpDir}/dwi_deGibbs.nii.gz"
+        nifti_check "DWI Ring Gibbs mean residuals (mean)" "${tmpDir}/dwi_deGibbs.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_deGibbs${dwi_acq}.png"
+        print_path "$dwi_resGibss"
+    fi
 
-if [ -f "${dir_QC}/eddy_QC/qc.pdf" ]; then
-  echo -e "\n        <h2>Eddy quad by FSL</h2>
-  <embed src=\"${dir_QC}/eddy_QC/qc.pdf\" width=\"1000\" height=\"500\" type=\"application/pdf\"> " >> "$QC_html"
-fi
-echo -e "\n    </div>" >> "$QC_html"
+    dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
+    if [ -f "$dwi_b0" ]; then nifti_check "DWI b0 pre-processed" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_b0${dwi_acq}.png"; fi
+
+    dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
+    if [ -f "$dwi_corr" ]; then
+      Do_cmd mrmath "$dwi_corr" mean "${tmpDir}/dwi_corr.nii.gz" -axis 3
+      nifti_check "DWI processed (mean)" "${tmpDir}/dwi_corr.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_preproc${dwi_acq}.png"
+    fi
+
+    dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+    if [ -f "$dwi_fod" ]; then
+      Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_fod.nii.gz"
+      nifti_check "White matter Fiber Orientation Distribution (FOD)" "${tmpDir}/dwi_fod.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_wmFOD${dwi_acq}.png"
+      print_path "$dwi_fod"
+    fi
+
+    dwi_tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-1M_tdi.mif"
+    if [ -f "$dwi_tdi" ]; then
+      Do_cmd mrconvert "$dwi_tdi" "${tmpDir}/dwi_tdi.nii.gz"
+      Do_cmd mrmath "${tmpDir}/dwi_tdi.nii.gz" mean "${tmpDir}/dwi_tdi_mean.nii.gz" -axis 3
+      nifti_check "Tract Density Imaging 1M tracts" "${tmpDir}/dwi_tdi_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_tdi-1M${dwi_acq}.png"
+      print_path "$dwi_tdi"
+    fi
+
+    dwi_adc="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
+    if [ -f "$dwi_adc" ]; then
+      Do_cmd mrconvert "$dwi_adc" "${tmpDir}/dwi_adc.nii.gz"
+      nifti_check "DTI ADC" "${tmpDir}/dwi_adc.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_adc${dwi_acq}.png"
+      print_path "$dwi_adc"
+    fi
+
+    dwi_fa="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+    if [ -f "$dwi_fa" ]; then
+      Do_cmd mrconvert "$dwi_fa" "${tmpDir}/dwi_fa.nii.gz"
+      nifti_check "DTI FA" "${tmpDir}/dwi_fa.nii.gz" "${dir_QC_png}/${idBIDS}_space-dti_fa${dwi_acq}.png"
+      print_path "$dwi_fa"
+    fi
+
+    dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
+    if [[ -f "${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz" ]]; then dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"; fi
+    if [ -f "$dwi_t1w" ]; then
+      nifti_check "Registration: T1w in DWI space" "${dwi_t1w}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro${dwi_acq}.png" "$dwi_b0"
+      print_path "${dwi_t1w}"
+    fi
+
+    dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+    if [ -f "$dwi_5tt" ]; then
+      Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/dwi_5tt${dwi_acq}.nii.gz"
+      nifti_check "5TT in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_5tt.nii${dwi_acq}.png" "${tmpDir}/dwi_5tt${dwi_acq}.nii.gz" "YES"
+    fi
+
+    dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
+    if [ -f "$dwi_gmwmi" ]; then
+      Do_cmd mrconvert "$dwi_gmwmi" "${tmpDir}/dwi_gmwmi${dwi_acq}.nii.gz"
+      nifti_check "GMWMI in DWI space" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_gmwgi${dwi_acq}.png" "${tmpDir}/dwi_gmwmi${dwi_acq}.nii.gz" "YES"
+    fi
+
+    dwi_cereb="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
+    if [ -f "$dwi_cereb" ]; then nifti_check "Cerebellum atlas in DWI space (-SC)" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_cerebellum${dwi_acq}.png" "${dwi_cereb}" "YES"; fi
+
+    dwi_subco="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
+    if [ -f "$dwi_subco" ]; then nifti_check "Subcortical atlas in DWI space (-SC)" "$dwi_b0" "${dir_QC_png}/${idBIDS}_space-dwi_subcortical${dwi_acq}.png" "${dwi_subco}" "YES"; fi
+
+    if [ -f "${dir_QC}/eddy_QC${dwi_acq}/qc.pdf" ]; then
+      echo -e "\n        <h2>Eddy quad by FSL</h2>
+      <embed src=\"${dir_QC}/eddy_QC${dwi_acq}/qc.pdf\" width=\"1000\" height=\"500\" type=\"application/pdf\"> " >> "$QC_html"
+    fi
+    echo -e "\n    </div>" >> "$QC_html"
+}
+
+# Generate default proc_dwi QC
+accordion_dwi
+
+# Generate proc_dwi QC for different acquisitions
+dwi_acqs=$(ls -d acq* 2>/dev/null)
+for acq in ${dwi_acqs[@]}; do accordion_dwi $acq; done
 
 #------------------------------------------------------------------------------#
 # RESTING STATE
@@ -931,7 +965,7 @@ echo -e "
 
    # Structural connectomes Input files
    # if [ ! -f ${dir_QC}/micapipe_qc_SC.txt ]; then QC_SC; fi
-   cat ${dir_QC}/micapipe_qc_SC.txt >> "$QC_html"
+   cat ${dir_QC}/micapipe_QC_SC.txt >> "$QC_html"
 
    echo -e "
          </tbody>
