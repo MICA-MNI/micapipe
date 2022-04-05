@@ -354,7 +354,7 @@ echo -e "
     <a href=\"#freesurfer\">proc_freesurfer</a>
     <a href=\"#postStruct\">post_structural</a>
     <a href=\"#diffusion\">proc_dwi</a>
-    <a href=\"#resting\">proc_rsfmri</a>
+    <a href=\"#func\">proc_rsfmri</a>
     <a style=\"margin-left: 1rem; font-size: 14px\" href=\"#functionalConn\">Functional connectomes</a>
     <a href=\"#structuralConn\">Structural Connectomes</a>
     <a href=\"#mpcGD\">MPC & GD connectomes</a>
@@ -383,8 +383,6 @@ echo -e "
               <br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>
           </div>
       </div>"  >> "$QC_html"
-
-
 
 #------------------------------------------------------------------------------#
 # MICAPIPE Processing Modules QC
@@ -429,7 +427,6 @@ T1_in_MNI152_08="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode
 MNI152_08_brain="${util_MNIvolumes}/MNI152_T1_0.8mm_brain.nii.gz"
 T1_in_MNI152_2="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_Warped.nii.gz"
 MNI152_2_brain="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
-Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/5tt_0.nii.gz"
 
 nifti_check() {
   echo -e "    <h3>$1</h3>" >> "$QC_html"
@@ -451,7 +448,9 @@ nifti_check() {
   fi
 }
 
-print_path() { echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> Real path: \"$1\" </p>"  >> "$QC_html"}
+print_path() {
+  echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> Real path: \"$1\" </p>"  >> "$QC_html"
+}
 
 print_row3() {
   # this function will write a row on the html QC file
@@ -481,6 +480,7 @@ echo -e "
           </table>
     <h2>Main outputs</h2>"  >> "$QC_html"
 nifti_check "T1w nativepro" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w.png"
+Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/5tt_0.nii.gz"
 nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_5TT.png" "${tmpDir}/5tt_0.nii.gz" "YES"
 nifti_check "T1w nativepro fast" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_fast.png" "$T1fast_seg" "YES"
 nifti_check "T1w nativepro brain" "$T1nativepro_brain" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_brain.png"
@@ -653,9 +653,9 @@ accordion_dwi() {
 
     #------------------------------------------------------------------------------#
     # DWI pre processing Options
-    DWIpe=$(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==1 {print $4}')
-    DWIrpe=$(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==2 {print $4}')
-    Shells=$(grep Shells "${proc_dwi}/idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
+    DWIpe=($(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==1 {print $4}'))
+    DWIrpe=($(grep fileName "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' 'NR==2 {print $4}'))
+    Shells=($(grep Shells "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}'))
     DWIpe_dir=$(grep pe_dir "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
     DWIReadoutTime=$(grep ReadoutTime "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
     Options=$(grep Options "${proc_dwi}/${idBIDS}_desc-preproc_dwi.json" | awk -F '"' '{print $4}')
@@ -674,7 +674,7 @@ accordion_dwi() {
               <tbody>" >> "$QC_html"
         print_row2 "DWI pe" "${DWIpe}"
         print_row2 "DWI rpe" "${DWIrpe}"
-        print_row2 "Shells" "${Shells}"
+        print_row2 "Shells" "${Shells[@]}"
         print_row2 "pe_dir" "${DWIpe_dir}"
         print_row2 "ReadoutTime" "${DWIReadoutTime}"
         print_row2 "dwifslpreproc options" "${Options}"
@@ -685,7 +685,7 @@ accordion_dwi() {
     for i in "${!DWIpe[@]}"; do
         if [[ ! -f "${dir_QC_png}/${idBIDS}_space-dwi_pe${i}${dwi_acq}.png" ]]; then
             Do_cmd mrmath "${DWIpe[$i]}" mean "${tmpDir}/dwi_pe${i}${dwi_acq}.nii.gz" -axis 3
-            echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"${DWIpe[$i]}\" </p> \n \t\t<br>"
+            echo -e "<p style=\"font-family:\"Courier New\", Courier, monospace\"> File path: \"${DWIpe[$i]}\" </p> \n \t\t<br>" >> "$QC_html"
             nifti_check "DWI main phase encoding [${i}]" "${tmpDir}/dwi_pe${i}${dwi_acq}.nii.gz" "${dir_QC_png}/${idBIDS}_space-dwi_pe${i}${dwi_acq}.png"
         else
             echo -e "\n        <h3>DWI main phase encoding [${i}]</h3>
@@ -799,145 +799,153 @@ accordion_dwi() {
 accordion_dwi
 
 # Generate proc_dwi QC for different acquisitions
-dwi_acqs=$(ls -d acq* 2>/dev/null)
-for acq in ${dwi_acqs[@]}; do accordion_dwi $acq; done
+dwi_acqs=$(ls -d ${proc_dwi}/acq* 2>/dev/null)
+Info ${dwi_acqs[@]}
+for acq in ${dwi_acqs[@]}; do
+  i=$(echo $acq | awk -F 'dwi/acq-' '{print $2}'); i=${i////}
+  accordion_dwi $acq;
+done
 
 #------------------------------------------------------------------------------#
 # RESTING STATE
-echo -e "
-    <button class=\"accordion\" id=\"resting\">Resting state fMRI processing: -proc_rsfmri</button>
-    <div class=\"panel\">
-      <h2>Input files</h2>" >> "$QC_html"
-    echo -e $table_style >> "$QC_html"
-    echo -e "
-        <table class=\"tg\">
-          <thead>
-            <tr>
-              <th class=\"tg-rkbl\">Variable name</th>
-              <th class=\"tg-droi\">Origin</th>
-              <th class=\"tg-droi\">Path to file</th>
-            </tr>
-          </thead>
-          <tbody>"  >> "$QC_html"
-# proc_rsfmri Input files
-if [ ! -f ${dir_QC}/micapipe_QC_proc-rsfmri.txt ]; then QC_proc-rsfmri; fi
-cat ${dir_QC}/micapipe_QC_proc-rsfmri.txt >> "$QC_html"
-
-echo -e "
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
-              <td class=\"tg-8pnm\">proc_structural<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
-            </tr>
-            <tr>
-              <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
-              <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
-              <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
-            </tr>
-          </tbody>
-          </table>"  >> "$QC_html"
-
-#------------------------------------------------------------------------------#
-# rsfMRI pre processing Options
-echo "                <h2>rsfMRI processing options</h2>" >> "$QC_html"
-              echo -e $table_style >> "$QC_html"
-              echo -e "
-                  <table class=\"tg\">
-                    <thead>
-                      <tr>
-                        <th class=\"tg-rkbl\">Variable</th>
-                        <th class=\"tg-droi\">Descrition</th>
-                      </tr>
-                    </thead>
-                    <tbody>"  >> "$QC_html"
-
-Opts=(MainScan MainPhaseScan ReversePhaseScan TOPUP Passband RepetitionTime TotalReadoutTime Melodic FIX Registration GlobalSignalRegression CSFWMSignalRegression)
-for i in ${Opts[*]}; do
-  opt=$(grep $i "${subject_dir}/func/volumetric/${idBIDS}_space-rsfmri_desc-singleecho_clean.json" | awk -F '"' 'NR==1 {print $4}')
+accordion_func() {
   echo -e "
-                      <tr>
-                        <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${i}</span></td>
-                        <td class=\"tg-8pnm\">${opt}</td>
-                      </tr>"   >> "$QC_html"
-done
+      <button class=\"accordion\" id=\"func\"> fMRI processing: -proc_rsfmri</button>
+      <div class=\"panel\">
+        <h2>Input files</h2>" >> "$QC_html"
+      echo -e $table_style >> "$QC_html"
+      echo -e "
+          <table class=\"tg\">
+            <thead>
+              <tr>
+                <th class=\"tg-rkbl\">Variable name</th>
+                <th class=\"tg-droi\">Origin</th>
+                <th class=\"tg-droi\">Path to file</th>
+              </tr>
+            </thead>
+            <tbody>"  >> "$QC_html"
+  # proc_rsfmri Input files
+  if [ ! -f ${dir_QC}/micapipe_QC_proc-rsfmri.txt ]; then QC_proc-rsfmri; fi
+  cat ${dir_QC}/micapipe_QC_proc-rsfmri.txt >> "$QC_html"
 
-echo -e "              </tbody>
-              </table>" >> "$QC_html"
+  echo -e "
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1nativepro</span></td>
+                <td class=\"tg-8pnm\">proc_structural<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
+              </tr>
+              <tr>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1freesurfr</span></td>
+                <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
+                <td class=\"tg-8pnm\">$(find $T1freesurfr 2>/dev/null)</td>
+              </tr>
+            </tbody>
+            </table>"  >> "$QC_html"
 
-# Main outputs rsfmri
-echo -e "\n      <h2>Main outputs</h2>" >> "$QC_html"
-fmri_mean="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mean.nii.gz"
-fmri_HP="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_HP.nii.gz"
-fmri_brain="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_brain.nii.gz"
-rsfmri_fsnative="${dir_warp}/${idBIDS}_from-rsfmri_to-fsnative_bbr_outbbreg_FIX.nii.gz"
-rsfmri_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_subcortical.nii.gz"
-rsfmri_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum.nii.gz"
-fmri_processed="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.nii.gz"
-fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
-t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
-t1_in_rsfmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+  #------------------------------------------------------------------------------#
+  # rsfMRI pre processing Options
+  echo "                <h2>rsfMRI processing options</h2>" >> "$QC_html"
+                echo -e $table_style >> "$QC_html"
+                echo -e "
+                    <table class=\"tg\">
+                      <thead>
+                        <tr>
+                          <th class=\"tg-rkbl\">Variable</th>
+                          <th class=\"tg-droi\">Descrition</th>
+                        </tr>
+                      </thead>
+                      <tbody>"  >> "$QC_html"
 
-if [ -f "$fmri_processed" ]; then
-    Do_cmd mrmath "$fmri_HP" mean "${tmpDir}/fmri_HP_mean.nii.gz" -axis 3
-    Do_cmd mrmath "$fmri_processed" mean "${tmpDir}/fmri_clean_mean.nii.gz" -axis 3
-    nifti_check "rsfMRI (mean)" "$fmri_mean" "${dir_QC_png}/${idBIDS}_space-rsfmri_mean.png"
-    nifti_check "rsfMRI brain" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_brain.png"
-    nifti_check "rsfMRI High Pass filtered (mean)" "${tmpDir}/fmri_HP_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri_HP.png"
-    nifti_check "rsfMRI clean (mean)" "${tmpDir}/fmri_clean_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri-clean_mean.png"
-    nifti_check "Registration: rsfMRI in freesurfer space" "$rsfmri_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_rsfmri.png" "$T1fsnii"
-    nifti_check "Registration: rsfMRI over T1w nativepro space" "$fmri_in_T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_rsfmri.png" "$t1bold"
-    nifti_check "Registration: T1w over rsfMRI space" "$t1_in_rsfmri" "${dir_QC_png}/${idBIDS}_space-rsfmri_t1w.png" "$fmri_mean"
-    nifti_check "Cerebellum atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_cerebellum.nii.png" "${rsfmri_cerebellum}" "YES"
-    nifti_check "Subcortical atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_subcortical.nii.png" "${rsfmri_subcortex}" "YES"
-fi
-
-# rsfmri motion parameters
-rsfmri_motion=${rsfmri_surf}/${idBIDS}_rsfmri-framewiseDisplacement.png
-if [ -f ${rsfmri_motion} ]; then
-  echo -e "\n      <h3>Framewise displacement: rsfMRI</h3>
-  <img src=\"${rsfmri_motion}\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\"> " >> "$QC_html"
-fi
-
-# Fuctional Connectomes
-echo -e "\n      <h2 id=\"functionalConn\">Functional connectomes</h2>" >> "$QC_html"
-echo -e $table_style >> "$QC_html"
-echo -e "
-    <table class=\"tg\">
-      <thead>
-        <tr>
-          <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
-          <th class=\"tg-droi\">Functional <br>connectome</th>
-          <th class=\"tg-droi\">FC conte69</th>
-        </tr>
-      </thead>
-      <tbody>" >> "$QC_html"
-
-# iterate over each FC png file
-Nconn=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-*_desc-FC.txt 2>/dev/null | wc -l)
-if [ ! "$Nconn" -eq 0 ]; then
-  for seg in $parcellations; do
-      parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
-      echo -e " <tr>
-            <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
-      for ext in FC FC-conte69; do
-          nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
-          if [ -f "$nom" ]; then
-              echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
-          else
-              echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
-          fi
-      done
-      echo "  </tr>" >> "$QC_html"
+  Opts=(MainScan MainPhaseScan ReversePhaseScan TOPUP Passband RepetitionTime TotalReadoutTime Melodic FIX Registration GlobalSignalRegression CSFWMSignalRegression)
+  for i in ${Opts[*]}; do
+    opt=$(grep $i "${subject_dir}/func/volumetric/${idBIDS}_space-rsfmri_desc-singleecho_clean.json" | awk -F '"' 'NR==1 {print $4}')
+    echo -e "
+                        <tr>
+                          <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">${i}</span></td>
+                          <td class=\"tg-8pnm\">${opt}</td>
+                        </tr>"   >> "$QC_html"
   done
-else
-  echo "  <p> ...Not processed yet... </p>" >>  $QC_html
-fi
-# Close functional connectome QC table
-echo -e "
-    </tbody>
-    </table>
-   </div>
- "  >> "$QC_html"
+
+  echo -e "              </tbody>
+                </table>" >> "$QC_html"
+
+  # Main outputs rsfmri
+  echo -e "\n      <h2>Main outputs</h2>" >> "$QC_html"
+  fmri_mean="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_mean.nii.gz"
+  fmri_HP="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_HP.nii.gz"
+  fmri_brain="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_brain.nii.gz"
+  rsfmri_fsnative="${dir_warp}/${idBIDS}_from-rsfmri_to-fsnative_bbr_outbbreg_FIX.nii.gz"
+  rsfmri_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_subcortical.nii.gz"
+  rsfmri_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum.nii.gz"
+  fmri_processed="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.nii.gz"
+  fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
+  t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
+  t1_in_rsfmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+
+  if [ -f "$fmri_processed" ]; then
+      Do_cmd mrmath "$fmri_HP" mean "${tmpDir}/fmri_HP_mean.nii.gz" -axis 3
+      Do_cmd mrmath "$fmri_processed" mean "${tmpDir}/fmri_clean_mean.nii.gz" -axis 3
+      nifti_check "rsfMRI (mean)" "$fmri_mean" "${dir_QC_png}/${idBIDS}_space-rsfmri_mean.png"
+      nifti_check "rsfMRI brain" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_brain.png"
+      nifti_check "rsfMRI High Pass filtered (mean)" "${tmpDir}/fmri_HP_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri_HP.png"
+      nifti_check "rsfMRI clean (mean)" "${tmpDir}/fmri_clean_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri-clean_mean.png"
+      nifti_check "Registration: rsfMRI in freesurfer space" "$rsfmri_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_rsfmri.png" "$T1fsnii"
+      nifti_check "Registration: rsfMRI over T1w nativepro space" "$fmri_in_T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_rsfmri.png" "$t1bold"
+      nifti_check "Registration: T1w over rsfMRI space" "$t1_in_rsfmri" "${dir_QC_png}/${idBIDS}_space-rsfmri_t1w.png" "$fmri_mean"
+      nifti_check "Cerebellum atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_cerebellum.nii.png" "${rsfmri_cerebellum}" "YES"
+      nifti_check "Subcortical atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_subcortical.nii.png" "${rsfmri_subcortex}" "YES"
+  fi
+
+  # rsfmri motion parameters
+  rsfmri_motion=${rsfmri_surf}/${idBIDS}_rsfmri-framewiseDisplacement.png
+  if [ -f ${rsfmri_motion} ]; then
+    echo -e "\n      <h3>Framewise displacement: rsfMRI</h3>
+    <img src=\"${rsfmri_motion}\"  alt=\"HTML5\" style=\"height:300px\"  class=\"center\"> " >> "$QC_html"
+  fi
+
+  # Fuctional Connectomes
+  echo -e "\n      <h2 id=\"functionalConn\">Functional connectomes</h2>" >> "$QC_html"
+  echo -e $table_style >> "$QC_html"
+  echo -e "
+      <table class=\"tg\">
+        <thead>
+          <tr>
+            <th class=\"tg-rkbl\">Parcellation<br>scheme</th>
+            <th class=\"tg-droi\">Functional <br>connectome</th>
+            <th class=\"tg-droi\">FC conte69</th>
+          </tr>
+        </thead>
+        <tbody>" >> "$QC_html"
+
+  # iterate over each FC png file
+  Nconn=$(ls "${rsfmri_surf}/${idBIDS}"_rsfmri_space-*_desc-FC.txt 2>/dev/null | wc -l)
+  if [ ! "$Nconn" -eq 0 ]; then
+    for seg in $parcellations; do
+        parc_name=$(echo ${seg/.nii.gz/} | awk -F 'atlas-' '{print $2}')
+        echo -e " <tr>
+              <td class=\"tg-droi\">${parc_name}</td>"  >> "$QC_html"
+        for ext in FC FC-conte69; do
+            nom=${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png
+            if [ -f "$nom" ]; then
+                echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"width:${px};height:${px}\"></td>" >> "$QC_html"
+            else
+                echo "            <td class=\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"</span><br><br></td>"  >> "$QC_html"
+            fi
+        done
+        echo "  </tr>" >> "$QC_html"
+    done
+  else
+    echo "  <p> ...Not processed yet... </p>" >>  $QC_html
+  fi
+  # Close functional connectome QC table
+  echo -e "
+      </tbody>
+      </table>
+     </div>
+   "  >> "$QC_html"
+}
+
+accordion_func
 
  #------------------------------------------------------------------------------#
  # Diffusion processing MRI
@@ -1078,6 +1086,7 @@ echo -e "
     <div class=\"panel\">" >> "$QC_html"
 echo -e "      <h2>Input</h2>" >> "$QC_html"
 microimg=$(grep input "${subject_dir}/anat/surfaces/micro_profiles/${idBIDS}_MPC.json" | awk -F '"' '{print $4}')
+nifti_check "Quantitative image" "${microimg}" "${dir_QC_png}/${idBIDS}_mpc.nii.png"
 nifti_check "Registration: Quantitative image over fsnative" "${microimg}" "${dir_QC_png}/${idBIDS}_mpc.nii.png" "$T1_fsnative"
 
 echo -e "      <h2>Surfaces</h2>" >> "$QC_html"
