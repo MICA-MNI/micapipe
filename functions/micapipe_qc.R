@@ -180,8 +180,7 @@ module.col <- function() {
   Completed.col <- ifelse(Completed.col>=0.95,"#00688B",Completed.col)
   Completed.col <- ifelse(Completed.col==0,"#EEE9E9",Completed.col)
   Completed.col[1:7] <- alpha(Completed.col[1:7],0.35)
-  #return(Completed.col)
-  return(files)
+  return(Completed.col)
 }
 
 # -----------------------------------------------------
