@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE October 2021 (Version v.0.1.2 'Roadrunner')\n"
+  echo -e "\nMICAPIPE April 2022 (Version v.0.2.0 'dev')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -308,8 +308,7 @@ do
   ;;
   -fmri_acq)
     fmri_acq=TRUE
-    fmri_str=$2
-    shift;shift
+    shift
   ;;
   -dropTR)
     dropTR=TRUE
@@ -506,7 +505,7 @@ if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); f
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
-if [[ "${fmri_acq}" == "TRUE" ]]; then fmri_str=${fmri_str}; else fmri_str=FALSE; fi
+if [[ "${fmri_acq}" != "TRUE" ]]; then fmri_acq="FALSE"; fi
 if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments task-fmri
@@ -897,7 +896,7 @@ fi
 #  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_str} ${dropTR} ${GSRtag}"
+    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
@@ -926,7 +925,7 @@ fi
 #  Task fMRI
 if [ "$ALL" = "TRUE" ] || [ "$procTask" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-task.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${taskScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_str}"
+    COMMAND="${scriptDir}/02_proc-task.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${taskScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq}"
     # mica.q - Task fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Task fMRI processing"
