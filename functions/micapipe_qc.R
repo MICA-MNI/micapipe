@@ -67,14 +67,13 @@ library('htmlwidgets') # save the widget
 module.col <- function() {
   # List of all the main outputs
   files <- data.frame(
-    module=c(rep("proc_structural",7), rep("proc_freesurfer",2), rep("Morphology",12), rep("post_structural", 13), rep("proc_dwi", 13), rep("SC", 3), rep("proc_rsfmri", 20)),
+    module=c(rep("proc_structural",7), rep("proc_freesurfer",2), rep("Morphology",12), rep("post_structural", 13), rep("proc_dwi", 12), rep("SC", 3), rep("proc_rsfmri", 20)),
     variables=c("t1w.nativepro", "t1w.firstout", "t1w.fast", "t1w.MNI0.8", "t1w.MNI2.0", "t1w.mask", "t1w.5tt", "fs.t1w", "fs.reconall",
                 "morph.lh.thick", "morph.rh.thick", "morph.lh.thick.fsa5", "morph.rh.thick.fsa5", "morph.lh.thick.c69", "morph.rh.thick.c69",
                 "morph.lh.curv", "morph.rh.curv", "morph.lh.curv.fsa5", "morph.rh.curv.fsa5", "morph.lh.curv.c69", "morph.rh.curv.c69",
                 "t1w.fsnative", "t1w.cerebellum", "t1w.subcortical", "c69.lh.mid", "c69.rh.mid", "c69.lh.pial", "c69.rh.pial", "c69.lh.white",
                 "c69.rh.white", "c69.lh.sphere", "c69.rh.sphere", "c69.lh.midth", "c69.rh.midth",
-                "dwi_res", "dwi_corr", "T1nativepro_in_dwi", "dwi_mask", "dwi_dti", "dti_FA", "dti_ADC", "fod_wmN", "dwi_in_T1nativepro",
-                "t1w_nativepro_in_dwi_NL", "dwi_5ttm", "dwi_gmwmi", "tdi_1M", "dwi_cere", "dwi_subc", "tck.tdi",
+                "dwi_res", "dwi_corr", "T1nativepro_in_dwi", "dwi_mask", "dwi_dti", "dti_FA", "dti_ADC", "fod_wmN", "dwi_in_T1nativepro", "dwi_5ttm", "dwi_gmwmi", "tdi_1M", "dwi_cere", "dwi_subc", "tck.tdi",
                 "singleecho", "fmri_brain", "fmri_HP", "fmri_mean", "fix_output", "fmri_processed", "global_signal", "spikeRegressors","vol2surfTS.lh","out_surf_native.lh",
                 "out_surf_fsa5.lh", "out_surf.lh", "vol2surfTS.rh", "out_surf_native.rh", "out_surf_fsa5.rh", "out_surf.rh", "rsfmri_subcortex", "timese_subcortex", "fmri_tSNR", "fmri.surf.c69.timeseries"
     ),
@@ -121,7 +120,6 @@ module.col <- function() {
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_model-DTI_map-ADC.mif"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"),
             paste0(proc_struct, "/", BIDSid, "_space-nativepro_desc-dwi.nii.gz"),
-            paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-t1w_nativepro_NL.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-5tt.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-gmwmi-mask.mif"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-iFOD1-1M_tdi.mif"),

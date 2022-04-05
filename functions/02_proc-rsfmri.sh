@@ -95,6 +95,7 @@ Note "Tag GSR files    :" "$GSRtag"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
 Note "fmri acq         :" "$fmri_acq"
+Note "regAffine        :" "${regAffine}"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -252,9 +253,9 @@ Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
 
 # rsfMRI directories
 if [[ "${fmri_acq}" == "FALSE" ]]; then
-  tagMRI="rsfmri"
-else
-  fmri_tag="acq-${fmri_tag/${idBIDS}_/}"
+  tagMRI="func"
+elif [[ ${fmri_acq} == "TRUE" ]]; then
+  fmri_tag=$(echo $mainScan | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag}"
   tagMRI="${fmri_tag}"
   proc_rsfmri="$subject_dir/func/${fmri_tag}"
   Info "Outputs will be stored in:"
@@ -323,7 +324,7 @@ if [[ ! -f "${singleecho}" ]]; then
               # Skipping fslroi step. Rename files for simplicity
               mv "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_sliceCut.nii.gz"
 
-              # Motion correction within scans
+              # Motion correction within scans <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Only first echo for tedana
               Do_cmd fslmaths "${tmp}/${tag}_sliceCut.nii.gz" -Tmean "${tmp}/${tag}_sliceCutMean.nii.gz"
               Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_sliceCutMean.nii.gz" \
                               -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
@@ -332,6 +333,8 @@ if [[ ! -f "${singleecho}" ]]; then
               Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
         fi
     done
+
+# Here goes tedana
 
     # Calculate motion outliers with FSL
     if [[ ! -f "${rsfmri_volum}/${idBIDS}_space-rsfmri_singleecho.1D" ]]; then
@@ -466,13 +469,26 @@ SyN_rsfmri_affine="${str_rsfmri_SyN}0GenericAffine.mat"
 SyN_rsfmri_warp="${str_rsfmri_SyN}1Warp.nii.gz"
 SyN_rsfmri_Invwarp="${str_rsfmri_SyN}1InverseWarp.nii.gz"
 
+if [[ ${regAffine}  == "FALSE" ]]; then
+    # SyN from T1_nativepro to t1-nativepro
+    export reg="Affine+SyN"
+    transformsInv="-t ${SyN_rsfmri_warp} -t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri
+    transform="-t ${mat_rsfmri_affine} -t [${SyN_rsfmri_affine},1] -t ${SyN_rsfmri_Invwarp}"  # rsfmri to T1nativepro
+    xfmat="-t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri only lineal for FIX
+elif [[ ${regAffine}  == "TRUE" ]]; then
+    export reg="Affine"
+    transformsInv="-t [${mat_rsfmri_affine},1]"  # T1nativepro to rsfmri
+    transform="-t ${SyN_rsfmri_affine}"   # rsfmri to T1nativepro
+    xfmat="-t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri only lineal for FIX
+fi
+
 # Registration to native pro
 Nreg=$(ls "$mat_rsfmri_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then
     # if [[ -f "$rsfmri4reg" ]]; then
     #     Do_cmd fslmaths "$rsfmri4reg" -mul "$fmri_mask" "$fmri_brain"
     # fi
-    if [[! -f "${t1bold}" ]]; then
+    if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
         # Inverse T1w
         Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
@@ -497,15 +513,6 @@ if [[ "$Nreg" -lt 3 ]]; then
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
         Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_rsfmri_SyN" -t s -n "$threads" -p d #-i "$mat_rsfmri_affine"
-        export reg="Affine+SyN"
-        transformsInv="-t ${SyN_rsfmri_warp} -t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri
-        transform="-t ${mat_rsfmri_affine} -t [${SyN_rsfmri_affine},1] -t ${SyN_rsfmri_Invwarp}"  # rsfmri to T1nativepro
-        xfmat="-t ${SyN_rsfmri_affine} -t [${mat_rsfmri_affine},1]" # T1nativepro to rsfmri only lineal
-    elif [[ ${regAffine}  == "TRUE" ]]; then
-        export reg="Affine"
-        transformsInv="-t [${mat_rsfmri_affine},1]"
-        transform="-t ${SyN_rsfmri_affine}"
-        xfmat="-t [${mat_rsfmri_affine},1]"
     fi
 
     # fmri to t1-nativepro
@@ -772,7 +779,7 @@ timese_subcortex="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_timeser
 
 if [[ ! -f "$timese_subcortex" ]] ; then
       Info "Getting subcortical timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel  "${transformsInv}" -o "$rsfmri_subcortex" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$rsfmri_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$fmri_processed" --seg "$rsfmri_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
