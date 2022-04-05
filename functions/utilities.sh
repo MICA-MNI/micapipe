@@ -630,26 +630,6 @@ function cleanup() {
   if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
 }
 
-function QC_proc-dwi() {
-  html=$1
-  if [ -f "$html" ]; then rm "$html"; fi
-  for i in "${!bids_dwis[@]}"; do
-    echo "        <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_dwis[${i}]</span></td>
-            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
-            <td class=\"tg-8pnm\">${bids_dwis[$i]}</td>
-          </tr>" >> "$html"
-  done
-
-  if [ -f "$dwi_reverse" ]; then
-    echo -e "        <tr>
-            <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_reverse</span></td>
-            <td class=\"tg-8pnm\">BIDS dwi<br><br></td>
-            <td class=\"tg-8pnm\">${dwi_reverse}</td>
-          </tr>"  >> "$html"
-  fi
-}
-
 function QC_proc-rsfmri() {
   outname=$1
   html="$dir_QC/${outname}"
