@@ -552,7 +552,7 @@ if [[ "$noFIX" -eq 0 ]]; then
 
                     # Replace file if melodic ran correctly - Change single-echo files for clean ones
                     if [[ -f "$fix_output" ]]; then
-                        yes | Do_cmd cp -rf "$fix_output" "$fmri_processed"
+                        yes | Do_cmd 3dresample -orient LPI -prefix "$fmri_processed" -inset "$fix_output"
                         export statusFIX="YES"
                     else
                         Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_rsfmri_*.txt)"; exit
