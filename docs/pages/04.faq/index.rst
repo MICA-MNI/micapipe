@@ -79,15 +79,15 @@ Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
       :linenos:
       :caption: From rsfMRI to T1nativepro space
 
-      # Map from rsfMRI space to MNI152 0.8mm
+      # Map from rsfMRI space to MNI152 2mm
       Input=file_in_space-rsfMRI.nii.gz
-      Output=file_from_rsfMRI_in_space-MNI152_0.8mm.nii.gz
+      Output=file_from_rsfMRI_in_space-MNI152_2mm.nii.gz
 
       antsApplyTransforms -d 3 \
           -i func/volumetric/${subjectID}_space-rsfmri_desc-singleecho_brain.nii.gz \
-          -r ${MICAPIPE_DIR}/MNI152Volumes/MNI152_T1_0.8mm_brain.nii.gz \
-          -t xfm/${subjectID}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz \
-          -t xfm/${subjectID}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_0GenericAffine.mat \
+          -r ${MICAPIPE_DIR}/MNI152Volumes/MNI152_T1_2mm_brain.nii.gz \
+          -t xfm/${subjectID}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz \
+          -t xfm/${subjectID}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_0GenericAffine.mat \
           -t xfm/${subjectID}_rsfmri_from-rsfmri_to-nativepro_mode-image_desc-affine_0GenericAffine.mat \
           -t [xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1] \
           -t xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz \
