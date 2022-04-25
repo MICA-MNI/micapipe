@@ -656,7 +656,7 @@ fi
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_structural_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
@@ -681,7 +681,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_freesurfer_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_freesurfer_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]]; then
@@ -708,7 +708,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
@@ -738,7 +738,7 @@ fi
 # # #         POST Structural processing
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
-    log_file_str=$dir_logs/post_structural_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
     # mica.q - POST Structural processing
     if [[ $micaq == "TRUE" ]]; then
@@ -768,7 +768,7 @@ fi
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
 #     REQUIRES -post-structural, -proc_freesurfer, and -postMPC
 if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
-    log_file_str=$dir_logs/Morphology_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/Morphology_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Morphology
     if [[ $micaq == "TRUE" ]]; then
@@ -798,7 +798,7 @@ fi
 #     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
-    log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/MPC_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
@@ -828,7 +828,7 @@ fi
 #     Generates geodesic distance matrices calculated along cortical surface mesh
 #     REQUIRES -post-structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
-    log_file_str=$dir_logs/GD_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/GD_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Geodesic distance
     if [[ $micaq == "TRUE" ]]; then
@@ -857,7 +857,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #   REQUIRES -proc_dwi
 if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/SC_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/SC_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
@@ -882,11 +882,11 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # #        Resting state
+# # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
@@ -914,7 +914,7 @@ fi
 # # #        Individual QC
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
-    log_file_str=$dir_logs/qc_$(date +'%d-%m-%Y')
+    log_file_str=$dir_logs/qc_$(date +'%Y-%m-%d_%H:%M:%S')
     if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
     COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
     # LOCAL - QC individual
@@ -925,7 +925,7 @@ fi
 #                   MICA - qsub test
 # -----------------------------------------------------------------------------------------------#
 if [[ $qtest = "TRUE" ]]; then
-    log_file_str=${out}/${id}_$(date +'%d-%m-%Y')
+    log_file_str=${out}/${id}_$(date +'%Y-%m-%d_%H:%M:%S')
     COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing}"
     if [[ $micaq == "TRUE" ]]; then
         export PROC="qsub-MICA"
