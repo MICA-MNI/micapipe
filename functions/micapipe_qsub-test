@@ -105,21 +105,21 @@ Note "PROC              =" $PROC
 N_mainScan=${#bids_mainScan[@]}
 if [ $N_mainScan -gt 1 ]; then
     if [[ ${thisMainScan} == "DEFAULT" ]]; then
-        Error "Multiple rsfMRI runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
+        Error "Multiple func runs found in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
     elif [ $thisMainScan -gt $N_mainScan ]; then
-        Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI scans scans found ($N_mainScan). Using first filename in list as default";
+        Warning "Specified run number ($thisMainScan) is greater than number of func scans scans found ($N_mainScan). Using first filename in list as default";
         mainScan=${bids_mainScan[0]}
     else
-        Info "Found $N_mainScan rsfMRI scans, processing specified scan # $thisMainScan"
+        Info "Found $N_mainScan func scans, processing specified scan # $thisMainScan"
         mainScan=${bids_mainScan[$thisMainScan-1]}
     fi
 else
     mainScan=${bids_mainScan[0]}
     if [[ "$thisMainScan" == "DEFAULT" ]]; then
-        Info "No run number specified for rsfMRI scan and did not find more than one run for main scan - all good!"
+        Info "No run number specified for func scan and did not find more than one run for main scan - all good!"
     else
         if [ $thisMainScan -gt $N_mainScan ]; then
-            Warning "Found one or less rsfMRI scan, but specified run number = $thisMainScan). Using first filename in list as default";
+            Warning "Found one or less func scan, but specified run number = $thisMainScan). Using first filename in list as default";
         fi
     fi
 fi
@@ -128,12 +128,12 @@ fi
 N_mainScanJson=${#bids_mainScanJson[@]}
 if [ $N_mainScanJson -gt 1 ]; then
     if [[ ${thisMainScan} == "DEFAULT" ]]; then
-        Error "Found multiple .json files for main rsfMRI scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
+        Error "Found multiple .json files for main func scan in BIDS rawdata directory! Please specify which run should be processed using flag -mainScanRun"; exit;
     elif [ $thisMainScan -gt $N_mainScanJson ]; then
-        Warning "Specified run number ($thisMainScan) is greater than number of rsfMRI json files found for main scan ($N_mainScan). Using first filename in list as default";
+        Warning "Specified run number ($thisMainScan) is greater than number of func json files found for main scan ($N_mainScan). Using first filename in list as default";
         mainScanJson=${bids_mainScan[0]}
     else
-        Info "Found $N_mainScanJson rsfMRI scan json files, using specified run # $thisMainScan"
+        Info "Found $N_mainScanJson func scan json files, using specified run # $thisMainScan"
         mainScanJson=${bids_mainScanJson[$thisMainScan-1]}
     fi
 else
@@ -169,7 +169,7 @@ fi
 
 # print the names on the terminal
 bids_print.variables
-bids_print.variables-rsfmri
+bids_print.variables-func
 bids_print.variables-post
 
 #    PACKAGES DEPENDENCIES print versions

@@ -67,7 +67,7 @@ library('htmlwidgets') # save the widget
 module.col <- function() {
   # List of all the main outputs
   files <- data.frame(
-    module=c(rep("proc_structural",7), rep("proc_freesurfer",2), rep("Morphology",12), rep("post_structural", 13), rep("proc_dwi", 12), rep("SC", 3), rep("proc_rsfmri", 20)),
+    module=c(rep("proc_structural",7), rep("proc_freesurfer",2), rep("Morphology",12), rep("post_structural", 13), rep("proc_dwi", 12), rep("SC", 3), rep("proc_func", 20)),
     variables=c("t1w.nativepro", "t1w.firstout", "t1w.fast", "t1w.MNI0.8", "t1w.MNI2.0", "t1w.mask", "t1w.5tt", "fs.t1w", "fs.reconall",
                 "morph.lh.thick", "morph.rh.thick", "morph.lh.thick.fsa5", "morph.rh.thick.fsa5", "morph.lh.thick.c69", "morph.rh.thick.c69",
                 "morph.lh.curv", "morph.rh.curv", "morph.lh.curv.fsa5", "morph.rh.curv.fsa5", "morph.lh.curv.c69", "morph.rh.curv.c69",
@@ -75,7 +75,7 @@ module.col <- function() {
                 "c69.rh.white", "c69.lh.sphere", "c69.rh.sphere", "c69.lh.midth", "c69.rh.midth",
                 "dwi_res", "dwi_corr", "T1nativepro_in_dwi", "dwi_mask", "dwi_dti", "dti_FA", "dti_ADC", "fod_wmN", "dwi_in_T1nativepro", "dwi_5ttm", "dwi_gmwmi", "tdi_1M", "dwi_cere", "dwi_subc", "tck.tdi",
                 "singleecho", "fmri_brain", "fmri_HP", "fmri_mean", "fix_output", "fmri_processed", "global_signal", "spikeRegressors","vol2surfTS.lh","out_surf_native.lh",
-                "out_surf_fsa5.lh", "out_surf.lh", "vol2surfTS.rh", "out_surf_native.rh", "out_surf_fsa5.rh", "out_surf.rh", "rsfmri_subcortex", "timese_subcortex", "fmri_tSNR", "fmri.surf.c69.timeseries"
+                "out_surf_fsa5.lh", "out_surf.lh", "vol2surfTS.rh", "out_surf_native.rh", "out_surf_fsa5.rh", "out_surf.rh", "func_subcortex", "timese_subcortex", "fmri_tSNR", "fmri.surf.c69.timeseries"
     ),
     files=c(paste0(proc_struct, "/", BIDSid, "_space-nativepro_t1w.nii.gz"),
             paste0(proc_struct, "/first/", BIDSid, "_space-nativepro_t1w_all_fast_firstseg.nii.gz"),
@@ -126,26 +126,26 @@ module.col <- function() {
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_atlas-cerebellum.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_atlas-subcortical.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-iFOD2-",tracts,"_tdi.mif"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_brain.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_HP.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_mean.nii.gz"),
-            paste0(rsfmri_ICA,"/filtered_func_data_clean.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_clean.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_global.txt"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_spikeRegressors_REFRMS.1D"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_lh.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_lh_10mm.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsaverage5_lh_10mm.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-conte69-32k_lh_10mm.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_rh.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_rh_10mm.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsaverage5_rh_10mm.mgh"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-conte69-32k_rh_10mm.mgh"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_subcortical.nii.gz"),
-            paste0(rsfmri_volum, "/", BIDSid, "_space-rsfmri_desc-singleecho_timeseries_subcortical.txt"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_desc-tSNR.txt"),
-            paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-conte69-32k_desc-timeseries_clean.txt")
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_brain.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_HP.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_mean.nii.gz"),
+            paste0(func_ICA,"/filtered_func_data_clean.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_clean.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_global.txt"),
+            paste0(func_volum, "/", BIDSid, "_space-func_spikeRegressors_REFRMS.1D"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsnative_lh.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsnative_lh_10mm.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsaverage5_lh_10mm.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-conte69-32k_lh_10mm.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsnative_rh.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsnative_rh_10mm.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-fsaverage5_rh_10mm.mgh"),
+            paste0(func_surf, "/", BIDSid, "_func_space-conte69-32k_rh_10mm.mgh"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_subcortical.nii.gz"),
+            paste0(func_volum, "/", BIDSid, "_space-func_desc-singleecho_timeseries_subcortical.txt"),
+            paste0(func_surf, "/", BIDSid, "_func_desc-tSNR.txt"),
+            paste0(func_surf, "/", BIDSid, "_func_space-conte69-32k_desc-timeseries_clean.txt")
     )
   )
   # Convert from factor to characters
@@ -161,11 +161,11 @@ module.col <- function() {
   for (seg in parc) { for (Size in c("cor", "sub", "full")) {
     files <- rbind(files, c("SC", paste0("SC",".",seg,".",Size), paste0(dwi_cnntm, "/", BIDSid, "_space-dwi_atlas-",seg,"_desc-iFOD2-",tracts,"-",Filter,"_",Size,"-connectome.txt")) )
   }}
-  # proc_rsfmri
+  # proc_func
   for (seg in parc) { for (space in c("fsnative", "conte69-32k")) {
-    files <- rbind(files, c("proc_rsfmri", paste0("FC",".",seg,".",space), paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-",space,"_atlas-",seg,"_desc-FC.txt")) )
+    files <- rbind(files, c("proc_func", paste0("FC",".",seg,".",space), paste0(func_surf, "/", BIDSid, "_func_space-",space,"_atlas-",seg,"_desc-FC.txt")) )
   }}
-  for (seg in parc) { files <- rbind(files, c("proc_rsfmri", paste0("FC",".",seg,".timeseries"), paste0(rsfmri_surf, "/", BIDSid, "_rsfmri_space-fsnative_atlas-",seg,"_desc-timeseries.txt")) )}
+  for (seg in parc) { files <- rbind(files, c("proc_func", paste0("FC",".",seg,".timeseries"), paste0(func_surf, "/", BIDSid, "_func_space-fsnative_atlas-",seg,"_desc-timeseries.txt")) )}
   # test existence of files
   files$done <- as.numeric(file.exists(files$files))
 
@@ -196,10 +196,10 @@ proc_struct <- paste0(subject_dir, "/anat")          # Structural processing dir
 proc_dwi <- paste0(subject_dir, "/dwi")              # dwi processing directory
   dir_eddy <- paste0(proc_dwi, "/eddy/dwi_post_eddy.eddy_") # Eddy directory
   dwi_cnntm <- paste0(proc_dwi, "/connectomes")
-proc_rsfmri <- paste0(subject_dir, "/func")
-  rsfmri_volum <- paste0(proc_rsfmri, "/volumetric" )
-  rsfmri_surf <- paste0(proc_rsfmri, "/surfaces") # rsfMRI surfaces
-  rsfmri_ICA <- paste0(proc_rsfmri, "/ICA_MELODIC")
+proc_func <- paste0(subject_dir, "/func")
+  func_volum <- paste0(proc_func, "/volumetric" )
+  func_surf <- paste0(proc_func, "/surfaces") # func surfaces
+  func_ICA <- paste0(proc_func, "/ICA_MELODIC")
 dir_warp <- paste0(subject_dir, "/xfm")
   dir_fs.label <- paste0(dir_fs,"/",BIDSid,"/label")
 dir_QC <- paste0(subject_dir, "/QC")                 # QC directory
@@ -218,9 +218,9 @@ load(file=paste0(mica.dir,"/functions/cmap_MICs.Rdata"))
 # -----------------------------------------------------
 #### Micapipe Workflow - sankey diagram ####
 # Nodes
-nodes <- data.frame(name=c("proc_structural","proc_freesurfer","proc_dwi","post_structural","proc_rsfmri","SC","MPC","GD","Morphology"),
+nodes <- data.frame(name=c("proc_structural","proc_freesurfer","proc_dwi","post_structural","proc_func","SC","MPC","GD","Morphology"),
                     color=c("#104E8B",  "#00688B",  "#668B8B",  "#7A8B8B",  "#B3362C",  "#6F4FA3",  "#3B8549",  "#3B70A2",  "#cd950c"), # colored nodes
-                    group=c("proc_structural", "proc_freesurfer","proc_dwi","post_structural","proc_rsfmri","SC","MPC","GD","Morphology"))
+                    group=c("proc_structural", "proc_freesurfer","proc_dwi","post_structural","proc_func","SC","MPC","GD","Morphology"))
 nodes$name <- as.character(nodes$name)
 nodes$color <- as.character(nodes$color)
 
@@ -264,14 +264,14 @@ for (seg in parc) { subj_id <- paste0(BIDSid,"_atlas-",seg)
     print(paste("[INFO]....  Creating PNG connectomes from parcellation:", seg))
 
     # Functional connectome
-    conn.rsf <- paste0(rsfmri_surf,"/",BIDSid,"_rsfmri_space-fsnative_atlas-",seg,"_desc-FC.txt")
+    conn.rsf <- paste0(func_surf,"/",BIDSid,"_func_space-fsnative_atlas-",seg,"_desc-FC.txt")
       if (file.exists(conn.rsf)==TRUE) { conn.rsf <- load.conn(conn.rsf); File <- ""; ColMap <- cmap.FC(256)
           png(paste0(dir_QC_png,"/", subj_id, "_desc-qc_FC.png"))
           image(conn.rsf, axes=FALSE, main=paste0(subj_id,"_FC"), col=ColMap ); dev.off()
           } else { conn.rsf <- notFound; File <- "NOT FOUND - "; ColMap <- "gray30"; print(paste(File, seg, "FC")) }
 
     # Functional connectome conte69
-    conn69.rsf <- paste0(rsfmri_surf,"/",BIDSid,"_rsfmri_space-conte69-32k_atlas-",seg,"_desc-FC.txt")
+    conn69.rsf <- paste0(func_surf,"/",BIDSid,"_func_space-conte69-32k_atlas-",seg,"_desc-FC.txt")
       if (file.exists(conn69.rsf)==TRUE) { conn69.rsf <- load.conn(conn69.rsf); File <- ""; ColMap <- cmap.FC(256)
           png(paste0(dir_QC_png,"/", subj_id,"_desc-qc_FC-conte69.png"))
           image(conn69.rsf, axes=FALSE, main=paste0(File, subj_id,"_FC-conte69.png"), col=ColMap ); dev.off()

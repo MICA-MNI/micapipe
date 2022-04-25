@@ -33,7 +33,7 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
-\t\033[38;5;197m-proc_rsfmri\033[0m      : Resting state Funtional MRI processing and functional connectome
+\t\033[38;5;197m-proc_func\033[0m      : Funtional MRI processing and functional connectome generation
 \t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
 \t\033[38;5;197m-proc_task\033[0m      : Task Funtional MRI processing
 \t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
@@ -76,12 +76,13 @@ echo -e "
 \t\t\033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
 \t\t\t\t         ( this will create a new directory here: dwi/acq-<dwi_acq> )
 
-\t\033[38;5;197m-proc_rsfmri | -proc_task\033[0m
-\t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for rsfMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
+\t\033[38;5;197m-proc_func\033[0m
+\t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t\t         Default='task-rest_acq-AP_bold'
-\t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for rsfMRI processing
+\t\t\t\t         Multiple strings separate by comma no blank space for multiecho acquisitions ( e.g. 'echo1,echo2,echo3' )
+\t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for func processing
 \t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for rsfMRI processing (If the path is wrong TOPUP won't run!)
+\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
 \t\t\t\t         Default='task-rest_acq-PAse_bold'
 \t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t\t         you must specify which scan to process ( e.g. '1' )
@@ -103,9 +104,9 @@ echo -e "
 \t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 \t\t\033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
 \t\t\t\t         ( default processing is independent )
-\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from rsfMRI to T1w.
+\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t\t         ( default is non linear registration SyN )
-\t\t\033[38;5;120m-fmri_acq\033[0m            : Use this flag if you have a rsfMRI already processed and you wish to process a new fMRI volume.
+\t\t\033[38;5;120m-fmri_acq\033[0m            : Use this flag if you have a func already processed and you wish to process a new fMRI volume.
 \t\t\t\t         ( this will create a new directory with the outputs func/acq-<fMRI> )
 
 \t\t\033[38;5;120m-taskScanStr\033[0m         : String(s) to manually identify the main scan(s) for task-fMRI processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -234,7 +235,7 @@ do
     dwi_str=$2
     shift;shift
     ;;
-  -proc_rsfmri)
+  -proc_func)
     procfMRI=TRUE
     shift
   ;;
@@ -479,7 +480,7 @@ Error "A processing flag is missing:
                     -proc_freesurfer
                     -post_structural
                     -proc_dwi
-                    -proc_rsfmri
+                    -proc_func
                     -proc_task
                     -SC
                     -MPC
@@ -490,11 +491,11 @@ Error "A processing flag is missing:
 help; exit 1; fi
 
 # Optional arguments rs-fmri
-optarg_rsfmri=($configFile $trainingFile $thisMainScan $thisPhase)
-if [[ $configFileInput == "TRUE" ]]; then optarg_rsfmri[0]=$configFile; else optarg_rsfmri[0]=DEFAULT; fi
-if [[ $icaFileInput == "TRUE" ]]; then optarg_rsfmri[1]=$trainingFile; else optarg_rsfmri[1]=DEFAULT; fi
-if [[ $specMainScan == "TRUE" ]]; then optarg_rsfmri[2]=$thisMainScan; else optarg_rsfmri[2]=DEFAULT; fi
-if [[ $specPhase == "TRUE" ]]; then optarg_rsfmri[3]=$thisPhase; else optarg_rsfmri[3]=DEFAULT; fi
+optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
+if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optarg_func[0]=DEFAULT; fi
+if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
+if [[ $specMainScan == "TRUE" ]]; then optarg_func[2]=$thisMainScan; else optarg_func[2]=DEFAULT; fi
+if [[ $specPhase == "TRUE" ]]; then optarg_func[3]=$thisPhase; else optarg_func[3]=DEFAULT; fi
 if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
 if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
 if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
@@ -895,15 +896,15 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-rsfmri.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
+    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_func -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]]; then
@@ -911,39 +912,10 @@ if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_func -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     else
         # LOCAL - Resting state fMRI processing
-        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-    fi
-fi
-
-# -----------------------------------------------------------------------------------------------#
-# # #        Task fMRI
-# -----------------------------------------------------------------------------------------------#
-#  Task fMRI
-if [ "$ALL" = "TRUE" ] || [ "$procTask" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_rsfmri_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-task.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing} ${taskScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq}"
-    # mica.q - Task fMRI processing
-    if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - Task fMRI processing"
-        Warning "This option only works on the MICA workstations"
-        export PROC="qsub-MICA"
-        # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    # all.q - ReTask fMRI processing
-    elif [[ $qall == "TRUE" ]]; then
-        Info "all.q qsub - Task fMRI processing"
-        Warning "This option only works on the McGill BIC network"
-        export PROC="qsub-all.q"
-        # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_rsfmri -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    else
-        # LOCAL - Task fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
@@ -964,7 +936,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [[ $qtest = "TRUE" ]]; then
     log_file_str=${out}/${id}_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_rsfmri[0]} ${optarg_rsfmri[1]} ${optarg_rsfmri[2]} ${optarg_rsfmri[3]} ${wbSmoothing}"
+    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing}"
     if [[ $micaq == "TRUE" ]]; then
         export PROC="qsub-MICA"
         Info "MICA qsub test: $PROC"

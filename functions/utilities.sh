@@ -51,10 +51,10 @@ export idBIDS="${subject}${ses}"
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
-  export proc_rsfmri=$subject_dir/func
-    export rsfmri_ICA=$proc_rsfmri/ICA_MELODIC
-    export rsfmri_volum=$proc_rsfmri/volumetric
-    export rsfmri_surf=$proc_rsfmri/surfaces
+  export proc_func=$subject_dir/func
+    export func_ICA=$proc_func/ICA_MELODIC
+    export func_volum=$proc_func/volumetric
+    export func_surf=$proc_func/surfaces
   export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
@@ -83,8 +83,8 @@ export idBIDS="${subject}${ses}"
   export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
 
   # BIDS Files: resting state
-  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.nii* 2>/dev/null))       # main rsfMRI scan
-  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.json 2>/dev/null))   # main rsfMRI scan json
+  bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.nii* 2>/dev/null))       # main func scan
+  bids_mainScanJson=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.json 2>/dev/null))   # main func scan json
   bids_mainPhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-APse_*bold.nii* 2>/dev/null))     # main phase scan
   bids_reversePhase=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-PAse_*bold.nii* 2>/dev/null))  # reverse phase scan
 
@@ -169,13 +169,13 @@ bids_print.variables-dwi() {
   Note "MNI152_mask     =" "$MNI152_mask"
 }
 
-bids_print.variables-rsfmri() {
+bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 freesurfer      =" "$(find "$T1freesurfr" 2>/dev/null)"
-  file.exist "Main rsfMRI        =" $mainScan
-  file.exist "Main rsfMRI json   =" $mainScanJson
+  file.exist "Main func        =" $mainScan
+  file.exist "Main func json   =" $mainScanJson
   file.exist "Main phase scan    =" $mainPhaseScan
   file.exist "Main reverse phase =" $reversePhaseScan
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
@@ -202,10 +202,10 @@ bids_variables_unset() {
   unset dir_conte69
   unset proc_dwi
   unset dwi_cnntm
-  unset proc_rsfmri
-  unset rsfmri_ICA
-  unset rsfmri_volum
-  unset rsfmri_surf
+  unset proc_func
+  unset func_ICA
+  unset func_volum
+  unset func_surf
   unset dir_warp
   unset dir_logs
   unset dir_QC
@@ -417,13 +417,14 @@ function json_nativepro_mask() {
   }" > "$3"
 }
 
-function json_rsfmri() {
+function json_func() {
   qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
   sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Tag\": \"${tagMRI}\",
+    \"Acquisition\": \"${acq}\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
 \t\t\"${sform}\"
@@ -433,24 +434,26 @@ function json_rsfmri() {
       ],
     \"Preprocess\": [
       {
-        \"MainScan\": \"${mainScan}\",
+        \"MainScan\": \"${mainScan[*]}\",
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
         \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
-        \"MotionCorrection\": [\"${rsfmri_volum}/${idBIDS}_space-rsfmri_spikeRegressors_FD.1D\"],
+        \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
         \"MainPhaseScan\": \"${mainPhaseScan}\",
         \"ReversePhaseScan\": \"${reversePhaseScan}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
-        \"RepetitionTime\": \"${RepetitionTime}\",
-        \"TotalReadoutTime\": \"${readoutTime}\",
+        \"RepetitionTime\": \"${RepetitionTime[*]}\",
+        \"TotalReadoutTime\": \"${readoutTime[*]}\",
+        \"EchoTime\": \"${EchoTime[*]}\",
         \"Melodic\": \"${statusMel}\",
         \"FIX\": \"${statusFIX}\",
         \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
-        \"dropTR\": \"${dropTR}\"
+        \"dropTR\": \"${dropTR}\",
+        \"procStatus\": \"${status}\",
       }
     ]
   }" > "$1"
@@ -630,7 +633,7 @@ function cleanup() {
   if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
 }
 
-function QC_proc-rsfmri() {
+function QC_proc-func() {
   outname=$1
   html="$dir_QC/${outname}"
   if [ -f "$html" ]; then rm "$html"; fi
@@ -800,7 +803,7 @@ function micapipe_group_QC() {
             <th class=\"tg-lp92\">GD</th>
             <th class=\"tg-lp92\">proc_dwi</th>
             <th class=\"tg-lp92\">SC</th>
-            <th class=\"tg-lp92\">proc_rsfmri</th>
+            <th class=\"tg-lp92\">proc_func</th>
             <th class=\"tg-lp92\">MPC</th>
           </tr>
         </thead>
@@ -817,7 +820,7 @@ function micapipe_group_QC() {
     else
         echo -e "              <td class=\"tg-oq6h\">Not processed<br><br></td>" >> "$QC_html"
     fi
-    for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_rsfmri MPC; do
+    for module in proc_structural proc_freesurfer post_structural Morphology GD proc_dwi SC proc_func MPC; do
         Status=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $4}')
         Steps=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $5}')
         Date=$(grep "${Nsub}, ${sub_ses/ses-/}, ${module}" "${pipecsv}" | awk -F ", " '{print $8}')
