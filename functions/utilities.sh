@@ -105,39 +105,39 @@ export idBIDS="${subject}${ses}"
 bids_print.variables() {
   # This functions prints BIDS variables names
   # IF they exist
-  Info "mica-pipe inputs:"
-  Note "id   =" "$id"
-  Note "BIDS =" "$BIDS"
-  Note "out  =" "$out"
-  Note "ses  =" "$SES"
+  Info "mica-pipe inputs"
+  Note "id   :" "$id"
+  Note "BIDS :" "$BIDS"
+  Note "out  :" "$out"
+  Note "ses  :" "$SES"
 
-  Info "BIDS naming:"
-  Note "subject_bids =" "$subject_bids"
-  Note "bids_T1ws    =" "N-${#bids_T1ws[@]}, e.g. ${bids_T1ws[0]}"
-  Note "bids_dwis    =" "N-${#bids_dwis[@]}, e.g. ${bids_dwis[0]}"
-  Note "subject      =" "$subject"
-  Note "subject_dir  =" "$subject_dir"
-  Note "proc_struct  =" "$proc_struct"
-  Note "dir_warp     =" "$dir_warp"
-  Note "logs         =" "$dir_logs"
+  Info "BIDS naming"
+  Note "subject_bids :" "$subject_bids"
+  Note "bids_T1ws    :" "N-${#bids_T1ws[@]}, e.g. ${bids_T1ws[0]}"
+  Note "bids_dwis    :" "N-${#bids_dwis[@]}, e.g. ${bids_dwis[0]}"
+  Note "subject      :" "$subject"
+  Note "subject_dir  :" "$subject_dir"
+  Note "proc_struct  :" "$proc_struct"
+  Note "dir_warp     :" "$dir_warp"
+  Note "logs         :" "$dir_logs"
 
-  Info "Processing directories:"
-  Note "subject_dir     =" "$subject_dir"
-  Note "proc_struct     =" "$proc_struct"
-  Note "dir_conte69     =" "$dir_conte69"
-  Note "dir_volum       =" "$dir_volum"
-  Note "dir_warp        =" "$dir_warp"
-  Note "dir_logs        =" "$dir_logs"
-  Note "dir_QC          =" "$dir_QC"
-  Note "dir_freesurfer  =" "$dir_freesurfer"
+  Info "Processing directories"
+  Note "subject_dir     :" "$subject_dir"
+  Note "proc_struct     :" "$proc_struct"
+  Note "dir_conte69     :" "$dir_conte69"
+  Note "dir_volum       :" "$dir_volum"
+  Note "dir_warp        :" "$dir_warp"
+  Note "dir_logs        :" "$dir_logs"
+  Note "dir_QC          :" "$dir_QC"
+  Note "dir_freesurfer  :" "$dir_freesurfer"
 
-  Info "Utilities directories:"
-  Note "scriptDir         =" "$scriptDir"
-  Note "util_MNIvolumes   =" "$util_MNIvolumes"
-  Note "util_lut          =" "$util_lut"
-  Note "util_parcelations =" "$util_parcelations"
-  Note "util_surface      =" "$util_surface"
-  Note "util_mics         =" "$util_mics"
+  Info "Utilities directories"
+  Note "scriptDir         :" "$scriptDir"
+  Note "util_MNIvolumes   :" "$util_MNIvolumes"
+  Note "util_lut          :" "$util_lut"
+  Note "util_parcelations :" "$util_parcelations"
+  Note "util_surface      :" "$util_surface"
+  Note "util_mics         :" "$util_mics"
 }
 
 file.exist(){
@@ -150,38 +150,38 @@ file.exist(){
 
 bids_print.variables-post() {
   # This functions prints BIDS variables names and files if found
-  Info "Structural processing output variables:"
-  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
-  Note "T1 fast_all     =" "$(find "$T1fast_seg" 2>/dev/null)"
-  Note "T1 resolution   =" "$res"
+  Info "Structural processing output variables"
+  Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          :" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "T1 fast_all     :" "$(find "$T1fast_seg" 2>/dev/null)"
+  Note "T1 resolution   :" "$res"
 }
 
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for DWI processing:"
-  Note "proc_dwi dir    =" "$proc_dwi"
-  Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  Note "dwi_reverse     =" "N-${#dwi_reverse[@]}, $dwi_reverse"
+  Info "mica-pipe variables for DWI processing"
+  Note "proc_dwi dir    :" "$proc_dwi"
+  Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
+  Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
 
-  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
-  Note "MNI152_mask     =" "$MNI152_mask"
+  Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          :" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "MNI152_mask     :" "$MNI152_mask"
 }
 
 bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for rs-fMRI processing:"
-  Note "T1 nativepro       =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 freesurfer      =" "$(find "$T1freesurfr" 2>/dev/null)"
+  Info "mica-pipe variables for rs-fMRI processing"
+  Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
-  file.exist "mainScan${i/0/}        =" ${mainScan[i]}
-  file.exist "mainScan${i/0/} json   =" ${mainScanJson[i]}
+  file.exist "mainScan${i/0/}         :" ${mainScan[i]}
+  file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
   done
-  file.exist "Main phase scan    =" $mainPhaseScan
-  file.exist "Main reverse phase =" $reversePhaseScan
-  Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
-  Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
+  file.exist "Main phase scan    :" $mainPhaseScan
+  file.exist "Main reverse phase :" $reversePhaseScan
+  Note "TOPUP config file  :" $(find "$topupConfigFile" 2>/dev/null)
+  Note "ICA-FIX training   :" $(find "$icafixTraining" 2>/dev/null)
 }
 
 bids_variables_unset() {
@@ -259,7 +259,17 @@ micapipe_software() {
   Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
   Note "            " "$(which R)"
 }
-micapipe_json() {
+
+function micapipe_procStatus() {
+  id=$1
+  session=$2
+  mod=$3
+  outfile=$4
+  grep -v "${id}, ${session}, ${mod}" "${outfile}" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${outfile}"
+  echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
+}
+
+function micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
     Name=$(grep Name "${BIDS}"/dataset_description.json | awk -F '"' '{print $4}')
