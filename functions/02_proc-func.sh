@@ -272,11 +272,18 @@ Note "Saving temporal dir:" "$nocleanup"
 Note "ANTs will use      :" "${threads} threads"
 Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
 
+# If mainScan is an array with more than one file we'll assume it's multiecho
+if [ ${#mainScan[@]} -eq 1 ]; then
+  acq="singleecho"
+elif [ ${#mainScan[@]} -gt 1 ]; then
+  acq="multiecho"; dropTR="FALSE"; noFIX=1
+fi
+
 # func directories
 if [[ "${fmri_acq}" == "FALSE" ]]; then
   tagMRI="func"
 elif [[ ${fmri_acq} == "TRUE" ]]; then
-  fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${fmri_tag}"
+  fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${acq}_${fmri_tag}"
   tagMRI="${fmri_tag}"
   proc_func="$subject_dir/func/${fmri_tag}"
   Info "Outputs will be stored in:"
@@ -306,13 +313,6 @@ for x in "$func_surf" "$func_volum"; do
 done
 
 #------------------------------------------------------------------------------#
-# If mainScan is an array with more than one file we'll assume it's multiecho
-if [ ${#mainScan[@]} -eq 1 ]; then
-  acq="singleecho"
-elif [ ${#mainScan[@]} -gt 1 ]; then
-  acq="multiecho"; dropTR="FALSE"; noFIX=1
-fi
-
 # Scans to process
 toProcess=($reversePhaseScan $mainPhaseScan)
 tags=("reversePhaseScan" "mainPhaseScan")
@@ -330,7 +330,7 @@ function func_reoMC() {
   # IF FILE IS NOT FOUND DON'T RUN
   if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
         Info "Processing $tag scan"
-        Note "RAWNIFTI:" "$rawNifti"
+        Note "func file:" "$rawNifti"
 
         # Drop first five TRs and reorient to standard
         if [ "$tag" == "mainScan" ] && [ "$dropTR" == "TRUE" ]; then

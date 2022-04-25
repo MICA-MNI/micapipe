@@ -174,8 +174,10 @@ bids_print.variables-func() {
   Info "mica-pipe variables for rs-fMRI processing:"
   Note "T1 nativepro       =" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 freesurfer      =" "$(find "$T1freesurfr" 2>/dev/null)"
-  file.exist "Main func        =" $mainScan
-  file.exist "Main func json   =" $mainScanJson
+  for i in "${!mainScan[@]}"; do
+  file.exist "mainScan${i/0/}        =" ${mainScan[i]}
+  file.exist "mainScan${i/0/} json   =" ${mainScanJson[i]}
+  done
   file.exist "Main phase scan    =" $mainPhaseScan
   file.exist "Main reverse phase =" $reversePhaseScan
   Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
