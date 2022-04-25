@@ -104,7 +104,7 @@ Note "DWi acquisition      :" "${dwi_str}"
 
 #	Timer
 aloita=$(date +%s)
-Nparc=0
+Nsteps=0
 
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_post-dwi_${id}"
@@ -132,18 +132,18 @@ fi
 
 if [[ ! -f "$dwi_cere" ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
       Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
-      if [[ -f "$dwi_cere" ]]; then ((Nparc++)); fi
+      if [[ -f "$dwi_cere" ]]; then ((Nsteps++)); fi
       # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
       # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
       Do_cmd fslmaths "$dwi_cere" -bin -mul 100 -add "$dwi_cere" "$dwi_cere"
-else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nparc++)); fi
+else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
 
 if [[ ! -f "$dwi_subc" ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
     Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
     # Remove brain-stem (label 16)
     Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
-    if [[ -f "$dwi_subc" ]]; then ((Nparc++)); fi
-else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nparc++)); fi
+    if [[ -f "$dwi_subc" ]]; then ((Nsteps++)); fi
+else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
 
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
@@ -179,9 +179,9 @@ if [ ! -f "$tdi" ]; then
     # TDI for QC
     Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
     Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
-    ((Nparc++))
+    ((Nsteps++))
 else
-    Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nparc++))
+    Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nsteps++))
 fi
 
 
@@ -213,9 +213,9 @@ for seg in "${parcellations[@]}"; do
             "$tck" "$dwi_cortex" "${connectome_str}_cor-edgeLengths.txt" \
             -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
         Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-        if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nparc++)); fi
+        if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nsteps++)); fi
     else
-        ((Nparc++))
+        ((Nsteps++))
     fi
 
     # -----------------------------------------------------------------------------------------------
@@ -236,9 +236,9 @@ for seg in "${parcellations[@]}"; do
             "$tck" "$dwi_cortexSub" "${connectome_str}_sub-edgeLengths.txt" \
             -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
         Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-        if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nparc++)); fi
+        if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nsteps++)); fi
     else
-        ((Nparc++))
+        ((Nsteps++))
     fi
 
     # -----------------------------------------------------------------------------------------------
@@ -259,9 +259,9 @@ for seg in "${parcellations[@]}"; do
             "$tck" "$dwi_all" "${connectome_str}_full-edgeLengths.txt" \
             -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
         Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-        if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nparc++)); fi
+        if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nsteps++)); fi
     else
-        ((Nparc++))
+        ((Nsteps++))
     fi
 done
 
@@ -293,12 +293,12 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 N="$(( 3 + ${#parcellations[*]} * 3))"
-if [ "$Nparc" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" "$Nparc")/$(printf "%02d" "$N")
+\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-grep -v "${id}, ${SES/ses-/}, SC-${tracts}${dwi_str_}" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, SC-${tracts}${dwi_str_}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "SC-${tracts}${dwi_str_}" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "SC-${tracts}${dwi_str_}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 cleanup "$tmp" "$nocleanup" "$here"

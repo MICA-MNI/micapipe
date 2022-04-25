@@ -254,11 +254,12 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 7 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+N=7
+if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "Volumetric structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
 \tSteps completed : $(printf "%02d" "$Nsteps")/07
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/proc_structural_*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_structural, ${status}, $(printf "%02d" "$Nsteps")/07, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_structural" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_structural" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 cleanup "$tmp" "$nocleanup" "$here"

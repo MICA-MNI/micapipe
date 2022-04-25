@@ -86,7 +86,7 @@ Info "wb_command will use $OMP_NUM_THREADS threads"
 
 #	Timer
 aloita=$(date +%s)
-Nfiles=0
+Nsteps=0
 
 # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_post-struct_${idBIDS}
@@ -109,9 +109,9 @@ if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then
     Do_cmd mrconvert "$T1freesurfr" "$T1_in_fs"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$T1_in_fs" -t ["${T1_fsnative_affine}",1] -o "$T1_fsnative" -v -u int
-    if [[ -f ${T1_fsnative} ]]; then ((Nfiles++)); fi
+    if [[ -f ${T1_fsnative} ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nfiles++))
+    Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -133,17 +133,17 @@ if [[ ! -f "$T1_seg_cerebellum" ]]; then
                 -r "$T1nativepro" \
                 -n GenericLabel -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
                 -o "$T1_seg_cerebellum" -v -u int
-    if [[ -f "$T1_seg_cerebellum" ]]; then ((Nfiles++)); fi
+    if [[ -f "$T1_seg_cerebellum" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nfiles++))
+    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nsteps++))
 fi
 
 Info "Subcortical parcellation to T1-nativepro Volume"
 if [[ ! -f "$T1_seg_subcortex" ]]; then
     Do_cmd cp "$T1fast_seg" "$T1_seg_subcortex"
-    if [[ -f "$T1_seg_subcortex" ]]; then ((Nfiles++)); fi
+    if [[ -f "$T1_seg_subcortex" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nfiles++))
+    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -176,10 +176,10 @@ for parc in "${atlas_parc[@]}"; do
 
         # Register parcellation to nativepro
         Do_cmd antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -v -u int
-        if [[ -f "$labels_nativepro" ]]; then ((Nfiles++)); fi
+        if [[ -f "$labels_nativepro" ]]; then ((Nsteps++)); fi
     else
         Info "Subject ${id} has a ${parc_str} segmentation on T1-nativepro space"
-        ((Nfiles++))
+        ((Nsteps++))
     fi
 done
 
@@ -207,11 +207,11 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
                 "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
                 BARYCENTRIC \
                 "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii"
-            if [[ -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii" ]]; then ((Nfiles++)); fi
+            if [[ -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii" ]]; then ((Nsteps++)); fi
         done
     done
 else
-    Info "Subject ${idBIDS} has surfaces on conte69"; Nfiles=$((Nfiles+4))
+    Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4))
 fi
 
 # -----------------------------------------------------------------------------------------------
@@ -222,12 +222,12 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 N=$((N+7)) # total number of steps
-if [ "$Nfiles" -eq $N ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "Post-structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" $Nfiles)/$(printf "%02d" $N)
+\tSteps completed : $(printf "%02d" $Nsteps)/$(printf "%02d" $N)
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/post_structural_*.txt)"
 # Print QC stamp
-grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, post_structural, $status, $(printf "%02d" "$Nfiles")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "post_structural" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "post_structural" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 cleanup "$tmp" "$nocleanup" "$here"

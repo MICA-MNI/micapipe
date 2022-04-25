@@ -65,7 +65,7 @@ Do_cmd mkdir -p "$tmp"
 
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
-status="COMPLETED"; N=01
+status="COMPLETED"; Nsteps=01
 grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
 echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 Warning "Subject ${id} has Freesurfer
@@ -143,7 +143,8 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
-if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then status="COMPLETED"; N=01; else status="INCOMPLETE"; N=00; fi
+N=1 # total number of steps
+if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then status="COMPLETED"; Nsteps=01; else status="INCOMPLETE"; Nsteps=00; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
@@ -153,6 +154,6 @@ eri=$(echo print "$eri"/60 | perl)
 Title "Freesurfer recon-all processing ended:
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/proc_freesurfer*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_freesurfer" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_freesurfer" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 cleanup "$tmp" "$nocleanup" "$here"

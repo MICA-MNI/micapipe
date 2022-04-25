@@ -289,7 +289,7 @@ elif [[ ${fmri_acq} == "TRUE" ]]; then
   Info "Outputs will be stored in:"
   Note "fMRI path:" "${proc_func}"
 fi
-Note "tagMRI             :" "${tagMRI}"
+Note "tagMRI:" "${tagMRI}"
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
@@ -423,6 +423,7 @@ function func_topup() {
 
 #------------------------------------------------------------------------------#
 # Begining of the REAL processing
+status="INCOMPLETE"
 # Processing fMRI acquisitions.
 if [[ ! -f "${func_nii}" ]]; then
     # Reorient and motion correct main(s) fMRI
@@ -883,17 +884,18 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 21 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+N=21
+if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
 Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_func_*.txt)"
 if [[ ${fmri_acq} == "FALSE" ]]; then
-    grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-    echo "${id}, ${SES/ses-/}, proc_func, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func" "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 else
-    grep -v "${id}, ${SES/ses-/}, proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-    echo "${id}, ${SES/ses-/}, proc_func_${tagMRI}, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 fi
 cleanup "$tmp" "$nocleanup" "$here"

@@ -266,7 +266,7 @@ function micapipe_procStatus() {
   mod=$3
   outfile=$4
   grep -v "${id}, ${session}, ${mod}" "${outfile}" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${outfile}"
-  echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
+  echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
 }
 
 function micapipe_json() {
