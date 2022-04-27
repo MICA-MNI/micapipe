@@ -106,8 +106,6 @@ echo -e "
 \t\t\t\t         ( default processing is independent )
 \t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t\t         ( default is non linear registration SyN )
-\t\t\033[38;5;120m-fmri_acq\033[0m            : Use this flag if you have a func already processed and you wish to process a new fMRI volume.
-\t\t\t\t         ( this will create a new directory with the outputs func/acq-<fMRI> )
 
 \t\033[38;5;197m-SC\033[0m
 \t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -298,10 +296,6 @@ do
   ;;
   -smoothWithWB)
     smoothWB=TRUE
-    shift
-  ;;
-  -fmri_acq)
-    fmri_acq=TRUE
     shift
   ;;
   -dropTR)
@@ -499,7 +493,6 @@ if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); f
 if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
-if [[ "${fmri_acq}" != "TRUE" ]]; then fmri_acq="FALSE"; fi
 if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments mpc
@@ -887,7 +880,7 @@ fi
 #  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H:%M:%S')
-    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${fmri_acq} ${dropTR} ${GSRtag}"
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"

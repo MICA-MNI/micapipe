@@ -42,10 +42,9 @@ performGSR=${17}
 noFIX=${18}
 sesAnat=${19}
 regAffine=${20}
-fmri_acq=${21}
-dropTR=${22}
-GSRtag=${23}
-PROC=${24}
+dropTR=${21}
+GSRtag=${22}
+PROC=${23}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -274,22 +273,19 @@ Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
 
 # If mainScan is an array with more than one file we'll assume it's multiecho
 if [ ${#mainScan[@]} -eq 1 ]; then
-  acq="singleecho"
+  acq="se"
 elif [ ${#mainScan[@]} -gt 1 ]; then
-  acq="multiecho"; dropTR="FALSE"; noFIX=1
+  acq="me"; dropTR="FALSE"; noFIX=1
 fi
 
 # func directories
-if [[ "${fmri_acq}" == "FALSE" ]]; then
-  tagMRI="func"
-elif [[ ${fmri_acq} == "TRUE" ]]; then
-  fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="acq-${acq}_${fmri_tag}"
-  tagMRI="${fmri_tag}"
-  proc_func="$subject_dir/func/${fmri_tag}"
-  Info "Outputs will be stored in:"
-  Note "fMRI path:" "${proc_func}"
-fi
+fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
+tagMRI="${fmri_tag}"
+proc_func="$subject_dir/func/${fmri_tag}"
+Info "Outputs will be stored in:"
+Note "fMRI path:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
+
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
@@ -444,7 +440,7 @@ if [[ ! -f "${func_nii}" ]]; then
 
         mkdir -p ${func_volum}/tedana
         tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${func_volum}/tedana
-        
+
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
         mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
