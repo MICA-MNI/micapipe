@@ -430,8 +430,7 @@ do
     shift
   ;;
   -*)
-    Error "Unknown option ${2}"
-    help
+    Error "Unknown option ${1}"
     exit 1
   ;;
     esac
@@ -442,7 +441,7 @@ if [ "$QCgroup" = "TRUE" ]; then
     if [ -z ${out} ]; then
             Error "For Quality Control -out is mandatory!!!
                    -out  : $out"
-            help; exit 1;
+            exit 1;
     else
             out=$(realpath $out)/micapipe
             micapipe_group_QC
@@ -457,7 +456,7 @@ Error "One or more mandatory arguments are missing:
                -sub  : $id
                -out  : $out
                -bids : $BIDS"
-help; exit 1; fi
+exit 1; fi
 
 runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
@@ -475,7 +474,7 @@ Error "A processing flag is missing:
                     -Morphology
                     -QC_subj
                     -slim"
-help; exit 1; fi
+exit 1; fi
 
 # Optional arguments rs-fmri
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)

@@ -358,7 +358,7 @@ function func_MCoutliers() {
       Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
                                  -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
                                  -s "${func_volum}/${idBIDS}${func_lab}_metric_FD.1D" --fd
-      Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${foutfile}"; ((Nsteps++))
+      Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${outfile}"; ((Nsteps++))
   else
       Info "Subject ${id} has a ${func_lab/_/}.1D with motion outliers"; ((Nsteps++))
   fi
@@ -432,7 +432,7 @@ if [[ ! -f "${func_nii}" ]]; then
     done
 
     # Run Tedana
-    if [[ ${acq}=="multiecho" ]]; then
+    if [[ ${acq}=="me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
         Note "EchoNumber :" ${EchoNumber[*]}
@@ -444,7 +444,7 @@ if [[ ! -f "${func_nii}" ]]; then
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
         mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
-        cp -f "${func_volum}/tedana/desc-optcomDenoised_bold.nii.gz" $mainScan
+        Do_cmd cp -f "${func_volum}/tedana/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
     # FSL MC outliers
