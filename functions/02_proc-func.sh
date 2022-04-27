@@ -324,9 +324,9 @@ function func_reoMC() {
   # Function that reorients the func file and motion corrects
   # Positional arguments: 1) nifti, 2) tag,
   # Get basic parameters
-  rawNifti=$1
-  tag=$2
-  EchoN=$3
+  local rawNifti=$1
+  local tag=$2
+  local EchoN=$3
   # IF FILE IS NOT FOUND DON'T RUN
   if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
         Info "Processing $tag scan"
@@ -357,7 +357,7 @@ function func_reoMC() {
 function func_MCoutliers() {
   # Function that generates the motion outliers file
   # Calculate motion outliers with FSL
-  outfile=$1
+  local outfile=$1
   if [[ ! -f "${outfile}" ]]; then
       Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
                                  -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
@@ -435,12 +435,20 @@ if [[ ! -f "${func_nii}" ]]; then
       func_reoMC ${toProcess[i]} ${tags[i]} 1
     done
 
-    # Here goes tedana
+    # Run Tedana
     if [[ ${acq}=="multiecho" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
         Note "EchoNumber :" ${EchoNumber[*]}
         Note "EchoTime   :" ${EchoTime[*]}
+
+        mkdir -p ${func_volum}/tedana
+        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${func_volum}/tedana
+        
+        # Overwite the motion corrected to insert this into topup.
+        ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
+        mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
+        cp -f "${func_volum}/tedana/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
     # FSL MC outliers
