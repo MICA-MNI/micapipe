@@ -280,7 +280,7 @@ fi
 
 # func directories
 fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
-tagMRI="${fmri_tag}"
+tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
 Info "Outputs will be stored in:"
 Note "fMRI path:" "${proc_func}"
@@ -517,7 +517,7 @@ fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_bold.nii.gz"
-T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-${tagMRI}_t1w.nii.gz"
+T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_${tagMRI}_t1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"

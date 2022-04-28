@@ -462,7 +462,7 @@ plt.title(title, fontsize=16)
 ax.set(xlabel='')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-plt.savefig(funcDir+'/surfaces/' + subject + '_func-framewiseDisplacement.png', dpi=300)
+plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacement.png', dpi=300)
 
 del fd
 
@@ -485,4 +485,4 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/surfaces/' + subject + func_lab + '_desc-tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
+np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
