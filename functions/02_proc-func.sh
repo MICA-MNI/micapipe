@@ -516,8 +516,8 @@ else
 fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
-fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_bold.nii.gz"
-T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_${tagMRI}_t1w.nii.gz"
+fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mean.nii.gz"
+T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
@@ -545,8 +545,10 @@ Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/de
 if [[ "$Nreg" -lt 3 ]]; then
     if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
+        # downsample T1w as reference to 2mm
+        Do_cmd flirt -applyisoxfm 2 -in "$T1nativepro" -ref "$T1nativepro" -out "${tmp}/${id}_t1w_nativepro_2mm.nii.gz"
         # Inverse T1w
-        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro" "${tmp}/${id}_t1w_nativepro_2mm.nii.gz"
         # Dilate the T1-mask
         #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
         # Masked the inverted T1w
@@ -596,6 +598,7 @@ fi
 # run ICA-FIX IF melodic ran succesfully
 fix_output="${func_ICA}/filtered_func_data_clean.nii.gz"
 fmri_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
+fmri_processed_in_T1nativepro="${func_volum}/${idBIDS}_space-nativepro_2mm_desc-${acq}_clean.nii.gz"
 
 # Run if fmri_clean does not exist
 if [[ "$noFIX" -eq 0 ]]; then
@@ -665,6 +668,10 @@ else
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
     json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
 fi
+
+#------------------------------------------------------------------------------#
+# Apply transformation of the timeseries to T1nativepro downsample to 2mm
+Do_cmd antsApplyTransforms -d 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
@@ -879,7 +886,6 @@ if [[ ! -f "$cleanTS" ]] ; then
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
 fi
-
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
