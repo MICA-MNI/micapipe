@@ -671,7 +671,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Apply transformation of the timeseries to T1nativepro downsample to 2mm
-Do_cmd antsApplyTransforms -d 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
+Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
