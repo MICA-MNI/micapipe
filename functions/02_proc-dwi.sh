@@ -418,11 +418,13 @@ fi
 # Get some basic metrics.
 dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.mif"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.mif"
+dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.mif"
 dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
 if [[ ! -f "$dti_FA" ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
-      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" "$dwi_dti"
+      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" -ad "$dti_AD" -rd "$dti_RD" "$dwi_dti"
       Do_cmd mrinfo "$dwi_dti" -json_all "${dwi_dti/mif/json}"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
@@ -501,6 +503,13 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
     # Apply transformation DWI-b0 space to T1nativepro
     Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int
+    # Apply transformation of each DTI derived map to T1nativepro
+    for metric in FA AD RD ADC; do
+        dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.mif"
+        dti_map_nativepro="${proc_dwi}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+        Do_cmd mrconvert "$dti_map" "${dti_map/.mif/.nii.gz}"
+        Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map/.mif/.nii.gz}" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -u int -n NearestNeighbor
+    done
     # Apply transformation T1nativepro to DWI space
     Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" "$trans_T12dwi" -o "$T1nativepro_in_dwi_NL" -v -u int
     # Apply transformation 5TT to DWI space
