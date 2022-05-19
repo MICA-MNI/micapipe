@@ -45,7 +45,6 @@ export idBIDS="${subject}${ses}"
   export dir_surf=${out/\/micapipe/}/freesurfer    # surfaces
   	 export dir_freesurfer=${dir_surf}/${idBIDS}  # freesurfer dir
   export proc_struct=$subject_dir/anat # structural processing directory
-  	 export dir_first=$proc_struct/first      # FSL first
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 export dir_conte69=${proc_struct}/surfaces/conte69   # conte69
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
@@ -197,7 +196,6 @@ bids_variables_unset() {
   unset subject_dir
   unset subject_bids
   unset proc_struct
-  unset dir_first
   unset dir_volum
   unset dir_surf
   unset dir_freesurfer
