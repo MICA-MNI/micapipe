@@ -142,6 +142,7 @@ Info "Subcortical parcellation to T1-nativepro Volume"
 if [[ ! -f "$T1_seg_subcortex" ]]; then
     Do_cmd cp "$T1fast_seg" "$T1_seg_subcortex"
     if [[ -f "$T1_seg_subcortex" ]]; then ((Nsteps++)); fi
+    Do_cmd rm -rf "$proc_struct/first/"
 else
     Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nsteps++))
 fi
