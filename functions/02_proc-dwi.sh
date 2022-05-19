@@ -84,8 +84,8 @@ if [[ "$dwi_processed" != "FALSE" ]]; then
 fi
 
 # Check inputs: DWI
-if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "Subject $id doesn't have DWIs:\n\t\t TRY <ls -l ${subject_bids}/dwi/>"; exit; fi
-if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI of $id doesn't not exist:\n\t\t TRY <ls -l ${bids_dwis[0]}>"; exit; fi
+if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "DWI string or path does not match the default:\n\t\t TRY to set it with -dwi_main <path to DWI.nii.gz>"; exit; fi
+if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI was not found:\n\t\t TRY to set it with -dwi_main <path to DWI.nii>"; exit; fi
 if [ ! -f "${T1_MNI152_InvWarp}" ]; then Error "Subject $id doesn't have T1_nativepro warp to MNI152.\n\t\tRun -proc_structural"; exit; fi
 if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
 if [ ! -f "${T15ttgen}" ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
