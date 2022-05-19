@@ -643,7 +643,7 @@ fi
 micapipe_json
 if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"; fi
 if [ ! -f "${dir_QC}/${idBIDS}_micapipe_processed.csv" ]; then
-  echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${dir_QC}/${idBIDS}}/micapipe_processed_sub.csv"
+  echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${dir_QC}/${idBIDS}_micapipe_processed_sub.csv"
 fi
 # -----------------------------------------------------------------------------------------------#
 #                      Structural processing: Volumetric
