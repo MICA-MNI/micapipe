@@ -114,11 +114,11 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         export EXPERT_FILE=${tmp}/expert.opts
         echo "mris_inflate -n 100" > "$EXPERT_FILE"
         # Optimize the contrast of the T1nativepro
-        pve2=T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
+        pve2=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
         T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4w.nii.gz"
-        Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1n4"
-        # Apply non-local means denoising
-        Do_cmd recon-all -all -s "$idBIDS" -hires -i "$T1_n4" -expert "$EXPERT_FILE"
+        Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
+        # Run freesurfer
+        Do_cmd recon-all -all -s "$idBIDS" -hires -i "$T1_n4" -expert "$EXPERT_FILE" -openmp ${threads}
         # Fix the inflation
         Do_cmd mris_inflate -n 15 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
     else
@@ -134,7 +134,7 @@ elif [[ "$FSdir" == "FALSE" ]]; then
 
         # List of Files for processing
         fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
-        Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS"
+        Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS" -openmp ${threads}
     fi
 
     # Copy the recon-all log to our MICA-log Directory
