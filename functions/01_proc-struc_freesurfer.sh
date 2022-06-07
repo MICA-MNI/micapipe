@@ -88,6 +88,7 @@ Note "\t\ttmp:" "${tmpDir}"
 
 #	Timer
 aloita=$(date +%s)
+umask 011
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
