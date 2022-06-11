@@ -301,7 +301,7 @@ export SUBJECTS_DIR="$dir_surf"
 
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
 func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
-func_ICA="${tmpDir}/ICA_MELODIC"      # ICAOutputDirectory
+func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
 for x in "$func_surf" "$func_volum"; do
@@ -437,14 +437,15 @@ if [[ ! -f "${func_nii}" ]]; then
         Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
         Note "EchoNumber :" ${EchoNumber[*]}
         Note "EchoTime   :" ${EchoTime[*]}
+        tedana_dir=${tmp}/tedana
 
-        mkdir -p ${func_volum}/tedana
-        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${func_volum}/tedana
+        mkdir -p ${tedana_dir}
+        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${tedana_dir}
 
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
         mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
-        Do_cmd cp -f "${func_volum}/tedana/desc-optcomDenoised_bold.nii.gz" $mainScan
+        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
     # FSL MC outliers
@@ -571,7 +572,7 @@ if [[ "$Nreg" -lt 3 ]]; then
         # SyN from T1_nativepro to t1-nativepro
         Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
-
+    Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
