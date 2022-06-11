@@ -518,6 +518,9 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
 else
     Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
 fi
+# Remove unused warped files
+Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
 dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
