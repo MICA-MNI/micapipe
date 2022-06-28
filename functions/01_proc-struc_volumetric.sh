@@ -171,11 +171,11 @@ else
 fi
 
 if [[ "$N4wm" == "TRUE" ]]; then
-  Info "N4 bias field corrtion weighted by white matter"
+  Info "N4 bias field corretion weighted by white matter"
   pve2=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
   T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4w.nii.gz"
   Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
-  DO_cmd mv "$T1_n4" "$T1nativepro"
+  Do_cmd ImageMath 3 "$T1nativepro" RescaleImage "$T1_n4" 0 100
 fi
 
 # Loop over all requested templates.
