@@ -162,12 +162,12 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         Do_cmd N4BiasFieldCorrection -r 1 -d 3 -w ${pve2_nat} -i "${T1fs}" -o "${T1_n4}"
 
         Info "Running recon with native submillimeter resolution"
-#        export EXPERT_FILE=${tmp}/expert.opts
-#        echo "mris_inflate -n 100" > "$EXPERT_FILE"
+        export EXPERT_FILE=${tmp}/expert.opts
+        echo "mris_inflate -n 100" > "$EXPERT_FILE"
         # Run freesurfer
-        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" #-expert "$EXPERT_FILE"
-#        # Fix the inflation
-#        Do_cmd mris_inflate -n 55 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
+        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" -expert "$EXPERT_FILE"
+        # Fix the inflation
+        Do_cmd mris_inflate -n 100 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
     else
         # Run FREESURFER recon-all
         Do_cmd recon-all -cm -all -i "${T1fs}" -s "$idBIDS"
