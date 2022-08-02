@@ -220,9 +220,10 @@ if [ "$procfMRI" = "TRUE" ]; then
     Warning "Erasing proc_func output files and logs"
     Do_cmd rm -rf "$proc_func"/* \
                   "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
-                  "$dir_warp"/*_func_from* \
-                  "$dir_warp"/*_from-func_to-fsnative_bbr* \
+                  "$dir_warp"/*_func_from-se* \
+                  "$dir_warp"/*_from-se*_to-fsnative_bbr* \
                   "$dir_warp"/*func_space-fsnative* \
+                  "$dir_warp"/*from-nativepro_func* \
                   "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
                   "$dir_logs"/proc_func_*
     grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
