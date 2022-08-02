@@ -195,8 +195,8 @@ done
 for i in ${mainScanJson[*]}; do
     if [ ! -f "$i" ]; then Error "Couldn't find $id main func scan json file: \n\t ls ${i}"; exit; fi
 done
-if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
-if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have a Main Phase Scan (pe): TOPUP will run only if a rpe is provided"; fi
+if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have Reverse Phase Scan (rpe): TOPUP will be skipped"; fi
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
@@ -537,7 +537,7 @@ if [[ ${regAffine}  == "FALSE" ]]; then
 elif [[ ${regAffine}  == "TRUE" ]]; then
     export reg="Affine"
     transformsInv="-t [${mat_func_affine},1]"  # T1nativepro to func
-    transform="-t ${SyN_func_affine}"   # func to T1nativepro
+    transform="-t ${mat_func_affine}"   # func to T1nativepro
     xfmat="-t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
 fi
 
@@ -565,7 +565,7 @@ if [[ "$Nreg" -lt 3 ]]; then
     Info "Registering func MRI to nativepro"
 
     # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
@@ -589,7 +589,8 @@ fi
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold
+#    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_fmri" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
@@ -672,7 +673,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Apply transformation of the timeseries to T1nativepro downsample to 2mm
-Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
+# Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
