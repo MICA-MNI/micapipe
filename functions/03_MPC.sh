@@ -124,17 +124,17 @@ fi
 
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
-origImage=${bids_T1ws[0]}
+T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
 if [[ ${input_dat} == "DEFAULT" ]]; then
     fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
     if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then
-        Info "Running microstructural -> freesurfer registration for Subject ${id}"
+        Info "Running microstructural -> freesurfer registration for Subject ${id}" #            --int "$T1_fsnative" \
         Do_cmd bbregister --s "$idBIDS" \
             --mov "$regImage" \
-            --int "$origImage" \
+            --init-rr \
             --reg "$fs_transform" \
             --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" \
-            --init-header --t1
+            --t1
         if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" ]]; then ((Nsteps++)); fi
     else
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"; ((Nsteps++))
