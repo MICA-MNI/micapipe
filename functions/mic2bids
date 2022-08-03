@@ -164,7 +164,7 @@ for k in ${!orig[@]}; do # iterate over acquisition names by index=k
     Names=($(ls -d ${orig[k]}))
     # ONLY for MICA dicoms_sorted NAMES
     if [[ "$mica" == TRUE ]]; then Names=($(ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") 2>/dev/null )); fi
-    for ((i = 1; i <= N; i++)); do
+    for ((i = 1; i <= N; i++)); do # iterate through multiple runs of the same acquisition name
        nii=$(echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}')
        nom="${id}${bids[k]}"
        dcm=$(echo ${nom##*_})
