@@ -31,6 +31,8 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural and -proc_freesurfer )
 \t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
 \t\t\t      ( Requires: -proc_structural )
+\t\033[38;5;197m-proc_asl\033[0m         : ASL-Arterial spin labelling processing
+\t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-proc_func\033[0m      : Funtional MRI processing and functional connectome generation
@@ -75,6 +77,12 @@ echo -e "
 \t\t\t\t         ( default is non linear registration SyN )
 \t\t\033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
 \t\t\t\t         ( this will create a new directory here: dwi/acq-<dwi_acq> )
+
+\t\033[38;5;197m-proc_asl\033[0m
+\t\t\033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
+\t\t\t\t         Default='asl'
+\t\t\033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
+\t\t\t\t         Default='m0scan'
 
 \t\033[38;5;197m-proc_func\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -429,6 +437,22 @@ do
     quiet=TRUE
     shift
   ;;
+  -proc_asl)
+    procASL=TRUE
+    shift
+  ;;
+  -aslScanStr)
+    aslScanStr=$2
+    shift;shift
+  ;;
+  -m0ScanStr)
+    m0ScanStr=$2
+    shift;shift
+  ;;
+  -proc_func)
+    procfMRI=TRUE
+    shift
+  ;;
   -*)
     Error "Unknown option ${1}"
     exit 1
@@ -458,7 +482,7 @@ Error "One or more mandatory arguments are missing:
                -bids : $BIDS"
 exit 1; fi
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -466,6 +490,7 @@ Error "A processing flag is missing:
                     -proc_freesurfer
                     -post_structural
                     -proc_dwi
+                    -proc_asl
                     -proc_func
                     -proc_task
                     -SC
@@ -527,6 +552,10 @@ else
 fi
 if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 if [[ $dwi_acq == "TRUE" ]]; then dwi_str=${dwi_str}; else dwi_str=DEFAULT; fi
+
+# Optional arguments proc_asl
+if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
+if [ -z "${m0ScanStr}" ]; then m0ScanStr=DEFAULT; fi
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe
@@ -721,6 +750,34 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
              $COMMAND $PROC
     else
       #  LOCAL - Diffusion processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Arterial spin labelling processing
+# -----------------------------------------------------------------------------------------------#
+#  Arterial spin labelling processing
+if [ "$ALL" = "TRUE" ] || [ "$procASL" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_asl_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_proc-asl.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $aslScanStr $m0ScanStr"
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Arterial spin labelling processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_asl -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - POST Structural processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Arterial spin labelling processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_asl -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - post_structural processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
