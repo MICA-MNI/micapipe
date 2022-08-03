@@ -54,6 +54,9 @@ export idBIDS="${subject}${ses}"
     export func_ICA=$proc_func/ICA_MELODIC
     export func_volum=$proc_func/volumetric
     export func_surf=$proc_func/surfaces
+  export proc_asl=$subject_dir/perf # ASL processing directory
+    export asl_volum=$proc_asl/volumetric
+    export asl_surf=$proc_asl/surfaces
   export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
@@ -90,6 +93,10 @@ export idBIDS="${subject}${ses}"
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
   export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
+
+  # BIDS files: arterial spin labelling (ASL)
+  bids_asl=($(ls "$subject_bids/perf/${subject}${ses}"_*asl.nii* 2>/dev/null))
+  bids_m0=($(ls "$subject_bids/perf/${subject}${ses}"_*m0scan.nii* 2>/dev/null))
 
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
@@ -206,6 +213,9 @@ bids_variables_unset() {
   unset func_ICA
   unset func_volum
   unset func_surf
+  unset proc_asl
+  unset asl_volum
+  unset asl_surf
   unset dir_warp
   unset dir_logs
   unset dir_QC
@@ -227,6 +237,8 @@ bids_variables_unset() {
   unset bids_mainScanJson
   unset bids_mainPhase
   unset bids_reversePhase
+  unset bids_asl
+  unset bids_m0
   unset topupConfigFile
   unset icafixTraining
   unset bids_T1ws
