@@ -22,8 +22,8 @@ export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
 export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0"
 # FSL 6.0
-export FSLDIR="/data_/mica1/01_programs/fsl_mica"
-export FSL_DIR="/data_/mica1/01_programs/fsl_mica"
+export FSLDIR="/data_/mica1/01_programs/fsl-6-0-1"
+export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-1"
 export FSL_BIN="${FSLDIR}/bin"
 # MRtrix3 3.0.1
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
