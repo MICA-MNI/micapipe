@@ -207,8 +207,6 @@ else
     Info "Subject ${id} has CBF and transformation matrix in T1nativepro space"; ((Nsteps++))
 fi
 
-
-if
 # -----------------------------------------------------------------------------------------------
 # QC: Input files
 # QC_proc-asl "${dir_QC}/micapipe_QC_proc-asl${asl_str_}.txt"
