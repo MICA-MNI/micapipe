@@ -207,8 +207,6 @@ else
     Info "Subject ${id} has CBF and transformation matrix in T1nativepro space"; ((Nsteps++))
 fi
 
-#--------------- Register to fsa5/conte69 and apply 10mm smooth ---------------#
-asl_fsa5
 
 if
 # -----------------------------------------------------------------------------------------------
