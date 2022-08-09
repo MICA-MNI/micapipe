@@ -392,6 +392,7 @@ function json_nativepro_t1w() {
         \"Reorient\": \"fslreorient2std\",
         \"NumberofT1w\": \"$2\",
         \"BiasFieldCorrection\": \"ANTS N4BiasFieldCorrection\",
+        \"WMweightedN4BFC\": \"${N4wm}\",
         \"RescaleRange\": \"0:100\"
       }
     ]

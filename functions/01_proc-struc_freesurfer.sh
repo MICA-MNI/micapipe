@@ -18,7 +18,7 @@
 # FastSurfer
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer
-
+umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -60,8 +60,8 @@ N=${#bids_T1ws[@]} # total number of T1w
 if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
 
 # # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_proc-freesurfer_${id}"
-Do_cmd mkdir -p "$tmp"
+tmp="${tmpDir}/${id}_micapipe_proc-freesurfer_${RANDOM}"
+Do_cmd mkdir -p "${tmp}/nii"
 
 # Stop if freesurfer has finished without errors
 if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
@@ -84,59 +84,93 @@ micapipe_software
 # print the names on the terminal
 bids_print.variables
 Info "Saving temporal dir: $nocleanup"
-Note "\t\ttmp:" "${tmpDir}"
+Note "\t\ttmp:" "${tmp}"
 
 #	Timer
 aloita=$(date +%s)
-umask 011
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 Info "Preprocessed freesurfer directory: $FSdir"
+
+# IF FREESURFER directory is provided create a symbolic link
 if [[ "$FSdir" != "FALSE" ]]; then
     if [[ -d "$FSdir" ]]; then
         Info "Copying from freesurfer_dir"
         Do_cmd mkdir "$dir_freesurfer"
-        Do_cmd cp -Rf "$FSdir"/* "$dir_freesurfer"
+        Do_cmd ln -s "$FSdir"/* "$dir_freesurfer"
     elif [[ ! -d "$FSdir" ]]; then
         Error "The provided freesurfer directory does not exist: $FSdir"
         exit
     fi
+
+# If not, prepare the BIDS T1w for freesurfer
 elif [[ "$FSdir" == "FALSE" ]]; then
     Info "Running Freesurfer"
     # Define SUBJECTS_DIR for freesurfer processing as a global variable
     # Will work on a temporal directory
     export SUBJECTS_DIR=${tmp}
-    if [ ! -d "$tmp/nii" ]; then Do_cmd mkdir "$tmp/nii"; fi
+    T1fs="${tmp}/${idBIDS}_t1w_mean_n4.nii.gz"
+
+    # transform to NIFTI_GZ (if == NIFTI)
+    for t1 in ${bids_T1ws[@]}; do
+        t1_name=$(echo "$t1" | awk -F 'anat/' '{print $2}')
+        Do_cmd fslchfiletype NIFTI_GZ "$t1" "$tmp/nii/${t1_name/.gz/}.gz"
+    done
+
+    # List of files for freesurfer
+    fs_T1ws=(${tmp}/nii/*)
+
+    #  If multiple T1w were provided, Register and average to the first T1w
+    if [ "${#fs_T1ws[@]}" -gt 1 ]; then
+        ref=${fs_T1ws[0]} # reference to registration
+        t1ref="T1wRef"
+        # Loop over each T1
+        N=${#fs_T1ws[@]} # total number of T1w
+        n=$((N - 1))
+        for ((i=1; i<=n; i++)); do
+            run=$((i+1))
+            T1mat_str="${tmp}/t1w_from-run-${run}_to_T1wRef_"
+            T1mat="${T1mat_str}0GenericAffine.mat"
+            T1run_2_T1ref="${tmp}/t1w_from-run-${run}_to_T1wRef.nii.gz"
+            Do_cmd antsRegistrationSyN.sh -d 3 -m "${bids_T1ws[i]}" -f "$ref" -o "$T1mat_str" -t a -n "$threads" -p d
+            Do_cmd antsApplyTransforms -d 3 -i "${bids_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1ref" -u int
+        done
+        # Calculate the mean over all T1w registered to the 1st t1w run
+        t1s_reg=$(find "${tmp}/t1w_from-run-"*"_to_T1wRef.nii.gz")
+        t1s_add=$(echo "-add $(echo ${t1s_reg} | sed 's: : -add :g')")
+        Do_cmd fslmaths "$ref" "$t1s_add" -div "$N" "$T1fs" -odt float
+    # If only one T1w is provided
+    elif [ "$N" -eq 1 ]; then
+      mv ${fs_T1ws[0]} $T1fs
+    fi
 
     # Perform recon-all surface registration
     if [[ "$hires" == "TRUE" ]]; then
-        Info "Running recon with native submillimeter resolution"
-        # export EXPERT_FILE=${tmp}/expert.opts
-        # echo "mris_inflate -n 100" > "$EXPERT_FILE"
-        # Optimize the contrast of the T1nativepro
-        pve2=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
-        T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4w.nii.gz"
-        Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
-        # Run freesurfer
-        # Do_cmd recon-all -all -s "$idBIDS" -cm -i "$T1_n4" -expert "$EXPERT_FILE" -openmp ${threads}
-        Do_cmd recon-all -cm -all -i "$T1_n4" -s "$idBIDS" -openmp ${threads}
-        # Fix the inflation
-        #Do_cmd mris_inflate -n 15 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
-    else
-        # Copy all the T1 from the BIDS directory to the TMP
-        # transform to NIFTI (if == NIFTI_GZ)
-        for t1 in ${bids_T1ws[@]}; do
-            t1_name=$(echo "$t1" | awk -F 'anat/' '{print $2}')
-            if [[ "$t1" == *'.gz'* ]]; then
-                  Do_cmd fslchfiletype NIFTI "$t1" "$tmp/nii/${t1_name/.gz/}"
-            else  Do_cmd cp "$t1" "$tmp/nii/"
-            fi
-        done
+        # Affine transformation between T1nativepro and native T1w for freesurfer
+        mov="${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz
+        T1mat_str="${tmp}/${idBIDS}_from-nativepro_to_native_"
+        T1mat="${T1mat_str}0GenericAffine.mat"
+        pve2="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz"
+        pve2_nat="${tmp}/space-native_t1w_brain_pve_2.nii.gz"
+        Info "Registering T1w_run-${run} to ${t1ref}"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${mov}" -f "${T1fs}" -o "${T1mat_str}" -t a -n "${threads}" -p d
+        Do_cmd antsApplyTransforms -d 3 -i "${pve2}" -r "${T1fs}" -t "${T1mat}" -o "${pve2_nat}" -u int -n GenericLabel
 
-        # List of Files for processing
-        fs_cmd=$(echo "-i $(echo "$tmp"/nii/*nii | sed 's: : -i :g')")
-        Do_cmd recon-all -cm -all "$fs_cmd" -s "$idBIDS" -openmp ${threads}
+        # 7T - Optimize the contrast of the T1w with the White matter probabilistic mask
+        T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4wm.nii.gz"
+        Do_cmd N4BiasFieldCorrection -r 1 -d 3 -w ${pve2_nat} -i "${T1fs}" -o "${T1_n4}"
+
+        Info "Running recon with native submillimeter resolution"
+        export EXPERT_FILE=${tmp}/expert.opts
+        echo "mris_inflate -n 100" > "$EXPERT_FILE"
+        # Run freesurfer
+        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" -expert "$EXPERT_FILE"
+        # Fix the inflation
+        Do_cmd mris_inflate -n 100 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
+    else
+        # Run FREESURFER recon-all
+        Do_cmd recon-all -cm -all -i "${T1fs}" -s "$idBIDS"
     fi
 
     # Copy the recon-all log to our MICA-log Directory

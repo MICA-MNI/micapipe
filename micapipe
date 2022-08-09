@@ -52,6 +52,8 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
 \t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
+\t\t\033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. 7T mprage).
+\t\t\t\t        ( default = no second N4 bias field corretion weighted by white matter )
 
 \t\033[38;5;197m-proc_freesurfer\033[0m
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
@@ -397,6 +399,10 @@ do
     hires=TRUE
     shift
   ;;
+  -N4wm)
+    N4wm=TRUE
+    shift
+  ;;
   -dwi_main)
     dwi_main="$2"
     shift;shift;
@@ -590,6 +596,7 @@ if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
 # T1w image to process (DEFAULT is *T1w.nii*)
 if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$t1wStr"; fi
+if [ -z ${N4wm} ]; then N4wm="FALSE"; else N4wm="TRUE"; fi
 
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
@@ -679,7 +686,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr"
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"

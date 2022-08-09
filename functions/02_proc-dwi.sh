@@ -245,7 +245,12 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
+                if [[ -f "${bids_dwi_str}.bvec" ]] && [[ -f "${bids_dwi_str}.bval" ]]; then
+                  Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
+                else
+                    Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
+                  Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
+                fi
             done
           fi
 
@@ -518,6 +523,9 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
 else
     Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
 fi
+# Remove unused warped files
+Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
 dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"

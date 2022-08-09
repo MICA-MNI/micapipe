@@ -183,6 +183,7 @@ for parc in "${atlas_parc[@]}"; do
         ((Nsteps++))
     fi
 done
+Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to Freesurfer and apply to 5TT and first

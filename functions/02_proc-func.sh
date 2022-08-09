@@ -195,8 +195,8 @@ done
 for i in ${mainScanJson[*]}; do
     if [ ! -f "$i" ]; then Error "Couldn't find $id main func scan json file: \n\t ls ${i}"; exit; fi
 done
-if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
-if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
+if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have a Main Phase Scan (pe): TOPUP will run only if a rpe is provided"; fi
+if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have Reverse Phase Scan (rpe): TOPUP will be skipped"; fi
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
@@ -301,7 +301,7 @@ export SUBJECTS_DIR="$dir_surf"
 
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
 func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
-func_ICA="${tmpDir}/ICA_MELODIC"      # ICAOutputDirectory
+func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
 for x in "$func_surf" "$func_volum"; do
@@ -437,14 +437,15 @@ if [[ ! -f "${func_nii}" ]]; then
         Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
         Note "EchoNumber :" ${EchoNumber[*]}
         Note "EchoTime   :" ${EchoTime[*]}
+        tedana_dir=${tmp}/tedana
 
-        mkdir -p ${func_volum}/tedana
-        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${func_volum}/tedana
+        mkdir -p ${tedana_dir}
+        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${tedana_dir}
 
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
         mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
-        Do_cmd cp -f "${func_volum}/tedana/desc-optcomDenoised_bold.nii.gz" $mainScan
+        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
     # FSL MC outliers
@@ -536,7 +537,7 @@ if [[ ${regAffine}  == "FALSE" ]]; then
 elif [[ ${regAffine}  == "TRUE" ]]; then
     export reg="Affine"
     transformsInv="-t [${mat_func_affine},1]"  # T1nativepro to func
-    transform="-t ${SyN_func_affine}"   # func to T1nativepro
+    transform="-t ${mat_func_affine}"   # func to T1nativepro
     xfmat="-t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
 fi
 
@@ -564,14 +565,14 @@ if [[ "$Nreg" -lt 3 ]]; then
     Info "Registering func MRI to nativepro"
 
     # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
         Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
-
+    Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
@@ -588,7 +589,8 @@ fi
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold
+#    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_fmri" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
@@ -671,7 +673,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Apply transformation of the timeseries to T1nativepro downsample to 2mm
-Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
+# Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"

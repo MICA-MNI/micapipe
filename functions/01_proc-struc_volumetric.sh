@@ -24,7 +24,8 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 t1wStr=$8
-PROC=$9
+N4wm=$9
+PROC=${10}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -99,18 +100,19 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
 
     # If multiple T1w were provided, Register and average to the first T1w
     if [ "$N" -gt 1 ]; then
-      ref=${bids_T1ws[0]} # reference to registration
-      ref_run=$(echo "${bids_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+      reo_T1ws=(${tmp}/reo_*)
+      ref=${reo_T1ws[0]} # reference to registration
+      ref_run=$(echo "${reo_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       t1ref="run-${ref_run}"
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
-          run=$(echo "${bids_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+          run=$(echo "${reo_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
           T1mat_str="${dir_warp}/${idBIDS}_t1w_from-run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
           T1run_2_T1="${tmp}/${id}_t1w_from-run-${run}_to_${t1ref}.nii.gz"
           Info "Registering T1w_run-${run} to ${t1ref}"
-          Do_cmd antsRegistrationSyN.sh -d 3 -m "${bids_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
-          Do_cmd antsApplyTransforms -d 3 -i "${bids_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
+          Do_cmd antsRegistrationSyN.sh -d 3 -m "${reo_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
+          Do_cmd antsApplyTransforms -d 3 -i "${reo_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
       done
       # Calculate the mean over all T1w registered to the 1st t1w run
       t1s_reg=$(find "${tmp}"/*_to_"${t1ref}".nii.gz)
@@ -168,6 +170,14 @@ else
     Info "Subject $id has FSL-fast"; ((Nsteps++))
 fi
 
+if [[ "$N4wm" == "TRUE" ]]; then
+  Info "N4 bias field corretion weighted by white matter"
+  pve2=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
+  T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4w.nii.gz"
+  Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
+  Do_cmd ImageMath 3 "$T1nativepro" RescaleImage "$T1_n4" 0 100
+fi
+
 # Loop over all requested templates.
 # mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
 for mm in 2 0.8; do
@@ -186,6 +196,7 @@ for mm in 2 0.8; do
       Info "Subject $id has nativepro_t1w on MNI152 space"; ((Nsteps++))
   fi
 done
+Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 # Update the T1native mask and T1native_brain
 T1nativepro_maskjson="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.json"
