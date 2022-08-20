@@ -91,3 +91,5 @@ def setup(app):
 
 def setup(app):
     app.add_css_file('css/custom.css')
+
+sphinx_tabs_valid_builders = ['linkcheck']
