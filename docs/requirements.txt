@@ -1,3 +1,4 @@
+https://github.com/executablebooks/sphinx-tabs/archive/refs/tags/v3.4.1.zip
 sphinx_rtd_theme
 sphinx-gallery
 sphinx-tabs
