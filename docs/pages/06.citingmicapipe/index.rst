@@ -16,4 +16,3 @@ If you used micapipe to process any part of your dataset, please cite the follow
 .. admonition:: DOI 🌐
 
 	`10.1101/2022.01.31.478189 <https://doi.org/10.1101/2022.01.31.478189>`_
-
