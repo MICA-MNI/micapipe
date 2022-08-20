@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Computing gradient from output matrices &mdash; micapipe  documentation</title>
   
@@ -22,10 +22,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -46,7 +43,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="FAQ" href="../04.faq/index.html" />
+    <link rel="next" title="How to downsample a tractogram" href="../04.tckdownsample/index.html" />
     <link rel="prev" title="Surface visualization" href="../04.surfaces/index.html" /> 
 </head>
 
@@ -108,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Additional tools</span></p>
 <ul>
@@ -118,6 +116,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.matrices/index.html">Main output matrices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.surfaces/index.html">Surface visualization</a></li>
@@ -131,13 +130,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#download-the-code">Download the code!</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
 <p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowlegdements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
             
@@ -178,8 +178,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -191,7 +189,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/pages/04.gradients/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -263,14 +261,14 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 22
 23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
 <span class="kn">from</span> <span class="nn">brainspace.plotting</span> <span class="kn">import</span> <span class="n">plot_hemispheres</span>
 <span class="kn">from</span> <span class="nn">brainspace.mesh.mesh_io</span> <span class="kn">import</span> <span class="n">read_surface</span>
 <span class="kn">from</span> <span class="nn">brainspace.datasets</span> <span class="kn">import</span> <span class="n">load_conte69</span>
 <span class="kn">from</span> <span class="nn">brainspace.gradient</span> <span class="kn">import</span> <span class="n">GradientMaps</span>
 <span class="kn">from</span> <span class="nn">brainspace.utils.parcellation</span> <span class="kn">import</span> <span class="n">map_to_labels</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="c1"># Set the working directory to the &#39;out&#39; directory</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;~/out&quot;</span><span class="p">)</span>     <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS PATH</span>
@@ -397,7 +395,7 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
  <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
 
  <span class="c1"># Calculate the gradients</span>
- <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+ <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
  <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">FCz</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
@@ -458,13 +456,13 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
  <span class="n">mask_fs5</span> <span class="o">=</span> <span class="n">labels_fs5</span> <span class="o">!=</span> <span class="mi">0</span>
 
  <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+ <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
      <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_fs5</span><span class="p">,</span>  <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_fs5</span><span class="p">)</span>
 
  <span class="c1"># Plot Gradients RdYlBu</span>
  <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">fs5_lh</span><span class="p">,</span> <span class="n">fs5_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                   <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
@@ -487,13 +485,13 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
  <span class="n">mask_c69</span> <span class="o">=</span> <span class="n">labels_c69</span> <span class="o">!=</span> <span class="mi">0</span>
 
  <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+ <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
      <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
 
  <span class="c1"># Plot Gradients coolwarm</span>
  <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                   <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </td></tr></table></div>
@@ -546,7 +544,7 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 5
 6
 7</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># SC Left hemi</span>
- <span class="n">gm_SC_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+ <span class="n">gm_SC_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
  <span class="n">gm_SC_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">SC</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
  <span class="c1"># SC Right hemi</span>
@@ -623,13 +621,13 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
  <span class="n">SC_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_SC_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_SC_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
  <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+ <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">SC_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
      <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
 
  <span class="c1"># Plot Gradients</span>
  <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;Grad1&#39;</span><span class="p">,</span> <span class="s1">&#39;Grad2&#39;</span><span class="p">,</span><span class="s1">&#39;Grad3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                   <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
@@ -676,7 +674,7 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 <div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Calculate the gradients</span>
- <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+ <span class="n">gm</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
  <span class="n">gm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">MPC</span><span class="p">,</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
@@ -731,13 +729,13 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 7
 8
 9</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+ <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gm</span><span class="o">.</span><span class="n">gradients_</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
      <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
 
  <span class="c1"># Plot Gradients</span>
  <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;MPC-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;MPC-G2&#39;</span><span class="p">,</span><span class="s1">&#39;MPC-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;MPC-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;MPC-G2&#39;</span><span class="p">,</span><span class="s1">&#39;MPC-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                   <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
@@ -782,7 +780,7 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
 5
 6
 7</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># GD Left hemi</span>
- <span class="n">gm_GD_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
+ <span class="n">gm_GD_L</span> <span class="o">=</span> <span class="n">GradientMaps</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approach</span><span class="o">=</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;normalized_angle&#39;</span><span class="p">)</span>
  <span class="n">gm_GD_L</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GD</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">200</span><span class="p">],</span> <span class="n">sparsity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 
  <span class="c1"># GD Right hemi</span>
@@ -859,13 +857,13 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
  <span class="n">GD_gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">gm_GD_L</span><span class="o">.</span><span class="n">gradients_</span><span class="p">,</span> <span class="n">gm_GD_R</span><span class="o">.</span><span class="n">gradients_</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
  <span class="c1"># Map gradients to original parcels</span>
- <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+ <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
  <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">GD_gradients</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,:]):</span>
      <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_to_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">labels_c69</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_c69</span><span class="p">)</span>
 
  <span class="c1"># Plot Gradients</span>
  <span class="n">plot_hemispheres</span><span class="p">(</span><span class="n">c69_lh</span><span class="p">,</span> <span class="n">c69_rh</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="n">grad</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span>
-                  <span class="n">embed_nb</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span><span class="s1">&#39;GD-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+                  <span class="n">embed_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="n">label_text</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:[</span><span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span> <span class="s1">&#39;GD-G1&#39;</span><span class="p">,</span><span class="s1">&#39;GD-G3&#39;</span><span class="p">]},</span> <span class="n">color_bar</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                   <span class="n">zoom</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span> <span class="n">nan_color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </td></tr></table></div>
@@ -890,7 +888,7 @@ Additionally the libraries <code class="docutils literal notranslate"><span clas
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../04.faq/index.html" class="btn btn-neutral float-right" title="FAQ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../04.tckdownsample/index.html" class="btn btn-neutral float-right" title="How to downsample a tractogram" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../04.surfaces/index.html" class="btn btn-neutral float-left" title="Surface visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
