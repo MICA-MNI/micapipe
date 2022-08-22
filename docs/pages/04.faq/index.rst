@@ -2,13 +2,14 @@
 
 .. title:: Frequent Asked Questions
 
+******************
 FAQ
-================================================
+******************
 
 .. contents:: Table of Contents
 
 Registration issues
-------------------------------------------------
+================================================
 
 Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
     **A:** although micapipe calculates all the necessary transformation matrices and warp fields to register from any native space to MNI152,
@@ -95,7 +96,7 @@ Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
 
 
 Surface issues
-------------------------------------------------
+================================================
 
 Q: What if my database already has quality checked *Freesurfer* outputs?
     **A:** If you have an already processed and QC-ed freesurfer directory remember to use the flag ``-freesurfer_dir`` when you run the pipeline!!
@@ -154,7 +155,7 @@ Q: How do I modify the smoothing on the surfaces?
 
 
 Resting state issues
-------------------------------------------------
+================================================
 
 Q: How do I process multiple rsfMRI If I have different runs in the same session?
     **A:** Right now the pipeline does not manage multiple runs on the same session.
@@ -196,7 +197,7 @@ Q: If my database has the field maps instead of the reverse phase encoding acqui
 
 
 DWI issues
-------------------------------------------------
+================================================
 
 Q: What if I already have DWI processed data?
     **A:** If you have your DWI already processed and you don't want to run this step again. you can use the flag ``-dwi_processed`` to the processed DWI,
@@ -217,8 +218,86 @@ Q: Does ``micapipe`` compress the tractogram (tck file) generated in ``-SC`` whe
     **A:** No, by default, our pipeline does not save the tractograms or compress them after connectome calculations (``-SC``). The main reason is storage and computational time, which is a significant issue even when compression is used (for 10 million streamlines, uncompressed/compressed tractograms are ~14G/3G per case). When running the pipeline, it is possible to keep tractograms (optional argument ``-keep_tck``), but it’s up to the final user to compress them.
     We included a short tutorial regarding this issue in the section `How to downsample a tractogram <../04.tckdownsample/index.html>`_
 
+Q: My dataset contains multiple and separated DWI shells, can I process them individually or should I merge them before ``-proc_dwi``?
+    **A:** The default behavior of micapipe is to use all the dwi shells provided and perform a rigid registration before concatenating them. While we found this step to increase robustness of our processing for some cases in the MICs dataset, applying a rotation prior to invoking ``dwipreproc`` (which runs eddy/topup and thus also corrects for motion within a given ``mif`` file) may increase data interpolation between shells.
+    If the user wants to avoid this rigid registration between shells is possible to concatenate the shells prior processing and call the resulting file with their corresponding updated json, bvecs and bval files. We recommend using ``mrcat`` and ``mrconvert`` to perform this step.
+
+    If the user wants to process only an individual shell from a dataset acquisition is also possible using the flag ``-dwi_main`` to select only one DWI nifti file.
+
+    Examples of how to process different shells using MICs dataset
+    --------------------------------------------------------------------
+    **Processing multiple shells with default parameters**
+
+    .. code-block:: bash
+       :linenos:
+
+       # Path relative to main MICs rawdata directory
+       sub_id="sub-HC001/ses-01/dwi/sub-HC001_ses-01"
+
+       # Processing command
+       micapipe -sub HC001 -ses 01 -proc_dwi \
+         -bids . \
+         -out ../derivatives \
+         -dwi_main ${sub_id}_acq-b2000-91_dir-AP_dwi.nii.gz,${sub_id}_acq-b700-41_dir-AP_dwi.nii.gz \
+         -dwi_rpe ${sub_id}_dir-PA_dwi.nii.gz \
+         -dwi_acq multi-shell
+
+
+    **Processing a single shell**
+
+    .. code-block:: bash
+       :linenos:
+
+       # Processing command
+       micapipe -sub HC001 -ses 01 -proc_dwi \
+         -bids . \
+         -out ../derivatives \
+         -dwi_main ${sub_id}_acq-b700-41_dir-AP_dwi.nii.gz \
+         -dwi_rpe ${sub_id}_dir-PA_dwi.nii.gz \
+         -dwi_acq shell-b700
+
+    **Concatenating shells before processing with micapipe**
+
+    .. code-block:: bash
+        :linenos:
+
+        # From the subject's DWI directory
+        cd sub-HC001/ses-01/dwi/
+        sub="sub-HC001_ses-01"
+
+        # Convert each shell to mif to store the associated bvecs, bvals and json files
+        # Shell b2000
+        mrconvert -json_import ${sub}_acq-b2000-91_dir-AP_dwi.json \
+        -fslgrad ${sub}_acq-b2000-91_dir-AP_dwi.bvec ${sub}_acq-b2000-91_dir-AP_dwi.bval \
+        ${sub}_acq-b2000-91_dir-AP_dwi.nii.gz \
+        ${sub}_acq-b2000-91_dir-AP_dwi.mif
+
+        # Shell b700
+        mrconvert -json_import ${sub}_acq-b700-41_dir-AP_dwi.json \
+        -fslgrad ${sub}_acq-b700-41_dir-AP_dwi.bvec ${sub}_acq-b700-41_dir-AP_dwi.bval \
+        ${sub}_acq-b700-41_dir-AP_dwi.nii.gz \
+        ${sub}_acq-b700-41_dir-AP_dwi.mif
+
+        # Concatenate shells and export bvec, bval and json files
+        mrcat ${sub}_acq-b2000-91_dir-AP_dwi.mif ${sub}_acq-b700-41_dir-AP_dwi.mif ${sub}_acq-MultiShell_dir-AP_dwi.mif
+
+        # Convert mif to nifti
+        mrconvert -export_grad_fsl ${sub}_acq-MultiShell_dir-AP_dwi.bvec ${sub}_acq-MultiShell_dir-AP_dwi.bval \
+        -json_export ${sub}_acq-MultiShell_dir-AP_dwi.json \
+        ${sub}_acq-MultiShell_dir-AP_dwi.mif \
+        ${sub}_acq-MultiShell_dir-AP_dwi.nii.gz
+
+        # Processing command
+        micapipe -sub HC001 -ses 01 -proc_dwi \
+        -bids \
+        -out \
+        -dwi_main ${sub}_acq-MultiShell_dir-AP_dwi.nii.gz \
+        -dwi_rpe ${sub}_dir-PA_dwi.nii.gz
+        -dwi_acq MultiShell
+
+
 Parcellation issues
-------------------------------------------------
+================================================
 
 Q: Can I use a different cortical / subcortical / cerebellar atlas not included in the micapipe?
     **A:** At the present moment this feature is not included. If you wan't to help us implementing this new feature you are very welcome.
