@@ -64,15 +64,16 @@ tmp="${tmpDir}/${id}_micapipe_proc-freesurfer_${RANDOM}"
 Do_cmd mkdir -p "${tmp}/nii"
 
 # Stop if freesurfer has finished without errors
-if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then
-status="COMPLETED"; Nsteps=01
-grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
-Warning "Subject ${id} has Freesurfer
-                    > If you want to re-run for QC purposes try it manually
-                    > If you want to run again this step first erase all the outputs with:
-                      mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
-exit
+recon_log="${dir_freesurfer}/scripts/recon-all.log"
+if [[ -f "${recon_log}" ]] && grep -q "finished without error" ${recon_log}; then
+    status="COMPLETED"; Nsteps=01
+    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
+    echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+    Warning "Subject ${id} has Freesurfer
+                        > If you want to re-run for QC purposes try it manually
+                        > If you want to run again this step first erase all the outputs with:
+                          mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
+    exit
 fi
 if [[ "$hires" = "TRUE" ]] && [[ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]]; then
   Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; rm -rf "${tmp}"; exit
@@ -158,7 +159,7 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         Do_cmd antsApplyTransforms -d 3 -i "${pve2}" -r "${T1fs}" -t "${T1mat}" -o "${pve2_nat}" -u int -n GenericLabel
 
         # 7T - Optimize the contrast of the T1w with the White matter probabilistic mask
-        T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4wm.nii.gz"
+        T1_n4="${tmp}/${idBIDS}_space-native_t1w_N4wm.nii.gz"
         Do_cmd N4BiasFieldCorrection -r 1 -d 3 -w ${pve2_nat} -i "${T1fs}" -o "${T1_n4}"
 
         Info "Running recon with native submillimeter resolution"
@@ -185,7 +186,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
 N=1 # total number of steps
-if grep -q "finished without error" "${dir_freesurfer}/scripts/recon-all.log"; then status="COMPLETED"; Nsteps=01; else status="INCOMPLETE"; Nsteps=00; fi
+if [[ -f "${recon_log}" ]] && grep -q "finished without error" ${recon_log}; then status="COMPLETED"; Nsteps=01; else status="INCOMPLETE"; Nsteps=00; fi
 
 # QC notification of completition
 lopuu=$(date +%s)
