@@ -20,10 +20,10 @@ export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
 # ICA-FIX
 export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
-export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0"
+export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
 # FSL 6.0
-export FSLDIR="/data_/mica1/01_programs/fsl-6-0-1"
-export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-1"
+export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
+export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
 export FSL_BIN="${FSLDIR}/bin"
 # MRtrix3 3.0.1
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
