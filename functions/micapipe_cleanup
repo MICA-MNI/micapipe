@@ -127,19 +127,10 @@ do
 done
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
-if [ "${#arg[@]}" -lt 3 ]; then help
-Error "One or more mandatory arguments are missing:
-                  -sub  : $id
-                  -out  : $out
-                  -bids : $BIDS"
-exit 1; fi
-
+missing_arg
 
 # Get the real path of the Inputs
-id=${id/sub-/}
-out=$(realpath $out)/micapipe
-BIDS=$(realpath $BIDS)
+inputs_realpath
 
 # Number of session (Default is "ses-pre")
 if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
@@ -167,11 +158,14 @@ Title "MICA pipe cleanup
 # CLEAN -proc_structural
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf "$proc_struct"/first/* \
-                  "$proc_struct"/*_space-nativepro_t1w_* \
+    Do_cmd rm -rf "$proc_struct"/first \
+                  "$proc_struct"/*_space-nativepro_t1w* \
                   "$dir_warp"/*-nativepro_brain_to-MNI152_* \
-                  "$dir_warp"/*pre_t1w_from-run-* \
-                  "$dir_logs"/proc_structural_*
+                  "$dir_warp"/*_transformations-proc_structural.json \
+                  "$dir_logs"/proc_structural_* \
+                  "$dir_QC"/*module-proc_structural.json \
+                  "$dir_volum"/*t1w_atlas-cerebellum.nii.gz \
+                  "$dir_volum"/*t1w_atlas-subcortical.nii.gz
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
