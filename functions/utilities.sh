@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.2.0 'dev'"
+export Version="v1.0.0 'Northern flicker'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -42,7 +42,7 @@ bids_variables() {
 export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
-  export dir_surf=${out/\/micapipe/}/freesurfer    # surfaces
+  export dir_surf=${out/\/micapipe_v1.0.0/}/freesurfer    # surfaces
   	 export dir_freesurfer=${dir_surf}/${idBIDS}  # freesurfer dir
   export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
@@ -152,6 +152,17 @@ file.exist(){
   else
     Note "$1" "file not found"
   fi
+}
+
+bids_print.variables-structural() {
+  Info "Main structural image(s) for processing"
+  Note "T1w string(s):" "$t1wStr, N=${Nimgs}"
+  if [[ "${UNI}" == "TRUE" ]]; then
+    Note "UNI" "${bids_T1ws[0]}"
+    Note "INV1" "${bids_inv1}"
+    Note "INV2" "${bids_inv2}"
+  fi
+  Note "mp2rage-UNI" "${UNI}"
 }
 
 bids_print.variables-post() {
@@ -279,6 +290,22 @@ function micapipe_procStatus() {
   echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
 }
 
+function micapipe_procStatus_json() {
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"${3}\",
+    \"Subject\": \"${1}\",
+    \"Session\": \"${2}\",
+    \"Status\": \"${status}\",
+    \"Progress\": \"$(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")\",
+    \"User\": \"$(whoami)\",
+    \"Workstation\": \"$(uname -n)\",
+    \"Date\": \"$(date)\",
+    \"Processing.time\": \"$(printf "%0.3f\n" "$eri")\",
+    \"Processing\": \"${PROC}\"
+  }" > "${4}"
+}
+
 function micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
@@ -297,23 +324,20 @@ function micapipe_json() {
       {
         \"Name\": \"micapipe\",
         \"Version\": \"${Version}\",
+        \"Reference\": \"Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Ilana Leppert, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022) Micapipe: a pipeline for multimodal neuroimaging and connectome analysis. NeuroImage, 2022, 119612, ISSN 1053-8119.\",
+        \"DOI\": \"https://doi.org/10.1016/j.neuroimage.2022.119612\",
+        \"URL\": \"https://micapipe.readthedocs.io/en/latest\",
+        \"GitHub\": \"https://github.com/MICA-MNI/micapipe\",
         \"Container\": {
           \"Type\": \"github\",
           \"Tag\": \"MICA-MNI/micapipe:${Version}\"
           }
       },
       {
-        \"Name\": \"$(whoami)\",
+        \"RunBy\": \"$(whoami)\",
         \"Workstation\": \"$(uname -n)\"
         \"LastRun\": \"$(date)\"
         \"Processing\": \"${PROC}\"
-      }
-    ],
-    \"SourceDatasets\": [
-      {
-        \"DOI\": \"doi:\",
-        \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \"${Version}\"
       }
     ]
   }" > "${out}/pipeline-description.json"
@@ -368,6 +392,7 @@ function json_nativepro_t1w() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=$(mrinfo "$1" -transform)
+  if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
   Info "Creating T1w_nativepro json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -390,13 +415,81 @@ function json_nativepro_t1w() {
       {
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
-        \"NumberofT1w\": \"$2\",
+        \"NumberOfT1w\": \"$2\",
+        \"UNI-T1map\": \"${UNI}\",
+        \"UNI-T1map-mf\": \"${MF}\",
         \"BiasFieldCorrection\": \"ANTS N4BiasFieldCorrection\",
-        \"WMweightedN4BFC\": \"${N4wm}\",
-        \"RescaleRange\": \"0:100\"
+        \"WMweightedN4B\": \"${N4wm}\",
+        \"N4wmProcessed\": \"${N4wmStatus}\",
+        \"RescaleRange\": \"0:100\",
+        \"BrainMask\": \"mri_synthstrip\"
       }
     ]
   }" > "$4"
+}
+
+function proc_struct_transformations() {
+  Info "Creating transformations file: MNI152 >><< T1nativepro"
+  ${tmp}/MNI151_to_T1nativepro.txt
+
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_structural\",
+    \"LastRun\": \"$(date)\",
+    \"T1nativepro\": \"${1}\",
+    \"MNI152_0p8mm\": \"${2}\",
+    \"MNI152_2mm\": \"${3}\",
+    \"from-t1nativepro_to-MNI152_0p8mm\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$1\",
+        \"reference\": \"$2\",
+        \"transformations\": \"-t ${T1_MNI152_Warp} -t ${T1_MNI152_affine}\",
+        \"output\": \"-o from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-MNI152_0p8mm_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$2\",
+        \"reference\": \"$1\",
+        \"transformations\": \"-t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp}\",
+        \"output\": \"-o from-MNI152_0.8mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-t1nativepro_to-MNI152_2mm\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${1}\",
+        \"reference\": \"${3}\",
+        \"transformations\": \"-t ${T1_MNI152_Warp/0.8mm/2mm} -t ${T1_MNI152_affine/0.8mm/2mm}\",
+        \"output\": \"-o from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-MNI152_2mm_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${3}\",
+        \"reference\": \"${1}\",
+        \"transformations\": \"-t [${T1_MNI152_affine/0.8mm/2mm},1] -t ${T1_MNI152_InvWarp/0.8mm/2mm}\",
+        \"output\": \"-o from-MNI152_2mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > "$4"
+}
+
+function slim_proc_struct(){
+  Info "Erasing temporary files"
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_to_std_sub*
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pveseg.nii.gz
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mixeltype.nii.gz
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_seg.nii.gz
+  Do_cmd rm -rf ${proc_struct}/first
+  Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 }
 
 function json_nativepro_mask() {
@@ -408,7 +501,7 @@ function json_nativepro_mask() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=$(mrinfo "$1" -transform)
-  Info "Creating T1natipro_brain json file"
+  Info "Creating T1nativepro_brain json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
@@ -646,14 +739,32 @@ function cleanup() {
   here=$3
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
-      echo -e "Erasing temporal directory: $tmp"
       rm -Rf "$tmp" 2>/dev/null
   else
       echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
   fi
   cd "$here"
   bids_variables_unset
-  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
+  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
+}
+
+function missing_arg() {
+  arg=($id $out $BIDS)
+  if [ ${#arg[@]} -lt 3 ]; then
+  Error "One or more mandatory arguments are missing:
+                 -sub  : $id
+                 -out  : $out
+                 -bids : $BIDS
+          \033[0m-h | -help (print help)\033[38;5;9m"
+  exit 1; fi
+}
+
+function inputs_realpath() {
+  # Get the real path of the Inputs
+  out=$(realpath $out)/micapipe_v1.0.0
+  BIDS=$(realpath $BIDS)
+  id=${id/sub-/}
+  here=$(pwd)
 }
 
 function QC_proc-func() {
