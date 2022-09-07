@@ -127,13 +127,7 @@ do
 done
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
-if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:
-               -sub  : $id
-               -out  : $out
-               -bids : $BIDS"
-help; exit 1; fi
+missing_arg
 
 # Number of session (Default is "ses-pre")
 if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -warpface or -all"; help; exit; fi
