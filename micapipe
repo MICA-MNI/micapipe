@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE April 2022 (Version v.0.2.0 'dev')\n"
+  echo -e "\nMICAPIPE April 2022 (Version v.1.0.0 'Northern flicker')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -52,8 +52,12 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
 \t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
-\t\t\033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. 7T mprage).
+\t\t\033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. for 7T T1w-mprage).
 \t\t\t\t        ( default = no second N4 bias field corretion weighted by white matter )
+\t\t\033[38;5;120m-uni\033[0m                :  Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
+\t\t\t\t        ( default = no processing of UNI-T1maps )
+\t\t\033[38;5;120m-mf\033[0m                :  Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
+\t\t\t\t        ( default = 3 )
 
 \t\033[38;5;197m-proc_freesurfer\033[0m
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
@@ -145,7 +149,6 @@ echo -e "
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
 \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
-\t\033[38;5;197m-slim\033[0m             : This option will keep only the main outputs and erase all the intermediate files
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
@@ -161,10 +164,10 @@ echo -e "
 
 \033[38;5;141mDEPENDENCIES:\033[0m
     > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
-    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
-    > FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
-    > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
-    > MRtrix3     3.0.0   (https://www.mrtrix.org)
+    > ANTs        2.3.4   (https://github.com/ANTsX/ANTs)
+    > FSL         6.0.3     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+    > Freesurfer  7.3.2     (https://surfer.nmr.mgh.harvard.edu/)
+    > MRtrix3     3.0.1   (https://www.mrtrix.org)
     > workbench   1.4.2
     > python      3.7.6
     > R           3.6.3
@@ -359,10 +362,6 @@ do
     qcsubj=TRUE
     shift
   ;;
-  -slim)
-    mica=TRUE
-    shift
-  ;;
   -mica)
     mica=TRUE
     shift
@@ -401,6 +400,14 @@ do
   ;;
   -N4wm)
     N4wm=TRUE
+    shift
+  ;;
+  -uni)
+    UNI=TRUE
+    shift
+  ;;
+  -mf)
+    MF="$2"
     shift
   ;;
   -dwi_main)
@@ -480,15 +487,9 @@ if [ "$QCgroup" = "TRUE" ]; then
 fi
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
-if [ ${#arg[@]} -lt 3 ]; then
-Error "One or more mandatory arguments are missing:
-               -sub  : $id
-               -out  : $out
-               -bids : $BIDS"
-exit 1; fi
+missing_arg
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -498,16 +499,15 @@ Error "A processing flag is missing:
                     -proc_dwi
                     -proc_asl
                     -proc_func
-                    -proc_task
+                    -proc_rsfmri
                     -SC
                     -MPC
                     -GD
                     -Morphology
-                    -QC_subj
-                    -slim"
+                    -QC_subj"
 exit 1; fi
 
-# Optional arguments rs-fmri
+# Optional arguments func (rs-fmri and task)
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
 if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optarg_func[0]=DEFAULT; fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
@@ -564,10 +564,7 @@ if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
 if [ -z "${m0ScanStr}" ]; then m0ScanStr=DEFAULT; fi
 
 # Get the real path of the Inputs
-out=$(realpath $out)/micapipe
-BIDS=$(realpath $BIDS)
-id=${id/sub-/}
-here=$(pwd)
+inputs_realpath
 
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
@@ -597,6 +594,8 @@ if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 # T1w image to process (DEFAULT is *T1w.nii*)
 if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$t1wStr"; fi
 if [ -z ${N4wm} ]; then N4wm="FALSE"; else N4wm="TRUE"; fi
+if [ -z ${UNI} ]; then UNI="FALSE"; else UNI="TRUE"; fi
+if [ -z ${MF} ]; then MF=3; else MF="${MF}"; fi
 
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
@@ -639,7 +638,6 @@ if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 
 # Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
 if [[ -z $threads ]]; then export threads=6; fi
-Info "micapipe will use $threads threads for multicore processing"
 
 # Directories check
 if [[ ${force} == TRUE ]]; then
@@ -658,11 +656,9 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 #   subject_dir
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
-    Info "Subject ${id} directory doesn't exist"
+    Info "Subject ${id} directory doesn't exist, creating..."
     Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
     chmod -R 770 $subject_dir
-else
-    Info "Subject ${id} directory exist"
 fi
 
 # freesurfer Directories
@@ -670,23 +666,16 @@ if [ ! -d "$dir_surf" ]; then mkdir "$dir_surf" && chmod -R 770 "$dir_surf"; fi
 if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
 if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surfaces/*conte69.gii "${dir_surf}"/conte69/surf; fi
 
-# print directory organization
-if [[ ! -z $(which tree) ]]; then
-    if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then Info "$subject directory structure:\n"; tree -d $subject_dir; fi
-fi
-
 # Pipeline description json
 micapipe_json
 if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"; fi
-if [ ! -f "${dir_QC}/${idBIDS}_micapipe_processed.csv" ]; then
-  echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${dir_QC}/${idBIDS}_micapipe_processed.csv"
-fi
+
 # -----------------------------------------------------------------------------------------------#
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm"
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm $UNI $MF"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
@@ -711,7 +700,7 @@ fi
 # # #        Structural processing: Freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_freesurfer_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr"
+    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr $UNI $MF"
     # mica.q - Structural processing: Freesurfer
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Freesurfer"
