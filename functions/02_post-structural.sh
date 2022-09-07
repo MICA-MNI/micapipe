@@ -115,41 +115,11 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Cerebellar parcellation from MNI152_0.8mm to T1-Nativepro
-Info "Cerebellum parcellation to T1-nativepro Volume"
+# Create parcellation on nativepro space
+Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 # Variables
 T1str_nat="${idBIDS}_space-nativepro_t1w_atlas"
 T1str_fs="${idBIDS}_space-fsnative_t1w"
-atlas_cerebellum="${util_MNIvolumes}/MNI152_T1_0.8mm_cerebellum.nii.gz"       # cerebellar lobules atlas
-mat_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_"    # transformation strings nativepro to MNI152_0.8mm
-T1_MNI152_InvWarp="${mat_MNI152_SyN}1InverseWarp.nii.gz"                      # Inversewarp - nativepro to MNI152_0.8mm
-T1_MNI152_affine="${mat_MNI152_SyN}0GenericAffine.mat"                        # Affine matrix - nativepro to MNI152_0.8mm
-T1_seg_cerebellum="${dir_volum}/${T1str_nat}-cerebellum.nii.gz"               # Cerebellar output
-T1_seg_subcortex="${dir_volum}/${T1str_nat}-subcortical.nii.gz"
-
-# Apply inverse transfrom from MNI152-cerebellum to T1-nativepro
-if [[ ! -f "$T1_seg_cerebellum" ]]; then
-    Do_cmd antsApplyTransforms -d 3 -i "$atlas_cerebellum" \
-                -r "$T1nativepro" \
-                -n GenericLabel -t ["$T1_MNI152_affine",1] -t "$T1_MNI152_InvWarp" \
-                -o "$T1_seg_cerebellum" -v -u int
-    if [[ -f "$T1_seg_cerebellum" ]]; then ((Nsteps++)); fi
-else
-    Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nsteps++))
-fi
-
-Info "Subcortical parcellation to T1-nativepro Volume"
-if [[ ! -f "$T1_seg_subcortex" ]]; then
-    Do_cmd cp "$T1fast_seg" "$T1_seg_subcortex"
-    if [[ -f "$T1_seg_subcortex" ]]; then ((Nsteps++)); fi
-    Do_cmd rm -rf "$proc_struct/first/"
-else
-    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nsteps++))
-fi
-
-#------------------------------------------------------------------------------#
-# Create parcellation on nativepro space
-Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 cd "$util_parcelations"
 for parc in "${atlas_parc[@]}"; do
     parc_annot="${parc/lh./}"
