@@ -393,6 +393,7 @@ function json_nativepro_t1w() {
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=$(mrinfo "$1" -transform)
   if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
+  if [[ "${maskbet}" == "TRUE" ]]; then BrainMask="bet"; else BrainMask="mri_synthstrip"; fi
   Info "Creating T1w_nativepro json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -422,7 +423,7 @@ function json_nativepro_t1w() {
         \"WMweightedN4B\": \"${N4wm}\",
         \"N4wmProcessed\": \"${N4wmStatus}\",
         \"RescaleRange\": \"0:100\",
-        \"BrainMask\": \"mri_synthstrip\"
+        \"BrainMask\": \"${BrainMask}\"
       }
     ]
   }" > "$4"
