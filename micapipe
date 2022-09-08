@@ -22,7 +22,6 @@ echo -e "
 \t\033[38;5;120m-QC\033[0m 	          : OPTIONAL flag for group level Quality Control (Requires -out)
 
    Flags for basic stages of processing:
-\t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
 
@@ -58,6 +57,8 @@ echo -e "
 \t\t\t\t        ( default = no processing of UNI-T1maps )
 \t\t\033[38;5;120m-mf\033[0m                :  Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
 \t\t\t\t        ( default = 3 )
+\t\t\033[38;5;120m-bet\033[0m                :  Use this option to apply the FSL-bet algorithm to generate the brain mask.
+\t\t\t\t        ( by default the pipeline will use 'mri_synthstrip' from freesurfer )
 
 \t\033[38;5;197m-proc_freesurfer\033[0m
 \t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
@@ -157,7 +158,6 @@ echo -e "
 \033[38;5;141mUSAGE:\033[0m
     For more examples see: https://micapipe.readthedocs.io/en/latest/pages/04.databases/index.html
 
-    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-all\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_freesurfer\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
 
@@ -209,10 +209,6 @@ do
   -bids)
     BIDS=$2
     shift;shift
-  ;;
-  -all)
-    ALL=TRUE
-    shift
   ;;
   -post)
     post=TRUE
@@ -386,6 +382,10 @@ do
     t1wStr="$2"
     shift;shift;
   ;;
+  -bet)
+    maskbet=TRUE
+    shift
+  ;;
   -atlas)
     atlas="$2"
     shift;shift;
@@ -489,10 +489,9 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
+runs=($procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
-                    -all
                     -proc_structural
                     -proc_freesurfer
                     -post_structural
@@ -596,6 +595,7 @@ if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$t1wStr"; fi
 if [ -z ${N4wm} ]; then N4wm="FALSE"; else N4wm="TRUE"; fi
 if [ -z ${UNI} ]; then UNI="FALSE"; else UNI="TRUE"; fi
 if [ -z ${MF} ]; then MF=3; else MF="${MF}"; fi
+if [ -z ${maskbet} ]; then maskbet="FALSE"; else maskbet="TRUE"; fi
 
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
@@ -656,7 +656,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 #   subject_dir
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
-    Info "Subject ${id} directory doesn't exist, creating..."
+    Info "Subject ${idBIDS} directory doesn't exist, creating..."
     Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
     chmod -R 770 $subject_dir
 fi
@@ -673,9 +673,9 @@ if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Mo
 # -----------------------------------------------------------------------------------------------#
 #                      Structural processing: Volumetric
 # -----------------------------------------------------------------------------------------------#
-if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
+if [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm $UNI $MF"
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm $UNI $MF $maskbet"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
@@ -698,7 +698,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------#
 # # #        Structural processing: Freesurfer
-if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
+if [ "$procFS" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_freesurfer_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr $UNI $MF"
     # mica.q - Structural processing: Freesurfer
@@ -725,7 +725,7 @@ fi
 # # #        Diffusion processing
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
-if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
+if [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str"
     # mica.q - Diffusion processing
@@ -754,7 +754,7 @@ fi
 # # #        Arterial spin labelling processing
 # -----------------------------------------------------------------------------------------------#
 #  Arterial spin labelling processing
-if [ "$ALL" = "TRUE" ] || [ "$procASL" = "TRUE" ]; then
+if [ "$procASL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_asl_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_proc-asl.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $aslScanStr $m0ScanStr"
     if [[ $micaq == "TRUE" ]]; then
@@ -783,7 +783,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #         POST Structural processing
 #     REQUIRES -proc_structural and -proc_freesurfer
-if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
+if [ "$postVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
     # mica.q - POST Structural processing
@@ -813,7 +813,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
 #     REQUIRES -post-structural, -proc_freesurfer, and -postMPC
-if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
+if [ "$postMorph" = "TRUE" ]; then
     log_file_str=$dir_logs/Morphology_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Morphology
@@ -843,7 +843,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_structural and -proc_freesurfer
-if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
+if [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/MPC_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
     # mica.q - Microstructural profile covariance
@@ -873,7 +873,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #     Generates geodesic distance matrices calculated along cortical surface mesh
 #     REQUIRES -post-structural and -proc_freesurfer
-if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
+if [ "$postGD" = "TRUE" ]; then
     log_file_str=$dir_logs/GD_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # mica.q - Geodesic distance
@@ -902,7 +902,7 @@ fi
 #       SC: Structural Connectome processing (tractography)
 # -----------------------------------------------------------------------------------------------#
 #   REQUIRES -proc_dwi
-if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
+if [ "$postDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/SC_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str"
     # mica.q - post-DWI processing (tractography)
@@ -931,7 +931,7 @@ fi
 # # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
-if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
+if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
@@ -959,7 +959,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #        Individual QC
 # -----------------------------------------------------------------------------------------------#
-if [ "$ALL" = "TRUE" ] || [ "$qcsubj" = "TRUE" ]; then
+if [ "$qcsubj" = "TRUE" ]; then
     log_file_str=$dir_logs/qc_$(date +'%Y-%m-%d_%H.%M.%S')
     if [ "${SES}" = "SINGLE" ]; then ses_str=""; else ses_str="-ses $SES"; fi
     COMMAND="${scriptDir}/micapipe_qc -sub $id -out ${out/\/micapipe/} -bids $BIDS -tracts $tracts -tmpDir $tmpDir ${ses_str}"
