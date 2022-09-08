@@ -27,7 +27,8 @@ t1wStr=$8
 N4wm=$9
 UNI=${10}
 MF=${11}
-PROC=${12}
+maskbet=${12}
+PROC=${13}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -173,7 +174,14 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if [ ! -f "$T1nativepro" ]; then Error "$T1str_nat was not generated"; Do_cmd exit; fi
 
     # Brainmask
-    Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask"
+    if [ ${maskbet} == "TRUE" ]; then
+      vox=($(mrinfo $T1nativepro -spacing)); x3=$(bc -l <<< "scale=3; ${vox[0]} * ${vox[1]} * ${vox[2]}")
+      # Fractional intensity is based in the linear relationship of the voxel resolution
+      fractional_intensity=$(bc -l <<< "scale=3; 0.4 * $x3 + 0.1")
+      Do_cmd bet "$T1nativepro" "$T1nativepro_brain" -B -f "${fractional_intensity}" -v
+    else
+      Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask"
+    fi
 
     # If no T1native pro exit_status "something is wrong" exit
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
