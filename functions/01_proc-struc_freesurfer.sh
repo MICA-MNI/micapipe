@@ -29,7 +29,9 @@ tmpDir=$7
 FSdir=$8
 hires=$9
 t1wStr=${10}
-PROC=${11}
+UNI=${11}
+MF=${12}
+PROC=${13}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -50,14 +52,25 @@ if [[ "$t1wStr" != "DEFAULT" ]]; then
   IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
   for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
   bids_T1ws=("${bids_t1wStr[@]}")
-  N="${#bids_t1wStr[*]}"
-  Info "Manually selected T1w string(s): $t1wStr, N=${N}"
+  Nimgs="${#bids_t1wStr[*]}"  # total number of T1w
 fi
 
-# BIDS T1w processing
-N=${#bids_T1ws[@]} # total number of T1w
 # End script if no T1 are found
-if [ "$N" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
+if [ "$Nimgs" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
+
+# If UNi is selected and multiple t1Str (3) are included the script will assing possitional values:
+# 1:UNI, 2:INV1, 3:INV2
+if [[ "${UNI}" == "TRUE" ]]; then
+  if [ "$Nimgs" -gt 1 ]; then
+    N4wm="TRUE"
+    bids_inv1=${bids_T1ws[1]}
+    bids_inv2=${bids_T1ws[2]}
+    bids_T1ws=(${bids_T1ws[0]})
+  fi
+  # Look for Inversion-1 and Inversion-2 if UNI is selected
+  if [ ! -f "${bids_inv1}" ]; then Error "Subject $id doesn't have INV1 on: \n\t${bids_inv1}"; exit; fi
+  if [ ! -f "${bids_inv2}" ]; then Error "Subject $id doesn't have INV2 on: \n\t${bids_inv2}"; exit; fi
+fi
 
 # # Create script specific temp directory
 tmp="${tmpDir}/${id}_micapipe_proc-freesurfer_${RANDOM}"
@@ -84,15 +97,20 @@ Title "Structural processing: Freesurfer\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 # print the names on the terminal
 bids_print.variables
-Info "Saving temporal dir: $nocleanup"
+bids_print.variables-structural
+Note "Preprocessed freesurfer directory: $FSdir"
+Note "Saving temporal dir: $nocleanup"
 Note "\t\ttmp:" "${tmp}"
+
+# GLOBAL variables for this script
+Info "Freesurfer will use $threads threads"
 
 #	Timer
 aloita=$(date +%s)
+N=0
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
-Info "Preprocessed freesurfer directory: $FSdir"
 
 # IF FREESURFER directory is provided create a symbolic link
 if [[ "$FSdir" != "FALSE" ]]; then
@@ -113,6 +131,15 @@ elif [[ "$FSdir" == "FALSE" ]]; then
     export SUBJECTS_DIR=${tmp}
     T1fs="${tmp}/${idBIDS}_t1w_mean_n4.nii.gz"
 
+    # Differential workflow if is mp2rage or mprage
+    if  [[ "${UNI}" == "TRUE" ]]; then
+      Info "Removing background noise from mp2rage UNI-T1map"
+      UNIdns="${tmp}/${idBIDS}_mp2rage-uni_denoised.nii.gz"
+      # UNI mp2rage denoising
+      Do_cmd ${MICAPIPE}/functions/mp2rage_denoise.py "${bids_T1ws[0]}" "${bids_inv1[0]}" "${bids_inv2[0]}" "$UNIdns" --mf "${MF}"
+      bids_T1ws=("$UNIdns")
+    fi
+
     # transform to NIFTI_GZ (if == NIFTI)
     for t1 in ${bids_T1ws[@]}; do
         t1_name=$(echo "$t1" | awk -F 'anat/' '{print $2}')
@@ -127,8 +154,8 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         ref=${fs_T1ws[0]} # reference to registration
         t1ref="T1wRef"
         # Loop over each T1
-        N=${#fs_T1ws[@]} # total number of T1w
-        n=$((N - 1))
+        Nimgs=${#fs_T1ws[@]} # total number of T1w
+        n=$((Nimgs - 1))
         for ((i=1; i<=n; i++)); do
             run=$((i+1))
             T1mat_str="${tmp}/t1w_from-run-${run}_to_T1wRef_"
@@ -146,7 +173,7 @@ elif [[ "$FSdir" == "FALSE" ]]; then
       mv ${fs_T1ws[0]} $T1fs
     fi
 
-    # Perform recon-all surface registration
+    # Perform freesurfer-all surface registration
     if [[ "$hires" == "TRUE" ]]; then
         # Affine transformation between T1nativepro and native T1w for freesurfer
         mov="${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz
@@ -166,15 +193,15 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         export EXPERT_FILE=${tmp}/expert.opts
         echo "mris_inflate -n 100" > "$EXPERT_FILE"
         # Run freesurfer
-        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" -expert "$EXPERT_FILE"
+        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" -expert "$EXPERT_FILE" -threads ${threads}
         # Fix the inflation
         Do_cmd mris_inflate -n 100 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
     else
         # Run FREESURFER recon-all
-        Do_cmd recon-all -cm -all -i "${T1fs}" -s "$idBIDS"
+        Do_cmd recon-all -cm -all -i "${T1fs}" -s "$idBIDS" -threads ${threads}
     fi
 
-    # Copy the recon-all log to our MICA-log Directory
+    # Copy the freesurfer log to our MICA-log Directory
     Do_cmd cp -v "${tmp}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
 
     # Copy results to  freesurfer's SUBJECTS_DIR directory
@@ -193,7 +220,7 @@ lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
-Title "Freesurfer recon-all processing ended:
+Title "Freesurfer processing ended:
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/proc_freesurfer*.txt)"
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_freesurfer" "${out}/micapipe_processed_sub.csv"
