@@ -101,9 +101,9 @@ export idBIDS="${subject}${ses}"
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
   bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
-  bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
-  bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
-  bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
+  bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*T1map.nii* 2>/dev/null)
+  bids_inv1=$(ls "$subject_bids"/anat/*inv1*T1map.nii* 2>/dev/null)
+  bids_inv2=$(ls "$subject_bids"/anat/*inv2*T1map.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
   dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_*dwi.nii* 2>/dev/null))
 }
@@ -290,6 +290,20 @@ function micapipe_procStatus() {
   echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
 }
 
+function micapipe_completition_status() {
+    # Processing time
+    lopuu=$(date +%s)
+    eri=$(echo "$lopuu - $aloita" | bc)
+    eri=$(echo print "$eri"/60 | perl)
+
+    # Print logs
+    if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+    Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+    \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
+    \tStatus          : ${status}
+    \tCheck logs      : $(ls "$dir_logs"/${1}_*.txt)"
+}
+
 function micapipe_procStatus_json() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -302,7 +316,8 @@ function micapipe_procStatus_json() {
     \"Workstation\": \"$(uname -n)\",
     \"Date\": \"$(date)\",
     \"Processing.time\": \"$(printf "%0.3f\n" "$eri")\",
-    \"Processing\": \"${PROC}\"
+    \"Processing\": \"${PROC}\",
+    \"Threads\": \"${threads}\"
   }" > "${4}"
 }
 
@@ -429,10 +444,57 @@ function json_nativepro_t1w() {
   }" > "$4"
 }
 
+function json_freesurfer() {
+  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
+  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=$(mrinfo "$1" -transform)
+  if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
+  Info "Creating proc_freesurfer json file"
+  if [[ "$FSdir" == "FALSE" ]]; then
+      echo -e "{
+        \"micapipeVersion\": \"${Version}\",
+        \"LastRun\": \"$(date)\",
+        \"fileName\": \"${1}\",
+        \"VoxelSize\": \"${res}\",
+        \"Dimensions\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": \"${Transform}\",
+        \"sform\": [
+    \"${qform}\"
+        ],
+        \"qform\": [
+    \"${sform}\"
+        ],
+        \"inputsRawdata\": \"${3}\",
+        \"input2recon-all\": \"${1}\",
+        \"FreesurferInput\": [
+          {
+            \"NumberOfT1w\": \"$2\",
+            \"UNI-T1map\": \"${UNI}\",
+            \"UNI-T1map-mf\": \"${MF}\",
+            \"N4BiasFieldCorrection\": \"${N4bfc}\",
+            \"WMweightedN4B\": \"${N4wm}\"
+          }
+        ]
+      }" > "$4"
+  elif [[ "$FSdir" != "FALSE" ]]; then
+    echo -e "{
+      \"micapipeVersion\": \"${Version}\",
+      \"LastRun\": \"$(date)\",
+      \"FreesurferDir\": \"${FSdir}\"
+    }" > "$4"
+  fi
+}
+
 function proc_struct_transformations() {
   Info "Creating transformations file: MNI152 >><< T1nativepro"
-  ${tmp}/MNI151_to_T1nativepro.txt
-
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_structural\",
