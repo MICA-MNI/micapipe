@@ -49,16 +49,16 @@ if [[ "$t1wStr" != "DEFAULT" ]]; then
   IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
   for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
   bids_T1ws=("${bids_t1wStr[@]}")
-  Nimgs="${#bids_t1wStr[*]}"  # total number of T1w
 fi
 
 # End script if no T1 are found
+Nimgs="${#bids_T1ws[*]}"  # total number of T1w
 if [ "$Nimgs" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_structural.json"
 if [ -f "${module_json}" ] && [ $(grep "Status" "${module_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
 Warning "Subject ${idBIDS} has been processed with -proc_structural
-                If you want to run again this step, first erase all the outputs with:
+                If you want to re-run this step again, first erase all the outputs with:
                 micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_structural"; exit; fi
 
 # If UNi is selected and multiple t1Str (3) are included the script will assing possitional values:
@@ -180,7 +180,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
       fractional_intensity=$(bc -l <<< "scale=3; 0.4 * $x3 + 0.1")
       Do_cmd bet "$T1nativepro" "$T1nativepro_brain" -B -f "${fractional_intensity}" -v
     else
-      Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask"
+      Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask" --no-csf
     fi
 
     # If no T1native pro exit_status "something is wrong" exit
@@ -350,17 +350,8 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# QC notification of completition
-lopuu=$(date +%s)
-eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print "$eri"/60 | perl)
-
 # Notification of completition
-if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "Volumetric structural processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
-\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
-\tStatus          : ${status}
-\tCheck logs      : $(ls "$dir_logs"/proc_structural_*.txt)"
+micapipe_completition_status proc_structural
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_structural" "${out}/micapipe_processed_sub.csv"
 Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_structural" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
