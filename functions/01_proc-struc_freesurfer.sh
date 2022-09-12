@@ -33,6 +33,7 @@ UNI=${11}
 MF=${12}
 PROC=${13}
 here=$(pwd)
+export OMP_NUM_THREADS=$threads
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -52,11 +53,18 @@ if [[ "$t1wStr" != "DEFAULT" ]]; then
   IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
   for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
   bids_T1ws=("${bids_t1wStr[@]}")
-  Nimgs="${#bids_t1wStr[*]}"  # total number of T1w
 fi
 
 # End script if no T1 are found
+Nimgs="${#bids_T1ws[*]}"  # total number of T1w
 if [ "$Nimgs" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-proc_freesurfer.json"
+if [ -f "${module_json}" ] && [ $(grep "Status" "${module_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
+Warning "Subject ${idBIDS} has been processed with -proc_freesurfer
+                If you want to re-run this step again, first erase all the outputs with:
+                micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_freesurfer"; exit; fi
 
 # If UNi is selected and multiple t1Str (3) are included the script will assing possitional values:
 # 1:UNI, 2:INV1, 3:INV2
@@ -72,24 +80,9 @@ if [[ "${UNI}" == "TRUE" ]]; then
   if [ ! -f "${bids_inv2}" ]; then Error "Subject $id doesn't have INV2 on: \n\t${bids_inv2}"; exit; fi
 fi
 
-# # Create script specific temp directory
-tmp="${tmpDir}/${id}_micapipe_proc-freesurfer_${RANDOM}"
-Do_cmd mkdir -p "${tmp}/nii"
-
-# Stop if freesurfer has finished without errors
-recon_log="${dir_freesurfer}/scripts/recon-all.log"
-if [[ -f "${recon_log}" ]] && grep -q "finished without error" ${recon_log}; then
-    status="COMPLETED"; Nsteps=01
-    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-    echo "${id}, ${SES/ses-/}, proc_freesurfer, ${status}, ${N}/01, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
-    Warning "Subject ${id} has Freesurfer
-                        > If you want to re-run for QC purposes try it manually
-                        > If you want to run again this step first erase all the outputs with:
-                          mica_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_fresurfer";
-    exit
-fi
+# For hires check that proc_structural nativepro exists
 if [[ "$hires" = "TRUE" ]] && [[ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]]; then
-  Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; rm -rf "${tmp}"; exit
+  Error "Submilimetric (hires) processing of fresurfer requires the T1_nativepro: RUN -proc_structural first"; exit
 fi
 
 #------------------------------------------------------------------------------#
@@ -99,21 +92,27 @@ micapipe_software
 bids_print.variables
 bids_print.variables-structural
 Note "Preprocessed freesurfer directory: $FSdir"
+
+# # Create script specific temp directory
+tmp="${tmpDir}/${id}_micapipe_proc-freesurfer_${RANDOM}"
+Do_cmd mkdir -p "${tmp}/nii"
 Note "Saving temporal dir: $nocleanup"
 Note "\t\ttmp:" "${tmp}"
 
 # GLOBAL variables for this script
 Info "Freesurfer will use $threads threads"
 
-#	Timer
+#	Timer and steps progress
 aloita=$(date +%s)
 N=0
+Nsteps=0
+recon_log="${dir_freesurfer}/scripts/recon-all.log"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # IF FREESURFER directory is provided create a symbolic link
-if [[ "$FSdir" != "FALSE" ]]; then
+if [[ "$FSdir" != "FALSE" ]]; then ((N++))
     if [[ -d "$FSdir" ]]; then
         Info "Copying from freesurfer_dir"
         Do_cmd mkdir "$dir_freesurfer"
@@ -124,7 +123,7 @@ if [[ "$FSdir" != "FALSE" ]]; then
     fi
 
 # If not, prepare the BIDS T1w for freesurfer
-elif [[ "$FSdir" == "FALSE" ]]; then
+elif [[ "$FSdir" == "FALSE" ]]; then ((N++))
     Info "Running Freesurfer"
     # Define SUBJECTS_DIR for freesurfer processing as a global variable
     # Will work on a temporal directory
@@ -174,6 +173,7 @@ elif [[ "$FSdir" == "FALSE" ]]; then
     fi
 
     # Perform freesurfer-all surface registration
+    T1_n4="${tmp}/${idBIDS}_space-native_t1w_N4wm.nii.gz"
     if [[ "$hires" == "TRUE" ]]; then
         # Affine transformation between T1nativepro and native T1w for freesurfer
         mov="${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz
@@ -186,43 +186,47 @@ elif [[ "$FSdir" == "FALSE" ]]; then
         Do_cmd antsApplyTransforms -d 3 -i "${pve2}" -r "${T1fs}" -t "${T1mat}" -o "${pve2_nat}" -u int -n GenericLabel
 
         # 7T - Optimize the contrast of the T1w with the White matter probabilistic mask
-        T1_n4="${tmp}/${idBIDS}_space-native_t1w_N4wm.nii.gz"
+        N4wm="TRUE";  N4bfc="FALSE"
         Do_cmd N4BiasFieldCorrection -r 1 -d 3 -w ${pve2_nat} -i "${T1fs}" -o "${T1_n4}"
 
-        Info "Running recon with native submillimeter resolution"
+        Info "Running recon-all for 7T (hires)"
         export EXPERT_FILE=${tmp}/expert.opts
         echo "mris_inflate -n 100" > "$EXPERT_FILE"
+
         # Run freesurfer
-        Do_cmd recon-all -cm -all -i "${T1_n4}" -s "$idBIDS" -expert "$EXPERT_FILE" -threads ${threads}
+        Do_cmd recon-all -cm -all -parallel -openmp ${threads} -expert "$EXPERT_FILE" -i "${T1_n4}" -s "$idBIDS"
         # Fix the inflation
         Do_cmd mris_inflate -n 100 "${tmp}/${idBIDS}"/surf/?h.smoothwm "${tmp}/${idBIDS}"/surf/?h.inflated
     else
+        # Normalize intensities
+        N4wm="FALSE"; N4bfc="TRUE"
+        Do_cmd N4BiasFieldCorrection -r 1 -d 3 -i "${T1fs}" -o "${T1_n4}"
+
         # Run FREESURFER recon-all
-        Do_cmd recon-all -cm -all -i "${T1fs}" -s "$idBIDS" -threads ${threads}
+        Do_cmd recon-all -cm -all -parallel -openmp ${threads} -i "${T1_n4}" -s "$idBIDS"
     fi
 
     # Copy the freesurfer log to our MICA-log Directory
-    Do_cmd cp -v "${tmp}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
+    Do_cmd cp "${tmp}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
 
     # Copy results to  freesurfer's SUBJECTS_DIR directory
-    Do_cmd cp -rv "${tmp}/${idBIDS}" "$dir_surf"
+    Do_cmd cp -r "${tmp}/${idBIDS}" "$dir_surf"
 
     Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 fi
 
 # -----------------------------------------------------------------------------------------------
+# Check proc_freesurfer status
+if [[ -f "${dir_logs}/recon-all.log" ]] && grep -q "finished without error" "${dir_logs}/recon-all.log"; then ((Nsteps++)); fi
+
+# Create json file for T1native
+if [[ "$FSdir" == "FALSE" ]]; then
+    freesurfer_json="${proc_struct}/${idBIDS}_proc_freesurfer.json"
+    json_freesurfer "$T1_n4" "$Nimgs" "${bids_T1ws[*]}" "${freesurfer_json}"
+fi
+
 # Notification of completition
-N=1 # total number of steps
-if [[ -f "${recon_log}" ]] && grep -q "finished without error" ${recon_log}; then status="COMPLETED"; Nsteps=01; else status="INCOMPLETE"; Nsteps=00; fi
-
-# QC notification of completition
-lopuu=$(date +%s)
-eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print "$eri"/60 | perl)
-
-Title "Freesurfer processing ended:
-\tStatus          : ${status}
-\tCheck logs      : $(ls "$dir_logs"/proc_freesurfer*.txt)"
+micapipe_completition_status proc_freesurfer
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_freesurfer" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_freesurfer" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_freesurfer" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
