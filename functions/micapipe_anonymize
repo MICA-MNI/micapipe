@@ -179,9 +179,9 @@ Title "Running MICA-anonymize by $METHOD method(s)"
 Info "micapipe will use $threads threads for multicore processing"
 
 # Creates OUT directory if it doesn't exist
-out_warps=${out}/${id}
+out_warps=${out}
 Info "Output directory: $out_warps"
-if [ ! -d ${out_warps} ]; then Do_cmd mkdir ${out_warps}; fi
+if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
 
 # Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
 t1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
