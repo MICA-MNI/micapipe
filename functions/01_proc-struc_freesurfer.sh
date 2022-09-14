@@ -18,7 +18,6 @@
 # FastSurfer
 # https://doi.org/10.1016/j.neuroimage.2020.117012
 # For future implementation: https://github.com/Deep-MI/FastSurfer
-umask 003
 BIDS=$1
 id=$2
 out=$3

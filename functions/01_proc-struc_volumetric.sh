@@ -15,7 +15,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -89,7 +88,6 @@ Info "ANTs will use $threads threads"
 aloita=$(date +%s)
 Nsteps=0
 N=0
-umask 011
 
 # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}

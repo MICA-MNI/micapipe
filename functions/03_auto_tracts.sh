@@ -2,7 +2,6 @@
 #
 # Automatic bundle segmentation
 #
-umask 003
 export FSLOUTPUTTYPE=NIFTI_GZ
 dir_functions=$(dirname $(realpath "$0"))
 MICAPIPE=$(dirname $(realpath "$dir_functions"))

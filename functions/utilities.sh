@@ -15,6 +15,7 @@ bids_variables() {
   id=$2
   out=$3
   SES=$4
+  umask 011
 
   #   Define UTILITIES directories
   export scriptDir=${MICAPIPE}/functions

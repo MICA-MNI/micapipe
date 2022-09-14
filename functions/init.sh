@@ -4,6 +4,9 @@
 ### Set variables beneath this ###
 ##################################
 
+# Permissions
+umask 011
+
 # Save OLD PATH
 export OLD_PATH=$PATH
 
