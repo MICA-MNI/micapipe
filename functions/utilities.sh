@@ -351,8 +351,8 @@ function micapipe_json() {
       },
       {
         \"RunBy\": \"$(whoami)\",
-        \"Workstation\": \"$(uname -n)\"
-        \"LastRun\": \"$(date)\"
+        \"Workstation\": \"$(uname -n)\",
+        \"LastRun\": \"$(date)\",
         \"Processing\": \"${PROC}\"
       }
     ]
@@ -445,7 +445,7 @@ function json_nativepro_t1w() {
   }" > "$4"
 }
 
-function json_freesurfer() {
+function json_surf() {
   qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
   sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
   res=$(mrinfo "$1" -spacing)
