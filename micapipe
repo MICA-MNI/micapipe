@@ -408,7 +408,7 @@ do
   ;;
   -mf)
     MF="$2"
-    shift
+    shift;shift;
   ;;
   -dwi_main)
     dwi_main="$2"
