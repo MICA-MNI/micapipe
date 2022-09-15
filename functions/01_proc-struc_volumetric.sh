@@ -129,7 +129,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
 
     # If multiple T1w were provided, Register and average to the first T1w
     if [ "$Nimgs" -gt 1 ]; then
-      reo_T1ws=(${tmp}/reo_*)
+      reo_T1ws=(${tmp}/reo-*)
       ref=${reo_T1ws[0]} # reference to registration
       ref_run=$(echo "${reo_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
       t1ref="run-${ref_run}"
@@ -159,6 +159,8 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
       Info "Removing background noise from mp2rage UNI-T1map"
       # UNI mp2rage denoising
       Do_cmd ${MICAPIPE}/functions/mp2rage_denoise.py "$T1reo" "${bids_inv1[0]}" "${bids_inv2[0]}" "$T1n4" --mf "${MF}"
+    else
+      mv "$T1reo" "$T1n4"
     fi
 
     Info "T1w_nativepro biasfield correction and intensity rescaling"
