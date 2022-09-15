@@ -162,6 +162,7 @@ bids_print.variables-structural() {
     Note "UNI" "${bids_T1ws[0]}"
     Note "INV1" "${bids_inv1}"
     Note "INV2" "${bids_inv2}"
+    Note "Multiplying Factor" "${MF}"
   fi
   Note "mp2rage-UNI" "${UNI}"
 }
