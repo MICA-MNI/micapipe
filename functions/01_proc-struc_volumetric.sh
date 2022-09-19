@@ -353,5 +353,5 @@ fi
 # Notification of completition
 micapipe_completition_status proc_structural
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_structural" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_structural" "${module_json}"
+micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_structural" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
