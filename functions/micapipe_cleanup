@@ -25,7 +25,7 @@ echo -e "
 \t\033[38;5;197m-bids\033[0m 	         : Path to BIDS directory
 \t\033[38;5;120m-ses\033[0m 	         : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
-   Flags for eraing specific processing outputs:\n
+   Flags for erasing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : DELETES Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
