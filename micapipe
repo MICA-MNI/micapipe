@@ -23,11 +23,12 @@ echo -e "
 
    Flags for basic stages of processing:
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
-\t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
+\t\033[38;5;197m-proc_surf\033[0m  : Cortical surface reconstruction processing
+\t\t\t      ( Requires: -proc_structural )
 
    Flags for second stages of structural processing:
 \t\033[38;5;197m-post_structural\033[0m  : Post structural volumetric processing
-\t\t\t      ( Requires: -proc_structural and -proc_freesurfer )
+\t\t\t      ( Requires: -proc_structural and -proc_surf )
 \t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
 \t\t\t      ( Requires: -proc_structural )
 \t\033[38;5;197m-proc_asl\033[0m         : ASL-Arterial spin labelling processing
@@ -35,17 +36,17 @@ echo -e "
 
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-proc_func\033[0m      : Funtional MRI processing and functional connectome generation
-\t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
+\t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
 \t\033[38;5;197m-proc_task\033[0m      : Task Funtional MRI processing
-\t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
+\t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
 \t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
-\t\t\t      ( Requires: -proc_freesurfer and -post_structural )
+\t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
-\t\t\t      ( Requires: -proc_freesurfer and -post_structural )
+\t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-Morphology\033[0m       : Cortical morphology analysis (Thickness and curvature)
-\t\t\t      ( Requires: -proc_freesurfer and -post_structural )
+\t\t\t      ( Requires: -proc_surf and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
@@ -60,12 +61,10 @@ echo -e "
 \t\t\033[38;5;120m-bet\033[0m                :  Use this option to apply the FSL-bet algorithm to generate the brain mask.
 \t\t\t\t        ( by default the pipeline will use 'mri_synthstrip' from freesurfer )
 
-\t\033[38;5;197m-proc_freesurfer\033[0m
-\t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
-\t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
-\t\t\033[38;5;120m-hires\033[0m               : Use this option for data with voxel sizes less than 1mm3 at native resolution (eg. isometric 7T acquisitions)
-\t\t\t                 ( Requires: -proc_structural )
-\t\t\033[38;5;120m-freesurfer_dir\033[0m      : If freesurfer has been performed, it will copy the files to '<output>/freesurfer/<subject>'
+\t\033[38;5;197m-proc_surf\033[0m
+\t\t\033[38;5;120m-surf_dir\033[0m      : If freesurfer/FastSurfer has been performed, it will create a symbolic link from the processed directory to '<output>/<freesurfer | FastSurfer>/<subject>'
+\t\t\033[38;5;120m-c\033[0m                :  Use this option to reconstruct the cortical surface with FastSurfer.
+\t\t\t\t        ( by default the pipeline will use 'Freesurfer 7' )
 
 \t\033[38;5;197m-post_structural\033[0m
 \t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
@@ -132,10 +131,10 @@ echo -e "
 \t\033[38;5;197m-MPC\033[0m
 \t\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native freesurfer space ( ./file.lta )
+\t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native surface space ( ./file.lta )
 \t\t\t\t        If left blank or omitted, registration will be computed in the script.
 \t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
-\t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to freesurfer ( ./img_2reg.nii.gz )
+\t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
 \t\t\t\t        It MUST be on the same space as the main microstructural image!!
 \t\t\033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t\t         ( this will create a new directory here: anat/surfaces/micro_profiles/acq-<mpc_acq> )
@@ -158,7 +157,7 @@ echo -e "
 \033[38;5;141mUSAGE:\033[0m
     For more examples see: https://micapipe.readthedocs.io/en/latest/pages/04.databases/index.html
 
-    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_freesurfer\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_surf\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
 
 
@@ -222,8 +221,8 @@ do
     procVOL=TRUE
     shift
   ;;
-  -proc_freesurfer)
-    procFS=TRUE
+  -proc_surf)
+    procSurf=TRUE
     shift
   ;;
   -proc_dwi)
@@ -390,12 +389,12 @@ do
     atlas="$2"
     shift;shift;
   ;;
-  -freesurfer_dir)
-    FSdir=$2
+  -surf_dir)
+    surfdir=$2
     shift;shift;
   ;;
-  -hires)
-    hires=TRUE
+  -fastsurfer)
+    FastSurfer=TRUE
     shift
   ;;
   -N4wm)
@@ -489,11 +488,11 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procFS $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
-                    -proc_freesurfer
+                    -proc_surf
                     -post_structural
                     -proc_dwi
                     -proc_asl
@@ -584,9 +583,9 @@ if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
 # Temporal directory
 if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); fi
 
-# Freesurfer directory (if already exists)
-if [ -z ${FSdir} ]; then FSdir="FALSE"; else  FSdir=$(realpath $FSdir); fi
-if [ -z ${hires} ]; then hires="FALSE"; else hires="TRUE"; fi
+# Surface directory (if already exists)
+if [ -z ${surfdir} ]; then surfdir="FALSE"; else  surfdir=$(realpath $surfdir); fi
+if [ -z ${FastSurfer} ]; then FastSurfer="FALSE"; else  FastSurfer="TRUE"; fi
 
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
@@ -662,8 +661,8 @@ if [ ! -d "${subject_dir}" ]; then
     chmod -R 770 $subject_dir
 fi
 
-# freesurfer Directories
-if [ ! -d "$dir_surf" ]; then mkdir "$dir_surf" && chmod -R 770 "$dir_surf"; fi
+# Surface Directories
+if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
 if [ ! -L "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
 if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surfaces/*conte69.gii "${dir_surf}"/conte69/surf; fi
 
@@ -698,26 +697,26 @@ if [ "$procVOL" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # #        Structural processing: Freesurfer
-if [ "$procFS" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_freesurfer_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_freesurfer.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $FSdir $hires $t1wStr $UNI $MF"
-    # mica.q - Structural processing: Freesurfer
+# # #        Surface processing: Freesurfer | FastSurfer
+if [ "$procSurf" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/01_proc-struc_surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer"
+    # mica.q - Surface processing
     if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - Structural processing: Freesurfer"
+        Info "MICA qsub - Surface processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
-             # all.q - Structural processing: Freesurfer
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_surf -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+             # all.q - Surface processing
     elif [[ $qall == "TRUE" ]]; then
-        Info "all.q qsub - Structural processing: Freesurfer"
+        Info "all.q qsub - Surface processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_surf -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
     else
-        #  LOCAL - Structural processing: Freesurfer
+        #  LOCAL - Surface processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
@@ -783,7 +782,7 @@ fi
 #                   POST Structural processing mica-02
 # -----------------------------------------------------------------------------------------------#
 # # #         POST Structural processing
-#     REQUIRES -proc_structural and -proc_freesurfer
+#     REQUIRES -proc_structural and -proc_surf
 if [ "$postVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
@@ -813,7 +812,7 @@ fi
 #                   POST Cortical morphology analyses mica-03
 # -----------------------------------------------------------------------------------------------#
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
-#     REQUIRES -post-structural, -proc_freesurfer, and -postMPC
+#     REQUIRES -post-structural, -proc_surf, and -postMPC
 if [ "$postMorph" = "TRUE" ]; then
     log_file_str=$dir_logs/Morphology_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
@@ -843,7 +842,7 @@ fi
 #                   POST Microstructural profile covariance mica-03
 # -----------------------------------------------------------------------------------------------#
 #     Generates microstructural profiles and covariance matrices
-#     REQUIRES -proc_structural and -proc_freesurfer
+#     REQUIRES -proc_structural and -proc_surf
 if [ "$postMPC" = "TRUE" ]; then
     log_file_str=$dir_logs/MPC_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
@@ -873,7 +872,7 @@ fi
 #                   POST Geodesic distance mica-03
 # -----------------------------------------------------------------------------------------------#
 #     Generates geodesic distance matrices calculated along cortical surface mesh
-#     REQUIRES -post-structural and -proc_freesurfer
+#     REQUIRES -post-structural and -proc_surf
 if [ "$postGD" = "TRUE" ]; then
     log_file_str=$dir_logs/GD_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
