@@ -44,7 +44,7 @@ export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
   export dir_surf=${out/\/micapipe_v1.0.0/}/freesurfer    # surfaces
-  	 export dir_freesurfer=${dir_surf}/${idBIDS}  # freesurfer dir
+  	 export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
   export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
   	 export dir_conte69=${proc_struct}/surfaces/conte69   # conte69
@@ -69,14 +69,14 @@ export idBIDS="${subject}${ses}"
       export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_t1w.nii.gz
       export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz
       export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz
-      export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
+      export T1freesurfr=${dir_subjsurf}/mri/T1.mgz
       export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_t1w_5TT.nii.gz
       export T1fast_seg=$proc_struct/first/${idBIDS}_space-nativepro_t1w_all_fast_firstseg.nii.gz
   fi
 
   # Native midsurface in gifti format
-  export lh_midsurf=${dir_freesurfer}/surf/lh.midthickness.surf.gii
-  export rh_midsurf=${dir_freesurfer}/surf/rh.midthickness.surf.gii
+  export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
+  export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
 
   # Registration from MNI152 to Native pro
   export T1str_nat=${idBIDS}_space-nativepro_t1w
@@ -136,7 +136,7 @@ bids_print.variables() {
   Note "dir_warp        :" "$dir_warp"
   Note "dir_logs        :" "$dir_logs"
   Note "dir_QC          :" "$dir_QC"
-  Note "dir_freesurfer  :" "$dir_freesurfer"
+  Note "dir_subjsurf  :" "$dir_subjsurf"
 
   Info "Utilities directories"
   Note "scriptDir         :" "$scriptDir"
@@ -218,7 +218,7 @@ bids_variables_unset() {
   unset proc_struct
   unset dir_volum
   unset dir_surf
-  unset dir_freesurfer
+  unset dir_subjsurf
   unset dir_conte69
   unset proc_dwi
   unset dwi_cnntm
@@ -368,7 +368,7 @@ function tck_json() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${8}\",
-    \"inputNIFTI\": [
+    \"fileInfo\": [
       {
       \"Name\": \"${fod_wmN}\",
       \"sform\": [
@@ -416,17 +416,21 @@ function json_nativepro_t1w() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${1}\",
-    \"VoxelSize\": \"${res}\",
-    \"Dimensions\": \"${Size}\",
-    \"Strides\": \"${Strides}\",
-    \"Offset\": \"${Offset}\",
-    \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
-    \"sform\": [
-\"${qform}\"
-    ],
-    \"qform\": [
-\"${sform}\"
+    \"fileInfo\": [
+      {
+        \"VoxelSize\": \"${res}\",
+        \"Dimensions\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": \"${Transform}\",
+        \"sform\": [
+    \"${qform}\"
+        ],
+        \"qform\": [
+    \"${sform}\"
+        ]
+      }
     ],
     \"inputsRawdata\": \"${3}\",
     \"anatPreproc\": [
@@ -456,41 +460,36 @@ function json_surf() {
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=$(mrinfo "$1" -transform)
   if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
-  Info "Creating proc_freesurfer json file"
+  Info "Creating proc_surf json file"
   if [[ "$FSdir" == "FALSE" ]]; then
       echo -e "{
         \"micapipeVersion\": \"${Version}\",
         \"LastRun\": \"$(date)\",
         \"fileName\": \"${1}\",
-        \"VoxelSize\": \"${res}\",
-        \"Dimensions\": \"${Size}\",
-        \"Strides\": \"${Strides}\",
-        \"Offset\": \"${Offset}\",
-        \"Multiplier\": \"${Multiplier}\",
-        \"Transform\": \"${Transform}\",
-        \"sform\": [
-    \"${qform}\"
-        ],
-        \"qform\": [
-    \"${sform}\"
-        ],
-        \"inputsRawdata\": \"${3}\",
-        \"input2recon-all\": \"${1}\",
-        \"FreesurferInput\": [
+        \"fileInfo\": [
           {
-            \"NumberOfT1w\": \"$2\",
-            \"UNI-T1map\": \"${UNI}\",
-            \"UNI-T1map-mf\": \"${MF}\",
-            \"N4BiasFieldCorrection\": \"${N4bfc}\",
-            \"WMweightedN4B\": \"${N4wm}\"
+            \"VoxelSize\": \"${res}\",
+            \"Dimensions\": \"${Size}\",
+            \"Strides\": \"${Strides}\",
+            \"Offset\": \"${Offset}\",
+            \"Multiplier\": \"${Multiplier}\",
+            \"Transform\": \"${Transform}\",
+            \"sform\": [
+        \"${qform}\"
+            ],
+            \"qform\": [
+        \"${sform}\"
+            ]
           }
-        ]
+        ],
+        \"SurfaceDir\": \"${1}\",
+        \"Algorithm\": \"${1}\",
       }" > "$4"
   elif [[ "$FSdir" != "FALSE" ]]; then
     echo -e "{
       \"micapipeVersion\": \"${Version}\",
       \"LastRun\": \"$(date)\",
-      \"FreesurferDir\": \"${FSdir}\"
+      \"SurfaceDir\": \"${surfdir}\"
     }" > "$4"
   fi
 }
