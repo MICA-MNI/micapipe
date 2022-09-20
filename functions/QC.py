@@ -120,7 +120,7 @@ tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
 
-derivatives = out.split('/micapipe')[0]
+derivatives = out.split('/micapipe_v1.0.0')[0]
 
 
 # Dataset name
@@ -131,8 +131,8 @@ dataset_name = dataset_description["Name"]
 
 # Opitonal inputs:
 # Session
-if sess == "":
-    sess = 'Not defined'
+if ses == "":
+    ses = 'Not defined'
 
 # QC module summary
 status =
@@ -140,11 +140,12 @@ progress =
 time =
 threads =
 micapipe_version =
+module =
 
 # QC png
 qc_png = os.path.realpth("")
 
-report_block = (
+report_block_header = (
     # ============================================================================================================= #
     # =============================================== P A G E   # 1 =============================================== #
     # ============================================================================================================= #
@@ -159,12 +160,14 @@ report_block = (
     # Subject's ID | Session
     '<h3 style="color:#343434;font-family:Helvetica, sans-serif;text-align:center;margin-bottom:0">'
     '<b>Subject</b>: {subj} &nbsp | &nbsp <b>Session</b>: {ses} </h3>'
+)
 
+report_module = (
     # ===================================== Structural Prossing - proc_struct ===================================== #
     # Module header:
     '<div class="boxed" style="border:2px solid #666;padding:10px;background-color:#eee;font-family:Helvetica, '
     'sans-serif;font-size:14px">'
-    '<b>Structural processing: -proc_struc</b> </div>'
+    '<b>Module: {module}</b> </div>'
 
     # QC summary:
     '<h4 style="font-family:Helvetica, sans-serif;text-align:Left;margin-bottom:10px">'
@@ -194,7 +197,7 @@ report_block = (
     'T1w nativepro </h4>'
 
     '<img src="{derivatives}/micapipe/{subj}/{ses}"{}'
-
+    '<br>\n'
 )
 
 
