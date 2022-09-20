@@ -172,7 +172,7 @@ fi
 # CLEAN -proc_freesurfer
 if [ "$procFS" = "TRUE" ]; then
     Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
-    Do_cmd rm -rf "$dir_freesurfer" \
+    Do_cmd rm -rf "$dir_subjsurf" \
                   "$dir_logs"/proc_freesurfer*
     grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -185,8 +185,8 @@ if [ "$postVOL" = "TRUE" ]; then
                   "$proc_struct"/"$idBIDS"_space-fsnative_t1w.nii.gz \
                   "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_t1w_* \
                   "${dir_conte69}"/* \
-                  "${dir_freesurfer}"/label/*_mics* \
-                  "${dir_freesurfer}"/surf/*.midthickness.surf.gii \
+                  "${dir_subjsurf}"/label/*_mics* \
+                  "${dir_subjsurf}"/surf/*.midthickness.surf.gii \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi

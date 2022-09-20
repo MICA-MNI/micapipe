@@ -72,7 +72,7 @@ outDir="${proc_struct}/surfaces/morphology"
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
-dataDir="${dir_freesurfer}/surf"
+dataDir="${dir_subjsurf}/surf"
 
 #------------------------------------------------------------------------------#
 ### Cortical Thickness ###
@@ -115,7 +115,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_thickness_10mm.mgh" ]]
             ADAP_BARY_AREA \
             "${tmp}/${hemi}_thickness_c69-32k.func.gii" \
             -area-surfs \
-            "${dir_freesurfer}/surf/${hemi}.midthickness.surf.gii" \
+            "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
 
         Do_cmd mri_convert "${tmp}/${hemi}_thickness_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_thickness.mgh"
@@ -177,7 +177,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-conte69-32k_desc-rh_curvature_10mm.mgh" ]]
             ADAP_BARY_AREA \
             "${tmp}/${hemi}_curv_c69-32k.func.gii" \
             -area-surfs \
-            "${dir_freesurfer}/surf/${hemi}.midthickness.surf.gii" \
+            "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
 
         Do_cmd mri_convert "${tmp}/${hemi}_curv_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_curvature.mgh"

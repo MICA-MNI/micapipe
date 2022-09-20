@@ -154,8 +154,8 @@ if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
         unset LD_LIBRARY_PATH
         tot_surfs=$((num_surfs + 2))
         Do_cmd python "$MICAPIPE"/functions/generate_equivolumetric_surfaces.py \
-            "${dir_freesurfer}/surf/${hemi}.pial" \
-            "${dir_freesurfer}/surf/${hemi}.white" \
+            "${dir_subjsurf}/surf/${hemi}.pial" \
+            "${dir_subjsurf}/surf/${hemi}.white" \
             "$tot_surfs" \
             "${outDir}/${hemi}.${num_surfs}surfs" \
             "$tmp" \
@@ -168,7 +168,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
         x=$(ls -t "$outDir"/"$hemi".${num_surfs}surfs*)
         for n in $(seq 1 1 "$num_surfs") ; do
             which_surf=$(sed -n "$n"p <<< "$x")
-            cp "$which_surf" "${dir_freesurfer}/surf/${hemi}.${n}by${num_surf}surf"
+            cp "$which_surf" "${dir_subjsurf}/surf/${hemi}.${n}by${num_surf}surf"
             # sample intensity
             Do_cmd mri_vol2surf \
                 --mov "$microImage" \
@@ -180,7 +180,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
                 --surf "${n}by${num_surf}surf"
 
             #Remove surfaces used by vol2surf
-            Do_cmd rm -rfv "$which_surf" "${dir_freesurfer}/surf/${hemi}.${n}by${num_surf}surf"
+            Do_cmd rm -rfv "$which_surf" "${dir_subjsurf}/surf/${hemi}.${n}by${num_surf}surf"
             if [[ -f "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" ]]; then ((Nsteps++)); fi
         done
     done
@@ -220,7 +220,7 @@ for hemi in lh rh; do
                     ADAP_BARY_AREA \
                     "${tmp}/${hemi}_${n}_c69-32k.func.gii" \
                     -area-surfs \
-                    "${dir_freesurfer}/surf/${hemi}.midthickness.surf.gii" \
+                    "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
                     "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
             Do_cmd mri_convert "${tmp}/${hemi}_${n}_c69-32k.func.gii" "$MPC_c69"
             if [[ -f "$MPC_c69" ]]; then ((Nsteps++)); fi
@@ -239,7 +239,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_space-fsnative_atlas-${parc}_desc-intensity_profiles.txt"
     if [[ ! -f "$MPC_int" ]]; then
         Info "Running MPC on $parc"
-        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_freesurfer" "${mpc_p}"
+        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); fi
 done

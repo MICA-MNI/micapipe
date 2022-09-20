@@ -69,8 +69,8 @@ if [[ "$sesAnat" != FALSE  ]]; then
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_t1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain.nii.gz"
   T1nativepro_mask="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_mask.nii.gz"
-  dir_freesurfer="${dir_surf}/${subject}_ses-${sesAnat}"
-  T1freesurfr="${dir_freesurfer}/mri/T1.mgz"
+  dir_subjsurf="${dir_surf}/${subject}_ses-${sesAnat}"
+  T1freesurfr="${dir_subjsurf}/mri/T1.mgz"
 else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
@@ -755,7 +755,7 @@ for hemisphere in lh rh; do
     if [[ ! -f "$out_surf_native" ]] ; then
           if [[ "$smooth" == 1 ]] ; then
             Do_cmd wb_command -metric-smoothing \
-                "${dir_freesurfer}/surf/${hemisphere}.midthickness.surf.gii"  \
+                "${dir_subjsurf}/surf/${hemisphere}.midthickness.surf.gii"  \
                 "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
                 10 \
                 "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}_10mm.func.gii"
@@ -813,7 +813,7 @@ for hemisphere in lh rh; do
               ADAP_BARY_AREA \
               "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" \
               -area-surfs \
-              "${dir_freesurfer}/surf/${hemisphere}.midthickness.surf.gii" \
+              "${dir_subjsurf}/surf/${hemisphere}.midthickness.surf.gii" \
               "${dir_conte69}/${BIDSanat}_space-conte69-32k_desc-${hemisphere}_midthickness.surf.gii"
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
@@ -881,7 +881,7 @@ fi
 cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean${gsr}.txt"
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running func post processing"
-    labelDirectory="${dir_freesurfer}/label/"
+    labelDirectory="${dir_subjsurf}/label/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$GSRtag" ${func_lab}
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else

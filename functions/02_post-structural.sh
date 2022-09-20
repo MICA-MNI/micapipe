@@ -70,7 +70,7 @@ fi
 if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
 # Check inputs: freesurfer space T1
-if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in freesurfer space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
 if [ -f "${module_json}" ] && [ $(grep "Status" "${module_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
@@ -137,7 +137,7 @@ for parc in "${atlas_parc[@]}"; do
                		  --srcsubject fsaverage5 \
                		  --trgsubject "$idBIDS" \
                		  --sval-annot "${hemi}.${parc_annot}" \
-               		  --tval "${dir_freesurfer}/label/${hemi}.${parc_annot}"
+               		  --tval "${dir_subjsurf}/label/${hemi}.${parc_annot}"
         done
         fs_mgz="${tmp}/${parc_str}.mgz"
         fs_tmp="${tmp}/${parc_str}_in_T1.mgz"
@@ -146,7 +146,7 @@ for parc in "${atlas_parc[@]}"; do
 
         # Register the annot surface parcelation to the T1-freesurfer volume
         Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
-        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1freesurfr" --o "$fs_tmp" --regheader "${dir_freesurfer}/mri/aseg.mgz"
+        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1freesurfr" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
         Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
         Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
         Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
@@ -169,16 +169,16 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
       HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
         # Build the conte69-32k sphere and midthickness surface
         Do_cmd wb_shortcuts -freesurfer-resample-prep \
-            "${dir_freesurfer}/surf/${hemisphere}h.white" \
-            "${dir_freesurfer}/surf/${hemisphere}h.pial" \
-            "${dir_freesurfer}/surf/${hemisphere}h.sphere.reg" \
+            "${dir_subjsurf}/surf/${hemisphere}h.white" \
+            "${dir_subjsurf}/surf/${hemisphere}h.pial" \
+            "${dir_subjsurf}/surf/${hemisphere}h.sphere.reg" \
             "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
-            "${dir_freesurfer}/surf/${hemisphere}h.midthickness.surf.gii" \
+            "${dir_subjsurf}/surf/${hemisphere}h.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_${hemisphere}h_sphereReg.surf.gii"
         # Resample white and pial surfaces to conte69-32k
         for surface in pial white; do ((N++))
-            Do_cmd mris_convert "${dir_freesurfer}/surf/${hemisphere}h.${surface}" "${tmp}/${hemisphere}h.${surface}.surf.gii"
+            Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.${surface}" "${tmp}/${hemisphere}h.${surface}.surf.gii"
             Do_cmd wb_command -surface-resample \
                 "${tmp}/${hemisphere}h.${surface}.surf.gii" \
                 "${dir_conte69}/${idBIDS}_${hemisphere}h_sphereReg.surf.gii" \
