@@ -113,12 +113,12 @@ If the data to be preprocessed is also on the HPC, you are ready to run micapipe
 
 .. code-block:: bash
 
-    $ singularity run --cleanenv /my_images/micapipe-<version>.simg \
+    $ singularity run --cleanenv \
         -B path/to/your/bids_dataset:/bids_dataset:ro \
         -B path/to/your/bids_dataset/derivatives:/output_directory \
         -B path/to/your/working_directory:/tmp \
-        -B path/to/your/freesurfer_license_file.txt:/opt/freesurfer-6.0.0/freesurfer_license_file.txt \
-        micapipe<version>.simg \
+        -B path/to/your/freesurfer_license_file.txt:/opt/freesurfer-6.0.0/license.txt \
+        /path/to/container/micapipe.simg \
         -bids /bids_dataset \
         -out /output_directory \
         -all -ses 01 \
