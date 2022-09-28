@@ -25,7 +25,7 @@ else:
     gsr=''
 
 # check if surface directory exist; exit if false
-if os.listdir(funcDir+'/surfaces/'):
+if os.listdir(funcDir+'/surf/'):
     print('')
     print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
     print('surfaces directory found; lets get the party started!')
@@ -45,9 +45,9 @@ else:
 # ------------------------------------------
 
 # Find and load surface-registered cortical timeseries
-os.chdir(funcDir+'/surfaces/')
-x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_lh_10mm*'))
-x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_rh_10mm*'))
+os.chdir(funcDir+'/surf/')
+x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_lh_10mm*'))
+x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_rh_10mm*'))
 lh_data = nib.load(x_lh)
 lh_data = np.squeeze(lh_data.get_fdata())
 rh_data = nib.load(x_rh)
@@ -170,7 +170,7 @@ else:
         data_corr = data
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surfaces/' + subject + '_func_space-conte69-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surf/' + subject + '_func_space-conte69-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
@@ -214,7 +214,7 @@ for parcellation in parcellationList_conte:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC' + gsr + '.txt',
+    np.savetxt(funcDir + '/surf/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC' + gsr + '.txt',
                ts_r, fmt='%.6f')
 
 # Clean up
@@ -230,8 +230,8 @@ del thisparc
 # ------------------------------------------
 
 # Process left hemisphere timeseries
-os.chdir(funcDir+'/surfaces/')
-x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/' + subject + '_func_space-fsnative_lh_10mm.mgh'))
+os.chdir(funcDir+'/surf/')
+x_lh_nat = " ".join(glob.glob(funcDir+'/surf/' + subject + '_func_space-fsnative_lh_10mm.mgh'))
 lh_data_nat = nib.load(x_lh_nat)
 lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
 
@@ -287,8 +287,8 @@ else:
         del lh_data_nat
 
 # Process right hemisphere timeseries
-os.chdir(funcDir+'/surfaces/')
-x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_rh_10mm.mgh'))
+os.chdir(funcDir+'/surf/')
+x_rh_nat = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_rh_10mm.mgh'))
 rh_data_nat = nib.load(x_rh_nat)
 rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
 
@@ -426,7 +426,7 @@ for parcellation in parcellationList:
         ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
     ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
-    np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
+    np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
 
     ts_r = np.corrcoef(np.transpose(ts))
 
@@ -438,7 +438,7 @@ for parcellation in parcellationList:
     else:
         ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
+    np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
 
 # Clean up
 del ts_native_ctx
@@ -467,10 +467,10 @@ plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacemen
 del fd
 
 # tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_lh_NoHP.mgh'))
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_lh_NoHP.mgh'))
 lh_nat_noHP_data = nib.load(lh_nat_noHP)
 lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_rh_NoHP.mgh'))
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_rh_NoHP.mgh'))
 rh_nat_noHP_data = nib.load(rh_nat_noHP)
 rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
 

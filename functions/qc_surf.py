@@ -126,9 +126,9 @@ print(f'  -subDir   : "{subDir}"')
 # Set paths and variables
 dir_fS = derivatives + '/freesurfer/'
 dir_fs_label = dir_fS + subBIDS + '/label/'
-dir_conte = subDir + '/anat/surfaces/conte69/'
-dir_morph = subDir + '/anat/surfaces/morphology/'
-dir_mpc = subDir + '/anat/surfaces/micro_profiles/'
+dir_conte = subDir + '/anat/surf/conte69/'
+dir_morph = subDir + '/anat/surf/morphology/'
+dir_mpc = subDir + '/anat/surf/micro_profiles/'
 dir_QC_png = subDir + '/QC/png/'
 
 # Colormap

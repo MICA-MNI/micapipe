@@ -188,7 +188,7 @@ module.col <- function() {
 # Paths
 proc_struct <- paste0(subject_dir, "/anat")          # Structural processing directory
   dir_volum <- paste0(proc_struct, "/volumetric" )      # Cortical segmentations
-  dir_surf <- paste0(proc_struct, "/surfaces")         # Structural surfaces
+  dir_surf <- paste0(proc_struct, "/surf")         # Structural surfaces
     dir_conte69 <- paste0(dir_surf, "/conte69")
     dir_mpc <- paste0(dir_surf, "/micro_profiles")       # MPC outputs
     dir_morpho <- paste0(dir_surf, "/morphology")        # morphometry
@@ -198,7 +198,7 @@ proc_dwi <- paste0(subject_dir, "/dwi")              # dwi processing directory
   dwi_cnntm <- paste0(proc_dwi, "/connectomes")
 proc_func <- paste0(subject_dir, "/func")
   func_volum <- paste0(proc_func, "/volumetric" )
-  func_surf <- paste0(proc_func, "/surfaces") # func surfaces
+  func_surf <- paste0(proc_func, "/surf") # func surfaces
   func_ICA <- paste0(proc_func, "/ICA_MELODIC")
 dir_warp <- paste0(subject_dir, "/xfm")
   dir_fs.label <- paste0(dir_fs,"/",BIDSid,"/label")

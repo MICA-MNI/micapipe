@@ -65,7 +65,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
   dir_volum="${dir_anat}/volumetric"
-  dir_conte69="${dir_anat}/surfaces/conte69"
+  dir_conte69="${dir_anat}/surf/conte69"
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_t1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain.nii.gz"
   T1nativepro_mask="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_mask.nii.gz"
@@ -299,7 +299,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR="$dir_surf"
 
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
-func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
+func_surf="${proc_func}/surf"      # surfaceOutputDirectory
 func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).

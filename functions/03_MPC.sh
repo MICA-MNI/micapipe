@@ -114,10 +114,10 @@ export SUBJECTS_DIR="$dir_surf"
 if [[ "${mpc_str}" == DEFAULT ]]; then
   mpc_str="micro"
   mpc_p="DEFAULT"
-  outDir="${subject_dir}/anat/surfaces/micro_profiles"
+  outDir="${subject_dir}/anat/surf/micro_profiles"
 else
   mpc_p="acq-${mpc_str}"
-  outDir="${subject_dir}/anat/surfaces/micro_profiles/${mpc_p}"
+  outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
 fi
 
 

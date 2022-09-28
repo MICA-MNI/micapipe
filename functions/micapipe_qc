@@ -1066,7 +1066,7 @@ accordion_gd() {
           Message="\"tg-8hoh\"><br><br><span style=\"font-weight:bold\">File Not Found:</span><br><br><span style=\"font-weight:bold\">\"${parc_name} ${ext}\"";
       fi
       nom="${dir_QC_png}/${idBIDS}_atlas-${parc_name}_desc-qc_${ext}.png"
-      File="${proc_struct}/surfaces/geo_dist/${idBIDS}_space-fsnative_atlas-${parc_name}_GD.txt"
+      File="${proc_struct}/surf/geo_dist/${idBIDS}_space-fsnative_atlas-${parc_name}_GD.txt"
       if [ -f "$nom" ]; then
           echo "            <td class=\"tg-wk8r\"><img src=\"${nom}\"  alt=\"HTML5\" style=\"height:${px}\"></td>
           <td class=\"tg-8pnm\">${File}<br><br></td>" >> "$QC_html"
@@ -1090,7 +1090,7 @@ accordion_mpc() {
       <button class=\"accordion\" id=\"mpc\">MPC | Microstructural profile covariance</button>
       <div class=\"panel\">" >> "$QC_html"
   echo -e "      <h2>qMRI input</h2>" >> "$QC_html"
-  microimg=$(grep input "${subject_dir}/anat/surfaces/micro_profiles/${idBIDS}_MPC.json" | awk -F '"' '{print $4}')
+  microimg=$(grep input "${subject_dir}/anat/surf/micro_profiles/${idBIDS}_MPC.json" | awk -F '"' '{print $4}')
   nifti_check "Quantitative MRI" "${microimg}" "${dir_QC_png}/${idBIDS}_qMRI.nii.png"
   print_path "${microimg}"
   nifti_check "Registration: Quantitative image over fsnative" "${microimg}" "${dir_QC_png}/${idBIDS}_qMRI_to-FS.nii.png" "$T1_fsnative"

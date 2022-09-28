@@ -10,7 +10,7 @@
 # group of individiuals. The following four variable need to be updated for
 # your individual system/study. It will automatically save the intensity
 # profiles and MPC matrices as a text files in the subject's BIDS folder,
-# alongside the preconstructed equivolumetric surfaces."
+# alongside the preconstructed equivolumetric surf."
 
 # Note that non cortical parcels should be excluded from the MPC computation.
 # This script excludes nodes at index = 0 and = nUniqueParcels/2, as it assumes that these entries are the position of the left and right medial wall.
@@ -64,9 +64,9 @@ else:
 
 # setting output directory
 if acq=="DEFAULT":
-    OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
+    OPATH = "{subject_dir}/anat/surf/micro_profiles/".format(subject_dir=ses_str)
 else:
-    OPATH = "{subject_dir}/anat/surfaces/micro_profiles/{acq}/".format(subject_dir=ses_str, acq=acq)
+    OPATH = "{subject_dir}/anat/surf/micro_profiles/{acq}/".format(subject_dir=ses_str, acq=acq)
 
 if os.path.exists(OPATH):
     try:

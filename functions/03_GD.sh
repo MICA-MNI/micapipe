@@ -40,7 +40,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Define output directory
-outPath="${proc_struct}/surfaces/geo_dist"
+outPath="${proc_struct}/surf/geo_dist"
 
 # wb_command
 workbench_path=$(which wb_command)

@@ -241,7 +241,7 @@ fi
 # CLEAN -MPC
 if [ "$postMPC" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
+    Do_cmd rm -rf "${subject_dir}/anat/surf/micro_profiles/" \
                   "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
                   "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
                   "$dir_logs"/MPC_* \
@@ -252,7 +252,7 @@ fi
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
-    Do_cmd rm -rf "${subject_dir}/anat/surfaces/geo_dist" \
+    Do_cmd rm -rf "${subject_dir}/anat/surf/geo_dist" \
                   "$dir_logs"/GD_*
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -260,7 +260,7 @@ fi
 # CLEAN -Morphology
 if [ "$postMorph" = "TRUE" ]; then
     Warning "ERASING '-Morphology' output files and logs"
-    Do_cmd rm -rf "${subject_dir}/anat/surfaces/morphology" \
+    Do_cmd rm -rf "${subject_dir}/anat/surf/morphology" \
                   "$dir_logs"/Morphology_*
     grep -v "${id}, ${SES/ses-/}, Morphology" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi

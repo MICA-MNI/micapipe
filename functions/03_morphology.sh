@@ -68,7 +68,7 @@ Do_cmd mkdir -p "$tmp"
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Make output directory
-outDir="${proc_struct}/surfaces/morphology"
+outDir="${proc_struct}/surf/morphology"
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
