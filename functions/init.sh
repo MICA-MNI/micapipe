@@ -24,6 +24,9 @@ export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
 export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
 export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
+# fastsurfer
+export FASTSURFER_HOME="/data_/mica1/01_programs/fastsurfer"
+export fs_licence="/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
 # FSL 6.0
 export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
 export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
@@ -67,7 +70,7 @@ export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${PATH}"
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${PATH}"
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
