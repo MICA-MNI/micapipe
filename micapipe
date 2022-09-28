@@ -35,9 +35,9 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
-\t\033[38;5;197m-proc_func\033[0m      : Funtional MRI processing and functional connectome generation
+\t\033[38;5;197m-proc_func\033[0m        : Funtional MRI processing and functional connectome generation
 \t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
-\t\033[38;5;197m-proc_task\033[0m      : Task Funtional MRI processing
+\t\033[38;5;197m-proc_task\033[0m        : Task Funtional MRI processing
 \t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
@@ -50,94 +50,94 @@ echo -e "
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
-\t\t\033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
-\t\t\t\t        eg. '-t1wStr run-01_T1w,run-02_T1w'. By default the pipeline uses the string 'T1w.nii'.
-\t\t\033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. for 7T T1w-mprage).
-\t\t\t\t        ( default = no second N4 bias field corretion weighted by white matter )
-\t\t\033[38;5;120m-uni\033[0m                :  Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
-\t\t\t\t        ( default = no processing of UNI-T1maps )
-\t\t\033[38;5;120m-mf\033[0m                :  Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
-\t\t\t\t        ( default = 3 )
-\t\t\033[38;5;120m-bet\033[0m                :  Use this option to apply the FSL-bet algorithm to generate the brain mask.
-\t\t\t\t        ( by default the pipeline will use 'mri_synthstrip' from freesurfer )
+\t   \033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
+\t\t\t            Default string is 'T1w.nii'. Multiple inputs example = '-t1wStr run-01_T1w,run-02_T1w'
+\t   \033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. for 7T T1w-mprage).
+\t\t\t            Default = no second N4 bias field corretion weighted by white matter
+\t   \033[38;5;120m-uni\033[0m                 : Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
+\t\t\t            Default = no processing of UNI-T1maps
+\t   \033[38;5;120m-mf\033[0m                  : Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
+\t\t\t            Default = 3 (7T), recomended value of 45 for 3T MP2RAGE
+\t   \033[38;5;120m-bet\033[0m                 : Use this option to apply the FSL-bet algorithm to generate the brain mask.
+\t\t\t            Default brain mask uses 'mri_synthstrip' from freesurfer
 
 \t\033[38;5;197m-proc_surf\033[0m
-\t\t\033[38;5;120m-surf_dir\033[0m      : If freesurfer/FastSurfer has been performed, it will create a symbolic link from the processed directory to '<output>/<freesurfer | FastSurfer>/<subject>'
-\t\t\033[38;5;120m-c\033[0m                :  Use this option to reconstruct the cortical surface with FastSurfer.
-\t\t\t\t        ( by default the pipeline will use 'Freesurfer 7' )
+\t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link from the processed directory to '<output>/<freesurfer | FastSurfer>/<subject>'
+\t   \033[38;5;120m-fastsurfer\033[0m          : Use this option to reconstruct the cortical surface with FastSurfer.
+\t\t\t            Default surface reconstruction uses 'Freesurfer 7'
 
 \t\033[38;5;197m-post_structural\033[0m
-\t\t\033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
-\t\t\t\t        ( default is the 18 parcellations provided in the pipeline )
+\t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
+\t\t\t            Default is the 18 parcellations provided in the pipeline
 
 \t\033[38;5;197m-proc_dwi\033[0m
-\t\t\033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii* )
-\t\t\033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
-\t\t\t\t        ( default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii* )
-\t\t\033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
-\t\t\t\t        ( MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded )
-\t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
-\t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
-\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
-\t\t\t\t         ( default is non linear registration SyN )
-\t\t\033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
-\t\t\t\t         ( this will create a new directory here: dwi/acq-<dwi_acq> )
+\t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
+\t\t\t            Default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii*
+\t   \033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
+\t\t\t            Default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii*
+\t   \033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
+\t\t\t            MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded
+\t   \033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
+\t\t\t            This option requires that both encoding contains the same number of volumes
+\t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
+\t\t\t            Default is non linear registration SyN
+\t   \033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
+\t\t\t            This will create a new directory here: dwi/acq-<dwi_acq>
 
 \t\033[38;5;197m-proc_asl\033[0m
-\t\t\033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
-\t\t\t\t         Default='asl'
-\t\t\033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
-\t\t\t\t         Default='m0scan'
+\t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
+\t\t\t            Default='asl'
+\t   \033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
+\t\t\t            Default='m0scan'
 
 \t\033[38;5;197m-proc_func\033[0m
-\t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
-\t\t\t\t         Default='task-rest_acq-AP_bold'
-\t\t\t\t         Multiple strings separate by comma and no blank space for multiecho acquisitions ( e.g. 'echo1,echo2,echo3' )
-\t\t\033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for func processing
-\t\t\t\t         Default='task-rest_acq-APse_bold'
-\t\t\033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
-\t\t\t\t         Default='task-rest_acq-PAse_bold'
-\t\t\033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
-\t\t\t\t         you must specify which scan to process ( e.g. '1' )
-\t\t\033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
-\t\t\t\t         you must specify which one to process ( e.g. '1' )
-\t\t\033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup
-\t\t\t\t         ( distortion correction; eg. file.cnf )
-\t\t\033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
-\t\t\t\t         ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
-\t\t\033[38;5;120m-regress_WM_CSF\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
-\t\t\t\t         ( default = no white matter and CSF signal regression )
-\t\t\033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
-\t\t\t\t         ( default = no global, white matter and CSF signal regression )
-\t\t\033[38;5;120m-GSRtag\033[0m              : Specify this option in addition to -GSR, to perform GSR and generate new outputs
-\t\t\t\t         ( the new output files will contain the tag 'desc-gsr' )
-\t\t\033[38;5;120m-noFIX\033[0m               : Specify this option to skip ICA-FIX processing.
-\t\t\t\t         ( default = FIX is run with specified training file )
-\t\t\033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
-\t\t\t\t         ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
-\t\t\033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
-\t\t\t\t         ( default processing is independent )
-\t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
-\t\t\t\t         ( default is non linear registration SyN )
+\t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
+\t\t\t            Default='task-rest_acq-AP_bold'
+\t\t\t            Multiple strings separate by comma and no blank space for multiecho acquisitions ( e.g. 'echo1,echo2,echo3' )
+\t   \033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for func processing
+\t\t\t            Default='task-rest_acq-APse_bold'
+\t   \033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
+\t\t\t            Default='task-rest_acq-PAse_bold'
+\t   \033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
+\t\t\t            you must specify which scan to process ( e.g. '1' )
+\t   \033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
+\t\t\t            you must specify which one to process ( e.g. '1' )
+\t   \033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup
+\t\t\t            ( distortion correction; eg. file.cnf )
+\t   \033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
+\t\t\t            ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
+\t   \033[38;5;120m-regress_WM_CSF\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
+\t\t\t            ( default = no white matter and CSF signal regression )
+\t   \033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
+\t\t\t            ( default = no global, white matter and CSF signal regression )
+\t   \033[38;5;120m-GSRtag\033[0m              : Specify this option in addition to -GSR, to perform GSR and generate new outputs
+\t\t\t            ( the new output files will contain the tag 'desc-gsr' )
+\t   \033[38;5;120m-noFIX\033[0m               : Specify this option to skip ICA-FIX processing.
+\t\t\t            ( default = FIX is run with specified training file )
+\t   \033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
+\t\t\t            ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
+\t   \033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
+\t\t\t            ( default processing is independent )
+\t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
+\t\t\t            ( default is non linear registration SyN )
 
 \t\033[38;5;197m-SC\033[0m
-\t\t\033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
-\t\t\033[38;5;120m-keep_tck\033[0m            : If provided, the tractogram will be copied to '<output>/micapipe/<subject>/dwi'
-\t\t\033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
-\t\t\033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
-\t\t\033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
+\t   \033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
+\t   \033[38;5;120m-keep_tck\033[0m            : If provided, the tractogram will be copied to '<output>/micapipe/<subject>/dwi'
+\t   \033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+\t   \033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
+\t   \033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
 
 \t\033[38;5;197m-MPC\033[0m
-\t\t\033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
-\t\t\t\t        If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t\t\033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native surface space ( ./file.lta )
-\t\t\t\t        If left blank or omitted, registration will be computed in the script.
-\t\t\t\t       Note that there is currently no built-in mechanism to verify the accuracy of this registration!
-\t\t\033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
-\t\t\t\t        It MUST be on the same space as the main microstructural image!!
-\t\t\033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
-\t\t\t\t         ( this will create a new directory here: anat/surfaces/micro_profiles/acq-<mpc_acq> )
+\t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
+\t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
+\t   \033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native surface space ( ./file.lta )
+\t\t\t            If left blank or omitted, registration will be computed in the script.
+\t\t\t            Note that there is currently no built-in mechanism to verify the accuracy of this registration!
+\t   \033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
+\t\t\t            It MUST be on the same space as the main microstructural image!!
+\t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
+\t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
 
 
 
@@ -657,14 +657,14 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${idBIDS} directory doesn't exist, creating..."
-    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surfaces/conte69},QC/png}
+    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surf/conte69},QC/png}
     chmod -R 770 $subject_dir
 fi
 
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
 if [ ! -L "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
-if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surfaces/*conte69.gii "${dir_surf}"/conte69/surf; fi
+if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surf/*conte69.gii "${dir_surf}"/conte69/surf; fi
 
 # Pipeline description json
 micapipe_json
