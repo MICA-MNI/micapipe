@@ -15,7 +15,7 @@ bids_variables() {
   id=$2
   out=$3
   SES=$4
-  umask 011
+  umask 001
 
   #   Define UTILITIES directories
   export scriptDir=${MICAPIPE}/functions
@@ -24,8 +24,8 @@ bids_variables() {
   # Directory with all the parcellations
   export util_parcelations=${MICAPIPE}/parcellations
   export util_lut=${MICAPIPE}/parcellations/lut
-  # Directory with the resampled freesurfer surfaces
-  export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
+  # Directory with the resampled freesurfer surf
+  export util_surface=${MICAPIPE}/surf # utilities/resample_fsaverage
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
   export subject=sub-${id}
@@ -43,21 +43,19 @@ bids_variables() {
 export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
-  export dir_surf=${out/\/micapipe_v1.0.0/}/freesurfer    # surfaces
-  	 export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
   export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
-  	 export dir_conte69=${proc_struct}/surfaces/conte69   # conte69
+  	 export dir_conte69=${proc_struct}/surf/conte69   # conte69
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
   export proc_func=$subject_dir/func
     export func_ICA=$proc_func/ICA_MELODIC
     export func_volum=$proc_func/volumetric
-    export func_surf=$proc_func/surfaces
+    export func_surf=$proc_func/surf
   export proc_asl=$subject_dir/perf # ASL processing directory
     export asl_volum=$proc_asl/volumetric
-    export asl_surf=$proc_asl/surfaces
+    export asl_surf=$proc_asl/surf
   export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
@@ -69,14 +67,9 @@ export idBIDS="${subject}${ses}"
       export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_t1w.nii.gz
       export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz
       export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz
-      export T1freesurfr=${dir_subjsurf}/mri/T1.mgz
       export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_t1w_5TT.nii.gz
       export T1fast_seg=$proc_struct/first/${idBIDS}_space-nativepro_t1w_all_fast_firstseg.nii.gz
   fi
-
-  # Native midsurface in gifti format
-  export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
-  export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
 
   # Registration from MNI152 to Native pro
   export T1str_nat=${idBIDS}_space-nativepro_t1w
@@ -107,6 +100,15 @@ export idBIDS="${subject}${ses}"
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*T1map.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
   dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_*dwi.nii* 2>/dev/null))
+}
+
+set_surface_directory() {
+  export dir_surf=${out/\/micapipe_v1.0.0/}/${1}    # surf
+  export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
+  export T1freesurfr=${dir_subjsurf}/mri/T1.mgz
+  # Native midsurface in gifti format
+  export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
+  export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
 }
 
 bids_print.variables() {
@@ -459,15 +461,15 @@ function json_surf() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=$(mrinfo "$1" -transform)
-  if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
   Info "Creating proc_surf json file"
-  if [[ "$FSdir" == "FALSE" ]]; then
+  if [[ "$surfdir" == "FALSE" ]]; then
       echo -e "{
         \"micapipeVersion\": \"${Version}\",
         \"LastRun\": \"$(date)\",
         \"fileName\": \"${1}\",
         \"fileInfo\": [
           {
+            \"Cropped\": \"${crop}\",
             \"VoxelSize\": \"${res}\",
             \"Dimensions\": \"${Size}\",
             \"Strides\": \"${Strides}\",
@@ -482,14 +484,14 @@ function json_surf() {
             ]
           }
         ],
-        \"SurfaceDir\": \"${1}\",
-        \"Algorithm\": \"${1}\",
+        \"SurfaceDir\": \"${2}\",
+        \"Algorithm\": \"${3}\",
       }" > "$4"
-  elif [[ "$FSdir" != "FALSE" ]]; then
+  elif [[ "$surfdir" != "FALSE" ]]; then
     echo -e "{
       \"micapipeVersion\": \"${Version}\",
       \"LastRun\": \"$(date)\",
-      \"SurfaceDir\": \"${surfdir}\"
+      \"SurfaceDir\": \"${2}\"
     }" > "$4"
   fi
 }
