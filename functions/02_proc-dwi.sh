@@ -34,7 +34,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v1.0.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
