@@ -425,7 +425,9 @@ function json_nativepro_t1w() {
         \"Strides\": \"${Strides}\",
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
-        \"Transform\": \"${Transform}\",
+        \"Transform\": [
+\"${Transform}\"
+      ],
         \"sform\": [
     \"${qform}\"
         ],
@@ -475,7 +477,9 @@ function json_surf() {
             \"Strides\": \"${Strides}\",
             \"Offset\": \"${Offset}\",
             \"Multiplier\": \"${Multiplier}\",
-            \"Transform\": \"${Transform}\",
+            \"Transform\": [
+\"${Transform}\"
+      ],
             \"sform\": [
         \"${qform}\"
             ],
@@ -577,7 +581,9 @@ function json_nativepro_mask() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
+    \"Transform\": [
+\"${Transform}\"
+      ],
     \"inputNIFTI\": [
       {
       \"Name\": \"${T1nativepro}\",
@@ -663,7 +669,9 @@ function json_mpc() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
+    \"Transform\": [
+\"${Transform}\"
+      ],
     \"sform\": [
 \"${qform}\"
       ],
