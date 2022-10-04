@@ -37,7 +37,7 @@ export OMP_NUM_THREADS=$threads
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v1.0.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -105,7 +105,7 @@ Info "Freesurfer will use $threads threads"
 aloita=$(date +%s)
 N=0
 Nsteps=0
-recon_log="${dir_freesurfer}/scripts/recon-all.log"
+recon_log="${dir_subjsurf}/scripts/recon-all.log"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -114,8 +114,8 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 if [[ "$FSdir" != "FALSE" ]]; then ((N++))
     if [[ -d "$FSdir" ]]; then
         Info "Copying from freesurfer_dir"
-        Do_cmd mkdir "$dir_freesurfer"
-        Do_cmd ln -s "$FSdir"/* "$dir_freesurfer"
+        Do_cmd mkdir "$dir_subjsurf"
+        Do_cmd ln -s "$FSdir"/* "$dir_subjsurf"
     elif [[ ! -d "$FSdir" ]]; then
         Error "The provided freesurfer directory does not exist: $FSdir"
         exit
