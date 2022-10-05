@@ -363,8 +363,8 @@ function micapipe_json() {
 }
 
 function tck_json() {
-  qform=$(fslhd "$dwi_b0" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$dwi_b0" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}'))
   Info "Creating tractography json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -373,11 +373,17 @@ function tck_json() {
     \"fileInfo\": [
       {
       \"Name\": \"${fod_wmN}\",
-      \"sform\": [
-\"${qform}\"
-      ],
       \"qform\": [
-\"${sform}\"
+        \"${qform[@]:0:4};\"
+        \"${qform[@]:4:4};\"
+        \"${qform[@]:8:4};\"
+        \"${qform[@]:12:8}\"
+      ],
+      \"sform\": [
+        \"${sform[@]:0:4};\"
+        \"${sform[@]:4:4};\"
+        \"${sform[@]:8:4};\"
+        \"${sform[@]:12:8}\"
       ],
       }
     ],
@@ -403,14 +409,14 @@ function tck_json() {
 }
 
 function json_nativepro_t1w() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "$1" -transform))
   if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
   if [[ "${maskbet}" == "TRUE" ]]; then BrainMask="bet"; else BrainMask="mri_synthstrip"; fi
   Info "Creating T1w_nativepro json file"
@@ -426,13 +432,22 @@ function json_nativepro_t1w() {
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
         \"Transform\": [
-\"${Transform}\"
+          \"${Transform[@]:0:4};\"
+          \"${Transform[@]:4:4};\"
+          \"${Transform[@]:8:4};\"
+          \"${Transform[@]:12:8}\"
       ],
-        \"sform\": [
-    \"${qform}\"
-        ],
         \"qform\": [
-    \"${sform}\"
+          \"${qform[@]:0:4};\"
+          \"${qform[@]:4:4};\"
+          \"${qform[@]:8:4};\"
+          \"${qform[@]:12:8}\"
+        ],
+        \"sform\": [
+          \"${sform[@]:0:4};\"
+          \"${sform[@]:4:4};\"
+          \"${sform[@]:8:4};\"
+          \"${sform[@]:12:8}\"
         ]
       }
     ],
@@ -455,14 +470,14 @@ function json_nativepro_t1w() {
 }
 
 function json_surf() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${img}" -transform))
   Info "Creating proc_surf json file"
   if [[ "$surfdir" == "FALSE" ]]; then
       echo -e "{
@@ -478,13 +493,22 @@ function json_surf() {
             \"Offset\": \"${Offset}\",
             \"Multiplier\": \"${Multiplier}\",
             \"Transform\": [
-\"${Transform}\"
+              \"${Transform[@]:0:4};\"
+              \"${Transform[@]:4:4};\"
+              \"${Transform[@]:8:4};\"
+              \"${Transform[@]:12:8}\"
       ],
-            \"sform\": [
-        \"${qform}\"
-            ],
             \"qform\": [
-        \"${sform}\"
+              \"${qform[@]:0:4};\"
+              \"${qform[@]:4:4};\"
+              \"${qform[@]:8:4};\"
+              \"${qform[@]:12:8}\"
+            ],
+            \"sform\": [
+              \"${sform[@]:0:4};\"
+              \"${sform[@]:4:4};\"
+              \"${sform[@]:8:4};\"
+              \"${sform[@]:12:8}\"
             ]
           }
         ],
@@ -563,14 +587,14 @@ function slim_proc_struct(){
 }
 
 function json_nativepro_mask() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${img}" -transform))
   Info "Creating T1nativepro_brain json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -582,16 +606,25 @@ function json_nativepro_mask() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"Transform\": [
-\"${Transform}\"
+        \"${Transform[@]:0:4};\"
+        \"${Transform[@]:4:4};\"
+        \"${Transform[@]:8:4};\"
+        \"${Transform[@]:12:8}\"
       ],
     \"inputNIFTI\": [
       {
       \"Name\": \"${T1nativepro}\",
-      \"sform\": [
-\"${qform}\"
-      ],
       \"qform\": [
-\"${sform}\"
+        \"${qform[@]:0:4};\"
+        \"${qform[@]:4:4};\"
+        \"${qform[@]:8:4};\"
+        \"${qform[@]:12:8}\"
+      ],
+      \"sform\": [
+        \"${sform[@]:0:4};\"
+        \"${sform[@]:4:4};\"
+        \"${sform[@]:8:4};\"
+        \"${sform[@]:12:8}\"
       ],
       }
     ],
@@ -606,8 +639,8 @@ function json_nativepro_mask() {
 }
 
 function json_func() {
-  qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}'))
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
@@ -615,10 +648,16 @@ function json_func() {
     \"Acquisition\": \"${acq}\",
     \"Name\": \"${fmri_processed}\",
     \"sform\": [
-\t\t\"${sform}\"
+        \"${sform[@]:0:4};\"
+        \"${sform[@]:4:4};\"
+        \"${sform[@]:8:4};\"
+        \"${sform[@]:12:8}\"
       ],
     \"qform\": [
-  \t\t\"${sform}\"
+        \"${qform[@]:0:4};\"
+        \"${qform[@]:4:4};\"
+        \"${qform[@]:8:4};\"
+        \"${qform[@]:12:8}\"
       ],
     \"Preprocess\": [
       {
@@ -648,14 +687,14 @@ function json_func() {
 }
 
 function json_mpc() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${img}" -transform))
   Info "Creating MPC json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -670,13 +709,22 @@ function json_mpc() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"Transform\": [
-\"${Transform}\"
-      ],
-    \"sform\": [
-\"${qform}\"
+        \"${Transform[@]:0:4};\"
+        \"${Transform[@]:4:4};\"
+        \"${Transform[@]:8:4};\"
+        \"${Transform[@]:12:8}\"
       ],
     \"qform\": [
-\"${sform}\"
+        \"${qform[@]:0:4};\"
+        \"${qform[@]:4:4};\"
+        \"${qform[@]:8:4};\"
+        \"${qform[@]:12:8}\"
+      ],
+    \"sform\": [
+        \"${sform[@]:0:4};\"
+        \"${sform[@]:4:4};\"
+        \"${sform[@]:8:4};\"
+        \"${sform[@]:12:8}\"
       ]
   }" > "$3"
 }
@@ -687,14 +735,14 @@ function json_dwipreproc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${img}" -transform))
 
   res_rpe=$(mrinfo "$4" -spacing)
   Size_rpe=$(mrinfo "$4" -size)
   Strides_rpe=$(mrinfo "$4" -strides)
   Offset_rpe=$(mrinfo "$4" -offset)
   Multiplier_rpe=$(mrinfo "$4" -multiplier)
-  Transform_rpe=$(mrinfo "$4" -transform)
+  Transform_rpe=($(mrinfo "$4" -transform))
 
   Info "Creating DWI preproc json file"
   echo -e "{
@@ -709,7 +757,12 @@ function json_dwipreproc() {
         \"Strides\": \"${Strides}\",
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
-        \"Transform\": \"${Transform}\"
+        \"Transform\": [
+          \"${Transform[@]:0:4};\"
+          \"${Transform[@]:4:4};\"
+          \"${Transform[@]:8:4};\"
+          \"${Transform[@]:12:8}\"
+      ]
     ],
     \"DWIrpe\": [
         \"fileName\": \"${dwi_reverse[*]}\",
@@ -719,7 +772,12 @@ function json_dwipreproc() {
         \"Strides\": \"${Strides_rpe}\",
         \"Offset\": \"${Offset_rpe}\",
         \"Multiplier\": \"${Multiplier_rpe}\",
-        \"Transform\": \"${Transform_rpe}\",
+        \"Transform\": [
+          \"${Transform_rpe[@]:0:4};\"
+          \"${Transform_rpe[@]:4:4};\"
+          \"${Transform_rpe[@]:8:4};\"
+          \"${Transform_rpe[@]:12:8}\"
+      ]
     ],
     \"Denoising\": \"Marchenko-Pastur PCA denoising, dwidenoise\",
     \"GibbsRingCorrection\": \"mrdegibbs\",
