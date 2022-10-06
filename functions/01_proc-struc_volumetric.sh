@@ -131,11 +131,11 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if [ "$Nimgs" -gt 1 ]; then
       reo_T1ws=(${tmp}/reo-*)
       ref=${reo_T1ws[0]} # reference to registration
-      ref_run=$(echo "${reo_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+      ref_run=$(echo "${reo_T1ws[0]}" | awk -F 'run-' '{print $2}'| sed 's:.nii.gz::g')
       t1ref="run-${ref_run}"
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
-          run=$(echo "${reo_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:_T1w.nii.gz::g')
+          run=$(echo "${reo_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:.nii.gz::g')
           T1mat_str="${dir_warp}/${idBIDS}_t1w_from-run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
           T1run_2_T1="${tmp}/${id}_t1w_from-run-${run}_to_${t1ref}.nii.gz"
