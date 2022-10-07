@@ -34,8 +34,8 @@ thisMainScan=${10}
 thisPhase=${11}
 smooth=${12}
 mainScanStr=${13}
-fmri_pe=${14}
-fmri_rpe=${15}
+func_pe=${14}
+func_rpe=${15}
 performNSR=${16}
 performGSR=${17}
 noFIX=${18}
@@ -84,8 +84,8 @@ Note "Topup Config     :" "$changeTopupConfig"
 Note "ICA fix training :" "$changeIcaFixTraining"
 if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainScan"; else
 Note "Main scan        :" "$mainScanStr"; fi
-Note "Phase scan       :" "$fmri_pe"
-Note "Reverse Phase    :" "$fmri_rpe"
+Note "Phase scan       :" "$func_pe"
+Note "Reverse Phase    :" "$func_rpe"
 Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
@@ -184,8 +184,8 @@ else
 fi
 
 # Manually defined Phase scan and reverse phase scan
-if [[ "$fmri_pe" != DEFAULT ]] && [[ -f "$fmri_pe" ]]; then mainPhaseScan="$fmri_pe"; fi
-if [[ "$fmri_rpe" != DEFAULT ]] && [[ -f "$fmri_rpe" ]]; then reversePhaseScan="$fmri_rpe"; fi
+if [[ "$func_pe" != DEFAULT ]] && [[ -f "$func_pe" ]]; then mainPhaseScan="$func_pe"; fi
+if [[ "$func_rpe" != DEFAULT ]] && [[ -f "$func_rpe" ]]; then reversePhaseScan="$func_rpe"; fi
 
 # Check inputs
 for i in ${mainScan[*]}; do

@@ -37,8 +37,6 @@ echo -e "
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-proc_func\033[0m        : Funtional MRI processing and functional connectome generation
 \t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
-\t\033[38;5;197m-proc_task\033[0m        : Task Funtional MRI processing
-\t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
 \t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
@@ -94,9 +92,9 @@ echo -e "
 \t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t            Default='task-rest_acq-AP_bold'
 \t\t\t            Multiple strings separate by comma and no blank space for multiecho acquisitions ( e.g. 'echo1,echo2,echo3' )
-\t   \033[38;5;120m-fmri_pe\033[0m             : Full path to the main phase encoding scan for func processing
+\t   \033[38;5;120m-func_pe\033[0m             : Full path to the main phase encoding scan for func processing
 \t\t\t            Default='task-rest_acq-APse_bold'
-\t   \033[38;5;120m-fmri_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
+\t   \033[38;5;120m-func_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
 \t\t\t            Default='task-rest_acq-PAse_bold'
 \t   \033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
 \t\t\t            you must specify which scan to process ( e.g. '1' )
@@ -120,6 +118,8 @@ echo -e "
 \t\t\t            ( default processing is independent )
 \t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t            ( default is non linear registration SyN )
+\t   \033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
+\t\t\t            ( default is FALSE  )
 
 \t\033[38;5;197m-SC\033[0m
 \t   \033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
@@ -242,10 +242,6 @@ do
     procfMRI=TRUE
     shift
   ;;
-  -proc_task)
-    procTask=TRUE
-    shift
-  ;;
   -topupConfig)
     configFileInput=TRUE
     configFile=$2
@@ -265,12 +261,12 @@ do
     mainScanStr=$2
     shift;shift
   ;;
-  -fmri_pe)
-    fmri_pe=$2
+  -func_pe)
+    func_pe=$2
     shift;shift
   ;;
-  -fmri_rpe)
-    fmri_rpe=$2
+  -func_rpe)
+    func_rpe=$2
     shift;shift
   ;;
   -sesAnat)
@@ -492,7 +488,7 @@ runs=($procVOL $procSurf $postVOL $procDWI $procASL $procfMRI $procTask $postDWI
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
-                    -proc_surf
+                    -proc_surfs
                     -post_structural
                     -proc_dwi
                     -proc_asl
@@ -517,8 +513,8 @@ if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
 if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
 if [[ $dropTR == "TRUE" ]]; then dropTR=TRUE; else dropTR=FALSE; fi
 if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
-if [ -z "$fmri_pe" ]; then fmri_pe=DEFAULT; else fmri_pe=$(realpath $fmri_pe); fi
-if [ -z "$fmri_rpe" ]; then fmri_rpe=DEFAULT; else fmri_rpe=$(realpath $fmri_rpe); fi
+if [ -z "$func_pe" ]; then func_pe=DEFAULT; else func_pe=$(realpath $func_pe); fi
+if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
@@ -928,7 +924,7 @@ fi
 #  Resting state
 if [ "$procfMRI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${fmri_pe} ${fmri_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - fMRI processing"
