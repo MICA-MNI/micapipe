@@ -13,9 +13,9 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v.0.1.2 'Roadrunner')"
+Version="(Version v.0.2.0 'Roadrunner')"
 version() {
-  echo -e "\nMICAPIPE August 2021 ${Version}\n"
+  echo -e "\nMICAPIPE October 2021 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
