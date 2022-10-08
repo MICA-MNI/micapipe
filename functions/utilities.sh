@@ -15,6 +15,7 @@ bids_variables() {
   id=$2
   out=$3
   SES=$4
+  umask 001
 
   #   Define UTILITIES directories
   export scriptDir=${MICAPIPE}/functions
@@ -627,6 +628,25 @@ function cleanup() {
   cd "$here"
   bids_variables_unset
   if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
+}
+
+function missing_arg() {
+  arg=($id $out $BIDS)
+  if [ ${#arg[@]} -lt 3 ]; then
+  Error "One or more mandatory arguments are missing:
+                 -sub  : $id
+                 -out  : $out
+                 -bids : $BIDS
+          \033[0m-h | -help (print help)\033[38;5;9m"
+  exit 1; fi
+}
+
+function inputs_realpath() {
+  # Get the real path of the Inputs
+  out=$(realpath $out)/micapipe
+  BIDS=$(realpath $BIDS)
+  id=${id/sub-/}
+  here=$(pwd)
 }
 
 function QC_proc-dwi() {
