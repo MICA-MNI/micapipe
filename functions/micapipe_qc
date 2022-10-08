@@ -13,9 +13,9 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v.0.2.0 'dev')"
+Version="(v1.0.0 'Northern flicker')"
 version() {
-  echo -e "\nMICAPIPE April 2022 ${Version}\n"
+  echo -e "\nMICAPIPE October 2022 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
