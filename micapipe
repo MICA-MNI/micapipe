@@ -99,7 +99,7 @@ echo -e "
 \t\t\t\t         ( default processing is independent )
 \t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t\t         ( default is non linear registration SyN )
-\t   \033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
+\t\t\033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
 \t\t\t            ( default is FALSE  )
 
 \t\033[38;5;197m-SC\033[0m
@@ -428,13 +428,7 @@ if [ "$QCgroup" = "TRUE" ]; then
 fi
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
-if [ ${#arg[@]} -lt 3 ]; then
-Error "One or more mandatory arguments are missing:
-               -sub  : $ids
-               -out  : $out
-               -bids : $BIDS"
-help; exit 1; fi
+missing_arg
 
 runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
@@ -444,7 +438,6 @@ Error "A processing flag is missing:
                     -proc_freesurfer
                     -post_structural
                     -proc_dwi
-                    -proc_rsfmri
                     -proc_func
                     -SC
                     -MPC
@@ -454,7 +447,7 @@ Error "A processing flag is missing:
                     -slim"
 help; exit 1; fi
 
-# Optional arguments rs-fmri
+# Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
 if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optarg_func[0]=DEFAULT; fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
@@ -504,16 +497,14 @@ fi
 if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 
 # Get the real path of the Inputs
-out=$(realpath $out)/micapipe
-BIDS=$(realpath $BIDS)
-id=${id/sub-/}
-here=$(pwd)
+inputs_realpath
 
 # Number of session (Default is "ses-pre")
 if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
+umask 001
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
