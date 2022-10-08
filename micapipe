@@ -501,7 +501,7 @@ Error "A processing flag is missing:
                     -QC_subj"
 exit 1; fi
 
-# Optional arguments func (rs-fmri and task)
+# Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
 if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optarg_func[0]=DEFAULT; fi
 if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
