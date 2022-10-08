@@ -17,7 +17,6 @@
 #   $2 : participant
 #   $3 : Out Directory
 #
-umask 003
 BIDS=$1
 id=$2
 out=$3
