@@ -90,6 +90,7 @@ Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
+Note "Drop TR          :" "${dropTR}"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -132,13 +133,25 @@ if [[ "$mainScanStr" == DEFAULT ]]; then
         Info "Using default json scan: ${bids_mainScanJson[0]}"
         mainScanJson=${bids_mainScanJson[0]}
     fi
-else
-    Info "Using user provided main scan: ${subject_bids}/func/${idBIDS}_${mainScanStr}"
-    mainScan=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".nii* 2>/dev/null)
-    mainScanJson=$(ls "${subject_bids}/func/${idBIDS}_${mainScanStr}".json 2>/dev/null)
-fi
+  else
+      Info "Using user provided main scan string(s): ${mainScanStr}"
+      IFS=',' read -ra func_main <<< $mainScanStr
+      func_json=(${func_main[*]})
+      for i in "${!func_main[@]}"; do
+          func_main[i]=$(ls "${subject_bids}/func/${idBIDS}_${func_main[$i]}".nii* 2>/dev/null);
+          func_json[i]=$(ls "${subject_bids}/func/${idBIDS}_${func_json[$i]}".json 2>/dev/null)
+      done # Full path
+      mainScan=(${func_main[*]})
+      mainScanJson=(${func_json[*]})
+  fi
 # If no json is found search at the top BIDS directory
-if [[ -z ${mainScanJson} ]]; then mainScanJson="${BIDS}/task-rest_bold.json"; fi
+if [[ -z ${mainScanJson} ]]; then
+    IFS=',' read -ra func_json <<< $mainScanStr
+    for i in "${!func_json[@]}"; do
+        func_json[i]=$(ls "${BIDS}/${func_json[$i]}.json" 2>/dev/null)
+    done # Full path
+    mainScanJson=(${func_json[*]})
+fi
 
 #------------------------------------------------------------------------------#
 # Phase encoding
@@ -172,8 +185,12 @@ if [[ "$func_pe" != DEFAULT ]] && [[ -f "$func_pe" ]]; then mainPhaseScan="$func
 if [[ "$func_rpe" != DEFAULT ]] && [[ -f "$func_rpe" ]]; then reversePhaseScan="$func_rpe"; fi
 
 # Check inputs
-if [ ! -f "$mainScan" ]; then Error "Couldn't find $id main func scan : \n\t ls ${mainScan}"; exit; fi #Last check to make sure file exists
-if [ ! -f "$mainScanJson" ]; then Error "Couldn't find $id main func scan json file: \n\t ls ${mainScanJson}"; exit; fi #Last check to make sure file exists
+for i in ${mainScan[*]}; do
+    if [ ! -f "$i" ]; then Error "Couldn't find $id main func scan : \n\t ls ${i}"; exit; fi
+done
+for i in ${mainScanJson[*]}; do
+    if [ ! -f "$i" ]; then Error "Couldn't find $id main func scan json file: \n\t ls ${i}"; exit; fi
+done
 if [ -z "$mainPhaseScan" ]; then  Warning "Subject $id doesn't have acq-APse_bold: TOPUP will be skipped"; fi
 if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have acq-PAse_bold: TOPUP will be skipped"; fi
 
@@ -227,18 +244,42 @@ else
 fi
 
 # gettin dat from mainScanJson exit if Not found
-readoutTime=$(grep TotalReadoutTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
-RepetitionTime=$(grep RepetitionTime "${mainScanJson}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}')
+unset readoutTime RepetitionTime EchoNumber EchoTime
+for json in ${mainScanJson[*]}; do
+    readoutTime+=($(grep TotalReadoutTime "${json}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}'))
+    RepetitionTime+=($(grep RepetitionTime "${json}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}'))
+    EchoNumber+=($(grep EchoNumber "${json}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}'))
+    EchoTime+=($(grep EchoTime "${json}" | awk -F ' ' '{print $2}' | awk -F ',' '{print $1}'))
+done
 if [[ -z "$readoutTime" ]]; then Warning "readoutTime is missing in $mainScanJson, if TOPUP was selected it will likely FAIL"; fi
 if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $mainScanJson $RepetitionTime"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "Resting state fMRI processing\n\t\tmicapipe $Version, $PROC "
+# If mainScan is an array with more than one file we'll assume it's multiecho
+if [ ${#mainScan[@]} -eq 1 ]; then
+  acq="se"
+elif [ ${#mainScan[@]} -gt 1 ]; then
+  acq="me"; dropTR="FALSE"; noFIX=1
+fi
+
+# func directories
+fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
+tagMRI="${fmri_tag/desc-/}"
+proc_func="$subject_dir/func/${fmri_tag}"
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-proc_func-${fmri_tag}.json"
+micapipe_check_json_status "${module_json}" "proc_func"
+
+#------------------------------------------------------------------------------#
+Title "functional fMRI processing\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 bids_print.variables-func
-Info "Saving temporal dir: $nocleanup"
-Info "ANTs will use $threads threads"
-Info "wb_command will use $OMP_NUM_THREADS threads"
+Note "Saving temporal dir:" "$nocleanup"
+Note "ANTs will use      :" "${threads} threads"
+Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
+Note "proc_fun outputs:" "${proc_func}"
+Note "tagMRI:" "${tagMRI}"
 
 #	Timer
 aloita=$(date +%s)
@@ -253,10 +294,9 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Define directories
 export SUBJECTS_DIR="$dir_surf"
 
-# func directories
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
-func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
-func_ICA="$proc_func/ICA_MELODIC"      # ICAOutputDirectory
+func_surf="${proc_func}/surf"      # surfaceOutputDirectory
+func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
 for x in "$func_surf" "$func_volum"; do
@@ -264,126 +304,163 @@ for x in "$func_surf" "$func_volum"; do
 done
 
 #------------------------------------------------------------------------------#
-# Begining of the REAL processing
 # Scans to process
-toProcess=($mainScan $reversePhaseScan $mainPhaseScan)
-tags=(mainScan reversePhaseScan mainPhaseScan)
-singleecho="${func_volum}/${idBIDS}"_space-func_desc-singleecho.nii.gz
+toProcess=($reversePhaseScan $mainPhaseScan)
+tags=("reversePhaseScan" "mainPhaseScan")
+func_lab="_space-func_desc-${acq}"
+func_nii="${func_volum}/${idBIDS}${func_lab}".nii.gz
 
-# scan for registration to T1
-# func4reg="${func_volum}/${idBIDS}_space-func_desc-singleecho_mainPhaseAlignedTopup_mean.nii.gz"
+# Processing functions
+function func_reoMC() {
+  # Function that reorients the func file and motion corrects
+  # Positional arguments: 1) nifti, 2) tag,
+  # Get basic parameters
+  local rawNifti=$1
+  local tag=$2
+  local EchoN=$3
+  # IF FILE IS NOT FOUND DON'T RUN
+  if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
+        Info "Processing $tag scan"
+        Note "func file:" "$rawNifti"
 
-# Processing single.
-if [[ ! -f "${singleecho}" ]]; then
-    # Loop over all scans for everything before motion correction across scans.
-    for i in {0..2}; do
-        # Get basic parameters
-        rawNifti=${toProcess[$i]}
-        tag=${tags[$i]}
-        Info "Processing TAG-$tag scan, readout time: $readoutTime ms"
-        # IF FILE NOT FOUND DON'T RUN
-        if [[ ! -z "${rawNifti}" ]] && [[ -f "${rawNifti}" ]]; then
-              Note "RAWNIFTI:" "$rawNifti"
-
-              # Drop first five TRs and reorient to standard
-              if [ "$tag" == "mainScan" ]; then
-                  Do_cmd nifti_tool -cbl -prefix "${tmp}/${tag}_trDrop.nii.gz" -infiles "$rawNifti"'[5..$]'
-                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
-                  Do_cmd fslreorient2std "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
-              else
-                  Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reorient.nii.gz" -inset "$rawNifti"
-                  Do_cmd fslreorient2std "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_reorient.nii.gz"
-              fi
-
-              # Remove slices to make an even number of slices in all directions (requisite for topup).
-              #dimensions=`fslhd ${tmp}/${tag}_reorient.nii.gz | grep -E "^dim[1-3]" | awk '{print $NF}'`
-              #newDimensions=`echo $dimensions | awk '{for(i=1;i<=NF;i++){$i=$i-($i%2);print $i}}'`
-              #Do_cmd fslroi ${tmp}/${tag}_reorient.nii.gz ${tmp}/${tag}_sliceCut.nii.gz `echo $newDimensions | sed 's/ / 0 /g' | sed 's/^/0 /'` # I removed -1 -1
-
-              # Skipping fslroi step. Rename files for simplicity
-              mv "${tmp}/${tag}_reorient.nii.gz" "${tmp}/${tag}_sliceCut.nii.gz"
-
-              # Motion correction within scans
-              Do_cmd fslmaths "${tmp}/${tag}_sliceCut.nii.gz" -Tmean "${tmp}/${tag}_sliceCutMean.nii.gz"
-              Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_sliceCutMean.nii.gz" \
-                              -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
-                              -1Dfile "${func_volum}/${idBIDS}_space-func_${tag}.1D" \
-                              "${tmp}/${tag}_sliceCut.nii.gz"
-              Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
+        # Drop first five TRs and reorient to standard
+        if [ "$tag" == "mainScan" ] && [ "$dropTR" == "TRUE" ]; then
+            Do_cmd nifti_tool -cbl -prefix "${tmp}/${tag}_trDrop.nii.gz" -infiles "$rawNifti"'[5..$]'
+            Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reo.nii.gz" -inset "${tmp}/${tag}_trDrop.nii.gz"
+            Do_cmd fslreorient2std "${tmp}/${tag}_reo.nii.gz" "${tmp}/${tag}_reo.nii.gz"
+        else
+            Do_cmd 3dresample -orient LPI -prefix "${tmp}/${tag}_reo.nii.gz" -inset "$rawNifti"
+            Do_cmd fslreorient2std "${tmp}/${tag}_reo.nii.gz" "${tmp}/${tag}_reo.nii.gz"
         fi
+
+        # Motion correction within scans <<<  Only first echo for tedana
+        if [[ ${EchoN} -eq 1 ]]; then
+            Do_cmd fslmaths "${tmp}/${tag}_reo.nii.gz" -Tmean "${tmp}/${tag}_reoMean.nii.gz"
+            Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_reoMean.nii.gz" \
+                            -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
+                            -1Dfile "${func_volum}/${idBIDS}${func_lab}_${tag}.1D" \
+                            "${tmp}/${tag}_reo.nii.gz"
+            Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
+        fi
+  fi
+}
+
+function func_MCoutliers() {
+  # Function that generates the motion outliers file
+  # Calculate motion outliers with FSL
+  local outfile=$1
+  if [[ ! -f "${outfile}" ]]; then
+      Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
+                                 -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
+                                 -s "${func_volum}/${idBIDS}${func_lab}_metric_FD.1D" --fd
+      Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${outfile}"; ((Nsteps++))
+  else
+      Info "Subject ${id} has a ${func_lab/_/}.1D with motion outliers"; ((Nsteps++))
+  fi
+}
+
+function func_topup() {
+  # Function that applies the distortion correction to the REO/MC file(s)
+  #
+  # If ONLY Reverse phase scan is provided mainScan will be the mainPhaseScan
+  if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then
+        main_pe="NO-main_pe"
+        Warning "reversePhaseScan was found but NO mainPhaseScan, using mainScan as mainPhaseScan"
+        mainPhaseScan="${tmp}/mainPhaseScan_mc.nii.gz"
+        Do_cmd cp "${tmp}/mainScan_mc.nii.gz" "$mainPhaseScan"
+        Do_cmd cp "${tmp}/mainScan_mcMean.nii.gz" "${tmp}/func_mainPhaseAlignedMean.nii.gz"
+  fi
+
+  # Only do distortion correction if reverse phase encoding images were provided,
+  # if not then rename the motion corrected mainScan to $func_nii.
+  if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
+      Warning "No pe or rpe (AP, PA) acquisition were found, TOPUP will be skip!!!!!!!"
+      export statusTopUp="NO"
+      Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${func_nii}"; ((Nsteps++))
+  else
+      if [[ ! -f "${func_volum}/TOPUP.txt" ]] && [[ ! -f "${func_nii}" ]]; then
+        # NOTE print readout times
+          mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan_mcMean.nii.gz")
+          mainPhaseScan=$(find "$tmp"        -maxdepth 1 -name "*mainPhaseScan_mc.nii.gz")
+          reversePhaseScanMean=$(find "$tmp" -maxdepth 1 -name "*reversePhaseScan_mcMean.nii.gz")
+          reversePhaseScan=$(find "$tmp"     -maxdepth 1 -name "*reversePhaseScan_mc.nii.gz")
+          mainScan=$(find "$tmp"             -maxdepth 1 -name "*mainScan_mc.nii.gz")
+
+          Do_cmd flirt -in "$reversePhaseScanMean" -ref "${tmp}/mainScan_mcMean.nii.gz" -omat "${tmp}/func_tmpXfmSecondary.omat"
+          Do_cmd flirt -in "$reversePhaseScan" -ref "${tmp}/mainScan_mcMean.nii.gz" -applyxfm -init "${tmp}/func_tmpXfmSecondary.omat" -out "${tmp}/func_secondaryPhaseAligned.nii.gz"
+          Do_cmd fslmaths "${tmp}/func_secondaryPhaseAligned.nii.gz" -Tmean "${tmp}/func_secondaryPhaseAlignedMean.nii.gz"
+
+          if [[ "$main_pe" != "NO-main_pe" ]]; then
+              Do_cmd flirt -in "$mainPhaseScanMean" -ref "${tmp}/mainScan_mcMean.nii.gz" -omat "${tmp}/func_tmpXfmMain.omat"
+              Do_cmd flirt -in "$mainPhaseScan" -ref "${tmp}/mainScan_mcMean.nii.gz" -applyxfm -init "${tmp}/func_tmpXfmMain.omat" -out "${tmp}/func_mainPhaseAligned.nii.gz"
+              Do_cmd fslmaths "${tmp}/func_mainPhaseAligned.nii.gz" -Tmean "${tmp}/func_mainPhaseAlignedMean.nii.gz"
+          fi
+
+          # Distortion correction
+          echo -e "0 1 0 ${readoutTime[0]} \n0 -1 0 ${readoutTime[0]}" > "${tmp}/func_topupDataIn.txt"
+          Info "topup datain:\n$(cat "${tmp}/func_topupDataIn.txt")"
+          Do_cmd fslmerge -t "${tmp}/func_mergeForTopUp.nii.gz" "${tmp}/func_mainPhaseAlignedMean.nii.gz" "${tmp}/func_secondaryPhaseAlignedMean.nii.gz"
+          Do_cmd topup --imain="${tmp}/func_mergeForTopUp.nii.gz" --datain="${tmp}/func_topupDataIn.txt" --config="${topupConfigFile}" --out="${tmp}/func_topup"
+          Do_cmd applytopup --imain="${mainScan}" --inindex=1 --datain="${tmp}/func_topupDataIn.txt" --topup="${tmp}/func_topup" --method=jac --out="${func_nii}"
+
+          # Check if it worked
+          if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt"; exit; fi
+          export statusTopUp="YES"; ((Nsteps++))
+      else
+          Info "Subject ${id} has a distortion corrected functional MRI (TOPUP)"; export statusTopUp="YES"; ((Nsteps++))
+      fi
+  fi
+}
+
+#------------------------------------------------------------------------------#
+# Begining of the REAL processing
+status="INCOMPLETE"
+# Processing fMRI acquisitions.
+if [[ ! -f "${func_nii}" ]]; then
+    # Reorient and motion correct main(s) fMRI
+    for i in "${!mainScan[@]}"; do n=$((i+1))
+      func_reoMC ${mainScan[i]} "mainScan${n/1/}" $n
+    done
+    # Reorient and motion correct fMRI rpe and pe
+    for i in "${!toProcess[@]}"; do
+      func_reoMC ${toProcess[i]} ${tags[i]} 1
     done
 
-    # Calculate motion outliers with FSL
-    if [[ ! -f "${func_volum}/${idBIDS}_space-func_singleecho.1D" ]]; then
-        Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_sliceCut.nii.gz" \
-                                   -o "${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D" \
-                                   -s "${func_volum}/${idBIDS}_space-func_metric_FD.1D" --fd
-        Do_cmd mv "${func_volum}/${idBIDS}_space-func_mainScan.1D ${func_volum}/${idBIDS}_space-func_singleecho.1D"; ((Nsteps++))
-    else
-        Info "Subject ${id} has a singleecho.1D with motion outliers"; ((Nsteps++))
+    # Run Tedana
+    if [[ ${acq}=="me" ]]; then
+        Info "Multiecho fMRI acquisition will be process with tedana"
+        Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
+        Note "EchoNumber :" ${EchoNumber[*]}
+        Note "EchoTime   :" ${EchoTime[*]}
+        tedana_dir=${tmp}/tedana
+
+        mkdir -p ${tedana_dir}
+        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${tedana_dir}
+
+        # Overwite the motion corrected to insert this into topup.
+        ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
+        mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
+        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
-    # If ONLY Reverse phase scan is provided mainScan will be the mainPhaseScan
-    if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then
-          main_pe="NO-main_pe"
-          Warning "reversePhaseScan was found but NO mainPhaseScan, using mainScan as mainPhaseScan"
-          mainPhaseScan="${tmp}/mainPhaseScan_mc.nii.gz"
-          Do_cmd cp "${tmp}/mainScan_mc.nii.gz" "$mainPhaseScan"
-          Do_cmd cp "${tmp}/mainScan_mcMean.nii.gz" "${tmp}/singleecho_mainPhaseAlignedMean.nii.gz"
-    fi
+    # FSL MC outliers
+    fmri_mc="${func_volum}/${idBIDS}${func_lab}.1D"
+    func_MCoutliers "${fmri_mc}"
 
-    # Only do distortion correction if field maps were provided, if not then rename the scan to distortionCorrected (just to make the next lines of code easy).
-    if [ -z "${mainPhaseScan}" ] || [ -z "${reversePhaseScan}" ]; then
-        Warning "No AP or PA acquisition was found, TOPUP will be skip!!!!!!!"
-        export statusTopUp="NO"
-        Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${singleecho}"; ((Nsteps++))
-    else
-        if [[ ! -f "${func_volum}/TOPUP.txt" ]] && [[ ! -f "${singleecho}" ]]; then
-            mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan*_mcMean.nii.gz")
-            mainPhaseScan=$(find "$tmp"        -maxdepth 1 -name "*mainPhaseScan*_mc.nii.gz")
-            reversePhaseScanMean=$(find "$tmp" -maxdepth 1 -name "*reversePhaseScan*_mcMean.nii.gz")
-            reversePhaseScan=$(find "$tmp"     -maxdepth 1 -name "*reversePhaseScan*_mc.nii.gz")
-            mainScan=$(find "$tmp"             -maxdepth 1 -name "*mainScan*_mc.nii.gz")
+    # Distortion correction with TOPUP
+    func_topup
 
-            Do_cmd flirt -in "$reversePhaseScanMean" -ref "$tmp"/mainScan_mcMean.nii.gz -omat "$tmp"/singleecho_tmpXfmSecondary.omat
-            Do_cmd flirt -in "$reversePhaseScan" -ref "$tmp"/mainScan_mcMean.nii.gz -applyxfm -init "$tmp"/singleecho_tmpXfmSecondary.omat -out "$tmp"/singleecho_secondaryPhaseAligned.nii.gz
-            Do_cmd fslmaths "$tmp"/singleecho_secondaryPhaseAligned.nii.gz -Tmean "$tmp"/singleecho_secondaryPhaseAlignedMean.nii.gz
-
-            if [[ "$main_pe" != "NO-main_pe" ]]; then
-                Do_cmd flirt -in "$mainPhaseScanMean" -ref "$tmp"/mainScan_mcMean.nii.gz -omat "$tmp"/singleecho_tmpXfmMain.omat
-                Do_cmd flirt -in "$mainPhaseScan" -ref "$tmp"/mainScan_mcMean.nii.gz -applyxfm -init "$tmp"/singleecho_tmpXfmMain.omat -out "$tmp"/singleecho_mainPhaseAligned.nii.gz
-                Do_cmd fslmaths "$tmp"/singleecho_mainPhaseAligned.nii.gz -Tmean "$tmp"/singleecho_mainPhaseAlignedMean.nii.gz
-            fi
-
-            # Distortion correction
-            echo -e "0 1 0 ${readoutTime} \n0 -1 0 ${readoutTime}" > "$tmp"/singleecho_topupDataIn.txt
-            Info "topup datain:\n$(cat "${tmp}"/singleecho_topupDataIn.txt)"
-            Do_cmd fslmerge -t "${tmp}/singleecho_mergeForTopUp.nii.gz" "${tmp}/singleecho_mainPhaseAlignedMean.nii.gz" "${tmp}/singleecho_secondaryPhaseAlignedMean.nii.gz"
-            Do_cmd topup --imain="${tmp}/singleecho_mergeForTopUp.nii.gz" --datain="${tmp}/singleecho_topupDataIn.txt" --config="${topupConfigFile}" --out="$tmp/singleecho_topup"
-            Do_cmd applytopup --imain="${mainScan}" --inindex=1 --datain="${tmp}/singleecho_topupDataIn.txt" --topup="${tmp}/singleecho_topup" --method=jac --out="${singleecho}"
-
-            # # func for registration
-            # Do_cmd applytopup --imain="${tmp}/singleecho_mainPhaseAligned.nii.gz" --inindex=1 --datain="${tmp}/singleecho_topupDataIn.txt" --topup="${tmp}/singleecho_topup" --method=jac --out="${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz"
-            # Do_cmd fslmaths "${tmp}/singleecho_mainPhaseAlignedTopup.nii.gz" -Tmean "$func4reg"
-
-            # Check if it worked
-            if [[ ! -f "${singleecho}" ]]; then Error "Something went wrong with TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func.txt"; exit; fi
-            export statusTopUp="YES"; ((Nsteps++))
-        else
-            Info "Subject ${id} has singleecho in fmrispace with TOPUP"; export statusTopUp="YES"; ((Nsteps++))
-        fi
-    fi
 else
-      Info "Subject ${id} has a singleecho_fmrispace processed"; Nsteps=$((Nsteps + 2))
+    Info "Subject ${id} has a functional MRI processed (reoriented/distorion and motion corrected)"; Nsteps=$((Nsteps + 2))
 fi
 
 #------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
-fmri_mean="${func_volum}/${idBIDS}_space-func_desc-singleecho_mean.nii.gz"
-fmri_HP="${func_volum}/${idBIDS}_space-func_desc-singleecho_HP.nii.gz"
-fmri_brain="${func_volum}/${idBIDS}_space-func_desc-singleecho_brain.nii.gz"
-fmri_mask="${func_volum}/${idBIDS}_space-func_desc-singleecho_brain_mask.nii.gz"
+fmri_mean="${func_volum}/${idBIDS}${func_lab}_mean.nii.gz"
+fmri_HP="${func_volum}/${idBIDS}${func_lab}_HP.nii.gz"
+fmri_brain="${func_volum}/${idBIDS}${func_lab}_brain.nii.gz"
+fmri_mask="${func_volum}/${idBIDS}${func_lab}_brain_mask.nii.gz"
 
 if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then
     Info "Generating a func binary mask"
@@ -435,55 +512,60 @@ else
 fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
-fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-func_bold.nii.gz"
-T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_t1w.nii.gz"
-str_func_affine="${dir_warp}/${idBIDS}_func_from-func_to-nativepro_mode-image_desc-affine_"
+fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mean.nii.gz"
+T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
+str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
 
-str_func_SyN="${dir_warp}/${idBIDS}_func_from-nativepro_func_to-func_mode-image_desc-SyN_"
+str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_desc-SyN_"
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
 SyN_func_warp="${str_func_SyN}1Warp.nii.gz"
 SyN_func_Invwarp="${str_func_SyN}1InverseWarp.nii.gz"
 
+if [[ ${regAffine}  == "FALSE" ]]; then
+    # SyN from T1_nativepro to t1-nativepro
+    export reg="Affine+SyN"
+    transformsInv="-t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
+    transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp}"  # func to T1nativepro
+    xfmat="-t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
+elif [[ ${regAffine}  == "TRUE" ]]; then
+    export reg="Affine"
+    transformsInv="-t [${mat_func_affine},1]"  # T1nativepro to func
+    transform="-t ${mat_func_affine}"   # func to T1nativepro
+    xfmat="-t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
+fi
+
 # Registration to native pro
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then
-    # if [[ -f "$func4reg" ]]; then
-    #     Do_cmd fslmaths "$func4reg" -mul "$fmri_mask" "$fmri_brain"
-    # fi
-    Info "Creating a synthetic BOLD image for registration"
-    # Inverse T1w
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
-    # Dilate the T1-mask
-    #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
-    # Masked the inverted T1w
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
-    # Match histograms values acording to func
-    Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
-    # Smoothing
-    Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
+    if [[ ! -f "${t1bold}" ]]; then
+        Info "Creating a synthetic BOLD image for registration"
+        # Inverse T1w
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro"
+        # Dilate the T1-mask
+        #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
+        # Masked the inverted T1w
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
+        # Match histograms values acording to func
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
+        # Smoothing
+        Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
+    else
+        Info "Subject ${id} has a synthetic BOLD image for registration"
+    fi
 
-    Info "Registering fmri space to nativepro"
+    Info "Registering func MRI to nativepro"
 
     # Affine from func to t1-nativepro
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
-    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
-        export reg="Affine+SyN"
-        transformsInv="-t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
-        transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp}"  # func to T1nativepro
-        xfmat="-t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func only lineal
-    elif [[ ${regAffine}  == "TRUE" ]]; then
-        export reg="Affine"
-        transformsInv="-t [${mat_func_affine},1]"
-        transform="-t ${SyN_func_affine}"
-        xfmat="-t [${mat_func_affine},1]"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
-
+    Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
@@ -509,11 +591,11 @@ fi
 #------------------------------------------------------------------------------#
 # run ICA-FIX IF melodic ran succesfully
 fix_output="${func_ICA}/filtered_func_data_clean.nii.gz"
-fmri_processed="${func_volum}/${idBIDS}_space-func_desc-singleecho_clean.nii.gz"
+func_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
 
 # Run if fmri_clean does not exist
 if [[ "$noFIX" -eq 0 ]]; then
-    if [[ ! -f "${fmri_processed}" ]] ; then
+    if [[ ! -f "${func_processed}" ]] ; then
           if  [[ -f "${melodic_IC}" ]] && [[ -f $(which fix) ]]; then
               if [[ ! -f "${fix_output}" ]] ; then
                     Info "Getting ICA-FIX requirements"
@@ -552,63 +634,63 @@ if [[ "$noFIX" -eq 0 ]]; then
 
                     # Replace file if melodic ran correctly - Change single-echo files for clean ones
                     if [[ -f "$fix_output" ]]; then
-                        yes | Do_cmd 3dresample -orient LPI -prefix "$fmri_processed" -inset "$fix_output"
+                        yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
                         export statusFIX="YES"
                     else
                         Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-                    cp -rf "$fix_output" "$fmri_processed"; export statusFIX="YES"
+                    cp -rf "$fix_output" "$func_processed"; export statusFIX="YES"
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
-              Do_cmd cp -rf "$fmri_HP" "$fmri_processed"
+              Do_cmd cp -rf "$fmri_HP" "$func_processed"
               export statusFIX="NO"
           fi
     else
-        Info "Subject ${id} has singleecho_fmrispace_clean"; export statusFIX="YES"
+        Info "Subject ${id} has a clean fMRI processed with FIX"; export statusFIX="YES"
     fi
-    json_func "${func_volum}/${idBIDS}_space-func_desc-singleecho_clean.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Further processing will be performed on distorsion corrected images."
-    cp -rf "${fmri_HP}" "$fmri_processed"
+    cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_func "${func_volum}/${idBIDS}_space-func_desc-singleecho_clean.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 fi
 
 
 #------------------------------------------------------------------------------#
-global_signal="${func_volum}/${idBIDS}_space-func_global.txt"
+global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
 if [[ ! -f "${global_signal}" ]] ; then
     Info "Calculating tissue-specific and global signals changes"
     tissues=(CSF GM WM)
     for idx in {0..2}; do
         tissue=${tissues[$idx]}
         tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
-        tissue_series="${func_volum}/${idBIDS}_space-func_pve_${tissue}.txt"
+        tissue_series="${func_volum}/${idBIDS}${func_lab}_pve_${tissue}.txt"
         if [[ ! -f "${tissue_series}" ]] ; then
-            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" "${transformsInv}" -o "${tmp}/${idBIDS}_space-func_${tissue}.nii.gz" -v -u int
-            Do_cmd fslmaths "${tmp}/${idBIDS}_space-func_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}_space-func_${tissue}.nii.gz"
-            Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}_space-func_${tissue}.nii.gz" -w
+            Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" "${transformsInv}" -o "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -v -u int
+            Do_cmd fslmaths "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz"
+            Do_cmd fslmeants -i "$func_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -w
         else
              Info "Subject ${idBIDS} has $tissue time-series"
         fi
     done
     # Global signal from brain mask
-    Do_cmd fslmeants -i "$fmri_processed" -o "$global_signal" -m "${fmri_mask}" -w
+    Do_cmd fslmeants -i "$func_processed" -o "$global_signal" -m "${fmri_mask}" -w
     if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has Global time-series"; ((Nsteps++))
 fi
 
 # Motion confound
-spikeRegressors="${func_volum}/${idBIDS}_space-func_spikeRegressors_REFRMS.1D"
+spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFRMS.1D"
 if [[ ! -f "$spikeRegressors" ]] ; then
-    Do_cmd fsl_motion_outliers -i "$fmri_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}_space-func_metric_REFRMS.1D" --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_REFRMS.1D" --refmse --nomoco
     if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++))
@@ -641,7 +723,7 @@ for hemisphere in lh rh; do
 
           # Map processed timeseries to surface
           Do_cmd mri_vol2surf \
-              --mov "$fmri_processed "\
+              --mov "$func_processed "\
               --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$BIDSanat" \
@@ -743,15 +825,15 @@ fi
 #------------------------------------------------------------------------------#
 #                           S U B C O R T E X
 # Subcortical segmentation (nativepro) to func space
-func_subcortex="${func_volum}/${idBIDS}_space-func_desc-singleecho_subcortical.nii.gz"
-timese_subcortex="${func_volum}/${idBIDS}_space-func_desc-singleecho_timeseries_subcortical.txt"
+func_subcortex="${func_volum}/${idBIDS}${func_lab}_subcortical.nii.gz"
+timese_subcortex="${func_volum}/${idBIDS}${func_lab}_timeseries_subcortical.txt"
 
 if [[ ! -f "$timese_subcortex" ]] ; then
       Info "Getting subcortical timeseries"
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel  "${transformsInv}" -o "$func_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i "$fmri_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
+      Do_cmd mri_segstats --i "$func_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
       if [[ -f "$timese_subcortex" ]] ; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has func subcortical time-series"; ((Nsteps++))
@@ -759,16 +841,16 @@ fi
 
 #------------------------------------------------------------------------------#
 #                           C E R E B E L L U M
-func_cerebellum="${func_volum}/${idBIDS}_space-func_desc-singleecho_cerebellum.nii.gz"
-timese_cerebellum="${func_volum}/${idBIDS}_space-func_desc-singleecho_timeseries_cerebellum.txt"
-stats_cerebellum="${func_volum}/${idBIDS}_space-func_desc-singleecho_cerebellum_roi_stats.txt"
+func_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum.nii.gz"
+timese_cerebellum="${func_volum}/${idBIDS}${func_lab}_timeseries_cerebellum.txt"
+stats_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum_roi_stats.txt"
 
 if [[ ! -f "$timese_cerebellum" ]] ; then
       Info "Getting cerebellar timeseries"
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i "$fmri_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
+      Do_cmd mri_segstats --i "$func_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
       3dROIstats -mask "$func_cerebellum" -nzsum "$func_cerebellum" > "$stats_cerebellum"
       if [[ -f "$timese_cerebellum" ]] ; then ((Nsteps++)); fi
 else
@@ -777,7 +859,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # QC: func processing Input files
-QC_proc-func
+QC_proc-func "micapipe_QC_proc-func_${tagMRI}.txt"
 
 #------------------------------------------------------------------------------#
 # run post-func
@@ -785,7 +867,7 @@ cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean.txt
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running func post processing"
     labelDirectory="${dir_freesurfer}/label/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
@@ -800,6 +882,7 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 if [ "$Nsteps" -eq 21 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
