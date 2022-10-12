@@ -11,7 +11,7 @@ generate() {
     --dcm2niix version=v1.0.20190902 method=source\
     --fsl version=6.0.3 \
     --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
-    --freesurfer version=6.3.2 \
+    --freesurfer version=7.3.2 \
     --matlabmcr version=2017b\
     --afni version=latest\
     --ants version=2.3.4 \
