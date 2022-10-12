@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE September 2022 (Version v.1.0.0 'Northern flicker')\n"
+  echo -e "\nMICAPIPE September 2022 (Version v0.2.0 'Northern flicker')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -239,7 +239,7 @@ do
     shift;shift
     ;;
   -proc_func)
-    procfMRI=TRUE
+    procFunc=TRUE
     shift
   ;;
   -topupConfig)
@@ -457,10 +457,6 @@ do
     m0ScanStr=$2
     shift;shift
   ;;
-  -proc_func)
-    procfMRI=TRUE
-    shift
-  ;;
   -*)
     Error "Unknown option ${1}"
     exit 1
@@ -484,7 +480,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procfMRI $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -493,7 +489,6 @@ Error "A processing flag is missing:
                     -proc_dwi
                     -proc_asl
                     -proc_func
-                    -proc_rsfmri
                     -SC
                     -MPC
                     -GD
@@ -922,7 +917,7 @@ fi
 # # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
-if [ "$procfMRI" = "TRUE" ]; then
+if [ "$procFunc" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
     # mica.q - Resting state fMRI processing
