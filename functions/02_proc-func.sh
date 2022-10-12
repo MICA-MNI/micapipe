@@ -883,7 +883,7 @@ cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean${gs
 if [[ ! -f "$cleanTS" ]] ; then
     Info "Running func post processing"
     labelDirectory="${dir_subjsurf}/label/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$GSRtag" ${func_lab}
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$GSRtag" "$func_lab"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
