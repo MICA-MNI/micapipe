@@ -120,7 +120,6 @@ else
   outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
 fi
 
-
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
