@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE October 2021 (Version v.0.2.0 'Roadrunner')\n"
+  echo -e "\nMICAPIPE October 2021 (Version v.0.1.5 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -216,7 +216,7 @@ do
     shift;shift;
     ;;
   -proc_rsfmri)
-    procfMRI=TRUE
+    procFunc=TRUE
     echo "-proc_rsfmri is deprecated, for future version it will be replaced with -proc_func"
     shift
   ;;
@@ -240,7 +240,7 @@ do
     shift;shift
   ;;
   -proc_func)
-    procfMRI=TRUE
+    procFunc=TRUE
     shift
   ;;
   -func_pe)
@@ -430,7 +430,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procfMRI $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procFunc $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -843,7 +843,7 @@ fi
 # # #        Functions MRI
 # -----------------------------------------------------------------------------------------------#
 #  Resting state
-if [ "$ALL" = "TRUE" ] || [ "$procfMRI" = "TRUE" ]; then
+if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR}"
     # mica.q - Resting state fMRI processing
