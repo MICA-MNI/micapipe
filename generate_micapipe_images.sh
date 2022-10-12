@@ -9,8 +9,8 @@ generate() {
     --pkg-manager=apt \
     --install "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
     --dcm2niix version=v1.0.20190902 method=source\
-    --fsl version=6.0.0 \
-    --run-bash 'bash /opt/fsl-6.0.0/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.0' \
+    --fsl version=6.0.3 \
+    --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
     --freesurfer version=6.0.0 \
     --matlabmcr version=2017b\
     --afni version=latest\
@@ -39,16 +39,17 @@ generate() {
            apt update; \
            apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
            rm -rf /var/lib/apt/lists/*;" \
-    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
+    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
     --copy . /opt/micapipe \
-    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/" \
+    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/" \
     --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects" \
     --workdir='/home/mica' \
     --env MICAPIPE='/opt/micapipe'\
+    --env PROC='container' \
     --add-to-entrypoint "source /opt/freesurfer-6.0.0/SetUpFreeSurfer.sh" \
     --add-to-entrypoint "export FIXPATH=/opt/fix && export PATH="${FIXPATH}:${PATH}"" \
-    --entrypoint "/neurodocker/startup.sh /opt/micapipe/mica-pipe" 
+    --entrypoint "/neurodocker/startup.sh /opt/micapipe/mica-pipe"
   }
 
 
