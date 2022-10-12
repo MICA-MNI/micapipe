@@ -48,7 +48,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
 
-# Freesurfer Directory
+# Surface Directory
 set_surface_directory "${recon}"
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
