@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v1.0.0 'Northern flicker'"
+export Version="v0.2.0 'Northern flicker'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -103,7 +103,7 @@ export idBIDS="${subject}${ses}"
 }
 
 set_surface_directory() {
-  export dir_surf=${out/\/micapipe_v1.0.0/}/${1}    # surf
+  export dir_surf=${out/\/micapipe_v0.2.0/}/${1}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
   export T1freesurfr=${dir_subjsurf}/mri/T1.mgz
   # Native midsurface in gifti format
@@ -360,6 +360,15 @@ function micapipe_json() {
       }
     ]
   }" > "${out}/pipeline-description.json"
+}
+
+function micapipe_check_json_status() {
+  local mod_json="${1}"
+  local mod_func="${2}"
+  if [ -f "${mod_json}" ] && [ $(grep "Status" "${mod_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
+  Warning "Subject ${idBIDS} has been processed with -${mod_func}
+                  If you want to re-run this step again, first erase all the outputs with:
+                  micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit; fi
 }
 
 function tck_json() {
@@ -893,7 +902,7 @@ function missing_arg() {
 
 function inputs_realpath() {
   # Get the real path of the Inputs
-  out=$(realpath $out)/micapipe_v1.0.0
+  out=$(realpath $out)/micapipe_v0.2.0
   BIDS=$(realpath $BIDS)
   id=${id/sub-/}
   here=$(pwd)
