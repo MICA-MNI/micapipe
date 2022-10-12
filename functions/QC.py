@@ -120,7 +120,7 @@ tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
 
-derivatives = out.split('/micapipe_v1.0.0')[0]
+derivatives = out.split('/micapipe_v0.2.0')[0]
 
 
 # Dataset name
