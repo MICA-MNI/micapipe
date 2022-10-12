@@ -50,7 +50,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v1.0.0
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -92,8 +92,8 @@ Note "Perform GSR      :" "$performGSR"
 Note "Tag GSR files    :" "$GSRtag"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
-Note "fmri acq         :" "$fmri_acq"
 Note "regAffine        :" "${regAffine}"
+Note "Drop TR          :" "${dropTR}"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -245,6 +245,7 @@ elif [[ $performGSR == 1 ]]; then
 else
     Info "Global, white matter and CSF signal regression will not be performed (default)"
 fi
+# Global signal regression with different name
 if [[ $GSRtag == TRUE ]]; then
   Info "Clean output series will have the tag 'desc-gsr'"
   gsr="_gsr"
@@ -263,13 +264,6 @@ if [[ -z "$readoutTime" ]]; then Warning "readoutTime is missing in $mainScanJso
 if [[ -z "$RepetitionTime" ]]; then Error "RepetitionTime is missing in $mainScanJson $RepetitionTime"; exit; fi
 
 #------------------------------------------------------------------------------#
-Title "functional MRI processing\n\t\tmicapipe $Version, $PROC "
-micapipe_software
-bids_print.variables-func
-Note "Saving temporal dir:" "$nocleanup"
-Note "ANTs will use      :" "${threads} threads"
-Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
-
 # If mainScan is an array with more than one file we'll assume it's multiecho
 if [ ${#mainScan[@]} -eq 1 ]; then
   acq="se"
@@ -279,10 +273,21 @@ fi
 
 # func directories
 fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
-tagMRI="${fmri_tag/desc-/}"
+export tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
-Info "Outputs will be stored in:"
-Note "fMRI path:" "${proc_func}"
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-proc_func-${fmri_tag}.json"
+micapipe_check_json_status "${module_json}" "proc_func"
+
+#------------------------------------------------------------------------------#
+Title "functional MRI processing\n\t\tmicapipe $Version, $PROC "
+micapipe_software
+bids_print.variables-func
+Note "Saving temporal dir:" "$nocleanup"
+Note "ANTs will use      :" "${threads} threads"
+Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
+Note "proc_fun outputs:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
 
 #	Timer
@@ -565,11 +570,11 @@ if [[ "$Nreg" -lt 3 ]]; then
 
     # Affine from func to t1-nativepro
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
-    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_fmri.nii.gz" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_fmri.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
     Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
@@ -598,12 +603,11 @@ fi
 #------------------------------------------------------------------------------#
 # run ICA-FIX IF melodic ran succesfully
 fix_output="${func_ICA}/filtered_func_data_clean.nii.gz"
-fmri_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
-fmri_processed_in_T1nativepro="${func_volum}/${idBIDS}_space-nativepro_2mm_desc-${acq}_clean.nii.gz"
+func_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
 
 # Run if fmri_clean does not exist
 if [[ "$noFIX" -eq 0 ]]; then
-    if [[ ! -f "${fmri_processed}" ]] ; then
+    if [[ ! -f "${func_processed}" ]] ; then
           if  [[ -f "${melodic_IC}" ]] && [[ -f $(which fix) ]]; then
               if [[ ! -f "${fix_output}" ]] ; then
                     Info "Getting ICA-FIX requirements"
@@ -642,20 +646,20 @@ if [[ "$noFIX" -eq 0 ]]; then
 
                     # Replace file if melodic ran correctly - Change single-echo files for clean ones
                     if [[ -f "$fix_output" ]]; then
-                        yes | Do_cmd 3dresample -orient LPI -prefix "$fmri_processed" -inset "$fix_output"
+                        yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
                         export statusFIX="YES"
                     else
                         Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-                    cp -rf "$fix_output" "$fmri_processed"; export statusFIX="YES"
+                    cp -rf "$fix_output" "$func_processed"; export statusFIX="YES"
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
-              Do_cmd cp -rf "$fmri_HP" "$fmri_processed"
+              Do_cmd cp -rf "$fmri_HP" "$func_processed"
               export statusFIX="NO"
           fi
     else
@@ -665,14 +669,15 @@ if [[ "$noFIX" -eq 0 ]]; then
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Clean fMRI image has been processed (no FIX)."
-    cp -rf "${fmri_HP}" "$fmri_processed"
+    cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
     json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
 fi
 
 #------------------------------------------------------------------------------#
-# Apply transformation of the timeseries to T1nativepro downsample to 2mm
-# Do_cmd antsApplyTransforms -d 3 -e 3 -i "$fmri_processed" -r "$t1bold" "${transform}" -o "$fmri_processed_in_T1nativepro" -v -u int
+# Save transformation of the timeseries from T1nativepro_2mm to func space
+# func_processed_in_T1nativepro="${func_volum}/${idBIDS}_space-nativepro_2mm_desc-${acq}_clean.nii.gz"
+# Do_cmd antsApplyTransforms -d 3 -e 3 -i "$func_processed" -r "$t1bold" "${transform}" -o "$func_processed_in_T1nativepro" -v -u int
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
@@ -686,13 +691,13 @@ if [[ ! -f "${global_signal}" ]] ; then
         if [[ ! -f "${tissue_series}" ]] ; then
             Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" "${transformsInv}" -o "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -v -u int
             Do_cmd fslmaths "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -thr 0.9 "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz"
-            Do_cmd fslmeants -i "$fmri_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -w
+            Do_cmd fslmeants -i "$func_processed" -o "$tissue_series" -m "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -w
         else
              Info "Subject ${idBIDS} has $tissue time-series"
         fi
     done
     # Global signal from brain mask
-    Do_cmd fslmeants -i "$fmri_processed" -o "$global_signal" -m "${fmri_mask}" -w
+    Do_cmd fslmeants -i "$func_processed" -o "$global_signal" -m "${fmri_mask}" -w
     if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has Global time-series"; ((Nsteps++))
@@ -701,7 +706,7 @@ fi
 # Motion confound
 spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFRMS.1D"
 if [[ ! -f "$spikeRegressors" ]] ; then
-    Do_cmd fsl_motion_outliers -i "$fmri_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFRMS.1D" --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFRMS.1D" --refmse --nomoco
     if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++))
@@ -734,7 +739,7 @@ for hemisphere in lh rh; do
 
           # Map processed timeseries to surface
           Do_cmd mri_vol2surf \
-              --mov "$fmri_processed "\
+              --mov "$func_processed "\
               --reg "$fmri2fs_dat" \
               --projfrac-avg 0.2 0.8 0.1 \
               --trgsubject "$BIDSanat" \
@@ -844,7 +849,7 @@ if [[ ! -f "$timese_subcortex" ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i "$fmri_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
+      Do_cmd mri_segstats --i "$func_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
       if [[ -f "$timese_subcortex" ]] ; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has func subcortical time-series"; ((Nsteps++))
@@ -861,7 +866,7 @@ if [[ ! -f "$timese_cerebellum" ]] ; then
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
-      Do_cmd mri_segstats --i "$fmri_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
+      Do_cmd mri_segstats --i "$func_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
       3dROIstats -mask "$func_cerebellum" -nzsum "$func_cerebellum" > "$stats_cerebellum"
       if [[ -f "$timese_cerebellum" ]] ; then ((Nsteps++)); fi
 else
@@ -869,12 +874,8 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# QC: func processing Input files <<<<<<<<<<<<<<< might remove this later
-if [[ ${fmri_acq} == "FALSE" ]]; then
-    QC_proc-func "micapipe_QC_proc-func.txt";
-else
-    QC_proc-func "micapipe_QC_proc-func_${tagMRI}.txt";
-fi
+# QC: func processing Input files
+QC_proc-func "micapipe_QC_proc-func_${tagMRI}.txt"
 
 #------------------------------------------------------------------------------#
 # run post-func
@@ -902,11 +903,6 @@ Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_func_*.txt)"
-if [[ ${fmri_acq} == "FALSE" ]]; then
-    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func" "${out}/micapipe_processed_sub.csv"
-    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
-else
-    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
-    micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
-fi
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 cleanup "$tmp" "$nocleanup" "$here"
