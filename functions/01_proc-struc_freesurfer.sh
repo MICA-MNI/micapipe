@@ -37,7 +37,7 @@ export OMP_NUM_THREADS=$threads
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v1.0.0
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -59,11 +59,8 @@ Nimgs="${#bids_T1ws[*]}"  # total number of T1w
 if [ "$Nimgs" -lt 1 ]; then Error "Subject $id doesn't have T1 on: \n\t\t\t${subject_bids}/anat"; exit; fi
 
 # End if module has been processed
-module_json="${dir_QC}/${idBIDS}_module-proc_freesurfer.json"
-if [ -f "${module_json}" ] && [ $(grep "Status" "${module_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
-Warning "Subject ${idBIDS} has been processed with -proc_freesurfer
-                If you want to re-run this step again, first erase all the outputs with:
-                micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_freesurfer"; exit; fi
+module_json="${dir_QC}/${idBIDS}_module-proc_surf.json"
+micapipe_check_json_status "${module_json}" "proc_surf"
 
 # If UNi is selected and multiple t1Str (3) are included the script will assing possitional values:
 # 1:UNI, 2:INV1, 3:INV2

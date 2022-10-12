@@ -30,7 +30,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v1.0.0
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -73,10 +73,7 @@ if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_
 if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
-if [ -f "${module_json}" ] && [ $(grep "Status" "${module_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
-Warning "Subject ${idBIDS} has been processed with -post_structural
-                If you want to re-run this step again, first erase all the outputs with:
-                micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -post_structural"; exit; fi
+micapipe_check_json_status "${module_json}" "post_structural"
 
 #------------------------------------------------------------------------------#
 Title "POST-structural processing\n\t\tmicapipe $Version, $PROC "
