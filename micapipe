@@ -173,7 +173,7 @@ echo -e "
     > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
 
 
-McGill University, MNI, MICA-lab, May-September 2020
+McGill University, MNI, MICA-lab, October 2020
 https://github.com/MICA-MNI/micapipe
 http://mica-mni.github.io/
 "
