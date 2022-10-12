@@ -26,7 +26,8 @@ tmpDir=$7
 input_im=$8
 input_dat=$9
 mpc_reg=${10}
-PROC=${11}
+mpc_str=${11}
+PROC=${12}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -109,20 +110,30 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR="$dir_surf"
 
+# Variables naming for multiple acquisitions
+if [[ "${mpc_str}" == DEFAULT ]]; then
+  mpc_str="micro"
+  mpc_p="DEFAULT"
+  outDir="${subject_dir}/anat/surf/micro_profiles"
+else
+  mpc_p="acq-${mpc_str}"
+  outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
+fi
+
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
-origImage=${bids_T1ws[0]}
+T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
 if [[ ${input_dat} == "DEFAULT" ]]; then
-    fs_transform="${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat"
-    if [[ ! -f "${dir_warp}/${idBIDS}_from-micro_to-fsnative_bbr.dat" ]]; then
-        Info "Running microstructural -> freesurfer registration for Subject ${id}"
+    fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
+    if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then
+        Info "Running microstructural -> freesurfer registration for Subject ${id}" #            --int "$T1_fsnative" \
         Do_cmd bbregister --s "$idBIDS" \
             --mov "$regImage" \
-            --int "$origImage" \
+            --init-rr \
             --reg "$fs_transform" \
-            --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
-            --init-header --t1
-        if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" ]]; then ((Nsteps++)); fi
+            --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" \
+            --t1
+        if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" ]]; then ((Nsteps++)); fi
     else
         Info "Subject ${id} already has a microstructural -> freesurfer transformation"; ((Nsteps++))
     fi
@@ -134,7 +145,6 @@ fi
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
 num_surfs=14
-outDir="${subject_dir}/anat/surfaces/micro_profiles"
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
 json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC.json"
 
@@ -228,7 +238,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_space-fsnative_atlas-${parc}_desc-intensity_profiles.txt"
     if [[ ! -f "$MPC_int" ]]; then
         Info "Running MPC on $parc"
-        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_freesurfer"
+        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_freesurfer" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); fi
 done
@@ -246,6 +256,11 @@ Title "Post-MPC processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") mi
 \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/MPC_*.txt)"
-grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, MPC, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+if [[ ${mpc_p} == DEFAULT ]]; then
+    micapipe_procStatus "${id}" "${SES/ses-/}" "MPC" "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "MPC" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+else
+    micapipe_procStatus "${id}" "${SES/ses-/}" "MPC_${mpc_p}" "${out}/micapipe_processed_sub.csv"
+    micapipe_procStatus "${id}" "${SES/ses-/}" "MPC_${mpc_p}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+fi
 cleanup "$tmp" "$nocleanup" "$here"
