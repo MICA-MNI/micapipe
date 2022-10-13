@@ -887,6 +887,6 @@ Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
 \tCheck logs      : $(ls "${dir_logs}"/proc_func_*.txt)"
-grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, proc_func, ${status}, $(printf "%02d" "$Nsteps")/21, $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
-cleanup "$tmp" "$nocleanup" "$here"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+cleanup "$tmp" "$nocleanup" "$here"$here"
