@@ -273,7 +273,7 @@ fi
 
 # func directories
 fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
-export tagMRI="${fmri_tag/desc-/}"
+tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
 
 # End if module has been processed
@@ -285,8 +285,7 @@ Title "functional MRI processing\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 bids_print.variables-func
 Note "Saving temporal dir:" "$nocleanup"
-Note "ANTs will use      :" "${threads} threads"
-Note "wb_command will use:" "${OMP_NUM_THREADS} threads"
+Note "Parallel processing      :" "${threads} threads"
 Note "proc_fun outputs:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
 
@@ -477,7 +476,7 @@ if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then
     Do_cmd fslmaths "$func_nii" -Tmean "$fmri_mean"
 
     # Creates a mask from the motion corrected time series
-    Do_cmd bet "$fmri_mean" "${fmri_brain}" -m -n
+    Do_cmd bet "$fmri_mean" "$fmri_brain" -m -n
 
     # masked mean func time series
     Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$fmri_brain"
@@ -589,7 +588,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Register func to Freesurfer space with Freesurfer
+# Register func to Surface space with Freesurfer
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
