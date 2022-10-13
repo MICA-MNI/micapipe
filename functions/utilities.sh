@@ -259,6 +259,30 @@ micapipe_software() {
   Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
   Note "            " "$(which R)"
 }
+
+function micapipe_procStatus() {
+  id=$1
+  session=$2
+  mod=$3
+  outfile=$4
+  grep -v "${id}, ${session}, ${mod}" "${outfile}" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${outfile}"
+  echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
+}
+
+function micapipe_completition_status() {
+    # Processing time
+    lopuu=$(date +%s)
+    eri=$(echo "$lopuu - $aloita" | bc)
+    eri=$(echo print "$eri"/60 | perl)
+
+    # Print logs
+    if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+    Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+    \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
+    \tStatus          : ${status}
+    \tCheck logs      : $(ls "$dir_logs"/${1}_*.txt)"
+}
+
 micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
