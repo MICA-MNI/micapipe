@@ -295,7 +295,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR="$dir_surf"
 
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
-func_surf="${proc_func}/surf"      # surfaceOutputDirectory
+func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
 func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
