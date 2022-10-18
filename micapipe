@@ -849,9 +849,8 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-# # #        Functions MRI
+# # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
-#  Resting state
 if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR}"
@@ -874,6 +873,12 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
     else
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+    # tag the log file with the specific acquisition
+    if [ -f ${log_file_str}.txt ]; then
+        tagMRI=$(grep tagMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
+        mv -v ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt
+        if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${tagMRI}.e; fi
     fi
 fi
 
