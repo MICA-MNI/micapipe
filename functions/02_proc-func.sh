@@ -277,7 +277,7 @@ Title "functional MRI processing\n\t\tmicapipe $Version, $PROC "
 micapipe_software
 bids_print.variables-func
 Note "Saving temporal dir:" "$nocleanup"
-Note "Parallel processing      :" "${threads} threads"
+Note "Parallel processing:" "${threads} threads"
 Note "proc_fun outputs:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
 

@@ -152,36 +152,38 @@ file.exist(){
 
 bids_print.variables-post() {
   # This functions prints BIDS variables names and files if found
-  Info "Structural processing output variables:"
-  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
-  Note "T1 fast_all     =" "$(find "$T1fast_seg" 2>/dev/null)"
-  Note "T1 resolution   =" "$res"
+  Info "Structural processing output variables"
+  Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          :" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "T1 fast_all     :" "$(find "$T1fast_seg" 2>/dev/null)"
+  Note "T1 resolution   :" "$res"
 }
 
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for DWI processing:"
-  Note "proc_dwi dir    =" "$proc_dwi"
-  Note "bids_dwis       =" "N-${#bids_dwis[@]}, $bids_dwis"
-  Note "dwi_reverse     =" "N-${#dwi_reverse[@]}, $dwi_reverse"
+  Info "Variables for DWI processing"
+  Note "proc_dwi dir    :" "$proc_dwi"
+  Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
+  Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
 
-  Note "T1 nativepro    =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 5tt          =" "$(find "$T15ttgen" 2>/dev/null)"
-  Note "MNI152_mask     =" "$MNI152_mask"
+  Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt          :" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "MNI152_mask     :" "$MNI152_mask"
 }
 
 bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for rs-fMRI processing:"
-  Note "T1 nativepro       =" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 freesurfer      =" "$(find "$T1freesurfr" 2>/dev/null)"
-  file.exist "Main func        =" $mainScan
-  file.exist "Main func json   =" $mainScanJson
-  file.exist "Main phase scan    =" $mainPhaseScan
-  file.exist "Main reverse phase =" $reversePhaseScan
-  Note "TOPUP config file  =" $(find "$topupConfigFile" 2>/dev/null)
-  Note "ICA-FIX training   =" $(find "$icafixTraining" 2>/dev/null)
+  Info "Variables for functional processing"
+  Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
+  for i in "${!mainScan[@]}"; do
+  file.exist "mainScan${i/0/}         :" ${mainScan[i]}
+  file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
+  done
+  file.exist "Main phase scan    :" $mainPhaseScan
+  file.exist "Main reverse phase :" $reversePhaseScan
+  Note "TOPUP config file  :" $(find "$topupConfigFile" 2>/dev/null)
+  Note "ICA-FIX training   :" $(find "$icafixTraining" 2>/dev/null)
 }
 
 bids_variables_unset() {

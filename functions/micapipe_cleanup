@@ -230,7 +230,7 @@ fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_func
 if [ "$procFunc" = "TRUE" ]; then
-    if [ -z ${acqStr} ]; then Warning "proc_func requires an acquisition string, select one from:"; ls ${proc_func}; exit; fi
+    if [ -z ${acqStr} ]; then Warning "proc_func requires an acquisition string (-acqStr), select one from:"; ls ${proc_func}; exit; fi
     Warning "Erasing proc_func output files and logs: ${acqStr}"
     acqStr=${acqStr/desc-/}
     Do_cmd rm -rf "${proc_func}"/desc-${acqStr} \
