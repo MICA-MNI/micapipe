@@ -29,6 +29,7 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : DELETES Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
+\t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES resting state MRI processing (DEPRECATED)
 \t\033[38;5;197m-proc_func\033[0m        : DELETES Funtional MRI processing
 \t  \033[38;5;120m-acqStr\033[0m         : -proc_fun requires the acquisition string to erase its outputs
 \t\t\t     e.g -acqStr desc-se_task-rest_acq-AP_bold
@@ -94,6 +95,10 @@ do
     procFunc=TRUE
     shift
   ;;
+  -proc_rfmri)
+    procrsMRI=TRUE
+    shift
+  ;;
   -post_structural)
     postVOL=TRUE
     shift
@@ -119,8 +124,7 @@ do
     shift
   ;;
   -acqStr)
-    mpc_acq=TRUE
-    mpc_str=$2
+    acqStr=$2
     shift;shift
   ;;
   -mica)
@@ -226,18 +230,34 @@ fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_func
 if [ "$procFunc" = "TRUE" ]; then
-    Warning "Erasing proc_func output files and logs"
-    Do_cmd rm -rf "$proc_func"/* \
-                  "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
-                  "$dir_warp"/*_func_from-se* \
-                  "$dir_warp"/*_from-se*_to-fsnative_bbr* \
-                  "$dir_warp"/*func_space-fsnative* \
-                  "$dir_warp"/*from-nativepro_func* \
+    if [ -z ${acqStr} ]; then Warning "proc_func requires an acquisition string, select one from:"; ls ${proc_func}; exit; fi
+    Warning "Erasing proc_func output files and logs: ${acqStr}"
+    acqStr=${acqStr/desc-/}
+    Do_cmd rm -rf "${proc_func}"/desc-${acqStr} \
+                  "$dir_warp"/*${acqStr}* \
                   "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
-                  "$dir_logs"/proc_func_*
-    grep -v "${id}, ${SES/ses-/}, proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-    grep -v "${id}, ${SES/ses-/}, proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+                  "$dir_logs"/proc_func_*${acqStr}*
+    grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${dir_QC}/${idBIDS}_micapipe_processed.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${dir_QC}/${idBIDS}_micapipe_processed.csv"
 fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_func
+if [ "$procrsMRI" = "TRUE" ]; then
+    Warning "Erasing proc_func output files and logs"
+    Do_cmd rm -rf "${proc_func}"/surfaces \
+                  "${proc_func}"/volumetric \
+                  "$proc_struct"/"$id"*desc-t1wbold.nii.gz \
+                  "$proc_struct"/"$id"*desc-T1wbold.nii.gz \
+                  "$proc_struct"/"$id"*desc-rsfmri_bold.nii.gz \
+                  "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
+                  "$dir_warp"/*rsfmri* \
+                  "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
+                  "$dir_logs"/proc_rsfmri*
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_rsfmri" "${dir_QC}/${idBIDS}_micapipe_processed.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+fi
+
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
@@ -254,7 +274,7 @@ if [ "$postDWI" = "TRUE" ]; then
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
-if [ "$postMPC" = "TRUE" ]; then
+if [ "${postMPC}" = "TRUE" ]; then
     Warning "Erasing post_mpc output files and logs"
     Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
                   "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
