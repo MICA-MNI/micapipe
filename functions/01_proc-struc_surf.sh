@@ -133,6 +133,14 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     else
         Info "Running Freesurfer"
         Do_cmd recon-all -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        # Run recon-all -autorecon1
+        Do_cmd recon-all -autorecon1 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        # Replace brainmask.mgz with mask
+
+        # Run recon-all -autorecon2
+        Do_cmd recon-all -autorecon2 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        # Run recon-all -autorecon3
+        Do_cmd recon-all -autorecon3 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
     fi
 
     # Copy the freesurfer log to our MICA-log Directory
