@@ -96,7 +96,6 @@ bids_print.variables-post
 Note "Saving temporal dir:" "$nocleanup"
 Note "Temporal dir:" "${tmp}"
 Note "Parallel processing:" "$threads threads"
-Note "acqMRI:" "${mpc_str}"
 
 #	Timer
 aloita=$(date +%s)
@@ -121,6 +120,7 @@ else
   mpc_p="acq-${mpc_str}"
 fi
 outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
+Note "acqMRI:" "${mpc_str}"
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
