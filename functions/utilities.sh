@@ -180,7 +180,7 @@ bids_print.variables-post() {
 
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for DWI processing"
+  Info "Variables for DWI processing"
   Note "proc_dwi dir    :" "$proc_dwi"
   Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
   Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
@@ -192,7 +192,7 @@ bids_print.variables-dwi() {
 
 bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for rs-fMRI processing"
+  Info "Variables for functional processing"
   Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
@@ -703,15 +703,15 @@ function json_mpc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "${1}" -transform))
   Info "Creating MPC json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Class\": \"Microstructural profile covariance\",
-    \"acquisition\": \"${mpc_acq}\",
+    \"acquisition\": \"${mpc_str}\",
     \"input\": \"${1}\",
-    \"freesurferTransformation\": \"${2}\",
+    \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
