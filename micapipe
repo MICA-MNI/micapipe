@@ -975,26 +975,6 @@ if [ "$qcsubj" = "TRUE" ]; then
 fi
 
 # -----------------------------------------------------------------------------------------------#
-#                   MICA - qsub test
-# -----------------------------------------------------------------------------------------------#
-if [[ $qtest = "TRUE" ]]; then
-    log_file_str=${out}/${id}_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/micapipe_qsub-test $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing}"
-    if [[ $micaq == "TRUE" ]]; then
-        export PROC="qsub-MICA"
-        Info "MICA qsub test: $PROC"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
-    elif [[ $qall == "TRUE" ]]; then
-        export PROC="qsub-all.q"
-        Info "MICA qsub test: $PROC"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
-    else
-        Info "LOCAL setup test"
-        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}_${PROC}.txt
-    fi
-fi
-
-# -----------------------------------------------------------------------------------------------#
 #			 Total Running Time
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
