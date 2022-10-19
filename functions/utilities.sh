@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.1.5 'Roadrunner'"
+export Version="v0.1.3 'Roadrunner'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
