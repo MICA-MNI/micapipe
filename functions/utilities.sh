@@ -555,7 +555,7 @@ function json_mpc() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Class\": \"Microstructural profile covariance\",
-    \"acquisition\": \"${mpc_acq}\",
+    \"acquisition\": \"${mpc_str}\",
     \"input\": \"${1}\",
     \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
