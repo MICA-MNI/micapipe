@@ -275,13 +275,26 @@ fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
 if [ "${postMPC}" = "TRUE" ]; then
-    Warning "Erasing post_mpc output files and logs"
-    Do_cmd rm -rf "${subject_dir}/anat/surfaces/micro_profiles/" \
-                  "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
-                  "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
-                  "$dir_logs"/MPC_* \
-                  "${dir_QC_png}"/*desc-qc_MPC*
-    grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    if [ -z ${acqStr} ]; then
+        Warning "Erasing post_mpc output files and logs"
+        Do_cmd rm -rf "${subject_dir}/anat/surf/micro_profiles/"*MPC* \
+                      "${subject_dir}/anat/surf/micro_profiles/"*intensity_profiles* \
+                      "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
+                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
+                      "$dir_logs"/MPC_* \
+                      "${dir_QC_png}"/*_MPC*
+        grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+        dir_mpc="${subject_dir}/anat/surf/micro_profiles/acq-${acqStr}"
+        if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/anat/surf/micro_profiles/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+        Warning "Erasing MPC output files and logs: ${acqStr}"
+        acqStr=${acqStr/acq-/}
+        Do_cmd rm -rf "${dir_mpc}" \
+                      "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
+                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
+                      "$dir_logs"/MPC_*"${acqStr}"*
+        grep -v "${id}, ${SES/ses-/}, MPC_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    fi
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
