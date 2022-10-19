@@ -549,7 +549,7 @@ function json_mpc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "${1}" -transform))
   Info "Creating MPC json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -557,7 +557,7 @@ function json_mpc() {
     \"Class\": \"Microstructural profile covariance\",
     \"acquisition\": \"${mpc_acq}\",
     \"input\": \"${1}\",
-    \"freesurferTransformation\": \"${2}\",
+    \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
