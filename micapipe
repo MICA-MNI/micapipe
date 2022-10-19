@@ -146,6 +146,7 @@ echo -e "
 \t\033[38;5;197m-v|-version\033[0m 	  : Print software version
 \t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
+\t\033[38;5;197m-cleanup\033[0m 	        : WARNING this option will erase the module(s) selected
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
 \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
@@ -433,6 +434,10 @@ do
     nocleanup=TRUE
     shift
   ;;
+  -cleanup)
+    cleanup=TRUE
+    shift
+  ;;
   -threads)
     threads=$2
     shift;shift
@@ -471,7 +476,7 @@ if [ "$QCgroup" = "TRUE" ]; then
                    -out  : $out"
             exit 1;
     else
-            out=$(realpath $out)/micapipe
+            out=$(realpath $out)/micapipe_v0.2.0
             micapipe_group_QC
             exit 0
     fi
@@ -480,7 +485,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -493,8 +498,13 @@ Error "A processing flag is missing:
                     -MPC
                     -GD
                     -Morphology
-                    -QC_subj"
+                    -QC_subj
+                    -cleanup"
 exit 1; fi
+
+# -----------------------------------------------------------------------------------------------#
+# Call micapipe_cleanup within micapipe
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup $@; exit; fi
 
 # Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
@@ -852,6 +862,14 @@ if [ "$postMPC" = "TRUE" ]; then
         # LOCAL - POST-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
     fi
+    # tag the log file with the specific acquisition
+    if [ -f ${log_file_str}.txt ]; then
+        acqMRI=$(grep acqMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
+        if [[ ${acqMRI} != "DEFAULT" ]]; then
+          mv -v ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt
+          if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${acqMRI}.e; fi
+        fi
+    fi
 fi
 
 # -----------------------------------------------------------------------------------------------#
@@ -916,7 +934,6 @@ fi
 # -----------------------------------------------------------------------------------------------#
 # # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
-#  Resting state
 if [ "$procFunc" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
@@ -939,6 +956,12 @@ if [ "$procFunc" = "TRUE" ]; then
     else
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+    # tag the log file with the specific acquisition
+    if [ -f ${log_file_str}.txt ]; then
+        tagMRI=$(grep tagMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
+        mv -v ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt
+        if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${tagMRI}.e; fi
     fi
 fi
 
