@@ -8,7 +8,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
 [![GitHub stars](https://img.shields.io/github/stars/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
-[![version](https://img.shields.io/badge/version-v0.1.2.RC-blue)](https://github.com/MICA-MNI/micapipe)
+[![version](https://img.shields.io/badge/version-v0.1.3-blue)](https://github.com/MICA-MNI/micapipe)
 [![Docker Pulls](https://img.shields.io/docker/pulls/micalab/micapipe)](https://hub.docker.com/r/micalab/micapipe)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version)
 
@@ -41,7 +41,7 @@ You can find the latest version of the container in [Docker](https://hub.docker.
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
 | Freesurfer | 6.0.0         | https://surfer.nmr.mgh.harvard.edu/ |
-| FSl        | 6.0           | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
+| FSl        | 6.0.3           | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
 | AFNI       | 20.3.03       | https://afni.nimh.nih.gov/download |
 | MRtrix3    | 3.0.1         | https://www.mrtrix.org |
 | ANTs       | 2.3.4         | https://github.com/ANTsX/ANTs |
