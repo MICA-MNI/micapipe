@@ -795,6 +795,14 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         # LOCAL - POST-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
     fi
+    # tag the log file with the specific acquisition
+    if [ -f ${log_file_str}.txt ]; then
+        acqMRI=$(grep acqMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
+        if [[ ${acqMRI} != "DEFAULT" ]]; then
+          mv -v ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt
+          if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${acqMRI}.e; fi
+        fi
+    fi
 fi
 
 # -----------------------------------------------------------------------------------------------#

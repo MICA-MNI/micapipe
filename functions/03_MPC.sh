@@ -93,8 +93,10 @@ if [ -z "${regImage}" ] || [ ! -f "${regImage}" ]; then Error "Image for MPC reg
 Title "Microstructural profiles and covariance\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-post
-Info "Saving temporal dir: $nocleanup"
-Info "wb_command will use $OMP_NUM_THREADS threads"
+Note "Saving temporal dir:" "$nocleanup"
+Note "Temporal dir:" "${tmp}"
+Note "Parallel processing:" "$threads threads"
+Note "acqMRI:" "${mpc_str}"
 
 #	Timer
 aloita=$(date +%s)
@@ -119,7 +121,6 @@ else
   mpc_p="acq-${mpc_str}"
   outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
 fi
-
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
