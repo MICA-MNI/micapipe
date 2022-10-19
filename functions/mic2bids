@@ -140,37 +140,37 @@ here=$(pwd)
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
 orig=("*mprage-0.8iso*" "*_INV1" "*_INV2" "*_T1_Images" "*UNI_Images" "*FLAIR*"\
     "*rsfmri-3mm-bold_AP" "*rsfmri-3mm_se_AP*" "*rsfmri-3mm_se_PA*"\
-    "*encoding*" '*retrieval*' "*patternsep-phase1*" "*patternsep-phase2*" "*semantic*" "*spatial*")
+    "*encoding*" '*retrieval*' "*patternsep-phase1*" "*patternsep-phase2*" "*semantic*" "*spatial*"\
+    "*ASL-pcasl-low" "*ASL-pcasl-low_M0")
 origDWI=("*dwi_b700_40" "*dwi_b300_10" "*dwi_b0_5PA" "*_dwi_b2000*")
 
 # New BIDS-naming, follow the BIDS specification:
 # https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html
 bids=(T1w acq-inv1_T1map acq-inv2_T1map acq-mp2rage_T1map acq-uni_T1map FLAIR \
     task-rest_acq-AP_bold task-rest_acq-APse_bold task-rest_acq-PAse_bold \
-    task-encoding_acq-AP_bold task-retrieval_acq-AP_bold task-MST1_acq-AP_bold task-MST2_acq-AP_bold task-semantic_acq-AP_bold task-spatial_acq-AP_bold)
+    task-encoding_acq-AP_bold task-retrieval_acq-AP_bold task-MST1_acq-AP_bold task-MST2_acq-AP_bold task-semantic_acq-AP_bold task-spatial_acq-AP_bold asl m0scan)
 bidsDWI=(acq-b700-NUM_dir-AP_dwi acq-b300-NUM_dir-AP_dwi dir-PA_dwi acq-b2000-NUM_dir-AP_dwi)
 
 # -----------------------------------------------------------------------------------------------
 # Create BIDS/subj_dir
 BIDS="${BIDS_DIR}/sub-${Subj}/${SES}"
-Do_cmd mkdir -p "$BIDS"/{anat,func,dwi}
+Do_cmd mkdir -p "$BIDS"/{anat,func,dwi,perf}
 if [ ! -d "$BIDS" ]; then Error "Could not create subject BIDS directory, check permissions \n\t     ${BIDS}\t    "; exit 0; fi
 
 # dicomx to Nifti with BIDS Naming
 Do_cmd cd $SUBJ_DIR
 # Warning lenght
-n=$((${#orig[@]} - 1))
-for ((k=0; k<=n; k++)); do
-  N=$(ls -d ${orig[k]} | wc -l)
+for k in ${!orig[@]}; do # iterate over acquisition names by index=k
+  N=$(ls -d ${orig[k]} 2>/dev/null | wc -l)
   # ONLY for MICA dicoms_sorted NAMES
-  if [[ "$mica" == TRUE ]]; then N=`ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") | wc -l`; fi
+  if [[ "$mica" == TRUE ]]; then N=`ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") 2>/dev/null | wc -l`; fi
   if [ "$N" -eq 0 ]; then
     Warn "No directories were found with the following name: ${orig[k]}"
   elif [ "$N" -gt 1 ]; then
     Names=($(ls -d ${orig[k]}))
     # ONLY for MICA dicoms_sorted NAMES
-    if [[ "$mica" == TRUE ]]; then Names=($(ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*"))); fi
-    for ((i = 1; i <= N; i++)); do
+    if [[ "$mica" == TRUE ]]; then Names=($(ls -d $(find . -name "${orig[k]}" ! -name "*ORIG*") 2>/dev/null )); fi
+    for ((i = 1; i <= N; i++)); do # iterate through multiple runs of the same acquisition name
        nii=$(echo ${Names[((i-2))]} | awk -F '_' '{print $1 "_" $2}')
        nom="${id}${bids[k]}"
        dcm=$(echo ${nom##*_})
@@ -186,6 +186,8 @@ Do_cmd mv -v "$BIDS"/*mp2rage* "$BIDS"/anat
 Do_cmd mv -v "$BIDS"/*bold* "$BIDS"/func
 Do_cmd mv -v "$BIDS"/*T1* "$BIDS"/anat
 Do_cmd mv -v "$BIDS"/*FLAIR* "$BIDS"/anat
+Do_cmd mv -v "$BIDS"/*asl* "$BIDS"/perf
+Do_cmd mv -v "$BIDS"/*m0scan* "$BIDS"/perf
 
 # BIDS names of DWI including NUM_dwi: Number of Directions
 n=$((${#origDWI[@]} - 1))
