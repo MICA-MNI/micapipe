@@ -7,7 +7,7 @@ dir_functions=$(dirname $(realpath "$0"))
 MICAPIPE=$(dirname $(realpath "$dir_functions"))
 source "${MICAPIPE}/functions/utilities.sh"
 version() {
-  echo -e "\nMICAPIPE October 2021 (${Version})\n"
+  echo -e "\nMICAPIPE (${Version})\n"
 }
 
 help() {
