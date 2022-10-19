@@ -136,7 +136,7 @@ if [[ "$mainScanStr" == DEFAULT ]]; then
     fi
 else
     Info "Using user provided main scan string(s): ${mainScanStr}"
-    IFS=',' read -ra func_main <<< $mainScanStr
+    IFS=',' read -ra func_main <<< "$mainScanStr"
     func_json=(${func_main[*]})
     for i in "${!func_main[@]}"; do
         func_main[i]=$(ls "${subject_bids}/func/${idBIDS}_${func_main[$i]}".nii* 2>/dev/null);
@@ -264,7 +264,7 @@ elif [ ${#mainScan[@]} -gt 1 ]; then
 fi
 
 # func directories
-fmri_tag=$(echo ${mainScan[0]} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
+fmri_tag=$(echo "${mainScan[0]}" | awk -F "${idBIDS}_" '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
 tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
 
@@ -419,28 +419,28 @@ status="INCOMPLETE"
 if [[ ! -f "${func_nii}" ]]; then
     # Reorient and motion correct main(s) fMRI
     for i in "${!mainScan[@]}"; do n=$((i+1))
-      func_reoMC ${mainScan[i]} "mainScan${n/1/}" $n
+      func_reoMC "${mainScan[i]}" "mainScan${n/1/}" $n
     done
     # Reorient and motion correct fMRI rpe and pe
     for i in "${!toProcess[@]}"; do
-      func_reoMC ${toProcess[i]} ${tags[i]} 1
+      func_reoMC "${toProcess[i]}" "${tags[i]}" 1
     done
 
     # Run Tedana
     if [[ ${acq}=="me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
-        Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
-        Note "EchoNumber :" ${EchoNumber[*]}
-        Note "EchoTime   :" ${EchoTime[*]}
+        Note "Files      :" "${mainScanStr[*]}" # this will print the string full path is in mainScan
+        Note "EchoNumber :" "${EchoNumber[*]}"
+        Note "EchoTime   :" "${EchoTime[*]}"
         tedana_dir=${tmp}/tedana
 
-        mkdir -p ${tedana_dir}
-        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${tedana_dir}
+        mkdir -p "${tedana_dir}"
+        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}"
 
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
-        mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
-        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
+        mainScan=$(find "$tmp" -maxdepth 1 -name "*mainScan_mc.nii.gz")
+        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" "$mainScan"
     fi
 
     # FSL MC outliers
@@ -565,7 +565,7 @@ if [[ "$Nreg" -lt 3 ]]; then
         # SyN from T1_nativepro to t1-nativepro
         Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
-    Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+    Do_cmd rm -rf "${dir_warp}"/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri

@@ -144,7 +144,7 @@ bids_print.variables() {
 
 file.exist(){
   if [[ ! -z "${2}" ]] && [[ -f "${2}" ]]; then
-    Note "$1" "$(find $2 2>/dev/null)"
+    Note "$1" $(find "${2}" 2>/dev/null)
   else
     Note "$1" "file not found"
   fi
@@ -177,11 +177,11 @@ bids_print.variables-func() {
   Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
   Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
-  file.exist "mainScan${i/0/}         :" ${mainScan[i]}
-  file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
+  file.exist "mainScan${i/0/}         :" "${mainScan[i]}"
+  file.exist "mainScan${i/0/} json    :" "${mainScanJson[i]}"
   done
-  file.exist "Main phase scan    :" $mainPhaseScan
-  file.exist "Main reverse phase :" $reversePhaseScan
+  file.exist "Main phase scan    :" "$mainPhaseScan"
+  file.exist "Main reverse phase :" "$reversePhaseScan"
   Note "TOPUP config file  :" $(find "$topupConfigFile" 2>/dev/null)
   Note "ICA-FIX training   :" $(find "$icafixTraining" 2>/dev/null)
 }
@@ -282,7 +282,7 @@ function micapipe_completition_status() {
     Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
     \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
     \tStatus          : ${status}
-    \tCheck logs      : $(ls "$dir_logs"/${1}_*.txt)"
+    \tCheck logs      : $(ls "$dir_logs/${1}"_*.txt)"
 }
 
 micapipe_json() {
@@ -749,8 +749,8 @@ function missing_arg() {
 
 function inputs_realpath() {
   # Get the real path of the Inputs
-  out=$(realpath $out)/micapipe
-  BIDS=$(realpath $BIDS)
+  out=$(realpath "$out")/micapipe
+  BIDS=$(realpath "$BIDS")
   id=${id/sub-/}
   here=$(pwd)
 }
