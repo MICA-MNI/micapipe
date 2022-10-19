@@ -402,6 +402,10 @@ do
     nocleanup=TRUE
     shift
   ;;
+  -cleanup)
+    cleanup=TRUE
+    shift
+  ;;
   -threads)
     threads=$2
     shift;shift
@@ -438,7 +442,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($ALL $procVOL $procFS $postVOL $procDWI $procFunc $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $slim)
+runs=($ALL $procVOL $procFS $postVOL $procDWI $procFunc $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -all
@@ -452,8 +456,12 @@ Error "A processing flag is missing:
                     -GD
                     -Morphology
                     -QC_subj
-                    -slim"
-help; exit 1; fi
+                    -cleanup"
+exit 1; fi
+
+# -----------------------------------------------------------------------------------------------#
+# Call micapipe_cleanup within micapipe
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup $@; exit; fi
 
 # Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
