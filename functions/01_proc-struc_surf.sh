@@ -81,9 +81,7 @@ tmp="${tmpDir}/${id}_micapipe_proc-surf_${RANDOM}"
 Do_cmd mkdir -p "${tmp}/nii"
 Note "Saving temporal dir:" "$nocleanup"
 Note "Temporal dir:" "${tmp}"
-
-# GLOBAL variables for this script
-Info "Proc_surf will use $threads threads"
+Note "Parallel processing:" "$threads threads"
 
 #	Timer and steps progress
 aloita=$(date +%s)
