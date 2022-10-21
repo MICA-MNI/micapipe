@@ -535,7 +535,8 @@ function json_func() {
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
         \"dropTR\": \"${dropTR}\",
-        \"procStatus\": \"${status}\",
+        \"noFC\": \"${noFC}\",
+        \"procStatus\": \"${status}\"
       }
     ]
   }" > "$1"
