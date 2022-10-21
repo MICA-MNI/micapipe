@@ -9,4 +9,4 @@ source "${MICAPIPE}/functions/utilities.sh"
 
 Warning "DEPRECATION: mica-pipe is deprecated and will be removed from upcoming versions (use micapipe instead)"
 
-${MICAPIPE}/micapipe $@
+${MICAPIPE}/micapipe "$@"
