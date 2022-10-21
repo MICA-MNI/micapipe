@@ -42,7 +42,8 @@ noFIX=${18}
 sesAnat=${19}
 regAffine=${20}
 dropTR=${21}
-PROC=${22}
+noFC=${22}
+PROC=${23}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -92,6 +93,7 @@ Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
 Note "regAffine        :" "${regAffine}"
 Note "Drop TR          :" "${dropTR}"
+Note "Generate FC      :" "$(if [ ${noFC}=="TRUE" ]; then echo "FALSE"; else echo "TRUE"; fi)"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -350,7 +352,7 @@ function func_MCoutliers() {
   # Calculate motion outliers with FSL
   local outfile=$1
   if [[ ! -f "${outfile}" ]]; then
-      Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
+      Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo_mc.nii.gz" \
                                  -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
                                  -s "${func_volum}/${idBIDS}${func_lab}_metric_FD.1D" --fd
       Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${outfile}"; ((Nsteps++))
@@ -687,10 +689,10 @@ else
     Info "Subject ${id} has Global time-series"; ((Nsteps++))
 fi
 
-# Motion confound
-spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFRMS.1D"
+# Motion confound REFMSE: SQUARE of [--refrms] root-mean square (RMS) intensity difference of volume N to the reference volume
+spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFMSE.1D"
 if [[ ! -f "$spikeRegressors" ]] ; then
-    Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFRMS.1D" --refmse --nomoco
+    Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFMSE.1D" --refmse --nomoco
     if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++))
@@ -864,15 +866,17 @@ QC_proc-func "micapipe_QC_proc-func_${tagMRI}.txt"
 #------------------------------------------------------------------------------#
 # run post-func
 cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean.txt"
-if [[ ! -f "$cleanTS" ]] ; then
+func_fwd="${func_volum}/${idBIDS}${func_lab}_framewiseDisplacement.png"
+func_tSRN="${func_volum}/${idBIDS}${func_lab}_tSNR.txt"
+Nfc=$(ls "$cleanTS" "$func_fwd" "$func_tSRN" 2>/dev/null | wc -l )
+if [[ "$Nfc" -lt 3 ]]; then
     Info "Running func post processing"
     labelDirectory="${dir_freesurfer}/label/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
 fi
-
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
