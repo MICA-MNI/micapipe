@@ -33,7 +33,7 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
-\t\033[38;5;197m-proc_func\033[0m      : Funtional MRI processing and functional connectome generation
+\t\033[38;5;197m-proc_func\033[0m        : Funtional MRI processing and functional connectome generation
 \t\t\t      ( Requires: -proc_structural, -proc_freesurfer and -post_structural )
 \t\033[38;5;197m-SC\033[0m               : Structural connectome generation
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
@@ -100,7 +100,9 @@ echo -e "
 \t\t\t\t         ( default processing is independent )
 \t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t\t         ( default is non linear registration SyN )
-\t\t\033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
+\t\t\033[38;5;120m-dropTR\033[0m              : Specify this option to drop the first five TRs.
+\t\t\t            ( default is FALSE  )
+\t\t\033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
 \t\t\t            ( default is FALSE  )
 
 \t\033[38;5;197m-SC\033[0m
@@ -120,7 +122,8 @@ echo -e "
 \t\t\033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t\t         ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
 
-
+\t\033[38;5;197m-cleanup\033[0m
+\t\t\033[38;5;120m-acqStr\033[0m              : This option is required to erase -MPC and -proc_func outputs
 
 \033[38;5;141mOPTIONS:\033[0m
 \t\033[38;5;197m-h|-help\033[0m          : Print help
@@ -167,6 +170,7 @@ source "${MICAPIPE}/functions/utilities.sh"
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
 # Create VARIABLES
+argCP="$@"
 for arg in "$@"
 do
   case "$arg" in
@@ -285,6 +289,10 @@ do
   ;;
   -dropTR)
     dropTR=TRUE
+    shift
+  ;;
+  -noFC)
+    noFC=TRUE
     shift
   ;;
   -post_structural)
@@ -406,6 +414,10 @@ do
     cleanup=TRUE
     shift
   ;;
+  -acqStr)
+    acqStr=$2
+    shift;shift
+  ;;
   -threads)
     threads=$2
     shift;shift
@@ -461,7 +473,7 @@ exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
 # Call micapipe_cleanup within micapipe
-if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup $@; exit; fi
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup ${argCP/ -cleanup/}; exit; fi
 
 # Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
@@ -479,6 +491,7 @@ if [ -z "$func_pe" ]; then func_pe=DEFAULT; else func_pe=$(realpath $func_pe); f
 if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
+if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
 
 # Optional arguments mpc
 optarg_mpc=($input_im $input_dat)
