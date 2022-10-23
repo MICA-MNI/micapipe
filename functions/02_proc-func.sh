@@ -93,7 +93,7 @@ Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
 Note "regAffine        :" "${regAffine}"
 Note "Drop TR          :" "${dropTR}"
-Note "Generate FC      :" "$(if [ ${noFC}=="TRUE" ]; then echo "FALSE"; else echo "TRUE"; fi)"
+Note "No FC            :" "${noFC}"
 
 #------------------------------------------------------------------------------#
 if [[ "$mainScanStr" == DEFAULT ]]; then
@@ -352,7 +352,7 @@ function func_MCoutliers() {
   # Calculate motion outliers with FSL
   local outfile=$1
   if [[ ! -f "${outfile}" ]]; then
-      Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo_mc.nii.gz" \
+      Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
                                  -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
                                  -s "${func_volum}/${idBIDS}${func_lab}_metric_FD.1D" --fd
       Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${outfile}"; ((Nsteps++))
@@ -429,7 +429,7 @@ if [[ ! -f "${func_nii}" ]]; then
     done
 
     # Run Tedana
-    if [[ ${acq}=="me" ]]; then
+    if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         Note "Files      :" "${mainScanStr[*]}" # this will print the string full path is in mainScan
         Note "EchoNumber :" "${EchoNumber[*]}"
