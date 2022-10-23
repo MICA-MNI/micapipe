@@ -233,7 +233,7 @@ if [ "$procFunc" = "TRUE" ]; then
     if [ -z ${acqStr} ]; then Warning "proc_func requires an acquisition string (-acqStr), select one from:"; ls ${proc_func}; exit; fi
     Warning "Erasing proc_func output files and logs: ${acqStr}"
     acqStr=${acqStr/desc-/}
-    Do_cmd rm -rf "${proc_func}"/desc-${acqStr} \
+    Do_cmd rm -rf "${proc_func}"/desc-*${acqStr} \
                   "$dir_warp"/*${acqStr}* \
                   "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
                   "$dir_logs"/proc_func_*${acqStr}*
