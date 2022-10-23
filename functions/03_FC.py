@@ -163,6 +163,12 @@ x_csf = " ".join(glob.glob(funcDir+'/volumetric/'+'*CSF*'))
 x_wm = " ".join(glob.glob(funcDir+'/volumetric/'+'*WM*'))
 x_gs = " ".join(glob.glob(funcDir+'/volumetric/'+'*global*'))
 
+
+def expand_dim(Data):
+    if Data.ndim == 1:
+        Data = np.expand_dims(Data, axis=1)
+    return Data
+
 # Function that calculates the regressed data
 def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     """ Nuisance signal regression: spikes and (optional) WM/CSF:
@@ -181,50 +187,46 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     ------
     Data_corr : array of data corrected
     """
+    dof = np.loadtxt(x_dof)
+    csf = expand_dim(np.loadtxt(x_csf))
+    wm = expand_dim(np.loadtxt(x_wm))
+    gs = expand_dim(np.loadtxt(x_gs))
     spike = []
+    print('')
     if x_spike:
-        spike = np.loadtxt(x_spike)
-        if spike.ndim == 1:
-            spike = np.expand_dims(spike, axis=1)
-        else:
-            print("spikeRegressors_FD file loaded as 2D: " + Data_name)
-        # regress out spikes from individual timeseries
+        spike = expand_dim(np.loadtxt(x_spike))
         ones = np.ones((spike.shape[0], 1))
         mdl = []
-        if performNSR == 1:
-            print('model = func ~ spike + dof + wm + csf')
-            wm = np.loadtxt(x_wm)
-            csf = np.loadtxt(x_csf)
-            mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), x_dof, axis=1), wm, axis=1), csf, axis=1)
-        elif performGSR == 1:
-            print('model = func ~ spike + dof + wm + csf + gs')
-            wm = np.loadtxt(x_wm)
-            csf = np.loadtxt(x_csf)
-            gs = np.loadtxt(x_gs)
-            mdl = np.append(np.append(np.append(np.append(np.append(ones, spike, axis=1), x_dof, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
+
+        # regress out spikes from individual timeseries
+        if performNSR == "1":
+            print(Data_name + ' model : func ~ spikes + dof + wm + csf')
+            mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1)
+        elif performGSR == "1":
+            print(Data_name + ' model : func ~ spikes + dof + wm + csf + gs')
+            mdl = np.append(np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
         else:
-            print('Default model = func ~ spike + dof')
-            mdl = np.append(np.append(ones, spike, axis=1), x_dof, axis=1)
+            print(Data_name + 'Default model : func ~ spikes + dof')
+            mdl = np.append(np.append(ones, spike, axis=1), dof, axis=1)
         # conte
         slm = LinearRegression().fit(Data, mdl)
         Data_corr = Data-np.dot(mdl, slm.coef_)
         del Data
     else:
-        del spike
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
         ones = np.ones((wm.shape[0], 1))
         print('NO spikeRegressors_FD file, will skip loading: ' + Data_name)
         if performNSR == 1:
-            print('model = func ~ dof + wm + csf')
-            mdl = np.append(np.append(np.append(ones, x_dof, axis=1), wm, axis=1), csf, axis=1)
+            print(Data_name + ', model : func ~ dof + wm + csf')
+            mdl = np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1)
         elif performGSR == 1:
-            print('model = func ~ dof + wm + csf + gs')
+            print(Data_name + ', model : func ~ dof + wm + csf + gs')
             gs = np.loadtxt(x_gs)
-            mdl = np.append(np.append(np.append(np.append(ones, x_dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
+            mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
         else:
-            print('model = func ~ dof')
-            mdl = np.append(ones, x_dof, axis=1)
+            print(Data_name + ', model : func ~ dof')
+            mdl = np.append(ones, dof, axis=1)
         slm = LinearRegression().fit(Data, mdl)
         Data_corr = Data-np.dot(mdl, slm.coef_)
     return Data_corr
@@ -280,15 +282,16 @@ if noFC!="TRUE":
 
         np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC.txt',
                    ts_r, fmt='%.6f')
+        del ts_r
+        del ts
+        del thisparc
 else:
-    print('INFO... no FC was selected, will skipp the functional connectome generation')
+    print('')
+    print('...... no FC was selected, will skipp the functional connectome generation')
 
 # Clean up
-del ts_r
-del ts
 del data_corr
 del data
-del thisparc
 
 # ------------------------------------------
 # Native surface processing
@@ -366,20 +369,22 @@ if noFC!="TRUE":
                 ts_r = np.triu(ts_r)
 
             np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-FC.txt', ts_r, fmt='%.6f')
+            del ts_native_ctx
+            del native_parc
+            del ts_r
+            del ts
 else:
-    print('INFO... no FC was selected, will skipp the functional connectome generation')
+    print('')
+    print('...... no FC was selected, will skipp the functional connectome generation')
 
 # Clean up
-del ts_native_ctx
-del native_parc
-del ts_r
-del ts
 del dataNative_corr
 del sctx_cereb_corr
 
 # ------------------------------------------
 # Additional QC
 # ------------------------------------------
+print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 print('Calculating tSNR and framewise displacement')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
@@ -417,3 +422,7 @@ tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
 np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + '.txt', tSNR, fmt='%.12f')
+print('')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
+print('func regression and FC ran successfully')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
