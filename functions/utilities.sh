@@ -494,14 +494,14 @@ function json_nativepro_mask() {
 }
 
 function json_func() {
-  qform=($(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}'))
-  sform=($(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}'))
+  qform=($(fslhd "$func_processed" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$func_processed" | grep sto_ | awk -F "\t" '{print $2}'))
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Tag\": \"${tagMRI}\",
     \"Acquisition\": \"${acq}\",
-    \"Name\": \"${fmri_processed}\",
+    \"Name\": \"${func_processed}\",
     \"sform\": [
         \"${sform[@]:0:4};\"
         \"${sform[@]:4:4};\"
