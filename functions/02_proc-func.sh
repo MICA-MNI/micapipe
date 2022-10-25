@@ -269,6 +269,7 @@ fi
 fmri_tag=$(echo "${mainScan[0]}" | awk -F "${idBIDS}_" '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
 tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
+if [[ "${tagMRI}" == "_" ]]; then Warning "The provided -mainScanStr did not match any Functional acquisition. Check you func name."; exit; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_func-${fmri_tag}.json"
@@ -639,6 +640,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                         yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
                         export statusFIX="YES"
                     else
+                        mv -fr" ${func_ICA}" "${proc_func}"
                         Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
                     fi
               else
@@ -880,6 +882,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
+if [[ -d "${proc_func}/ICA_MELODIC" ]] && Do_cmd rm -fr "${proc_func}/ICA_MELODIC"
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
