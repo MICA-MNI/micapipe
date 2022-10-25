@@ -786,9 +786,10 @@ fi
 #     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_structural and -proc_freesurfer
 if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
-    log_file_str=$dir_logs/MPC_$(date +'%d-%m-%Y')
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
-    jobName="q${RANDOM}_mpc"
+    jobName="q${rand}_mpc"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
@@ -797,7 +798,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI"
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Microstructural profile covariance"
@@ -806,11 +807,11 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI"
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     else
         # LOCAL - POST-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
-        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI"
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     fi
 fi
 
@@ -877,9 +878,10 @@ fi
 # # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
 if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')
+    rand=${RANDOM}
+    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')"-${rand}"
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${noFC}"
-    jobName="q${RANDOM}_fun"
+    jobName="q${rand}_fun"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Resting state fMRI processing"
@@ -888,7 +890,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI"
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Resting state fMRI processing"
@@ -897,11 +899,11 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI"
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     else
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-        "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI"
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     fi
 fi
 
