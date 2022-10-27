@@ -435,7 +435,7 @@ if [[ ! -f "${func_nii}" ]]; then
     done
 
     # Run Tedana
-    if [[ ${acq}=="me" ]]; then
+    if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
         Note "EchoNumber :" ${EchoNumber[*]}
