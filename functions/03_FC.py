@@ -35,7 +35,7 @@ Generates multiple functional connectomes based on micapipe's provided parcellat
                     Identifier of type of sequence multi/single echo.
 
     noFC      :  str
-                    [TRUE, FALSE]. If true skipps the functional connectomes generation.
+                    [TRUE, FALSE]. If True skipps the functional connectomes generation.
 
 Created and modified from 2019 to 2022
 @author: A collaborative effort of the MICA lab  :D
@@ -193,6 +193,14 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     gs = expand_dim(np.loadtxt(x_gs))
     spike = []
     print('')
+    def check_arrays():
+        if np.array_equal(mdl, ones) != True:
+            print('apply regression')
+            slm = LinearRegression().fit(Data, mdl)
+            Data_res = Data-np.dot(mdl, slm.coef_)
+        else:
+            Data_res = Data
+        return Data_res
     if x_spike:
         spike = expand_dim(np.loadtxt(x_spike))
         ones = np.ones((spike.shape[0], 1))
@@ -208,10 +216,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         else:
             print(Data_name + 'Default model : func ~ spikes + dof')
             mdl = np.append(np.append(ones, spike, axis=1), dof, axis=1)
-        # conte
-        slm = LinearRegression().fit(Data, mdl)
-        Data_corr = Data-np.dot(mdl, slm.coef_)
-        del Data
+        # apply regression
+        Data_corr = check_arrays()
     else:
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
@@ -227,8 +233,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         else:
             print(Data_name + ', model : func ~ dof')
             mdl = np.append(ones, dof, axis=1)
-        slm = LinearRegression().fit(Data, mdl)
-        Data_corr = Data-np.dot(mdl, slm.coef_)
+        # apply regression
+        Data_corr = check_arrays()
     return Data_corr
 
 # conte69
