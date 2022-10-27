@@ -188,6 +188,7 @@ if [[ "$func_pe" != DEFAULT ]] && [[ -f "$func_pe" ]]; then mainPhaseScan="$func
 if [[ "$func_rpe" != DEFAULT ]] && [[ -f "$func_rpe" ]]; then reversePhaseScan="$func_rpe"; fi
 
 # Check inputs
+if [[ ${#mainScan[@]} -eq 0 ]]; then Error "The provided -mainScanStr did not match any Functional acquisition. \n\t\t Check you func string in ${subject_bids}/func/"; exit; fi
 for i in ${mainScan[*]}; do
     if [ ! -f "$i" ]; then Error "Couldn't find $id main func scan : \n\t ls ${i}"; exit; fi
 done
@@ -451,6 +452,7 @@ if [[ ! -f "${func_nii}" ]]; then
     func_MCoutliers "${fmri_mc}"
 
     # Distortion correction with TOPUP
+    Info "Preparing data for topup/eddie"
     func_topup
 
 else
@@ -558,8 +560,6 @@ if [[ "$Nreg" -lt 3 ]]; then
         Info "Subject ${id} has a synthetic BOLD image for registration"
     fi
 
-    Info "Registering func MRI to nativepro"
-
     # Affine from func to t1-nativepro
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
@@ -585,7 +585,9 @@ fi
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --9
+    #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_fmri" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
+    #Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
@@ -875,14 +877,15 @@ if [[ "$Nfc" -lt 3 ]]; then
     Info "Running func post processing"
     labelDirectory="${dir_freesurfer}/label/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
-    if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
+    Nfc=$(ls "$cleanTS" "$func_fwd" "$func_tSRN" 2>/dev/null | wc -l )
+    if [[ "$Nfc" -eq 3 ]] then ((Nsteps++)); else Warning "Deconfounding/Functional connectomes script failed (FC.py)"; fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
 fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
-if [[ -d "${proc_func}/ICA_MELODIC" ]] && Do_cmd rm -fr "${proc_func}/ICA_MELODIC"
+if [[ -d "${proc_func}/ICA_MELODIC" ]]; then Do_cmd rm -fr "${proc_func}/ICA_MELODIC"; fi
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
