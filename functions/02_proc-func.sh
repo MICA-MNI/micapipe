@@ -464,19 +464,19 @@ Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
 
 fmri_mean="${func_volum}/${idBIDS}${func_lab}_mean.nii.gz"
 fmri_HP="${func_volum}/${idBIDS}${func_lab}_HP.nii.gz"
-fmri_brain="${func_volum}/${idBIDS}${func_lab}_brain.nii.gz"
+func_brain="${func_volum}/${idBIDS}${func_lab}_brain.nii.gz"
 fmri_mask="${func_volum}/${idBIDS}${func_lab}_brain_mask.nii.gz"
 
-if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then
+if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$func_brain" ]]; then
     Info "Generating a func binary mask"
     # Calculates the mean func volume
     Do_cmd fslmaths "$func_nii" -Tmean "$fmri_mean"
 
     # Creates a mask from the motion corrected time series
-    Do_cmd bet "$fmri_mean" "$fmri_brain" -m -n
+    Do_cmd bet "$fmri_mean" "$func_brain" -m -n
 
     # masked mean func time series
-    Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$fmri_brain"
+    Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$func_brain"
     if [[ -f "${fmri_mask}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a binary mask of the func"; ((Nsteps++))
@@ -495,9 +495,11 @@ fi
 # run MELODIC for ICA-FIX
 melodic_IC="${func_ICA}/filtered_func_data.ica/melodic_IC.nii.gz"
 fmri_filtered="${func_ICA}/filtered_func_data.nii.gz"
+func_proc_json="${func_volum}/${idBIDS}${func_lab}_clean.json"
 
 # melodic will run ONLY no FIX option is selected
-if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
+if [[ -f "${func_proc_json}" ]]; then export statusMel=$(grep Melodic "${func_proc_json}" | awk -F '"' '{print $4}'); else export statusMel="NO"; fi
+if [[ "$noFIX" -eq 0 ]] && [[ "${statusMel}" == "NO" ]]; then
     [[ ! -d "${func_ICA}" ]] && Do_cmd mkdir -p "${func_ICA}"
     Info "Running melodic"
     Do_cmd cp "$fmri_HP" "$fmri_filtered"
@@ -518,7 +520,7 @@ fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mean.nii.gz"
-T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
+T1nativepro_in_func="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
@@ -542,7 +544,7 @@ elif [[ ${regAffine}  == "TRUE" ]]; then
 fi
 
 # Registration to native pro
-Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/dev/null | wc -l )
+Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then
     if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
@@ -553,7 +555,7 @@ if [[ "$Nreg" -lt 3 ]]; then
         # Masked the inverted T1w
         Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
         # Match histograms values acording to func
-        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
+        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$func_brain"
         # Smoothing
         Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
     else
@@ -561,20 +563,20 @@ if [[ "$Nreg" -lt 3 ]]; then
     fi
 
     # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
-    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$func_brain" -o "$str_func_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$func_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
-        # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
+        # SyN from T1_nativepro-func to func
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$func_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
     Do_cmd rm -rf "${dir_warp}"/*Warped.nii.gz 2>/dev/null
     # fmri to t1-nativepro
-    Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$func_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
-    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_fmri}" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$func_brain" "${transformsInv}" -o "${T1nativepro_in_func}" -v -u int
 
-    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
+    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_func_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++))
@@ -585,8 +587,8 @@ fi
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
   Info "Registering fmri to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --9
-    #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_fmri" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$func_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --12
+    #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --t1 --12
     #Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
@@ -598,56 +600,54 @@ fi
 fix_output="${func_ICA}/filtered_func_data_clean.nii.gz"
 func_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
 
-# Run if fmri_clean does not exist
+# Run if func_clean does not exist
 if [[ "$noFIX" -eq 0 ]]; then
     if [[ ! -f "${func_processed}" ]] ; then
           if  [[ -f "${melodic_IC}" ]] && [[ -f $(which fix) ]]; then
-              if [[ ! -f "${fix_output}" ]] ; then
-                    Info "Getting ICA-FIX requirements"
-                    Do_cmd mkdir -p "${func_ICA}"/{reg,mc}
-                    # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
-                    # $fmri_filtered                                                                                 preprocessed 4D data
-                    # $melodic_IC                                                                                    melodic (command-line program) full output directory
-                    Do_cmd cp "${fmri_mc}" "${func_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
-                    Do_cmd cp "$fmri_mask" "${func_ICA}/mask.nii.gz"                                                 # valid mask relating to the 4D data
-                    Do_cmd cp "${func_ICA}/filtered_func_data.ica/mean.nii.gz" "${func_ICA}/mean_func.nii.gz"      # temporal mean of 4D data
-                    middleSlice=$(mrinfo "$fmri_filtered" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
-                    Do_cmd fslroi "$fmri_filtered" "${func_ICA}/reg/example_func.nii.gz" "$middleSlice" 1          # example middle image from 4D data
-                    Do_cmd cp "$T1nativepro_brain" "${func_ICA}/reg/highres.nii.gz"                                  # brain-extracted structural
+              a
+              Info "Getting ICA-FIX requirements"
+              Do_cmd mkdir -p "${func_ICA}"/{reg,mc}
+              # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
+              # $fmri_filtered                                                                                 preprocessed 4D data
+              # $melodic_IC                                                                                    melodic (command-line program) full output directory
+              Do_cmd cp "${fmri_mc}" "${func_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
+              Do_cmd cp "$fmri_mask" "${func_ICA}/mask.nii.gz"                                                 # valid mask relating to the 4D data
+              Do_cmd cp "${func_ICA}/filtered_func_data.ica/mean.nii.gz" "${func_ICA}/mean_func.nii.gz"      # temporal mean of 4D data
+              middleSlice=$(mrinfo "$fmri_filtered" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
+              Do_cmd fslroi "$fmri_filtered" "${func_ICA}/reg/example_func.nii.gz" "$middleSlice" 1          # example middle image from 4D data
+              Do_cmd cp "$T1nativepro_brain" "${func_ICA}/reg/highres.nii.gz"                                  # brain-extracted structural
 
-                    # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
-                    if [[ ! -f "${func_ICA}/reg/highres2example_func.mat" ]]; then
-                        # Get transformation matrix T1native to func space (ICA-FIX requirement)
-                        Do_cmd antsApplyTransforms -v 1 -o Linear["$tmp/highres2example_func.mat",0] "${xfmat}"
-                        # Transform matrix: ANTs (itk binary) to text
-                        Do_cmd ConvertTransformFile 3 "$tmp/highres2example_func.mat" "$tmp/highres2example_func.txt"
+              # REQUIRED by FIX - reg/highres2example_func.mat                                               # FLIRT transform from structural to functional space
+              if [[ ! -f "${func_ICA}/reg/highres2example_func.mat" ]]; then
+                  # Get transformation matrix T1native to func space (ICA-FIX requirement)
+                  Do_cmd antsApplyTransforms -v 1 -o Linear["$tmp/highres2example_func.mat",0] "${xfmat}"
+                  # Transform matrix: ANTs (itk binary) to text
+                  Do_cmd ConvertTransformFile 3 "$tmp/highres2example_func.mat" "$tmp/highres2example_func.txt"
 
-                        # Fixing the transformations incompatibility between ANTS and FSL
-                        tmp_ants2fsl_mat="$tmp/itk2fsl_highres2example_func.mat"
-                        # Transform matrix: ITK text to matrix (FSL format)
-                        Do_cmd lta_convert --initk "$tmp/highres2example_func.txt" --outfsl "$tmp_ants2fsl_mat" --src "$T1nativepro" --trg "$fmri_brain"
-                        # apply transformation with FSL
-                        Do_cmd flirt -in "$T1nativepro" -out "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$fmri_brain" -applyxfm -init "$tmp_ants2fsl_mat"
-                        # correct transformation matrix
-                        Do_cmd flirt -in "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_fmri" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
-                        # concatenate the matrices to fix the transformation matrix
-                      Do_cmd convert_xfm -concat "${tmp}/ants2fsl_fixed.omat" -omat "${func_ICA}/reg/highres2example_func.mat" "$tmp_ants2fsl_mat"
-                    else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
+                  # Fixing the transformations incompatibility between ANTS and FSL
+                  tmp_ants2fsl_mat="$tmp/itk2fsl_highres2example_func.mat"
+                  # Transform matrix: ITK text to matrix (FSL format)
+                  Do_cmd lta_convert --initk "$tmp/highres2example_func.txt" --outfsl "$tmp_ants2fsl_mat" --src "$T1nativepro" --trg "$func_brain"
+                  # apply transformation with FSL
+                  Do_cmd flirt -in "$T1nativepro" -out "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$func_brain" -applyxfm -init "$tmp_ants2fsl_mat"
+                  # correct transformation matrix
+                  Do_cmd flirt -in "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_func" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
+                  # concatenate the matrices to fix the transformation matrix
+                  Do_cmd convert_xfm -concat "${tmp}/ants2fsl_fixed.omat" -omat "${func_ICA}/reg/highres2example_func.mat" "$tmp_ants2fsl_mat"
+              else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
 
-                    Info "Running ICA-FIX"
-                    Do_cmd fix "$func_ICA" "$icafixTraining" 20 -m -h 100
+                  Info "Running ICA-FIX"
+                  Do_cmd fix "$func_ICA" "$icafixTraining" 20 -m -h 100
 
-                    # Replace file if melodic ran correctly - Change single-echo files for clean ones
-                    if [[ -f "$fix_output" ]]; then
-                        yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
-                        export statusFIX="YES"
-                    else
-                        mv -fr" ${func_ICA}" "${proc_func}"
-                        Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
-                    fi
-              else
-                    Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
-                    cp -rf "$fix_output" "$func_processed"; export statusFIX="YES"
+                  # Replace file if melodic ran correctly - Change single-echo files for clean ones
+                  if [[ -f "$fix_output" ]]; then
+                      yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
+                      export statusFIX="YES"
+                  else
+                      export statusFIX="FAILED"
+                      mv -fr" ${func_ICA}" "${proc_func}"
+                      json_func "${func_proc_json}"
+                      Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
@@ -657,17 +657,17 @@ if [[ "$noFIX" -eq 0 ]]; then
               export statusFIX="NO"
           fi
     else
-        Info "Subject ${id} has a clean fMRI processed with FIX"; export statusFIX="YES"
+        export statusFIX=$(grep FIX "${func_proc_json}" | awk -F '"' '{print $4}')
+        Info "Subject ${id} has a clean fMRI processed. FIX: ${statusFIX}";
     fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
+    json_func "${func_proc_json}"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Clean fMRI image has been processed (no FIX)."
     cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
+    json_func "${func_proc_json}"
 fi
-
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
@@ -878,7 +878,7 @@ if [[ "$Nfc" -lt 3 ]]; then
     labelDirectory="${dir_freesurfer}/label/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
     Nfc=$(ls "$cleanTS" "$func_fwd" "$func_tSRN" 2>/dev/null | wc -l )
-    if [[ "$Nfc" -eq 3 ]] then ((Nsteps++)); else Warning "Deconfounding/Functional connectomes script failed (FC.py)"; fi
+    if [[ "$Nfc" -eq 3 ]]; then ((Nsteps++)); else Warning "Deconfounding/Functional connectomes script failed (FC.py)"; fi
 else
     Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
 fi
@@ -892,7 +892,7 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 if [ "$Nsteps" -eq 21 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
+json_func "${func_proc_json}"
 Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
 \tSteps completed : $(printf "%02d" "$Nsteps")/21
 \tStatus          : ${status}
