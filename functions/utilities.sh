@@ -295,6 +295,7 @@ function micapipe_procStatus() {
 }
 
 function micapipe_completition_status() {
+  if [ -z "${2}" ]; then logaqc=""; else logaqc="${2}"; fi
     # Processing time
     lopuu=$(date +%s)
     eri=$(echo "$lopuu - $aloita" | bc)
@@ -305,7 +306,7 @@ function micapipe_completition_status() {
     Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
     \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
     \tStatus          : ${status}
-    \tCheck logs      : $(ls "$dir_logs"/${1}_*.txt)"
+    \tCheck logs      : $(ls "$dir_logs"/${1}_*"${logaqc}.txt")"
 }
 
 function micapipe_procStatus_json() {
