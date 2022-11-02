@@ -180,8 +180,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     ----------
     x_spike : str (spikeRegressors_FD file)
     Data : array
-    performNSR : int (0,1)
-    performGSR : int (0,1)
+    performNSR : str (0,1)
+    performGSR : str (0,1)
 
     Return
     ------
@@ -214,8 +214,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
             print(Data_name + ' model : func ~ spikes + dof + wm + csf + gs')
             mdl = np.append(np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
         else:
-            print(Data_name + 'Default model : func ~ spikes + dof')
-            mdl = np.append(np.append(ones, spike, axis=1), dof, axis=1)
+            print(Data_name + 'Default model : func ~ spikes')
+            mdl = np.append(ones, spike, axis=1)
         # apply regression
         Data_corr = check_arrays()
     else:
@@ -231,8 +231,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
             gs = np.loadtxt(x_gs)
             mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
         else:
-            print(Data_name + ', model : func ~ dof')
-            mdl = np.append(ones, dof, axis=1)
+            print(Data_name + ', model : none')
+            mdl = ones
         # apply regression
         Data_corr = check_arrays()
     return Data_corr
