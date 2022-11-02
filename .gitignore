@@ -3,3 +3,4 @@ docs/__pycache__/
 .DS_Store
 docs/pages/.DS_Store
 docs/build/
+functions/__pycache__/
