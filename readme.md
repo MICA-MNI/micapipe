@@ -8,7 +8,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
 [![GitHub stars](https://img.shields.io/github/stars/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
-[![version](https://img.shields.io/badge/version-v0.1.3-blue)](https://github.com/MICA-MNI/micapipe)
+[![version](https://img.shields.io/badge/version-v0.1.4-blue)](https://github.com/MICA-MNI/micapipe)
 [![Docker Pulls](https://img.shields.io/docker/pulls/micalab/micapipe)](https://hub.docker.com/r/micalab/micapipe)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version)
 
