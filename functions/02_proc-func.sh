@@ -393,7 +393,7 @@ function func_topup() {
       export statusTopUp="NO"
       Do_cmd mv -v "${tmp}/mainScan_mc.nii.gz" "${func_nii}"; ((Nsteps++))
   else
-      if [[ ! -f "${func_volum}/TOPUP.txt" ]] && [[ ! -f "${func_nii}" ]]; then
+      if [[ ! -f "${func_nii}" ]]; then
         # NOTE print readout times
           mainPhaseScanMean=$(find "$tmp"    -maxdepth 1 -name "*mainPhaseScan_mcMean.nii.gz")
           mainPhaseScan=$(find "$tmp"        -maxdepth 1 -name "*mainPhaseScan_mc.nii.gz")
@@ -430,6 +430,8 @@ function func_topup() {
 #------------------------------------------------------------------------------#
 # Begining of the REAL processing
 status="INCOMPLETE"
+func_mc="${func_volum}/${idBIDS}${func_lab}.1D"
+func_spikes="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D"
 # Processing fMRI acquisitions.
 if [[ ! -f "${func_nii}" ]]; then
     # Reorient and motion correct main(s) fMRI
@@ -459,18 +461,17 @@ if [[ ! -f "${func_nii}" ]]; then
     fi
 
     # FSL MC outliers
-    func_mc="${func_volum}/${idBIDS}${func_lab}.1D"
-    func_spikes="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D"
     func_MCoutliers "${func_mc}" "${func_spikes}"
-    if [ ! -f "${func_spikes}" ]; then mod="none"; fi
 
     # Distortion correction with TOPUP
     Info "Preparing data for topup/eddie"
     func_topup
 
 else
+    if [[ -f "${func_proc_json}" ]]; then export statusTopUp=$(grep TOPUP "${func_proc_json}" | awk -F '"' '{print $4}'); fi
     Info "Subject ${id} has a functional MRI processed (reoriented/distorion and motion corrected)"; Nsteps=$((Nsteps + 2)); N=$((N+2))
 fi
+if [ ! -f "${func_spikes}" ]; then mod="none"; fi
 
 #------------------------------------------------------------------------------#
 Info "!!!!!  goin str8 to ICA-FIX yo  !!!!!"
@@ -512,7 +513,7 @@ func_proc_json="${func_volum}/${idBIDS}${func_lab}_clean.json"
 
 # melodic will run ONLY no FIX option is selected
 if [[ -f "${func_proc_json}" ]]; then export statusMel=$(grep Melodic "${func_proc_json}" | awk -F '"' '{print $4}'); else export statusMel="NO"; fi
-if [[ "$noFIX" -eq 0 ]] && [[ "${statusMel}" == "NO" ]]; then
+if [[ "$noFIX" -eq 0 ]] && [[ "${statusMel}" != "YES" ]]; then
     [[ ! -d "${func_ICA}" ]] && Do_cmd mkdir -p "${func_ICA}"
     Info "Running melodic"
     Do_cmd cp "$fmri_HP" "$fmri_filtered"
@@ -528,7 +529,7 @@ if [[ "$noFIX" -eq 0 ]] && [[ "${statusMel}" == "NO" ]]; then
           --Omean="${func_ICA}/mean_func.nii.gz"
     if [[ -f "${melodic_IC}" ]]; then export statusMel="YES"; else export statusMel="FAILED"; fi
 else
-    Info "Subject ${id} has MELODIC outputs"; export statusMel="YES"
+    Info "Subject ${id} has MELODIC outputs: ${statusMel}"
 fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
@@ -617,7 +618,6 @@ func_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
 if [[ "$noFIX" -eq 0 ]]; then
     if [[ ! -f "${func_processed}" ]] ; then
           if  [[ -f "${melodic_IC}" ]] && [[ -f $(which fix) ]]; then
-              a
               Info "Getting ICA-FIX requirements"
               Do_cmd mkdir -p "${func_ICA}"/{reg,mc}
               # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
@@ -658,16 +658,17 @@ if [[ "$noFIX" -eq 0 ]]; then
                       export statusFIX="YES"
                   else
                       export statusFIX="FAILED"
-                      mv -fr" ${func_ICA}" "${proc_func}"
+                      Do_cmd mv -f "${func_ICA}" "${proc_func}"
                       json_func "${func_proc_json}"
-                      Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
+                      Error "FIX failed, but MELODIC status: ${statusMel} \nlog file:\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
-              Do_cmd cp -rf "$fmri_HP" "$func_processed"
-              export statusFIX="NO"
+              #Do_cmd cp -rf "$fmri_HP" "$func_processed"
+              #export statusFIX="NO"
+              statusMel="NO"; json_func "${func_proc_json}"; exit
           fi
     else
         export statusFIX=$(grep FIX "${func_proc_json}" | awk -F '"' '{print $4}')
