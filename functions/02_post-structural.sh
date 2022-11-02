@@ -50,6 +50,8 @@ else
   IFS=',' read -ra atlas_parc <<< "$atlas"
   for i in "${!atlas_parc[@]}"; do atlas_parc[i]=$(ls lh."${atlas_parc[$i]}"_mics.annot 2>/dev/null); done
   atlas_parc=("${atlas_parc[@]}")
+  # Always runs schaefer-400 for default (QC)
+  if [[ ! "${atlas_parc[*]}" =~ "schaefer-400" ]]; then atlas_parc+=("schaefer-400"); fi
   N="${#atlas_parc[*]}"
   Info "Selected parcellations: $atlas, N=${N}"
 fi
