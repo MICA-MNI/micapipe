@@ -87,9 +87,9 @@ Note "Main scan        :" "$mainScanStr"; fi
 Note "Phase scan       :" "$func_pe"
 Note "Reverse Phase    :" "$func_rpe"
 Note "Smoothing        :" "$smooth"
+Note "No FIX           :" "$noFIX"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
-Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
 Note "regAffine        :" "${regAffine}"
 Note "Drop TR          :" "${dropTR}"
@@ -214,14 +214,13 @@ fi
 
 # Check FIX: run or no?
 if [[ "$noFIX" -eq 1 ]]; then
-    Info "ICA-FIX will be skipped! Consider performing nuisance signal regression with <-regress_WM_CSF> or <-GSR>"
+    Info "ICA-FIX will be skipped! Consider performing nuisance signal regression with [-regress_WM_CSF] or [-GSR]>"
 
     # Check ICA-FIX Training input
     if [[ ! ${changeIcaFixTraining} == "DEFAULT" ]]; then
         Error "If ICA-FIX is skipped, <-icafixTraining> must remain empty"; exit; fi
 else
     Info "ICA-FIX pipeline will be run!"
-
     # Check ICA-FIX Training input
     if [[ ${changeIcaFixTraining} == "DEFAULT" ]]; then
         Info "Will use default training file for ICA-FIX: ${icafixTraining}"
@@ -240,11 +239,14 @@ fi
 
 # Check nuisance signal regression
 if [[ $performNSR == 1 ]]; then
-    Info "White matter and CSF signals will be regressed from processed timeseries"
+    Info "6 Motion parameters, White matter and CSF signals will be regressed from processed timeseries"
+    mod="func~spikes+dof+wm+csf"; Note "${mod}"
 elif [[ $performGSR == 1 ]]; then
-    Info "Global, white matter and CSF signals will be regressed from processed timeseries"
+    Info "Global signal, 6 Motion parameters, White matter and CSF signals will be regressed from processed timeseries"
+    mod="func~spikes+dof+wm+csf+gs"; Note "${mod}"
 else
-    Info "Global, white matter and CSF signal regression will not be performed (default)"
+    Info "Only motion outlier (spikes) regression will be performed (DEFAULT)"
+    mod="func~spikes"; Note "${mod}"
 fi
 
 # gettin dat from mainScanJson exit if Not found
@@ -267,13 +269,15 @@ elif [ ${#mainScan[@]} -gt 1 ]; then
 fi
 
 # func directories
+Info "Obtaining the func acquisition name"
 fmri_tag=$(echo "${mainScan[0]}" | awk -F "${idBIDS}_" '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
 tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
 if [[ "${tagMRI}" == "_" ]]; then Warning "The provided -mainScanStr did not match any Functional acquisition. Check you func name."; exit; fi
+Note "tagMRI:" "${tagMRI}"
 
 # End if module has been processed
-module_json="${dir_QC}/${idBIDS}_module-proc_func-${fmri_tag}.json"
+module_json="${dir_QC}/${idBIDS}_module-proc_func_${fmri_tag}.json"
 micapipe_check_json_status "${module_json}" "proc_func"
 
 #------------------------------------------------------------------------------#
@@ -283,11 +287,11 @@ bids_print.variables-func
 Note "Saving temporal dir:" "$nocleanup"
 Note "Parallel processing:" "${threads} threads"
 Note "proc_fun outputs:" "${proc_func}"
-Note "tagMRI:" "${tagMRI}"
 
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
+N=0
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_proc-func_${idBIDS}"
 Do_cmd mkdir -p "$tmp"
@@ -300,7 +304,11 @@ export SUBJECTS_DIR="$dir_surf"
 
 func_volum="${proc_func}/volumetric"   # volumetricOutputDirectory
 func_surf="${proc_func}/surfaces"      # surfaceOutputDirectory
-func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
+if [ -d "${proc_func}/ICA_MELODIC" ]; then
+  func_ICA="${proc_func}/ICA_MELODIC";
+else
+  func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
+fi
 
 # Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
 for x in "$func_surf" "$func_volum"; do
@@ -353,9 +361,11 @@ function func_MCoutliers() {
   # Function that generates the motion outliers file
   # Calculate motion outliers with FSL
   local outfile=$1
+  local outspikes=$2
+  ((N++))
   if [[ ! -f "${outfile}" ]]; then
       Do_cmd fsl_motion_outliers -i "${tmp}/mainScan_reo.nii.gz" \
-                                 -o "${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D" \
+                                 -o "${outspikes}" \
                                  -s "${func_volum}/${idBIDS}${func_lab}_metric_FD.1D" --fd
       Do_cmd mv "${func_volum}/${idBIDS}${func_lab}_mainScan.1D ${outfile}"; ((Nsteps++))
   else
@@ -365,7 +375,7 @@ function func_MCoutliers() {
 
 function func_topup() {
   # Function that applies the distortion correction to the REO/MC file(s)
-  #
+  ((N++))
   # If ONLY Reverse phase scan is provided mainScan will be the mainPhaseScan
   if [[ -f "$reversePhaseScan" ]] && [[ ! -f "$mainPhaseScan" ]]; then
         main_pe="NO-main_pe"
@@ -373,6 +383,7 @@ function func_topup() {
         mainPhaseScan="${tmp}/mainPhaseScan_mc.nii.gz"
         Do_cmd cp "${tmp}/mainScan_mc.nii.gz" "$mainPhaseScan"
         Do_cmd cp "${tmp}/mainScan_mcMean.nii.gz" "${tmp}/func_mainPhaseAlignedMean.nii.gz"
+        ((Nsteps++))
   fi
 
   # Only do distortion correction if reverse phase encoding images were provided,
@@ -411,7 +422,7 @@ function func_topup() {
           if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt"; exit; fi
           export statusTopUp="YES"; ((Nsteps++))
       else
-          Info "Subject ${id} has a distortion corrected functional MRI (TOPUP)"; export statusTopUp="YES"; ((Nsteps++))
+          Info "Subject ${id} has a distortion corrected functional MRI (TOPUP)"; export statusTopUp="YES"; ((N++)); ((Nsteps++))
       fi
   fi
 }
@@ -448,15 +459,17 @@ if [[ ! -f "${func_nii}" ]]; then
     fi
 
     # FSL MC outliers
-    fmri_mc="${func_volum}/${idBIDS}${func_lab}.1D"
-    func_MCoutliers "${fmri_mc}"
+    func_mc="${func_volum}/${idBIDS}${func_lab}.1D"
+    func_spikes="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_FD.1D"
+    func_MCoutliers "${func_mc}" "${func_spikes}"
+    if [ ! -f "${func_spikes}" ]; then mod="none"; fi
 
     # Distortion correction with TOPUP
     Info "Preparing data for topup/eddie"
     func_topup
 
 else
-    Info "Subject ${id} has a functional MRI processed (reoriented/distorion and motion corrected)"; Nsteps=$((Nsteps + 2))
+    Info "Subject ${id} has a functional MRI processed (reoriented/distorion and motion corrected)"; Nsteps=$((Nsteps + 2)); N=$((N+2))
 fi
 
 #------------------------------------------------------------------------------#
@@ -467,7 +480,7 @@ fmri_HP="${func_volum}/${idBIDS}${func_lab}_HP.nii.gz"
 func_brain="${func_volum}/${idBIDS}${func_lab}_brain.nii.gz"
 fmri_mask="${func_volum}/${idBIDS}${func_lab}_brain_mask.nii.gz"
 
-if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$func_brain" ]]; then
+if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$func_brain" ]]; then ((N++))
     Info "Generating a func binary mask"
     # Calculates the mean func volume
     Do_cmd fslmaths "$func_nii" -Tmean "$fmri_mean"
@@ -479,16 +492,16 @@ if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$func_brain" ]]; then
     Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$func_brain"
     if [[ -f "${fmri_mask}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a binary mask of the func"; ((Nsteps++))
+    Info "Subject ${id} has a binary mask of the func"; ((Nsteps++)); ((N++))
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "$fmri_HP" ]]; then
+if [[ ! -f "$fmri_HP" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has High-pass filter"; ((Nsteps++))
+    Info "Subject ${id} has High-pass filter"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -545,7 +558,7 @@ fi
 
 # Registration to native pro
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
-if [[ "$Nreg" -lt 3 ]]; then
+if [[ "$Nreg" -lt 3 ]]; then ((N++))
     if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
         # Inverse T1w
@@ -579,20 +592,20 @@ if [[ "$Nreg" -lt 3 ]]; then
     if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_func_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++))
+    Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
 # Register func to Freesurfer space with Freesurfer
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
-if [[ ! -f "${fmri2fs_dat}" ]] ; then
+if [[ ! -f "${fmri2fs_dat}" ]] ; then ((N++))
   Info "Registering fmri to FreeSurfer space"
     Do_cmd bbregister --s "$BIDSanat" --mov "$func_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --12
     #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --t1 --12
     #Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
+    Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -610,7 +623,7 @@ if [[ "$noFIX" -eq 0 ]]; then
               # FIX requirements - https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX/UserGuide
               # $fmri_filtered                                                                                 preprocessed 4D data
               # $melodic_IC                                                                                    melodic (command-line program) full output directory
-              Do_cmd cp "${fmri_mc}" "${func_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
+              Do_cmd cp "${func_mc}" "${func_ICA}/mc/prefiltered_func_data_mcf.par"   # motion parameters created by mcflirt
               Do_cmd cp "$fmri_mask" "${func_ICA}/mask.nii.gz"                                                 # valid mask relating to the 4D data
               Do_cmd cp "${func_ICA}/filtered_func_data.ica/mean.nii.gz" "${func_ICA}/mean_func.nii.gz"      # temporal mean of 4D data
               middleSlice=$(mrinfo "$fmri_filtered" -size | awk -F ' ' '{printf "%.0f\n", $4/2}')
@@ -671,7 +684,7 @@ fi
 
 #------------------------------------------------------------------------------#
 global_signal="${func_volum}/${idBIDS}${func_lab}_global.txt"
-if [[ ! -f "${global_signal}" ]] ; then
+if [[ ! -f "${global_signal}" ]] ; then ((N++))
     Info "Calculating tissue-specific and global signals changes"
     tissues=(CSF GM WM)
     for idx in "${!tissues[@]}"; do
@@ -690,16 +703,16 @@ if [[ ! -f "${global_signal}" ]] ; then
     Do_cmd fslmeants -i "$func_processed" -o "$global_signal" -m "${fmri_mask}" -w
     if [[ -f "${global_signal}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has Global time-series"; ((Nsteps++))
+    Info "Subject ${id} has Global time-series"; ((Nsteps++)); ((N++))
 fi
 
 # Motion confound REFMSE: SQUARE of [--refrms] root-mean square (RMS) intensity difference of volume N to the reference volume
 spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFMSE.1D"
-if [[ ! -f "$spikeRegressors" ]] ; then
+if [[ ! -f "$spikeRegressors" ]] ; then ((N++))
     Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFMSE.1D" --refmse --nomoco
     if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++))
+    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -715,7 +728,7 @@ for hemisphere in lh rh; do
     HEMI=$(echo "${hemisphere/h/}" | tr [:lower:] [:upper:])
     Info "Mapping volumetric timeseries to native surface ${hemisphere}"
     vol2surfTS="${func_surf}/${idBIDS}"_func_space-fsnative_${hemisphere}.mgh
-    if [[ ! -f "$vol2surfTS" ]] ; then
+    if [[ ! -f "$vol2surfTS" ]] ; then ((N++))
 
           # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
           Do_cmd mri_vol2surf \
@@ -739,7 +752,7 @@ for hemisphere in lh rh; do
 
           if [[ -f "$vol2surfTS" ]] ; then ((Nsteps++)); fi
     else
-        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"; ((Nsteps++))
+        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"; ((Nsteps++)); ((N++))
     fi
 
     # Convert native timeseries to gifti
@@ -747,7 +760,7 @@ for hemisphere in lh rh; do
 
     # Apply smoothing on native surface
     out_surf_native="${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf_native" ]] ; then
+    if [[ ! -f "$out_surf_native" ]] ; then ((N++))
           if [[ "$smooth" == 1 ]] ; then
             Do_cmd wb_command -metric-smoothing \
                 "${dir_freesurfer}/surf/${hemisphere}.midthickness.surf.gii"  \
@@ -766,12 +779,12 @@ for hemisphere in lh rh; do
           fi
     if [[ -f "$out_surf_native" ]] ; then ((Nsteps++)); fi
     else
-        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"; ((Nsteps++))
+        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"; ((Nsteps++)); ((N++))
     fi
 
     # Register to fsa5 and smooth
     out_surf_fsa5="${func_surf}/${idBIDS}_func_space-fsaverage5_${hemisphere}.mgh"
-    if [[ ! -f "$out_surf_fsa5" ]] ; then
+    if [[ ! -f "$out_surf_fsa5" ]] ; then ((N++))
          Do_cmd mri_surf2surf \
             --hemi "${hemisphere}" \
             --srcsubject "$BIDSanat" \
@@ -780,11 +793,11 @@ for hemisphere in lh rh; do
             --tval "$out_surf_fsa5"
          if [[ -f "$out_surf_fsa5" ]] ; then ((Nsteps++)); fi
     else
-         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"; ((Nsteps++))
+         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"; ((Nsteps++)); ((N++))
     fi
 
     out_surf_fsa5_sm="${func_surf}/${idBIDS}_func_space-fsaverage5_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf_fsa5_sm" ]] ; then
+    if [[ ! -f "$out_surf_fsa5_sm" ]] ; then ((N++))
          Do_cmd mri_surf2surf \
             --hemi "${hemisphere}" \
             --srcsubject "$BIDSanat" \
@@ -794,12 +807,12 @@ for hemisphere in lh rh; do
             --fwhm-trg 10
          if [[ -f "$out_surf_fsa5_sm" ]] ; then ((Nsteps++)); fi
     else
-         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"; ((Nsteps++))
+         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"; ((Nsteps++)); ((N++))
     fi
 
     # Register to conte69 and smooth
     out_surf="${func_surf}/${idBIDS}_func_space-conte69-32k_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf" ]] ; then
+    if [[ ! -f "$out_surf" ]] ; then ((N++))
           # Register to conte69
           Do_cmd wb_command -metric-resample \
               "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
@@ -821,11 +834,11 @@ for hemisphere in lh rh; do
           Do_cmd mri_convert "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}_10mm.func.gii" "${out_surf}"
           if [[ -f "$out_surf" ]] ; then ((Nsteps++)); fi
     else
-          Info "Subject ${id} has a func MRI fmri2fs ${hemisphere} on conte69-32k 10mm surface"; ((Nsteps++))
+          Info "Subject ${id} has a func MRI fmri2fs ${hemisphere} on conte69-32k 10mm surface"; ((Nsteps++)); ((N++))
     fi
 done
 else
-  Info "Subject ${id} has a func MRI fmri2fs on all surfaces: native, native_fwhm-10mm, fsa5, fsa5_fwhm-10mm, and conte69fwhm_10mm"; Nsteps=$((Nsteps+10))
+  Info "Subject ${id} has a func MRI fmri2fs on all surfaces: native, native_fwhm-10mm, fsa5, fsa5_fwhm-10mm, and conte69fwhm_10mm"; Nsteps=$((Nsteps+10)); N=$((N+10))
 fi
 
 #------------------------------------------------------------------------------#
@@ -834,7 +847,7 @@ fi
 func_subcortex="${func_volum}/${idBIDS}${func_lab}_subcortical.nii.gz"
 timese_subcortex="${func_volum}/${idBIDS}${func_lab}_timeseries_subcortical.txt"
 
-if [[ ! -f "$timese_subcortex" ]] ; then
+if [[ ! -f "$timese_subcortex" ]] ; then ((N++))
       Info "Getting subcortical timeseries"
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_subcortex" -v -u int
       # Extract subcortical timeseries
@@ -842,7 +855,7 @@ if [[ ! -f "$timese_subcortex" ]] ; then
       Do_cmd mri_segstats --i "$func_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
       if [[ -f "$timese_subcortex" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has func subcortical time-series"; ((Nsteps++))
+      Info "Subject ${id} has func subcortical time-series"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -851,7 +864,7 @@ func_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum.nii.gz"
 timese_cerebellum="${func_volum}/${idBIDS}${func_lab}_timeseries_cerebellum.txt"
 stats_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum_roi_stats.txt"
 
-if [[ ! -f "$timese_cerebellum" ]] ; then
+if [[ ! -f "$timese_cerebellum" ]] ; then ((N++))
       Info "Getting cerebellar timeseries"
       Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
@@ -860,12 +873,8 @@ if [[ ! -f "$timese_cerebellum" ]] ; then
       3dROIstats -mask "$func_cerebellum" -nzsum "$func_cerebellum" > "$stats_cerebellum"
       if [[ -f "$timese_cerebellum" ]] ; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has func cerebellar time-series"; ((Nsteps++))
+      Info "Subject ${id} has func cerebellar time-series"; ((Nsteps++)); ((N++))
 fi
-
-# -----------------------------------------------------------------------------------------------
-# QC: func processing Input files
-QC_proc-func "micapipe_QC_proc-func_${tagMRI}.txt"
 
 #------------------------------------------------------------------------------#
 # run post-func
@@ -873,30 +882,20 @@ cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean.txt
 func_fwd="${func_volum}/${idBIDS}${func_lab}_framewiseDisplacement.png"
 func_tSRN="${func_volum}/${idBIDS}${func_lab}_tSNR.txt"
 Nfc=$(ls "$cleanTS" "$func_fwd" "$func_tSRN" 2>/dev/null | wc -l )
-if [[ "$Nfc" -lt 3 ]]; then
+if [[ "$Nfc" -lt 3 ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${dir_freesurfer}/label/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
     Nfc=$(ls "$cleanTS" "$func_fwd" "$func_tSRN" 2>/dev/null | wc -l )
     if [[ "$Nfc" -eq 3 ]]; then ((Nsteps++)); else Warning "Deconfounding/Functional connectomes script failed (FC.py)"; fi
 else
-    Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++))
+    Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
-if [[ -d "${proc_func}/ICA_MELODIC" ]]; then Do_cmd rm -fr "${proc_func}/ICA_MELODIC"; fi
-lopuu=$(date +%s)
-eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print "$eri"/60 | perl)
-
-# Notification of completition
-if [ "$Nsteps" -eq 21 ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-json_func "${func_proc_json}"
-Title "func processing and post processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" "$Nsteps")/21
-\tStatus          : ${status}
-\tCheck logs      : $(ls "${dir_logs}"/proc_func_*.txt)"
+micapipe_completition_status proc_func ${tagMRI}
+if [[ -d "${proc_func}/ICA_MELODIC" ]] && [[ ${status} == "COMPLETED" ]]; then Do_cmd rm -fr "${proc_func}/ICA_MELODIC"; fi
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_func" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
