@@ -521,7 +521,7 @@ fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mean.nii.gz"
-T1nativepro_in_fmri="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
+T1nativepro_in_func="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
 t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
@@ -545,7 +545,7 @@ elif [[ ${regAffine}  == "TRUE" ]]; then
 fi
 
 # Registration to native pro
-Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_fmri" 2>/dev/null | wc -l )
+Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then
     if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
@@ -579,9 +579,9 @@ if [[ "$Nreg" -lt 3 ]]; then
     # fmri to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to fmri
-    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_fmri}" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_func}" -v -u int
 
-    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_fmri}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
+    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_func_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++))
@@ -591,9 +591,9 @@ fi
 # Register func to Surface space with Freesurfer
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]] ; then
-  Info "Registering fmri to FreeSurfer space"
+  Info "Registering func to FreeSurfer space"
 #    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
-    Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_fmri" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++))
@@ -635,7 +635,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                         # apply transformation with FSL
                         Do_cmd flirt -in "$T1nativepro" -out "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$fmri_brain" -applyxfm -init "$tmp_ants2fsl_mat"
                         # correct transformation matrix
-                        Do_cmd flirt -in "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_fmri" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
+                        Do_cmd flirt -in "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_func" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
                         # concatenate the matrices to fix the transformation matrix
                         Do_cmd convert_xfm -concat "${tmp}/ants2fsl_fixed.omat" -omat "${func_ICA}/reg/highres2example_func.mat" "$tmp_ants2fsl_mat"
                     else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
