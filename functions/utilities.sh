@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.1.3 'Roadrunner'"
+export Version="v0.1.4 'Roadrunner'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -272,6 +272,7 @@ function micapipe_procStatus() {
 }
 
 function micapipe_completition_status() {
+    if [ -z "${2}" ]; then logaqc=""; else logaqc="${2}"; fi
     # Processing time
     lopuu=$(date +%s)
     eri=$(echo "$lopuu - $aloita" | bc)
@@ -282,7 +283,24 @@ function micapipe_completition_status() {
     Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
     \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
     \tStatus          : ${status}
-    \tCheck logs      : $(ls "$dir_logs/${1}"_*.txt)"
+    \tCheck logs      : $(ls "$dir_logs"/${1}_*"${logaqc}.txt")"
+}
+
+function micapipe_procStatus_json() {
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"${3}\",
+    \"Subject\": \"${1}\",
+    \"Session\": \"${2}\",
+    \"Status\": \"${status}\",
+    \"Progress\": \"$(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")\",
+    \"User\": \"$(whoami)\",
+    \"Workstation\": \"$(uname -n)\",
+    \"Date\": \"$(date)\",
+    \"Processing.time\": \"$(printf "%0.3f\n" "$eri")\",
+    \"Processing\": \"${PROC}\",
+    \"Threads\": \"${threads}\"
+  }" > "${4}"
 }
 
 micapipe_json() {
@@ -328,10 +346,14 @@ micapipe_json() {
 function micapipe_check_json_status() {
   local mod_json="${1}"
   local mod_func="${2}"
-  if [ -f "${mod_json}" ] && [ $(grep "Status" "${mod_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
-  Warning "Subject ${idBIDS} has been processed with -${mod_func}
+  if [ -f "${mod_json}" ]; then
+    status=$(grep "Status" "${mod_json}" | awk -F '"' '{print $4}')
+    if [ "${status}" == "COMPLETED" ]; then
+      Warning "Subject ${idBIDS} has been processed with -${mod_func}
                   If you want to re-run this step again, first erase all the outputs with:
-                  micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit; fi
+                  micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}";
+    exit; fi
+  fi
 }
 
 function tck_json() {
@@ -523,6 +545,7 @@ function json_func() {
         \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
         \"MainPhaseScan\": \"${mainPhaseScan}\",
         \"ReversePhaseScan\": \"${reversePhaseScan}\",
+        \"dropTR\": \"${dropTR}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
@@ -534,9 +557,9 @@ function json_func() {
         \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
-        \"dropTR\": \"${dropTR}\",
+        \"RegressionModel\": \"${mod}\",
         \"noFC\": \"${noFC}\",
-        \"procStatus\": \"${status}\"
+        \"Status\": \"${status}\"
       }
     ]
   }" > "$1"
@@ -774,46 +797,6 @@ function QC_proc-dwi() {
             <td class=\"tg-8pnm\">${dwi_reverse}</td>
           </tr>"  >> "$html"
   fi
-}
-
-function QC_proc-func() {
-  outname=$1
-  html="$dir_QC/${outname}"
-  if [ -f "$html" ]; then rm "$html"; fi
-  echo -e "            <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainScan" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainScanJson" 2>/dev/null)</td>
-              </tr>" >> "$html"
-            if [ -f "$mainPhaseScan" ]; then
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainPhaseScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainPhaseScan" 2>/dev/null)</td>
-              </tr>"  >> "$html"
-            fi
-            if [ -f "$reversePhaseScan" ]; then
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">reversePhaseScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$reversePhaseScan" 2>/dev/null)</td>
-              </tr>"  >> "$html"
-            fi
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
-                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$topupConfigFile" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
-                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$icafixTraining" 2>/dev/null)</td>
-              </tr>"   > "$html"
 }
 
 function QC_SC() {
