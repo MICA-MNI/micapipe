@@ -234,11 +234,12 @@ if [ "$procFunc" = "TRUE" ]; then
     if [ ! -d ${proc_func}/${acqStr} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_func}; exit; fi
     Warning "Erasing proc_func output files and logs: ${acqStr}"
     acqStr=${acqStr/desc-/}
-    Do_cmd rm -rf "${proc_func}"/desc-*${acqStr} \
+    Do_cmd rm -rf "${proc_func}"/desc-*"${acqStr}" \
                   "${dir_warp}/${idBIDS}_from-nativepro_func_to-${acqStr}_mode-image_desc-SyN_"* \
                   "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
                   "${dir_warp}/${idBIDS}_from-${acqStr}_to-fsnative_bbr"* \
                   "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
+                  "${dir_QC}/${idBIDS}"_module-proc_func_desc-*"${acqStr}".json \
                   "$dir_logs"/proc_func_*${acqStr}*
     grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${dir_QC}/${idBIDS}_micapipe_processed.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${dir_QC}/${idBIDS}_micapipe_processed.csv"
