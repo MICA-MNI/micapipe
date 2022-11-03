@@ -310,7 +310,7 @@ else
   func_ICA="${tmp}/ICA_MELODIC"      # ICAOutputDirectory
 fi
 
-# Make directories - exit if processing directory already exists (to prevent deletion of existing files at the end of this script).
+# Make directories
 for x in "$func_surf" "$func_volum"; do
     [[ ! -d "${x}" ]] && mkdir -p "${x}"
 done
@@ -419,7 +419,8 @@ function func_topup() {
           Do_cmd applytopup --imain="${mainScan}" --inindex=1 --datain="${tmp}/func_topupDataIn.txt" --topup="${tmp}/func_topup" --method=jac --out="${func_nii}"
 
           # Check if it worked
-          if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt"; exit; fi
+          if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt";
+          micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"; exit; fi
           export statusTopUp="YES"; ((Nsteps++))
       else
           Info "Subject ${id} has a distortion corrected functional MRI (TOPUP)"; export statusTopUp="YES"; ((N++)); ((Nsteps++))
@@ -660,15 +661,15 @@ if [[ "$noFIX" -eq 0 ]]; then
                       export statusFIX="FAILED"
                       Do_cmd mv -f "${func_ICA}" "${proc_func}"
                       json_func "${func_proc_json}"
-                      Error "FIX failed, but MELODIC status: ${statusMel} \nlog file:\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
+                      Error "FIX failed, but MELODIC status: ${statusMel} \nlog file:\t $(ls "${dir_logs}"/proc_func_*.txt)";
+                      micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"; exit
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
                              If you've installed FIX try to install required R packages and re-run:
                              'kernlab','ROCR','class','party','e1071','randomForest'"
-              #Do_cmd cp -rf "$fmri_HP" "$func_processed"
-              #export statusFIX="NO"
-              statusMel="NO"; json_func "${func_proc_json}"; exit
+              statusMel="NO"; json_func "${func_proc_json}"
+              micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"; exit
           fi
     else
         export statusFIX=$(grep FIX "${func_proc_json}" | awk -F '"' '{print $4}')
