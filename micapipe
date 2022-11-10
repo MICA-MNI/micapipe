@@ -22,7 +22,6 @@ echo -e "
 \t\033[38;5;120m-QC\033[0m 	          : OPTIONAL flag for group level Quality Control (Requires -out)
 
    Flags for basic stages of processing:
-\t\033[38;5;197m-all\033[0m              : Performs ALL stages of micapipe processing
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : Freesurfer recon-all processing
 
@@ -133,21 +132,21 @@ echo -e "
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
 \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
-\t\033[38;5;197m-slim\033[0m             : This option will keep only the main outputs and erase all the intermediate files
 \t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
 \t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
 \t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
 
 
 \033[38;5;141mUSAGE:\033[0m
-    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-all\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_freesurfer\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
 
+\033[38;5;141mDOCUMENTATION:\033[0m
+    https://github.com/MICA-MNI/micapipe
 
 \033[38;5;141mDEPENDENCIES:\033[0m
     > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
-    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
+    > ANTs        2.3.4   (https://github.com/ANTsX/ANTs)
     > FSL         6.0.3     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
     > Freesurfer  6.0     (https://surfer.nmr.mgh.harvard.edu/)
     > MRtrix3     3.0.0   (https://www.mrtrix.org)
@@ -157,7 +156,7 @@ echo -e "
     > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
 
 
-McGill University, MNI, MICA-lab, May-September 2020
+McGill University, MNI, MICA-lab
 https://github.com/MICA-MNI/micapipe
 http://mica-mni.github.io/
 "
@@ -193,10 +192,6 @@ do
   -bids)
     BIDS=$2
     shift;shift
-  ;;
-  -all)
-    ALL=TRUE
-    shift
   ;;
   -post)
     post=TRUE
@@ -342,10 +337,6 @@ do
     qcsubj=TRUE
     shift
   ;;
-  -slim)
-    mica=TRUE
-    shift
-  ;;
   -mica)
     mica=TRUE
     shift
@@ -457,7 +448,6 @@ missing_arg
 runs=($ALL $procVOL $procFS $postVOL $procDWI $procFunc $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
-                    -all
                     -proc_structural
                     -proc_freesurfer
                     -post_structural
