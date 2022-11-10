@@ -897,6 +897,7 @@ fi
 #------------------------------------------------------------------------------#
 # QC notification of completition
 micapipe_completition_status proc_func ${tagMRI}
+json_func "${func_proc_json}"
 if [[ -d "${proc_func}/ICA_MELODIC" ]] && [[ ${status} == "COMPLETED" ]]; then Do_cmd rm -fr "${proc_func}/ICA_MELODIC"; fi
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_func_${tagMRI}" "${out}/micapipe_processed_sub.csv"
 Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_func" "${module_json}"
