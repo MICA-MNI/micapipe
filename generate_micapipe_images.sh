@@ -49,7 +49,7 @@ generate() {
     --env PROC='container-micapipe v0.1.4' \
     --add-to-entrypoint "source /opt/freesurfer-6.0.0/SetUpFreeSurfer.sh" \
     --add-to-entrypoint "export FIXPATH=/opt/fix && export PATH="${FIXPATH}:${PATH}"" \
-    --entrypoint "/neurodocker/startup.sh /opt/micapipe/mica-pipe"
+    --entrypoint "/neurodocker/startup.sh /opt/micapipe/micapipe"
   }
 
 
