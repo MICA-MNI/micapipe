@@ -87,7 +87,7 @@ echo -e "
 
 \t\t\033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t\t         ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
-\t\t\033[38;5;120m-regress_WM_CSF\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
+\t\t\033[38;5;120m-NSR\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
 \t\t\t\t         ( default = no white matter and CSF signal regression )
 \t\t\033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
 \t\t\t\t         ( default = no global, white matter and CSF signal regression )
@@ -262,7 +262,7 @@ do
     thisPhase=$2
     shift;shift
   ;;
-  -regress_WM_CSF)
+  -NSR)
     NSR=TRUE
     shift
   ;;
@@ -653,7 +653,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
     else
         # LOCAL Structural processing: Volumetric
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -678,7 +678,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
     else
         #  LOCAL - Structural processing: Freesurfer
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -707,7 +707,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
              "${COMMAND}" "${PROC}"
     else
       #  LOCAL - Diffusion processing
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -737,7 +737,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
              "${COMMAND}" "${PROC}"
     else
       # LOCAL - post_structural processing
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -767,7 +767,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
              "${COMMAND}" "${PROC}"
     else
         # LOCAL - Morphology
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -801,7 +801,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     else
         # LOCAL - POST-Structural processing
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a  ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
         "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     fi
 fi
@@ -832,7 +832,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
              "${COMMAND}" "${PROC}"
     else
         # LOCAL - Geodesic distance processing
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -861,7 +861,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
              "${COMMAND}" "${PROC}"
     else
         # LOCAL - post-DWI processing (tractography)
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
 
@@ -893,7 +893,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     else
         # LOCAL - functional processing
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
         "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     fi
 fi
@@ -925,7 +925,7 @@ if [[ $qtest = "TRUE" ]]; then
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt "${COMMAND}" "${PROC}"
     else
         Info "LOCAL setup test"
-        "${COMMAND}" "${PROC}" 2>&1 | tee -a ${log_file_str}_${PROC}.txt
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}_${PROC}.txt
     fi
 fi
 
