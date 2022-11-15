@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE September 2022 (Version v0.2.0 'Northern flicker')\n"
+  echo -e "\nMICAPIPE November 2022 (Version v0.2.0 'Northern flicker')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -104,7 +104,7 @@ echo -e "
 \t\t\t            ( distortion correction; eg. file.cnf )
 \t   \033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t            ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
-\t   \033[38;5;120m-regress_WM_CSF\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
+\t   \033[38;5;120m-NSR\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no white matter and CSF signal regression )
 \t   \033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no global, white matter and CSF signal regression )
@@ -156,11 +156,11 @@ echo -e "
 
 
 \033[38;5;141mUSAGE:\033[0m
-    For more examples see: https://micapipe.readthedocs.io/en/latest/pages/04.databases/index.html
-
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_surf\033[0m
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
 
+\033[38;5;141mDOCUMENTATION:\033[0m
+    https://github.com/MICA-MNI/micapipe
 
 \033[38;5;141mDEPENDENCIES:\033[0m
     > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
@@ -174,7 +174,7 @@ echo -e "
     > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
 
 
-McGill University, MNI, MICA-lab, October 2020
+McGill University, MNI, MICA-lab
 https://github.com/MICA-MNI/micapipe
 http://mica-mni.github.io/
 "
@@ -279,7 +279,7 @@ do
     thisPhase=$2
     shift;shift
   ;;
-  -regress_WM_CSF)
+  -NSR)
     NSR=TRUE
     shift
   ;;
