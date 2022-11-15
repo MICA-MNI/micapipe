@@ -214,7 +214,7 @@ fi
 
 # Check FIX: run or no?
 if [[ "$noFIX" -eq 1 ]]; then
-    Info "ICA-FIX will be skipped! Consider performing nuisance signal regression with [-regress_WM_CSF] or [-GSR]>"
+    Info "ICA-FIX will be skipped! Consider performing nuisance signal regression with [-NSR] or [-GSR]>"
 
     # Check ICA-FIX Training input
     if [[ ! ${changeIcaFixTraining} == "DEFAULT" ]]; then
