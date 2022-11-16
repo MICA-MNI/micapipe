@@ -9,7 +9,7 @@ Generates a pdf file for QC of the processing
     Parameters
     ----------
 
-    subj      : str, subject identification
+    sub      : str, subject identification
 
     out       : Output directory for the processed files <derivatives>
 
@@ -44,30 +44,30 @@ import sys
 import pandas as pd
 import os
 import argparse
+import json
 
 # Arguments
 parser = argparse.ArgumentParser()
 
 # Required
-parser.add_argument('-subj',
-                    dest='subj',
+parser.add_argument('-sub',
+                    dest='sub',
                     type=str,
                     help='Subject identification',
-                    nargs='1'
                     required=True
                     )
 
 parser.add_argument('-out',
-                    dest='out'
+                    dest='out',
                     type=str,
-                    help='Output directory for the processed files <derivatives>'
+                    help='Output directory for the processed files <derivatives>',
                     required=True
                     )
 
 parser.add_argument('-bids',
-                    dest='bid',
+                    dest='bids',
                     type=str,
-                    help='Path to BIDS Directory'
+                    help='Path to BIDS Directory',
                     required=True
                     )
 
@@ -111,7 +111,7 @@ parser.add_argument('-version',
 args = parser.parse_args()
 
 # Arguments
-subj = args.subj
+sub = args.sub
 out = os.path.realpath(args.out)
 bids = os.path.realpath(args.bids)
 ses = args.ses
@@ -120,88 +120,268 @@ tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
 
+<<<<<<< HEAD
+# Optional inputs:
+# Session
+if ses == "":
+    ses_number = "Not defined"
+    sbids = sub
+else:
+    ses_number = ses
+    ses = "ses-" + ses_number
+    sbids = sub + "_" + ses
+
 derivatives = out.split('/micapipe_v0.2.0')[0]
 
+# Path to MICAPIPE
+MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
+
+
+## ------------------------------------------------------------------------- ##
+##                                                                           ##
+##                      Helper functions to generate PDF                     ##
+##                                                                           ##
+## ------------------------------------------------------------------------- ##
+def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
+    # Header
+    report_header = (
+        # Micapipe banner
+        '<img id=\"top\" src=\"{MICAPIPE}/docs/figures/micapipe_long.png\" alt=\"micapipe\">'
+
+        # Dataset name
+        '<h1 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:center;margn-bottom:0">'
+        '{dataset_name} <h1>'
+
+        # Subject's ID | Session
+        '<h3 style="color:#343434;font-family:Helvetica, sans-serif;text-align:center;margin-bottom:25px">'
+        '<b>Subject</b>: {sub} &nbsp | &nbsp <b>Session</b>: {ses_number} </h3>'
+    )
+    return report_header.format(sub=sub, ses_number=ses_number, dataset_name=dataset_name, MICAPIPE=MICAPIPE)
+
+# Header template
+def report_module_header_template(module=''):
+    # Module header:
+    report_module_header = (
+        '<p style="border:2px solid #666;padding-top:10px;padding-left:5px;background-color:#eee;font-family:Helvetica, '
+        'sans-serif;font-size:14px">'
+        '<b>Module: {module}</b> <p>'
+    )
+    return report_module_header.format(module=module)
+
+# QC Summary
+def report_qc_summary_template(jsonPath=''):
+    module_description = os.path.realpath(jsonPath)
+    with open( module_description ) as f:
+        module_description = json.load(f)
+    module = module_description["Module"]
+    status = module_description["Status"]
+    progress = module_description["Progress"]
+    time = module_description["Processing.time"]
+    threads = module_description["Threads"]
+    micapipe_version = module_description["micapipeVersion"]
+    date = module_description["Date"]
+
+    # QC summary table
+    report_qc_summary = (
+        '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+        '<b>QC summary</b> </p>'
+
+        '<table style="border:1px solid #666;width:100%">'
+            # Status
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Status</td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left>{status}: {progress} steps completed</td></tr>'
+            # Processing time
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Processing time</td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left>{time} minutes</td></tr>'
+            # Thread
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Number of threads</td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left>{threads}</td></tr>'
+            # Micapipe version
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Micapipe version</td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left>{micapipe_version}</td></tr>'
+            # Date
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Date</td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left>{date}</td></tr>'
+        '</table>'
+    )
+    return report_qc_summary.format(status=status, progress=progress, time=time, threads=threads, micapipe_version=micapipe_version, date=date)
+
+# INPUT TEMPLATE
+def report_module_input_template(inputs=''):
+    # Module inputs
+    report_module_input = (
+        # Module inputs:
+        '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0">'
+        '<b>Inputs </b> </p>'
+    )
+    report_module_input.format(inputs=inputs)
+
+    _input = ''
+    for i in inputs.split():
+        _input_template = ('<ul><li>{i}</li></ul>')
+        _input += _input_template.format(i=i)
+    report_module_input += _input
+
+    return report_module_input
+
+# OUTPUT TEMPLATE
+def report_module_output_template(outName='', outPath='', figPath=''):
+    # Module Outputs
+    report_module_output = (
+        '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+        '<b> {outName} </b> </p>'
+
+        '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+        'Filepath: <wbr>{outPath}</wbr> </p>'
+
+        '<center> <img style="width:500px%;margin-top:0px" src="{figPath}"> </center>'
+    )
+    return report_module_output.format(outName=outName, outPath=outPath, figPath=figPath)
+
+
+# NIFTI_CHECK (generate qc images)
+def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
+
+    if os.path.exists(outPath):
+        if os.path.exists(refPath):
+            ROI = '-roi' if roi else ''
+            print(ROI)
+            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, roi, figPath))
+        else:
+            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s -out %s"%(outPath, figPath))
+
+        _static_block = report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
+    else:
+        _static_block = ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+            '<b> {outName} </b> </p>'
+            '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+            'Filepath: does not exist </p>').format(outName=outName)
+
+    return _static_block
+
+=======
+derivatives = out.split('/micapipe_v0.2.0')[0]
+>>>>>>> 74216e79748946c941edeb2bf290c2b5b0427c0e
+
+## ------------------------------------------------------------------------- ##
+##                                                                           ##
+##                              Build QC report                              ##
+##                                                                           ##
+## ------------------------------------------------------------------------- ##
+static_report = ''
+
+
+## ---------------------------- MICAPIPE header ---------------------------- ##
 
 # Dataset name
 dataset_description = os.path.realpath("%s/dataset_description.json"%(bids))
 with open( dataset_description ) as f:
     dataset_description = json.load(f)
 dataset_name = dataset_description["Name"]
+_static_block = report_header_template(sub=sub, ses_number=ses_number, dataset_name=dataset_name, MICAPIPE=MICAPIPE)
 
-# Opitonal inputs:
-# Session
-if ses == "":
-    ses = 'Not defined'
+static_report += _static_block
 
-# QC module summary
-status =
-progress =
-time =
-threads =
-micapipe_version =
-module =
 
-# QC png
-qc_png = os.path.realpth("")
+## ------------------------ PROC-STRUCTURAL MODULE ------------------------- ##
+_static_block =  report_module_header_template(module='proc_structural')
 
-report_block_header = (
-    # ============================================================================================================= #
-    # =============================================== P A G E   # 1 =============================================== #
-    # ============================================================================================================= #
+# QC summary
+proc_structural_json = "%s/%s/%s/QC/%s_module-proc_structural.json"%(out,sub,ses,sbids)
+_static_block += report_qc_summary_template(proc_structural_json)
 
-    # Micapipe banner
-    '<img id=\"top\" src=\"${MICAPIPE}/docs/figures/micapipe_long.png\" style=\"width:100%\"  alt=\"micapipe\">'
+# Inputs
+nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_t1w.json"%(out,sub,ses,sbids))
+with open( nativepro_json ) as f:
+    nativepro_json = json.load(f)
+inputs = nativepro_json["inputsRawdata"]
+_static_block += report_module_input_template(inputs=inputs)
 
-    # Dataset name
-    '<h1 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:center;margn-bottom:0">'
-    '{dataset_name} <h1>'
+static_report += _static_block
 
-    # Subject's ID | Session
-    '<h3 style="color:#343434;font-family:Helvetica, sans-serif;text-align:center;margin-bottom:0">'
-    '<b>Subject</b>: {subj} &nbsp | &nbsp <b>Session</b>: {ses} </h3>'
+# Outputs
+_static_block = (
+        '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+        '<b>Main outputs </b> </p>'
 )
 
-report_module = (
-    # ===================================== Structural Prossing - proc_struct ===================================== #
-    # Module header:
-    '<div class="boxed" style="border:2px solid #666;padding:10px;background-color:#eee;font-family:Helvetica, '
-    'sans-serif;font-size:14px">'
-    '<b>Module: {module}</b> </div>'
+T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids)
 
-    # QC summary:
-    '<h4 style="font-family:Helvetica, sans-serif;text-align:Left;margin-bottom:10px">'
-    'Module-specific QC summary </h4>'
+figPath = "%s/nativepro_t1w_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="T1w nativepro", outPath=T1w_nativepro, figPath=figPath)
 
-    '<style> td {padding:5px;text-align:left} </style>'
-    '<table border="1px solid" style="width:100%;border-collapse:collapse">'
-        '<tr> <td>Status</td> <td>{status}: {progress} steps completed </td> </tr>'
-        '<tr> <td>Processing time</td> <td>{time} minutes</td> </tr>'
-        '<tr> <td>Number of threads</td> <td>{threads}</td> </tr>'
-        '<tr> <td>Micapipe version</td> <td>{micapipe_version</td> </tr> </table>'
+outPath = "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_t1w_brain_mask_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-    # Module inputs:
-    '<h4 style="font-family:Helvetica, sans-serif;text-align:Left;margin-bottom:10px">'
-    'Module-specific input files </h4>'
+outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-    '<style> td {padding:5px;text-align:left} </style>'
-    '<table border="1px solid" style="width:100%;border-collapse:collapse">'
-        '<tr> <td>Status</td> <td>{status}</td> </tr>'
-        '<tr> <td>Progress</td> <td>{progress} steps completed</td> </tr>'
-        '<tr> <td>Number of threads</td> <td>{threads}</td> </tr>'
-        '<tr> <td>Processing time</td> <td>{time} minutes</td> </tr> </table>'
+outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-    # Module Outputs
-    # T1w nativepro
-    '<h4 style="font-family:Helvetica, sans-serif;text-align:Left;margin-bottom:10px">'
-    'T1w nativepro </h4>'
+outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-    '<img src="{derivatives}/micapipe/{subj}/{ses}"{}'
-    '<br>\n'
-)
+outPath =  "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_t1w_brain_pve_2_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+
+# outName = "T1w nativepro white matter partial volume image (pve2)"
+# outPath = "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
+# figPath = "%s/nativepro_t1w_brain_mni152_2_screenshot.png"%(tmpDir)
+# if os.path.exists(outPath):
+#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
+#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
+# else:
+#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+#         '<b> {outName} </b> </p>'
+#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+#         'Filepath: does not exist </p>').format(outName=outName)
+#
+# outName = "T1w nativepro cerebellum atlas"
+# outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_t1w_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
+# figPath = "%s/nativepro_t1w_cerebllum_screenshot.png"%(tmpDir)
+# if os.path.exists(outPath):
+#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
+#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
+# else:
+#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+#         '<b> {outName} </b> </p>'
+#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+#         'Filepath: does not exist </p>').format(outName=outName)
+#
+# outName = "T1w nativepro subcortical atlas"
+# outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_t1w_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
+# figPath = "%s/nativepro_t1w_subcortical_screenshot.png"%(tmpDir)
+# if os.path.exists(outPath):
+#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
+#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
+# else:
+#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+#         '<b> {outName} </b> </p>'
+#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+#         'Filepath: does not exist </p>').format(outName=outName)
+#
+# ################# FIX outPath ####################################
+# outName = "T1w nativepro 5 tissue segmentation (5TT)"
+# outPath = "%s/%s/%s/anat/%s_space-nativepro_t1w_TT.nii.gz"%(out,sub,ses,sbids)
+# figPath = "%s/nativepro_t1w_5TT_screenshot.png"%(tmpDir)
+# if os.path.exists(outPath):
+#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
+#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
+# else:
+#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+#         '<b> {outName} </b> </p>'
+#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
+#         'Filepath: does not exist </p>').format(outName=outName)
+
+static_report += _static_block
 
 
-convert_html_to_pdf(, )
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
@@ -217,3 +397,6 @@ def convert_html_to_pdf(source_html, output_filename):
 
     # return True on success and False on errors
     return pisa_status.err
+
+# Generate PDF report of Micapipe QC
+convert_html_to_pdf(static_report, out+"/"+sub+'/'+ses+'/QC/'+sbids+'_test.pdf')
