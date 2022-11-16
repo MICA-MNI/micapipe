@@ -604,7 +604,7 @@ function json_nativepro_mask() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "$1" -transform))
   Info "Creating T1nativepro_brain json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
