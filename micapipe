@@ -643,14 +643,14 @@ if [ "$ALL" = "TRUE" ] || [ "$procVOL" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
     # all.q - Structural processing: Volumetric
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Structural processing: Volumetric"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
     else
         # LOCAL Structural processing: Volumetric
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -668,14 +668,14 @@ if [ "$ALL" = "TRUE" ] || [ "$procFS" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
              # all.q - Structural processing: Freesurfer
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Structural processing: Freesurfer"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt "${COMMAND}" "${PROC}"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_freesurfer -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
     else
         #  LOCAL - Structural processing: Freesurfer
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -696,7 +696,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     # all.q - Diffusion processing
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Diffusion processing"
@@ -704,7 +704,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     else
       #  LOCAL - Diffusion processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -726,7 +726,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     # all.q - POST Structural processing
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - POST Structural processing"
@@ -734,7 +734,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postVOL" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     else
       # LOCAL - post_structural processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -756,7 +756,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     # all.q - Morphology
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Cortical Morphoogy"
@@ -764,7 +764,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMorph" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     else
         # LOCAL - Morphology
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -788,7 +788,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]]; then
@@ -797,7 +797,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     else
         # LOCAL - POST-Structural processing
@@ -821,7 +821,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-              "${COMMAND}" "${PROC}"
+              $COMMAND $PROC
     # all.q - Geodesic distance
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Geodesic distance"
@@ -829,7 +829,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postGD" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     else
         # LOCAL - Geodesic distance processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -850,7 +850,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - POST DWI processing (tractography)"
@@ -858,7 +858,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postDWI" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
     else
         # LOCAL - post-DWI processing (tractography)
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
@@ -880,7 +880,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         Do_cmd qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
         qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     # all.q - functional processing
     elif [[ $qall == "TRUE" ]]; then
@@ -889,7 +889,7 @@ if [ "$ALL" = "TRUE" ] || [ "$procFunc" = "TRUE" ]; then
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
         Do_cmd qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
-             "${COMMAND}" "${PROC}"
+             $COMMAND $PROC
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     else
         # LOCAL - functional processing
@@ -918,11 +918,11 @@ if [[ $qtest = "TRUE" ]]; then
     if [[ $micaq == "TRUE" ]]; then
         export PROC="qsub-MICA"
         Info "MICA qsub test: $PROC"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt "${COMMAND}" "${PROC}"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
     elif [[ $qall == "TRUE" ]]; then
         export PROC="qsub-all.q"
         Info "MICA qsub test: $PROC"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt "${COMMAND}" "${PROC}"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_micaqTEST -e ${log_file_str}_${PROC}.e -o ${log_file_str}_${PROC}.txt $COMMAND $PROC
     else
         Info "LOCAL setup test"
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}_${PROC}.txt
