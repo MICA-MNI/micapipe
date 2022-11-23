@@ -164,7 +164,11 @@ fa=$(realpath "$fa")
 here=$(pwd)
 
 if [ -z "$minStreamlinesPerVoxel" ]; then minStreamlinesPerVoxel=1; fi
-if [ -z "$tck_weights" ]; then tck_weights=""; else tck_weights="-tck_weights_in $tck_weights"; fi
+if [ -z "$tck_weights" ]; then tck_weights=""; else
+    tck_weights=$(realpath "$tck_weights")
+    if [ ! -f "$tck_weights" ]; then Error "File not found -weights:\n\t\t $tck_weights"; help; exit 2; fi
+    tck_weights="-tck_weights_in ${tck_weights}";
+fi
 structures=$(ls -1 "$autoPtx")
 
 #------------------------------------------------------------------------------#
