@@ -118,7 +118,7 @@ Error "One or more mandatory arguments are missing:
 help; exit 1; fi
 
 # Get the real path of the Inputs
-out=$(realpath $out)/micapipe
+out=$(realpath $out)/micapipe_v0.2.0
 BIDS=$(realpath $BIDS)
 id=${id/sub-/}
 here=$(pwd)
@@ -177,31 +177,29 @@ cd $tmpDir
 # -----------------------------------------------------------------------------------------------
 # PROC structural
 # -----------------------------------------------------------------------------------------------
-xfm_proc_struc_json=${dir_warp}/${IidBIDS}_transformations-proc_structural.json
 
-# T1w to MNI 0.8
-t1w_in_MNI08=${tmpDir}/t1w_in_MNI08.nii.gz
-transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1 {print $4}')
+# T1w nativepro 5 tissue segmentation (5tt)
+Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_t1w_brain_5tt.nii.gz" -force
 
+# Registration: T1wnatipro to MNI152 (2mm and 0.8mm)
+xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
 for mm in 2 0.8; do
-    # MNI152 brain templates
+    t1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_t1w_brain.nii.gz
+
+    if [[ $(mm) == 2 ]] ; then
+      transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
+    else
+      transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
+    fi
     MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -v -u int -o "${t1w_in_MNI08}" \
-            -i "$T1nativepro_brain" \
+    Do_cmd antsApplyTransforms -d 3 -v -u int -o "${t1w_in_MNI}" \
+            -i "${T1nativepro_brain}" \
             -r "${MNI152_brain}" \
-            -t "${transformation}"
+            "${transformation}"
 done
-# -----------------------------------------------------------------------------------------------
-# T1w to MNI 2
-t1w_in_MNI20=${tmpDir}/t1w_in_MNI20.nii.gz
 
-# -----------------------------------------------------------------------------------------------
-# SURF structural
-# -----------------------------------------------------------------------------------------------
+Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
-
-# CALL QC.py
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub # arguments here
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition

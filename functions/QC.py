@@ -120,7 +120,6 @@ tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
 
-<<<<<<< HEAD
 # Optional inputs:
 # Session
 if ses == "":
@@ -245,7 +244,6 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
     if os.path.exists(outPath):
         if os.path.exists(refPath):
             ROI = '-roi' if roi else ''
-            print(ROI)
             os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, roi, figPath))
         else:
             os.system("${MICAPIPE}/functions/nifti_capture.py -img %s -out %s"%(outPath, figPath))
@@ -259,9 +257,7 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
 
     return _static_block
 
-=======
 derivatives = out.split('/micapipe_v0.2.0')[0]
->>>>>>> 74216e79748946c941edeb2bf290c2b5b0427c0e
 
 ## ------------------------------------------------------------------------- ##
 ##                                                                           ##
@@ -314,70 +310,23 @@ outPath = "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_mask.nii.gz"%(out,sub,ses,
 figPath = "%s/nativepro_t1w_brain_mask_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+outPath = "%s/nativepro_t1w_brain_5tt.nii.gz"%(tmpDir)
+figPath = "%s/nativepro_t1w_brain_5tt_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="T1w nativepro 5 tissue segmentation (5TT)", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
+outPath = "%s/%s_space-MNI152_0.8_t1w_brain.nii.gz"%(tmpDir,sbids)
+MNI152_0_8mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_0.8mm_brain_mask.nii.gz"
 figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=MNI152_0_8mm, refPath=outPath, figPath=figPath)
 
-outPath =  "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+outPath = "%s/%s_space-MNI152_2_t1w_brain.nii.gz"%(tmpDir,sbids)
+MNI152_2mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_2mm_brain_mask.nii.gz"
+figPath = "%s/nativepro_t1w_brain_mni152_2_screenshot.png"%(tmpDir)
+_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=MNI152_2mm, refPath=outPath, figPath=figPath)
 
 outPath =  "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
 figPath = "%s/nativepro_t1w_brain_pve_2_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
-
-# outName = "T1w nativepro white matter partial volume image (pve2)"
-# outPath = "%s/%s/%s/xfm/%s_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"%(out,sub,ses,sbids)
-# figPath = "%s/nativepro_t1w_brain_mni152_2_screenshot.png"%(tmpDir)
-# if os.path.exists(outPath):
-#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
-#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
-# else:
-#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
-#         '<b> {outName} </b> </p>'
-#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
-#         'Filepath: does not exist </p>').format(outName=outName)
-#
-# outName = "T1w nativepro cerebellum atlas"
-# outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_t1w_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
-# figPath = "%s/nativepro_t1w_cerebllum_screenshot.png"%(tmpDir)
-# if os.path.exists(outPath):
-#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
-#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
-# else:
-#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
-#         '<b> {outName} </b> </p>'
-#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
-#         'Filepath: does not exist </p>').format(outName=outName)
-#
-# outName = "T1w nativepro subcortical atlas"
-# outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_t1w_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
-# figPath = "%s/nativepro_t1w_subcortical_screenshot.png"%(tmpDir)
-# if os.path.exists(outPath):
-#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s -roi"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
-#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
-# else:
-#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
-#         '<b> {outName} </b> </p>'
-#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
-#         'Filepath: does not exist </p>').format(outName=outName)
-#
-# ################# FIX outPath ####################################
-# outName = "T1w nativepro 5 tissue segmentation (5TT)"
-# outPath = "%s/%s/%s/anat/%s_space-nativepro_t1w_TT.nii.gz"%(out,sub,ses,sbids)
-# figPath = "%s/nativepro_t1w_5TT_screenshot.png"%(tmpDir)
-# if os.path.exists(outPath):
-#     os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s -out %s"%("%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids), outPath, figPath))
-#     _static_block += report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
-# else:
-#     _static_block += ('<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
-#         '<b> {outName} </b> </p>'
-#         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
-#         'Filepath: does not exist </p>').format(outName=outName)
+_static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, figPath=figPath)
 
 static_report += _static_block
 
