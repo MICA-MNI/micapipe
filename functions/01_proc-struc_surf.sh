@@ -124,23 +124,54 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
 
     # Recontruction method
     if [[ "$FastSurfer" == "TRUE" ]]; then
-        Info "Running FastSurfer"
-        Do_cmd run_fastsurfer.sh --t1 "${T1nativepro}" \
-                  --sid "${idBIDS}" --sd "${SUBJECTS_DIR}" \
-                  --fs_license "${fs_licence}" \
-                  --parallel --threads "${threads}" --py python3.7 --no_cuda \
-		              --surfreg
+        Info "Running FastSurfer" # Working on the containarized version
+        # Do_cmd run_fastsurfer.sh --t1 "${T1nativepro}" \
+        #           --sid "${idBIDS}" --sd "${SUBJECTS_DIR}" \
+        #           --fs_license "${fs_licence}" \
+        #           --parallel --threads "${threads}" --py python3.7 --no_cuda \
+		    #           --surfreg
+        docker run -v ${T1nativepro}:/data/${idBIDS}_space-nativepro_t1w.nii.gz \
+           -v "${SUBJECTS_DIR}":/output \
+           -v "${fs_licence}":/fs_license/license.txt \
+           --rm fastsurfer:cpu \
+           --t1 /data/${idBIDS}_space-nativepro_t1w.nii.g \
+           --sid ${idBIDS} --sd /output \
+           --fs_license /fs_license/license.txt \
+           --parallel --threads ${threads} --no_cuda \
+           --surfreg
     else
-        Info "Running Freesurfer"
-        Do_cmd recon-all -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        Info "Running Freesurfer 7.3.2 comform volume to minimum"
+        #Do_cmd recon-all -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
         # Run recon-all -autorecon1
-        Do_cmd recon-all -autorecon1 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
-        # Replace brainmask.mgz with mask
+        Do_cmd recon-all -autorecon1 -cm -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
 
-        # Run recon-all -autorecon2
-        Do_cmd recon-all -autorecon2 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
-        # Run recon-all -autorecon3
-        Do_cmd recon-all -autorecon3 -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        # Replace brainmask.mgz with mri_synthstrip mask
+        Do_cmd mri_synthstrip -i ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz -o ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.auto.mgz --no-csf
+        Do_cmd cp ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.auto.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.mgz
+
+        # Run recon-all -autorecon2 weird bug on recon2 is skipping -careg (will run each step manually)
+        Do_cmd recon-all -gcareg -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -canorm -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -careg -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -calabel -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -normalization2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -maskbfs -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -segmentation -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -fill -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -tessellate -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -smooth1 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -inflate1 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -qsphere -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -fix -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -autorecon-pial -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -autorecon2-wm -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Do_cmd recon-all -white -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Do_cmd recon-all -smooth2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Do_cmd recon-all -inflate2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Do_cmd recon-all -curvHK -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Do_cmd recon-all -curvstats -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        # Run autorecon3
+        Do_cmd recon-all -autorecon3 -cm -parallel -openmp ${threads} -s "${idBIDS}"
     fi
 
     # Copy the freesurfer log to our MICA-log Directory

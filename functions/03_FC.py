@@ -1,3 +1,46 @@
+#!/usr/bin/env python3.7
+# -*- coding: utf-8 -*-
+
+"""
+micapipe Functional Connectome and cofounding regression script.
+
+Generates a surface-based clean data [func~spike+wm+csf+gsr] (optional)
+Generates multiple functional connectomes based on micapipe's provided parcellations.
+
+    Positional arguments
+    ----------
+
+    subject     :  str
+                    BIDS id (including ses if necessary, eg. sub-01_ses-01).
+
+    funcDir     :  str
+                    Path to subject func directory.
+
+    labelDir    :  str
+                    Path to subject surface labels.
+
+    parcDir     :  str
+                    Path to micapipe parcellations directory.
+
+    volmDir     :  str
+                    Path to subject anat/volumetric directory (parcellations).
+
+    performNSR  :  int
+                    YES: 1, NO: 0. Performs Nuisance Signal Regression
+
+    performGSR  :  int
+                    YES: 1, NO: 0. Perform global signal regression to the clean data
+
+    func_lab    :  str
+                    Identifier of type of sequence multi/single echo.
+
+    noFC      :  str
+                    [TRUE, FALSE]. If True skipps the functional connectomes generation.
+
+Created and modified from 2019 to 2022
+@author: A collaborative effort of the MICA lab  :D
+"""
+
 import sys
 import os
 import glob
@@ -15,17 +58,11 @@ parcDir = sys.argv[4]
 volmDir = sys.argv[5]
 performNSR = sys.argv[6]
 performGSR = sys.argv[7]
-GSRtag = sys.argv[8]
-func_lab = sys.argv[9]
-
-# Rename outputs with GSR
-if GSRtag == 'TRUE':
-    gsr='_gsr'
-else:
-    gsr=''
+func_lab = sys.argv[8]
+noFC = sys.argv[9]
 
 # check if surface directory exist; exit if false
-if os.listdir(funcDir+'/surf/'):
+if os.listdir(funcDir+'/surfaces/'):
     print('')
     print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
     print('surfaces directory found; lets get the party started!')
@@ -35,6 +72,7 @@ else:
     print('')
     print(':( sad face :( sad face :( sad face :(')
     print('No surface directory. Exiting. Bye-bye')
+    print('Run the module -proc_freesurfer first!')
     print(':( sad face :( sad face :( sad face :(')
     print('')
     exit()
@@ -45,9 +83,9 @@ else:
 # ------------------------------------------
 
 # Find and load surface-registered cortical timeseries
-os.chdir(funcDir+'/surf/')
-x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_lh_10mm*'))
-x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_rh_10mm*'))
+os.chdir(funcDir+'/surfaces/')
+x_lh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_lh_10mm*'))
+x_rh = " ".join(glob.glob(funcDir+'/surfaces/'+'*space-conte69-32k_rh_10mm*'))
 lh_data = nib.load(x_lh)
 lh_data = np.squeeze(lh_data.get_fdata())
 rh_data = nib.load(x_rh)
@@ -116,61 +154,94 @@ n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx v
 data = np.append(np.append(sctx, cereb, axis=1), data, axis=1)
 
 # Load confound files
-spike = []
 os.chdir(funcDir+'/volumetric/')
-x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD*'))
-x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD.1D'))
+x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD.1D'))
 x_dof = " ".join(glob.glob(funcDir+'/volumetric/*'+func_lab+'.1D'))
-x_refrms = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFRMS.1D'))
+# x_refmse = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFMSE.1D'))
+x_fd = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_FD*'))
 x_csf = " ".join(glob.glob(funcDir+'/volumetric/'+'*CSF*'))
 x_wm = " ".join(glob.glob(funcDir+'/volumetric/'+'*WM*'))
 x_gs = " ".join(glob.glob(funcDir+'/volumetric/'+'*global*'))
 
-# Nuisance signal regression: spikes and (optional) WM/CSF
-if x_spike:
-    spike = np.loadtxt(x_spike)
-    if spike.ndim == 1:
-        spike = np.expand_dims(spike, axis=1)
+
+def expand_dim(Data):
+    if Data.ndim == 1:
+        Data = np.expand_dims(Data, axis=1)
+    return Data
+
+# Function that calculates the regressed data
+def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
+    """ Nuisance signal regression: spikes and (optional) WM/CSF:
+        This function loads and generates the regression matrix according to the input parameters
+        and returns the data corrected by the selected regresors (wm, csf, gs).
+        By default will regress motion parameters and spikeRegressors
+
+    Parameters
+    ----------
+    x_spike : str (spikeRegressors_FD file)
+    Data : array
+    performNSR : str (0,1)
+    performGSR : str (0,1)
+
+    Return
+    ------
+    Data_corr : array of data corrected
+    """
+    dof = np.loadtxt(x_dof)
+    csf = expand_dim(np.loadtxt(x_csf))
+    wm = expand_dim(np.loadtxt(x_wm))
+    gs = expand_dim(np.loadtxt(x_gs))
+    spike = []
+    print('')
+    def check_arrays():
+        if np.array_equal(mdl, ones) != True:
+            print('apply regression')
+            slm = LinearRegression().fit(Data, mdl)
+            Data_res = Data-np.dot(mdl, slm.coef_)
+        else:
+            Data_res = Data
+        return Data_res
+    if x_spike:
+        spike = expand_dim(np.loadtxt(x_spike))
+        ones = np.ones((spike.shape[0], 1))
+        mdl = []
+
+        # regress out spikes from individual timeseries
+        if performNSR == "1":
+            print(Data_name + ' model : func ~ spikes + dof + wm + csf')
+            mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1)
+        elif performGSR == "1":
+            print(Data_name + ' model : func ~ spikes + dof + wm + csf + gs')
+            mdl = np.append(np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
+        else:
+            print(Data_name + 'Default model : func ~ spikes')
+            mdl = np.append(ones, spike, axis=1)
+        # apply regression
+        Data_corr = check_arrays()
     else:
-        print("spike file loaded as 2D")
-    # regress out spikes from individual timeseries
-    ones = np.ones((spike.shape[0], 1))
-    mdl = []
-    if performNSR == 1:
         wm = np.loadtxt(x_wm)
         csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
-    else:
-        mdl = np.append(ones, spike, axis=1)
-    # conte
-    slm = LinearRegression().fit(data, mdl)
-    data_corr = data-np.dot(mdl, slm.coef_)
-else:
-    del spike
-    print('no spikey, no spikey, will skippy')
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
-        slm = LinearRegression().fit(data, mdl)
-        data_corr = data-np.dot(mdl, slm.coef_)
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(ones, wm, axis=1), csf, axis=1), gs, axis = 1)
-        slm = LinearRegression().fit(data, mdl)
-        data_corr = data-np.dot(mdl, slm.coef_)
-    else:
-        data_corr = data
+        ones = np.ones((wm.shape[0], 1))
+        print('NO spikeRegressors_FD file, will skip loading: ' + Data_name)
+        if performNSR == 1:
+            print(Data_name + ', model : func ~ dof + wm + csf')
+            mdl = np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1)
+        elif performGSR == 1:
+            print(Data_name + ', model : func ~ dof + wm + csf + gs')
+            gs = np.loadtxt(x_gs)
+            mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
+        else:
+            print(Data_name + ', model : none')
+            mdl = ones
+        # apply regression
+        Data_corr = check_arrays()
+    return Data_corr
+
+# conte69
+data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'conte69')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surf/' + subject + '_func_space-conte69-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surfaces/' + subject + '_func_space-conte69-32k_desc-timeseries_clean.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
@@ -185,162 +256,70 @@ parcellationList.remove('cerebellum')
 # Start with conte parcellations
 parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
 
-for parcellation in parcellationList_conte:
-    parcSaveName = parcellation.split('_conte')[0]
-    parcPath = os.path.join(parcDir, parcellation) + '.csv'
+if noFC!="TRUE":
+    for parcellation in parcellationList_conte:
+        parcSaveName = parcellation.split('_conte')[0]
+        parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
-    if parcellation == "aparc-a2009s_conte69":
-        print("parcellation " + parcellation + " currently not supported")
-        continue
-    else:
-        thisparc = np.loadtxt(parcPath)
+        if parcellation == "aparc-a2009s_conte69":
+            print("parcellation " + parcellation + " currently not supported")
+            continue
+        else:
+            thisparc = np.loadtxt(parcPath)
 
-    # Parcellate cortical timeseries
-    data_corr_ctx = data_corr[:, -n_vertex_ctx_c69:]
-    uparcel = np.unique(thisparc)
-    ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
-    for lab in range(len(uparcel)):
-        tmpData = data_corr_ctx[:, thisparc == lab]
-        ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+        # Parcellate cortical timeseries
+        data_corr_ctx = data_corr[:, -n_vertex_ctx_c69:]
+        uparcel = np.unique(thisparc)
+        ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
+        for lab in range(len(uparcel)):
+            tmpData = data_corr_ctx[:, thisparc == lab]
+            ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-    ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
-    ts_r = np.corrcoef(np.transpose(ts))
+        ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
+        ts_r = np.corrcoef(np.transpose(ts))
 
-    if np.isnan(exclude_labels[0]) == False:
-        for i in exclude_labels:
-            ts_r[:, i + n_sctx] = 0
-            ts_r[i + n_sctx, :] = 0
-        ts_r = np.triu(ts_r)
-    else:
-        ts_r = np.triu(ts_r)
+        if np.isnan(exclude_labels[0]) == False:
+            for i in exclude_labels:
+                ts_r[:, i + n_sctx] = 0
+                ts_r[i + n_sctx, :] = 0
+            ts_r = np.triu(ts_r)
+        else:
+            ts_r = np.triu(ts_r)
 
-    np.savetxt(funcDir + '/surf/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC' + gsr + '.txt',
-               ts_r, fmt='%.6f')
+        np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC.txt',
+                   ts_r, fmt='%.6f')
+        del ts_r
+        del ts
+        del thisparc
+else:
+    print('')
+    print('...... no FC was selected, will skipp the functional connectome generation')
 
 # Clean up
-del ts_r
-del ts
 del data_corr
 del data
-del thisparc
-
 
 # ------------------------------------------
 # Native surface processing
 # ------------------------------------------
 
 # Process left hemisphere timeseries
-os.chdir(funcDir+'/surf/')
-x_lh_nat = " ".join(glob.glob(funcDir+'/surf/' + subject + '_func_space-fsnative_lh_10mm.mgh'))
+os.chdir(funcDir+'/surfaces/')
+x_lh_nat = " ".join(glob.glob(funcDir+'/surfaces/' + subject + '_func_space-fsnative_lh_10mm.mgh'))
 lh_data_nat = nib.load(x_lh_nat)
 lh_data_nat = np.transpose(np.squeeze(lh_data_nat.get_fdata()))
 
-# Nuisance signal regression: spikes and (optional) WM/CSF
-spike = []
-if x_spike:
-    spike = np.loadtxt(x_spike)
-    if spike.ndim == 1:
-        spike = np.expand_dims(spike, axis=1)
-    else:
-        print("spike file loaded as 2D")
-    # regress out spikes from individual timeseries
-    ones = np.ones((spike.shape[0], 1))
-    mdl = []
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
-    else:
-        mdl = np.append(ones, spike, axis=1)
-
-    slm = LinearRegression().fit(lh_data_nat, mdl)
-    lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
-    del lh_data_nat
-    del slm
-else:
-    del spike
-    print('no spikey, no spikey, will skippy')
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
-        slm = LinearRegression().fit(lh_data_nat, mdl)
-        lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
-        del lh_data_nat
-        del slm
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(ones, wm, axis=1), csf, axis=1), gs, axis=1)
-        slm = LinearRegression().fit(lh_data_nat, mdl)
-        lh_data_nat_corr = lh_data_nat-np.dot(mdl, slm.coef_)
-        del lh_data_nat
-        del slm
-    else:
-        lh_data_nat_corr = lh_data_nat
-        del lh_data_nat
+# left hemisphere native data
+lh_data_nat_corr = get_regressed_data(x_spike, lh_data_nat, performNSR, performGSR, 'lh_native')
 
 # Process right hemisphere timeseries
-os.chdir(funcDir+'/surf/')
-x_rh_nat = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_rh_10mm.mgh'))
+os.chdir(funcDir+'/surfaces/')
+x_rh_nat = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_rh_10mm.mgh'))
 rh_data_nat = nib.load(x_rh_nat)
 rh_data_nat = np.transpose(np.squeeze(rh_data_nat.get_fdata()))
 
-# Nuisance signal regression: spikes and (optional) WM/CSF
-spike = []
-if x_spike:
-    spike = np.loadtxt(x_spike)
-    if spike.ndim == 1:
-        spike = np.expand_dims(spike, axis=1)
-    else:
-        print("spike file loaded as 2D")
-    # regress out spikes from individual timeseries
-    ones = np.ones((spike.shape[0], 1))
-    mdl = []
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
-    else:
-        mdl = np.append(ones, spike, axis=1)
-    slm = LinearRegression().fit(rh_data_nat, mdl)
-    rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
-    del rh_data_nat
-    del slm
-else:
-    del spike
-    print('no spikey, no spikey, will skippy')
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
-        slm = LinearRegression().fit(rh_data_nat, mdl)
-        rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
-        del rh_data_nat
-        del slm
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(ones, wm, axis=1), csf, axis=1), gs, axis=1)
-        slm = LinearRegression().fit(rh_data_nat, mdl)
-        rh_data_nat_corr = rh_data_nat-np.dot(mdl, slm.coef_)
-        del rh_data_nat
-        del slm
-    else:
-        rh_data_nat_corr = rh_data_nat
-        del rh_data_nat
+# right hemisphere native data
+rh_data_nat_corr = get_regressed_data(x_spike, rh_data_nat, performNSR, performGSR, 'rh_native')
 
 # Concatenate hemispheres and clean up
 dataNative_corr = np.append(lh_data_nat_corr, rh_data_nat_corr, axis=1)
@@ -348,110 +327,73 @@ del lh_data_nat_corr
 del rh_data_nat_corr
 
 # Process subcortex and cerebellum
-spike = []
 sctx_cereb = np.append(sctx, cereb, axis=1)
 del sctx
 del cereb
-if x_spike:
-    spike = np.loadtxt(x_spike)
-    if spike.ndim == 1:
-        spike = np.expand_dims(spike, axis=1)
-    else:
-        print("spike file loaded as 2D")
-    # regress out spikes from individual timeseries
-    ones = np.ones((spike.shape[0], 1))
-    mdl = []
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1)
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(np.append(ones, spike, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
-    else:
-        mdl = np.append(ones, spike, axis=1)
-    slm = LinearRegression().fit(sctx_cereb, mdl)
-    sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
-    del sctx_cereb
-else:
-    del spike
-    print('no spikey, no spikey, will skippy')
-    if performNSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        mdl = np.append(np.append(ones, wm, axis=1), csf, axis=1)
-        slm = LinearRegression().fit(sctx_cereb, mdl)
-        sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
-        del sctx_cereb
-        del slm
-    elif performGSR == 1:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
-        gs = np.loadtxt(x_gs)
-        mdl = np.append(np.append(np.append(ones, wm, axis=1), csf, axis=1), gs, axis=1)
-        slm = LinearRegression().fit(sctx_cereb, mdl)
-        sctx_cereb_corr = sctx_cereb-np.dot(mdl, slm.coef_)
-        del sctx_cereb
-        del slm
-    else:
-        sctx_cereb_corr = sctx_cereb
-        del sctx_cereb
+sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR, 'sctx_cereb')
 
 # Generate native surface connectomes
-for parcellation in parcellationList:
+if noFC!="TRUE":
+    for parcellation in parcellationList:
+        # Load left and right annot files
+        fname_lh = 'lh.' + parcellation + '_mics.annot'
+        ipth_lh = os.path.join(labelDir, fname_lh)
+        [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
+        fname_rh = 'rh.' + parcellation + '_mics.annot'
+        ipth_rh = os.path.join(labelDir, fname_rh)
+        [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
+        # Join hemispheres
+        nativeLength = len(labels_lh)+len(labels_rh)
+        if dataNative_corr.shape[1] != nativeLength:
+            print('ERROR..' + parcellation + '_mics.annot' + ' has a mismatch between the native surface and the annot file!!')
+        else:
+            native_parc = np.zeros((nativeLength))
+            for (x, _) in enumerate(labels_lh):
+                native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
+            for (x, _) in enumerate(labels_rh):
+                native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
 
-    # Load left and right annot files
-    fname_lh = 'lh.' + parcellation + '_mics.annot'
-    ipth_lh = os.path.join(labelDir, fname_lh)
-    [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
-    fname_rh = 'rh.' + parcellation + '_mics.annot'
-    ipth_rh = os.path.join(labelDir, fname_rh)
-    [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
-    # Join hemispheres
-    nativeLength = len(labels_lh)+len(labels_rh)
-    native_parc = np.zeros((nativeLength))
-    for (x, _) in enumerate(labels_lh):
-        native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
-    for (x, _) in enumerate(labels_rh):
-        native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
+            # Generate connectome on native space parcellation
+            # Parcellate cortical timeseries
+            uparcel = np.unique(native_parc)
+            ts_native_ctx = np.zeros([dataNative_corr.shape[0], len(uparcel)])
+            for (lab, _) in enumerate(uparcel):
+                tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
+                ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-    # Generate connectome on native space parcellation
-    # Parcellate cortical timeseries
-    uparcel = np.unique(native_parc)
-    ts_native_ctx = np.zeros([dataNative_corr.shape[0], len(uparcel)])
-    for (lab, _) in enumerate(uparcel):
-        tmpData = dataNative_corr[:, native_parc == int(uparcel[lab])]
-        ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
+            ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
+            np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-timeseries.txt', ts, fmt='%.12f')
 
-    ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
-    np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
+            ts_r = np.corrcoef(np.transpose(ts))
 
-    ts_r = np.corrcoef(np.transpose(ts))
+            if np.isnan(exclude_labels[0]) == False:
+                for i in exclude_labels:
+                    ts_r[:, i + n_sctx] = 0
+                    ts_r[i + n_sctx, :] = 0
+                ts_r = np.triu(ts_r)
+            else:
+                ts_r = np.triu(ts_r)
 
-    if np.isnan(exclude_labels[0]) == False:
-        for i in exclude_labels:
-            ts_r[:, i + n_sctx] = 0
-            ts_r[i + n_sctx, :] = 0
-        ts_r = np.triu(ts_r)
-    else:
-        ts_r = np.triu(ts_r)
-
-    np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
+            np.savetxt(funcDir + '/surfaces/' + subject + '_func_space-fsnative_atlas-' + parcellation + '_desc-FC.txt', ts_r, fmt='%.6f')
+            del ts_native_ctx
+            del native_parc
+            del ts_r
+            del ts
+else:
+    print('')
+    print('...... no FC was selected, will skipp the functional connectome generation')
 
 # Clean up
-del ts_native_ctx
-del native_parc
-del ts_r
-del ts
 del dataNative_corr
 del sctx_cereb_corr
 
 # ------------------------------------------
 # Additional QC
 # ------------------------------------------
-
+print('')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
+print('Calculating tSNR and framewise displacement')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 # mean framewise displacement + save plot
 fd = np.loadtxt(x_fd)
 title = 'mean FD: ' + str(np.mean(fd))
@@ -467,10 +409,10 @@ plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacemen
 del fd
 
 # tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_lh_NoHP.mgh'))
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_lh_NoHP.mgh'))
 lh_nat_noHP_data = nib.load(lh_nat_noHP)
 lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_rh_NoHP.mgh'))
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surfaces/'+'*_func_space-fsnative_rh_NoHP.mgh'))
 rh_nat_noHP_data = nib.load(rh_nat_noHP)
 rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
 
@@ -485,4 +427,8 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 
-np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
+np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + '.txt', tSNR, fmt='%.12f')
+print('')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
+print('func regression and FC ran successfully')
+print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
