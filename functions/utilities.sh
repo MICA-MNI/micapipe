@@ -487,7 +487,7 @@ function json_surf() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "${1}" -transform))
   Info "Creating proc_surf json file"
   if [[ "$surfdir" == "FALSE" ]]; then
       echo -e "{
@@ -745,7 +745,7 @@ function json_dwipreproc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "${1}" -transform))
 
   res_rpe=$(mrinfo "$4" -spacing)
   Size_rpe=$(mrinfo "$4" -size)
