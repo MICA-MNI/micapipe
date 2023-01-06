@@ -239,8 +239,6 @@ Q: My dataset contains multiple and separated DWI shells, can I process them ind
 
     If the user wants to process only an individual shell from a dataset acquisition is also possible using the flag ``-dwi_main`` to select only one DWI nifti file.
 
-    Examples of how to process different shells using MICs dataset
-    --------------------------------------------------------------------
     **Processing multiple shells with default parameters**
 
     .. code-block:: bash
