@@ -1,78 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Automatic Bundle Segmentation &mdash; micapipe  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Processing step by step: start to finish with micapipe" href="../04.start2end/index.html" />
     <link rel="prev" title="micapipe_anonymize" href="../05.micapipe_anonymize/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #261F4A" >
-          
-
-          
             <a href="../../index.html">
-          
-
-          
-            
             <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -80,41 +43,30 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">fMRI processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
@@ -124,145 +76,75 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #261F4A" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">micapipe</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>Automatic Bundle Segmentation</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Automatic Bundle Segmentation</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/pages/05.autotract/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="automatic-bundle-segmentation">
-<span id="autotract"></span><h1>Automatic Bundle Segmentation<a class="headerlink" href="#automatic-bundle-segmentation" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="automatic-bundle-segmentation">
+<span id="autotract"></span><h1>Automatic Bundle Segmentation<a class="headerlink" href="#automatic-bundle-segmentation" title="Permalink to this heading"></a></h1>
 <p>This section describes the integrated automatic virtual dissection of the main brain tracts based on <a class="reference external" href="https://github.com/rcruces/auto_tracto/blob/master/Readme.md">auto_tracto</a>. This tool was implemented using ANTs registration tools. The main purpose of the script <code class="docutils literal notranslate"><span class="pre">03_auto_tracts.sh</span></code> is to split a tck tractogram into <a class="reference external" href="https://github.com/lconcha/auto_tracto/blob/master/tract_definitions.md">35 white matter tracts</a>, using already established automatic dissection protocols, which were manually tuned for optimal performance.</p>
 <p>Derived from a full brain tractogram, 35 bundles are virtually dissected using the <a class="reference external" href="https://github.com/rcruces/auto_tracto/tree/master/lanirem/protocols">LANIREM protocols</a>. The quality of the full brain tractogram will determine the quality of bundle separation. It is highly recommended to provide a tractogram with more than one million streamlines, and quality controlled for any errors. Strategies such as anatomically-contstrained tractography (ACT) and spherical deconvolution informed filtering of tractograms (SIFT), available in MRTrix3, should aid in obtaining such high-quality tractograms.</p>
 <img alt="../../_images/autotract.png" class="align-center" src="../../_images/autotract.png" />
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-0-0 docutils container">
-<div class="docutils container">
-<p>Processing steps</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-1 docutils container">
-<div class="docutils container">
-<p>Usage</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-2 docutils container">
-<div class="docutils container">
-<p>Outputs</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
-<ul class="simple">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Processing steps</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Usage</button><button aria-controls="panel-0-0-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-2" name="0-2" role="tab" tabindex="-1">Outputs</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><ul class="simple">
 <li><p>Non-linear (SyN) registration of the native FA map to the FA atlas (FMRIB58_FA_1mm)</p></li>
 <li><p>Apply transformation to each bundle protocol to register them to the native FA space (DWI)</p></li>
 <li><p>Verify stop criterion conditionals</p></li>
 <li><p>Filter each white matter bundle according to the dissection protocols</p></li>
 </ul>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
-<blockquote>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><blockquote>
 <div><p>There are two ways to run the <em>automatic bundle segmentation</em>. The first is integrated within the main script <code class="docutils literal notranslate"><span class="pre">mica-pipe</span></code> under the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module by adding a specific flag for this purpose, as shown in the following example:</p>
 </div></blockquote>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Integrated usage within <code class="docutils literal notranslate"><span class="pre">mica-pipe</span> <span class="pre">-SC</span></code></span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe <span class="se">\</span>
-     -sub &lt;subject&gt; <span class="se">\</span>
-     -ses &lt;session&gt; <span class="se">\</span>
-     -out &lt;outputDirectory&gt; <span class="se">\</span>
-     -bids &lt;BIDS&gt; <span class="se">\</span>
-<span class="hll">     -SC -autoTract <span class="se">\</span>
-</span>     -tracts 40M
+<div class="code-block-caption"><span class="caption-text">Integrated usage within <code class="docutils literal notranslate"><span class="pre">mica-pipe</span> <span class="pre">-SC</span></code></span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>mica-pipe <span class="se">\</span>
+<span class="linenos">2</span>     -sub &lt;subject&gt; <span class="se">\</span>
+<span class="linenos">3</span>     -ses &lt;session&gt; <span class="se">\</span>
+<span class="linenos">4</span>     -out &lt;outputDirectory&gt; <span class="se">\</span>
+<span class="linenos">5</span>     -bids &lt;BIDS&gt; <span class="se">\</span>
+<span class="hll"><span class="linenos">6</span>     -SC -autoTract <span class="se">\</span>
+</span><span class="linenos">7</span>     -tracts 40M
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <p>Automatic bundle segmentation can also be performed using the stand alone script <code class="docutils literal notranslate"><span class="pre">03_auto_tracts.sh</span></code>. Note that the stand alone script requires that all inputs are in DWI space.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">Example usage for standalone script</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6</pre></div></td><td class="code"><div class="highlight"><pre><span></span>03_auto_tracts.sh <span class="se">\</span>
-     -tck sub-01_full_brain_tractogram.tck <span class="se">\</span>
-     -outbase sub-01_tract <span class="se">\</span>
-     -mask sub-01_binary_brain_mask.nii.gz <span class="se">\</span>
-     -fa sub-01_FA_map.nii.gz <span class="se">\</span>
-     -weights sub-01_full_brain_tractogram_weights.txt
+<div class="code-block-caption"><span class="caption-text">Example usage for standalone script</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>03_auto_tracts.sh <span class="se">\</span>
+<span class="linenos">2</span>     -tck sub-01_full_brain_tractogram.tck <span class="se">\</span>
+<span class="linenos">3</span>     -outbase sub-01_tract <span class="se">\</span>
+<span class="linenos">4</span>     -mask sub-01_binary_brain_mask.nii.gz <span class="se">\</span>
+<span class="linenos">5</span>     -fa sub-01_FA_map.nii.gz <span class="se">\</span>
+<span class="linenos">6</span>     -weights sub-01_full_brain_tractogram_weights.txt
 </pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -324,9 +206,7 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
-<p>Directories created by this script will be in the selected <code class="docutils literal notranslate"><span class="pre">outbase</span></code>.
+</div><div aria-labelledby="tab-0-0-2" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-2" name="0-2" role="tabpanel" tabindex="0"><p>Directories created by this script will be in the selected <code class="docutils literal notranslate"><span class="pre">outbase</span></code>.
 The outputs generated by the micapipe integrated script are located in <em>&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/auto_tract</em></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dwi/auto_tract/
 ├── &lt;sub&gt;_space-dwi_desc-iFOD2-40M-SIFT2_AC.tck
@@ -369,8 +249,7 @@ The outputs generated by the micapipe integrated script are located in <em>&lt;o
 </pre></div>
 </div>
 <p>The description (<code class="docutils literal notranslate"><span class="pre">desc-</span></code>) refers to the algorithm used to generate the tractogram (here, <em>iFOD2</em>), its number of streamlines (here, <em>40M</em>) and the filtering algorithm (here, <em>SIFT2</em>).</p>
-</div>
-</div>
+</div></div>
 <p>List of names and their acronyms obtained with the integrated automatic virtual dissection of the main brain tracts based on auto_tracto:</p>
 <blockquote>
 <div><table class="docutils align-default">
@@ -444,11 +323,10 @@ The outputs generated by the micapipe integrated script are located in <em>&lt;o
 </tbody>
 </table>
 </div></blockquote>
-</div>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
   
@@ -467,7 +345,7 @@ The outputs generated by the micapipe integrated script are located in <em>&lt;o
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, micapipe
+        &copy; Copyright 2022, micapipe
 
     </p>
   </div>
@@ -484,22 +362,13 @@ The outputs generated by the micapipe integrated script are located in <em>&lt;o
 
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-    
+  </script>  
 
   <style>
          .wy-nav-content { max-width: none; }

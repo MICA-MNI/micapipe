@@ -1,78 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quality control report &mdash; micapipe  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Arterial spin labeling processing" href="../02.aslproc/index.html" />
     <link rel="prev" title="Microstructural profile covariance" href="../02.microstructproc/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #261F4A" >
-          
-
-          
             <a href="../../index.html">
-          
-
-          
-            
             <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -80,29 +43,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">fMRI processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quality control</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#individual-qc">Individual QC</a></li>
@@ -111,14 +63,14 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
@@ -128,110 +80,52 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #261F4A" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">micapipe</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>Quality control report</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Quality control report</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/pages/02.qc/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="quality-control">
-<span id="qc"></span><h1>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="quality-control">
+<span id="qc"></span><h1>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this heading"></a></h1>
 <p><em>micapipe</em> includes an integrated module for quality control of the outputs, which can be run at any point during processing. This step generates group and individual quality control reports, that will allow you to quickly identify missing files, verify registration performance, and check outputs requiring further inspection.</p>
-<div class="section" id="individual-qc">
-<h2>Individual QC<a class="headerlink" href="#individual-qc" title="Permalink to this headline">¶</a></h2>
+<section id="individual-qc">
+<h2>Individual QC<a class="headerlink" href="#individual-qc" title="Permalink to this heading"></a></h2>
 <p>This module generates an individual html report with detailed information of each processing step, which can be used for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <a class="reference internal image-reference" href="../../_images/qc_subj.png"><img alt="../../_images/qc_subj.png" src="../../_images/qc_subj.png" style="width: 1150.0px; height: 287.6px;" /></a>
-</div>
+</figure>
 <p>There are two ways to run the <em>individual quality control</em> module, one is integrated within the main script <code class="docutils literal notranslate"><span class="pre">mica-pipe</span></code>. The second is using the stand alone script <code class="docutils literal notranslate"><span class="pre">micapipe_qc</span></code>. Both options use the same optional arguments.</p>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-0-0 docutils container">
-<div class="docutils container">
-<p>mica-pipe</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-1 docutils container">
-<div class="docutils container">
-<p>micapipe_qc</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-2 docutils container">
-<div class="docutils container">
-<p>Output</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-<span class="hll">-QC_subj
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">mica-pipe</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">micapipe_qc</button><button aria-controls="panel-0-0-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-2" name="0-2" role="tab" tabindex="-1">Output</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>mica-pipe -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="hll"><span class="linenos">2</span>-QC_subj
 </span></pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Optional arguments:</strong></p>
 <table class="colwidths-given tight-table docutils align-default">
 <colgroup>
@@ -255,13 +149,10 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span>micapipe_qc -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-<span class="hll">-QC_subj
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>micapipe_qc -sub &lt;subject_id&gt; -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="hll"><span class="linenos">2</span>-QC_subj
 </span></pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Optional arguments:</strong></p>
 <p>Additional flags can be specified when running the quality control using <code class="docutils literal notranslate"><span class="pre">micapipe_qc</span></code></p>
 <table class="colwidths-given tight-table docutils align-default">
@@ -298,9 +189,7 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
-<p>Directories created or populated by <strong>-QC_subj</strong>:</p>
+</div><div aria-labelledby="tab-0-0-2" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-2" name="0-2" role="tabpanel" tabindex="0"><p>Directories created or populated by <strong>-QC_subj</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">QC</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">QC</span><span class="o">/</span><span class="n">QC_png</span>
 </pre></div>
@@ -322,54 +211,36 @@
 </ul>
 </dd>
 </dl>
-<div class="figure align-default">
+<figure class="align-default">
 <a class="reference internal image-reference" href="../../_images/qc_subj_html.png"><img alt="../../_images/qc_subj_html.png" src="../../_images/qc_subj_html.png" style="width: 760px; height: 420px;" /></a>
-</div>
-</div>
-</div>
-</div>
-<div class="section" id="group-level-qc">
-<h2>Group level QC<a class="headerlink" href="#group-level-qc" title="Permalink to this headline">¶</a></h2>
+</figure>
+</div></div>
+</section>
+<section id="group-level-qc">
+<h2>Group level QC<a class="headerlink" href="#group-level-qc" title="Permalink to this heading"></a></h2>
 <p>The group level quality control generates a report with all completed and processed modules by subjects. The report consists of a color coded table with rows as subjects and columns as the pipeline modules.</p>
 <ul class="simple">
 <li><p>Blue: Completed</p></li>
 <li><p>Orange: Either incomplete or error</p></li>
 <li><p>Dark gray: not processed</p></li>
 </ul>
-<div class="figure align-default">
+<figure class="align-default">
 <a class="reference internal image-reference" href="../../_images/qc_group.png"><img alt="../../_images/qc_group.png" src="../../_images/qc_group.png" style="width: 768.6px; height: 261.59999999999997px;" /></a>
-</div>
+</figure>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-1-0 docutils container">
-<div class="docutils container">
-<p>Usage</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-1-1 docutils container">
-<div class="docutils container">
-<p>Output</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-0 active docutils container">
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span>mica-pipe -out &lt;outputDirectory&gt; -QC
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Usage</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Output</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>mica-pipe -out &lt;outputDirectory&gt; -QC
 </pre></div>
-</td></tr></table></div>
+</div>
 <p><strong>Optional arguments:</strong></p>
 <p>There are no optional arguments for this command.</p>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
-<p>The QC table output by <code class="docutils literal notranslate"><span class="pre">-QC</span></code> can be found here:</p>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>The QC table output by <code class="docutils literal notranslate"><span class="pre">-QC</span></code> can be found here:</p>
 <p><strong>Main output:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/micapipe_progress.html</span></code></p>
-</div>
-</div>
-</div>
-</div>
+</div></div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
   
@@ -388,7 +259,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, micapipe
+        &copy; Copyright 2022, micapipe
 
     </p>
   </div>
@@ -405,22 +276,13 @@
 
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-    
+  </script>  
 
   <style>
          .wy-nav-content { max-width: none; }

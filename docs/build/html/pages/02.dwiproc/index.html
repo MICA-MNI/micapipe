@@ -1,78 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DWI &mdash; micapipe  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Resting-state fMRI processing" href="../02.restingstateproc/index.html" />
+    <link rel="next" title="fMRI processing" href="../02.restingstateproc/index.html" />
     <link rel="prev" title="Structural processing" href="../02.structuralproc/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #261F4A" >
-          
-
-          
             <a href="../../index.html">
-          
-
-          
-            
             <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -80,25 +43,14 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Diffusion-weighted imaging processing</a><ul>
@@ -106,19 +58,19 @@
 <li class="toctree-l2"><a class="reference internal" href="#sc">-SC</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">fMRI processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
@@ -128,82 +80,43 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #261F4A" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">micapipe</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>DWI</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">DWI</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/pages/02.dwiproc/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="diffusion-weighted-imaging-processing">
-<span id="dwiproc"></span><h1>Diffusion-weighted imaging processing<a class="headerlink" href="#diffusion-weighted-imaging-processing" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="diffusion-weighted-imaging-processing">
+<span id="dwiproc"></span><h1>Diffusion-weighted imaging processing<a class="headerlink" href="#diffusion-weighted-imaging-processing" title="Permalink to this heading"></a></h1>
 <p>This section describes all DWI-related pre-processing steps implemented in micapipe, which heavily relies on tools from <a class="reference external" href="https://mrtrix.readthedocs.io/en/latest/">mrtrix</a>. This includes image processing in preparation for the construction of tractography-based structural connectivity matrices, as well as associated edge length matrices. This processing pipeline has been optimized for multi-shell DWI, but can also handle single-shell data.</p>
 <img alt="../../_images/sankey_dwi.png" class="align-center" src="../../_images/sankey_dwi.png" />
-<div class="section" id="proc-dwi">
-<h2>-proc_dwi<a class="headerlink" href="#proc-dwi" title="Permalink to this headline">¶</a></h2>
+<section id="proc-dwi">
+<h2>-proc_dwi<a class="headerlink" href="#proc-dwi" title="Permalink to this heading"></a></h2>
 <p>This module performs required pre-processing of DWI scans, in addition to deriving useful metrics from diffusion images (e.g. fractional anisotropy, mean diffusivity). For multi-shell data, the Dhollander algorithm is applied to estimate response functions of CSF, gray, and white matter, and multi-shell, multi-tissue constrained spherical deconvolution is used to estimate fibre orientation distributions. For single-shell data, the Tournier algorithm and single-shell, single tissue constrained spherical deconvolution are used for these processing steps, respectively.</p>
 <div class="admonition-prerequisites admonition">
 <p class="admonition-title">Prerequisites 🖐🏼</p>
@@ -211,30 +124,7 @@
 </div>
 <a class="reference internal image-reference" href="../../_images/proc_dwi.png"><img alt="../../_images/proc_dwi.png" class="align-center" src="../../_images/proc_dwi.png" style="width: 250.2px; height: 677.1px;" /></a>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-0-0 docutils container">
-<div class="docutils container">
-<p>Processing steps</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-1 docutils container">
-<div class="docutils container">
-<p>Usage</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-2 docutils container">
-<div class="docutils container">
-<p>Outputs</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-3 docutils container">
-<div class="docutils container">
-<p>TDI quality</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
-<ul class="simple">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Processing steps</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Usage</button><button aria-controls="panel-0-0-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-2" name="0-2" role="tab" tabindex="-1">Outputs</button><button aria-controls="panel-0-0-3" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-3" name="0-3" role="tab" tabindex="-1">TDI quality</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><ul class="simple">
 <li><p>All DWI scans found in the bids directory are aligned using a rigid-body registration, and concatenated.</p></li>
 <li><p>Concatenated DWI images undergo denoising by MP-PCA and Gibbs ring correction. Residuals are also calculated from denoised images</p></li>
 <li><p>Correction of eddy current-induced distortions and motion</p></li>
@@ -248,9 +138,7 @@
 <li><p>Apply inverse non-linear transformation to 5-tissue-type images for anatomically-constrained tractography</p></li>
 <li><p>Compute track density image with 1 million streamlines using the iFOD1 algorithm. This image is mainly generated for quality control of previous DWI pre-processing.</p></li>
 </ul>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
-<p><strong>Terminal:</strong></p>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p><strong>Terminal:</strong></p>
 <pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-proc_dwi</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -proc_dwi
@@ -289,21 +177,18 @@
 <p><strong>Multiple inputs:</strong> <code class="docutils literal notranslate"><span class="pre">dwi_main</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">dwi_rpe</span></code></p>
 <p>If your DWI naming scheme is different than the default, and you want to process multiple shells at the same you can do it using the <code class="docutils literal notranslate"><span class="pre">-dwi_main</span></code> and <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> flags. When multiple input scans are provided, seperate the filenames by commas, with no space. Don’t forget to specify the full path of the images, as shown below; In this example, the <code class="docutils literal notranslate"><span class="pre">shell1</span></code> and <code class="docutils literal notranslate"><span class="pre">shell2</span></code> scans of <code class="docutils literal notranslate"><span class="pre">sub-01</span></code> will be processed:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span> mica-pipe -proc_dwi -sub <span class="m">01</span> -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
-<span class="hll">           -dwi_main &lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell1_dwi.nii.gz,&lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell2_dwi.nii.gz
+<div class="code-block-caption"><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span> mica-pipe -proc_dwi -sub <span class="m">01</span> -out &lt;outputDirectory&gt; -bids &lt;BIDS-directory&gt; <span class="se">\</span>
+<span class="hll"><span class="linenos">2</span>           -dwi_main &lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell1_dwi.nii.gz,&lt;BIDS-directory&gt;/sub-01/dwi/sub-01_acq-shell2_dwi.nii.gz
 </span></pre></div>
-</td></tr></table></div>
+</div>
 </div>
 <div class="admonition-reverse-phase-encoding-flag admonition">
 <p class="admonition-title">Reverse phase encoding flag ⏮</p>
 <p>If you use the argument <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> but your reverse phase encoding image does not contain a <em>bval</em> or <em>bvec</em> file, the module will
 assume that all the images are b0s (if more than one). If the file specified under the <code class="docutils literal notranslate"><span class="pre">-dwi_rpe</span></code> flag contains any weighted image, it will considerably affect most steps of the processing.</p>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
-<p>Directories created or populated by <strong>-proc_dwi</strong>:</p>
+</div><div aria-labelledby="tab-0-0-2" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-2" name="0-2" role="tabpanel" tabindex="0"><p>Directories created or populated by <strong>-proc_dwi</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">dwi</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">dwi</span><span class="o">/</span><span class="n">eddy</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">xfms</span>
@@ -384,9 +269,7 @@ assume that all the images are b0s (if more than one). If the file specified und
 
 - All outputs from FSL eddy are stored in:
     *&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/eddy</em></pre>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-3 docutils container">
-<p>A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module. It is useful in providing a quick overview of the DWI processing quality. We strongly recommend to take your time in checking the quality of the processed DWI before generating the structural connectomes (<code class="docutils literal notranslate"><span class="pre">-SC</span></code>). An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:</p>
+</div><div aria-labelledby="tab-0-0-3" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-3" name="0-3" role="tabpanel" tabindex="0"><p>A tract density image (TDI) is a low density snapshot of the tractogram that will be generated in the <code class="docutils literal notranslate"><span class="pre">-SC</span></code> module. It is useful in providing a quick overview of the DWI processing quality. We strongly recommend to take your time in checking the quality of the processed DWI before generating the structural connectomes (<code class="docutils literal notranslate"><span class="pre">-SC</span></code>). An abnormal TDI image is a reflection of many different issues with the DWI acquisition or processing, such as:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Issues with the DWI DICOMS (missing directions, cropped images, low signal, etc);</p></li>
@@ -400,17 +283,16 @@ assume that all the images are b0s (if more than one). If the file specified und
 </ul>
 </div></blockquote>
 <p>File: <code class="docutils literal notranslate"><span class="pre">&lt;outputDirectory&gt;/micapipe/&lt;sub&gt;/dwi/&lt;sub&gt;_space-dwi_desc-iFOD1-1M_tdi.mif</span></code></p>
-<div class="figure align-center">
+<figure class="align-center">
 <img alt="../../_images/tdi_qc.png" src="../../_images/tdi_qc.png" />
-</div>
-</div>
-</div>
-</div>
-<div class="section" id="sc">
-<h2>-SC<a class="headerlink" href="#sc" title="Permalink to this headline">¶</a></h2>
-<div class="figure align-left">
+</figure>
+</div></div>
+</section>
+<section id="sc">
+<h2>-SC<a class="headerlink" href="#sc" title="Permalink to this heading"></a></h2>
+<figure class="align-left">
 <a class="reference internal image-reference" href="../../_images/SC-schaefer.gif"><img alt="../../_images/SC-schaefer.gif" src="../../_images/SC-schaefer.gif" style="width: 97.75px; height: 87.0px;" /></a>
-</div>
+</figure>
 <p>This modules computes tractography-based structural connectivity matrices and associated edge length matrices. We apply iFOD2 for this purpose, a probabilistic tractography algorithm.</p>
 <div class="admonition-prerequisites admonition">
 <p class="admonition-title">Prerequisites 🖐🏼</p>
@@ -418,32 +300,12 @@ assume that all the images are b0s (if more than one). If the file specified und
 </div>
 <a class="reference internal image-reference" href="../../_images/SC.png"><img alt="../../_images/SC.png" class="align-center" src="../../_images/SC.png" style="width: 478.8px; height: 333.20000000000005px;" /></a>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-1-0 docutils container">
-<div class="docutils container">
-<p>Processing steps</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-1-1 docutils container">
-<div class="docutils container">
-<p>Usage</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-1-2 docutils container">
-<div class="docutils container">
-<p>Outputs</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-0 active docutils container">
-<ul class="simple">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Processing steps</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Usage</button><button aria-controls="panel-1-1-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-2" name="1-2" role="tab" tabindex="-1">Outputs</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><ul class="simple">
 <li><p>Compute tractogram with specified number of streamlines using iFOD2 algorithm</p></li>
 <li><p>Build structural connectomes and edge length matrices from cortical, subcortical, and cerebellar parcellations non-linearly registered to DWI space</p></li>
 <li><p>If requested, compute automatic bundle segmentation using <a class="reference external" href="https://github.com/lconcha/auto_tracto">auto tractography</a>.</p></li>
 </ul>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-1 docutils container">
-<p><strong>Terminal:</strong></p>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p><strong>Terminal:</strong></p>
 <pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-SC</strong></pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -SC
@@ -473,9 +335,7 @@ assume that all the images are b0s (if more than one). If the file specified und
 </tr>
 </tbody>
 </table>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-1-2 docutils container">
-<p>Directories created or populated by <strong>-SC</strong>:</p>
+</div><div aria-labelledby="tab-1-1-2" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-2" name="1-2" role="tabpanel" tabindex="0"><p>Directories created or populated by <strong>-SC</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">dwi</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">dwi</span><span class="o">/</span><span class="n">connectomes</span>
 </pre></div>
@@ -500,20 +360,18 @@ assume that all the images are b0s (if more than one). If the file specified und
        - <em>cor</em>: Only cortical nodes are represented in the connectomes/edge length matrix
        - <em>sub</em>: Subcortical and cortical nodes are represented in the the connectomes/edge length matrix
        - <em>full</em>: Subcortical, cerebellar, and cortical nodes are represented in the the connectomes/edge length matrix</pre>
-</div>
-</div>
-</div>
-</div>
+</div></div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../02.restingstateproc/index.html" class="btn btn-neutral float-right" title="Resting-state fMRI processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../02.restingstateproc/index.html" class="btn btn-neutral float-right" title="fMRI processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../02.structuralproc/index.html" class="btn btn-neutral float-left" title="Structural processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -526,7 +384,7 @@ assume that all the images are b0s (if more than one). If the file specified und
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, micapipe
+        &copy; Copyright 2022, micapipe
 
     </p>
   </div>
@@ -543,22 +401,13 @@ assume that all the images are b0s (if more than one). If the file specified und
 
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-    
+  </script>  
 
   <style>
          .wy-nav-content { max-width: none; }

@@ -1,78 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Output matrices &mdash; micapipe  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Surface visualization" href="../04.surfaces/index.html" />
     <link rel="prev" title="Processing databases with micapipe" href="../04.databases/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #261F4A" >
-          
-
-          
             <a href="../../index.html">
-          
-
-          
-            
             <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -80,41 +43,30 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">fMRI processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.microstructproc/index.html">Microstructural profile covariance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
@@ -142,83 +94,44 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #261F4A" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">micapipe</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>Output matrices</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Output matrices</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/pages/04.matrices/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="main-output-matrices">
-<span id="matrices"></span><h1>Main output matrices<a class="headerlink" href="#main-output-matrices" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="main-output-matrices">
+<span id="matrices"></span><h1>Main output matrices<a class="headerlink" href="#main-output-matrices" title="Permalink to this heading"></a></h1>
 <p>This section describes where are the main connectomes generated by the pipeline, and how you can visualize them using python or R.
 All the outputs are BIDS conform and stored under their correspondent directory (e.g. <code class="docutils literal notranslate"><span class="pre">anat</span></code>, <code class="docutils literal notranslate"><span class="pre">func</span></code> <code class="docutils literal notranslate"><span class="pre">dwi</span></code>).
 This example will use the subject <code class="docutils literal notranslate"><span class="pre">HC001</span></code>, session <code class="docutils literal notranslate"><span class="pre">01</span></code> from the MICs dataset, and all paths will be relative to the subject directory or <code class="docutils literal notranslate"><span class="pre">out/micapipe/sub-HC001_ses01/</span></code></p>
-<div class="section" id="organization-of-the-outputs">
-<h2>Organization of the outputs<a class="headerlink" href="#organization-of-the-outputs" title="Permalink to this headline">¶</a></h2>
+<section id="organization-of-the-outputs">
+<h2>Organization of the outputs<a class="headerlink" href="#organization-of-the-outputs" title="Permalink to this heading"></a></h2>
 <p>If you are inside the <code class="docutils literal notranslate"><span class="pre">out</span></code> directory, where the pipeline’s outputs are stored, two folders can be found inside, one for each pipeline used.
 For this dataset, the main structure should look like this:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>out
@@ -235,7 +148,7 @@ For this dataset, the main structure should look like this:</p>
 </ul>
 </div></blockquote>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">The subject list is truncated to the first three subjects</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">The subject list is truncated to the first three subjects</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>micapipe/
 ├── micapipe_processed_sub.csv
 ├── pipeline-description.json
@@ -285,20 +198,7 @@ All the paths are relative to the subject’s directory, which in our case is <c
 <p>This example uses the packages <code class="docutils literal notranslate"><span class="pre">nilearn</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> and <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> for <strong>python</strong>, and <code class="docutils literal notranslate"><span class="pre">RColorBrewer</span></code> and <code class="docutils literal notranslate"><span class="pre">viridis</span></code> for <strong>R</strong>.
 The first step in both languages is to set the environment:</p>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">nilearn</span> <span class="kn">import</span> <span class="n">plotting</span>
@@ -315,9 +215,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">atlas</span><span class="o">=</span><span class="s1">&#39;schaefer-400&#39;</span> <span class="c1"># &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; CHANGE THIS ATLAS</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the environment</span>
 <span class="nf">require</span><span class="p">(</span><span class="s">&quot;RColorBrewer&quot;</span><span class="p">)</span>
 <span class="nf">require</span><span class="p">(</span><span class="s">&quot;viridis&quot;</span><span class="p">)</span>
 
@@ -331,11 +229,10 @@ The first step in both languages is to set the environment:</p>
 <span class="n">atlas</span> <span class="o">&lt;-</span> <span class="s">&#39;schaefer-400&#39;</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="structural-connectome">
-<h2>Structural connectome<a class="headerlink" href="#structural-connectome" title="Permalink to this headline">¶</a></h2>
+</div></div>
+</section>
+<section id="structural-connectome">
+<h2>Structural connectome<a class="headerlink" href="#structural-connectome" title="Permalink to this heading"></a></h2>
 <dl class="simple">
 <dt>Structural connectomes are stored in the <code class="docutils literal notranslate"><span class="pre">dwi/connectomes</span></code> directory. Three main connectomes are generated per atlas, and are identified with a specific string:</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cor-connectome</span></code>: Contains only cortical nodes.</p></li>
@@ -355,23 +252,10 @@ The first step in both languages is to set the environment:</p>
 └── sub-HC005_ses-01_space-dwi_atlas-schaefer-400_desc-iFOD2-40M-SIFT2_sub-edgeLengths.txt
 </pre></div>
 </div>
-<div class="section" id="full-structural-connectome">
-<h3>Full structural connectome<a class="headerlink" href="#full-structural-connectome" title="Permalink to this headline">¶</a></h3>
+<section id="full-structural-connectome">
+<h3>Full structural connectome<a class="headerlink" href="#full-structural-connectome" title="Permalink to this heading"></a></h3>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
 <span class="n">cnt_sc_cor</span> <span class="o">=</span> <span class="s1">&#39;dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_full-connectome.txt&#39;</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -384,9 +268,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mtx_scSym</span><span class="p">),</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
 <span class="n">cnt_sc_cor</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;dwi/connectomes/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-dwi_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-iFOD2-40M-SIFT2_full-connectome.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -399,29 +281,15 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_sc</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/SC_py.png"><img alt="alternate text" src="../../_images/SC_py.png" style="width: 357.0px; height: 297.5px;" /></a>
-</div>
-</div>
-<div class="section" id="full-structural-connectome-edge-lengths">
-<h3>Full structural connectome edge lengths<a class="headerlink" href="#full-structural-connectome-edge-lengths" title="Permalink to this headline">¶</a></h3>
+</figure>
+</section>
+<section id="full-structural-connectome-edge-lengths">
+<h3>Full structural connectome edge lengths<a class="headerlink" href="#full-structural-connectome-edge-lengths" title="Permalink to this heading"></a></h3>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
 <span class="n">cnt_sc_EL</span> <span class="o">=</span> <span class="n">cnt_sc_cor</span><span class="o">=</span><span class="s1">&#39;dwi/connectomes/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-dwi_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt&#39;</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -434,9 +302,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_scELSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Purples&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
+</div><div aria-labelledby="tab-2-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the structural cortical connectome</span>
 <span class="n">cnt_sc_EL</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;dwi/connectomes/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-dwi_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -449,15 +315,14 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">mtx_scEL</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;SC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Purples&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/SC_EL_py.png"><img alt="alternate text" src="../../_images/SC_EL_py.png" style="width: 360.0px; height: 297.5px;" /></a>
-</div>
-</div>
-</div>
-<div class="section" id="resting-state-functional-connectome">
-<h2>Resting state Functional connectome<a class="headerlink" href="#resting-state-functional-connectome" title="Permalink to this headline">¶</a></h2>
+</figure>
+</section>
+</section>
+<section id="resting-state-functional-connectome">
+<h2>Resting state Functional connectome<a class="headerlink" href="#resting-state-functional-connectome" title="Permalink to this heading"></a></h2>
 <p>For each atlas, two files are generated: the functional connectome (<code class="docutils literal notranslate"><span class="pre">desc-FC.txt</span></code>) and the time-series of that atlas (<code class="docutils literal notranslate"><span class="pre">desc-timeseries.txt</span></code>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func/surfaces/
 ├── sub-HC005_ses-01_rsfmri_space-fsnative_atlas-schaefer-400_desc-FC.txt
@@ -465,20 +330,7 @@ The first step in both languages is to set the environment:</p>
 </pre></div>
 </div>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
 <span class="n">cnt_fs</span> <span class="o">=</span> <span class="s1">&#39;func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-FC.txt&#39;</span>
 
 <span class="c1"># Load the connectome</span>
@@ -491,9 +343,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_fcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
+</div><div aria-labelledby="tab-3-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the functional connectome</span>
 <span class="n">cnt_fs</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;func/surfaces/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_rsfmri_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-FC.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -506,28 +356,14 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_fs</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;FC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Reds&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/FC_py.png"><img alt="alternate text" src="../../_images/FC_py.png" style="width: 358.5px; height: 297.5px;" /></a>
-</div>
-<div class="section" id="resting-state-time-series">
-<h3>Resting state time series<a class="headerlink" href="#resting-state-time-series" title="Permalink to this headline">¶</a></h3>
+</figure>
+<section id="resting-state-time-series">
+<h3>Resting state time series<a class="headerlink" href="#resting-state-time-series" title="Permalink to this heading"></a></h3>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
 <span class="n">cnt_time</span> <span class="o">=</span> <span class="s1">&#39;func/surfaces/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_rsfmri_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-timeseries.txt&#39;</span>
 
 <span class="c1"># Load the time series</span>
@@ -537,9 +373,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_time</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+</div><div aria-labelledby="tab-4-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
 <span class="n">cnt_time</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;func/surfaces/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_rsfmri_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-timeseries.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the time series</span>
@@ -549,15 +383,14 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_time</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;Time series &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">plasma</span><span class="p">(</span><span class="m">64</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/timeseries_py.png"><img alt="alternate text" src="../../_images/timeseries_py.png" style="width: 390.0px; height: 186.0px;" /></a>
-</div>
-</div>
-</div>
-<div class="section" id="mpc-connectome">
-<h2>MPC connectome<a class="headerlink" href="#mpc-connectome" title="Permalink to this headline">¶</a></h2>
+</figure>
+</section>
+</section>
+<section id="mpc-connectome">
+<h2>MPC connectome<a class="headerlink" href="#mpc-connectome" title="Permalink to this heading"></a></h2>
 <p>For each atlas, two files are generated: the microstructural profile covariance connectome (<code class="docutils literal notranslate"><span class="pre">desc-MPC.txt</span></code>) and the intensity profile of that atlas (<code class="docutils literal notranslate"><span class="pre">desc-intensity_profiles.txt</span></code>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>anat/surfaces/micro_profiles/
 ├── sub-HC005_ses-01_space-fsnative_atlas-schaefer-400_desc-intensity_profiles.txt
@@ -565,20 +398,7 @@ The first step in both languages is to set the environment:</p>
 </pre></div>
 </div>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-5-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-5-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-5-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
 <span class="n">cnt_mpc</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-MPC.txt&#39;</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -591,9 +411,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_mpcSym</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
+</div><div aria-labelledby="tab-5-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the MPC cortical connectome</span>
 <span class="n">cnt_mpc</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/micro_profiles/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-MPC.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -606,28 +424,14 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_mpc</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;MPC &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Greens&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/MPC_py.png"><img alt="alternate text" src="../../_images/MPC_py.png" style="width: 358.0px; height: 296.0px;" /></a>
-</div>
-<div class="section" id="intensity-profiles">
-<h3>Intensity profiles<a class="headerlink" href="#intensity-profiles" title="Permalink to this headline">¶</a></h3>
+</figure>
+<section id="intensity-profiles">
+<h3>Intensity profiles<a class="headerlink" href="#intensity-profiles" title="Permalink to this heading"></a></h3>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-6-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-6-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-6-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
 <span class="n">cnt_int</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/micro_profiles/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_desc-intensity_profiles.txt&#39;</span>
 
 <span class="c1"># Load the time series</span>
@@ -637,9 +441,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greens&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
+</div><div aria-labelledby="tab-6-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-6-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the time series file</span>
 <span class="n">cnt_int</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/micro_profiles/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_desc-intensity_profiles.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the time series</span>
@@ -649,35 +451,21 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_int</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;Intensity profiles&quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Greens&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/intensity_py.png"><img alt="alternate text" src="../../_images/intensity_py.png" style="width: 726.0px; height: 33.5px;" /></a>
-</div>
-</div>
-</div>
-<div class="section" id="geodesic-distance-connectome">
-<h2>Geodesic distance connectome<a class="headerlink" href="#geodesic-distance-connectome" title="Permalink to this headline">¶</a></h2>
+</figure>
+</section>
+</section>
+<section id="geodesic-distance-connectome">
+<h2>Geodesic distance connectome<a class="headerlink" href="#geodesic-distance-connectome" title="Permalink to this heading"></a></h2>
 <p>Only one file per atlas is generated by this module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>anat/surfaces/geo_dist/
 └── sub-HC005_ses-01_space-fsnative_atlas-schaefer-400_GD.txt
 </pre></div>
 </div>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-UHl0aG9u docutils container">
-<div class="docutils container">
-<p>Python</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-Ug== docutils container">
-<div class="docutils container">
-<p>R</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-UHl0aG9u active docutils container">
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-7-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-7-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-7-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-7-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-7-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
 <span class="n">cnt_gd</span> <span class="o">=</span> <span class="s1">&#39;anat/surfaces/geo_dist/&#39;</span> <span class="o">+</span> <span class="n">subjectID</span> <span class="o">+</span> <span class="s1">&#39;_space-fsnative_atlas-&#39;</span> <span class="o">+</span> <span class="n">atlas</span> <span class="o">+</span> <span class="s1">&#39;_GD.txt&#39;</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -687,9 +475,7 @@ The first step in both languages is to set the environment:</p>
 <span class="n">corr_plot</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_matrix</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment code-tab sphinx-data-tab-Ug== docutils container">
-<div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
+</div><div aria-labelledby="tab-7-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-7-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the path to the the geodesic distance connectome</span>
 <span class="n">cnt_gd</span> <span class="o">&lt;-</span> <span class="nf">paste0</span><span class="p">(</span><span class="s">&#39;anat/surfaces/geo_dist/&#39;</span><span class="p">,</span> <span class="n">subjectID</span><span class="p">,</span> <span class="s">&#39;_space-fsnative_atlas-&#39;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">,</span> <span class="s">&#39;_GD.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Load the cortical connectome</span>
@@ -699,23 +485,21 @@ The first step in both languages is to set the environment:</p>
 <span class="nf">image</span><span class="p">(</span><span class="n">mtx_gd</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">FALSE</span><span class="p">,</span> <span class="n">main</span><span class="o">=</span><span class="nf">paste0</span><span class="p">(</span><span class="s">&quot;GD &quot;</span><span class="p">,</span> <span class="n">atlas</span><span class="p">),</span> <span class="n">col</span><span class="o">=</span><span class="nf">brewer.pal</span><span class="p">(</span><span class="m">9</span><span class="p">,</span> <span class="s">&quot;Blues&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="figure align-center">
+</div></div>
+<figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/GD_py.png"><img alt="alternate text" src="../../_images/GD_py.png" style="width: 360.0px; height: 296.5px;" /></a>
-</div>
-</div>
-<div class="section" id="download-code-examples-matrices">
-<h2>Download code examples: matrices<a class="headerlink" href="#download-code-examples-matrices" title="Permalink to this headline">¶</a></h2>
+</figure>
+</section>
+<section id="download-code-examples-matrices">
+<h2>Download code examples: matrices<a class="headerlink" href="#download-code-examples-matrices" title="Permalink to this heading"></a></h2>
 <p><a class="reference download internal" download="" href="../../_downloads/f590d96f7e78de4acd514b907abb6fc2/tutorial_main_output_matrices.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">'tutorial_main_output_matrices.ipynb'</span></code></a></p>
 <p><a class="reference download internal" download="" href="../../_downloads/d190f358c7ecbc0c49390a51cfc2e6f3/tutorial_main_output_matrices.py"><code class="xref download docutils literal notranslate"><span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.py'</span></code></a></p>
 <p><a class="reference download internal" download="" href="../../_downloads/f5d683d82fae8ef9221785414c0a48e6/tutorial_main_output_matrices.R"><code class="xref download docutils literal notranslate"><span class="pre">R</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">'tutorial_main_output_matrices.R'</span></code></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
   
@@ -734,7 +518,7 @@ The first step in both languages is to set the environment:</p>
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, micapipe
+        &copy; Copyright 2022, micapipe
 
     </p>
   </div>
@@ -751,22 +535,13 @@ The first step in both languages is to set the environment:</p>
 
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-    
+  </script>  
 
   <style>
          .wy-nav-content { max-width: none; }

@@ -1,78 +1,41 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MPC &mdash; micapipe  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/sphinx_tabs/tabs.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/mica-pipe_colors.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.js"></script>
-        <script src="../../_static/sphinx_tabs/tabs.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Quality control" href="../02.qc/index.html" />
-    <link rel="prev" title="Resting-state fMRI processing" href="../02.restingstateproc/index.html" /> 
+    <link rel="prev" title="fMRI processing" href="../02.restingstateproc/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #261F4A" >
-          
-
-          
             <a href="../../index.html">
-          
-
-          
-            
             <img src="../../_static/html_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -80,29 +43,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Getting started</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../01.install/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatyouneed/index.html">Usages Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../01.whatsnew/index.html">What’s new?</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Processing modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Processing modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../02.structuralproc/index.html">Structural processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.dwiproc/index.html">Diffusion-weighted imaging processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">Resting-state fMRI processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.restingstateproc/index.html">fMRI processing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Microstructural profile covariance</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mpc">-MPC</a></li>
 </ul>
@@ -110,14 +62,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../02.qc/index.html">Quality control</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02.aslproc/index.html">Arterial spin labeling processing</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Additional tools</span></p>
+<p class="caption" role="heading"><span class="caption-text">Additional tools</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../05.mic2bids/index.html">From DICOMS to BIDS: <code class="docutils literal notranslate"><span class="pre">mic2bids</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_cleanup/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_cleanup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.micapipe_anonymize/index.html"><code class="docutils literal notranslate"><span class="pre">micapipe_anonymize</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05.autotract/index.html">Automatic Bundle Segmentation</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../04.start2end/index.html">Processing step by step: start to finish with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.databases/index.html">Processing databases with <code class="docutils literal notranslate"><span class="pre">micapipe</span></code></a></li>
@@ -127,121 +79,62 @@
 <li class="toctree-l1"><a class="reference internal" href="../04.tckdownsample/index.html">How to downsample a tractogram</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04.faq/index.html">FAQ</a></li>
 </ul>
-<p class="caption"><span class="caption-text">References &amp; Acknowledgements</span></p>
+<p class="caption" role="heading"><span class="caption-text">References &amp; Acknowledgements</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../06.citingmicapipe/index.html">Citing micapipe</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.references/index.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../06.acknowledge/index.html">Acknowledgements</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #261F4A" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">micapipe</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>MPC</li>
-    
-    
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">MPC</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
             <a href="../../_sources/pages/02.microstructproc/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="microstructural-profile-covariance">
-<span id="microstructproc"></span><h1>Microstructural profile covariance<a class="headerlink" href="#microstructural-profile-covariance" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="microstructural-profile-covariance">
+<span id="microstructproc"></span><h1>Microstructural profile covariance<a class="headerlink" href="#microstructural-profile-covariance" title="Permalink to this heading"></a></h1>
 <p>This module samples intracortical intensities from a microstructurally-sensitive contrast. This is achieved by constructing a series of equivolumetric surfaces between pial and white matter boundaries, yielding unique intracortical intensity profiles at each vertex of the native surface mesh. This approach has been previously applied in the <a class="reference external" href="https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284">whole cortex</a>, as well as in targeted structures such as the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S1053811920303451">insula</a>. By parcellating and cross-correlating nodal intensity profiles, this module profiles microstructural profile covariance (MPC) matrices describing similiarity in intracortical microstructure across the cortex.</p>
 <p>Intracortical equivolumetric surfaces are generated using scripts from the <a class="reference external" href="https://github.com/kwagstyl/surface_tools">surface tools repository</a>, available via GitHub.</p>
-<div class="figure align-center">
+<figure class="align-center">
 <img alt="../../_images/sankey_mpc.png" src="../../_images/sankey_mpc.png" />
-</div>
-<div class="section" id="mpc">
-<h2>-MPC<a class="headerlink" href="#mpc" title="Permalink to this headline">¶</a></h2>
+</figure>
+<section id="mpc">
+<h2>-MPC<a class="headerlink" href="#mpc" title="Permalink to this heading"></a></h2>
 <div class="admonition-prerequisites admonition">
 <p class="admonition-title">Prerequisites 🖐🏼</p>
 <p>You need to run <code class="docutils literal notranslate"><span class="pre">-proc_structural</span></code>, <code class="docutils literal notranslate"><span class="pre">-proc_freesurfer</span></code> and <code class="docutils literal notranslate"><span class="pre">-post_structural</span></code> before this stage</p>
 </div>
-<div class="figure align-center">
+<figure class="align-center">
 <img alt="../../_images/MPC_01-14.gif" src="../../_images/MPC_01-14.gif" />
-</div>
+</figure>
 <div class="sphinx-tabs docutils container">
-<div class="ui top attached tabular menu sphinx-menu docutils container">
-<div class="active item sphinx-data-tab-0-0 docutils container">
-<div class="docutils container">
-<p>Processing steps</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-1 docutils container">
-<div class="docutils container">
-<p>Usage</p>
-</div>
-</div>
-<div class="item sphinx-data-tab-0-2 docutils container">
-<div class="docutils container">
-<p>Outputs</p>
-</div>
-</div>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-0 active docutils container">
-<ul class="simple">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Processing steps</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Usage</button><button aria-controls="panel-0-0-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-2" name="0-2" role="tab" tabindex="-1">Outputs</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><ul class="simple">
 <li><p>Compute boundary-based registration from microstructural imaging volume to FreeSurfer native space</p></li>
 <li><p>Generate 16 equivolumetric surfaces between pial and white matter boundary previously defined from FreeSurfer. Surfaces closest to pial and white matter boundaries are then discarded to account for partial volume effects, resulting in 14 surfaces used for further analyses</p></li>
 <li><p>Perform surface-based registration to fsaverage5 and conte69-32k templates</p></li>
 <li><p>Average intensity profiles within parcels defined on the native FreeSurfer surface, while excluding outlier vertices</p></li>
 <li><p>Perform partial correlation, controlling for parcel-wide mean profile, across all pairs of intensity profiles</p></li>
 </ul>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-1 docutils container">
-<p><strong>Terminal:</strong></p>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p><strong>Terminal:</strong></p>
 <pre class="literal-block">$ mica-pipe <strong>-sub</strong> &lt;subject_id&gt; <strong>-out</strong> &lt;outputDirectory&gt; <strong>-bids</strong> &lt;BIDS-directory&gt; <strong>-MPC</strong> &lt;options&gt;</pre>
 <p><strong>Docker command:</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker -MPC
@@ -271,9 +164,7 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="ui bottom attached sphinx-tab tab segment sphinx-data-tab-0-2 docutils container">
-<p>Directories created or populated by <strong>-MPC</strong>:</p>
+</div><div aria-labelledby="tab-0-0-2" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-2" name="0-2" role="tabpanel" tabindex="0"><p>Directories created or populated by <strong>-MPC</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">anat</span><span class="o">/</span><span class="n">surfaces</span><span class="o">/</span><span class="n">micro_profiles</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">anat</span>
 <span class="o">-</span> <span class="o">&lt;</span><span class="n">outputDirectory</span><span class="o">&gt;/</span><span class="n">micapipe</span><span class="o">/&lt;</span><span class="n">sub</span><span class="o">&gt;/</span><span class="n">xfm</span>
@@ -310,14 +201,12 @@
 
     - MPC matrices:
        <em>&lt;sub&gt;_space-fsnative_atlas-&lt;atlas&gt;_desc-MPC.txt</em></pre>
-</div>
-</div>
-</div>
-</div>
+</div></div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
   
@@ -326,7 +215,7 @@
         <a href="../02.qc/index.html" class="btn btn-neutral float-right" title="Quality control" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../02.restingstateproc/index.html" class="btn btn-neutral float-left" title="Resting-state fMRI processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../02.restingstateproc/index.html" class="btn btn-neutral float-left" title="fMRI processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -336,7 +225,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, micapipe
+        &copy; Copyright 2022, micapipe
 
     </p>
   </div>
@@ -353,22 +242,13 @@
 
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-    
+  </script>  
 
   <style>
          .wy-nav-content { max-width: none; }

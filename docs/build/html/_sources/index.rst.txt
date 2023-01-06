@@ -65,7 +65,7 @@
 
 Breaking news ️‍📰
 --------------------------------------------------------
-`micapipe version 2` is soon to be released!! keep tuned!
+`micapipe version 2` soon to be released!! stay tuned!
 
 
 About 👁️‍🗨️
