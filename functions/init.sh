@@ -35,6 +35,10 @@ export FSL_BIN="${FSLDIR}/bin"
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
 # Python 3.7
 export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
+# Export fs fs_licence
+export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
+# Fastsurfer singularity container
+export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
 
 #------------------------------------------------------------------------------#
 # Remove any other instance from the PATH
