@@ -27,7 +27,9 @@ export threads=$6
 tmpDir=$7
 surfdir=$8
 FastSurfer=$9
-PROC=${10}
+fs_licence=${10}
+t1=${11}
+PROC=${12}
 here=$(pwd)
 export OMP_NUM_THREADS=$threads
 
@@ -44,11 +46,19 @@ source "$MICAPIPE/functions/utilities.sh"
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-# Check inputs: Nativepro T1
-if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
+# Check inputs: Nativepro T1 or custom T1
+if [[ "$t1" != "DEFAULT" ]]; then
+    if [ ! -f "${t1}" ]; then Error "The provided T1 volume does not exist:\n\t${t1}"; exit; fi
+    t1_2proc=${t1}
+  else
+    if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
+    t1_2proc=${T1nativepro}
+fi
+
 if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
 
 # Surface Directory
+Note "Surface software" "${recon}"
 set_surface_directory "${recon}"
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
@@ -78,10 +88,14 @@ Note "Preprocessed surface directory: $surfdir"
 
 # # Create script specific temp directory
 tmp="${tmpDir}/${id}_micapipe_proc-surf_${RANDOM}"
-Do_cmd mkdir -p "${tmp}/nii"
+Info "Processing surfaces"
 Note "Saving temporal dir:" "$nocleanup"
 Note "Temporal dir:" "${tmp}"
 Note "Parallel processing:" "$threads threads"
+Note "fs licence:" "${fs_licence}"
+Note "fastsurfer img:" "${fastsurfer_img}"
+Note "t1 to process:" "${t1_2proc}"
+Do_cmd mkdir -p "${tmp}/nii"
 
 #	Timer and steps progress
 aloita=$(date +%s)
@@ -94,56 +108,63 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # IF SURFACE directory is provided create a symbolic link
 if [[ "$surfdir" != "FALSE" ]]; then ((N++))
     if [[ -d "$surfdir" ]]; then
-        Info "Copying from surface directory"
-        Do_cmd mkdir -p "$dir_subjsurf"
-        Do_cmd ln -s "$surfdir"/* "$dir_subjsurf"
+        if [[ -d "$dir_subjsurf" ]]; then
+            # dir_subjsurf IS under ${out}/fastsurfer
+            Info "Current surface directory has a compatible naming and structure with micapipe"
+        else
+            Info "Creating links for micapipe compatibility"
+            # dir_subjsurf IS NOT at ${out}/fastsurfer
+            Do_cmd ln -s "$surfdir" "$dir_subjsurf"
+        fi
     elif [[ ! -d "$surfdir" ]]; then
         Error "The provided surface directory does not exist: $surfdir"
-        exit
+        cleanup $tmp $nocleanup $here; exit
     fi
+    Do_cmd cp "${dir_subjsurf}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
 
 # If not, get ready to run the surface reconstruccion
 elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
-
-    # FIX FOV greater than 256
-    dim=($(mrinfo ${T1nativepro} -size))
-    res=($(mrinfo ${T1nativepro} -spacing))
-    fov=$(printf "%.0f" $(bc -l <<< "scale=2; ${dim[2]}*${res[2]}"))
-
-    if [ ${fov} -gt 256 ]; then
-      Info "Cropping structural image to 256 for surface reconstruction compatibility"
-      crop=$(bc -l <<< "scale=0; (${fov}-256)/${res[2]}")
-      Do_cmd mrgrid ${T1nativepro} crop -axis 2 0,${crop} ${tmp}/space-nativepro_t1w_croped.nii.gz
-      T1nativepro=${tmp}/space-nativepro_t1w_croped.nii.gz
-    else
-      crop="FALSE"
-    fi
-
     # Define SUBJECTS_DIR for surface processing as a global variable
     export SUBJECTS_DIR=${tmp} # Will work on a temporal directory
+    t1="${SUBJECTS_DIR}/nii/${idBIDS}"_t1w.nii.gz
+    Do_cmd cp "${t1_2proc}" "${t1}"
 
     # Recontruction method
     if [[ "$FastSurfer" == "TRUE" ]]; then
-        Info "Running FastSurfer" # Working on the containarized version
-        # Do_cmd run_fastsurfer.sh --t1 "${T1nativepro}" \
-        #           --sid "${idBIDS}" --sd "${SUBJECTS_DIR}" \
-        #           --fs_license "${fs_licence}" \
-        #           --parallel --threads "${threads}" --py python3.7 --no_cuda \
-		    #           --surfreg
-        docker run -v ${T1nativepro}:/data/${idBIDS}_space-nativepro_t1w.nii.gz \
-           -v "${SUBJECTS_DIR}":/output \
-           -v "${fs_licence}":/fs_license/license.txt \
-           --rm fastsurfer:cpu \
-           --t1 /data/${idBIDS}_space-nativepro_t1w.nii.g \
-           --sid ${idBIDS} --sd /output \
-           --fs_license /fs_license/license.txt \
-           --parallel --threads ${threads} --no_cuda \
-           --surfreg
+        Info "FastSurfer: running the singularity image"
+        Do_cmd mkdir -p "${SUBJECTS_DIR}/${idBIDS}"
+
+        singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
+                              -B "${SUBJECTS_DIR}":/output \
+                              -B "${fs_licence}":/fs \
+                              -B "${tmp}/nii":/anat \
+                               "${fastsurfer_img}" \
+                               /fastsurfer/run_fastsurfer.sh \
+                              --fs_license /fs/license.txt \
+                              --t1 /anat/"${idBIDS}"_t1w.nii.gz \
+                              --sid "${idBIDS}" --sd /output --no_fs_T1 \
+                              --parallel --threads "${threads}"
+        chmod aug+wr -R ${SUBJECTS_DIR}/${idBIDS}
     else
         Info "Running Freesurfer 7.3.2 comform volume to minimum"
-        #Do_cmd recon-all -cm -all -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+
+        # FIX FOV greater than 256
+        t1nii="${t1_2proc}"
+        dim=($(mrinfo ${t1nii} -size))
+        res=($(mrinfo ${t1nii} -spacing))
+        fov=$(printf "%.0f" $(bc -l <<< "scale=2; ${dim[2]}*${res[2]}"))
+
+        if [ ${fov} -gt 256 ]; then
+          Info "Cropping structural image to 256 for surface reconstruction compatibility"
+          crop=$(bc -l <<< "scale=0; (${fov}-256)/${res[2]}")
+          Do_cmd mrgrid ${t1nii} crop -axis 2 0,${crop} ${tmp}/_t1w_croped.nii.gz
+          t1nii=${tmp}/_t1w_croped.nii.gz
+        else
+          crop="FALSE"
+        fi
+
         # Run recon-all -autorecon1
-        Do_cmd recon-all -autorecon1 -cm -parallel -openmp ${threads} -i "${T1nativepro}" -s "${idBIDS}"
+        Do_cmd recon-all -autorecon1 -cm -parallel -openmp ${threads} -i "${t1nii}" -s "${idBIDS}"
 
         # Replace brainmask.mgz with mri_synthstrip mask
         Do_cmd mri_synthstrip -i ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz -o ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.auto.mgz --no-csf
@@ -179,20 +200,19 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
 
     # Copy results from TMP to deviratives/SUBJECTS_DIR directory
     Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
-
-    Info "Check log file:\n\t\t\t ${dir_logs}/recon-all.log"
 fi
+Note "Check log file:" "${dir_logs}/recon-all.log"
 
 # -----------------------------------------------------------------------------------------------
 # Check proc_surf status
 if [[ -f "${dir_logs}/recon-all.log" ]] && grep -q "finished without error" "${dir_logs}/recon-all.log"; then ((Nsteps++)); fi
 
 # Create json file for T1native
-proc_surf_json="${proc_struct}/${idBIDS}_proc_surf-${recon}.json"
-json_surf "${T1nativepro}" "${dir_surf}" "${recon}" "${proc_surf_json}"
+proc_surf_json="${proc_struct}/surf/${idBIDS}_proc_surf-${recon}.json"
+json_surf "${t1_2proc}" "${dir_surf}" "${recon}" "${proc_surf_json}"
 
 # Notification of completition
 micapipe_completition_status proc_surf
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_surf" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_surf" "${module_json}"
+micapipe_procStatus "${id}" "${SES/ses-/}" "proc_surf-${recon}" "${out}/micapipe_processed_sub.csv"
+micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_surf-${recon}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
