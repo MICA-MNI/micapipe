@@ -529,7 +529,8 @@ function json_surf() {
     echo -e "{
       \"micapipeVersion\": \"${Version}\",
       \"LastRun\": \"$(date)\",
-      \"SurfaceDir\": \"${2}\"
+      \"SurfaceDir\": \"${2}\",
+      \"Algorithm\": \"${3}\"
     }" > "$4"
   fi
 }
