@@ -60,9 +60,15 @@ echo -e "
 \t\t\t            Default brain mask uses 'mri_synthstrip' from freesurfer
 
 \t\033[38;5;197m-proc_surf\033[0m
-\t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link from the processed directory to '<output>/<freesurfer | FastSurfer>/<subject>'
+\t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link for compatibility
+\t\t\t            Prove full path to the subject's directory: e.g. <path_to>/freesurfer/sub-001_ses-01
 \t   \033[38;5;120m-fastsurfer\033[0m          : Use this option to reconstruct the cortical surface with FastSurfer.
 \t\t\t            Default surface reconstruction uses 'Freesurfer 7'
+\t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
+\t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
+\t   \033[38;5;120m-t1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a t1w image to be processed.
+\t\t\t            By default micapipe uses t1nativepro to generate the surfaces.
+
 
 \t\033[38;5;197m-post_structural\033[0m
 \t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
@@ -394,6 +400,12 @@ do
     FastSurfer=TRUE
     shift
   ;;
+  -fs_licence)
+    shift;shift;
+  ;;
+  -t1)
+    shift;shift;
+  ;;
   -N4wm)
     N4wm=TRUE
     shift
@@ -570,7 +582,7 @@ if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-umask 001
+umask 000
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
@@ -587,6 +599,7 @@ if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); f
 # Surface directory (if already exists)
 if [ -z ${surfdir} ]; then surfdir="FALSE"; else  surfdir=$(realpath $surfdir); fi
 if [ -z ${FastSurfer} ]; then FastSurfer="FALSE"; else  FastSurfer="TRUE"; fi
+if [ -z ${t1} ]; then t1=DEFAULT; else t1=$(realpath $t1); fi
 
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
@@ -634,6 +647,10 @@ else
     if [[ -z $(which R) ]]; then Warning "R was not found"; fi
 fi
 
+# Freesurfer fs_licence
+if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; fi
+if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
+
 # Processing
 if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 
@@ -658,8 +675,8 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${idBIDS} directory doesn't exist, creating..."
-    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surf/conte69},QC/png}
-    chmod -R 770 $subject_dir
+    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surf/conte69},QC}
+    Do_cmd chmod -R 777 $subject_dir
 fi
 
 # Pipeline description json
@@ -696,7 +713,7 @@ fi
 # # #        Surface processing: Freesurfer | FastSurfer
 if [ "$procSurf" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer"
+    COMMAND="${scriptDir}/01_proc-struc_surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer $fs_licence $t1"
     # mica.q - Surface processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Surface processing"
