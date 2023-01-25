@@ -798,7 +798,7 @@ fi
 #     REQUIRES -proc_structural and -proc_surf
 if [ "$postVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas"
+    COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas $FastSurfer"
     # mica.q - POST Structural processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST Structural processing"
