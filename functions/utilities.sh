@@ -105,7 +105,7 @@ export idBIDS="${subject}${ses}"
 set_surface_directory() {
   export dir_surf=${out/\/micapipe_v0.2.0/}/${1}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
-  export T1freesurfr=${dir_subjsurf}/mri/T1.mgz
+  export T1surfOrig=${dir_subjsurf}/mri/T1.mgz
   # Native midsurface in gifti format
   export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
   export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
@@ -194,7 +194,7 @@ bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
   Info "Variables for functional processing"
   Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
+  Note "T1 freesurfer      :" "$(find "$T1surfOrig" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
   file.exist "mainScan${i/0/}         :" ${mainScan[i]}
   file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
@@ -237,7 +237,7 @@ bids_variables_unset() {
   unset dir_QC_png
   unset T1nativepro
   unset T1nativepro_brain
-  unset T1freesurfr
+  unset T1surfOrig
   unset T15ttgen
   unset T1fast_seg
   unset res

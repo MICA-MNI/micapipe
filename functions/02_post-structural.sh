@@ -40,6 +40,11 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
+# Surface Directory
+if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
+set_surface_directory "${recon}"
+Note "Surface software" "${recon}"
+
 # Manage manual inputs: Parcellations
 cd "$util_parcelations"
 if [[ "$atlas" == "DEFAULT" ]]; then
@@ -70,7 +75,7 @@ fi
 if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
 # Check inputs: freesurfer space T1
-if [ ! -f "$T1freesurfr" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1surfOrig" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
 micapipe_check_json_status "${module_json}" "post_structural"
@@ -109,7 +114,7 @@ mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_t1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 
 if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then ((N++))
-    Do_cmd mrconvert "$T1freesurfr" "$T1_in_fs"
+    Do_cmd mrconvert "$T1surfOrig" "$T1_in_fs"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$T1_in_fs" -t ["${T1_fsnative_affine}",1] -o "$T1_fsnative" -v -u int
     if [[ -f ${T1_fsnative} ]]; then ((Nsteps++)); fi
@@ -143,7 +148,7 @@ for parc in "${atlas_parc[@]}"; do
 
         # Register the annot surface parcelation to the T1-freesurfer volume
         Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
-        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1freesurfr" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
+        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surfOrig" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
         Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
         Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
         Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels

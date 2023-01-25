@@ -55,11 +55,11 @@ if [[ "$t1" != "DEFAULT" ]]; then
     t1_2proc=${T1nativepro}
 fi
 
-if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
-
 # Surface Directory
-Note "Surface software" "${recon}"
+if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
 set_surface_directory "${recon}"
+Note "Surface software" "${recon}"
+
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
 if [ ! -L "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi

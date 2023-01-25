@@ -45,7 +45,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Freesurfer space T1
-if [ ! -f "$T1freesurfr" ]; then Error "T1 in freesurfer space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1surfOrig" ]; then Error "T1 in surface space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 
 # Check PARCELLATIONS
 parcellations=($(find "$dir_volum" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
