@@ -23,7 +23,8 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 atlas=$8
-PROC=$9
+FastSurfer=$9
+PROC=${10}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -40,10 +41,32 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-# Surface Directory
-if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
+# Setting Surface Directory
+Nrecon=($(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null | wc -l))
+if [[ "$Nrecon" -lt 1 ]]; then
+  Error "Subject $id doesn't have a module-proc_surf: run -proc_surf"; exit 1
+if [[ "$Nrecon" -gt 1 ]]; then
+  Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
+  Note "Using freesurfer by default"
+  Note "Use the flag -FastSurfer if you want to use fastsurfer surfaces\n"
+  recon="freesurfer"
+elif [[ "$Nrecon" -eq 1 ]]; then
+  module_json=$(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null)
+  recon="$(echo ${module_json/.json/} | awk -F 'proc_surf-' '{print $2}')"
+fi
+
+# overwrite recon IF flag is set
+if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; fi
+
+# Set surface directory
 set_surface_directory "${recon}"
-Note "Surface software" "${recon}"
+
+# Check dependencies Status: PROC_SURF
+module_json="${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
+status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+if [ "$status" != "COMPLETED" ]; then
+  Error "proc_surf output has an $status status, try re-running -proc_surf"; exit 1
+fi
 
 # Manage manual inputs: Parcellations
 cd "$util_parcelations"
@@ -74,8 +97,8 @@ fi
 # Check inputs: Nativepro T1
 if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
-# Check inputs: freesurfer space T1
-if [ ! -f "$T1surfOrig" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
+# Check inputs: surface space T1
+if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 in surface space: ${T1surf}"; exit; fi
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
 micapipe_check_json_status "${module_json}" "post_structural"
@@ -87,9 +110,10 @@ micapipe_software
 bids_print.variables-post
 
 # GLOBAL variables for this script
-Info "Saving temporal dir: $nocleanup"
-Info "ANTs will use $threads threads"
-Info "wb_command will use $OMP_NUM_THREADS threads"
+Note "Saving temporal dir:" "${nocleanup}"
+Note "ANTs threads:" "$threads"
+Note "wb_command threads:" "${OMP_NUM_THREADS}"
+Note "Surface software:" "${recon}"
 
 #	Timer
 aloita=$(date +%s)
@@ -107,17 +131,18 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR=${dir_surf}
 
 #------------------------------------------------------------------------------#
-# Compute affine matrix from Freesurfer space to nativepro
+# Compute affine matrix from surface space to nativepro
 T1_in_fs=${tmp}/T1.nii.gz
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
 mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_t1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 
 if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then ((N++))
-    Do_cmd mrconvert "$T1surfOrig" "$T1_in_fs"
+    Do_cmd mrconvert "$T1surf" "$T1_in_fs"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$T1_in_fs" -t ["${T1_fsnative_affine}",1] -o "$T1_fsnative" -v -u int
     if [[ -f ${T1_fsnative} ]]; then ((Nsteps++)); fi
+    post_struct_transformations "$T1nativepro" "$T1_fsnative" "${dir_warp}/${idBIDS}_transformations-post_structural.json" '${T1_fsnative_affine}'
 else
     Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nsteps++)); ((N++))
 fi
@@ -146,9 +171,9 @@ for parc in "${atlas_parc[@]}"; do
         fs_nii="${tmp}/${T1str_fs}_${parc_str}.nii.gz"                   # labels in fsnative tmp dir
         labels_nativepro="${dir_volum}/${T1str_nat}-${parc_str}.nii.gz"  # lables in nativepro
 
-        # Register the annot surface parcelation to the T1-freesurfer volume
+        # Register the annot surface parcelation to the T1-surface volume
         Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
-        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surfOrig" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
+        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
         Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
         Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
         Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
@@ -164,7 +189,7 @@ done
 Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
-# Compute warp of native structural to Freesurfer and apply to 5TT and first
+# Compute warp of native structural to surface and apply to 5TT and first
 if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf.gii" ]]; then
     for hemisphere in l r; do
       Info "Native surfaces to conte69-64k vertices (${hemisphere}h hemisphere)"
@@ -193,6 +218,10 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
 else
     Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); ((N+4))
 fi
+
+# Create json file for post_structural
+proc_surf_json="${proc_struct}/${idBIDS}_post_structural.json"
+json_poststruct "${T1surf}" "${proc_surf_json}"
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
