@@ -553,7 +553,7 @@ accordion_postStruct() {
     echo -e $table_style >> "$QC_html"
     echo -e "      <table class=\"tg\">
           <thead> " >> "$QC_html"
-            print_row3 "T1surfOrig" "proc_surf" $(find $T1surfOrig 2>/dev/null)
+            print_row3 "T1surf" "proc_surf" $(find $T1surf 2>/dev/null)
             print_row3 "T1nativepro" "proc_structural" $(find $T1nativepro 2>/dev/null)
             print_row3 "T1fast_seg" "proc_structural" $(find $T1fast_seg 2>/dev/null)
             print_row3 "T1_MNI152_InvWarp" "proc_structural" $(find $T1_MNI152_InvWarp 2>/dev/null)
@@ -564,13 +564,13 @@ accordion_postStruct() {
 
   #------------------------------------------------------------------------------#
   T1fsnii=${tmpDir}/T1.nii.gz
-  mrconvert "$T1surfOrig" "$T1fsnii"
+  mrconvert "$T1surf" "$T1fsnii"
   T1_fsnative="${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz"
   T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
   T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
   echo -e "<h2>Main outputs</h2>"  >> "$QC_html"
   nifti_check "Registration: T1w nativepro in freesurfer space" "$T1fsnii" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png" "$T1_fsnative"
-  print_path "$T1surfOrig"
+  print_path "$T1surf"
   nifti_check "T1w nativepro cerebellum atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png" "$T1_seg_cerebellum" "YES"
   nifti_check "T1w nativepro subcortical atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png" "$T1_seg_subcortex" "YES"
   #------------------------------------------------------------------------------#
@@ -839,9 +839,9 @@ accordion_func() {
                 <td class=\"tg-8pnm\">$(find $T1nativepro 2>/dev/null)</td>
               </tr>
               <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1surfOrig</span></td>
+                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1surf</span></td>
                 <td class=\"tg-8pnm\">proc_freesurfer<br><br></td>
-                <td class=\"tg-8pnm\">$(find $T1surfOrig 2>/dev/null)</td>
+                <td class=\"tg-8pnm\">$(find $T1surf 2>/dev/null)</td>
               </tr>
             </tbody>
             </table>"  >> "$QC_html"

@@ -42,7 +42,7 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs
-if [ ! -f "$T1surfOrig" ]; then Error "T1 in surface space not found for Subject $id : ${T1surfOrig}"; exit; fi
+if [ ! -f "$T1surf" ]; then Error "T1 in surface space not found for Subject $id : ${T1surf}"; exit; fi
 Nc69=$(ls "${dir_conte69}"/*gii 2>/dev/null | wc -l)
 if [ "$Nc69" -lt 8 ]; then Error "Missing conte69 surfaces: run -post_structural"; exit; fi
 

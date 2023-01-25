@@ -70,7 +70,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain.nii.gz"
   T1nativepro_mask="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_mask.nii.gz"
   dir_subjsurf="${dir_surf}/${subject}_ses-${sesAnat}"
-  T1surfOrig="${dir_subjsurf}/mri/T1.mgz"
+  T1surf="${dir_subjsurf}/mri/T1.mgz"
 else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
@@ -199,7 +199,7 @@ if [ -z "$reversePhaseScan" ]; then Warning "Subject $id doesn't have Reverse Ph
 
 # Check requirements: Structural nativepro scan and freesurfer, and post_structural
 if [ ! -f "$T1nativepro" ]; then Error "Subject $id doesn't have T1_nativepro: run -proc_structural"; exit; fi
-if [ ! -f "$T1surfOrig" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
+if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${idBIDS}/mri/T1.mgz"; exit; fi
 if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\t ls ${T1_seg_cerebellum} \n\t\tRUN -post_structural"; exit; fi
 if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\t ls ${T1_seg_subcortex} \n\t\t -post_structural"; exit; fi
 

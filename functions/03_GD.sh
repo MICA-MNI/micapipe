@@ -46,7 +46,7 @@ outPath="${proc_struct}/surf/geo_dist"
 workbench_path=$(which wb_command)
 
 # Check inputs: freesurfer space T1 (to make sure freesurfer was run)
-if [ ! -f "${T1surfOrig}" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+if [ ! -f "${T1surf}" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
 if [ ! -f "${lh_midsurf}" ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
 if [ ! -f "${rh_midsurf}" ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
