@@ -106,11 +106,7 @@ set_surface_directory() {
   local recon=${1}
   export dir_surf=${out/\/micapipe_v0.2.0/}/${recon}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
-  if [[ "${recon}" == "fastsurfer" ]]; then
-    export T1surf=${dir_subjsurf}/mri/norm.mgz
-  else
-    export T1surf=${dir_subjsurf}/mri/T1.mgz
-  fi
+  export T1surf=${dir_subjsurf}/mri/T1.mgz
 
   # Native midsurface in gifti format
   export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
