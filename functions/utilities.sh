@@ -103,9 +103,15 @@ export idBIDS="${subject}${ses}"
 }
 
 set_surface_directory() {
-  export dir_surf=${out/\/micapipe_v0.2.0/}/${1}    # surf
+  local recon=${1}
+  export dir_surf=${out/\/micapipe_v0.2.0/}/${recon}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
-  export T1surfOrig=${dir_subjsurf}/mri/T1.mgz
+  if [[ "${recon}" == "fastsurfer" ]]; then
+    export T1surf=${dir_subjsurf}/mri/norm.mgz
+  else
+    export T1surf=${dir_subjsurf}/mri/T1.mgz
+  fi
+
   # Native midsurface in gifti format
   export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
   export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
@@ -194,7 +200,7 @@ bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
   Info "Variables for functional processing"
   Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 freesurfer      :" "$(find "$T1surfOrig" 2>/dev/null)"
+  Note "T1 surface      :" "$(find "$T1surf" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
   file.exist "mainScan${i/0/}         :" ${mainScan[i]}
   file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
@@ -237,7 +243,7 @@ bids_variables_unset() {
   unset dir_QC_png
   unset T1nativepro
   unset T1nativepro_brain
-  unset T1surfOrig
+  unset T1surf
   unset T15ttgen
   unset T1fast_seg
   unset res
@@ -480,6 +486,7 @@ function json_nativepro_t1w() {
 }
 
 function json_surf() {
+  Info "Creating proc_surf json file"
   qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
   sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
@@ -587,6 +594,37 @@ function proc_struct_transformations() {
   }" > "$4"
 }
 
+function post_struct_transformations() {
+  Info "Creating transformations file: Surface Native >><< T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"post_structural\",
+    \"LastRun\": \"$(date)\",
+    \"T1nativepro\": \"${1}\",
+    \"T1surf\": \"${T1surf}\",
+    \"from-t1nativepro_to-fsnative\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$1\",
+        \"reference\": \"$2\",
+        \"transformations\": \"[${T1_fsnative_affine},1]\",
+        \"output\": \"-o from-nativepro_to-fsnative_mode-image_desc-affine.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-fsnative_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$2\",
+        \"reference\": \"$1\",
+        \"transformations\": \"-t ${T1_fsnative_affine}\",
+        \"output\": \"-o from-fsnative_to-nativepro_mode-image_desc-affine.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > "$3"
+}
+
 function slim_proc_struct(){
   Info "Erasing temporary files"
   Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_to_std_sub*
@@ -647,6 +685,39 @@ function json_nativepro_mask() {
       }
     ]
   }" > "$3"
+}
+
+function json_poststruct() {
+  Info "Creating post_structural json file"
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"FastSurfer\": \"${FastSurfer}\",
+    \"SurfaceProc\": \"${recon}\",
+    \"Atlas\": [
+        \"${atlas}\"
+      ],
+    \"NativeSurfSpace\": [
+        \"fileName\": \"${1}\",
+        \"VoxelSize\": \"${res}\",
+        \"Dimensions\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": [
+          \"${Transform[@]:0:4};\"
+          \"${Transform[@]:4:4};\"
+          \"${Transform[@]:8:4};\"
+          \"${Transform[@]:12:8}\"
+      ]
+    ],
+  }" > "$2"
 }
 
 function json_func() {
