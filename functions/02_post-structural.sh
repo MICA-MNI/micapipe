@@ -4,7 +4,7 @@
 #
 # Preprocessing workflow for diffusion MRI.
 #
-# This workflow makes use of freesurfer, FSL workbench and MRtrix3
+# This workflow makes use of freesurfer, FastSurfer, FSL, ANTs, and workbench
 #
 # Atlas an templates are avaliable from:
 #
@@ -45,7 +45,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 Nrecon=($(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null | wc -l))
 if [[ "$Nrecon" -lt 1 ]]; then
   Error "Subject $id doesn't have a module-proc_surf: run -proc_surf"; exit 1
-if [[ "$Nrecon" -gt 1 ]]; then
+elif [[ "$Nrecon" -gt 1 ]]; then
   Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
   Note "Using freesurfer by default"
   Note "Use the flag -FastSurfer if you want to use fastsurfer surfaces\n"
@@ -98,7 +98,9 @@ fi
 if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
 # Check inputs: surface space T1
-if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 in surface space: ${T1surf}"; exit; fi
+if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 on surface space: re-run -proc_surf"; exit; fi
+if [ ! -f "${dir_subjsurf}/mri/T1.mgz" ]; then Error "Subject $id doesn't have a mri/ribbon.mgz: re-run -proc_surf"; exit; fi
+
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
 micapipe_check_json_status "${module_json}" "post_structural"
@@ -144,7 +146,7 @@ if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then ((N++))
     if [[ -f ${T1_fsnative} ]]; then ((Nsteps++)); fi
     post_struct_transformations "$T1nativepro" "$T1_fsnative" "${dir_warp}/${idBIDS}_transformations-post_structural.json" '${T1_fsnative_affine}'
 else
-    Info "Subject ${id} has a T1 on FreeSurfer space"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has a T1 on Surface space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -216,7 +218,7 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
         done
     done
 else
-    Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); ((N+4))
+    Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); N=$((N+4))
 fi
 
 # Create json file for post_structural
