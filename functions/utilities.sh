@@ -371,13 +371,24 @@ function micapipe_check_json_status() {
   if [ -f "${module_json}" ]; then
     status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
     if [ "$status" == "COMPLETED" ]; then
-    Note "Proc_surf json" "${module_json}"
+    Note "${mod_func} json" "${module_json}"
     Warning "Subject ${idBIDS} has been processed with -${mod_func}
               If you want to re-run this step again, first erase all the outputs with:
+
               micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit
     else
         Info "${mod_func} is ${status}, processing will continute"
     fi
+  fi
+}
+
+function micapipe_check_dependency() {
+  local mod_str="${1}"
+  local module_json="${2}"
+  if [[ ! -f "${module_json}" ]]; then Error "${mod_str} outputs were not found: \n\t\t\tRun -${mod_str}"; exit 1; fi
+  status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+  if [ "$status" != "COMPLETED" ]; then
+    Error "${mod_str} output has an $status status, try re-running -${mod_str}"; exit 1
   fi
 }
 
@@ -701,7 +712,6 @@ function json_poststruct() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"FastSurfer\": \"${FastSurfer}\",
     \"SurfaceProc\": \"${recon}\",
     \"Atlas\": [
         \"${atlas}\"
@@ -784,9 +794,11 @@ function json_mpc() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"Class\": \"Microstructural profile covariance\",
+    \"Module\": \"Microstructural profile covariance\",
     \"acquisition\": \"${mpc_str}\",
-    \"input\": \"${1}\",
+    \"microstructural_img\": \"${1}\",
+    \"microstructural_reg\": \"${regImage}\",
+    \"microstructural_dat\": \"${input_dat}\",
     \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
