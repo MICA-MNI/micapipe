@@ -27,7 +27,7 @@ echo -e "
 
    Flags for erasing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
-\t\033[38;5;197m-proc_freesurfer\033[0m  : DELETES Freesurfer recon-all processing
+\t\033[38;5;197m-proc_surf\033[0m  : DELETES Surface processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t\033[38;5;197m-proc_func\033[0m      : DELETES Funtional MRI processing
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
@@ -78,7 +78,7 @@ do
     procVOL=TRUE
     shift
   ;;
-  -proc_freesurfer)
+  -proc_surf)
     procFS=TRUE
     shift
   ;;
@@ -169,12 +169,13 @@ if [ "$procVOL" = "TRUE" ]; then
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
-# CLEAN -proc_freesurfer
+# CLEAN -proc_surf
 if [ "$procFS" = "TRUE" ]; then
-    Warning "Erasing proc_freesurfer output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
+    Warning "Erasing proc_surf output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
+    # if the directory is a symbolic link then unlink it
     Do_cmd rm -rf "$dir_subjsurf" \
-                  "$dir_logs"/proc_freesurfer*
-    grep -v "${id}, ${SES/ses-/}, proc_freesurfer" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+                  "$dir_logs"/proc_surf*
+    grep -v "${id}, ${SES/ses-/}, proc_surf" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
