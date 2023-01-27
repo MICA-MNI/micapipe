@@ -39,6 +39,7 @@ export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
 export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
 # Fastsurfer singularity container
 export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
+unset TMPDIR
 
 #------------------------------------------------------------------------------#
 # Remove any other instance from the PATH
