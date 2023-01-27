@@ -47,6 +47,7 @@ source "$MICAPIPE/functions/utilities.sh"
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Nativepro T1 or custom T1
+Info ${t1}
 if [[ "$t1" != "DEFAULT" ]]; then
     if [ ! -f "${t1}" ]; then Error "The provided T1 volume does not exist:\n\t${t1}"; exit; fi
     t1_2proc=${t1}
@@ -67,17 +68,7 @@ if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/su
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
-if [ -f "${module_json}" ]; then
-  status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
-  if [ "$status" == "COMPLETED" ]; then
-  Note "Proc_surf json" "${module_json}"
-  Warning "Subject ${idBIDS} has been processed with -proc_surf
-            If you want to re-run this step again, first erase all the outputs with:
-            micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -proc_surf"; exit
-  else
-      Info "proc_surf is INCOMPLETE, processing will continute"
-  fi
-fi
+micapipe_check_json_status "${module_json}" "proc_surf"
 
 #------------------------------------------------------------------------------#
 Title "Surface processing\n\t\tmicapipe $Version, $PROC "
@@ -137,14 +128,14 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     if [[ "$FastSurfer" == "TRUE" ]]; then
         Info "FastSurfer: running the singularity image"
         Do_cmd mkdir -p "${SUBJECTS_DIR}/${idBIDS}"
+        cp ${fs_licence} ${SUBJECTS_DIR}/license.txt
 
         singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
                               -B "${SUBJECTS_DIR}":/output \
-                              -B "${fs_licence}":/fs \
                               -B "${tmp}/nii":/anat \
                                "${fastsurfer_img}" \
                                /fastsurfer/run_fastsurfer.sh \
-                              --fs_license /fs/license.txt \
+                              --fs_license /output/license.txt \
                               --t1 /anat/"${idBIDS}"_t1w.nii.gz \
                               --sid "${idBIDS}" --sd /output --no_fs_T1 \
                               --parallel --threads "${threads}"
@@ -214,7 +205,7 @@ Note "Check log file:" "${dir_logs}/recon-all.log"
 if [[ -f "${dir_logs}/recon-all.log" ]] && grep -q "finished without error" "${dir_logs}/recon-all.log"; then ((Nsteps++)); fi
 
 # Create json file for T1native
-proc_surf_json="${proc_struct}/surf/${idBIDS}_proc_surf-${recon}.json"
+proc_surf_json="${proc_struct}/surf/${idBIDS}_proc_surf.json"
 json_surf "${t1_2proc}" "${dir_surf}" "${recon}" "${proc_surf_json}"
 
 # Notification of completition
