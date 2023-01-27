@@ -237,6 +237,7 @@ done
 
 #------------------------------------------------------------------------------#
 # Create MPC connectomes and Intensity profiles per parcellations
+parcellations=($(find "$dir_volum" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
 for seg in "${parcellations[@]}"; do
     parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     parc_annot="${parc}_mics.annot"
