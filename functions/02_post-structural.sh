@@ -51,8 +51,8 @@ elif [[ "$Nrecon" -gt 1 ]]; then
   Note "Use the flag -FastSurfer if you want to use fastsurfer surfaces\n"
   recon="freesurfer"
 elif [[ "$Nrecon" -eq 1 ]]; then
-  module_json=$(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null)
-  recon="$(echo ${module_json/.json/} | awk -F 'proc_surf-' '{print $2}')"
+  module_qc=$(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null)
+  recon="$(echo ${module_qc/.json/} | awk -F 'proc_surf-' '{print $2}')"
 fi
 
 # overwrite recon IF flag is set
@@ -62,11 +62,7 @@ if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; fi
 set_surface_directory "${recon}"
 
 # Check dependencies Status: PROC_SURF
-module_json="${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
-status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
-if [ "$status" != "COMPLETED" ]; then
-  Error "proc_surf output has an $status status, try re-running -proc_surf"; exit 1
-fi
+micapipe_check_dependency "proc_surf" "${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
 
 # Manage manual inputs: Parcellations
 cd "$util_parcelations"
@@ -204,13 +200,13 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
             "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
             "${dir_subjsurf}/surf/${hemisphere}h.midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_midthickness.surf.gii" \
-            "${dir_conte69}/${idBIDS}_${hemisphere}h_sphereReg.surf.gii"
+            "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii"
         # Resample white and pial surfaces to conte69-32k
         for surface in pial white; do ((N++))
             Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.${surface}" "${tmp}/${hemisphere}h.${surface}.surf.gii"
             Do_cmd wb_command -surface-resample \
                 "${tmp}/${hemisphere}h.${surface}.surf.gii" \
-                "${dir_conte69}/${idBIDS}_${hemisphere}h_sphereReg.surf.gii" \
+                "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii" \
                 "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
                 BARYCENTRIC \
                 "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii"
@@ -222,8 +218,8 @@ else
 fi
 
 # Create json file for post_structural
-proc_surf_json="${proc_struct}/${idBIDS}_post_structural.json"
-json_poststruct "${T1surf}" "${proc_surf_json}"
+post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
+json_poststruct "${T1surf}" "${post_struct_json}"
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
