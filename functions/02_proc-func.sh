@@ -812,7 +812,7 @@ for hemisphere in lh rh; do
           # Register to conte69
           Do_cmd wb_command -metric-resample \
               "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
-              "${dir_conte69}/${BIDSanat}_${hemisphere}_sphereReg.surf.gii" \
+              "${dir_conte69}/${BIDSanat}_${hemisphere}_space-fsnative_desc-sphere.surf.gii" \
               "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii" \
               ADAP_BARY_AREA \
               "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" \
