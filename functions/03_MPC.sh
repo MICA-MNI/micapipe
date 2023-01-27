@@ -44,12 +44,25 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-# Check inputs: Freesurfer space T1
-if [ ! -f "$T1surf" ]; then Error "T1 in surface space not found for Subject $id : <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
+# Check dependencies Status: POST_STRUCTURAL
+micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
 
-# Check PARCELLATIONS
-parcellations=($(find "$dir_volum" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
-if [ "${#parcellations[*]}" -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
+# Setting Surface Directory from post_structural
+post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
+recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+set_surface_directory "${recon}"
+
+# Variables naming for multiple acquisitions
+if [[ "${mpc_str}" == DEFAULT ]]; then
+  mpc_str="qMRI"
+  mpc_p="acq-qMRI"
+else
+  mpc_p="acq-${mpc_str}"
+fi
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-MPC-${mpc_str}.json"
+micapipe_check_json_status "${module_json}" "MPC"
 
 # Check microstructural image input flag and set parameters accordingly
 if [[ "$input_im" == "DEFAULT" ]]; then
@@ -78,9 +91,9 @@ Note "micro2fs registration image =" "$regImage"
 
 # Check .dat file input flag and set parameters accordingly
 if [[ "$input_dat" == "DEFAULT" ]]; then
-    Warning "Registration to freesurfer space will be performed within script"
+    Warning "Registration to surface space will be performed within script"
 else
-    Warning "Applying provided .dat file to perform registration to native freesurfer space"
+    Warning "Applying provided .dat file to perform registration to native surface space"
     Note "micro2fs transform =" "$input_dat"
     if [ -z "${input_dat}" ] || [ ! -f "${input_dat}" ]; then Error "Provided registration for MPC was not found or the path is wrong!!!"; exit; fi
 fi
@@ -111,23 +124,15 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR="$dir_surf"
-
-# Variables naming for multiple acquisitions
-if [[ "${mpc_str}" == DEFAULT ]]; then
-  mpc_str="qMRI"
-  mpc_p="acq-qMRI"
-else
-  mpc_p="acq-${mpc_str}"
-fi
 outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 #------------------------------------------------------------------------------#
-# If no lta specified by user, register to Freesurfer space using T1w as intermediate volume
+# If no lta specified by user, register to surface space using T1w as intermediate volume
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
 if [[ ${input_dat} == "DEFAULT" ]]; then
     fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
     if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then ((N++))
-        Info "Running microstructural -> freesurfer registration for Subject ${id}" #            --int "$T1_fsnative" \
+        Info "Running microstructural -> Surface registration for Subject ${id}" #            --int "$T1_fsnative" \
         Do_cmd bbregister --s "$idBIDS" \
             --mov "$regImage" \
             --init-rr \
@@ -136,7 +141,7 @@ if [[ ${input_dat} == "DEFAULT" ]]; then
             --t1
         if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" ]]; then ((Nsteps++)); fi
     else
-        Info "Subject ${id} already has a microstructural -> freesurfer transformation"; ((Nsteps++)); ((N++))
+        Info "Subject ${id} already has a microstructural -> Surface space transformation"; ((Nsteps++)); ((N++))
     fi
 else
     Info "Using provided input .dat for vol2surf"
@@ -147,7 +152,7 @@ fi
 ## Register qT1 intensity to surface
 num_surfs=14
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
-json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC_${mpc_str}.json"
+json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
 
 if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
     for hemi in lh rh ; do
@@ -185,7 +190,7 @@ if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
         done
     done
 else
-    Info "Subject ${id} has microstructural intensities mapped to native surface"; Nsteps=$((Nsteps + 28)); N=$((N + 28))
+    Info "Subject ${id} has microstructural intensities mapped to native surface"; Nsteps=$((Nsteps+28)); N=$((N+28))
 fi
 
 # Register to fsa5
@@ -200,7 +205,7 @@ for hemi in lh rh; do
                 --trgsurfval "$MPC_fs5"
             if [[ -f "$MPC_fs5" ]]; then ((Nsteps++)); fi
         else
-            Info "Subject ${id} ${hemi}_MPC-${n} is registered to fsaverage5"; ((Nsteps++)); ((N++))
+            Info "Subject ${id} ${hemi}_MPC-${n} is registered to fsaverage5"; ((Nsteps++))
         fi
     done
 done
@@ -215,7 +220,7 @@ for hemi in lh rh; do
             Do_cmd mri_convert "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" "${tmp}/${hemi}_${n}.func.gii"
             Do_cmd wb_command -metric-resample \
                     "${tmp}/${hemi}_${n}.func.gii" \
-                    "${dir_conte69}/${idBIDS}_${hemi}_sphereReg.surf.gii" \
+                    "${dir_conte69}/${idBIDS}_${hemi}_space-fsnative_desc-sphere.surf.gii" \
                     "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
                     ADAP_BARY_AREA \
                     "${tmp}/${hemi}_${n}_c69-32k.func.gii" \
@@ -232,7 +237,6 @@ done
 
 #------------------------------------------------------------------------------#
 # Create MPC connectomes and Intensity profiles per parcellations
-N=${#parcellations[*]}
 for seg in "${parcellations[@]}"; do
     parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     parc_annot="${parc}_mics.annot"
@@ -251,7 +255,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-micapipe_completition_status "MPC_${mpc_p}"
-micapipe_procStatus "${id}" "${SES/ses-/}" "MPC_${mpc_p}" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC_${mpc_p}" "${module_json}"
+micapipe_completition_status "MPC"
+micapipe_procStatus "${id}" "${SES/ses-/}" "MPC-${mpc_str}" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC-${mpc_str}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
