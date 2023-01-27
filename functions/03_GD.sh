@@ -39,16 +39,23 @@ source $MICAPIPE/functions/utilities.sh
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
+# Check dependencies Status: POST_STRUCTURAL
+micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
+
+# Setting Surface Directory from post_structural
+post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
+recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+set_surface_directory "${recon}"
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-GD.json"
+micapipe_check_json_status "${module_json}" "GD"
+
 # Define output directory
 outPath="${proc_struct}/surf/geo_dist"
 
 # wb_command
 workbench_path=$(which wb_command)
-
-# Check inputs: freesurfer space T1 (to make sure freesurfer was run)
-if [ ! -f "${T1surf}" ]; then Error "Subject $id doesn't have a T1 in surface space: <SUBJECTS_DIR>/${id}/mri/T1.mgz"; exit; fi
-if [ ! -f "${lh_midsurf}" ]; then Error "Subject $id doesn't have left hemisphere midsurface gifti file"; exit; fi
-if [ ! -f "${rh_midsurf}" ]; then Error "Subject $id doesn't have right hemisphere midsurface gifti file"; exit; fi
 
 # Check PARCELLATIONS
 parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
@@ -60,22 +67,18 @@ micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
 
-# Check IF output exits and WARNING
-N=$(ls "${outPath}"/* 2>/dev/null | wc -l)
-if [ "$N" -gt 2 ]; then Warning "Existing connectomes will be skipped!! If you want to re-run -GD first clean the outpus:
-          micapipe_cleanup -GD -sub ${id} -out ${out} -bids ${BIDS}"; fi
-
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
+N=0
+
 # creates output directory if it doesn't exist
 [[ ! -d "$outPath" ]] && mkdir -p "$outPath"
 
 #------------------------------------------------------------------------------#
 # Compute geodesic distance on all parcellations
-N=${#parcellations[*]}
-for seg in "${parcellations[@]}"; do
-  parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
+for seg in "${parcellations[@]}"; do ((N++))
+    parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     lh_annot="${dir_subjsurf}/label/lh.${parc}_mics.annot"
     rh_annot="${dir_subjsurf}/label/rh.${parc}_mics.annot"
     outName="${outPath}/${idBIDS}_space-fsnative_atlas-${parc}_GD"
@@ -97,11 +100,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "Post-GD processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
-\tStatus          : ${status}
-\tCheck logs      : $(ls "${dir_logs}"/GD_*.txt)"
+micapipe_completition_status GD
 micapipe_procStatus "${id}" "${SES/ses-/}" "GD" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "GD" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "GD" "${module_json}"
 bids_variables_unset
