@@ -24,8 +24,8 @@ bids_variables() {
   # Directory with all the parcellations
   export util_parcelations=${MICAPIPE}/parcellations
   export util_lut=${MICAPIPE}/parcellations/lut
-  # Directory with the resampled freesurfer surf
-  export util_surface=${MICAPIPE}/surf # utilities/resample_fsaverage
+  # Directory with the resampled surfaces
+  export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
   export subject=sub-${id}
@@ -68,7 +68,7 @@ export idBIDS="${subject}${ses}"
       export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz
       export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz
       export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_t1w_5TT.nii.gz
-      export T1fast_seg=$proc_struct/first/${idBIDS}_space-nativepro_t1w_all_fast_firstseg.nii.gz
+      export T1fast_seg=$proc_struct/volumetric/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz
   fi
 
   # Registration from MNI152 to Native pro
@@ -368,10 +368,17 @@ function micapipe_json() {
 function micapipe_check_json_status() {
   local mod_json="${1}"
   local mod_func="${2}"
-  if [ -f "${mod_json}" ] && [ $(grep "Status" "${mod_json}" | awk -F '"' '{print $4}')=="COMPLETED" ]; then
-  Warning "Subject ${idBIDS} has been processed with -${mod_func}
-                  If you want to re-run this step again, first erase all the outputs with:
-                  micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit; fi
+  if [ -f "${module_json}" ]; then
+    status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+    if [ "$status" == "COMPLETED" ]; then
+    Note "Proc_surf json" "${module_json}"
+    Warning "Subject ${idBIDS} has been processed with -${mod_func}
+              If you want to re-run this step again, first erase all the outputs with:
+              micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit
+    else
+        Info "${mod_func} is ${status}, processing will continute"
+    fi
+  fi
 }
 
 function tck_json() {
@@ -491,7 +498,6 @@ function json_surf() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=($(mrinfo "${1}" -transform))
-  Info "Creating proc_surf json file"
   if [[ "$surfdir" == "FALSE" ]]; then
       echo -e "{
         \"micapipeVersion\": \"${Version}\",
@@ -526,14 +532,15 @@ function json_surf() {
           }
         ],
         \"SurfaceDir\": \"${2}\",
-        \"Algorithm\": \"${3}\",
+        \"SurfRecon\": \"${3}\",
       }" > "$4"
   elif [[ "$surfdir" != "FALSE" ]]; then
     echo -e "{
       \"micapipeVersion\": \"${Version}\",
       \"LastRun\": \"$(date)\",
+      \"originalDir\": \"${surfdir}\",
       \"SurfaceDir\": \"${2}\",
-      \"Algorithm\": \"${3}\"
+      \"SurfRecon\": \"${3}\"
     }" > "$4"
   fi
 }
