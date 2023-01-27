@@ -404,6 +404,7 @@ do
     shift;shift;
   ;;
   -t1)
+    t1="$2"
     shift;shift;
   ;;
   -N4wm)
