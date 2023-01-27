@@ -49,27 +49,18 @@ post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
 recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
-# End if module has been processed
-module_json="${dir_QC}/${idBIDS}_module-morphology.json"
-micapipe_check_json_status "${module_json}" "morphology"
-
 #------------------------------------------------------------------------------#
-Title "Cortical morphology analysis\n\t\tmicapipe $Version, $PROC"
-micapipe_software
-bids_print.variables-post
-Info "wb_command will use $OMP_NUM_THREADS threads"
-Info "Saving temporal dir: $nocleanup"
+Title "Cortical morphology analysis"
 
-# Timer
-aloita=$(date +%s)
-Nsteps=0
-N=0
+# Steps
+local Nsteps=0
+local N=0
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
 
 # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_post-morpho_${idBIDS}"
+local tmp="${tmpDir}/${RANDOM}_micapipe_post-morpho_${idBIDS}"
 Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
@@ -206,12 +197,13 @@ fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
-lopuu=$(date +%s)
-eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print "$eri"/60 | perl)
+local lopuu=$(date +%s)
+local eri=$(echo "$lopuu - $aloita" | bc)
+local eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
+# End if module has been processed
+morph_json="${dir_QC}/${idBIDS}_module-morphology.json"
 micapipe_completition_status morphology
-micapipe_procStatus "${id}" "${SES/ses-/}" "morphology" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "morphology" "${module_json}"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "morphology" "${morph_json}"
 cleanup "$tmp" "$nocleanup" "$here"
