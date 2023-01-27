@@ -43,7 +43,7 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
-\t\033[38;5;197m-Morphology\033[0m       : Cortical morphology analysis (Thickness and curvature)
+\t\033[38;5;197m-morphology\033[0m       : Cortical morphology analysis (Thickness and curvature)
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
@@ -325,7 +325,7 @@ do
     postGD=TRUE
     shift
   ;;
-  -Morphology)
+  -morphology)
     postMorph=TRUE
     shift
   ;;
@@ -510,7 +510,7 @@ Error "A processing flag is missing:
                     -SC
                     -MPC
                     -GD
-                    -Morphology
+                    -morphology
                     -QC_subj
                     -cleanup"
 exit 1; fi
@@ -828,17 +828,17 @@ fi
 #     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
 #     REQUIRES -post-structural, -proc_surf, and -postMPC
 if [ "$postMorph" = "TRUE" ]; then
-    log_file_str=$dir_logs/Morphology_$(date +'%Y-%m-%d_%H.%M.%S')
+    log_file_str=$dir_logs/morphology_$(date +'%Y-%m-%d_%H.%M.%S')
     COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
-    # mica.q - Morphology
+    # mica.q - morphology
     if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - Cortical Morphology"
+        Info "MICA qsub - Cortical morphology"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-    # all.q - Morphology
+    # all.q - morphology
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Cortical Morphoogy"
         Warning "This option only works on the McGill BIC network"
@@ -847,7 +847,7 @@ if [ "$postMorph" = "TRUE" ]; then
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     else
-        # LOCAL - Morphology
+        # LOCAL - morphology
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
