@@ -43,13 +43,11 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
-\t\033[38;5;197m-morphology\033[0m       : Cortical morphology analysis (Thickness and curvature)
-\t\t\t      ( Requires: -proc_surf and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
-\t   \033[38;5;120m-t1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
-\t\t\t            Default string is 'T1w.nii'. Multiple inputs example = '-t1wStr run-01_T1w,run-02_T1w'
+\t   \033[38;5;120m-T1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
+\t\t\t            Default string is 'T1w.nii'. Multiple inputs example = '-T1wStr run-01_T1w,run-02_T1w'
 \t   \033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. for 7T T1w-mprage).
 \t\t\t            Default = no second N4 bias field corretion weighted by white matter
 \t   \033[38;5;120m-uni\033[0m                 : Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
@@ -66,7 +64,7 @@ echo -e "
 \t\t\t            Default surface reconstruction uses 'Freesurfer 7'
 \t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
 \t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
-\t   \033[38;5;120m-t1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a t1w image to be processed.
+\t   \033[38;5;120m-t1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
 \t\t\t            By default micapipe uses t1nativepro to generate the surfaces.
 
 
@@ -325,10 +323,6 @@ do
     postGD=TRUE
     shift
   ;;
-  -morphology)
-    postMorph=TRUE
-    shift
-  ;;
   -MPC)
     postMPC=TRUE
     shift
@@ -380,8 +374,8 @@ do
     tmpDir=$2
     shift;shift;
   ;;
-  -t1wStr)
-    t1wStr="$2"
+  -T1wStr)
+    T1wStr="$2"
     shift;shift;
   ;;
   -bet)
@@ -510,7 +504,6 @@ Error "A processing flag is missing:
                     -SC
                     -MPC
                     -GD
-                    -morphology
                     -QC_subj
                     -cleanup"
 exit 1; fi
@@ -606,7 +599,7 @@ if [ -z ${t1} ]; then t1=DEFAULT; else t1=$(realpath $t1); fi
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
 # T1w image to process (DEFAULT is *T1w.nii*)
-if [ -z ${t1wStr} ]; then t1wStr=DEFAULT; else t1wStr="$t1wStr"; fi
+if [ -z ${T1wStr} ]; then T1wStr=DEFAULT; else T1wStr="$T1wStr"; fi
 if [ -z ${N4wm} ]; then N4wm="FALSE"; else N4wm="TRUE"; fi
 if [ -z ${UNI} ]; then UNI="FALSE"; else UNI="TRUE"; fi
 if [ -z ${MF} ]; then MF=3; else MF="${MF}"; fi
@@ -682,6 +675,7 @@ fi
 
 # Pipeline description json
 micapipe_json
+if [ ! -f "${out}/dataset_description.json" ]; then micapipe_json; fi
 if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"; fi
 
 # -----------------------------------------------------------------------------------------------#
@@ -689,7 +683,7 @@ if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Mo
 # -----------------------------------------------------------------------------------------------#
 if [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $t1wStr $N4wm $UNI $MF $maskbet"
+    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $N4wm $UNI $MF $maskbet"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
@@ -818,36 +812,6 @@ if [ "$postVOL" = "TRUE" ]; then
              $COMMAND $PROC
     else
       # LOCAL - post_structural processing
-        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-    fi
-fi
-
-# -----------------------------------------------------------------------------------------------#
-#                   POST Cortical morphology analyses mica-03
-# -----------------------------------------------------------------------------------------------#
-#     Quantitative outputs for cortical morphology analyses: Thickness, curvature, mean qT1
-#     REQUIRES -post-structural, -proc_surf, and -postMPC
-if [ "$postMorph" = "TRUE" ]; then
-    log_file_str=$dir_logs/morphology_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/03_morphology.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
-    # mica.q - morphology
-    if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - Cortical morphology"
-        Warning "This option only works on the MICA workstations"
-        export PROC="qsub-MICA"
-        # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    # all.q - morphology
-    elif [[ $qall == "TRUE" ]]; then
-        Info "all.q qsub - Cortical Morphoogy"
-        Warning "This option only works on the McGill BIC network"
-        export PROC="qsub-all.q"
-        # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_morpho -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    else
-        # LOCAL - morphology
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
