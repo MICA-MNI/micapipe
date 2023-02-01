@@ -121,7 +121,7 @@ if [[ "$surfdir" != "FALSE" ]]; then ((N++))
 elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     # Define SUBJECTS_DIR for surface processing as a global variable
     export SUBJECTS_DIR=${tmp} # Will work on a temporal directory
-    t1="${SUBJECTS_DIR}/nii/${idBIDS}"_t1w.nii.gz
+    t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
     Do_cmd cp "${t1_2proc}" "${t1}"
 
     # Recontruction method
@@ -136,7 +136,7 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
                                "${fastsurfer_img}" \
                                /fastsurfer/run_fastsurfer.sh \
                               --fs_license /output/license.txt \
-                              --t1 /anat/"${idBIDS}"_t1w.nii.gz \
+                              --t1 /anat/"${idBIDS}"_T1w.nii.gz \
                               --sid "${idBIDS}" --sd /output --no_fs_T1 \
                               --parallel --threads "${threads}"
         chmod aug+wr -R ${SUBJECTS_DIR}/${idBIDS}
@@ -154,8 +154,8 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         if [ ${fov} -gt 256 ]; then
           Info "Cropping structural image to 256 for surface reconstruction compatibility"
           crop=$(bc -l <<< "scale=0; (${fov}-256)/${res[2]}")
-          Do_cmd mrgrid ${t1nii} crop -axis 2 0,${crop} ${tmp}/_t1w_croped.nii.gz
-          t1nii=${tmp}/_t1w_croped.nii.gz
+          Do_cmd mrgrid ${t1nii} crop -axis 2 0,${crop} ${tmp}/_T1w_croped.nii.gz
+          t1nii=${tmp}/_T1w_croped.nii.gz
         else
           crop="FALSE"
         fi
