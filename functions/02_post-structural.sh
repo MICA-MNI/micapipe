@@ -91,7 +91,7 @@ if [ "${Natlas}" -eq 0 ]; then
 fi
 
 # Check inputs: Nativepro T1
-if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_t1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
+if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_T1w.nii.gz ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
 # Check inputs: surface space T1
 if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 on surface space: re-run -proc_surf"; exit; fi
@@ -131,8 +131,8 @@ export SUBJECTS_DIR=${dir_surf}
 #------------------------------------------------------------------------------#
 # Compute affine matrix from surface space to nativepro
 T1_in_fs=${tmp}/T1.nii.gz
-T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
-mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_t1w_
+T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz
+mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 
 if [[ ! -f "$T1_fsnative" ]] || [[ ! -f "$T1_fsnative_affine" ]]; then ((N++))
@@ -149,8 +149,8 @@ fi
 # Create parcellation on nativepro space
 Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 # Variables
-T1str_nat="${idBIDS}_space-nativepro_t1w_atlas"
-T1str_fs="${idBIDS}_space-fsnative_t1w"
+T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
+T1str_fs="${idBIDS}_space-fsnative_T1w"
 cd "$util_parcelations"
 for parc in "${atlas_parc[@]}"; do
     parc_annot="${parc/lh./}"
@@ -218,10 +218,11 @@ else
 fi
 
 # Running cortical morphology
-morph_json="${dir_QC}/${idBIDS}_module-morphology.json"
-if [[ ! -f "${morph_json}" ]]; then ((N++))
-    ${MICAPIPE}/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
-    if [[ -f "${morph_json}" ]]; then ((Nsteps++)); fi
+Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 20 ]]; then ((N++))
+    ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
+    Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 20 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
