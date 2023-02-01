@@ -22,7 +22,7 @@ SES=$4
 nocleanup=$5
 threads=$6
 tmpDir=$7
-t1wStr=$8
+T1wStr=$8
 N4wm=$9
 UNI=${10}
 MF=${11}
@@ -44,10 +44,10 @@ source $MICAPIPE/functions/utilities.sh
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Manage manual inputs: T1w images
-if [[ "$t1wStr" != "DEFAULT" ]]; then
-  IFS=',' read -ra bids_t1wStr <<< "$t1wStr"
-  for i in "${!bids_t1wStr[@]}"; do bids_t1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_t1wStr[$i]}.nii"* 2>/dev/null); done
-  bids_T1ws=("${bids_t1wStr[@]}")
+if [[ "$T1wStr" != "DEFAULT" ]]; then
+  IFS=',' read -ra bids_T1wStr <<< "$T1wStr"
+  for i in "${!bids_T1wStr[@]}"; do bids_T1wStr[i]=$(ls "${subject_bids}/anat/${idBIDS}_${bids_T1wStr[$i]}.nii"* 2>/dev/null); done
+  bids_T1ws=("${bids_T1wStr[@]}")
 fi
 
 # End script if no T1 are found
@@ -99,18 +99,18 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # BIDS T1w processing
 Nimgs=${#bids_T1ws[@]} # total number of T1w
 n=$((Nimgs - 1))
-T1str_nat="${idBIDS}_space-nativepro_t1w"
+T1str_nat="${idBIDS}_space-nativepro_T1w"
 T1reo="${tmp}/${T1str_nat}_reo.nii.gz"
 T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
 T1nativepro="${proc_struct}/${T1str_nat}.nii.gz"
-T1nativepro_brain="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz"
-T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz"
+T1nativepro_brain="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz"
+T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz"
 T1nativepro_first="${proc_struct}/first/${T1str_nat}.nii.gz"
 T1nativepro_5tt="${T1nativepro/.nii.gz/_5TT.nii.gz}"
 procstruct_json="${proc_struct}/${T1str_nat}.json"
 export N4wmStatus="FALSE"
 
-# Creates the t1w_nativepro for structural processing
+# Creates the T1w_nativepro for structural processing
 if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1str_nat}"_brain.nii.gz ]; then ((N++))
     # Reorient  to LPI with AFNI
     # LPI is the standard 'neuroscience' orientation, where the x-axis is
@@ -134,14 +134,14 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
           run=$(echo "${reo_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:.nii.gz::g')
-          T1mat_str="${dir_warp}/${idBIDS}_t1w_from-run-${run}_to_${t1ref}_"
+          T1mat_str="${dir_warp}/${idBIDS}_T1w_from-run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
-          T1run_2_T1="${tmp}/${id}_t1w_from-run-${run}_to_${t1ref}.nii.gz"
+          T1run_2_T1="${tmp}/${id}_T1w_from-run-${run}_to_${t1ref}.nii.gz"
           Info "Registering T1w_run-${run} to ${t1ref}"
           Do_cmd antsRegistrationSyN.sh -d 3 -m "${reo_T1ws[i]}" -f "$ref"  -o "$T1mat_str" -t a -n "$threads" -p d
           Do_cmd antsApplyTransforms -d 3 -i "${reo_T1ws[i]}" -r "$ref" -t "$T1mat" -o "$T1run_2_T1" -v -u int
       done
-      # Calculate the mean over all T1w registered to the 1st t1w run
+      # Calculate the mean over all T1w registered to the 1st T1w run
       t1s_reg=$(find "${tmp}"/*_to_"${t1ref}".nii.gz)
       t1s_add=$(echo "-add $(echo ${t1s_reg} | sed 's: : -add :g')")
       Do_cmd fslmaths "$ref" "$t1s_add" -div "$Nimgs" "$T1reo" -odt float
@@ -185,9 +185,9 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
 
     # Create json file for T1native
-    json_nativepro_t1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"
+    json_nativepro_T1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"
 else
-    Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has a T1w_nativepro and T1w_nativepro_brain"; ((Nsteps++)); ((N++))
 fi
 
 # Loop over all requested templates.
@@ -206,7 +206,7 @@ for mm in 2 0.8; do
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$MNI152_brain" -m "$T1nativepro_brain" -o "$str_MNI152_SyN" -t s -n "$threads"
       ((Nsteps++))
   else
-      Info "Subject $id has nativepro_t1w on MNI152 space"; ((Nsteps++)); ((N++))
+      Info "Subject $id has nativepro_T1w on MNI152 space"; ((Nsteps++)); ((N++))
   fi
 done
 
@@ -224,7 +224,7 @@ T1nativepro_to_MNI152="-t ${T1_MNI152_Warp} -t ${T1_MNI152_affine}"
 proc_struct_transformations "$T1nativepro_brain" "${MNI152_08mm}" "${MNI152_2mm}" "${dir_warp}/${idBIDS}_transformations-proc_structural.json" '${T1nativepro_to_MNI152}' '${MNI151_to_T1nativepro}'
 
 # Update the T1native mask and T1native_brain
-T1nativepro_maskjson="${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.json"
+T1nativepro_maskjson="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.json"
 if [ ! -f "$T1nativepro_maskjson" ]; then ((N++))
     Do_cmd antsApplyTransforms -d 3 -n GenericLabel -i "$MNI152_mask" -r "$T1nativepro_brain" \
             "${MNI151_to_T1nativepro}" -o "$T1nativepro_mask" -v
@@ -233,13 +233,13 @@ if [ ! -f "$T1nativepro_maskjson" ]; then ((N++))
         "antsApplyTransforms -d 3 -n GenericLabel -i ${MNI152_mask} -r ${T1nativepro_brain} -t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp} -o ${T1nativepro_mask}"
     ((Nsteps++))
 else
-        Info "Subject $id has a masked t1w_${mm}mm_nativepro"; ((Nsteps++)); ((N++))
+        Info "Subject $id has a masked T1w_${mm}mm_nativepro"; ((Nsteps++)); ((N++))
 fi
 
-# FSL first on the t1w_nativepro
+# FSL first on the T1w_nativepro
 unset SGE_ROOT
 export FSLPARALLEL=0
-T1str_atlas="${idBIDS}_space-nativepro_t1w_atlas"
+T1str_atlas="${idBIDS}_space-nativepro_T1w_atlas"
 T1_seg_subcortex="${dir_volum}/${T1str_atlas}-subcortical.nii.gz"
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 
@@ -254,7 +254,7 @@ else
     Info "Subject $id has FSL-first"; ((Nsteps++)); ((N++))
 fi
 
-# FSL FAST on the t1w_nativepro
+# FSL FAST on the T1w_nativepro
 if [ ! -f "${T1nativepro_brain/.nii.gz/_pve_0.nii.gz}" ]; then ((N++))
     Do_cmd fast -N "$T1nativepro_brain"
     if [ -f "${T1nativepro_brain/.nii.gz/_pve_0.nii.gz}" ]; then ((Nsteps++)); fi
@@ -266,13 +266,13 @@ fi
 N4wmStatus_check=$(grep "N4wmProcessed" ${procstruct_json} | awk -F '"' '{print $4}')
 if [ "$N4wm" == "TRUE" ] && [ "$N4wmStatus_check" == "FALSE" ]; then
   Info "N4 bias field corretion weighted by white matter"
-  pve2=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_pve_2.nii.gz
-  T1_n4="${tmp}/${idBIDS}_space-nativepro_t1w_N4w.nii.gz"
+  pve2=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_pve_2.nii.gz
+  T1_n4="${tmp}/${idBIDS}_space-nativepro_T1w_N4w.nii.gz"
   Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
   Do_cmd ImageMath 3 "$T1nativepro" RescaleImage "$T1_n4" 0 100
   export N4wmStatus="TRUE"
   # Update json file for T1native
-  json_nativepro_t1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"
+  json_nativepro_T1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"
 fi
 
 #------------------------------------------------------------------------------#
