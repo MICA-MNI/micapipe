@@ -351,7 +351,7 @@ function micapipe_json() {
         \"GitHub\": \"https://github.com/MICA-MNI/micapipe\",
         \"Container\": {
           \"Type\": \"docker\",
-          \"Tag\": \"micalab/${Version/ /:}\"
+          \"Tag\": \"micalab/micapipe:$(echo ${Version} | awk '{print $1}')\"
         },
         \"RunBy\": \"$(whoami)\",
         \"Workstation\": \"$(uname -n)\",
