@@ -287,7 +287,7 @@ proc_structural_json = "%s/%s/%s/QC/%s_module-proc_structural.json"%(out,sub,ses
 _static_block += report_qc_summary_template(proc_structural_json)
 
 # Inputs
-nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_t1w.json"%(out,sub,ses,sbids))
+nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_T1w.json"%(out,sub,ses,sbids))
 with open( nativepro_json ) as f:
     nativepro_json = json.load(f)
 inputs = nativepro_json["inputsRawdata"]
@@ -301,31 +301,31 @@ _static_block = (
         '<b>Main outputs </b> </p>'
 )
 
-T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_t1w.nii.gz"%(out,sub,ses,sbids)
+T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
 
-figPath = "%s/nativepro_t1w_screenshot.png"%(tmpDir)
+figPath = "%s/nativepro_T1w_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="T1w nativepro", outPath=T1w_nativepro, figPath=figPath)
 
-outPath = "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_t1w_brain_mask_screenshot.png"%(tmpDir)
+outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-outPath = "%s/nativepro_t1w_brain_5tt.nii.gz"%(tmpDir)
-figPath = "%s/nativepro_t1w_brain_5tt_screenshot.png"%(tmpDir)
+outPath = "%s/nativepro_T1w_brain_5tt.nii.gz"%(tmpDir)
+figPath = "%s/nativepro_T1w_brain_5tt_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="T1w nativepro 5 tissue segmentation (5TT)", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-outPath = "%s/%s_space-MNI152_0.8_t1w_brain.nii.gz"%(tmpDir,sbids)
+outPath = "%s/%s_space-MNI152_0.8_T1w_brain.nii.gz"%(tmpDir,sbids)
 MNI152_0_8mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_0.8mm_brain_mask.nii.gz"
-figPath = "%s/nativepro_t1w_brain_mni152_08_screenshot.png"%(tmpDir)
+figPath = "%s/nativepro_T1w_brain_mni152_08_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=MNI152_0_8mm, refPath=outPath, figPath=figPath)
 
-outPath = "%s/%s_space-MNI152_2_t1w_brain.nii.gz"%(tmpDir,sbids)
+outPath = "%s/%s_space-MNI152_2_T1w_brain.nii.gz"%(tmpDir,sbids)
 MNI152_2mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_2mm_brain_mask.nii.gz"
-figPath = "%s/nativepro_t1w_brain_mni152_2_screenshot.png"%(tmpDir)
+figPath = "%s/nativepro_T1w_brain_mni152_2_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=MNI152_2mm, refPath=outPath, figPath=figPath)
 
-outPath =  "%s/%s/%s/anat/%s_space-nativepro_t1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_t1w_brain_pve_2_screenshot.png"%(tmpDir)
+outPath =  "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
+figPath = "%s/nativepro_T1w_brain_pve_2_screenshot.png"%(tmpDir)
 _static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, figPath=figPath)
 
 static_report += _static_block

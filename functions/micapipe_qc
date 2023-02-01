@@ -487,13 +487,13 @@ accordion_procStruct() {
   echo -e "\n          </tbody>
             </table>
       <h2>Main outputs</h2>"  >> "$QC_html"
-  nifti_check "T1w nativepro" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w.png"
+  nifti_check "T1w nativepro" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w.png"
   Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/5tt_0.nii.gz" -force
-  nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_5TT.png" "${tmpDir}/5tt_0.nii.gz" "YES"
-  nifti_check "T1w nativepro fast" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_fast.png" "$T1fast_seg" "YES"
-  nifti_check "T1w nativepro brain" "$T1nativepro_brain" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w_brain.png"
-  nifti_check "Registration: T1w nativepro in MNI152 0.8mm" "$T1_in_MNI152_08" "${dir_QC_png}/${idBIDS}_space-MNI152_0.8mm_nativepro_t1w.png" "$MNI152_08_brain"
-  nifti_check "Registration: T1w nativepro in MNI152 2mm" "$T1_in_MNI152_2" "${dir_QC_png}/${idBIDS}_space-MNI152_2mm_nativepro_t1w.png" "$MNI152_2_brain"
+  nifti_check "T1w nativepro 5 tissue segmentation (5tt)" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w_5TT.png" "${tmpDir}/5tt_0.nii.gz" "YES"
+  nifti_check "T1w nativepro fast" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w_fast.png" "$T1fast_seg" "YES"
+  nifti_check "T1w nativepro brain" "$T1nativepro_brain" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w_brain.png"
+  nifti_check "Registration: T1w nativepro in MNI152 0.8mm" "$T1_in_MNI152_08" "${dir_QC_png}/${idBIDS}_space-MNI152_0.8mm_nativepro_T1w.png" "$MNI152_08_brain"
+  nifti_check "Registration: T1w nativepro in MNI152 2mm" "$T1_in_MNI152_2" "${dir_QC_png}/${idBIDS}_space-MNI152_2mm_nativepro_T1w.png" "$MNI152_2_brain"
   echo -e "    </div>"  >> "$QC_html"
 }
 
@@ -565,14 +565,14 @@ accordion_postStruct() {
   #------------------------------------------------------------------------------#
   T1fsnii=${tmpDir}/T1.nii.gz
   mrconvert "$T1surf" "$T1fsnii"
-  T1_fsnative="${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz"
-  T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
-  T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_t1w_atlas-subcortical.nii.gz"
+  T1_fsnative="${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz"
+  T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
+  T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz"
   echo -e "<h2>Main outputs</h2>"  >> "$QC_html"
-  nifti_check "Registration: T1w nativepro in freesurfer space" "$T1fsnii" "${dir_QC_png}/${idBIDS}_space-fsnative_t1w.png" "$T1_fsnative"
+  nifti_check "Registration: T1w nativepro in freesurfer space" "$T1fsnii" "${dir_QC_png}/${idBIDS}_space-fsnative_T1w.png" "$T1_fsnative"
   print_path "$T1surf"
-  nifti_check "T1w nativepro cerebellum atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-cerebellum.png" "$T1_seg_cerebellum" "YES"
-  nifti_check "T1w nativepro subcortical atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_t1w-subcortical.png" "$T1_seg_subcortex" "YES"
+  nifti_check "T1w nativepro cerebellum atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w-cerebellum.png" "$T1_seg_cerebellum" "YES"
+  nifti_check "T1w nativepro subcortical atlas" "$T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_T1w-subcortical.png" "$T1_seg_subcortex" "YES"
   #------------------------------------------------------------------------------#
   echo -e "<h2>Output parcellations</h2>" >> "$QC_html"
   echo -e $table_style >> "$QC_html"
@@ -777,11 +777,11 @@ accordion_dwi() {
       print_path "$dwi_fa"
     fi
 
-    dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
-    if [[ -f "${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz" ]]; then dwi_t1w="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"; fi
-    if [ -f "$dwi_t1w" ]; then
-      nifti_check "Registration: T1w in DWI space" "${dwi_t1w}" "${dir_QC_png}/${idBIDS}_space-dwi_t1w_nativepro${dwi_acq}.png" "$dwi_b0"
-      print_path "${dwi_t1w}"
+    dwi_T1w="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
+    if [[ -f "${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_Affine.nii.gz" ]]; then dwi_T1w="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_Affine.nii.gz"; fi
+    if [ -f "$dwi_T1w" ]; then
+      nifti_check "Registration: T1w in DWI space" "${dwi_T1w}" "${dir_QC_png}/${idBIDS}_space-dwi_T1w_nativepro${dwi_acq}.png" "$dwi_b0"
+      print_path "${dwi_T1w}"
     fi
 
     dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
@@ -883,8 +883,8 @@ accordion_func() {
   rsfmri_cerebellum="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_cerebellum.nii.gz"
   fmri_processed="${rsfmri_volum}/${idBIDS}_space-rsfmri_desc-singleecho_clean.nii.gz"
   fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-rsfmri_bold.nii.gz"
-  t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
-  t1_in_rsfmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_t1w.nii.gz"
+  t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz"
+  t1_in_rsfmri="${rsfmri_volum}/${idBIDS}_space-rsfmri_T1w.nii.gz"
 
   if [ -f "$fmri_processed" ]; then
       Do_cmd mrmath "$fmri_HP" mean "${tmpDir}/fmri_HP_mean.nii.gz" -axis 3
@@ -895,7 +895,7 @@ accordion_func() {
       nifti_check "rsfMRI clean (mean)" "${tmpDir}/fmri_clean_mean.nii.gz" "${dir_QC_png}/${idBIDS}_space-rsfmri-clean_mean.png"
       nifti_check "Registration: rsfMRI in freesurfer space" "$rsfmri_fsnative" "${dir_QC_png}/${idBIDS}_space-fsnative_rsfmri.png" "$T1fsnii"
       nifti_check "Registration: rsfMRI over T1w nativepro space" "$fmri_in_T1nativepro" "${dir_QC_png}/${idBIDS}_space-nativepro_rsfmri.png" "$t1bold"
-      nifti_check "Registration: T1w over rsfMRI space" "$t1_in_rsfmri" "${dir_QC_png}/${idBIDS}_space-rsfmri_t1w.png" "$fmri_mean"
+      nifti_check "Registration: T1w over rsfMRI space" "$t1_in_rsfmri" "${dir_QC_png}/${idBIDS}_space-rsfmri_T1w.png" "$fmri_mean"
       nifti_check "Cerebellum atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_cerebellum.nii.png" "${rsfmri_cerebellum}" "YES"
       nifti_check "Subcortical atlas in rsfMRI space" "$fmri_brain" "${dir_QC_png}/${idBIDS}_space-rsfmri_subcortical.nii.png" "${rsfmri_subcortex}" "YES"
   fi

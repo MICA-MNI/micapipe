@@ -128,7 +128,7 @@ outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to surface space using T1w as intermediate volume
-T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_t1w.nii.gz
+T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz
 if [[ ${input_dat} == "DEFAULT" ]]; then
     fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
     if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then ((N++))

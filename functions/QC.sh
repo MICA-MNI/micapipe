@@ -179,12 +179,12 @@ cd $tmpDir
 # -----------------------------------------------------------------------------------------------
 
 # T1w nativepro 5 tissue segmentation (5tt)
-Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_t1w_brain_5tt.nii.gz" -force
+Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
 # Registration: T1wnatipro to MNI152 (2mm and 0.8mm)
 xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
 for mm in 2 0.8; do
-    t1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_t1w_brain.nii.gz
+    T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
 
     if [[ $(mm) == 2 ]] ; then
       transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
@@ -192,7 +192,7 @@ for mm in 2 0.8; do
       transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
     fi
     MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -v -u int -o "${t1w_in_MNI}" \
+    Do_cmd antsApplyTransforms -d 3 -v -u int -o "${T1w_in_MNI}" \
             -i "${T1nativepro_brain}" \
             -r "${MNI152_brain}" \
             "${transformation}"

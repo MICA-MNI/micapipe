@@ -66,17 +66,17 @@ if [[ "$sesAnat" != FALSE  ]]; then
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
   dir_volum="${dir_anat}/volumetric"
   dir_conte69="${dir_anat}/surf/conte69"
-  T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_t1w.nii.gz"
-  T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain.nii.gz"
-  T1nativepro_mask="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_mask.nii.gz"
+  T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_T1w.nii.gz"
+  T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain.nii.gz"
+  T1nativepro_mask="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain_mask.nii.gz"
   dir_subjsurf="${dir_surf}/${subject}_ses-${sesAnat}"
   T1surf="${dir_subjsurf}/mri/T1.mgz"
 else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-subcortical.nii.gz"
-T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_t1w_atlas-cerebellum.nii.gz"
+T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
+T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
 
 ### CHECK INPUTS: func, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -521,10 +521,10 @@ fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
 fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mean.nii.gz"
-T1nativepro_in_func="${func_volum}/${idBIDS}_space-func_desc-t1w.nii.gz"
+T1nativepro_in_func="${func_volum}/${idBIDS}_space-func_desc-T1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
-t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz"
+t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz"
 
 str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_desc-SyN_"
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
@@ -550,17 +550,17 @@ if [[ "$Nreg" -lt 3 ]]; then
     if [[ ! -f "${t1bold}" ]]; then
         Info "Creating a synthetic BOLD image for registration"
         # downsample T1w as reference to 2mm
-        Do_cmd flirt -applyisoxfm 2 -in "$T1nativepro" -ref "$T1nativepro" -out "${tmp}/${id}_t1w_nativepro_2mm.nii.gz"
+        Do_cmd flirt -applyisoxfm 2 -in "$T1nativepro" -ref "$T1nativepro" -out "${tmp}/${id}_T1w_nativepro_2mm.nii.gz"
         # Inverse T1w
-        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" Neg "$T1nativepro" "${tmp}/${id}_t1w_nativepro_2mm.nii.gz"
+        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" Neg "$T1nativepro" "${tmp}/${id}_T1w_nativepro_2mm.nii.gz"
         # Dilate the T1-mask
-        #Do_cmd ImageMath 3 "${tmp}/${id}_t1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
+        #Do_cmd ImageMath 3 "${tmp}/${id}_T1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
         # Masked the inverted T1w
-        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_t1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
+        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
         # Match histograms values acording to func
-        Do_cmd ImageMath 3 "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_t1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
+        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
         # Smoothing
-        Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_t1w_nativepro_NEG-rescaled.nii.gz" 0.35
+        Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" 0.35
     else
         Info "Subject ${id} has a synthetic BOLD image for registration"
     fi
@@ -581,7 +581,7 @@ if [[ "$Nreg" -lt 3 ]]; then
     # t1-nativepro to fmri
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_func}" -v -u int
 
-    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/t1w2fmri_brain.nii.gz"; fi
+    if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/T1w2fmri_brain.nii.gz"; fi
     if [[ -f "${SyN_func_Invwarp}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++))
@@ -633,9 +633,9 @@ if [[ "$noFIX" -eq 0 ]]; then
                         # Transform matrix: ITK text to matrix (FSL format)
                         Do_cmd lta_convert --initk "$tmp/highres2example_func.txt" --outfsl "$tmp_ants2fsl_mat" --src "$T1nativepro" --trg "$fmri_brain"
                         # apply transformation with FSL
-                        Do_cmd flirt -in "$T1nativepro" -out "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$fmri_brain" -applyxfm -init "$tmp_ants2fsl_mat"
+                        Do_cmd flirt -in "$T1nativepro" -out "$tmp/T1w2fmri_brain_ants2fsl.nii.gz" -ref "$fmri_brain" -applyxfm -init "$tmp_ants2fsl_mat"
                         # correct transformation matrix
-                        Do_cmd flirt -in "$tmp/t1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_func" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
+                        Do_cmd flirt -in "$tmp/T1w2fmri_brain_ants2fsl.nii.gz" -ref "$T1nativepro_in_func" -omat "$tmp/ants2fsl_fixed.omat" -cost mutualinfo -searchcost mutualinfo -dof 6
                         # concatenate the matrices to fix the transformation matrix
                         Do_cmd convert_xfm -concat "${tmp}/ants2fsl_fixed.omat" -omat "${func_ICA}/reg/highres2example_func.mat" "$tmp_ants2fsl_mat"
                     else Info "Subject ${id} has reg/highres2example_func.mat for ICA-FIX"; fi
@@ -685,7 +685,7 @@ if [[ ! -f "${global_signal}" ]] ; then
     tissues=(CSF GM WM)
     for idx in "${!tissues[@]}"; do
         tissue=${tissues[$idx]}
-        tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_t1w_brain_pve_${idx}.nii.gz"
+        tissuemap="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain_pve_${idx}.nii.gz"
         tissue_series="${func_volum}/${idBIDS}${func_lab}_pve_${tissue}.txt"
         if [[ ! -f "${tissue_series}" ]] ; then
             Do_cmd antsApplyTransforms -d 3 -i "$tissuemap" -r "$fmri_mean" "${transformsInv}" -o "${tmp}/${idBIDS}${func_lab}_${tissue}.nii.gz" -v -u int

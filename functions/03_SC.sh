@@ -67,7 +67,7 @@ dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # from proc_structural
-T1str_nat="${idBIDS}_space-nativepro_t1w_atlas"
+T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 T1_seg_cerebellum="${dir_volum}/${T1str_nat}-cerebellum.nii.gz"
 T1_seg_subcortex="${dir_volum}/${T1str_nat}-subcortical.nii.gz"
 # TDI output

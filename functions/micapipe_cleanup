@@ -159,13 +159,13 @@ Title "MICA pipe cleanup
 if [ "$procVOL" = "TRUE" ]; then
     Warning "Erasing proc_structural output files and logs\n IF you re-run this step we highly recomend to re-run all post steps"
     Do_cmd rm -rf "$proc_struct"/first \
-                  "$proc_struct"/*_space-nativepro_t1w* \
+                  "$proc_struct"/*_space-nativepro_T1w* \
                   "$dir_warp"/*-nativepro_brain_to-MNI152_* \
                   "$dir_warp"/*_transformations-proc_structural.json \
                   "$dir_logs"/proc_structural_* \
                   "$dir_QC"/*module-proc_structural.json \
-                  "$dir_volum"/*t1w_atlas-cerebellum.nii.gz \
-                  "$dir_volum"/*t1w_atlas-subcortical.nii.gz
+                  "$dir_volum"/*T1w_atlas-cerebellum.nii.gz \
+                  "$dir_volum"/*T1w_atlas-subcortical.nii.gz
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
@@ -183,8 +183,8 @@ fi
 if [ "$postVOL" = "TRUE" ]; then
     Warning "Erasing post_structural output files and logs"
     Do_cmd rm -rf "$dir_volum"/* \
-                  "$proc_struct"/"$idBIDS"_space-fsnative_t1w.nii.gz \
-                  "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_t1w_* \
+                  "$proc_struct"/"$idBIDS"_space-fsnative_T1w.nii.gz \
+                  "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_T1w_* \
                   "${dir_conte69}"/* \
                   "${dir_subjsurf}"/label/*_mics* \
                   "${dir_subjsurf}"/surf/*.midthickness.surf.gii \
@@ -219,7 +219,7 @@ if [ "$procFunc" = "TRUE" ]; then
                   "$dir_warp"/*_from-se*_to-fsnative_bbr* \
                   "$dir_warp"/*func_space-fsnative* \
                   "$dir_warp"/*from-nativepro_func* \
-                  "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
+                  "$proc_struct"/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz \
                   "$dir_logs"/proc_func_*
     grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"

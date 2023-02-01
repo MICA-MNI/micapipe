@@ -391,7 +391,7 @@ dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz" # This should be a NIFTI for compatibility with ANTS
 str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro_mode-image_desc-affine_"
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
-T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro.nii.gz"
+T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro.nii.gz"
 
 if [[ ! -f "$T1nativepro_in_dwi" ]] || [[ ! -f "$mat_dwi_affine" ]]; then
       Info "Affine registration from DWI-b0 to T1nativepro"
@@ -483,14 +483,14 @@ dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 
 if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
     dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
-    T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro-brain.nii.gz"
+    T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
     fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
     Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         Info "Non-linear registration from T1w_dwi-space to DWI"
-        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_SyN.nii.gz"
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
         Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
         export reg="Affine+SyN"
         trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
@@ -499,7 +499,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
 
     elif [[ ${regAffine}  == "TRUE" ]]; then
         Info "Only affine registration from T1w_dwi-space to DWI"; ((Nsteps++))
-        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-t1w_nativepro_Affine.nii.gz"
+        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_Affine.nii.gz"
         trans_T12dwi="-t [${mat_dwi_affine},1]"
         trans_dwi2T1="-t ${mat_dwi_affine}"
     fi
