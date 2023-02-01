@@ -342,8 +342,9 @@ function micapipe_json() {
     \"Name\": \"${Name}\",
     \"BIDSVersion\": \"${BIDSVersion}\",
     \"DatasetType\": \"derivative\",
-    \"GeneratedBy\": {
-        \"Name\": \"${Version}\",
+    \"GeneratedBy\": [{
+        \"Name\": \"micapipe\",
+        \"Version\": \"${Version}\",
         \"Reference\": \"Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Ilana Leppert, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022) Micapipe: a pipeline for multimodal neuroimaging and connectome analysis. NeuroImage, 2022, 119612, ISSN 1053-8119.\",
         \"DOI\": \"https://doi.org/10.1016/j.neuroimage.2022.119612\",
         \"URL\": \"https://micapipe.readthedocs.io/en/latest\",
@@ -351,15 +352,12 @@ function micapipe_json() {
         \"Container\": {
           \"Type\": \"docker\",
           \"Tag\": \"micalab/${Version/ /:}\"
-          }
-      },
-      {
+        },
         \"RunBy\": \"$(whoami)\",
         \"Workstation\": \"$(uname -n)\",
         \"LastRun\": \"$(date)\",
         \"Processing\": \"${PROC}\"
-      }
-    ]
+      }]
   }" > "${out}/dataset_description.json"
 }
 
