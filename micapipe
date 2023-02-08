@@ -64,7 +64,7 @@ echo -e "
 \t\t\t            Default surface reconstruction uses 'Freesurfer 7'
 \t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
 \t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
-\t   \033[38;5;120m-t1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
+\t   \033[38;5;120m-T1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
 \t\t\t            By default micapipe uses t1nativepro to generate the surfaces.
 
 
@@ -397,7 +397,7 @@ do
   -fs_licence)
     shift;shift;
   ;;
-  -t1)
+  -T1)
     t1="$2"
     shift;shift;
   ;;
