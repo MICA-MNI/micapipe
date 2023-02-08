@@ -25,8 +25,9 @@ tmpDir=$7
 tracts=$8
 autoTract=$9
 keep_tck=${10}
+dwi_str=${11}
 filter=SIFT2
-PROC=${11}
+PROC=${12}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -42,14 +43,25 @@ source "$MICAPIPE/functions/utilities.sh"
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
+# Update path for multiple acquisitions processing
+if [[ "${dwi_str}" != "DEFAULT" ]]; then
+  dwi_str="acq-${dwi_str/acq-/}"
+  dwi_str_="_${dwi_str}"
+  export proc_dwi=$subject_dir/dwi/"${dwi_str}"
+  export dwi_cnntm=$proc_dwi/connectomes
+  export autoTract_dir=$proc_dwi/auto_tract
+else
+  dwi_str=""; dwi_str_=""
+fi
+
 # Check inputs: DWI post TRACTOGRAPHY
 fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
-str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-nativepro_mode-image_desc-affine_"
+str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro_mode-image_desc-affine_"
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
-dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_"
+dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-dwi_mode-image_desc-SyN_"
 dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
@@ -64,7 +76,7 @@ tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif"
 # Check inputs
 if [ ! -f "$fod_wmN"  ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f "$dwi_b0" ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$mat_dwi_affine" ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f "$mat_dwi_affine" ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\t${mat_dwi_affine}\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f "$dwi_5tt" ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit; fi
 if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
 if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
@@ -286,6 +298,6 @@ Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\
 \tStatus          : ${status}
 \tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
 # Print QC stamp
-grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
-echo "${id}, ${SES/ses-/}, SC-${tracts}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
+grep -v "${id}, ${SES/ses-/}, SC${tracts}${dwi_str_}" "${out}/micapipe_processed_sub.csv" > "${tmp}/tmpfile" && mv "${tmp}/tmpfile" "${out}/micapipe_processed_sub.csv"
+echo "${id}, ${SES/ses-/}, SC${tracts}${dwi_str_}, ${status}, $(printf "%02d" "$Nparc")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${out}/micapipe_processed_sub.csv"
 cleanup "$tmp" "$nocleanup" "$here"

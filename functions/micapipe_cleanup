@@ -29,12 +29,14 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_freesurfer\033[0m  : DELETES Freesurfer recon-all processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
+\t  \033[38;5;120m-acqStr\033[0m         : Use this option if -proc_dwi was used with -dwi_acq
 \t\033[38;5;197m-proc_rsfmri\033[0m      : DELETES resting state MRI processing (DEPRECATED)
 \t\033[38;5;197m-proc_func\033[0m        : DELETES Funtional MRI processing
 \t  \033[38;5;120m-acqStr\033[0m         : -proc_fun requires the acquisition string to erase its outputs
 \t\t\t     e.g -acqStr desc-se_task-rest_acq-AP_bold
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
 \t\033[38;5;197m-SC\033[0m               : DELETES Post tractography and connectome generation
+\t  \033[38;5;120m-acqStr\033[0m         : Use this option if -SC was used with -dwi_acq
 \t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
 \t  \033[38;5;120m-acqStr\033[0m         : -MPC requires the acquisition string to erase its outputs
 \t\t\t     e.g -acqStr T1map
@@ -209,23 +211,6 @@ if [ "$postVOL" = "TRUE" ]; then
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
-# ---------------------------------------------------------------------------------------
-# CLEAN -proc_dwi
-if [ "$procDWI" = "TRUE" ]; then
-    Warning "Erasing proc_dwi output files and logs"
-    dwifiles=($(find "${proc_dwi}" -name "*_space-dwi_desc-*" ! -name "*iFOD2*"))
-    Do_cmd rm -rf "$proc_dwi"/eddy/* \
-                  "${dwifiles[*]}" \
-                  "${proc_dwi}/${idBIDS}"_space-dwi_model-* \
-                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-MP-PCA_* \
-                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-deGibbs_* \
-                  "${proc_struct}/${idBIDS}"_space-nativepro_desc-dwi.nii.gz \
-                  "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
-                  "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
-                  "$dir_warp"/*_mode-image_desc-rigid_* \
-                  "$dir_logs"/proc_dwi_*
-    grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-fi
 
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_func
@@ -263,10 +248,41 @@ if [ "$procrsMRI" = "TRUE" ]; then
 fi
 
 # ---------------------------------------------------------------------------------------
+# CLEAN -proc_dwi
+# Update path for multiple acquisitions processing
+if [ "$procDWI" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then
+    Warning "Erasing proc_dwi output files and logs"
+    dwifiles=($(find "${proc_dwi}" -name "*_space-dwi_desc-*" ! -name "*iFOD2*"))
+    Do_cmd rm -rf "$proc_dwi"/eddy/* \
+                  "${dwifiles[*]}" \
+                  "${proc_dwi}/${idBIDS}"_space-dwi_model-* \
+                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-MP-PCA_* \
+                  "${proc_dwi}/${idBIDS}"_space-dwi*_desc-deGibbs_* \
+                  "${proc_struct}/${idBIDS}"_space-nativepro_desc-dwi.nii.gz \
+                  "$dir_warp"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
+                  "$dir_warp"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
+                  "$dir_warp"/*_mode-image_desc-rigid_* \
+                  "$dir_logs"/proc_dwi_*
+    grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+      proc_dwi=$subject_dir/dwi/"${acqStr}"
+      if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
+      Do_cmd rm -rf "$proc_dwi"/* \
+                  "$dir_warp"/*_space-dwi_from-dwi_"${acqStr}"_to-nativepro_mode-image_desc-affine_* \
+                  "$dir_warp"/*_space-dwi_${acqStr}_from-dwi_to-dwi_mode-image_desc-SyN_* \
+                  "$dir_warp"/*${acqStr}_mode-image_desc-rigid_* \
+                  "$dir_logs"/proc_dwi_${acqStr}*
+      grep -v "${id}, ${SES/ses-/}, proc_dwi_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    fi
+fi
+
+# ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     filter=SIFT2
     Warning "Erasing post_tractography output files and logs"
+    if [ -z ${acqStr} ]; then
     Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
@@ -275,6 +291,15 @@ if [ "$postDWI" = "TRUE" ]; then
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-cerebellum.nii.gz \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
     grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+      proc_dwi=$subject_dir/dwi/"${acqStr}"
+      if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
+      Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
+                    "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
+                    "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
+                    "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_tdi.mif \
+                    "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
+    fi
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
