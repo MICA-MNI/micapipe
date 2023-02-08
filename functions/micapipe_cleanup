@@ -29,10 +29,17 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_surf\033[0m  : DELETES Surface processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
+\t  \033[38;5;120m-acqStr\033[0m         : Use this option if -proc_dwi was used with -dwi_acq
 \t\033[38;5;197m-proc_func\033[0m      : DELETES Funtional MRI processing
+\t  \033[38;5;120m-acqStr\033[0m         : -proc_fun requires the acquisition string to erase its outputs
+\t\t\t     e.g -acqStr desc-se_task-rest_acq-AP_bold
 \t\033[38;5;197m-post_structural\033[0m  : DELETES Post structural volumetric processing
 \t\033[38;5;197m-SC\033[0m               : DELETES Post tractography and connectome generation
+\t  \033[38;5;120m-acqStr\033[0m         : Use this option if -SC was used with -dwi_acq
 \t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
+\t  \033[38;5;120m-acqStr\033[0m         : -MPC requires the acquisition string to erase its outputs
+\t\t\t     e.g -acqStr T1map
+
 
 \033[38;5;141mUSAGE:\033[0m
 $(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;120m-ses\033[0m <session> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
@@ -114,6 +121,10 @@ do
     postMorph=TRUE
     shift
   ;;
+  -acqStr)
+    acqStr=$2
+    shift;shift
+  ;;
   -mica)
     mica=TRUE
     shift
@@ -191,9 +202,29 @@ if [ "$postVOL" = "TRUE" ]; then
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_func
+if [ "$procFunc" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then Warning "proc_func requires an acquisition string (-acqStr), select one from:"; ls ${proc_func}; exit; fi
+    if [ ! -d ${proc_func}/${acqStr} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_func}; exit; fi
+    Warning "Erasing proc_func output files and logs: ${acqStr}"
+    acqStr=${acqStr/desc-/}
+    Do_cmd rm -rf "${proc_func}"/desc-*"${acqStr}" \
+                  "${dir_warp}/${idBIDS}_from-nativepro_func_to-${acqStr}_mode-image_desc-SyN_"* \
+                  "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
+                  "${dir_warp}/${idBIDS}_from-${acqStr}_to-fsnative_bbr"* \
+                  "$proc_struct"/${idBIDS}_space-nativepro_desc-t1wbold.nii.gz \
+                  "${dir_QC}/${idBIDS}"_module-proc_func_desc-*"${acqStr}".json \
+                  "$dir_logs"/proc_func_*${acqStr}*
+    grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${dir_QC}/${idBIDS}_micapipe_processed.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+fi
+
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_dwi
 if [ "$procDWI" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then
     Warning "Erasing proc_dwi output files and logs"
     dwifiles=($(find "${proc_dwi}" -name "*_space-dwi_desc-*" ! -name "*iFOD2*"))
     Do_cmd rm -rf "$proc_dwi"/eddy/* \
@@ -207,28 +238,24 @@ if [ "$procDWI" = "TRUE" ]; then
                   "$dir_warp"/*_mode-image_desc-rigid_* \
                   "$dir_logs"/proc_dwi_*
     grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+      proc_dwi=$subject_dir/dwi/"${acqStr}"
+      if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
+      Do_cmd rm -rf "$proc_dwi"/* \
+                  "$dir_warp"/*_space-dwi_from-dwi_"${acqStr}"_to-nativepro_mode-image_desc-affine_* \
+                  "$dir_warp"/*_space-dwi_${acqStr}_from-dwi_to-dwi_mode-image_desc-SyN_* \
+                  "$dir_warp"/*${acqStr}_mode-image_desc-rigid_* \
+                  "$dir_logs"/proc_dwi_${acqStr}*
+      grep -v "${id}, ${SES/ses-/}, proc_dwi_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    fi
 fi
 
-# ---------------------------------------------------------------------------------------
-# CLEAN -proc_func
-if [ "$procFunc" = "TRUE" ]; then
-    Warning "Erasing proc_func output files and logs"
-    Do_cmd rm -rf "$proc_func"/* \
-                  "$proc_struct"/"$id"_singleecho_nativepro_brain.nii.gz \
-                  "$dir_warp"/*_func_from-se* \
-                  "$dir_warp"/*_from-se*_to-fsnative_bbr* \
-                  "$dir_warp"/*func_space-fsnative* \
-                  "$dir_warp"/*from-nativepro_func* \
-                  "$proc_struct"/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz \
-                  "$dir_logs"/proc_func_*
-    grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-    grep -v "${id}, ${SES/ses-/}, proc_func" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -SC TRACTOGRAPHY
 if [ "$postDWI" = "TRUE" ]; then
     filter=SIFT2
     Warning "Erasing post_tractography output files and logs"
+    if [ -z ${acqStr} ]; then
     Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
                   "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
@@ -237,18 +264,39 @@ if [ "$postDWI" = "TRUE" ]; then
                   "$proc_dwi"/"$idBIDS"_space-dwi_atlas-cerebellum.nii.gz \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
     grep -v "${id}, ${SES/ses-/}, SC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+      proc_dwi=$subject_dir/dwi/"${acqStr}"
+      if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
+      Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
+                    "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*connectome.png \
+                    "$proc_dwi"/QC/png/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*edgeLengths.png \
+                    "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_tdi.mif \
+                    "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
+    fi
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
-if [ "$postMPC" = "TRUE" ]; then
-    if [ -z ${acqStr} ]; then Warning "MPC requires an acquisition string (-acqStr), select one from:"; $(ls -d "${subject_dir}/anat/surf/micro_profiles/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
-    Warning "Erasing MPC output files and logs: ${acqStr}"
-    acqStr=${acqStr/acq-/}
-    Do_cmd rm -rf "${subject_dir}/anat/surf/micro_profiles/acq-${acqStr}" \
-                  "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
-                  "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
-                  "$dir_logs"/MPC_*"${acqStr}"*
-    grep -v "${id}, ${SES/ses-/}, MPC_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+if [ "${postMPC}" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then
+        Warning "Erasing post_mpc output files and logs"
+        Do_cmd rm -rf "${subject_dir}/anat/surf/micro_profiles/"*MPC* \
+                      "${subject_dir}/anat/surf/micro_profiles/"*intensity_profiles* \
+                      "${dir_warp}/${idBIDS}"_from-micro_to-fsnative* \
+                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-micro.nii.gz" \
+                      "$dir_logs"/MPC_* \
+                      "${dir_QC_png}"/*_MPC*
+        grep -v "${id}, ${SES/ses-/}, MPC" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    else
+        dir_mpc="${subject_dir}/anat/surf/micro_profiles/acq-${acqStr}"
+        if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/anat/surf/micro_profiles/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+        Warning "Erasing MPC output files and logs: ${acqStr}"
+        acqStr=${acqStr/acq-/}
+        Do_cmd rm -rf "${dir_mpc}" \
+                      "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
+                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
+                      "$dir_logs"/MPC_*"${acqStr}"*
+        grep -v "${id}, ${SES/ses-/}, MPC_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    fi
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -GD
