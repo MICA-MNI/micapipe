@@ -196,8 +196,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     def check_arrays():
         if np.array_equal(mdl, ones) != True:
             print('apply regression')
-            slm = LinearRegression().fit(Data, mdl)
-            Data_res = Data-np.dot(mdl, slm.coef_)
+            slm = LinearRegression().fit(mdl, Data)
+            Data_res = Data - slm.predict(mdl)
         else:
             Data_res = Data
         return Data_res
@@ -219,8 +219,6 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         # apply regression
         Data_corr = check_arrays()
     else:
-        wm = np.loadtxt(x_wm)
-        csf = np.loadtxt(x_csf)
         ones = np.ones((wm.shape[0], 1))
         print('NO spikeRegressors_FD file, will skip loading: ' + Data_name)
         if performNSR == 1:
@@ -228,7 +226,6 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
             mdl = np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1)
         elif performGSR == 1:
             print(Data_name + ', model : func ~ dof + wm + csf + gs')
-            gs = np.loadtxt(x_gs)
             mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
         else:
             print(Data_name + ', model : none')
