@@ -303,7 +303,7 @@ function micapipe_procStatus_json() {
   }" > "${4}"
 }
 
-micapipe_json() {
+function micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
     Name=$(grep Name "${BIDS}"/dataset_description.json | awk -F '"' '{print $4}')
@@ -317,42 +317,39 @@ micapipe_json() {
     \"Name\": \"${Name}\",
     \"BIDSVersion\": \"${BIDSVersion}\",
     \"DatasetType\": \"derivative\",
-    \"GeneratedBy\": [
-      {
+    \"GeneratedBy\": [{
         \"Name\": \"micapipe\",
         \"Version\": \"${Version}\",
+        \"Reference\": \"Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Ilana Leppert, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022) Micapipe: a pipeline for multimodal neuroimaging and connectome analysis. NeuroImage, 2022, 119612, ISSN 1053-8119.\",
+        \"DOI\": \"https://doi.org/10.1016/j.neuroimage.2022.119612\",
+        \"URL\": \"https://micapipe.readthedocs.io/en/latest\",
+        \"GitHub\": \"https://github.com/MICA-MNI/micapipe\",
         \"Container\": {
-          \"Type\": \"github\",
-          \"Tag\": \"MICA-MNI/micapipe:${Version}\"
-          }
-      },
-      {
-        \"Name\": \"$(whoami)\",
-        \"Workstation\": \"$(uname -n)\"
-        \"LastRun\": \"$(date)\"
+          \"Type\": \"docker\",
+          \"Tag\": \"micalab/micapipe:$(echo ${Version} | awk '{print $1}')\"
+        },
+        \"RunBy\": \"$(whoami)\",
+        \"Workstation\": \"$(uname -n)\",
+        \"LastRun\": \"$(date)\",
         \"Processing\": \"${PROC}\"
-      }
-    ],
-    \"SourceDatasets\": [
-      {
-        \"DOI\": \"doi:\",
-        \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \"${Version}\"
-      }
-    ]
-  }" > "${out}/pipeline-description.json"
+      }]
+  }" > "${out}/dataset_description.json"
 }
 
 function micapipe_check_json_status() {
   local mod_json="${1}"
   local mod_func="${2}"
-  if [ -f "${mod_json}" ]; then
-    status=$(grep "Status" "${mod_json}" | awk -F '"' '{print $4}')
-    if [ "${status}" == "COMPLETED" ]; then
-      Warning "Subject ${idBIDS} has been processed with -${mod_func}
-                  If you want to re-run this step again, first erase all the outputs with:
-                  micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}";
-    exit; fi
+  if [ -f "${module_json}" ]; then
+    status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+    if [ "$status" == "COMPLETED" ]; then
+    Note "${mod_func} json" "${module_json}"
+    Warning "Subject ${idBIDS} has been processed with -${mod_func}
+              If you want to re-run this step again, first erase all the outputs with:
+
+              micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit
+    else
+        Info "${mod_func} is ${status}, processing will continute"
+    fi
   fi
 }
 
@@ -364,45 +361,40 @@ function tck_json() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${8}\",
-    \"fileInfo\": [
-      {
+    \"fileInfo\": {
       \"Name\": \"${fod_wmN}\",
       \"qform\": [
-        \"${qform[@]:0:4};\"
-        \"${qform[@]:4:4};\"
-        \"${qform[@]:8:4};\"
-        \"${qform[@]:12:8}\"
+          \"${qform[@]:0:4} \",
+          \"${qform[@]:4:4} \",
+          \"${qform[@]:8:4} \",
+          \"${qform[@]:12:8}\"
       ],
       \"sform\": [
-        \"${sform[@]:0:4};\"
-        \"${sform[@]:4:4};\"
-        \"${sform[@]:8:4};\"
-        \"${sform[@]:12:8}\"
-      ],
-      }
-    ],
-    \"Tractography\": [
-      {
-        \"TractographyClass\": \"local\",
-        \"TractographyMethod\": \"probabilistic\",
-        \"TractographyAlgorithm\": \"$1\",
-        \"StepSizeUnits\": [\"mm\"],
-        \"StepSize\": \"$2\",
-        \"AngleCurvature\": \"$3\",
-        \"cutoff\": \"$4\",
-        \"maxlength\": \"$5\",
-        \"minlength\": \"$6\",
-        \"SeedingMethod\": \"$7\",
-        \"SeedingNumberMethod\": \"${tracts}\",
-        \"TerminationCriterion\": [\"reachingTissueType”],
-        \"TerminationCriterionTest\": [\"ACT\"],
-        \"TractographySaved\": \"${nocleanup}\"
-      }
-    ]
+          \"${sform[@]:0:4} \",
+          \"${sform[@]:4:4} \",
+          \"${sform[@]:8:4} \",
+          \"${sform[@]:12:8}\"
+      ]
+    },
+    \"Tractography\": {
+      \"TractographyMethod\": \"probabilistic\",
+      \"TractographyAlgorithm\": \"$1\",
+      \"StepSizeUnits\": [\"mm\"],
+      \"StepSize\": \"$2\",
+      \"AngleCurvature\": \"$3\",
+      \"cutoff\": \"$4\",
+      \"maxlength\": \"$5\",
+      \"minlength\": \"$6\",
+      \"SeedingMethod\": \"$7\",
+      \"SeedingNumberMethod\": \"${tracts}\",
+      \"TerminationCriterion\": [\"reachingTissueType”],
+      \"TerminationCriterionTest\": [\"ACT\"],
+      \"TractographySaved\": \"${nocleanup}\"
+    }
   }" > "${tckjson}"
 }
 
-function json_nativepro_t1w() {
+function json_nativepro_T1w() {
   qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
   sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
@@ -418,33 +410,31 @@ function json_nativepro_t1w() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${1}\",
-    \"fileInfo\": [
-      {
+    \"fileInfo\": {
         \"VoxelSize\": \"${res}\",
         \"Dimensions\": \"${Size}\",
         \"Strides\": \"${Strides}\",
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
         \"Transform\": [
-          \"${Transform[@]:0:4};\"
-          \"${Transform[@]:4:4};\"
-          \"${Transform[@]:8:4};\"
+          \"${Transform[@]:0:4} \",
+          \"${Transform[@]:4:4} \",
+          \"${Transform[@]:8:4} \",
           \"${Transform[@]:12:8}\"
       ],
         \"qform\": [
-          \"${qform[@]:0:4};\"
-          \"${qform[@]:4:4};\"
-          \"${qform[@]:8:4};\"
+          \"${qform[@]:0:4} \",
+          \"${qform[@]:4:4} \",
+          \"${qform[@]:8:4} \",
           \"${qform[@]:12:8}\"
         ],
         \"sform\": [
-          \"${sform[@]:0:4};\"
-          \"${sform[@]:4:4};\"
-          \"${sform[@]:8:4};\"
+          \"${sform[@]:0:4} \",
+          \"${sform[@]:4:4} \",
+          \"${sform[@]:8:4} \",
           \"${sform[@]:12:8}\"
         ]
-      }
-    ],
+      },
     \"inputsRawdata\": \"${3}\",
     \"anatPreproc\": [
       {
@@ -471,7 +461,7 @@ function json_nativepro_mask() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "$1" -transform))
   Info "Creating T1nativepro_brain json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
@@ -483,28 +473,26 @@ function json_nativepro_mask() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"Transform\": [
-        \"${Transform[@]:0:4};\"
-        \"${Transform[@]:4:4};\"
-        \"${Transform[@]:8:4};\"
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
         \"${Transform[@]:12:8}\"
       ],
-    \"inputNIFTI\": [
-      {
+    \"inputNIFTI\": {
       \"Name\": \"${T1nativepro}\",
       \"qform\": [
-        \"${qform[@]:0:4};\"
-        \"${qform[@]:4:4};\"
-        \"${qform[@]:8:4};\"
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
         \"${qform[@]:12:8}\"
       ],
       \"sform\": [
-        \"${sform[@]:0:4};\"
-        \"${sform[@]:4:4};\"
-        \"${sform[@]:8:4};\"
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
         \"${sform[@]:12:8}\"
-      ],
-      }
-    ],
+      ]
+    },
     \"BinaryMask\": [
       {
         \"BinaryMask_original\": \"$2\",
@@ -578,9 +566,11 @@ function json_mpc() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"Class\": \"Microstructural profile covariance\",
+    \"Module\": \"Microstructural profile covariance\",
     \"acquisition\": \"${mpc_str}\",
-    \"input\": \"${1}\",
+    \"microstructural_img\": \"${1}\",
+    \"microstructural_reg\": \"${regImage}\",
+    \"microstructural_dat\": \"${input_dat}\",
     \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -588,21 +578,21 @@ function json_mpc() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"Transform\": [
-        \"${Transform[@]:0:4};\"
-        \"${Transform[@]:4:4};\"
-        \"${Transform[@]:8:4};\"
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
         \"${Transform[@]:12:8}\"
       ],
     \"qform\": [
-        \"${qform[@]:0:4};\"
-        \"${qform[@]:4:4};\"
-        \"${qform[@]:8:4};\"
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
         \"${qform[@]:12:8}\"
       ],
     \"sform\": [
-        \"${sform[@]:0:4};\"
-        \"${sform[@]:4:4};\"
-        \"${sform[@]:8:4};\"
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
         \"${sform[@]:12:8}\"
       ]
   }" > "$3"
@@ -614,7 +604,7 @@ function json_dwipreproc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=($(mrinfo "${img}" -transform))
+  Transform=($(mrinfo "${1}" -transform))
 
   res_rpe=$(mrinfo "$4" -spacing)
   Size_rpe=$(mrinfo "$4" -size)
@@ -628,7 +618,12 @@ function json_dwipreproc() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Class\": \"DWI preprocessing\",
-    \"DWIpe\": [
+    \"rpe_all\": \"${rpe_all}\",
+    \"dwi_acq\": \"${dwi_acq}\",
+    \"Only Affine\": \"${regAffine}\",
+    \"B0 threshold\": \"${b0thr}\",
+    \"Bvalue scaling\": \"${bvalscale}\",
+    \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",
         \"VoxelSizepe\": \"${res}\",
@@ -637,13 +632,13 @@ function json_dwipreproc() {
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
         \"Transform\": [
-          \"${Transform[@]:0:4};\"
-          \"${Transform[@]:4:4};\"
-          \"${Transform[@]:8:4};\"
+          \"${Transform[@]:0:4} \",
+          \"${Transform[@]:4:4} \",
+          \"${Transform[@]:8:4} \",
           \"${Transform[@]:12:8}\"
       ]
-    ],
-    \"DWIrpe\": [
+    },
+    \"DWIrpe\": {
         \"fileName\": \"${dwi_reverse[*]}\",
         \"NumberOfInputs\": \"${#dwi_reverse[*]}\",
         \"VoxelSizepe\": \"${res_rpe}\",
@@ -652,15 +647,15 @@ function json_dwipreproc() {
         \"Offset\": \"${Offset_rpe}\",
         \"Multiplier\": \"${Multiplier_rpe}\",
         \"Transform\": [
-          \"${Transform_rpe[@]:0:4};\"
-          \"${Transform_rpe[@]:4:4};\"
-          \"${Transform_rpe[@]:8:4};\"
+          \"${Transform_rpe[@]:0:4} \",
+          \"${Transform_rpe[@]:4:4} \",
+          \"${Transform_rpe[@]:8:4} \",
           \"${Transform_rpe[@]:12:8}\"
       ]
-    ],
+    },
     \"Denoising\": \"Marchenko-Pastur PCA denoising, dwidenoise\",
     \"GibbsRingCorrection\": \"mrdegibbs\",
-    \"dwiflspreproc\": [
+    \"dwiflspreproc\": {
         \"input\": \"${dwi_4proc}\",
         \"output\": \"${dwi_corr}\",
         \"Shells\": \"${shells[*]}\",
@@ -668,7 +663,7 @@ function json_dwipreproc() {
         \"ReadoutTime\": \"${ReadoutTime}\",
         \"Options\": \"${opt}\",
         \"slm\": \"linear\"
-    ],
+    },
     \"B1fieldCorrection\": \"ANTS N4BiasFieldCorrection\",
     \"DWIprocessed\": \"$2\",
   }" > "$3"
