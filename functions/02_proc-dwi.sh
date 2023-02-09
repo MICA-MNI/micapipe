@@ -432,8 +432,8 @@ fi
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
 dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.mif"
-dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
-dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
+dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
+dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.nii.gz"
 if [[ ! -f "$dti_FA" ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
