@@ -69,9 +69,13 @@ echo -e "
 \t\t\033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
 \t\t\t\t        ( This option requires that both encoding contains the same number of volumes )
 \t\t\033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
-\t\t\t\t         ( default is non linear registration SyN )
+\t\t\t\t        ( default is non linear registration SyN )
 \t\t\033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
-\t\t\t\t         This will create a new directory here: dwi/acq-<dwi_acq>
+\t\t\t\t        This will create a new directory here: dwi/acq-<dwi_acq>
+\t\t\\033[38;5;120m-b0thr\033[0m               : Specifies the b-value threshold for determining those image volumes that correspond to b=0.
+\t\t\t\t        Default = 61 . This value will vary from DWI acquisition and from scanner to scanner (3T or 7T)
+\t\t\\033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
+\t\t\t\t        Default is scaling. See more on MRtrix3 documentation
 
 \t\033[38;5;197m-proc_func (-proc_rsfmri is deprecated)\033[0m
 \t\t\033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -223,6 +227,14 @@ do
     dwi_acq=TRUE
     dwi_str=$2
     shift;shift
+  ;;
+  -b0thr)
+    b0thr=${2}
+    shift;shift;
+  ;;
+  -no_bvalue_scaling)
+    bvalscale=no
+    shift
   ;;
   -proc_rsfmri)
     procFunc=TRUE
@@ -524,6 +536,8 @@ else
 fi
 if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 if [[ $dwi_acq == "TRUE" ]]; then dwi_str=${dwi_str}; else dwi_str=DEFAULT; fi
+if [ -z ${b0thr} ]; then b0thr=61; else b0thr=${b0thr}; fi
+if [ -z ${bvalscale} ]; then bvalscale=DEFAULT; else bvalscale=no; fi
 
 # Get the real path of the Inputs
 inputs_realpath
@@ -696,7 +710,7 @@ fi
 #  Diffusion processing
 if [ "$ALL" = "TRUE" ] || [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%d-%m-%Y')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
