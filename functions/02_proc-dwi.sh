@@ -28,7 +28,9 @@ dwi_processed=${10}
 rpe_all=${11}
 regAffine=${12}
 dwi_str=${13}
-PROC=${14}
+b0thr=${14}
+bvalscale=${15}
+PROC=${16}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -38,24 +40,34 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
-# mtrix configuration file
-mrconf="${HOME}/.mrtrix.conf"
-echo "BZeroThreshold: 61" > "$mrconf"
-
 # source utilities
 source "$MICAPIPE/functions/utilities.sh"
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
-Info "Inputs of proc_dwi:"
-Note "tmpDir     : " "$tmpDir"
-Note "dwi_main   : " "$dwi_main"
-Note "dwi_rpe    : " "$dwi_rpe"
-Note "rpe_all    : " "$rpe_all"
-Note "dwi_acq    : " "$dwi_str"
-Note "Affine only: " "$regAffine"
-Note "Processing : " "$PROC"
+Info "Inputs of proc_dwi"
+Note "tmpDir        :" "$tmpDir"
+Note "dwi_main      :" "$dwi_main"
+Note "dwi_rpe       :" "$dwi_rpe"
+Note "rpe_all       :" "$rpe_all"
+Note "dwi_acq       :" "$dwi_str"
+Note "Affine only   :" "$regAffine"
+Note "B0 threshold  :" "$b0thr"
+Note "bvalue scaling:" "$bvalscale"
+Note "Processing    :" "$PROC"
+
+# mtrix configuration file
+if ! [[ ${b0thr} =~ ^-?[0-9]+$ ]] ; then Error "B0 threshold is not a valid integrer: ${b0thr}" >&2; exit 1; fi
+mrconf="${HOME}/.mrtrix.conf"
+echo "BZeroThreshold: ${b0thr}" > "$mrconf"
+
+# mrconvert bvalue_scaling
+if [[ "$bvalscale" == "no" ]]; then
+  bvalstr="-bvalue_scaling no"
+else
+  bvalstr=""
+fi
 
 # Manage manual inputs: DWI main image(s)
 if [[ "$dwi_main" != "DEFAULT" ]]; then
@@ -149,7 +161,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           for dwi in "${bids_dwis[@]}"; do
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
-                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif"
+                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
                 Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
@@ -170,7 +182,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
                 mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}__Ralign.mif" -force -quiet
+                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}__Ralign.mif" -force -quiet  "${bvalstr}"
             done
           fi
 
@@ -211,11 +223,11 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
                 Info "DWI reverse phase encoding processing: $dwi_nom"
                 if [[ -f "${bids_dwi_str}.bvec" ]] && [[ -f "${bids_dwi_str}.bval" ]]; then
-                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif"
+                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
                     Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 else
                     Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
-                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}.mif"
+                    Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
                     Do_cmd cp "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif"
                 fi
 
@@ -245,7 +257,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
                 Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
                 if [[ -f "${bids_dwi_str}.bvec" ]] && [[ -f "${bids_dwi_str}.bval" ]]; then
-                  Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
+                  Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet "${bvalstr}"
                 else
                     Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
                   Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}_rpe_Ralign.mif" -force -quiet
@@ -421,10 +433,10 @@ fi
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
 dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.mif"
-dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
-dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.mif"
-dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.mif"
-dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.mif"
+dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
+dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.nii.gz"
+dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.nii.gz"
+dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.nii.gz"
 if [[ ! -f "$dti_FA" ]]; then
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
@@ -568,9 +580,6 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------
-# QC: Input files
-QC_proc-dwi "${dir_QC}/micapipe_QC_proc-dwi${dwi_str_}.txt"
-
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
