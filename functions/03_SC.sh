@@ -285,7 +285,6 @@ if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; Do_cmd mv "$wei
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
-QC_SC "${dir_QC}/micapipe_QC_SC${dwi_str_}.txt"
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
