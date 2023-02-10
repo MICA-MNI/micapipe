@@ -626,6 +626,39 @@ function post_struct_transformations() {
   }" > "$3"
 }
 
+function proc_func_transformations() {
+  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
+  Info "Creating transformations file: func space <<>> T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_func\",
+    \"LastRun\": \"$(date)\",
+    \"Only affine\": \"${regAffine}\",
+    \"T1nativepro brain\": \"${T1nativepro_brain}\",
+    \"func brain\": \"${fmri_brain}\",
+    \"from-t1nativepro_to-func\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${T1nativepro_brain}\",
+        \"reference\": \"${fmri_brain}\",
+        \"transformations\": \"$(echo ${2} | sed 's/:/ /g')\",
+        \"output\": \"-o from-nativepro_to-${tagMRI}_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-func_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${fmri_brain}\",
+        \"reference\": \"${t1bold}\",
+        \"transformations\": \"$(echo ${3} | sed 's/:/ /g')\",
+        \"output\": \"-o from-${tagMRI}_to-nativepro_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > ${1}
+}
+
 function slim_proc_struct(){
   Info "Erasing temporary files"
   Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_to_std_sub*
@@ -719,14 +752,14 @@ function json_poststruct() {
 }
 
 function json_func() {
-  qform=($(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}'))
-  sform=($(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}'))
+  qform=($(fslhd "$func_processed" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$func_processed" | grep sto_ | awk -F "\t" '{print $2}'))
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Tag\": \"${tagMRI}\",
     \"Acquisition\": \"${acq}\",
-    \"Name\": \"${fmri_processed}\",
+    \"Name\": \"${func_processed}\",
     \"sform\": [
         \"${sform[@]:0:4} \",
         \"${sform[@]:4:4} \",
@@ -829,6 +862,11 @@ function json_dwipreproc() {
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Class\": \"DWI preprocessing\",
+    \"rpe_all\": \"${rpe_all}\",
+    \"dwi_acq\": \"${dwi_acq}\",
+    \"Only Affine\": \"${regAffine}\",
+    \"B0 threshold\": \"${b0thr}\",
+    \"Bvalue scaling\": \"${bvalscale}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",
