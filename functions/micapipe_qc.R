@@ -1,7 +1,7 @@
 # R script
 #
 # Generates PNG images for micapipe Quality Check
-# micapipe v0.1.4
+# micapipe v0.1.5
 # Extra functions
 #
 # Created by RRC on Feb-Apr 2021 (the second year of the pademic)

@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE November 2022 (Version v0.1.4 'Roadrunner')\n"
+  echo -e "\nMICAPIPE November 2022 (Version v0.1.5 'Roadrunner')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {

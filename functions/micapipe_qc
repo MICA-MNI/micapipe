@@ -13,7 +13,7 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(Version v0.1.4 'Roadrunner')"
+Version="(Version v0.1.5 'Roadrunner')"
 version() {
   echo -e "\nMICAPIPE November 2022 ${Version}\n"
 }
