@@ -85,6 +85,10 @@ echo -e "
 \t\t\t            Default is non linear registration SyN
 \t   \033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
 \t\t\t            This will create a new directory here: dwi/acq-<dwi_acq>
+\t   \033[38;5;120m-b0thr\033[0m               : Specifies the b-value threshold for determining those image volumes that correspond to b=0.
+\t\t\t            Default = 61 . This value will vary from DWI acquisition and from scanner to scanner (3T or 7T)
+\t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
+\t\t\t            Default is scaling. See more on MRtrix3 documentation
 
 \t\033[38;5;197m-proc_asl\033[0m
 \t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
@@ -123,6 +127,8 @@ echo -e "
 \t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t            ( default is non linear registration SyN )
 \t   \033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
+\t\t\t            ( default is FALSE  )
+\t\t\033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
 \t\t\t            ( default is FALSE  )
 
 \t\033[38;5;197m-SC\033[0m
@@ -243,6 +249,14 @@ do
     dwi_str=$2
     shift;shift
     ;;
+  -b0thr)
+    b0thr=${2}
+    shift;shift;
+  ;;
+  -no_bvalue_scaling)
+    bvalscale=no
+    shift
+  ;;
   -proc_func)
     procFunc=TRUE
     shift
@@ -309,6 +323,10 @@ do
   ;;
   -dropTR)
     dropTR=TRUE
+    shift
+  ;;
+  -noFC)
+    noFC=TRUE
     shift
   ;;
   -post_structural)
@@ -528,6 +546,7 @@ if [ -z "$func_pe" ]; then func_pe=DEFAULT; else func_pe=$(realpath $func_pe); f
 if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
+if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
 if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments mpc
@@ -563,6 +582,8 @@ else
 fi
 if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 if [[ $dwi_acq == "TRUE" ]]; then dwi_str=${dwi_str}; else dwi_str=DEFAULT; fi
+if [ -z ${b0thr} ]; then b0thr=61; else b0thr=${b0thr}; fi
+if [ -z ${bvalscale} ]; then bvalscale=DEFAULT; else bvalscale=no; fi
 
 # Optional arguments proc_asl
 if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
@@ -576,7 +597,7 @@ if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-umask 000
+umask 001
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
@@ -735,7 +756,7 @@ fi
 #  Diffusion processing
 if [ "$procDWI" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -847,7 +868,7 @@ if [ "$postMPC" = "TRUE" ]; then
     # tag the log file with the specific acquisition
     if [ -f ${log_file_str}.txt ]; then
         acqMRI=$(grep acqMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
-        mv -v ${log_file_str}.txt ${log_file_str}_${acqMRI}.txt
+        mv ${log_file_str}.txt ${log_file_str}_${acqMRI}.txt && if [[ -f ${log_file_str}*_.txt ]]; then rm ${log_file_str}*_.txt; fi
         if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${acqMRI}.e; fi
     fi
 fi
@@ -916,7 +937,7 @@ fi
 # -----------------------------------------------------------------------------------------------#
 if [ "$procFunc" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${GSRtag}"
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${noFC} ${GSRtag}"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - fMRI processing"
@@ -940,7 +961,7 @@ if [ "$procFunc" = "TRUE" ]; then
     # tag the log file with the specific acquisition
     if [ -f ${log_file_str}.txt ]; then
         tagMRI=$(grep tagMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
-        mv -v ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt
+        mv ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt && if [[ -f ${log_file_str}*_.txt ]]; then rm ${log_file_str}*_.txt; fi
         if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${tagMRI}.e; fi
     fi
 fi
