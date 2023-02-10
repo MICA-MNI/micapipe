@@ -197,7 +197,7 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         if np.array_equal(mdl, ones) != True:
             print('apply regression')
             slm = LinearRegression().fit(mdl, Data)
-            Data_res = Data - slm.predict(mdl)
+            Data_res = Data - np.dot(mdl, slm.coef_.T)
         else:
             Data_res = Data
         return Data_res
