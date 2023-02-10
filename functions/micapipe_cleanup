@@ -241,7 +241,7 @@ if [ "$procDWI" = "TRUE" ]; then
     else
       proc_dwi=$subject_dir/dwi/"${acqStr}"
       if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
-      Do_cmd rm -rf "$proc_dwi"/* \
+      Do_cmd rm -rf "$proc_dwi" \
                   "$dir_warp"/*_space-dwi_from-dwi_"${acqStr}"_to-nativepro_mode-image_desc-affine_* \
                   "$dir_warp"/*_space-dwi_${acqStr}_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "$dir_warp"/*${acqStr}_mode-image_desc-rigid_* \
