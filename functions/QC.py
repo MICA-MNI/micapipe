@@ -331,6 +331,14 @@ _static_block += nifti_check(outName="Partial volume: white matter", outPath=out
 static_report += _static_block
 
 
+## --------------------------- PROC-SURF MODULE ---------------------------- ##
+_static_block = '<div style="page-break-before: always">' + report_module_header_template(module='proc_surf') + '</div>'
+
+# QC summary
+proc_surf_json = "%s/%s/%s/QC/%s_module-proc_surf-*.json"%(out,sub,ses,sbids)
+_static_block += report_qc_summary_template(proc_surfer_json)
+
+
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)

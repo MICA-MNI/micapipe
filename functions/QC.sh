@@ -175,8 +175,10 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 cd $tmpDir
 
 # -----------------------------------------------------------------------------------------------
-# PROC structural
+# Structural processing
 # -----------------------------------------------------------------------------------------------
+
+# PROC_STRUC ------------------------------------------------------------------------------------
 
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
@@ -199,6 +201,9 @@ for mm in 2 0.8; do
 done
 
 Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
+
+# PROC_FREESURFER -------------------------------------------------------------------------------
+Do_cmd python "$MICAPIPE"/functions/qc_surf.py -subBIDS ${idBIDS} -subDir ${out}/${subject}/${SES}
 
 
 # -----------------------------------------------------------------------------------------------
