@@ -811,7 +811,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
         # Info "Setting a warper to run on mica.q"
         qsub -q mica.q -pe smp $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
-        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Microstructural profile covariance"
@@ -822,7 +822,7 @@ if [ "$ALL" = "TRUE" ] || [ "$postMPC" = "TRUE" ]; then
              $COMMAND $PROC
         qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     else
-        # LOCAL - POST-Structural processing
+        # LOCAL - Microstructural-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
         "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     fi
