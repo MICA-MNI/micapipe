@@ -106,7 +106,7 @@ T1nativepro="${proc_struct}/${T1str_nat}.nii.gz"
 T1nativepro_brain="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz"
 T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz"
 T1nativepro_first="${proc_struct}/first/${T1str_nat}.nii.gz"
-T1nativepro_5tt="${T1nativepro/.nii.gz/_5TT.nii.gz}"
+T1nativepro_5tt="${T1nativepro/.nii.gz/_5tt.nii.gz}"
 procstruct_json="${proc_struct}/${T1str_nat}.json"
 export N4wmStatus="FALSE"
 
