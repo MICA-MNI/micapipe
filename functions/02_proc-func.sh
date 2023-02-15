@@ -708,13 +708,12 @@ else
     Info "Subject ${id} has Global time-series"; ((Nsteps++)); ((N++))
 fi
 
-# Motion confound
+# Motion confound (If no output no outliers??)
 spikeRegressors="${func_volum}/${idBIDS}${func_lab}_spikeRegressors_REFRMS.1D"
-if [[ ! -f "$spikeRegressors" ]] ; then ((N++))
+if [[ ! -f "$spikeRegressors" ]] ; then
     Do_cmd fsl_motion_outliers -i "$func_processed" -o "$spikeRegressors" -s "${func_volum}/${idBIDS}${func_lab}_metric_REFRMS.1D" --refmse --nomoco
-    if [[ -f "$spikeRegressors" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
 fi
 
 #------------------------------------------------------------------------------#
