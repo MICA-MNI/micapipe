@@ -56,6 +56,8 @@ Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
 Note "Processing    :" "$PROC"
+Note "Saving temporal dir     :" "$nocleanup"
+Note "ANTs and MRtrix will use: " "$threads threads"
 
 # mtrix configuration file
 if ! [[ ${b0thr} =~ ^-?[0-9]+$ ]] ; then Error "B0 threshold is not a valid integrer: ${b0thr}" >&2; exit 1; fi
@@ -94,12 +96,10 @@ if [[ "$dwi_processed" != "FALSE" ]]; then
     dwi_corr="$dwi_processed"
 fi
 
-# Check inputs: DWI
+# Check dependencies Status: PROC_STRUCTURAL
+micapipe_check_dependency "proc_structural" "${dir_QC}/${idBIDS}_module-proc_structural.json"
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "DWI string or path does not match the default:\n\t\t TRY to set it with -dwi_main <path to DWI.nii.gz>"; exit; fi
 if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI was not found:\n\t\t TRY to set it with -dwi_main <path to DWI.nii>"; exit; fi
-if [ ! -f "${T1_MNI152_InvWarp}" ]; then Error "Subject $id doesn't have T1_nativepro warp to MNI152.\n\t\tRun -proc_structural"; exit; fi
-if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
-if [ ! -f "${T15ttgen}" ]; then Error "Subject $id doesn't have a 5tt volume in nativepro space.\n\t\tRun -proc_structural"; exit; fi
 
 # CHECK if PhaseEncodingDirection and TotalReadoutTime exist
 for i in ${bids_dwis[*]}; do
@@ -120,21 +120,23 @@ else
   dwi_str=""; dwi_str_=""
 fi
 
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-proc_dwi${dwi_str_}.json"
+micapipe_check_json_status "${module_json}" "proc_dwi${dwi_str_}"
+
 #------------------------------------------------------------------------------#
 Title "Diffusion Weighted Imaging processing\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-dwi
-Note "Saving temporal dir     :" "$nocleanup"
-Note "ANTs and MRtrix will use: " "$threads threads"
 
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
+N=0
 
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_proc-dwi_${id}"
 Do_cmd mkdir -p "$tmp"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 
 # TRAP in case the script fails
 trap 'rm $mrconf; cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -149,13 +151,13 @@ dwi_cat="${tmp}/dwi_concatenate.mif"
 dwi_dns="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
 dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
 dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
-dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-dwi_preproc.mif"
+dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif"
 b0_refacq=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}'); b0_refacq=$(echo "${b0_refacq/_dwi/}"); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
 
 #------------------------------------------------------------------------------#
 # Main phase encoding processing
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
-    if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then
+    if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then ((N++))
     Info "DWI denoise and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
           for dwi in "${bids_dwis[@]}"; do
@@ -201,15 +203,12 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_res" -axis 3
           Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
           mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
-          Do_cmd mrinfo "$dwi_dns" -json_all "${dwi_dns/mif/json}"
-          Do_cmd mrinfo "$dwi_res" -json_all "${dwi_res/mif/json}"
-          Do_cmd mrinfo "$dwi_resGibss" -json_all "${dwi_resGibss/mif/json}"
           ((Nsteps++))
     else
-          Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++))
+          Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++)); ((N++))
     fi
 else
-    Info "Subject ${id} has a DWI processed, skipping denoise and concatenation"; ((Nsteps++))
+    Info "Subject ${id} has a DWI processed, skipping denoise and concatenation"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -288,7 +287,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # dwifslpreproc and TOPUP preparations
-if [[ ! -f "$dwi_corr" ]]; then
+if [[ ! -f "$dwi_corr" ]]; then ((N++))
       Info "DWI dwifslpreproc"
       # Get parameters
       ReadoutTime=$(mrinfo "$dwi_dns" -property TotalReadoutTime)
@@ -307,7 +306,7 @@ if [[ ! -f "$dwi_corr" ]]; then
       dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_pe${dwi_str_}.png"
+      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${proc_dwi}/${idBIDS}_space-dwi_pe${dwi_str_}.png"
 
       # Processing the reverse encoding b0
       if [[ -f "$rpe_dns" ]]; then
@@ -333,8 +332,7 @@ if [[ ! -f "$dwi_corr" ]]; then
                 fi
             fi
             Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
-
-            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${dir_QC_png}/${idBIDS}_space-dwi_rpe${dwi_str_}.png"
+            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${proc_dwi}/${idBIDS}_space-dwi_rpe${dwi_str_}.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
@@ -393,19 +391,18 @@ if [[ ! -f "$dwi_corr" ]]; then
           ((Nsteps++))
       fi
 else
-      Info "Subject ${id} has a DWI processed"; ((Nsteps++))
+      Info "Subject ${id} has a DWI processed"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
-
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz" # This should be a NIFTI for compatibility with ANTS
 str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro_mode-image_desc-affine_"
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
-T1nativepro_in_dwi="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro.nii.gz"
+T1nativepro_in_dwi="${tmp}/${idBIDS}_space-dwi_desc-T1w_nativepro_Only-Affine.nii.gz"
 
-if [[ ! -f "$T1nativepro_in_dwi" ]] || [[ ! -f "$mat_dwi_affine" ]]; then
+if [[ ! -f "$mat_dwi_affine" ]]; then ((N++))
       Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
@@ -414,7 +411,6 @@ if [[ ! -f "$T1nativepro_in_dwi" ]] || [[ ! -f "$mat_dwi_affine" ]]; then
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$dwi_b0" -o "$str_dwi_affine" -t a -n "$threads" -p d
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$dwi_b0" -t ["$mat_dwi_affine",1] -o "$T1nativepro_in_dwi" -v -u int
-      if [[ -f "$T1nativepro_in_dwi" ]]; then ((Nsteps++)); fi
 
       #------------------------------------------------------------------------------#
       Info "Creating DWI binary mask of processed volumes"
@@ -427,7 +423,7 @@ if [[ ! -f "$T1nativepro_in_dwi" ]] || [[ ! -f "$mat_dwi_affine" ]]; then
       # Do_cmd dwi2mask "$dwi_corr" "$dwi_mask" -nthreads "$threads"
       if [[ -f "$dwi_mask" ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has an affine transformation from T1w to DWI-b0 space"; Nsteps=$((Nsteps + 2))
+      Info "Subject ${id} has an affine transformation from T1w to DWI-b0 space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -437,14 +433,13 @@ dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
 dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.nii.gz"
 dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.nii.gz"
 dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.nii.gz"
-if [[ ! -f "$dti_FA" ]]; then
+if [[ ! -f "$dti_FA" ]]; then ((N++))
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
       tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" -ad "$dti_AD" -rd "$dti_RD" "$dwi_dti"
-      Do_cmd mrinfo "$dwi_dti" -json_all "${dwi_dti/mif/json}"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++))
+      Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -452,7 +447,7 @@ fi
 fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
 fod_gmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-gmNorm.mif"
 fod_csfN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-csfNorm.mif"
-if [[ ! -f "$fod_wmN" ]]; then
+if [[ ! -f "$fod_wmN" ]]; then ((N++))
       Info "Calculating Multi-Shell Multi-Tissue, Response function and Fiber Orientation Distribution"
             rf=dhollander
             # Response function
@@ -481,7 +476,7 @@ if [[ ! -f "$fod_wmN" ]]; then
       fi
       if [[ -f "$fod_wmN" ]]; then ((Nsteps++)); fi
 else
-      Info "Subject ${id} has Fiber Orientation Distribution file"; ((Nsteps++))
+      Info "Subject ${id} has Fiber Orientation Distribution file"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -492,8 +487,7 @@ dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 
-
-if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
+if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
     T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
     fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
@@ -518,7 +512,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
     # Apply transformation DWI-b0 space to T1nativepro
-    Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int
+    # Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int MOVE to QC
     # Apply transformation of each DTI derived map to T1nativepro
     for metric in FA AD RD ADC; do
         dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.mif"
@@ -532,51 +526,43 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then
     Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" "$trans_T12dwi" -o "$dwi_5tt" -v -e 3 -n linear
     if [[ -f "$dwi_5tt" ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2))
+    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2)); N=$((N + 2))
 fi
 # Remove unused warped files
 Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_str_}.json" ${trans_T12dwi// /:} ${trans_dwi2T1// /:}
+
+# -----------------------------------------------------------------------------------------------
+# Prepare the segmentatons
+dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
+dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
+
+if [[ ! -f "$dwi_cere" ]]; then ((N++))
+  Info "Registering Cerebellar parcellation to DWI-b0 space"
+  Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
+  if [[ -f "$dwi_cere" ]]; then ((Nsteps++)); fi
+  # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
+  # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
+  Do_cmd fslmaths "$dwi_cere" -bin -mul 100 -add "$dwi_cere" "$dwi_cere"
+else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
+
+if [[ ! -f "$dwi_subc" ]]; then ((N++))
+  Info "Registering Subcortical parcellation to DWI-b0 space"
+  Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
+  # Remove brain-stem (label 16)
+  Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
+  if [[ -f "$dwi_subc" ]]; then ((Nsteps++)); fi
+else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
 
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
 dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
-if [[ ! -f "$dwi_gmwmi" ]]; then
+if [[ ! -f "$dwi_gmwmi" ]]; then ((N++))
       Info "Calculating Gray matter White matter interface mask"
       Do_cmd 5tt2gmwmi "$dwi_5tt" "$dwi_gmwmi"
       Do_cmd mrinfo "$dwi_gmwmi" -json_all "${dwi_gmwmi/mif/json}"; ((Nsteps++))
 else
-      Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++))
-fi
-
-#------------------------------------------------------------------------------#
-# QC of the tractography
-tracts=1M
-tdi_1M="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tdi.mif"
-export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.json"
-if [[ ! -f "$tdi_1M" ]]; then
-  Info "Creating a track density image for quality check"
-  tck_1M="${tmp}/${idBIDS}_space-dwi_desc-iFOD1-${tracts}_tractography.tck"
-  Do_cmd tckgen -nthreads "$threads" \
-      "$fod_wmN" \
-      "$tck_1M" \
-      -act "$dwi_5tt" \
-      -crop_at_gmwmi \
-      -backtrack \
-      -seed_gmwmi "$dwi_gmwmi" \
-      -algorithm iFOD1 \
-      -step 0.5 \
-      -angle 22.5 \
-      -cutoff 0.06 \
-      -maxlength 400 \
-      -minlength 10 \
-      -power 1.0 \
-      -select "$tracts"
-
-  Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck_1M" "$tdi_1M"
-  if [[ -f "$tdi_1M" ]]; then ((Nsteps++)); fi
-  tck_json iFOD1 0.5 22.5 0.06 400 10 seed_gmwmi "$tck_1M"
-else
-      Info "Subject ${id} has a Tract Density Image for QC 1M streamlines"; ((Nsteps++))
+      Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++)); ((N++))
 fi
 
 # -----------------------------------------------------------------------------------------------
@@ -586,14 +572,8 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-N=10
-if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "DWI processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\t\tSteps completed: $(printf "%02d" "$Nsteps")/10
-\tStatus          : ${status}
-\tCheck logs:
-$(ls "${dir_logs}"/proc_dwi_*.txt)"
-# Print QC stamp
+micapipe_completition_status "proc_dwi${dwi_str_}"
+# IF completition STATUS is COMPLETED run dwi-QC and erase EVERYTHING!!!!!! intermediate files
 micapipe_procStatus "${id}" "${SES/ses-/}" "proc_dwi${dwi_str_}" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_dwi${dwi_str_}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_dwi${dwi_str_}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"

@@ -659,6 +659,39 @@ function proc_func_transformations() {
   }" > ${1}
 }
 
+function proc_dwi_transformations() {
+  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
+  Info "Creating transformations file: DWI space <<>> T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_dwi\",
+    \"LastRun\": \"$(date)\",
+    \"transform\": \"${Mode}\",
+    \"T1nativepro\": \"${T1nativepro}\",
+    \"DWI b0\": \"${dwi_b0}\",
+    \"from-t1nativepro_to-dwi\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${T1nativepro}\",
+        \"reference\": \"${fod}\",
+        \"transformations\": \"$(echo ${2} | sed 's/:/ /g')\",
+        \"output\": \"-o from-nativepro_to-dwi${dwi_str_}_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-dwi_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${dwi_b0}\",
+        \"reference\": \"${T1nativepro_brain}\",
+        \"transformations\": \"$(echo ${3} | sed 's/:/ /g')\",
+        \"output\": \"-o from-dwi${dwi_str_}_to-nativepro_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > ${1}
+}
+
 function slim_proc_struct(){
   Info "Erasing temporary files"
   Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_to_std_sub*
