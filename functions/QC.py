@@ -45,6 +45,18 @@ import pandas as pd
 import os
 import argparse
 import json
+import glob
+import nibabel as nb
+from nibabel.freesurfer.mghformat import load
+import numpy as np
+import matplotlib as plt
+import matplotlib.pyplot as pltpy
+from brainspace.plotting import plot_hemispheres
+from brainspace.mesh.mesh_io import read_surface
+from brainspace.mesh.mesh_operations import combine_surfaces
+from brainspace.vtk_interface import wrap_vtk, serial_connect
+from brainspace.datasets import load_conte69
+from vtk import vtkPolyDataNormals
 
 # Arguments
 parser = argparse.ArgumentParser()
@@ -141,6 +153,19 @@ MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
 ##                      Helper functions to generate PDF                     ##
 ##                                                                           ##
 ## ------------------------------------------------------------------------- ##
+def check_json_exist_complete(jsonPath=''):
+    # Check if json file exists:
+    json_exist = os.path.isfile(jsonPath)
+
+    # Check if module is complete
+    module_description = os.path.realpath(jsonPath)
+    with open( module_description ) as f:
+        module_description = json.load(f)
+    json_complete = module_description["Status"] == "COMPLETED"
+
+    return json_exist and json_complete
+
+
 def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
     # Header
     report_header = (
@@ -238,7 +263,7 @@ def report_module_output_template(outName='', outPath='', figPath=''):
     return report_module_output.format(outName=outName, outPath=outPath, figPath=figPath)
 
 
-# NIFTI_CHECK (generate qc images)
+# NIFTI_CHECK (generate qc images from volumes)
 def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
 
     if os.path.exists(outPath):
@@ -257,6 +282,63 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
 
     return _static_block
 
+def load_surface(lh, rh, with_normals=True, join=False):
+    """
+    Loads surfaces.
+
+    Parameters
+    ----------
+    with_normals : bool, optional
+        Whether to compute surface normals. Default is True.
+    join : bool, optional.
+        If False, return one surface for left and right hemispheres. Otherwise,
+        return a single surface as a combination of both left and right.
+        surfaces. Default is False.
+
+    Returns
+    -------
+    surf : tuple of BSPolyData or BSPolyData.
+        Surfaces for left and right hemispheres. If ``join == True``, one
+        surface with both hemispheres.
+    """
+
+    surfs = [None] * 2
+    for i, side in enumerate([lh, rh]):
+        surfs[i] = read_surface(side)
+        if with_normals:
+            nf = wrap_vtk(vtkPolyDataNormals, splitting=False,
+                          featureAngle=0.1)
+            surfs[i] = serial_connect(surfs[i], nf)
+
+    if join:
+        return combine_surfaces(*surfs)
+    return surfs[0], surfs[1]
+
+def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
+    """
+    Creates a gradient color map of a defined lenght.
+
+    Parameters
+    ----------
+    N     : int
+         Number of colors to extract from each of the base_cmaps below.
+    cmaps : list
+        List of color map(s) to merge.
+
+    Returns
+    -------
+    cmap : numpy ndarray
+        Surfaces for left and right hemispheres. If ``join == True``, one
+        surface with both hemispheres.
+    """
+    # number of colors
+    N = 75
+
+    # we go from 0.2 to 0.8 below to avoid having several whites and blacks in the resulting cmaps
+    colors = np.concatenate([pltpy.get_cmap(name)(np.linspace(0,1,N)) for name in base_cmaps])
+    cmap = plt.colors.ListedColormap(colors)
+    return cmap
+
 derivatives = out.split('/micapipe_v0.2.0')[0]
 
 ## ------------------------------------------------------------------------- ##
@@ -268,76 +350,158 @@ static_report = ''
 
 
 ## ---------------------------- MICAPIPE header ---------------------------- ##
+def qc_header()
+    dataset_description = os.path.realpath("%s/dataset_description.json"%(bids))
+    with open( dataset_description ) as f:
+        dataset_description = json.load(f)
+    dataset_name = dataset_description["Name"]
+    _static_block = report_header_template(sub=sub, ses_number=ses_number, dataset_name=dataset_name, MICAPIPE=MICAPIPE)
 
-# Dataset name
-dataset_description = os.path.realpath("%s/dataset_description.json"%(bids))
-with open( dataset_description ) as f:
-    dataset_description = json.load(f)
-dataset_name = dataset_description["Name"]
-_static_block = report_header_template(sub=sub, ses_number=ses_number, dataset_name=dataset_name, MICAPIPE=MICAPIPE)
-
-static_report += _static_block
+    return _static_block
 
 
 ## ------------------------ PROC-STRUCTURAL MODULE ------------------------- ##
-_static_block =  report_module_header_template(module='proc_structural')
 
-# QC summary
-proc_structural_json = "%s/%s/%s/QC/%s_module-proc_structural.json"%(out,sub,ses,sbids)
-_static_block += report_qc_summary_template(proc_structural_json)
+def qc_proc_structural(proc_structural_json=''):
 
-# Inputs
-nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_T1w.json"%(out,sub,ses,sbids))
-with open( nativepro_json ) as f:
-    nativepro_json = json.load(f)
-inputs = nativepro_json["inputsRawdata"]
-_static_block += report_module_input_template(inputs=inputs)
+    if check_json_exist_complete(proc_structural_json):
 
-static_report += _static_block
+        # QC header
+        _static_block = qc_header()
+        _static_block +=  report_module_header_template(module='proc_structural')
 
-# Outputs
-_static_block = (
-        '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
-        '<b>Main outputs </b> </p>'
-)
+        # QC summary
+        _static_block += report_qc_summary_template(proc_structural_json)
 
-T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+        # Inputs
+        nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_T1w.json"%(out,sub,ses,sbids))
+        with open( nativepro_json ) as f:
+            nativepro_json = json.load(f)
+        inputs = nativepro_json["inputsRawdata"]
+        _static_block += report_module_input_template(inputs=inputs)
 
-figPath = "%s/nativepro_T1w_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="T1w nativepro", outPath=T1w_nativepro, figPath=figPath)
+        static_report += _static_block
 
-outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+        # Outputs
+        _static_block = (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs </b> </p>'
+        )
 
-outPath = "%s/nativepro_T1w_brain_5tt.nii.gz"%(tmpDir)
-figPath = "%s/nativepro_T1w_brain_5tt_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="T1w nativepro 5 tissue segmentation (5TT)", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+        T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
 
-outPath = "%s/%s_space-MNI152_0.8_T1w_brain.nii.gz"%(tmpDir,sbids)
-MNI152_0_8mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_0.8mm_brain_mask.nii.gz"
-figPath = "%s/nativepro_T1w_brain_mni152_08_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=MNI152_0_8mm, refPath=outPath, figPath=figPath)
+        figPath = "%s/nativepro_T1w_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="T1w nativepro", outPath=T1w_nativepro, figPath=figPath)
 
-outPath = "%s/%s_space-MNI152_2_T1w_brain.nii.gz"%(tmpDir,sbids)
-MNI152_2mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_2mm_brain_mask.nii.gz"
-figPath = "%s/nativepro_T1w_brain_mni152_2_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=MNI152_2mm, refPath=outPath, figPath=figPath)
+        outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-outPath =  "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
-figPath = "%s/nativepro_T1w_brain_pve_2_screenshot.png"%(tmpDir)
-_static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, figPath=figPath)
+        outPath = "%s/nativepro_T1w_brain_5tt.nii.gz"%(tmpDir)
+        figPath = "%s/nativepro_T1w_brain_5tt_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="T1w nativepro 5 tissue segmentation (5TT)", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-static_report += _static_block
+        outPath = "%s/%s_space-MNI152_0.8_T1w_brain.nii.gz"%(tmpDir,sbids)
+        MNI152_0_8mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_0.8mm_brain_mask.nii.gz"
+        figPath = "%s/nativepro_T1w_brain_mni152_08_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=MNI152_0_8mm, refPath=outPath, figPath=figPath)
+
+        outPath = "%s/%s_space-MNI152_2_T1w_brain.nii.gz"%(tmpDir,sbids)
+        MNI152_2mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_2mm_brain_mask.nii.gz"
+        figPath = "%s/nativepro_T1w_brain_mni152_2_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=MNI152_2mm, refPath=outPath, figPath=figPath)
+
+        outPath =  "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/nativepro_T1w_brain_pve_2_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, figPath=figPath)
+
+        return _static_block
 
 
 ## --------------------------- PROC-SURF MODULE ---------------------------- ##
-_static_block = '<div style="page-break-before: always">' + report_module_header_template(module='proc_surf') + '</div>'
+def qc_proc_surf(proc_surf_json=''):
 
-# QC summary
-proc_surf_json = "%s/%s/%s/QC/%s_module-proc_surf-*.json"%(out,sub,ses,sbids)
-_static_block += report_qc_summary_template(proc_surfer_json)
+    if check_json_exist_complete(proc_surf_json):
 
+        # QC header
+        _static_block = qc_header()
+
+        surf_json = os.path.realpath("%s/%s/%s/anat/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
+        with open( os.path.realpath(surf_json) ) as f:
+            surf_description = json.load(f)
+        recon = surf_description["SurfRecon"]
+        surfaceDir = surf_description["SurfaceDir"]
+        _static_block +=  report_module_header_template(module="proc_surf (%s)"%(surf_description["SurfRecon"]))
+
+        # QC summary
+        _static_block += report_qc_summary_template(proc_surf_json)
+
+        # Outputs
+        _static_block = (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>'
+                '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+                '<b> Native surfaces </b> </p>'
+        )
+
+        # Native thickness
+        th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/rh.thickness')), axis=0)
+        plot_hemispheres(surf_lh, surf_rh, array_name=th, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_thickness.png')
+        # Native curvature
+        cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/rh.curv')), axis=0)
+        plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_curv.png')
+        # Native sulcal depth
+        sd = np.concatenate((nb.freesurfer.read_morph_data(dir_fS + subBIDS + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(dir_fS + subBIDS + '/surf/rh.sulc')), axis=0)
+        plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_sulc.png')
+        # Destrieux atlas (aparc.a2009s)
+        parc = np.concatenate((nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/lh.aparc.a2009s.annot')[0], nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/rh.aparc.a2009s.annot')[0]), axis=0)
+        plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_a2009s.png')
+        # Desikan-Killiany Atlas (aparc)
+        parcDK = np.concatenate((nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/lh.aparc.annot')[0], nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/rh.aparc.annot')[0]), axis=0)
+        plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_aparc.png')
+
+        native_surface_table = (
+            '<table style="border:1px solid #666;width:100%">'
+                # Thickness
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Thickness</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{thPath}"></td></tr>'
+                # Curvature
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Curvature</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{cvPath}"></td></tr>'
+                # Sulcal depth
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Sulcal depth</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{sdPath}"></td></tr>'
+                # Destrieux Atlas (aparc.a2009s)
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Destrieuz Atlas (aparc.a2009s)</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{parcPath}"></td></tr>'
+                # Desikan-Killiany Atlas (aparc)
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Desikan-Killiany Atlas (aparc)</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{parcDKPath}"></td></tr>'
+            '</table>'
+        )
+
+        _static_block += native_surface_table.format(thPath=tmpDir+sbids+'_space-fsnative_desc-surf_thickness.png',
+            cvPath=tmpDir+sbids+'_space-fsnative_desc-surf_curv.png',
+            sdPath=tmpDir+sbids+'_space-fsnative_desc-surf_sulc.png',
+            parcPath=tmpDir+sbids+'_space-fsnative_desc-surf_a2009s.png'
+            parcDKPath=tmpDir+sbids+'_space-fsnative_desc-surf_aparc.png'
+        )
+
+        return _static_block
+
+## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
+
+# QC summary =
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):

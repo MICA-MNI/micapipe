@@ -200,11 +200,14 @@ for mm in 2 0.8; do
             "${transformation}"
 done
 
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
 # PROC_FREESURFER -------------------------------------------------------------------------------
-Do_cmd python "$MICAPIPE"/functions/qc_surf.py -subBIDS ${idBIDS} -subDir ${out}/${subject}/${SES}
 
+
+# -----------------------------------------------------------------------------------------------
+# Generate Q
+# -----------------------------------------------------------------------------------------------
+Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
