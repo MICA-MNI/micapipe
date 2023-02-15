@@ -217,7 +217,11 @@ else
     Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); N=$((N+4))
 fi
 
-# Running cortical morphology
+# Create json file for post_structural
+post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
+json_poststruct "${T1surf}" "${post_struct_json}"
+
+# Running cortical morphology - Requires json_poststruct
 Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 20 ]]; then ((N++))
     ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
@@ -226,10 +230,6 @@ if [[ "$Nmorph" -lt 20 ]]; then ((N++))
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
-
-# Create json file for post_structural
-post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-json_poststruct "${T1surf}" "${post_struct_json}"
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
