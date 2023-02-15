@@ -71,6 +71,8 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t            Default is the 18 parcellations provided in the pipeline
+\t   \033[38;5;120m-fastsurfer\033[0m          : Use this option to reconstruct the cortical surface with FastSurfer.
+\t\t\t            Default surface reconstruction uses 'Freesurfer 7'
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
@@ -112,7 +114,7 @@ echo -e "
 \t\t\t            ( distortion correction; eg. file.cnf )
 \t   \033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
 \t\t\t            ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
-\t   \033[38;5;120m-NSR\033[0m      : Specify this option to perform white matter and CSF signal regression of timeseries
+\t   \033[38;5;120m-NSR\033[0m                 : Specify this option to perform white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no white matter and CSF signal regression )
 \t   \033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no global, white matter and CSF signal regression )
@@ -126,9 +128,9 @@ echo -e "
 \t\t\t            ( default processing is independent )
 \t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
 \t\t\t            ( default is non linear registration SyN )
-\t   \033[38;5;120m-dropTR\033[0m           : Specify this option to drop the first five TRs.
+\t   \033[38;5;120m-dropTR\033[0m              : Specify this option to drop the first five TRs.
 \t\t\t            ( default is FALSE  )
-\t\t\033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
+\t   \033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
 \t\t\t            ( default is FALSE  )
 
 \t\033[38;5;197m-SC\033[0m
@@ -137,6 +139,8 @@ echo -e "
 \t   \033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
 \t   \033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
 \t   \033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
+\t   \033[38;5;120m-weighted_SC\033[0m         : Weight the SC by a quantitative map in DWI space (e.g. FA, ADC, qT1 or MT). None by default.
+
 
 \t\033[38;5;197m-MPC\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
@@ -219,10 +223,6 @@ do
   -bids)
     BIDS=$2
     shift;shift
-  ;;
-  -post)
-    post=TRUE
-    shift
   ;;
   -ses)
     SES=$2
@@ -387,6 +387,10 @@ do
   -autoTract)
     autoTract=TRUE
     shift
+  ;;
+  -weighted_SC)
+    weighted_SC=$2
+    shift;shift
   ;;
   -tmpDir)
     tmpDir=$2
@@ -562,6 +566,7 @@ if [[ $mpc_acq == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
+if [ -z ${weighted_SC} ]; then weighted_SC=FALSE; else keep_tck=${weighted_SC}; fi
 
 # Optional arguments proc_dwi
 # User provided DWI main phase
@@ -755,7 +760,8 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #  Diffusion processing
 if [ "$procDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')
+    if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
+    log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
     COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
@@ -843,33 +849,32 @@ fi
 #     Generates microstructural profiles and covariance matrices
 #     REQUIRES -proc_structural and -proc_surf
 if [ "$postMPC" = "TRUE" ]; then
-    log_file_str=$dir_logs/MPC_$(date +'%Y-%m-%d_%H.%M.%S')
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
     COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
+    jobName="q${rand}_mpc"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Microstructural profile covariance"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     # all.q - Microstructural profile covariance
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - Microstructural profile covariance"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_mpc -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     else
-        # LOCAL - POST-Structural processing
+        # LOCAL - Microstructural-Structural processing
         $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
-    fi
-    # tag the log file with the specific acquisition
-    if [ -f ${log_file_str}.txt ]; then
-        acqMRI=$(grep acqMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
-        mv ${log_file_str}.txt ${log_file_str}_${acqMRI}.txt && if [[ -f ${log_file_str}*_.txt ]]; then rm ${log_file_str}*_.txt; fi
-        if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${acqMRI}.e; fi
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     fi
 fi
 
@@ -908,8 +913,9 @@ fi
 # -----------------------------------------------------------------------------------------------#
 #   REQUIRES -proc_dwi
 if [ "$postDWI" = "TRUE" ]; then
-    log_file_str=$dir_logs/SC_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str"
+    if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
+    log_file_str=$dir_logs/SC_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
+    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str $weighted_SC"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST DWI processing (tractography)"
@@ -936,33 +942,32 @@ fi
 # # #        functional MRI
 # -----------------------------------------------------------------------------------------------#
 if [ "$procFunc" = "TRUE" ]; then
-    log_file_str=$dir_logs/proc_func_$(date +'%Y-%m-%d_%H.%M.%S')
+    rand=${RANDOM}
+    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')"-${rand}"
     COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${noFC} ${GSRtag}"
+    jobName="q${rand}_fun"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - fMRI processing"
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        Do_cmd qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_func -e ${log_file_str}.e -o ${log_file_str}.txt \
+        Do_cmd qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     # all.q - Resting state fMRI processing
     elif [[ $qall == "TRUE" ]]; then
         Info "all.q qsub - fMRI processing"
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        Do_cmd qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_func -e ${log_file_str}.e -o ${log_file_str}.txt \
+        Do_cmd qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     else
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-    fi
-    # tag the log file with the specific acquisition
-    if [ -f ${log_file_str}.txt ]; then
-        tagMRI=$(grep tagMRI ${log_file_str}.txt | awk -F ':' 'NR==1 {print $2}'| tr -d '[:space:]' | sed -r "s/\x1B\[(([0-9]+)(;[0-9]+)*)?[m,K,H,f,J]//g")
-        mv ${log_file_str}.txt ${log_file_str}_${tagMRI}.txt && if [[ -f ${log_file_str}*_.txt ]]; then rm ${log_file_str}*_.txt; fi
-        if [ -f ${log_file_str}.e ]; then mv ${log_file_str}.e ${log_file_str}_${tagMRI}.e; fi
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
     fi
 fi
 
