@@ -199,10 +199,6 @@ do
     BIDS=$2
     shift;shift
   ;;
-  -post)
-    post=TRUE
-    shift
-  ;;
   -ses)
     SES=$2
     shift;shift
