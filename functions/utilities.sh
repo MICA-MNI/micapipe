@@ -59,7 +59,6 @@ export idBIDS="${subject}${ses}"
   export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
-  export dir_QC_png=$subject_dir/QC/png                  # directory with QC files
 
   # post structural Files (the resolution might vary depending on the dataset)
   if [ -f "${proc_struct}"/"${idBIDS}"_space-nativepro_T1w.nii.gz ]; then
@@ -67,7 +66,7 @@ export idBIDS="${subject}${ses}"
       export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_T1w.nii.gz
       export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz
       export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz
-      export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_T1w_5TT.nii.gz
+      export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz
       export T1fast_seg=$proc_struct/volumetric/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz
   fi
 
@@ -424,6 +423,7 @@ function tck_json() {
       \"SeedingNumberMethod\": \"${tracts}\",
       \"TerminationCriterion\": [\"reachingTissueType”],
       \"TerminationCriterionTest\": [\"ACT\"],
+      \"weighted_SC\": \"${weighted_SC}\",
       \"TractographySaved\": \"${nocleanup}\"
     }
   }" > "${tckjson}"
