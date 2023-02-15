@@ -26,8 +26,9 @@ tracts=$8
 autoTract=$9
 keep_tck=${10}
 dwi_str=${11}
+weighted_SC=${12}
+PROC=${13}
 filter=SIFT2
-PROC=${12}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -74,15 +75,18 @@ T1_seg_subcortex="${dir_volum}/${T1str_nat}-subcortical.nii.gz"
 tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif"
 
 # Check inputs
-if [ ! -f "$fod_wmN"  ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$dwi_b0" ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$mat_dwi_affine" ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$dwi_5tt" ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit; fi
-if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit; fi
-if [ ! -f "$dwi_mask" ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit; fi
-if [ ! -f "$dti_FA" ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit; fi
+if [ ! -f "$fod_wmN"  ]; then Error "Subject $id doesn't have FOD:\n\t\tRUN -proc_dwi"; exit 1; fi
+if [ ! -f "$dwi_b0" ]; then Error "Subject $id doesn't have dwi_b0:\n\t\tRUN -proc_dwi"; exit 1; fi
+if [ ! -f "$mat_dwi_affine" ]; then Error "Subject $id doesn't have an affine mat from T1nativepro to DWI space:\n\t\tRUN -proc_dwi"; exit 1; fi
+if [ ! -f "$dwi_5tt" ]; then Error "Subject $id doesn't have 5tt in dwi space:\n\t\tRUN -proc_dwi"; exit 1; fi
+if [ ! -f "$T1_seg_cerebellum" ]; then Error "Subject $id doesn't have cerebellar segmentation:\n\t\tRUN -post_structural"; exit 1; fi
+if [ ! -f "$T1_seg_subcortex" ]; then Error "Subject $id doesn't have subcortical segmentation:\n\t\tRUN -post_structural"; exit 1; fi
+if [ ! -f "$dwi_mask" ]; then Error "Subject $id doesn't have DWI binary mask:\n\t\tRUN -proc_dwi"; exit 1; fi
+if [ ! -f "$dti_FA" ]; then Error "Subject $id doesn't have a FA:\n\t\tRUN -proc_dwi"; exit 1; fi
 if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE"; fi
+if [ ${weighted_SC} != "FALSE" ]; then
+  if [ ! -f "$weighted_SC" ]; then Error "The provided weighted map does NOT exist: ${weighted_SC}"; exit 1; fi
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Check IF output exits and WARNING
@@ -100,6 +104,7 @@ Note "Saving tractography  :" "${keep_tck}"
 Note "Saving temporal dir  :" "${nocleanup}"
 Note "MRtrix will use      :" "${threads} threads"
 Note "DWi acquisition      :" "${dwi_str}"
+Note "Weighted SC          :" "${weighted_SC}"
 
 #	Timer
 aloita=$(date +%s)
@@ -115,34 +120,6 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 # Create Connectomes directory for the outpust
 [[ ! -d "$dwi_cnntm" ]] && Do_cmd mkdir -p "$dwi_cnntm" && chmod -R 770 "$dwi_cnntm"
 Do_cmd cd "$tmp"
-
-# -----------------------------------------------------------------------------------------------
-# Prepare the segmentatons
-parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
-dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
-dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
-
-# Transformations from T1nativepro to DWI
-if [[ ${regAffine}  == "FALSE" ]]; then
-    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
-elif [[ ${regAffine}  == "TRUE" ]]; then
-    trans_T12dwi="-t [${mat_dwi_affine},1]"
-fi
-
-if [[ ! -f "$dwi_cere" ]]; then Info "Registering Cerebellar parcellation to DWI-b0 space"
-      Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
-      if [[ -f "$dwi_cere" ]]; then ((Nsteps++)); fi
-      # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
-      # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
-      Do_cmd fslmaths "$dwi_cere" -bin -mul 100 -add "$dwi_cere" "$dwi_cere"
-else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); fi
-
-if [[ ! -f "$dwi_subc" ]]; then Info "Registering Subcortical parcellation to DWI-b0 space"
-    Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
-    # Remove brain-stem (label 16)
-    Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
-    if [[ -f "$dwi_subc" ]]; then ((Nsteps++)); fi
-else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); fi
 
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
@@ -183,9 +160,34 @@ else
     Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nsteps++))
 fi
 
+# Map the weighted image to the whole brain tractography
+if [ ${weighted_SC} != "FALSE" ]; then Do_cmd tcksample "${tck}" ${weighted_SC} ${tmp}/mean_map_per_streamline.txt -stat_tck mean -nthreads "$threads"; fi
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
+function build_connectomes(){
+	nodes=$1
+	sc_file=$2
+	# Build the weighted connectomes
+    Do_cmd tck2connectome -nthreads "$threads" \
+    	"${tck}" "${nodes}" "${sc_file}-connectome.txt" \
+        -tck_weights_in "$weights" -quiet
+    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+
+    # Calculate the edge lenghts
+    Do_cmd tck2connectome -nthreads "$threads" \
+        "${tck}" "${nodes}" "${sc_file}-connectome.txt" \
+        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
+    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+
+    # Weighted connectome with a NIFTI map
+	if [ ${weighted_SC} != "FALSE" ]; then
+		Do_cmd tck2connectome -nthreads "$threads" \
+			"${tck}" "${nodes}" "${sc_file}-weighted_connectome.txt" \
+			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet
+	fi
+}
+
 for seg in "${parcellations[@]}"; do
     parc_name=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     connectome_str="${dwi_cnntm}/${idBIDS}_space-dwi_atlas-${parc_name}_desc-iFOD2-${tracts}-${filter}"
@@ -200,18 +202,8 @@ for seg in "${parcellations[@]}"; do
         Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cortex" -v -u int
         # Remove the medial wall
         for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
-
         # Build the Cortical connectomes
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_cortex" "${connectome_str}_cor-connectome.txt" \
-            -tck_weights_in "$weights" -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-
-        # Calculate the edge lenghts
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_cortex" "${connectome_str}_cor-edgeLengths.txt" \
-            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_cor-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        build_connectomes "$dwi_cortex" "${connectome_str}_cor"
         if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nsteps++)); fi
     else
         ((Nsteps++))
@@ -223,18 +215,8 @@ for seg in "${parcellations[@]}"; do
         Info "Building $parc_name cortical-subcortical connectome"
         dwi_cortexSub="${tmp}/${id}_${parc_name}-sub_dwi.nii.gz"
         Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_subc" -add "$dwi_cortex" "$dwi_cortexSub" -odt int # added the subcortical parcellation
-
         # Build the Cortical-Subcortical connectomes
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_cortexSub" "${connectome_str}_sub-connectome.txt" \
-            -tck_weights_in "$weights" -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-
-        # Calculate the edge lenghts
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_cortexSub" "${connectome_str}_sub-edgeLengths.txt" \
-            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_sub-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        build_connectomes "$dwi_cortexSub" "${connectome_str}_sub"
         if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nsteps++)); fi
     else
         ((Nsteps++))
@@ -246,18 +228,8 @@ for seg in "${parcellations[@]}"; do
         Info "Building $parc_name cortical-subcortical-cerebellum connectome"
         dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
         Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
-
         # Build the Cortical-Subcortical-Cerebellum connectomes
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_all" "${connectome_str}_full-connectome.txt" \
-            -tck_weights_in "$weights" -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
-
-        # Calculate the edge lenghts
-        Do_cmd tck2connectome -nthreads "$threads" \
-            "$tck" "$dwi_all" "${connectome_str}_full-edgeLengths.txt" \
-            -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-        Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${connectome_str}_full-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+        build_connectomes "$dwi_all" "${connectome_str}_full"
         if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nsteps++)); fi
     else
         ((Nsteps++))
@@ -290,13 +262,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-N="$(( 3 + ${#parcellations[*]} * 3))"
-if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "DWI-post TRACTOGRAPHY processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
-\tStatus          : ${status}
-\tCheck logs      : $(ls "$dir_logs"/SC_*.txt)"
-# Print QC stamp
+micapipe_completition_status "SC-${tracts}${dwi_str_}"
 micapipe_procStatus "${id}" "${SES/ses-/}" "SC-${tracts}${dwi_str_}" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "SC-${tracts}${dwi_str_}" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "SC-${tracts}${dwi_str_}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
