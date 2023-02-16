@@ -45,7 +45,7 @@ jobs:
           # Note: tags has to be all lower-case
           tags: |
             micalab/micapipe:latest 
-            ghcr.io/MICA-MNI/micapipe:latest
+            ghcr.io/mica-mni/micapipe:latest
           # build on feature branches, push only on master branch
           push: ${{ github.ref == 'refs/heads/master' }}
 
