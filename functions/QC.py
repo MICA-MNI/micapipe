@@ -346,8 +346,6 @@ derivatives = out.split('/micapipe_v0.2.0')[0]
 ##                              Build QC report                              ##
 ##                                                                           ##
 ## ------------------------------------------------------------------------- ##
-static_report = ''
-
 
 ## ---------------------------- MICAPIPE header ---------------------------- ##
 def qc_header()
@@ -500,8 +498,142 @@ def qc_proc_surf(proc_surf_json=''):
         return _static_block
 
 ## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
+def qc_post_structural(post_structural_json=''):
 
-# QC summary =
+    if check_json_exist_complete(proc_structural_json):
+
+        # QC header
+        _static_block = qc_header()
+        _static_block +=  report_module_header_template(module='post_structural')
+
+        # QC summary
+        _static_block += report_qc_summary_template(post_surf_json)
+
+        # Main outputs
+        _static_block = (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs </b> </p>'
+        )
+
+        json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
+        with open( os.path.realpath(json) ) as f:
+            post_struct_description = json.load(f)
+        recon = post_struct_description["SurfaceProc"]
+
+                outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
+                figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
+                _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
+
+        # Regitration/atlases
+        outPath = post_struct_description["NativeSurfSpace"]["fileName"]
+        refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/nativepro_T1w_fsnative_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="Registration: T1w nativepro in %s native space"%(recon), outPath=outPath, refPath=refPath, figPath=figPath)
+
+        outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_T1w_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
+        refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/nativepro_T1w_cerebellum_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="T1w nativepro cerebellum atlas", outPath=outPath, refPath=refPath, figPath=figPath)
+
+        outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_T1w_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
+        refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/nativepro_T1w_subcortical_screenshot.png"%(tmpDir)
+        _static_block += nifti_check(outName="T1w nativepro subcortical atlas", outPath=outPath, refPath=refPath, figPath=figPath)
+
+        # Parcellations
+        _static_block = (
+            '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+            '<b> Parcellations </b> </p>'
+        )
+
+        parcellation_table = (
+            '<table style="border:1px solid #666;width:100%">'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Surface labels</td></tr>'
+        )
+
+        label_dir = "%s/%s/%s/label"%(derivatives,recon,sbids)
+        atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
+        atlas = [f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas]
+        for annot in atlas:
+            fig = sbids + "_atlas-" + annot + "_desc-surf.png"
+            fileL= "%s/lh.%s.annot"%(label_dir,annot)
+            fileR= "%s/rh.%s.annot"%(label_dir,annot)
+            figPath = tmpDir + fig
+            label = np.concatenate((nb.freesurfer.read_annot(fileL)[0], nb.freesurfer.read_annot(fileR)[0]), axis=0)
+            if os.path.exists(fileL) and os.path.exists(fileR):
+                plot_hemispheres(surf_lh, surf_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                 nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(label)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
+                                 screenshot = True, filename = figPath)
+
+            parcellation_table += (
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>{annot}</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{figPath}"></td></tr>'
+            ).format(annot=annot,figPath=figPath)
+
+        parcellation_table += "</table>"
+
+        _static_block += parcellation_table
+
+        # Conte69 surfaces
+        _static_block = (
+            '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+            '<b> Conte69 surfaces </b> </p>'
+        )
+
+        conte69_dir = "%s/%s/%s/anat/surf/conte69/"%(out,sub,ses)
+        c69_lhS, c69_rhS = load_surface(conte69_dir+sbids+'_lh_space-fsnative_desc-sphere.surf.gii',
+                                      conte69_dir+sbids+'_rh_space-fsnative_desc-sphere.surf.gii', with_normals=True, join=False)
+        c69_lhM, c69_rhM = load_surface(conte69_dir+sbids+'_space-conte69-32k_desc-lh_midthickness.surf.gii',
+                                      conte69_dir+sbids+'_space-conte69-32k_desc-rh_midthickness.surf.gii', with_normals=True, join=False)
+        c69_lhP, c69_rhP = load_surface(conte69_dir+sbids+'_space-conte69-32k_desc-lh_pial.surf.gii',
+                                      conte69_dir+sbids+'_space-conte69-32k_desc-rh_pial.surf.gii', with_normals=True, join=False)
+        c69_lhW, c69_rhW = load_surface(conte69_dir+sbids+'_space-conte69-32k_desc-lh_white.surf.gii',
+                                      conte69_dir+sbids+'_space-conte69-32k_desc-rh_white.surf.gii', with_normals=True, join=False)
+        Val = np.repeat(0, c69_lhM.n_points + c69_rhM.n_points, axis=0)
+        grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
+
+        # Sphere native
+        plot_hemispheres(c69_lhS, c69_rhS, array_name=th, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="gray", transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_sphere.png')
+        # conte69 midthickness
+        plot_hemispheres(c69_lhM, c69_rhM, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-conte69_desc-surf_mid.png')
+        # conte69 pial
+        plot_hemispheres(c69_lhP, c69_rhP, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
+                         screenshot = True, filename = tmpDir + sbids + '_space-conte69_desc-surf_pial.png')
+        # conte69 white
+        plot_hemispheres(c69_lhW, c69_rhW, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
+                         screenshot = True, filename = dtmpDir + sbids + '_space-conte69_desc-surf_white.png')
+
+        conte69_surface_table = (
+            '<table style="border:1px solid #666;width:100%">'
+                 # Pial
+                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Pial surface</td>'
+                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{pPath}"></td></tr>'
+                 # Middle
+                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Middle surface</td>'
+                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{mPath}"></td></tr>'
+                 # White
+                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>White surface</td>'
+                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{wPath}"></td></tr>'
+                 # Sphere
+                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Native sphere)</td>'
+                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{sPath}"></td></tr>'
+            '</table>'
+        )
+
+        _static_block += conte69_surface_table.format(pPath=tmpDir+sbids+'_space-conte69_desc-surf_pial.png',
+            mPath=tmpDir+sbids+'_space-conte69_desc-surf_mid.png',
+            wPath=tmpDir+sbids+'_space-conte69_desc-surf_white.png',
+            sPath=tmpDir+sbids+'_space-fsnative_desc-surf_sphere.png'
+        )
+
+        return _static_block
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
