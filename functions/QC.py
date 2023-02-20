@@ -269,7 +269,7 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
     if os.path.exists(outPath):
         if os.path.exists(refPath):
             ROI = '-roi' if roi else ''
-            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, roi, figPath))
+            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, ROI, figPath))
         else:
             os.system("${MICAPIPE}/functions/nifti_capture.py -img %s -out %s"%(outPath, figPath))
 
@@ -341,6 +341,9 @@ def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
 
+ColCurv= plt.colors.ListedColormap(['#A2CD5A', '#A0CA5B', '#9FC85C', '#9EC55D', '#9DC35E', '#9CC05F', '#9BBE61', '#9ABB62', '#99B963', '#98B664', '#96B465', '#95B166', '#94AF68', '#93AC69', '#92AA6A', '#91A76B', '#90A56C', '#8FA26D', '#8EA06F', '#8C9D70', '#8B9B71', '#8A9972', '#899673', '#889475', '#879176', '#868F77', '#858C78', '#848A79', '#82877A', '#81857C', '#80827D', '#7F807E', '#807D7D', '#827A7A', '#857777', '#877575', '#8A7272', '#8C6F6F', '#8F6C6C', '#916969', '#946666', '#966464', '#996161', '#9B5E5E', '#9D5B5B', '#A05858', '#A25656', '#A55353', '#A75050', '#AA4D4D', '#AC4A4A', '#AF4747', '#B14545', '#B44242', '#B63F3F', '#B93C3C', '#BB3939', '#BE3636', '#C03434', '#C33131', '#C52E2E', '#C82B2B', '#CA2828', '#CD2626'])
+
+
 ## ------------------------------------------------------------------------- ##
 ##                                                                           ##
 ##                              Build QC report                              ##
@@ -348,7 +351,7 @@ derivatives = out.split('/micapipe_v0.2.0')[0]
 ## ------------------------------------------------------------------------- ##
 
 ## ---------------------------- MICAPIPE header ---------------------------- ##
-def qc_header()
+def qc_header():
     dataset_description = os.path.realpath("%s/dataset_description.json"%(bids))
     with open( dataset_description ) as f:
         dataset_description = json.load(f)
@@ -378,10 +381,8 @@ def qc_proc_structural(proc_structural_json=''):
         inputs = nativepro_json["inputsRawdata"]
         _static_block += report_module_input_template(inputs=inputs)
 
-        static_report += _static_block
-
         # Outputs
-        _static_block = (
+        _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
                 '<b>Main outputs </b> </p>'
         )
@@ -425,9 +426,10 @@ def qc_proc_surf(proc_surf_json=''):
         _static_block = qc_header()
 
         surf_json = os.path.realpath("%s/%s/%s/anat/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
-        with open( os.path.realpath(surf_json) ) as f:
+        with open( surf_json ) as f:
             surf_description = json.load(f)
         recon = surf_description["SurfRecon"]
+        global surfaceDir
         surfaceDir = surf_description["SurfaceDir"]
         _static_block +=  report_module_header_template(module="proc_surf (%s)"%(surf_description["SurfRecon"]))
 
@@ -435,64 +437,73 @@ def qc_proc_surf(proc_surf_json=''):
         _static_block += report_qc_summary_template(proc_surf_json)
 
         # Outputs
-        _static_block = (
+        _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
                 '<b>Main outputs</b> </p>'
                 '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
                 '<b> Native surfaces </b> </p>'
         )
 
+        # Load native surface
+        global surf_lh, surf_rh, wm_lh, wm_rh, inf_lh, inf_rh
+        surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
+        surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
+        wm_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.white', itype='fs')
+        wm_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.white', itype='fs')
+        inf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.inflated', itype='fs')
+        inf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.inflated', itype='fs')
+
         # Native thickness
-        th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/rh.thickness')), axis=0)
+        th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
         plot_hemispheres(surf_lh, surf_rh, array_name=th, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_thickness.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
         # Native curvature
-        cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + sbids + '/surf/rh.curv')), axis=0)
+        cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
         plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_curv.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
         # Native sulcal depth
-        sd = np.concatenate((nb.freesurfer.read_morph_data(dir_fS + subBIDS + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(dir_fS + subBIDS + '/surf/rh.sulc')), axis=0)
+        sd = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.sulc')), axis=0)
         plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_sulc.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
         # Destrieux atlas (aparc.a2009s)
-        parc = np.concatenate((nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/lh.aparc.a2009s.annot')[0], nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/rh.aparc.a2009s.annot')[0]), axis=0)
+        parc = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc-a2009s_mics.annot')[0]), axis=0)
         plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_a2009s.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_a2009s.png')
         # Desikan-Killiany Atlas (aparc)
-        parcDK = np.concatenate((nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/lh.aparc.annot')[0], nb.freesurfer.read_annot(dir_fS + subBIDS + '/label/rh.aparc.annot')[0]), axis=0)
+        parcDK = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc_mics.annot')[0]), axis=0)
         plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_aparc.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_aparc.png')
 
         native_surface_table = (
             '<table style="border:1px solid #666;width:100%">'
                 # Thickness
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Thickness</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{thPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>Thickness</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{thPath}"></td></tr>'
                 # Curvature
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Curvature</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{cvPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>Curvature</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500x%;margin-top:0px" src="{cvPath}"></td></tr>'
                 # Sulcal depth
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Sulcal depth</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{sdPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>Sulcal depth</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{sdPath}"></td></tr>'
                 # Destrieux Atlas (aparc.a2009s)
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Destrieuz Atlas (aparc.a2009s)</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{parcPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>Destrieuz Atlas (aparc.a2009s)</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcPath}"></td></tr>'
                 # Desikan-Killiany Atlas (aparc)
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Desikan-Killiany Atlas (aparc)</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{parcDKPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>Desikan-Killiany Atlas (aparc)</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcDKPath}"></td></tr>'
             '</table>'
         )
 
-        _static_block += native_surface_table.format(thPath=tmpDir+sbids+'_space-fsnative_desc-surf_thickness.png',
-            cvPath=tmpDir+sbids+'_space-fsnative_desc-surf_curv.png',
-            sdPath=tmpDir+sbids+'_space-fsnative_desc-surf_sulc.png',
-            parcPath=tmpDir+sbids+'_space-fsnative_desc-surf_a2009s.png'
-            parcDKPath=tmpDir+sbids+'_space-fsnative_desc-surf_aparc.png'
+        _static_block += native_surface_table.format(thPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_thickness.png',
+            cvPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_curv.png',
+            sdPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_sulc.png',
+            parcPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_a2009s.png',
+            parcDKPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_aparc.png'
         )
 
         return _static_block
@@ -500,29 +511,25 @@ def qc_proc_surf(proc_surf_json=''):
 ## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
 def qc_post_structural(post_structural_json=''):
 
-    if check_json_exist_complete(proc_structural_json):
+    if check_json_exist_complete(post_structural_json):
 
         # QC header
         _static_block = qc_header()
         _static_block +=  report_module_header_template(module='post_structural')
 
         # QC summary
-        _static_block += report_qc_summary_template(post_surf_json)
+        _static_block += report_qc_summary_template(post_structural_json)
 
         # Main outputs
-        _static_block = (
+        _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
                 '<b>Main outputs </b> </p>'
         )
 
-        json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
-        with open( os.path.realpath(json) ) as f:
+        post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
+        with open( post_struct_json ) as f:
             post_struct_description = json.load(f)
         recon = post_struct_description["SurfaceProc"]
-
-                outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
-                figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
-                _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
         # Regitration/atlases
         outPath = post_struct_description["NativeSurfSpace"]["fileName"]
@@ -533,15 +540,15 @@ def qc_post_structural(post_structural_json=''):
         outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_T1w_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
         refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
         figPath = "%s/nativepro_T1w_cerebellum_screenshot.png"%(tmpDir)
-        _static_block += nifti_check(outName="T1w nativepro cerebellum atlas", outPath=outPath, refPath=refPath, figPath=figPath)
+        _static_block += nifti_check(outName="T1w nativepro cerebellum atlas", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
         outPath = "%s/%s/%s/anat/volumetric/%s_space-nativepro_T1w_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
         refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
         figPath = "%s/nativepro_T1w_subcortical_screenshot.png"%(tmpDir)
-        _static_block += nifti_check(outName="T1w nativepro subcortical atlas", outPath=outPath, refPath=refPath, figPath=figPath)
+        _static_block += nifti_check(outName="T1w nativepro subcortical atlas", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
         # Parcellations
-        _static_block = (
+        _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Parcellations </b> </p>'
         )
@@ -552,14 +559,14 @@ def qc_post_structural(post_structural_json=''):
                 '<td style=padding-top:4px;padding-left:3px;text-align:center>Surface labels</td></tr>'
         )
 
-        label_dir = "%s/%s/%s/label"%(derivatives,recon,sbids)
+        label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
         atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
         atlas = [f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas]
         for annot in atlas:
             fig = sbids + "_atlas-" + annot + "_desc-surf.png"
             fileL= "%s/lh.%s.annot"%(label_dir,annot)
             fileR= "%s/rh.%s.annot"%(label_dir,annot)
-            figPath = tmpDir + fig
+            figPath = tmpDir + '/' + fig
             label = np.concatenate((nb.freesurfer.read_annot(fileL)[0], nb.freesurfer.read_annot(fileR)[0]), axis=0)
             if os.path.exists(fileL) and os.path.exists(fileR):
                 plot_hemispheres(surf_lh, surf_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -567,8 +574,8 @@ def qc_post_structural(post_structural_json=''):
                                  screenshot = True, filename = figPath)
 
             parcellation_table += (
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>{annot}</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{figPath}"></td></tr>'
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{figPath}"></td></tr>'
             ).format(annot=annot,figPath=figPath)
 
         parcellation_table += "</table>"
@@ -576,7 +583,7 @@ def qc_post_structural(post_structural_json=''):
         _static_block += parcellation_table
 
         # Conte69 surfaces
-        _static_block = (
+        _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Conte69 surfaces </b> </p>'
         )
@@ -594,46 +601,49 @@ def qc_post_structural(post_structural_json=''):
         grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
 
         # Sphere native
+        th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
         plot_hemispheres(c69_lhS, c69_rhS, array_name=th, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="gray", transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-fsnative_desc-surf_sphere.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sphere.png')
         # conte69 midthickness
         plot_hemispheres(c69_lhM, c69_rhM, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-conte69_desc-surf_mid.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-conte69_desc-surf_mid.png')
         # conte69 pial
         plot_hemispheres(c69_lhP, c69_rhP, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = tmpDir + sbids + '_space-conte69_desc-surf_pial.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-conte69_desc-surf_pial.png')
         # conte69 white
         plot_hemispheres(c69_lhW, c69_rhW, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = dtmpDir + sbids + '_space-conte69_desc-surf_white.png')
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-conte69_desc-surf_white.png')
 
         conte69_surface_table = (
             '<table style="border:1px solid #666;width:100%">'
                  # Pial
-                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Pial surface</td>'
-                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{pPath}"></td></tr>'
+                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>Pial surface</td>'
+                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{pPath}"></td></tr>'
                  # Middle
-                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Middle surface</td>'
-                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{mPath}"></td></tr>'
+                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>Middle surface</td>'
+                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{mPath}"></td></tr>'
                  # White
-                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>White surface</td>'
-                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{wPath}"></td></tr>'
+                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>White surface</td>'
+                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{wPath}"></td></tr>'
                  # Sphere
-                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Native sphere)</td>'
-                 '<td style=padding-top:4px;padding-left:3px;text-align:center><img src="{sPath}"></td></tr>'
+                 '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Native sphere</td>'
+                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{sPath}"></td></tr>'
             '</table>'
         )
 
-        _static_block += conte69_surface_table.format(pPath=tmpDir+sbids+'_space-conte69_desc-surf_pial.png',
-            mPath=tmpDir+sbids+'_space-conte69_desc-surf_mid.png',
-            wPath=tmpDir+sbids+'_space-conte69_desc-surf_white.png',
-            sPath=tmpDir+sbids+'_space-fsnative_desc-surf_sphere.png'
+        _static_block += conte69_surface_table.format(pPath=tmpDir+'/'+sbids+'_space-conte69_desc-surf_pial.png',
+            mPath=tmpDir+'/'+sbids+'_space-conte69_desc-surf_mid.png',
+            wPath=tmpDir+'/'+sbids+'_space-conte69_desc-surf_white.png',
+            sPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_sphere.png'
         )
 
         return _static_block
+
+
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
@@ -652,4 +662,15 @@ def convert_html_to_pdf(source_html, output_filename):
     return pisa_status.err
 
 # Generate PDF report of Micapipe QC
-convert_html_to_pdf(static_report, out+"/"+sub+'/'+ses+'/QC/'+sbids+'_test.pdf')
+qc_module_function = {
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural]
+    'modules':   ['proc_surf', 'post_structural'],
+    'functions': [qc_proc_surf, qc_post_structural]
+}
+
+for i, m in enumerate(qc_module_function['modules']):
+    module_qc_json = glob.glob("%s/%s/%s/QC/%s_module-%s*.json"%(out,sub,ses,sbids,m))
+    for j in module_qc_json:
+        static_report = qc_module_function['functions'][i](j)
+        convert_html_to_pdf(static_report, j.replace('.json','_qc-report.pdf'))
