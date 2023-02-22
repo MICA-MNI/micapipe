@@ -180,6 +180,7 @@ cd $tmpDir
 
 # PROC_STRUC ------------------------------------------------------------------------------------
 
+if false; then
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
@@ -199,11 +200,12 @@ for mm in 2 0.8; do
             -r "${MNI152_brain}" \
             "${transformation}"
 done
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF
 # -----------------------------------------------------------------------------------------------
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
+Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} 2> /dev/null
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition

@@ -641,8 +641,73 @@ def qc_post_structural(post_structural_json=''):
             sPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_sphere.png'
         )
 
-        return _static_block
+        # Morphological outputs:
+        _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+            '<b> Morphological features </b> </p>'
+        )
 
+        fs5I_lh = read_surface(surfaceDir+'/fsaverage5/surf/lh.inflated', itype='fs')
+        fs5I_rh = read_surface(surfaceDir+'/fsaverage5/surf/rh.inflated', itype='fs')
+
+        global c69I_lh, c69_rh
+        c69I_lh = read_surface(surfaceDir+'/conte69/surf/lh.conte69.inflated.gii', itype='gii')
+        c69I_rh = read_surface(surfaceDir+'/conte69/surf/rh.conte69.inflated.gii', itype='gii')
+
+        for feature in ['curvature', 'thickness']:
+
+            feature_title = 'Curvature' if feature=='curvature' else 'Thickness'
+            feature_cmap = ColCurv if feature=='curvature' else 'inferno'
+            feature_crange = (-0.2, 0.2) if feature=='curvature' else (1.5,4)
+
+            feature_fsn_lh = "%s/%s/%s/anat/surf/morphology/%s_space-fsnative_desc-lh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_fsn_rh = "%s/%s/%s/anat/surf/morphology/%s_space-fsnative_desc-rh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_fsn_png = "%s/%s_space-fsnative_desc-surf_%s_morph.png"%(tmpDir,sbids,feature)
+            f = np.hstack(np.concatenate((np.array(load(feature_fsn_lh).get_fdata()), np.array(load(feature_fsn_rh).get_fdata())), axis=0))
+            plot_hemispheres(inf_lh, inf_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
+                             screenshot = True, filename = feature_fsn_png)
+
+            feature_fs5_lh = "%s/%s/%s/anat/surf/morphology/%s_space-fsaverage5_desc-lh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_fs5_rh = "%s/%s/%s/anat/surf/morphology/%s_space-fsaverage5_desc-rh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_fs5_png = "%s/%s_space-fsaverage5_desc-surf_%s_morph.png"%(tmpDir,sbids,feature)
+            f = np.hstack(np.concatenate((np.array(load(feature_fs5_lh).get_fdata()), np.array(load(feature_fs5_rh).get_fdata())), axis=0))
+            plot_hemispheres(fs5I_lh, fs5I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
+                             screenshot = True, filename = feature_fs5_png)
+
+            feature_c69_lh = "%s/%s/%s/anat/surf/morphology/%s_space-conte69-32k_desc-lh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_c69_rh = "%s/%s/%s/anat/surf/morphology/%s_space-conte69-32k_desc-rh_%s.mgh"%(out,sub,ses,sbids,feature)
+            feature_c69_png = "%s/%s_space-conte69-32k_desc-surf_%s_morph.png"%(tmpDir,sbids,feature)
+            f = np.hstack(np.concatenate((np.array(load(feature_c69_lh).get_fdata()), np.array(load(feature_c69_rh).get_fdata())), axis=0))
+            plot_hemispheres(c69I_lh, c69I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
+                             screenshot = True, filename = feature_c69_png)
+
+
+            morph_table = '<br />' if feature == 'thickness' else ''
+            morph_table += (
+                '<table style="border:1px solid #666;width:100%">'
+                     '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2">{feature_title}</td></tr>'
+                     # Fsnative
+                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>Fsnative</td>'
+                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{feature_fsn_png}"></td></tr>'
+                     # Fsaverage5
+                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>Fsaverage5</td>'
+                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{feature_fs5_png}"></td></tr>'
+                     # Conte69
+                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>Conte69</td>'
+                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{feature_c69_png}"></td></tr>'
+                '</table>'
+            )
+
+            _static_block += morph_table.format(feature_title=feature_title,
+                feature_fsn_png=feature_fsn_png,
+                feature_fs5_png=feature_fs5_png,
+                feature_c69_png=feature_c69_png
+            )
+
+        return _static_block
 
 
 # Utility function
@@ -663,8 +728,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural]
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func]
     'modules':   ['proc_surf', 'post_structural'],
     'functions': [qc_proc_surf, qc_post_structural]
 }
