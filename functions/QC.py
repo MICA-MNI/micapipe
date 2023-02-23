@@ -54,6 +54,7 @@ import matplotlib.pyplot as pltpy
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
+from brainspace.utils.parcellation import map_to_labels
 from brainspace.vtk_interface import wrap_vtk, serial_connect
 from brainspace.datasets import load_conte69
 from vtk import vtkPolyDataNormals
@@ -236,9 +237,8 @@ def report_module_input_template(inputs=''):
     report_module_input = (
         # Module inputs:
         '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0">'
-        '<b>Inputs </b> </p>'
+        '<b>Inputs</b> </p>'
     )
-    report_module_input.format(inputs=inputs)
 
     _input = ''
     for i in inputs.split():
@@ -428,6 +428,7 @@ def qc_proc_surf(proc_surf_json=''):
         surf_json = os.path.realpath("%s/%s/%s/anat/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
         with open( surf_json ) as f:
             surf_description = json.load(f)
+        global recon
         recon = surf_description["SurfRecon"]
         global surfaceDir
         surfaceDir = surf_description["SurfaceDir"]
@@ -513,9 +514,14 @@ def qc_post_structural(post_structural_json=''):
 
     if check_json_exist_complete(post_structural_json):
 
+        post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
+        with open( post_struct_json ) as f:
+            post_struct_description = json.load(f)
+        recon = post_struct_description["SurfaceProc"]
+
         # QC header
         _static_block = qc_header()
-        _static_block +=  report_module_header_template(module='post_structural')
+        _static_block +=  report_module_header_template(module='post_structural (%s)'%(recon))
 
         # QC summary
         _static_block += report_qc_summary_template(post_structural_json)
@@ -525,11 +531,6 @@ def qc_post_structural(post_structural_json=''):
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
                 '<b>Main outputs </b> </p>'
         )
-
-        post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
-        with open( post_struct_json ) as f:
-            post_struct_description = json.load(f)
-        recon = post_struct_description["SurfaceProc"]
 
         # Regitration/atlases
         outPath = post_struct_description["NativeSurfSpace"]["fileName"]
@@ -561,7 +562,7 @@ def qc_post_structural(post_structural_json=''):
 
         label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
         atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-        atlas = [f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas]
+        atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas])
         for annot in atlas:
             fig = sbids + "_atlas-" + annot + "_desc-surf.png"
             fileL= "%s/lh.%s.annot"%(label_dir,annot)
@@ -650,7 +651,7 @@ def qc_post_structural(post_structural_json=''):
         fs5I_lh = read_surface(surfaceDir+'/fsaverage5/surf/lh.inflated', itype='fs')
         fs5I_rh = read_surface(surfaceDir+'/fsaverage5/surf/rh.inflated', itype='fs')
 
-        global c69I_lh, c69_rh
+        global c69I_lh, c69I_rh
         c69I_lh = read_surface(surfaceDir+'/conte69/surf/lh.conte69.inflated.gii', itype='gii')
         c69I_rh = read_surface(surfaceDir+'/conte69/surf/rh.conte69.inflated.gii', itype='gii')
 
@@ -709,6 +710,92 @@ def qc_post_structural(post_structural_json=''):
 
         return _static_block
 
+## ------------------------------- MPC MODULE ------------------------------ ##
+def qc_mpc(mpc_json=''):
+
+    if check_json_exist_complete(mpc_json):
+        acquisition = mpc_json.split('%s_module-MPC-'%(sbids))[1].split('.json')[0]
+
+        # QC header
+        _static_block = qc_header()
+        _static_block +=  report_module_header_template(module='Microstructural profile covariance (%s)'%(acquisition))
+
+        # QC summary
+        _static_block += report_qc_summary_template(mpc_json)
+
+        # Outputs
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>'
+        )
+
+        outPath = "%s/%s/%s/anat/%s_space-fsnative_desc-%s.nii.gz"%(out,sub,ses,sbids,acquisition)
+        refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
+        figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
+        _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
+
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>MPC connectomes</b> </p>'
+        )
+
+        mpc_connectome_table = (
+            '<table style="border:1px solid #666;width:100%">'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Intensity profiles</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
+        )
+
+        label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
+        atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
+        atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+        for annot in atlas:
+
+            # Intensity profiles
+            ip_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
+            ip_file = "%s/%s/%s/anat/surf/micro_profiles/acq-%s/%s_space-fsnative_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
+            ip = np.loadtxt(ip_file, dtype=float, delimiter=' ')
+            pltpy.imshow(ip, cmap="Greens", aspect='auto')
+            pltpy.savefig(ip_fig)
+
+            # MPC connectomes
+            mpc_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
+            mpc_file = "%s/%s/%s/anat/surf/micro_profiles/acq-%s/%s_space-fsnative_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
+            mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+            mpc = np.triu(mpc,1)+mpc.T
+            mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
+            mpc[~np.isfinite(mpc)] = np.finfo(float).eps
+            mpc[mpc==0] = np.finfo(float).eps
+
+            pltpy.imshow(mpc, cmap="Greens", aspect='auto')
+            pltpy.savefig(mpc_fig)
+
+            # Degree
+            deg_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
+            deg = np.mean(mpc,axis=1)
+
+            annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
+            if os.path.isfile(annot_file):
+                labels_c69 = np.loadtxt(open(annot_file), dtype=int)
+                mask_c69 = labels_c69 != 0
+
+                deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                 nan_color=(0, 0, 0, 1), color_range='sym', cmap='RdBu', transparent_bg=False,
+                                 screenshot = True, filename = deg_fig)
+                mpc_connectome_table += (
+                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                    '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{ip_fig}"></td>'
+                    '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{mpc_fig}"></td>'
+                    '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
+                ).format(annot=annot,ip_fig=ip_fig,mpc_fig=mpc_fig,deg_fig=deg_fig)
+
+        mpc_connectome_table += "</table>"
+
+        _static_block += mpc_connectome_table
+
+        return _static_block
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
@@ -730,8 +817,8 @@ def convert_html_to_pdf(source_html, output_filename):
 qc_module_function = {
     #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func'],
     #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func]
-    'modules':   ['proc_surf', 'post_structural'],
-    'functions': [qc_proc_surf, qc_post_structural]
+    'modules':   ['proc_surf', 'post_structural', 'MPC'],
+    'functions': [qc_proc_surf, qc_post_structural, qc_mpc]
 }
 
 for i, m in enumerate(qc_module_function['modules']):

@@ -205,7 +205,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF
 # -----------------------------------------------------------------------------------------------
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} 2> /dev/null
+Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
