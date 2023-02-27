@@ -723,6 +723,21 @@ def qc_mpc(mpc_json=''):
         # QC summary
         _static_block += report_qc_summary_template(mpc_json)
 
+        # Inputs:
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main input</b> </p>'
+        )
+
+        proc_mpc_json = os.path.realpath("%s/%s/%s/anat/surf/micro_profiles/acq-%s/%s_MPC-%s.json"%(out,sub,ses,acquisition,sbids,acquisition))
+        with open( proc_mpc_json ) as f:
+            mpc_description = json.load(f)
+        microstructural_img = mpc_description["microstructural_img"]
+
+        outPath = microstructural_img
+        figPath = "%s/%s_microstructural_img.png"%(tmpDir,acquisition)
+        _static_block += nifti_check(outName="Microstructural image (%s)"%(acquisition), outPath=outPath, figPath=figPath)
+
         # Outputs
         _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -746,6 +761,7 @@ def qc_mpc(mpc_json=''):
                 '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
                 '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
         )
+
 
         label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
         atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
@@ -773,7 +789,7 @@ def qc_mpc(mpc_json=''):
 
             # Degree
             deg_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
-            deg = np.mean(mpc,axis=1)
+            deg = np.sum(mpc,axis=1)
 
             annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
             if os.path.isfile(annot_file):
