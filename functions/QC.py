@@ -813,6 +813,76 @@ def qc_mpc(mpc_json=''):
 
         return _static_block
 
+## -------------------------------- GD MODULE ------------------------------ ##
+def qc_gd(gd_json=''):
+
+    if check_json_exist_complete(gd_json):
+
+        # QC header
+        _static_block = qc_header()
+        _static_block +=  report_module_header_template(module='Geodesic distance')
+
+        # QC summary
+        _static_block += report_qc_summary_template(gd_json)
+
+        # Outputs
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>'
+        )
+
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>GD connectomes</b> </p>'
+        )
+
+        gd_connectome_table = (
+            '<table style="border:1px solid #666;width:100%">'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
+        )
+
+
+        label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
+        atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
+        atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+        for annot in atlas:
+
+            # gd connectomes
+            gd_fig = sbids + "space-fsnative_atlas-" + annot + "_gd.png"
+            gd_file = "%s/%s/%s/anat/surf/geo_dist/%s_space-fsnative_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
+            gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+            gd = np.delete(np.delete(gd, 0, axis=0), 0, axis=1)
+            pltpy.imshow(gd, cmap="Blues", aspect='auto')
+            pltpy.savefig(gd_fig)
+
+            # Degree
+            deg_fig = sbids + "space-fsnative_atlas-" + annot + "_gd_degree.png"
+            deg = np.sum(gd,axis=1)
+
+            annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
+            if os.path.isfile(annot_file):
+                labels_c69 = np.loadtxt(open(annot_file), dtype=int)
+                mask_c69 = labels_c69 != 0
+
+                deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                 nan_color=(0, 0, 0, 1), cmap='bone_r', transparent_bg=False,
+                                 screenshot = True, filename = deg_fig)
+                gd_connectome_table += (
+                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                    '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{gd_fig}"></td>'
+                    '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
+                ).format(annot=annot,gd_fig=gd_fig,deg_fig=deg_fig)
+
+        gd_connectome_table += "</table>"
+
+        _static_block += gd_connectome_table
+
+        return _static_block
+
+
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
     # open output file for writing (truncated binary)
@@ -831,10 +901,10 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func]
-    'modules':   ['proc_surf', 'post_structural', 'MPC'],
-    'functions': [qc_proc_surf, qc_post_structural, qc_mpc]
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func', 'MPC', 'GD'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func, qc_mpc, qc_gd]
+    'modules':   ['proc_surf', 'post_structural', 'GD'],
+    'functions': [qc_proc_surf, qc_post_structural, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
