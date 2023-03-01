@@ -105,7 +105,7 @@ T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
 T1nativepro="${proc_struct}/${T1str_nat}.nii.gz"
 T1nativepro_brain="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz"
 T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz"
-T1nativepro_first="${tmp}/first/${T1str_nat}.nii.gz"
+T1nativepro_first="${proc_struct}/first/${T1str_nat}.nii.gz"
 T1nativepro_5tt="${T1nativepro/.nii.gz/_5tt.nii.gz}"
 procstruct_json="${proc_struct}/${T1str_nat}.json"
 export N4wmStatus="FALSE"
@@ -243,7 +243,7 @@ T1str_atlas="${idBIDS}_space-nativepro_T1w_atlas"
 T1_seg_subcortex="${dir_volum}/${T1str_atlas}-subcortical.nii.gz"
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 
-if [[ ! -f "$T1_seg_subcortex" ]]; then ((N++))
+if [ ! -f "$T1_seg_subcortex" ] || [ ! -f "$T1nativepro_5tt" ]; then ((N++))
     Info "FSL first is running"
     Note "output file:" "${firstout}/${T1str_nat}"
     Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b &
