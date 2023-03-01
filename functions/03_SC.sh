@@ -64,7 +64,7 @@ mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-dwi_mode-image_desc-SyN_"
 dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
-dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # from proc_structural
 T1str_nat="${idBIDS}_space-nativepro_t1w_atlas"
