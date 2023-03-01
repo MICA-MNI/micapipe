@@ -148,9 +148,9 @@ Do_cmd cd "$tmp"
 # Interpolation or smoothing in other processing steps, such as motion and distortion correction,
 # may alter the noise characteristics and thus violate the assumptions upon which MP-PCA is based.
 dwi_cat="${tmp}/dwi_concatenate.mif"
-dwi_dns="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_dwi.mif"
-dwi_res="${proc_dwi}/${idBIDS}_space-dwi_desc-MP-PCA_residuals-dwi.mif"
-dwi_resGibss="${proc_dwi}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
+dwi_dns="${tmp}/${idBIDS}_space-dwi_desc-denoised_dwi.mif"
+dwi_resPCA="${tmp}/${idBIDS}_space-dwi_desc-PCA_residuals-dwi.mif"
+dwi_resGibss="${tmp}/${idBIDS}_space-dwi_desc-deGibbs_residuals-dwi.mif"
 dwi_corr="${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif"
 b0_refacq=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}'); b0_refacq=$(echo "${b0_refacq/_dwi/}"); b0_refacq=$(echo "${b0_refacq/${idBIDS}_/}")
 
@@ -177,7 +177,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
+                b0mat_str="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
@@ -200,7 +200,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           Info "DWI MP-PCA denoising and Gibbs ringing correction"
           dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
           Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
-          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_res" -axis 3
+          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
           Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
           mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
           ((Nsteps++))
@@ -248,7 +248,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${dwi_reverse[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${dwi_reverse[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
+                b0mat_str="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "DWI rpe - Registering ${b0_acq} to ${b0_refacq}"
@@ -277,7 +277,6 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           # Denoise DWI and calculate residuals
           Info "DWI-rpe: MP-PCA denoising and Gibbs ringing correction"
           Do_cmd mrdegibbs "$rpe_dns_tmp" "$rpe_dns" -nthreads "$threads"
-          Do_cmd mrinfo "$rpe_dns" -json_all "${rpe_dns/mif/json}"
     else
           Info "Subject ${id} has DWI-rpe in mif, denoised and concatenaded"
     fi
@@ -306,7 +305,6 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
       dwiextract -nthreads "$threads" "$dwi_4proc" - -bzero | mrmath - mean "$tmp"/b0_meanMainPhase.mif -axis 3
       # Mean rpe QC image
       Do_cmd mrconvert "${tmp}/b0_meanMainPhase.mif" "${tmp}/b0_meanMainPhase.nii.gz"
-      Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_meanMainPhase.nii.gz" -out "${proc_dwi}/${idBIDS}_space-dwi_pe${dwi_str_}.png"
 
       # Processing the reverse encoding b0
       if [[ -f "$rpe_dns" ]]; then
@@ -332,7 +330,6 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
                 fi
             fi
             Do_cmd mrconvert "${tmp}/b0_meanReversePhase.nii.gz" "${tmp}/b0_ReversePhase.nii.gz" -coord 0 0:"${dimNew[0]}" -coord 1 0:"${dimNew[1]}" -coord 2 0:"${dimNew[2]}" -force
-            Do_cmd ${MICAPIPE}/functions/nifti_capture.py -img "${tmp}/b0_ReversePhase.nii.gz" -out "${proc_dwi}/${idBIDS}_space-dwi_rpe${dwi_str_}.png"
 
             if [[ "$rpe_all" == TRUE ]]; then
                 # Remove slices to make an even number of slices in all directions (requisite for dwi_preproc-TOPUP).
@@ -467,12 +464,8 @@ if [[ ! -f "$fod_wmN" ]]; then ((N++))
                 -mask "$dwi_mask"
       if [ "${#shells[@]}" -ge 2 ]; then
             Do_cmd mtnormalise "$fod_wm" "$fod_wmN" "$fod_gm" "$fod_gmN" "$fod_csf" "$fod_csfN" -nthreads "$threads" -mask "$dwi_mask"
-            Do_cmd mrinfo "$fod_wmN" -json_all "${fod_wmN/mif/json}"
-            Do_cmd mrinfo "$fod_gmN" -json_all "${fod_gmN/mif/json}"
-            Do_cmd mrinfo "$fod_csfN" -json_all "${fod_csfN/mif/json}"
       else
             Do_cmd mtnormalise -nthreads "$threads" -mask "$dwi_mask" "$fod_wm" "$fod_wmN"
-            Do_cmd mrinfo "$fod_wmN" -json_all "${fod_wmN/mif/json}"
       fi
       if [[ -f "$fod_wmN" ]]; then ((Nsteps++)); fi
 else
@@ -486,13 +479,12 @@ dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
 dwi_SyN_Invwarp="${dwi_SyN_str}1InverseWarp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
 
 if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
-    dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
-    T1nativepro_in_dwi_brain="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
-    fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+    T1nativepro_in_dwi_brain="${tmp}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
-    Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         Info "Non-linear registration from T1w_dwi-space to DWI"
@@ -511,56 +503,55 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     fi
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
-    # Apply transformation DWI-b0 space to T1nativepro
-    # Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int MOVE to QC
     # Apply transformation of each DTI derived map to T1nativepro
     for metric in FA AD RD ADC; do
-        dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.mif"
+        dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
         dti_map_nativepro="${proc_dwi}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
-        Do_cmd mrconvert "$dti_map" "${dti_map/.mif/.nii.gz}"
-        Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map/.mif/.nii.gz}" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -u int -n NearestNeighbor
+        Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map}" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -n NearestNeighbor
     done
     # Apply transformation T1nativepro to DWI space
     Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T1nativepro" "$trans_T12dwi" -o "$T1nativepro_in_dwi_NL" -v -u int
     # Apply transformation 5TT to DWI space
     Do_cmd antsApplyTransforms -d 3 -r "$fod" -i "$T15ttgen" "$trans_T12dwi" -o "$dwi_5tt" -v -e 3 -n linear
     if [[ -f "$dwi_5tt" ]]; then ((Nsteps++)); fi
+
+    # -----------------------------------------------------------------------------------------------
+    # Prepare the segmentatons
+    dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
+    dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
+    T1_seg_cerebellum="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
+    T1_seg_subcortex="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz"
+
+    if [[ ! -f "$dwi_cere" ]]; then ((N++))
+      Info "Registering Cerebellar parcellation to DWI-b0 space"
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
+      if [[ -f "$dwi_cere" ]]; then ((Nsteps++)); fi
+      # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
+      # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
+      Do_cmd fslmaths "$dwi_cere" -bin -mul 100 -add "$dwi_cere" "$dwi_cere"
+    else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
+
+    if [[ ! -f "$dwi_subc" ]]; then ((N++))
+      Info "Registering Subcortical parcellation to DWI-b0 space"
+      Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
+      # Remove brain-stem (label 16)
+      Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
+      if [[ -f "$dwi_subc" ]]; then ((Nsteps++)); fi
+    else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
+
 else
-    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 2)); N=$((N + 2))
+    Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 4)); N=$((N + 4))
 fi
 # Remove unused warped files
 Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_str_}.json" ${trans_T12dwi// /:} ${trans_dwi2T1// /:}
 
-# -----------------------------------------------------------------------------------------------
-# Prepare the segmentatons
-dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
-dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
-
-if [[ ! -f "$dwi_cere" ]]; then ((N++))
-  Info "Registering Cerebellar parcellation to DWI-b0 space"
-  Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_cerebellum" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_cere" -v -u int
-  if [[ -f "$dwi_cere" ]]; then ((Nsteps++)); fi
-  # Threshold cerebellar nuclei (29,30,31,32,33,34) and add 100
-  # Do_cmd fslmaths $dwi_cere -uthr 28 $dwi_cere
-  Do_cmd fslmaths "$dwi_cere" -bin -mul 100 -add "$dwi_cere" "$dwi_cere"
-else Info "Subject ${id} has a Cerebellar segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
-
-if [[ ! -f "$dwi_subc" ]]; then ((N++))
-  Info "Registering Subcortical parcellation to DWI-b0 space"
-  Do_cmd antsApplyTransforms -d 3 -e 3 -i "$T1_seg_subcortex" -r "$fod" -n GenericLabel "$trans_T12dwi" -o "$dwi_subc" -v -u int
-  # Remove brain-stem (label 16)
-  Do_cmd fslmaths "$dwi_subc" -thr 16 -uthr 16 -binv -mul "$dwi_subc" "$dwi_subc"
-  if [[ -f "$dwi_subc" ]]; then ((Nsteps++)); fi
-else Info "Subject ${id} has a Subcortical segmentation in DWI space"; ((Nsteps++)); ((N++)); fi
-
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask
-dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.mif"
+dwi_gmwmi="${proc_dwi}/${idBIDS}_space-dwi_desc-gmwmi-mask.nii.gz"
 if [[ ! -f "$dwi_gmwmi" ]]; then ((N++))
       Info "Calculating Gray matter White matter interface mask"
-      Do_cmd 5tt2gmwmi "$dwi_5tt" "$dwi_gmwmi"
-      Do_cmd mrinfo "$dwi_gmwmi" -json_all "${dwi_gmwmi/mif/json}"; ((Nsteps++))
+      Do_cmd 5tt2gmwmi "$dwi_5tt" "$dwi_gmwmi"; ((Nsteps++))
 else
       Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++)); ((N++))
 fi

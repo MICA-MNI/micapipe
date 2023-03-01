@@ -201,6 +201,7 @@ source "${MICAPIPE}/functions/utilities.sh"
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
 # Create VARIABLES
+argCP="$@"
 for arg in "$@"
 do
   case "$arg" in
@@ -467,6 +468,10 @@ do
     cleanup=TRUE
     shift
   ;;
+  -acqStr)
+    acqStr=$2
+    shift;shift
+  ;;
   -threads)
     threads=$2
     shift;shift
@@ -532,7 +537,8 @@ exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
 # Call micapipe_cleanup within micapipe
-if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup $@; exit; fi
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup ${argCP/-cleanup/}; exit; fi
+echo -e "\n\nmicapipe ${argCP}"
 
 # Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
@@ -566,7 +572,7 @@ if [[ $mpc_acq == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
-if [ -z ${weighted_SC} ]; then weighted_SC=FALSE; else keep_tck=${weighted_SC}; fi
+if [ -z ${weighted_SC} ]; then weighted_SC=FALSE; else weighted_SC=$(realpath ${weighted_SC}); fi
 
 # Optional arguments proc_dwi
 # User provided DWI main phase

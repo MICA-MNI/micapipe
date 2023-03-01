@@ -243,15 +243,15 @@ T1str_atlas="${idBIDS}_space-nativepro_T1w_atlas"
 T1_seg_subcortex="${dir_volum}/${T1str_atlas}-subcortical.nii.gz"
 firstout=${T1nativepro_first/.nii.gz/_all_fast_firstseg.nii.gz}
 
-if [[ ! -f "$T1_seg_subcortex" ]]; then ((N++))
+if [ ! -f "$T1_seg_subcortex" ] || [ ! -f "$T1nativepro_5tt" ]; then ((N++))
     Info "FSL first is running"
     Note "output file:" "${firstout}/${T1str_nat}"
     Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b &
     wait $!
     until [ -f "$firstout" ]; do sleep 120; done
-    if [ -f "$firstout" ]; then ((Nsteps++)); fi
+    if [ -f "$firstout" ]; then Do_cmd cp "$firstout" "$T1_seg_subcortex"; ((Nsteps++)); fi
 else
-    Info "Subject $id has FSL-first"; ((Nsteps++)); ((N++))
+    Info "Subject $id has a Subcortical parcellation"; ((Nsteps++)); ((N++))
 fi
 
 # FSL FAST on the T1w_nativepro
@@ -290,14 +290,6 @@ if [[ ! -f "$T1_seg_cerebellum" ]]; then ((N++))
     if [[ -f "$T1_seg_cerebellum" ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nsteps++)); ((N++))
-fi
-
-Info "Subcortical parcellation to T1-nativepro Volume"
-if [[ ! -f "$T1_seg_subcortex" ]]; then ((N++))
-    Do_cmd cp "$firstout" "$T1_seg_subcortex"
-    if [[ -f "$T1_seg_subcortex" ]]; then ((Nsteps++)); fi
-else
-    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nsteps++)); ((N++))
 fi
 
 # Generate a five-tissue-type image for anatomically constrained tractography

@@ -780,7 +780,7 @@ function json_poststruct() {
           \"${Transform[@]:8:4} \",
           \"${Transform[@]:12:8}\"
           ]
-      },
+      }
   }" > "$2"
 }
 
@@ -811,8 +811,8 @@ function json_func() {
         \"Reorient\": \"fslreorient2std\",
         \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
         \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
-        \"MainPhaseScan\": \"${mainPhaseScan}\",
-        \"ReversePhaseScan\": \"${reversePhaseScan}\",
+        \"MainPhaseScan\": \"${func_pe}\",
+        \"ReversePhaseScan\": \"${func_rpe}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
@@ -825,7 +825,7 @@ function json_func() {
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
         \"dropTR\": \"${dropTR}\",
-        \"procStatus\": \"${status}\",
+        \"SurfaceProc\": \"${recon}\"
       }
   }" > "$1"
 }
