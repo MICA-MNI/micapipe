@@ -180,6 +180,7 @@ cd $tmpDir
 
 # PROC_STRUC ------------------------------------------------------------------------------------
 
+if false; then
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
@@ -188,7 +189,7 @@ xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
 for mm in 2 0.8; do
     T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
 
-    if [[ $(mm) == 2 ]] ; then
+    if [[ ${mm} == 2 ]] ; then
       transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
     else
       transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
@@ -199,13 +200,10 @@ for mm in 2 0.8; do
             -r "${MNI152_brain}" \
             "${transformation}"
 done
-
-
-# PROC_FREESURFER -------------------------------------------------------------------------------
-
+fi
 
 # -----------------------------------------------------------------------------------------------
-# Generate Q
+# Generate QC PDF
 # -----------------------------------------------------------------------------------------------
 Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
