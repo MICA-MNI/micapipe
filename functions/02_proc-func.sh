@@ -352,11 +352,19 @@ function func_reoMC() {
             Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_reoMean.nii.gz" \
                             -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
                             -1Dfile "${func_volum}/${idBIDS}${func_lab}_${tag}.1D" \
+                            -1Dmatrix_save mat.r01.1D \
                             "${tmp}/${tag}_reo.nii.gz"
             Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
         fi
   fi
 }
+
+# func_apply
+# 3dAllineate -base {$subj}_T1w_ns+tlrc                        \
+#           -input rm.epi.all1+orig                         \
+#           -1Dmatrix_apply mat.r$run.warp.aff12.1D         \
+#           -mast_dxyz 3 -final NN -quiet                   \
+#           -prefix rm.epi.1.r$run
 
 function func_MCoutliers() {
   # Function that generates the motion outliers file
@@ -417,7 +425,7 @@ function func_topup() {
           Do_cmd applytopup --imain="${mainScan}" --inindex=1 --datain="${tmp}/func_topupDataIn.txt" --topup="${tmp}/func_topup" --method=jac --out="${func_nii}"
 
           # Check if it worked
-          if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt"; exit; fi
+          if [[ ! -f "${func_nii}" ]]; then Error "Something went wrong while running TOPUP check ${tmp} and log:\n\t\t${dir_logs}/proc_func_$(date +'%d-%m-%Y').txt"; cleanup "$tmp" "$nocleanup" "$here"; exit; fi
           export statusTopUp="YES"; ((Nsteps++))
       else
           Info "Subject ${id} has a distortion corrected functional MRI (TOPUP)"; export statusTopUp="YES"; ((Nsteps++)); ((N++))
@@ -442,17 +450,35 @@ if [[ ! -f "${func_nii}" ]]; then
     # Run Tedana
     if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
-        Note "Files      :" ${mainScanStr[*]} # this will print the string full path is in mainScan
-        Note "EchoNumber :" ${EchoNumber[*]}
-        Note "EchoTime   :" ${EchoTime[*]}
+        scans4tedana=($(find "$tmp" -maxdepth 1 -name "*mainScan*_reo.nii.gz"))
+        Note "Files      :" "${scans4tedana[*]/${tmp}/}" # this will print the string full path is in mainScan
+        Note "EchoNumber :" "${EchoNumber[*]}"
+        Note "EchoTime   :" "${EchoTime[*]}"
         tedana_dir=${tmp}/tedana
 
-        mkdir -p ${tedana_dir}
-        tedana -d $(printf "%s " "${mainScan[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir ${tedana_dir}
+        # prepare files for tedana
+        mkdir -p "${tedana_dir}"
+        # create a mask for tedana
+        tmp_func_mean=${tmp}/mainScan01_mean.nii.gz
+        tmp_t1w_brain_res=${tmp}/nativepro_brain_rescaled.nii.gz
+        tmp_affineStr="${tmp}/from-nativepro_to-mainScan01_"
+        tmp_aff_mat="${tmp_affineStr}0GenericAffine.mat"
+        tmp_func_mask=${tmp}/mainScan01_mean_mask.nii.gz
+
+        # Create a loose mask for tedana
+        fslmaths "${scans4tedana[0]}" -Tmean ${tmp_func_mean}
+        voxels=$(mrinfo ${tmp_func_mean} -spacing); voxels=${voxels// /,}
+        Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref ${T1nativepro_brain} -out "${tmp_t1w_brain_res}"
+        Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d
+        Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_mask" -r "$tmp_func_mean" -t "$tmp_aff_mat" -o "${tmp_func_mask}" -u int
+        Do_cmd ImageMath 3 "${tmp_func_mask}" MD ${tmp}/mainScan01_mean_mask_transformed.nii.gz 2
+        # Run tedana
+        tedana -d $(printf "%s " "${scans4tedana[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}" --mask ${tmp_func_mask}
 
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
         mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
+        if [ ! -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" ]; then Error "tedana failed: $(which tedana)"; cleanup "$tmp" "$nocleanup" "$here"; exit 1; fi
         Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
     fi
 
@@ -479,12 +505,10 @@ if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then ((N++))
     Info "Generating a func binary mask"
     # Calculates the mean func volume
     Do_cmd fslmaths "$func_nii" -Tmean "$fmri_mean"
+    Do_cmd N4BiasFieldCorrection  -d 3 -i "$fmri_mean" -r -o "$fmri_mean"
 
     # Creates a mask from the motion corrected time series
-    Do_cmd bet "$fmri_mean" "$fmri_brain" -m -n
-
-    # masked mean func time series
-    Do_cmd fslmaths "$fmri_mean" -mul "$fmri_mask" "$fmri_brain"
+    Do_cmd mri_synthstrip -i "$fmri_mean" -o "$fmri_brain" -m "$fmri_mask"
     if [[ -f "${fmri_mask}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a binary mask of the func"; ((Nsteps++)); ((N++))
@@ -553,32 +577,42 @@ fi
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then ((N++))
     if [[ ! -f "${t1bold}" ]]; then
-        Info "Creating a synthetic BOLD image for registration"
-        # downsample T1w as reference to 2mm
-        Do_cmd flirt -applyisoxfm 2 -in "$T1nativepro" -ref "$T1nativepro" -out "${tmp}/${id}_T1w_nativepro_2mm.nii.gz"
+        Info "Creating a synthetic T1natipro image for registration"
+        voxels=$(mrinfo ${fmri_mean} -spacing); voxels=${voxels// /,}
         # Inverse T1w
-        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" Neg "$T1nativepro" "${tmp}/${id}_T1w_nativepro_2mm.nii.gz"
-        # Dilate the T1-mask
-        #Do_cmd ImageMath 3 "${tmp}/${id}_T1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
-        # Masked the inverted T1w
-        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
-        # Match histograms values acording to func
-        Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
-        # Smoothing
-        Do_cmd ImageMath 3 "$t1bold" G "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" 0.35
+        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" Neg "${T1nativepro}"
+        # # Dilate the T1-mask
+        # #Do_cmd ImageMath 3 "${tmp}/${id}_T1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
+        # # Masked the inverted T1w
+        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
+        # # Match histograms values acording to func
+        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
+        # # Smoothing
+        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" G "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" 0.35
+        # # downsample T1w as reference to func resolution
+        # Do_cmd flirt -applyisoxfm ${voxels} -in "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" -ref "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" -out "${t1bold}"
+        Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
+
     else
-        Info "Subject ${id} has a synthetic BOLD image for registration"
+        Info "Subject ${id} has a synthetic T1nativepro image for registration"
     fi
 
     Info "Registering func MRI to nativepro"
+    bold_synth="${tmp}/func_brain_synthsegGM.nii.gz"
+    t1_synth="${tmp}/T1bold_synthsegGM.nii.gz"
+    Do_cmd mri_synthseg --i "${t1bold}" --o "${tmp}/T1bold_synthseg.nii.gz" --robust --threads $threads --cpu
+    Do_cmd fslmaths "${tmp}/T1bold_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1bold_synthseg.nii.gz" "${t1_synth}"
+
+    Do_cmd mri_synthseg --i ""$fmri_brain"" --o "${tmp}/func_brain_synthseg.nii.gz" --robust --threads $threads --cpu
+    Do_cmd fslmaths "${tmp}/func_brain_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/func_brain_synthseg.nii.gz" "${bold_synth}"
 
     # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1bold" -m "$fmri_brain" -o "$str_func_affine" -t a -n "$threads" -p d
-    Do_cmd antsApplyTransforms -d 3 -i "$t1bold" -r "$fmri_brain" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1_synth" -m "$bold_synth" -o "$str_func_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$t1_synth" -r "$bold_synth" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
         # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "$fmri_brain" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
+        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "${bold_synth}" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
     Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
     # func to t1-nativepro
@@ -598,8 +632,8 @@ proc_func_transformations "${dir_warp}/${idBIDS}_transformations-proc_func.json"
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]]; then ((N++))
   Info "Registering func to FreeSurfer space"
-#    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --bold --12
-    Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --12
+    #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++)); ((N++))
@@ -654,7 +688,7 @@ if [[ "$noFIX" -eq 0 ]]; then
                         yes | Do_cmd 3dresample -orient LPI -prefix "$func_processed" -inset "$fix_output"
                         export statusFIX="YES"
                     else
-                        Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; exit
+                        Error "FIX failed, but MELODIC ran log file:\n\t $(ls "${dir_logs}"/proc_func_*.txt)"; cleanup "$tmp" "$nocleanup" "$here"; exit
                     fi
               else
                     Info "Subject ${id} has filtered_func_data_clean from ICA-FIX already"
@@ -715,6 +749,10 @@ if [[ ! -f "$spikeRegressors" ]] ; then
 else
     Info "Subject ${id} has a spike Regressors from fsl_motion_outliers"
 fi
+
+#------------------------------------------------------------------------------#
+# Transform surface to func space
+
 
 #------------------------------------------------------------------------------#
 # Register to surface
