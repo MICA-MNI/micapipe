@@ -105,7 +105,7 @@ T1n4="${tmp}/${T1str_nat}_n4.nii.gz"
 T1nativepro="${proc_struct}/${T1str_nat}.nii.gz"
 T1nativepro_brain="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz"
 T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz"
-T1nativepro_first="${proc_struct}/first/${T1str_nat}.nii.gz"
+T1nativepro_first="${tmp}/first/${T1str_nat}.nii.gz"
 T1nativepro_5tt="${T1nativepro/.nii.gz/_5tt.nii.gz}"
 procstruct_json="${proc_struct}/${T1str_nat}.json"
 export N4wmStatus="FALSE"
@@ -249,9 +249,9 @@ if [[ ! -f "$T1_seg_subcortex" ]]; then ((N++))
     Do_cmd run_first_all -i "$T1nativepro_brain" -o "$T1nativepro_first" -b &
     wait $!
     until [ -f "$firstout" ]; do sleep 120; done
-    if [ -f "$firstout" ]; then ((Nsteps++)); fi
+    if [ -f "$firstout" ]; then Do_cmd cp "$firstout" "$T1_seg_subcortex"; ((Nsteps++)); fi
 else
-    Info "Subject $id has FSL-first"; ((Nsteps++)); ((N++))
+    Info "Subject $id has a Subcortical parcellation"; ((Nsteps++)); ((N++))
 fi
 
 # FSL FAST on the T1w_nativepro
@@ -290,14 +290,6 @@ if [[ ! -f "$T1_seg_cerebellum" ]]; then ((N++))
     if [[ -f "$T1_seg_cerebellum" ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a Cerebellum parcellation on T1-nativepro"; ((Nsteps++)); ((N++))
-fi
-
-Info "Subcortical parcellation to T1-nativepro Volume"
-if [[ ! -f "$T1_seg_subcortex" ]]; then ((N++))
-    Do_cmd cp "$firstout" "$T1_seg_subcortex"
-    if [[ -f "$T1_seg_subcortex" ]]; then ((Nsteps++)); fi
-else
-    Info "Subject ${id} has a Subcortical parcellation on T1-nativepro"; ((Nsteps++)); ((N++))
 fi
 
 # Generate a five-tissue-type image for anatomically constrained tractography
