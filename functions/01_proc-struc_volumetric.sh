@@ -139,7 +139,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
 
     # Create json file for T1native
-    json_nativepro_t1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
+    json_nativepro_T1w "$T1nativepro" "$N" "${bids_T1ws[*]}" "${proc_struct}/${T1str_nat}.json"
 else
     Info "Subject ${id} has a t1w_nativepro and t1w_nativepro_brain"; ((Nsteps++))
 fi
