@@ -47,8 +47,8 @@ if [[ "$Nrecon" -lt 1 ]]; then
   Error "Subject $id doesn't have a module-proc_surf: run -proc_surf"; exit 1
 elif [[ "$Nrecon" -gt 1 ]]; then
   Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
-  Note "Using freesurfer by default"
-  Note "Use the flag -FastSurfer if you want to use fastsurfer surfaces\n"
+  Note "freesurfer is the default"
+  Note "fastsurfer flag is: $FastSurfer\n"
   recon="freesurfer"
 elif [[ "$Nrecon" -eq 1 ]]; then
   module_qc=$(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null)
@@ -233,7 +233,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
-micapipe_completition_status proc_structural
+micapipe_completition_status post_structural
 micapipe_procStatus "${id}" "${SES/ses-/}" "post_structural" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_structural" "${module_json}"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "post_structural" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
