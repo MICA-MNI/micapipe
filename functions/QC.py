@@ -726,19 +726,30 @@ def qc_proc_func(proc_func_json=''):
         func_clean_json = glob.glob("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(out,sub,ses,tag,sbids))[0]
         with open( func_clean_json ) as f:
             func_clean_json = json.load(f)
-        inputs = ['Main scan: ' + func_clean_json["Preprocess"]["MainScan"],
-                  'Main phase scan: ' + func_clean_json["Preprocess"]["MainPhaseScan"],
-                  'Reverse phase scan: ' + func_clean_json["Preprocess"]["ReversePhaseScan"]
-        ]
-
         acquisition = func_clean_json["Acquisition"]
 
         # Inputs
         _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
-                '<b>Main inputs</b> </p>'
+                '<b>Inputs</b> </p>'
         )
-        _static_block += report_module_input_template(inputs=inputs)
+
+        mainScan = func_clean_json["Preprocess"]["MainScan"].split()
+        for i, s in enumerate(mainScan):
+            outPath = tmpDir + '/' + s.split("%s/%s/%s/func/"%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+            outName = "Main scan (mean)" if len(mainScan) == 1 else "Main scan - echo %s (mean)"%(i+1)
+            figPath = "%s/fmri_mainScan%s.png"%(tmpDir,i+1)
+            _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
+
+        mainPhaseScan = func_clean_json["Preprocess"]["MainPhaseScan"]
+        outPath = tmpDir + '/' + mainPhaseScan.split('%s/%s/%s/fmap/'%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        figPath = "%s/fmri_mainPhaseScan.png"%(tmpDir)
+        _static_block += nifti_check(outName="Main phase scan (mean)", outPath=outPath, figPath=figPath)
+
+        reversePhaseScan = func_clean_json["Preprocess"]["ReversePhaseScan"]
+        outPath = tmpDir + '/' + reversePhaseScan.split('%s/%s/%s/fmap/'%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        figPath = "%s/fmri_reveresePhaseScan.png"%(tmpDir)
+        _static_block += nifti_check(outName="Reverse phase scan (mean)", outPath=outPath, figPath=figPath)
 
         # Outputs
         _static_block += (
@@ -749,17 +760,16 @@ def qc_proc_func(proc_func_json=''):
         outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
         figPath = "%s/func_brain_screenshot.png"%(tmpDir)
         _static_block += nifti_check(outName="fMRI brain", outPath=outPath, figPath=figPath)
-        print(outPath)
 
         outPath = "%s/%s/%s/xfm/%s_from-%s_to-fsnative_bbr_outbbreg_FIX.nii.gz"%(out,sub,ses,sbids,tag)
+        refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
         figPath = "%s/fmri_fsnative_screenshot.png"%(tmpDir)
-        _static_block += nifti_check(outName="Registration: fMRI in %s native space"%(recon), outPath=outPath, figPath=figPath)
+        _static_block += nifti_check(outName="Registration: fMRI in %s native space"%(recon), outPath=outPath, refPath=refPath, figPath=figPath)
 
         outPath = "%s/%s/%s/anat/%s_space-nativepro_desc-%s_mean.nii.gz"%(out,sub,ses,sbids,tag)
         refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
         figPath = "%s/fmri_nativepro_screenshot.png"%(tmpDir)
         _static_block += nifti_check(outName="Registration: fMRI in T1w nativepro space", outPath=outPath, refPath=refPath, figPath=figPath)
-        print(outPath, refPath)
 
         outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-T1w.nii.gz"%(out,sub,ses,tag,sbids)
         refPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
@@ -786,18 +796,17 @@ def qc_proc_func(proc_func_json=''):
 
         fc_connectome_table = (
             '<table style="border:1px solid #666;width:100%">'
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center><b>Parcellation<b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Connectome<b></td>'
                 '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
         )
-
 
         label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
         atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
         atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
         for annot in atlas:
             # fc connectomes
-            fc_fig = sbids + "space-conte69-32k_atlas-" + annot + "_fc.png"
+            fc_fig = tmpDir + "/" + sbids + "space-conte69-32k_atlas-" + annot + "_fc.png"
             fc_file = "%s/%s/%s/func/desc-%s/surf/%s_func_space-conte69-32k_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
 
             if os.path.isfile(fc_file):
@@ -812,8 +821,10 @@ def qc_proc_func(proc_func_json=''):
                 pltpy.savefig(fc_fig)
 
                 # Degree
-                deg_fig = sbids + "space-conte69-32k_atlas-" + annot + "_fc_degree.png"
-                deg = np.sum(fcz,axis=1)
+                deg_fig = tmpDir + "/" + sbids + "space-conte69-32k_atlas-" + annot + "_fc_degree.png"
+                fc_pos = np.copy(fcz)
+                fc_pos[0>fc_pos] = 0
+                deg = np.sum(fc_pos,axis=1)
 
                 annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
                 if os.path.isfile(annot_file):
@@ -822,10 +833,10 @@ def qc_proc_func(proc_func_json=''):
 
                     deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
                     plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                     nan_color=(0, 0, 0, 1), color_range='sym', cmap='RdBu', layout_style='grid', transparent_bg=False,
+                                     nan_color=(0, 0, 0, 1), cmap='Reds', layout_style='grid', transparent_bg=False,
                                      screenshot = True, filename = deg_fig)
                     fc_connectome_table += (
-                        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                         '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{fc_fig}"></td>'
                         '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
                     ).format(annot=annot,fc_fig=fc_fig,deg_fig=deg_fig)
@@ -833,6 +844,130 @@ def qc_proc_func(proc_func_json=''):
         fc_connectome_table += "</table>"
 
         _static_block += fc_connectome_table
+
+        return _static_block
+
+## ------------------------------- SC MODULE ------------------------------ ##
+def qc_sc(sc_json=''):
+
+    if check_json_exist_complete(sc_json):
+
+        streamlines = sc_json.split('%s_module-SC-'%(sbids))[1].split('.json')[0]
+
+        # QC header
+        _static_block = qc_header()
+        _static_block +=  report_module_header_template(module="Structural connectomes (%s streamlines)"%(streamlines))
+
+        # QC summary
+        _static_block += report_qc_summary_template(sc_json)
+
+        tdi_json = os.path.realpath("%s/%s/%s/dwi/%s_space-dwi_desc-iFOD2-%s_tractography.json"%(out,sub,ses,sbids,streamlines))
+        with open( tdi_json ) as f:
+            tdi_json = json.load(f)
+
+        # Inputs
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Inputs</b> </p>'
+        )
+
+        dti_fod = tdi_json["fileInfo"]["Name"]
+        outPath = tmpDir + '/' + dti_fod.split("%s/%s/%s/dwi/"%(out,sub,ses))[1].split('.mif')[0] + '.nii.gz'
+        figPath = "%s/dti_FOD.png"%(tmpDir)
+        _static_block += nifti_check(outName="Fiber orientation distribution", outPath=outPath, figPath=figPath)
+
+        # Outputs
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>'
+        )
+
+        tractography = tdi_json["Tractography"]
+        tractography_table = (
+                '<table style="border:1px solid #666;width:100%">'
+                    '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2">Tractography information</td></tr>'
+        )
+        for k in tractography:
+            tractography_table += (
+                '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left;width:20%>{left}</td>'
+                '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left>{right}</td></tr>'
+            ).format(left=k, right=tractography[k])
+        tractography_table += "</table>"
+
+        _static_block += tractography_table
+
+        outPath = "%s/%s_space-dwi_desc-iFOD2-%s_tdi_mean.nii.gz"%(tmpDir,sbids,streamlines)
+        figPath = "%s/tdi_%s.png"%(tmpDir,streamlines)
+        _static_block += nifti_check(outName="Track density imaging (%s tracks)"%(streamlines), outPath=outPath, figPath=figPath)
+
+        label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
+        atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
+        atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+
+        for connectomeType in ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']:
+
+            connectome_table = (
+                '<table style="border:1px solid #666;width:100%">'
+                    '<tr><td style=padding-top:4px;padding-left:3px;text-align:center><b>Parcellation</b></td>'
+                    '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Full connectomes</b></td>'
+                    '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
+            )
+
+            for annot in atlas:
+
+                c_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + ".png"
+                c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
+                c = np.loadtxt(c_file, dtype=float, delimiter=' ')
+                c = np.log(np.triu(c,1)+c.T)
+                c[np.isneginf(c)] = 0
+                c[c==0] = np.finfo(float).eps
+                pltpy.imshow(c, cmap="Purples", aspect='auto')
+                pltpy.savefig(c_fig)
+
+                deg_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + "_degree.png"
+                deg = np.sum(c[49:,49:],axis=1)
+
+                annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
+                if os.path.isfile(annot_file):
+                    labels_c69 = np.loadtxt(open(annot_file), dtype=int)
+                    mask_c69 = labels_c69 != 0
+
+                    deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                    plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                     nan_color=(0, 0, 0, 1), color_range='sym', cmap='Purples', layout_style='grid', transparent_bg=False,
+                                     screenshot = True, filename = deg_fig)
+                    connectome_table += (
+                        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
+                        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{c_fig}"></td>'
+                        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
+                    ).format(annot=annot,c_fig=c_fig,deg_fig=deg_fig)
+
+            connectome_table += "</table>"
+
+            if connectomeType == 'full-connectome':
+                sc_connectome_table = connectome_table
+            elif connectomeType == 'full-edgeLengths':
+                el_connectome_table = connectome_table
+            elif connectomeType == 'full-weighted_connectome':
+                wsc_connectome_table = connectome_table
+
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Structural connectomes ({streamlines})</b> </p>'
+        ).format(streamlines=streamlines)
+        _static_block += sc_connectome_table
+
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Edge length connectomes ({streamlines})</b> </p>'
+        ).format(streamlines=streamlines)
+        _static_block += el_connectome_table
+
+        _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Weighted structural connectomes ({streamlines})</b> </p>'
+        ).format(streamlines=streamlines)
+        _static_block += wsc_connectome_table
 
         return _static_block
 
@@ -899,10 +1034,10 @@ def qc_mpc(mpc_json=''):
 
         mpc_connectome_table = (
             '<table style="border:1px solid #666;width:100%">'
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Intensity profiles</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center><b>Parcellation</b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Intensity profiles</b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Connectomes</b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
         )
 
 
@@ -912,14 +1047,14 @@ def qc_mpc(mpc_json=''):
         for annot in atlas:
 
             # Intensity profiles
-            ip_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
+            ip_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
             ip_file = "%s/%s/%s/anat/surf/micro_profiles/acq-%s/%s_space-fsnative_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
             ip = np.loadtxt(ip_file, dtype=float, delimiter=' ')
             pltpy.imshow(ip, cmap="Greens", aspect='auto')
             pltpy.savefig(ip_fig)
 
             # MPC connectomes
-            mpc_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
+            mpc_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
             mpc_file = "%s/%s/%s/anat/surf/micro_profiles/acq-%s/%s_space-fsnative_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
             mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
             mpc = np.triu(mpc,1)+mpc.T
@@ -931,7 +1066,7 @@ def qc_mpc(mpc_json=''):
             pltpy.savefig(mpc_fig)
 
             # Degree
-            deg_fig = sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
+            deg_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
             deg = np.sum(mpc,axis=1)
 
             annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
@@ -941,10 +1076,10 @@ def qc_mpc(mpc_json=''):
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
                 plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), color_range='sym', cmap='RdBu', layout_style='grid', transparent_bg=False,
+                                 nan_color=(0, 0, 0, 1), color_range='sym', cmap='Greens', layout_style='grid', transparent_bg=False,
                                  screenshot = True, filename = deg_fig)
                 mpc_connectome_table += (
-                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{ip_fig}"></td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{mpc_fig}"></td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
@@ -981,9 +1116,9 @@ def qc_gd(gd_json=''):
 
         gd_connectome_table = (
             '<table style="border:1px solid #666;width:100%">'
-                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center>Parcellation</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Connectomes</td>'
-                '<td style=padding-top:4px;padding-left:3px;text-align:center>Degree</td></tr>'
+                '<tr><td style=padding-top:4px;padding-left:3px;text-align:center><b>Parcellation</b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Connectomes</b></td>'
+                '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
         )
 
 
@@ -993,7 +1128,7 @@ def qc_gd(gd_json=''):
         for annot in atlas:
 
             # gd connectomes
-            gd_fig = sbids + "space-fsnative_atlas-" + annot + "_gd.png"
+            gd_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_gd.png"
             gd_file = "%s/%s/%s/anat/surf/geo_dist/%s_space-fsnative_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
             gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
             gd = np.delete(np.delete(gd, 0, axis=0), 0, axis=1)
@@ -1001,7 +1136,7 @@ def qc_gd(gd_json=''):
             pltpy.savefig(gd_fig)
 
             # Degree
-            deg_fig = sbids + "space-fsnative_atlas-" + annot + "_gd_degree.png"
+            deg_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_gd_degree.png"
             deg = np.sum(gd,axis=1)
 
             annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
@@ -1011,10 +1146,10 @@ def qc_gd(gd_json=''):
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
                 plot_hemispheres(c69I_lh, c69I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), cmap='bone_r', layout_style='grid', transparent_bg=False,
+                                 nan_color=(0, 0, 0, 1), cmap='Blues', layout_style='grid', transparent_bg=False,
                                  screenshot = True, filename = deg_fig)
                 gd_connectome_table += (
-                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left>{annot}</td>'
+                    '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{gd_fig}"></td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{deg_fig}"></td></tr>'
                 ).format(annot=annot,gd_fig=gd_fig,deg_fig=deg_fig)
@@ -1044,10 +1179,10 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func', 'MPC', 'GD'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func, qc_mpc, qc_gd]
-    'modules':   ['proc_surf', 'post_structural', 'proc_func'], # 'MPC-qT1', 'GD'],
-    'functions': [qc_proc_surf, qc_post_structural, qc_proc_func] #qc_mpc, qc_gd]
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func', 'SC', 'MPC', 'GD'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func, qc_sc, qc_mpc, qc_gd]
+    'modules':   ['proc_surf', 'post_structural', 'SC'],
+    'functions': [qc_proc_surf, qc_post_structural, qc_sc]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
