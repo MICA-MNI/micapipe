@@ -67,7 +67,7 @@ T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
 dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
 # TDI output
-tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.mif"
+tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.nii.gz"
 
 # Check inputs
 micapipe_check_dependency "proc_structural" "${dir_QC}/${idBIDS}_module-proc_structural.json"
@@ -142,7 +142,8 @@ if [ ! -f "$tdi" ]; then ((N++))
 
     # TDI for QC
     Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-    Do_cmd tckmap -vox 1,1,1 -dec -nthreads "$threads" "$tck" "$tdi" -force
+    Do_cmd tckmap -template ${dwi_b0} -dec -nthreads "$threads" "$tck" "$tdi" -force
+    Do_cmd tckmap -template ${dwi_b0} -tod 6 -nthreads "$threads" "$tck" "${tdi/tdi/tod}" -force
     ((Nsteps++))
 else
     Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nsteps++)); ((N++))
@@ -186,35 +187,7 @@ for seg in "${parcellations[@]}"; do
     dwi_cortex="${tmp}/${id}_${parc_name}-cor_dwi.nii.gz" # Segmentation in dwi space
 
     # -----------------------------------------------------------------------------------------------
-    # Build the Cortical-Subcortical connectomes
-    if [[ ! -f "${connectome_str}_cor-connectome.txt" ]]; then ((N++))
-        Info "Building $parc_name cortical connectome"
-        # Take parcellation into DWI space
-        Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "$dwi_b0" -n GenericLabel "$trans_T12dwi" -o "$dwi_cortex" -v -u int
-        # Remove the medial wall
-        for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
-        # Build the Cortical connectomes
-        build_connectomes "$dwi_cortex" "${connectome_str}_cor"
-        if [[ -f "${connectome_str}_cor-connectome.txt" ]]; then ((Nsteps++)); fi
-    else
-        ((Nsteps++))
-    fi
-
-    # -----------------------------------------------------------------------------------------------
-    # Build the Cortical-Subcortical connectomes (-sub)
-    if [[ ! -f "${connectome_str}_sub-connectome.txt" ]]; then ((N++))
-        Info "Building $parc_name cortical-subcortical connectome"
-        dwi_cortexSub="${tmp}/${id}_${parc_name}-sub_dwi.nii.gz"
-        Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_subc" -add "$dwi_cortex" "$dwi_cortexSub" -odt int # added the subcortical parcellation
-        # Build the Cortical-Subcortical connectomes
-        build_connectomes "$dwi_cortexSub" "${connectome_str}_sub"
-        if [[ -f "${connectome_str}_sub-connectome.txt" ]]; then ((Nsteps++)); fi
-    else
-        ((Nsteps++))
-    fi
-
-    # -----------------------------------------------------------------------------------------------
-    # Build the Cortical-Subcortical-Cerebellar connectomes (-sub-cereb)
+    # Build the Full connectome (Cortical-Subcortical-Cerebellar)
     if [[ ! -f "${connectome_str}_full-connectome.txt" ]]; then ((N++))
         Info "Building $parc_name cortical-subcortical-cerebellum connectome"
         dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
