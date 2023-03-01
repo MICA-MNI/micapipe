@@ -177,7 +177,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
+                b0mat_str="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
@@ -248,7 +248,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 bids_dwi_str=$(echo "${dwi_reverse[i]}" | awk -F . '{print $1}')
                 b0_nom="${tmp}/$(echo "${dwi_reverse[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
-                b0mat_str="${dir_warp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
+                b0mat_str="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "DWI rpe - Registering ${b0_acq} to ${b0_refacq}"
@@ -483,7 +483,6 @@ fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
 
 if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
-    dwi_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-dwi.nii.gz" # Only for QC
     T1nativepro_in_dwi_brain="${tmp}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
 
@@ -504,8 +503,6 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     fi
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
-    # Apply transformation DWI-b0 space to T1nativepro
-    # Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "$dwi_b0" -r "$T1nativepro_brain" "$trans_dwi2T1" -o "$dwi_in_T1nativepro" -v -u int MOVE to QC
     # Apply transformation of each DTI derived map to T1nativepro
     for metric in FA AD RD ADC; do
         dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
