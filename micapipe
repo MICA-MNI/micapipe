@@ -79,6 +79,7 @@ echo -e "
 \t\t\t            Default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii*
 \t   \033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t            Default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii*
+\t\t\t            Set to 'FALSE' if no DWI with reverse fase encoding will be provided
 \t   \033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
 \t\t\t            MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded
 \t   \033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
@@ -586,6 +587,8 @@ fi
 # User provided DWI reverse phase encoded
 if [ -z ${dwi_rpe} ]; then
     dwi_rpe=DEFAULT
+elif [ ${dwi_rpe} == "FALSE" ]; then
+    dwi_rpe=${dwi_rpe}
 else
     IFS=',' read -ra dwis_rpe <<< $dwi_rpe
     for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path

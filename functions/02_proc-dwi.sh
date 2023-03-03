@@ -80,6 +80,8 @@ fi
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then
     IFS=',' read -ra dwi_reverse <<< "$dwi_rpe"
     dwi_reverse=("${dwi_reverse[@]}")
+elif [[ "$dwi_rpe" == "FALSE" ]]; then
+    dwi_reverse=()
 fi
 
 # Manage manual inputs: DWI pre-processed
@@ -213,7 +215,7 @@ fi
 
 #------------------------------------------------------------------------------#
 rpe_cat="${tmp}/dwi_rpe_concatenate.mif"
-rpe_dns="${proc_dwi}/${idBIDS}_space-dwi_dir-rpe_desc-MP-PCA_dwi.mif"
+rpe_dns="${tmp}/${idBIDS}_space-dwi_dir-rpe_desc-MP-PCA_dwi.mif"
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$rpe_dns" ] && [[ "${#dwi_reverse[@]}" -gt 0 ]]; then
     # Concatenate shells -if only one shell then just convert to mif and rename.
@@ -425,7 +427,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Get some basic metrics.
-dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.mif"
+dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.nii.gz"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
 dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.nii.gz"
 dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.nii.gz"
@@ -441,9 +443,9 @@ fi
 
 #------------------------------------------------------------------------------#
 # Response function and Fiber Orientation Distribution
-fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
-fod_gmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-gmNorm.mif"
-fod_csfN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-csfNorm.mif"
+fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+fod_gmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-gmNorm.nii.gz"
+fod_csfN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-csfNorm.nii.gz"
 if [[ ! -f "$fod_wmN" ]]; then ((N++))
       Info "Calculating Multi-Shell Multi-Tissue, Response function and Fiber Orientation Distribution"
             rf=dhollander
