@@ -421,8 +421,7 @@ function tck_json() {
       \"minlength\": \"$6\",
       \"SeedingMethod\": \"$7\",
       \"SeedingNumberMethod\": \"${tracts}\",
-      \"TerminationCriterion\": [\"reachingTissueType”],
-      \"TerminationCriterionTest\": [\"ACT\"],
+      \"TerminationCriteria\": [\"ACT\"],
       \"weighted_SC\": \"${weighted_SC}\",
       \"TractographySaved\": \"${nocleanup}\"
     }
