@@ -56,7 +56,7 @@ else
 fi
 
 # Check inputs: DWI post TRACTOGRAPHY
-fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
@@ -165,7 +165,7 @@ function build_connectomes(){
 
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads "$threads" \
-        "${tck}" "${nodes}" "${sc_file}-connectome.txt" \
+        "${tck}" "${nodes}" "${sc_file}-edgeLengths.txt" \
         -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
     Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
@@ -174,6 +174,7 @@ function build_connectomes(){
 		Do_cmd tck2connectome -nthreads "$threads" \
 			"${tck}" "${nodes}" "${sc_file}-weighted_connectome.txt" \
 			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet
+      Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 	fi
 }
 
