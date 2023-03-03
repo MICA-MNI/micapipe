@@ -159,7 +159,7 @@ parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -nam
 workflow="${dir_QC}/${idBIDS}_desc-qc_micapipe_workflow.html"
 
 #------------------------------------------------------------------------------#
-Title "MICAPIPE: Creating a QC pdf file for $idBIDS"
+Title "MICAPIPE: Creating a QC rport for $idBIDS"
 #	Timer
 aloita=$(date +%s)
 
@@ -173,6 +173,8 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Calculate everythin on a tmpDir dir
 cd $tmpDir
+
+Title "Generating necessary files for QC report"
 
 # -----------------------------------------------------------------------------------------------
 # Structural processing
@@ -203,10 +205,43 @@ done
 fi
 
 # -----------------------------------------------------------------------------------------------
+# Functional processing
+# -----------------------------------------------------------------------------------------------
+if false; then
+for func_scan in `ls ${subject_bids}/func/${idBIDS}_task-rest_echo-*_bold.nii.gz`; do
+    func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
+    Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
+done
+
+for fmap_scan in `ls ${subject_bids}/fmap/${idBIDS}_acq-fmri_dir-*_epi.nii.gz`; do
+    fmap_scan_mean=$(basename $fmap_scan | sed "s/.nii.gz/_mean.nii.gz/")
+    Do_cmd fslmaths "${fmap_scan}" -Tmean "${tmpDir}/${fmap_scan_mean}"
+done
+fi
+
+# -----------------------------------------------------------------------------------------------
+# Diffusion processing
+# -----------------------------------------------------------------------------------------------
+
+# STRUCTRAL CONNECTOME --------------------------------------------------------------------------
+if false; then
+dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+
+for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do
+    tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
+    Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
+done
+fi
+
+# -----------------------------------------------------------------------------------------------
 # Generate QC PDF
 # -----------------------------------------------------------------------------------------------
+Title "Generating QC report"
+
 Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
+exit
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
 lopuu=$(date +%s)
