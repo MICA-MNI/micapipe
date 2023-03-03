@@ -78,6 +78,8 @@ fi
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then
     IFS=',' read -ra dwi_reverse <<< "$dwi_rpe"
     dwi_reverse=("${dwi_reverse[@]}")
+elif [[ "$dwi_rpe" == "FALSE" ]]; then
+    dwi_reverse=()
 fi
 
 # Manage manual inputs: DWI pre-processed
