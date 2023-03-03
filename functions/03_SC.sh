@@ -60,10 +60,14 @@ fod_wmN="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 dwi_b0="${proc_dwi}/${idBIDS}_space-dwi_desc-b0.nii.gz"
 dwi_mask="${proc_dwi}/${idBIDS}_space-dwi_desc-brain_mask.nii.gz"
-dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
+str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro_mode-image_desc-affine_"
+mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
+dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-dwi_mode-image_desc-SyN_"
+dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
+dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
+dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # from proc_structural
-T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
 dwi_subc="${proc_dwi}/${idBIDS}_space-dwi_atlas-subcortical.nii.gz"
 # TDI output
@@ -76,6 +80,7 @@ micapipe_check_dependency "proc_dwi" "${dir_QC}/${idBIDS}_module-proc_dwi${dwi_s
 if [ ${weighted_SC} != "FALSE" ]; then
   if [ ! -f "$weighted_SC" ]; then Error "The provided weighted map does NOT exist: ${weighted_SC}"; exit 1; fi
 fi
+if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE"; fi
 
 # -----------------------------------------------------------------------------------------------
 # End if module has been processed
@@ -110,13 +115,25 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 Do_cmd cd "$tmp"
 
 # -----------------------------------------------------------------------------------------------
+# Prepare the segmentatons
+parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+# Transformations from T1nativepro to DWI
+if [[ ${regAffine}  == "FALSE" ]]; then
+    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
+elif [[ ${regAffine}  == "TRUE" ]]; then
+    trans_T12dwi="-t [${mat_dwi_affine},1]"
+fi
+# get wmFOD for registration
+fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
+
+# -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
 tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
-if [ ! -f "$tdi" ]; then ((N++))
-    Info "Building the ${tracts} streamlines connectome!!!"
-    export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
-    weights=${tmp}/SIFT2_${tracts}.txt
-    Do_cmd tckgen -nthreads "$threads" \
+Info "Building the ${tracts} streamlines connectome!!!"
+export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
+weights=${tmp}/SIFT2_${tracts}.txt
+Do_cmd tckgen -nthreads "$threads" \
         "$fod_wmN" \
         "$tck" \
         -act "$dwi_5tt" \
@@ -131,23 +148,18 @@ if [ ! -f "$tdi" ]; then ((N++))
         -minlength 10 \
         -select "$tracts"
 
-    # Exit if tractography fails
-    if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
+# Exit if tractography fails
+if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
 
-    # json file of tractogram
-    tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
+# json file of tractogram
+tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
 
-    # SIFT2
-    Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
+# SIFT2
+Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
 
-    # TDI for QC
-    Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-    Do_cmd tckmap -template ${dwi_b0} -dec -nthreads "$threads" "$tck" "$tdi" -force
-    Do_cmd tckmap -template ${dwi_b0} -tod 6 -nthreads "$threads" "$tck" "${tdi/tdi/tod}" -force
-    ((Nsteps++))
-else
-    Warning "SC has been processed for Subject $id: TDI of ${tracts} was found"; ((Nsteps++)); ((N++))
-fi
+# TDI for QC
+Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
+Do_cmd tckmap -template ${fod} -dec -nthreads "$threads" "$tck" "$tdi" -force
 
 # Map the weighted image to the whole brain tractography
 if [ ${weighted_SC} != "FALSE" ]; then Do_cmd tcksample "${tck}" ${weighted_SC} ${tmp}/mean_map_per_streamline.txt -stat_tck mean -nthreads "$threads"; fi
@@ -179,19 +191,22 @@ function build_connectomes(){
 }
 
 # Create a connectome per parcellation
-parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
-Info "${parcellations[*]}"
 for seg in "${parcellations[@]}"; do
     parc_name=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     connectome_str="${dwi_cnntm}/${idBIDS}_space-dwi_atlas-${parc_name}_desc-iFOD2-${tracts}-${filter}"
     lut="${util_lut}/lut_${parc_name}_mics.csv"
     dwi_cortex="${tmp}/${id}_${parc_name}-cor_dwi.nii.gz" # Segmentation in dwi space
-
+    dwi_cortexSub="${tmp}/${id}_${parc_name}-sub_dwi.nii.gz"
+    dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
     # -----------------------------------------------------------------------------------------------
     # Build the Full connectome (Cortical-Subcortical-Cerebellar)
     if [[ ! -f "${connectome_str}_full-connectome.txt" ]]; then ((N++))
         Info "Building $parc_name cortical-subcortical-cerebellum connectome"
-        dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
+        # Take parcellation into DWI space
+        Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "${fod}" -n GenericLabel "$trans_T12dwi" -o "$dwi_cortex" -v -u int
+        # Remove the medial wall
+        for i in 1000 2000; do Do_cmd fslmaths "$dwi_cortex" -thr "$i" -uthr "$i" -binv -mul "$dwi_cortex" "$dwi_cortex"; done
+        Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_subc" -add "$dwi_cortex" "$dwi_cortexSub" -odt int # added the subcortical parcellation
         Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
         # Build the Cortical-Subcortical-Cerebellum connectomes
         build_connectomes "$dwi_all" "${connectome_str}_full"
