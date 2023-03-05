@@ -508,7 +508,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     # Apply transformation of each DTI derived map to T1nativepro
     for metric in FA AD RD ADC; do
         dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
-        dti_map_nativepro="${proc_dwi}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+        dti_map_nativepro="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
         Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map}" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -n NearestNeighbor
     done
     # Apply transformation T1nativepro to DWI space
