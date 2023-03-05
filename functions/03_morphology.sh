@@ -60,7 +60,7 @@ Do_cmd mkdir -p "$tmp_morph"
 trap 'cleanup $tmp_morph $nocleanup $here' SIGINT SIGTERM
 
 # Make output directory
-outDir="${proc_struct}/surf/morphology"
+outDir="${dir_maps}"
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
 # Data location
@@ -75,22 +75,24 @@ function reg_surfaces(){
   # Register to fsa5 and apply 10mm smooth
   if [[ ! -f "${outDir}/${idBIDS}_space-fsaverage5_desc-rh_${morph_data}_10mm.mgh" ]]; then
       for hemi in lh rh; do
+        [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
           # Convert native file to mgh and save in output directory
-          Do_cmd mri_convert "${dataDir}/${hemi}.${morph_data} ${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_${morph_data}.mgh"
+          Do_cmd mri_convert "${dataDir}/${hemi}.${morph_data} ${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-${morph_data}.mgh"
 
           Do_cmd mri_surf2surf --hemi "$hemi" \
               --srcsubject "$idBIDS" \
-              --srcsurfval "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_${morph_data}.mgh" \
+              --srcsurfval "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-${morph_data}.mgh" \
               --trgsubject fsaverage5 \
-              --trgsurfval "${outDir}/${idBIDS}_space-fsaverage5_desc-${hemi}_${morph_data}.mgh"
+              --trgsurfval "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsaverage5_label-${morph_data}.mgh"
 
           Do_cmd mri_surf2surf --hemi "$hemi" \
               --fwhm-trg "${smooth}" \
               --srcsubject "$idBIDS" \
-              --srcsurfval "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_${morph_data}.mgh" \
+              --srcsurfval "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-${morph_data}.mgh" \
               --trgsubject fsaverage5 \
-              --trgsurfval "${outDir}/${idBIDS}_space-fsaverage5_desc-${hemi}_${morph_data}_${smooth}mm.mgh"
-              if [[ -f "${outDir}/${idBIDS}_space-fsaverage5_desc-${hemi}_${morph_data}_${smooth}mm.mgh" ]]; then ((Nsteps++)); fi
+              --trgsurfval "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsaverage5_label-${morph_data}_${smooth}mm.mgh"
+              if [[ -f "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsaverage5_label-${morph_data}_${smooth}mm.mgh" ]]; then ((Nsteps++)); fi
       done
   else
       Info "Subject ${id} cortical ${morph_data} is registered to fsa5"
@@ -102,19 +104,19 @@ function reg_surfaces(){
           [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
           HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
 
-          Do_cmd mri_convert "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_${morph_data}.mgh" "${tmp_morph}/${hemi}_${morph_data}.func.gii"
+          Do_cmd mri_convert "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-${morph_data}.mgh" "${tmp_morph}/${hemi}_${morph_data}.func.gii"
 
           Do_cmd wb_command -metric-resample \
               "${tmp_morph}/${hemi}_${morph_data}.func.gii" \
-              "${dir_conte69}/${idBIDS}_${hemi}_space-fsnative_desc-sphere.surf.gii" \
+              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-sphere.surf.gii" \
               "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
               ADAP_BARY_AREA \
               "${tmp_morph}/${hemi}_${morph_data}_c69-32k.func.gii" \
               -area-surfs \
               "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
-              "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
+              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-midthickness.surf.gii"
 
-          Do_cmd mri_convert "${tmp_morph}/${hemi}_${morph_data}_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_${morph_data}.mgh"
+          Do_cmd mri_convert "${tmp_morph}/${hemi}_${morph_data}_c69-32k.func.gii" "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-${morph_data}.mgh"
 
           # Smoothing
           Do_cmd wb_command -metric-smoothing \
@@ -123,7 +125,7 @@ function reg_surfaces(){
               10 \
               "${tmp_morph}/${hemi}_${morph_data}_${smooth}mm_c69-32k.func.gii"
 
-          Do_cmd mri_convert "${tmp_morph}/${hemi}_${morph_data}_${smooth}mm_c69-32k.func.gii" "${outDir}/${idBIDS}_space-conte69-32k_desc-${hemi}_${morph_data}_${smooth}mm.mgh"
+          Do_cmd mri_convert "${tmp_morph}/${hemi}_${morph_data}_${smooth}mm_c69-32k.func.gii" "${outDir}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-${morph_data}_${smooth}mm.mgh"
       done
   else
       Info "Subject ${idBIDS} cortical ${morph_data} is registered to conte69"
