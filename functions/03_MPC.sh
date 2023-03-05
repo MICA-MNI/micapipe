@@ -124,7 +124,7 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR="$dir_surf"
-outDir="${subject_dir}/anat/surf/micro_profiles/${mpc_p}"
+outDir="${subject_dir}/mpc/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 #------------------------------------------------------------------------------#
 # If no lta specified by user, register to surface space using T1w as intermediate volume
