@@ -89,7 +89,7 @@ N=0
 
 # Create script specific temp directory
 tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}
-Do_cmd mkdir -p "$tmp"
+Do_cmd mkdir -p "$tmp" ${proc_struct}/first
 Note "Saving temporal dir:" "$nocleanup"
 Note "\t\ttmp:" "${tmp}"
 
@@ -134,7 +134,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
       # Loop over each T1
       for ((i=1; i<=n; i++)); do
           run=$(echo "${reo_T1ws[i]}" | awk -F 'run-' '{print $2}'| sed 's:.nii.gz::g')
-          T1mat_str="${dir_warp}/${idBIDS}_T1w_from-run-${run}_to_${t1ref}_"
+          T1mat_str="${tmp}/${idBIDS}_T1w_from-run-${run}_to_${t1ref}_"
           T1mat="${T1mat_str}0GenericAffine.mat"
           T1run_2_T1="${tmp}/${id}_T1w_from-run-${run}_to_${t1ref}.nii.gz"
           Info "Registering T1w_run-${run} to ${t1ref}"
