@@ -186,7 +186,7 @@ Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # Compute warp of native structural to surface and apply to 5TT and first
-if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf.gii" ]]; then
+if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-conte69-32k_label-midthickness.surf.gii" ]]; then
     for hemisphere in l r; do
       Info "Native surfaces to conte69-64k vertices (${hemisphere}h hemisphere)"
       HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
@@ -197,22 +197,74 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf
             "${dir_subjsurf}/surf/${hemisphere}h.sphere.reg" \
             "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
             "${dir_subjsurf}/surf/${hemisphere}h.midthickness.surf.gii" \
-            "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_midthickness.surf.gii" \
-            "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii"
+            "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-midthickness.surf.gii" \
+            "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-sphere.surf.gii"
         # Resample white and pial surfaces to conte69-32k
         for surface in pial white; do ((N++))
             Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.${surface}" "${tmp}/${hemisphere}h.${surface}.surf.gii"
             Do_cmd wb_command -surface-resample \
                 "${tmp}/${hemisphere}h.${surface}.surf.gii" \
-                "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii" \
+                "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-fsnative_label-sphere.surf.gii" \
                 "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
                 BARYCENTRIC \
-                "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii"
-            if [[ -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii" ]]; then ((Nsteps++)); fi
+                "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-${surface}.surf.gii"
+            if [[ -f "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-${surface}.surf.gii" ]]; then ((Nsteps++)); fi
         done
     done
 else
     Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); N=$((N+4))
+fi
+
+#------------------------------------------------------------------------------#
+# Apply transformations to the surface white, midthickness and pial
+Info "Register surfaces to nativepro space"
+function appply_surf(){
+    label=$1
+    wb_affine=$2
+    for hemi in lh rh; do
+        [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
+        if [ "${label##*.}" != "gii" ]; then
+            in_surf="${tmp}/${hemi}.${label}.surf.gii"
+            Do_cmd mris_convert "${dir_subjsurf}/surf/${hemi}.${label}" "${in_surf}"
+            out_surf="${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_label-${label}.surf.gii"
+        else
+            in_surf="${dir_subjsurf}/surf/${hemi}.${label}"
+            out_surf="${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_label-${label}"
+        fi
+        # HIppocampal surface in DWI space
+        Info "Apply transformations to ${hemi} ${label} surface"
+        # remove offset-to-origin from any gifti surface derived from FS
+        python "$MICAPIPE"/functions/removeFSoffset.py "${in_surf}" ${tmp}/${label}_no_offset.surf.gii
+        # now match target surface to the original fssurf bounding box
+        Do_cmd wb_command -surface-match ${tmp}/${label}_no_offset.surf.gii ${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-conte69-32k_label-${label/.surf.gii/}.surf.gii ${tmp}/${label}_conte69_space-fsnative.surf.gii
+        # note: this works because the conte69 surface still has (nearly) exactly the same shape as the fssurface, just different vertices. The more vertices get removed, the more the shape degrades and the exact bounding box may no longer match. With 32k vertices though, the bounding box stays the same to within <0.01mm
+        Do_cmd wb_command -surface-apply-affine "${tmp}/${label}_conte69_space-fsnative.surf.gii" ${wb_affine} "${out_surf}"
+    done
+}
+
+Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-midthickness.surf.gii ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-pial.surf.gii ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-white.surf.gii 2>/dev/null | wc -l)
+if [[ "$Nsurf" -lt 6 ]]; then ((N++))
+    if [ ${recon} == "fastsurfer" ]; then
+        for hemisphere in l r; do
+          HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
+          Do_cmd cp "${dir_subjsurf}/surf/${hemisphere}h.midthickness.surf.gii" "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_label-midthickness.surf.gii"
+          Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.pial" "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_label-pial.surf.gii"
+          Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.white" "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_label-white.surf.gii"
+        done
+    elif [ ${recon} == "freesurfer" ]; then
+        # Select the transformation file from ANTs
+        affine_xfm="${tmp}/${idBIDS}_from-fsnative_to_nativepro_wb.mat"
+        # apply registration to nativepro
+        Do_cmd c3d_affine_tool -itk $T1_fsnative_affine -inv -o ${affine_xfm}
+        appply_surf midthickness.surf.gii "${affine_xfm}"
+        appply_surf pial "${affine_xfm}"
+        appply_surf white "${affine_xfm}"
+    fi
+    Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-midthickness.surf.gii ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-pial.surf.gii ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_label-white.surf.gii 2>/dev/null | wc -l)
+    if [[ "$Nsurf" -eq 6 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has surfaces on nativepro space"; ((Nsteps++)); ((N++))
 fi
 
 # Create json file for post_structural
@@ -220,11 +272,11 @@ post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
 json_poststruct "${T1surf}" "${post_struct_json}"
 
 # Running cortical morphology - Requires json_poststruct
-Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 20 ]]; then ((N++))
+Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 10 ]]; then ((N++))
     ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
-    Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 20 ]]; then ((Nsteps++)); fi
+    Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 10 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
