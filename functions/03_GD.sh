@@ -52,7 +52,7 @@ module_json="${dir_QC}/${idBIDS}_module-GD.json"
 micapipe_check_json_status "${module_json}" "GD"
 
 # Define output directory
-outPath="${proc_struct}/surf/geo_dist"
+outPath="${proc_struct}/geo_dist"
 
 # wb_command
 workbench_path=$(which wb_command)
