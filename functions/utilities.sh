@@ -45,7 +45,8 @@ export idBIDS="${subject}${ses}"
   # Structural directories derivatives/
   export proc_struct=$subject_dir/anat # structural processing directory
   	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
-  	 export dir_conte69=${proc_struct}/surf/conte69   # conte69
+  	 export dir_conte69=$subject_dir/surf   # conte69
+     export dir_maps=$subject_dir/maps
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
