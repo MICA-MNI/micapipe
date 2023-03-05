@@ -205,7 +205,7 @@ Note "Check log file:" "${dir_logs}/recon-all.log"
 if [[ -f "${dir_logs}/recon-all.log" ]] && grep -q "finished without error" "${dir_logs}/recon-all.log"; then ((Nsteps++)); fi
 
 # Create json file for T1native
-proc_surf_json="${proc_struct}/surf/${idBIDS}_proc_surf.json"
+proc_surf_json="${subject_dir}/surf/${idBIDS}_proc_surf.json"
 json_surf "${t1_2proc}" "${dir_surf}" "${recon}" "${proc_surf_json}"
 
 # Notification of completition
