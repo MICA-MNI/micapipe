@@ -33,6 +33,8 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural )
 \t\033[38;5;197m-proc_asl\033[0m         : ASL-Arterial spin labelling processing
 \t\t\t      ( Requires: -proc_structural )
+\t\033[38;5;197m-proc_flair\033[0m         : T2/FLAIR processing
+\t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
 \t\033[38;5;197m-proc_func\033[0m        : Funtional MRI processing and functional connectome generation
@@ -98,6 +100,10 @@ echo -e "
 \t\t\t            Default='asl'
 \t   \033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
 \t\t\t            Default='m0scan'
+
+\t\033[38;5;197m-proc_flair\033[0m
+\t   \033[38;5;120m-flairScanStr\033[0m          : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
+\t\t\t            Default='FLAIR'
 
 \t\033[38;5;197m-proc_func\033[0m
 \t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -331,6 +337,14 @@ do
     noFC=TRUE
     shift
   ;;
+  -proc_flair)
+    procFLAIR=TRUE
+    shift
+  ;;
+  -flairScanStr)
+    flairScanStr="$2"
+    shift;shift;
+  ;;
   -post_structural)
     postVOL=TRUE
     shift
@@ -520,7 +534,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -528,6 +542,7 @@ Error "A processing flag is missing:
                     -post_structural
                     -proc_dwi
                     -proc_asl
+                    -proc_flair
                     -proc_func
                     -SC
                     -MPC
@@ -602,6 +617,9 @@ if [ -z ${bvalscale} ]; then bvalscale=DEFAULT; else bvalscale=no; fi
 # Optional arguments proc_asl
 if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
 if [ -z "${m0ScanStr}" ]; then m0ScanStr=DEFAULT; fi
+
+# Optional arguments proc_flair (DEFAULT is *FLAIR.nii*)
+if [ -z "${flairScanStr}" ]; then flairScanStr=DEFAULT; fi
 
 # Get the real path of the Inputs
 inputs_realpath
@@ -818,6 +836,34 @@ if [ "$procASL" = "TRUE" ]; then
              $COMMAND $PROC
     else
       # LOCAL - post_structural processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        T2/FLAIR processing
+# -----------------------------------------------------------------------------------------------#
+#  T2/FLAIR processing
+if [ "$procFLAIR" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_flair_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr"
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - T2/FLAIR processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_flair -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - flair processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - T2/FLAIR processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_flair -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - flair processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
