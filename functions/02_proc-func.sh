@@ -352,19 +352,13 @@ function func_reoMC() {
             Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_reoMean.nii.gz" \
                             -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
                             -1Dfile "${func_volum}/${idBIDS}${func_lab}_${tag}.1D" \
-                            -1Dmatrix_save mat.r01.1D \
+                            -1Dmatrix_save ${tmp}/${tag}_mat_mc.1D \
                             "${tmp}/${tag}_reo.nii.gz"
             Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
         fi
   fi
 }
 
-# func_apply
-# 3dAllineate -base {$subj}_T1w_ns+tlrc                        \
-#           -input rm.epi.all1+orig                         \
-#           -1Dmatrix_apply mat.r$run.warp.aff12.1D         \
-#           -mast_dxyz 3 -final NN -quiet                   \
-#           -prefix rm.epi.1.r$run
 
 function func_MCoutliers() {
   # Function that generates the motion outliers file
@@ -450,10 +444,17 @@ if [[ ! -f "${func_nii}" ]]; then
     # Run Tedana
     if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
-        scans4tedana=($(find "$tmp" -maxdepth 1 -name "*mainScan*_reo.nii.gz"))
+        scans4tedana=($(ls ${tmp}/mainScan?_reo.nii.gz))
+        Info "Apply motion correction to echos"
+        for me in ${!scans4tedana[@]}; do
+          3dAllineate -base ${tmp}/mainScan_mcMean.nii.gz \
+            -input ${scans4tedana[${me}]} -1Dmatrix_apply ${tmp}/mainScan_mat_mc.1D -prefix ${scans4tedana[${me}]/_reo/_mc}
+        done
+        scans4tedana=(${tmp}/mainScan_mc.nii.gz $(ls ${tmp}/mainScan?_mc.nii.gz))
         Note "Files      :" "${scans4tedana[*]/${tmp}/}" # this will print the string full path is in mainScan
         Note "EchoNumber :" "${EchoNumber[*]}"
         Note "EchoTime   :" "${EchoTime[*]}"
+
         tedana_dir=${tmp}/tedana
 
         # prepare files for tedana
@@ -471,7 +472,7 @@ if [[ ! -f "${func_nii}" ]]; then
         Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref ${T1nativepro_brain} -out "${tmp_t1w_brain_res}"
         Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d
         Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_mask" -r "$tmp_func_mean" -t "$tmp_aff_mat" -o "${tmp_func_mask}" -u int
-        Do_cmd ImageMath 3 "${tmp_func_mask}" MD ${tmp}/mainScan01_mean_mask_transformed.nii.gz 2
+
         # Run tedana
         tedana -d $(printf "%s " "${scans4tedana[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}" --mask ${tmp_func_mask}
 
@@ -553,7 +554,7 @@ fmri_in_T1nativepro="${proc_struct}/${idBIDS}_space-nativepro_desc-${tagMRI}_mea
 T1nativepro_in_func="${func_volum}/${idBIDS}_space-func_desc-T1w.nii.gz"
 str_func_affine="${dir_warp}/${idBIDS}_from-${tagMRI}_to-nativepro_mode-image_desc-affine_"
 mat_func_affine="${str_func_affine}0GenericAffine.mat"
-t1bold="${proc_struct}/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz"
+t1bold="${tmp}/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz"
 
 str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_desc-SyN_"
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
@@ -576,26 +577,9 @@ fi
 # Registration to native pro
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then ((N++))
-    if [[ ! -f "${t1bold}" ]]; then
-        Info "Creating a synthetic T1natipro image for registration"
-        voxels=$(mrinfo ${fmri_mean} -spacing); voxels=${voxels// /,}
-        # Inverse T1w
-        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" Neg "${T1nativepro}"
-        # # Dilate the T1-mask
-        # #Do_cmd ImageMath 3 "${tmp}/${id}_T1w_mask_dil-2.nii.gz" MD "$T1nativepro_mask" 2
-        # # Masked the inverted T1w
-        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" m "${tmp}/${id}_T1w_nativepro_NEG.nii.gz" "$T1nativepro_mask"
-        # # Match histograms values acording to func
-        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" HistogramMatch "${tmp}/${id}_T1w_nativepro_NEG_brain.nii.gz" "$fmri_brain"
-        # # Smoothing
-        # Do_cmd ImageMath 3 "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" G "${tmp}/${id}_T1w_nativepro_NEG-rescaled.nii.gz" 0.35
-        # # downsample T1w as reference to func resolution
-        # Do_cmd flirt -applyisoxfm ${voxels} -in "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" -ref "${tmp}/${id}_T1w_nativepro_NEG-rescaled_smoothed.nii.gz" -out "${t1bold}"
-        Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
-
-    else
-        Info "Subject ${id} has a synthetic T1nativepro image for registration"
-    fi
+    Info "Creating a synthetic T1natipro image for registration"
+    voxels=$(mrinfo ${fmri_mean} -spacing); voxels=${voxels// /,}
+    Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
 
     Info "Registering func MRI to nativepro"
     bold_synth="${tmp}/func_brain_synthsegGM.nii.gz"
@@ -621,7 +605,7 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
     Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_brain" -r "$fmri_brain" "${transformsInv}" -o "${T1nativepro_in_func}" -v -u int
 
     if [[ -d "${func_ICA}/filtered_func_data.ica" ]]; then Do_cmd cp "${T1nativepro_in_func}" "${func_ICA}/filtered_func_data.ica/T1w2fmri_brain.nii.gz"; fi
-    if [[ -f "${SyN_func_Invwarp}" ]] ; then ((Nsteps++)); fi
+    if [[ -f "${T1nativepro_in_func}" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++)); ((N++))
 fi
@@ -632,7 +616,7 @@ proc_func_transformations "${dir_warp}/${idBIDS}_transformations-proc_func.json"
 fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
 if [[ ! -f "${fmri2fs_dat}" ]]; then ((N++))
   Info "Registering func to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_mean" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-fsl --bold --12
+    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_mode-image_desc-bbregister.nii.gz" --init-fsl --bold --12
     #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
     if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
 else
@@ -855,13 +839,13 @@ for hemisphere in lh rh; do
           # Register to conte69
           Do_cmd wb_command -metric-resample \
               "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
-              "${dir_conte69}/${BIDSanat}_${hemisphere}_space-fsnative_desc-sphere.surf.gii" \
+              "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-fsnative_label-sphere.surf.gii" \
               "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii" \
               ADAP_BARY_AREA \
               "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" \
               -area-surfs \
               "${dir_subjsurf}/surf/${hemisphere}.midthickness.surf.gii" \
-              "${dir_conte69}/${BIDSanat}_space-conte69-32k_desc-${hemisphere}_midthickness.surf.gii"
+              "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-conte69-32k_label-midthickness.surf.gii"
           # Apply smooth on conte69
           Do_cmd wb_command -metric-smoothing \
               "${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii" \
