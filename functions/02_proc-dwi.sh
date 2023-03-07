@@ -429,13 +429,11 @@ fi
 # Get some basic metrics.
 dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.nii.gz"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
-dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.nii.gz"
-dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.nii.gz"
 dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.nii.gz"
 if [[ ! -f "$dti_FA" ]]; then ((N++))
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
-      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" -ad "$dti_AD" -rd "$dti_RD" "$dwi_dti"
+      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" "$dwi_dti"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++)); ((N++))
