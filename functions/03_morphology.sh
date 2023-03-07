@@ -103,8 +103,10 @@ function reg_surfaces(){
       Info "Subject ${id} cortical ${morph_data} is registered to fsa5"
   fi
 
-  # Register to conte69 and apply 10mm smooth
+  # Register to fsLR-32k and fsLR-5k and apply 10mm smooth
   if [[ ! -f "${outDir}/${idBIDS}_surf-fsLR-32k_desc-rh_${morph_data}_${smooth}mm.mgh" ]]; then
+    for Surf in "fsLR-32k" "fsLR-5k"; do
+      Info "Resampling ${morph_data} to ${Surf}"
       for hemi in lh rh; do
           [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
           HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
@@ -112,19 +114,21 @@ function reg_surfaces(){
           Do_cmd wb_command -metric-resample \
               "${outDir}/${surf_id}-fsnative_label-${morph_data}.func.gii" \
               "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
-              "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
+              "${util_surface}/${Surf}.${HEMICAP}.sphere.reg.surf.gii" \
               ADAP_BARY_AREA \
-              "${outDir}/${surf_id}-fsLR-32k_label-${morph_data}.func.gii" \
+              "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" \
               -area-surfs \
-              "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
-              "${dir_conte69}/${surf_id}-fsLR-32k_space-fsnative_label-midthickness.surf.gii"
+              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-midthickness.surf.gii" \
+              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${Surf}_label-midthickness.surf.gii"
           # Smoothing
+          # changed   "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" >>>
           Do_cmd wb_command -metric-smoothing \
-              "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" \
-              "${outDir}/${surf_id}-fsLR-32k_label-${morph_data}.func.gii" \
+              "${util_surface}/${Surf}.${HEMICAP}.sphere.reg.surf.gii" \
+              "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" \
               10 \
-              "${outDir}/${surf_id}-fsLR-32k_label-${morph_data}_${smooth}mm.func.gii"
+              "${outDir}/${surf_id}-${Surf}_label-${morph_data}_${smooth}mm.func.gii"
       done
+    done
   else
       Info "Subject ${idBIDS} cortical ${morph_data} is registered to conte69"
   fi
