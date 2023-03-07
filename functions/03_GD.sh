@@ -81,7 +81,7 @@ for seg in "${parcellations[@]}"; do ((N++))
     parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     lh_annot="${dir_subjsurf}/label/lh.${parc}_mics.annot"
     rh_annot="${dir_subjsurf}/label/rh.${parc}_mics.annot"
-    outName="${outPath}/${idBIDS}_space-fsnative_atlas-${parc}_GD"
+    outName="${outPath}/${idBIDS}_atlas-${parc}_GD"
     if [ -f "${outName}.txt" ]; then
         Info "Geodesic Distance on $parc, already exists"; ((Nsteps++))
     else
