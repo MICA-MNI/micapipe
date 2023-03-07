@@ -904,6 +904,8 @@ def qc_sc(sc_json=''):
         atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
         atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
 
+        connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == False else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']:
+        sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
         for connectomeType in ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']:
 
             connectome_table = (
@@ -945,11 +947,11 @@ def qc_sc(sc_json=''):
             connectome_table += "</table>"
 
             if connectomeType == 'full-connectome':
-                sc_connectome_table = connectome_table
+                sc_connectome_table += connectome_table
             elif connectomeType == 'full-edgeLengths':
-                el_connectome_table = connectome_table
+                el_connectome_table += connectome_table
             elif connectomeType == 'full-weighted_connectome':
-                wsc_connectome_table = connectome_table
+                wsc_connectome_table += connectome_table
 
         _static_block += (
                 '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
