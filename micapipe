@@ -611,7 +611,7 @@ if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-umask 001
+umask 002
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
