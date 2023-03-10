@@ -67,7 +67,7 @@ cd "$util_parcelations"
 if [[ "$atlas" == "DEFAULT" ]]; then
   atlas_parc=($(ls lh.*annot))
   Natlas="${#atlas_parc[*]}"
-  Info "Selected parcellations: DEFAULT, N=${N}"
+  Info "Selected parcellations: DEFAULT, N=${Natlas}"
 else
   IFS=',' read -ra atlas_parc <<< "$atlas"
   for i in "${!atlas_parc[@]}"; do atlas_parc[i]=$(ls lh."${atlas_parc[$i]}"_mics.annot 2>/dev/null); done
@@ -151,40 +151,51 @@ Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
 # Variables
 T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 T1str_fs="${idBIDS}_space-fsnative_T1w"
+
+# Define the workflow
+function map_annot(){
+      parc_annot=$1;
+      parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
+      if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]] || [[ ! -f "${dir_subjsurf}/label/rh.${parc_annot}_mics.annot" ]]; then
+          for hemi in lh rh; do
+          Info "Running surface $hemi $parc_annot to $subject"
+          Do_cmd mri_surf2surf --hemi "$hemi" \
+                      --srcsubject fsaverage5 \
+                      --trgsubject "$idBIDS" \
+                      --sval-annot "${hemi}.${parc_annot}" \
+                      --tval "${dir_subjsurf}/label/${hemi}.${parc_annot}" # change this to /label
+          done
+          fs_mgz="${tmp}/${parc_str}.mgz"
+          fs_tmp="${tmp}/${parc_str}_in_T1.mgz"
+          fs_nii="${tmp}/${T1str_fs}_${parc_str}.nii.gz"                   # labels in fsnative tmp dir
+          labels_nativepro="${dir_volum}/${T1str_nat}-${parc_str}.nii.gz"  # lables in nativepro
+
+          # Register the annot surface parcelation to the T1-surface volume
+          Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
+          Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
+          Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
+          Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
+          Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
+
+          # Register parcellation to nativepro
+          Do_cmd antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -v -u int
+      fi
+}
+# Change directory otherwise the script won't work
 cd "$util_parcelations"
-for parc in "${atlas_parc[@]}"; do
-    parc_annot="${parc/lh./}"
-    parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
-    if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]]; then ((N++))
-        for hemi in lh rh; do
-        Info "Running surface $hemi $parc_annot to $subject"
-        Do_cmd mri_surf2surf --hemi "$hemi" \
-               		  --srcsubject fsaverage5 \
-               		  --trgsubject "$idBIDS" \
-               		  --sval-annot "${hemi}.${parc_annot}" \
-               		  --tval "${dir_subjsurf}/label/${hemi}.${parc_annot}"
-        done
-        fs_mgz="${tmp}/${parc_str}.mgz"
-        fs_tmp="${tmp}/${parc_str}_in_T1.mgz"
-        fs_nii="${tmp}/${T1str_fs}_${parc_str}.nii.gz"                   # labels in fsnative tmp dir
-        labels_nativepro="${dir_volum}/${T1str_nat}-${parc_str}.nii.gz"  # lables in nativepro
+Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot | wc -l 2>/dev/null)
+if [[ "${Nannot}" != "${Natlas}" ]]; then ((N++))
+  while [ "${Natlas}" != "${Nannot}" ]; do
+    Info "Mapping $((Natlas-Nannot)) of ${Natlas} parcellations to nativepro"
+    for parc in "${atlas_parc[@]}"; do
+      parc_nom="${parc/lh./}"
+      Do_cmd map_annot "${parc_nom}"
+    done
+  done
+else
+  Info "Subject ${idBIDS} surfaced derived parcellations on nativepro"; ((Nsteps++)); ((N++))
+fi
 
-        # Register the annot surface parcelation to the T1-surface volume
-        Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
-        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
-        Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
-        Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
-        Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
-
-        # Register parcellation to nativepro
-        Do_cmd antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -v -u int
-        if [[ -f "$labels_nativepro" ]]; then ((Nsteps++)); fi
-    else
-        Info "Subject ${id} has a ${parc_str} segmentation on T1-nativepro space"
-        ((Nsteps++)); ((N++))
-    fi
-done
-Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # Compute Creating fsnative sphere for registration
@@ -204,7 +215,7 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-m
             if [[ -f "${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${idBIDS} has a sphere on fsnative space"; Nsteps=$((Nsteps+1)); N=$((N+1))
+    Info "Subject ${idBIDS} has a sphere on fsnative space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -235,7 +246,7 @@ function from-fsnative_to-nativepro(){
     done
 }
 
-Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii 2>/dev/null | wc -l)
+Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
 if [[ "$Nsurf" -lt 6 ]]; then ((N++))
     Info "Register surfaces to nativepro space"
     # Convert the ANTs transformation file for wb_command
@@ -243,7 +254,7 @@ if [[ "$Nsurf" -lt 6 ]]; then ((N++))
     Do_cmd c3d_affine_tool -itk $T1_fsnative_affine -inv -o ${affine_xfm}
     for Surf in pial midthickness.surf.gii white; do from-fsnative_to-nativepro "${Surf}" "${affine_xfm}"; done
     # Check outputs
-    Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii 2>/dev/null | wc -l)
+    Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
     if [[ "$Nsurf" -eq 6 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has surfaces on nativepro space"; ((Nsteps++)); ((N++))
@@ -299,7 +310,9 @@ if [[ "$Nmorph" -lt 10 ]]; then ((N++))
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
-rm -rfv "${dir_subjsurf}/surf/"*gii "${dir_subjsurf}/label/"*mics.annot
+
+# remove intermediate files
+rm -rf "${dir_subjsurf}/surf/"*giis ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition
