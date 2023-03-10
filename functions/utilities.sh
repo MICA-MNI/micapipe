@@ -109,8 +109,8 @@ set_surface_directory() {
   export T1surf=${dir_subjsurf}/mri/T1.mgz
 
   # Native midsurface in gifti format
-  export lh_midsurf=${dir_subjsurf}/surf/lh.midthickness.surf.gii
-  export rh_midsurf=${dir_subjsurf}/surf/rh.midthickness.surf.gii
+  export lh_midsurf="${dir_conte69}/${idBIDS}_hemi-L_surf-fsnative_label-midthickness.surf.gii"
+  export rh_midsurf="${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-midthickness.surf.gii"
 }
 
 bids_print.variables() {
