@@ -115,11 +115,8 @@ function reg_surfaces(){
               "${outDir}/${surf_id}-fsnative_label-${morph_data}.func.gii" \
               "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
               "${util_surface}/${Surf}.${HEMICAP}.sphere.reg.surf.gii" \
-              ADAP_BARY_AREA \
-              "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" \
-              -area-surfs \
-              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-midthickness.surf.gii" \
-              "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${Surf}_label-midthickness.surf.gii"
+              BARYCENTRIC \
+              "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" #\
           # Smoothing
           # changed   "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" >>>
           Do_cmd wb_command -metric-smoothing \

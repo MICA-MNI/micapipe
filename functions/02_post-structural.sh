@@ -66,7 +66,7 @@ micapipe_check_dependency "proc_surf" "${dir_QC}/${idBIDS}_module-proc_surf-${re
 cd "$util_parcelations"
 if [[ "$atlas" == "DEFAULT" ]]; then
   atlas_parc=($(ls lh.*annot))
-  N="${#atlas_parc[*]}"
+  Natlas="${#atlas_parc[*]}"
   Info "Selected parcellations: DEFAULT, N=${N}"
 else
   IFS=',' read -ra atlas_parc <<< "$atlas"
@@ -74,8 +74,8 @@ else
   atlas_parc=("${atlas_parc[@]}")
   # Always runs schaefer-400 for default (QC)
   if [[ ! "${atlas_parc[*]}" =~ "schaefer-400" ]]; then atlas_parc+=("schaefer-400"); fi
-  N="${#atlas_parc[*]}"
-  Info "Selected parcellations: $atlas, N=${N}"
+  Natlas="${#atlas_parc[*]}"
+  Info "Selected parcellations: $atlas, N=${Natlas}"
 fi
 cd "$here"
 
@@ -252,7 +252,7 @@ fi
 # Resample to fsLR-32k fsLR-5k and fsaverage5
 function resample_surfs(){
   label=$1
-  surfaces=("fsLR-32k" "fsaverage5" "fsLR-5k")
+  surfaces=("fsLR-32k" "fsaverage5")
   for i in "${!surfaces[@]}"; do
     Info "Resampling to ${surfaces[i]}"
     for HEMICAP in L R; do
@@ -265,6 +265,14 @@ function resample_surfs(){
                   "${sphere}" \
                   BARYCENTRIC \
                   "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii"
+      if [ ${surfaces[i]} == "fsLR-32k" ]; then
+        Do_cmd wb_command -surface-resample \
+                    "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii" \
+                    "${util_surface}/${surfaces[i]}.${HEMICAP}.sphere.surf.gii" \
+                    "${util_surface}/fsLR-5k.${HEMICAP}.sphere.surf.gii" \
+                    BARYCENTRIC \
+                    "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsLR-5k_label-${label}.surf.gii"
+      fi
     done
   done
 }
