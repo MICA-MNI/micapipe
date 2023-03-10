@@ -86,7 +86,7 @@ else:
 
 
 # ------------------------------------------
-# Conte69 processing
+# fsLR processing
 # ------------------------------------------
 
 # Find and load surface-registered cortical timeseries
@@ -112,7 +112,7 @@ else:
 # Reformat data
 data = []
 data = np.transpose(np.append(lh_data, rh_data, axis=0))
-n_vertex_ctx_c69 = data.shape[1]
+n_vertex_ctx_fsLR = data.shape[1]
 del lh_data
 del rh_data
 
@@ -241,8 +241,8 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         Data_corr = check_arrays()
     return Data_corr
 
-# conte69
-data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'conte69')
+# fsLR
+data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
 np.savetxt(funcDir+'/surf/' + subject + '_func_space-fsLR-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
@@ -257,11 +257,8 @@ parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellatio
 parcellationList.remove('subcortical')
 parcellationList.remove('cerebellum')
 
-# Start with conte parcellations
-parcellationList_conte=[sub + '_conte69' for sub in parcellationList]
-
 if noFC!="TRUE":
-    for parcellation in parcellationList_conte:
+    for parcellation in parcellationList:
         parcSaveName = parcellation.split('_conte')[0]
         parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
@@ -272,7 +269,7 @@ if noFC!="TRUE":
             thisparc = np.loadtxt(parcPath)
 
         # Parcellate cortical timeseries
-        data_corr_ctx = data_corr[:, -n_vertex_ctx_c69:]
+        data_corr_ctx = data_corr[:, -n_vertex_ctx_fsLR:]
         uparcel = np.unique(thisparc)
         ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
         for lab in range(len(uparcel)):
@@ -290,7 +287,7 @@ if noFC!="TRUE":
         else:
             ts_r = np.triu(ts_r)
 
-        np.savetxt(funcDir + '/surf/' + subject + '_func_space-conte69-32k_atlas-' + parcellation.replace('_conte69','') + '_desc-FC' + gsr + '.txt',
+        np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsLR-32k_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
                    ts_r, fmt='%.6f')
         del ts_r
         del ts
