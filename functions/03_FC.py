@@ -91,8 +91,8 @@ else:
 
 # Find and load surface-registered cortical timeseries
 os.chdir(funcDir+'/surf/')
-x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_lh_10mm*'))
-x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*space-conte69-32k_rh_10mm*'))
+x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-L_func_space-fsLR-32k.func.gii'))
+x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-R_func_space-fsLR-32k.func.gii'))
 lh_data = nib.load(x_lh)
 lh_data = np.squeeze(lh_data.get_fdata())
 rh_data = nib.load(x_rh)
@@ -245,7 +245,7 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
 data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'conte69')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surf/' + subject + '_func_space-conte69-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surf/' + subject + '_func_space-fsLR-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = os.listdir(volmDir)
@@ -413,10 +413,10 @@ plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacemen
 del fd
 
 # tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_lh_NoHP.mgh'))
+lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-L_func_space-fsLR-32k_NoHP.func.gii'))
 lh_nat_noHP_data = nib.load(lh_nat_noHP)
 lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*_func_space-fsnative_rh_NoHP.mgh'))
+rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-R_func_space-fsLR-32k_NoHP.func.gii'))
 rh_nat_noHP_data = nib.load(rh_nat_noHP)
 rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
 
