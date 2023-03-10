@@ -2,19 +2,19 @@
 
 set -e
 
-# Generate Dockerfile.
+# Generate Dockerfile using neurodocker 0.7.0
 generate() {
   docker run --rm neurodocker:local generate "$1" \
     --base=ubuntu:bionic-20201119 \
     --pkg-manager=apt \
     --install "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
     --dcm2niix version=v1.0.20190902 method=source\
-    --fsl version=6.0.3 \
+    --fsl version=6.0.2 \
     --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
     --freesurfer version=6.0.0 \
     --matlabmcr version=2017b\
     --afni version=latest\
-    --ants version=2.3.4 \
+    --ants version=2.3.1 \    # change manually the Dockefile to 2.3.4
     --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
     --run-bash "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz" \
     --user=mica \
