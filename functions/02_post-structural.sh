@@ -189,7 +189,7 @@ Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 #------------------------------------------------------------------------------#
 # Compute Creating fsnative sphere for registration
 if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii" ]]; then
-    for hemisphere in l r; do
+    for hemisphere in l r; do ((N++))
       Info "Creating fsnative sphere surface (${hemisphere}h hemisphere)"
       HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
         # Build the fsLR-32k sphere and midthickness surface
@@ -204,7 +204,7 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-m
             if [[ -f "${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${idBIDS} has a sphere on fsnative space"; Nsteps=$((Nsteps+4)); N=$((N+4))
+    Info "Subject ${idBIDS} has a sphere on fsnative space"; Nsteps=$((Nsteps+2)); N=$((N+1))
 fi
 
 #------------------------------------------------------------------------------#
@@ -291,6 +291,7 @@ post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
 json_poststruct "${T1surf}" "${post_struct_json}"
 
 # Running cortical morphology - Requires json_poststruct
+Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 10 ]]; then ((N++))
     ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
     Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
