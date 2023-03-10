@@ -29,6 +29,7 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_surf\033[0m        : DELETES Surface processing
 \t  \033[38;5;120m-fastsurfer\033[0m        Use this to delete fastsurfer processing
+\t\033[38;5;197m-proc_flair\033[0m       : DELETES FLAIR processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t  \033[38;5;120m-acqStr\033[0m            Use this option if -proc_dwi was used with -dwi_acq
 \t\033[38;5;197m-proc_func\033[0m        : DELETES Funtional MRI processing
@@ -96,6 +97,10 @@ do
   ;;
   -proc_func)
     procFunc=TRUE
+    shift
+  ;;
+  -proc_flair)
+    procFlair=TRUE
     shift
   ;;
   -post_structural)
@@ -234,6 +239,16 @@ if [ "$postVOL" = "TRUE" ]; then
                   "${subject_dir}/anat/surf/morphology" \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_flair
+if [ "$procFlair" = "TRUE" ]; then
+    Warning "Erasing proc_flair output files and logs"
+    Do_cmd rm -rf "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.nii.gz \
+        "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.json \
+        "${dir_QC}/${idBIDS}"_module-flair.json 
+    grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------

@@ -60,6 +60,10 @@ else
     flairScan=;$(ls "${subject_bids}/anat/${idBIDS}_${flairScanStr}".nii* 2>/dev/null);
 fi
 
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-flair.json"
+micapipe_check_json_status "${module_json}" "flair"
+
 
 #------------------------------------------------------------------------------#
 Title "T2-FLAIR intensities\n\t\tmicapipe $Version, $PROC"
@@ -70,6 +74,7 @@ Info "Saving temporary dir: $nocleanup"
 # Timer
 aloita=$(date +%s)
 Nsteps=0
+N=0
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
@@ -85,6 +90,10 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 outDir="${subject_dir}/maps"
 [[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
 
+# json file
+flairProcStr="${idBIDS}_space-nativepro_map-flair"
+flair_json="${outDir}/${flairProcStr}.json"
+
 
 #------------------------------------------------------------------------------#
 ### FLAIR intensity correction ###
@@ -92,36 +101,45 @@ outDir="${subject_dir}/maps"
 # Bias field correction
 flair_N4="${tmp}/${idBIDS}_space-flair_desc-flair_N4.nii.gz"
 if [[ ! -f "$flair_N4" ]]; then
+    ((N++))
     Do_cmd N4BiasFieldCorrection -d 3 -i "$bids_flair" -r \
                                 -o "$flair_N4" -v
+    ((Nsteps++))
 else
-    Info "Subject ${id} T2-FLAIR is N4 bias corrected"; Nsteps=$((Nsteps++))
+    Info "Subject ${id} T2-FLAIR is N4 bias corrected"; ((Nsteps++)); ((N++))
 fi
 
 # Clamp and rescale intensities
 flair_clamp="${tmp}/${idBIDS}_space-flair_desc-flair_N4_clamp.nii.gz"
 flair_rescale="${tmp}/${idBIDS}_space-flair_desc-flair_N4_rescale.nii.gz"
 if [[ ! -f "$flair_rescale" ]]; then
+    ((N++))
+
     # Clamp intensities
     Do_cmd ImageMath 3 "$flair_clamp" TruncateImageIntensity "$flair_N4" 0.01 0.99 75
 
     # Rescale intensity [0,100]
     Do_cmd ImageMath 3 "$flair_rescale" RescaleImage "$flair_clamp" 0 100
+    
+    ((Nsteps++))
 else
-    Info "Subject ${id} T2-FLAIR is intensity corrected"; Nsteps=$((Nsteps++))
+    Info "Subject ${id} T2-FLAIR is intensity corrected"; ((Nsteps++)); ((N++))
 fi
 
 # Normalize intensities by GM/WM interface, uses 5ttgen
 flair_preproc="${tmp}/${idBIDS}_space-flair_desc-flair_preproc.nii.gz"
-if [[ ! -f "$flair_gmwmi" ]]; then
+if [[ ! -f "$flair_gmwmi" ]]; then 
+    ((N++))
     # Get gm/wm interface mask
     t1_gmwmi="${tmp}/${idBIDS}_space-nativepro_desc-gmwmi-mask.nii.gz"
     t1_5tt="${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz"
     if [[ ! -f "$t1_gmwmi" ]]; then
+        ((N++))
         Info "Calculating Gray matter White matter interface mask"
         Do_cmd 5tt2gmwmi "$t1_5tt" "$t1_gmwmi"
+        ((Nsteps++))
     else
-        Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++))
+        Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++)); ((N++))
     fi
 
     # Register nativepro and flair
@@ -139,20 +157,27 @@ if [[ ! -f "$flair_gmwmi" ]]; then
 
     # Normalize flair
     fslmaths "$flair_rescale" -div $gmwmi_mean "$flair_preproc"
+    
+    ((Nsteps++))
 else
-    Info "Subject ${id} T2-FLAIR is normalized by GM/WM interface"; Nsteps=$((Nsteps++))
+    Info "Subject ${id} T2-FLAIR is normalized by GM/WM interface"; ((Nsteps++)); ((N++))
 fi
 
 
 #------------------------------------------------------------------------------#
 ### FLAIR registration to nativepro ###
-flairNP="${outDir}/${idBIDS}_space-nativepro_desc-flair.nii.gz"
+flairNP="${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz"
 if [[ ! -f "$flairNP" ]]; then
     Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$str_flair_affine"0GenericAffine.mat -o "$flairNP" -v -u float
+    ((Nsteps++)); ((N++))
 else
-    Info "Subject ${id} T2-FLAIR is registered to nativepro"; Nsteps=$((Nsteps++))
+    Info "Subject ${id} T2-FLAIR is registered to nativepro"; ((Nsteps++)); ((N++))
 fi
 
+# Write json file
+json_nativepro_flair "$flairNP" \
+    "antsApplyTransforms -d 3 -i ${flair_preproc} -r ${T1nativepro_brain} -t ${str_flair_affine}0GenericAffine.mat -o ${flairNP} -v -u float" \
+    "$flair_json"
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
@@ -161,12 +186,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-if [ "$Nsteps" -eq 6 ]; then status="COMPLETED"; else status="ERROR T2-FLAIR is missing a processing step"; fi
-Title "proc-flair processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m.
-\tSteps completed : $(printf "%02d" "$Nsteps")/6
-\tStatus          : ${status}
-\tCheck logs      : $(ls "${dir_logs}"/proc_flair_*.txt)"
-# Print QC stamp
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_flair" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_flair" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
-cleanup "$tmp" "$nocleanup" "$here"
+module_name="flair"
+micapipe_completition_status ${module_name}
+micapipe_procStatus "${id}" "${SES/ses-/}" "${module_name}" "${out}/micapipe_processed_sub.csv"
+module_json="${dir_QC}/${idBIDS}_module-${module_name}.json"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "${module_name}" "${module_json}"
+
+
