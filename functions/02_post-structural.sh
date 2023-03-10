@@ -191,6 +191,7 @@ if [[ "${Nannot}" != "${Natlas}" ]]; then ((N++))
       parc_nom="${parc/lh./}"
       Do_cmd map_annot "${parc_nom}"
     done
+    Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot | wc -l 2>/dev/null)
   done
 else
   Info "Subject ${idBIDS} surfaced derived parcellations on nativepro"; ((Nsteps++)); ((N++))
