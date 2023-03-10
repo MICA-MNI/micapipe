@@ -43,6 +43,8 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
+\t\033[38;5;197m-dist\033[0m               : Matrix distance analysis
+\t\t\t      ( Requires: -proc_surf and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
@@ -343,6 +345,10 @@ do
     postGD=TRUE
     shift
   ;;
+  -dist)
+    dist=TRUE
+    shift
+  ;;
   -MPC)
     postMPC=TRUE
     shift
@@ -520,7 +526,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFunc $procTask $postDWI $postGD $dist $postMorph $postMPC $qtest $qcsubj $cleanup)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -532,6 +538,7 @@ Error "A processing flag is missing:
                     -SC
                     -MPC
                     -GD
+                    -dist
                     -QC_subj
                     -cleanup"
 exit 1; fi
@@ -916,6 +923,32 @@ if [ "$postGD" = "TRUE" ]; then
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
+
+if [ "$dist" = "TRUE" ]; then
+    log_file_str=$dir_logs/dist_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/03_dist.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    # mica.q - Geodesic distance
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Distance"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+              $COMMAND $PROC
+    # all.q - Geodesic distance
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Distance"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+        # LOCAL - Geodesic distance processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #       SC: Structural Connectome processing (tractography)
