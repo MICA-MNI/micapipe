@@ -942,7 +942,7 @@ function json_dwipreproc() {
         \"slm\": \"linear\"
     },
     \"B1fieldCorrection\": \"ANTS N4BiasFieldCorrection\",
-    \"DWIprocessed\": \"$2\",
+    \"DWIprocessed\": \"$2\"
   }" > "$3"
 }
 
