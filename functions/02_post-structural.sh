@@ -204,7 +204,7 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-m
             if [[ -f "${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${idBIDS} has a sphere on fsnative space"; Nsteps=$((Nsteps+2)); N=$((N+1))
+    Info "Subject ${idBIDS} has a sphere on fsnative space"; Nsteps=$((Nsteps+1)); N=$((N+1))
 fi
 
 #------------------------------------------------------------------------------#
