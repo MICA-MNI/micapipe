@@ -429,13 +429,11 @@ fi
 # Get some basic metrics.
 dwi_dti="${proc_dwi}/${idBIDS}_space-dwi_model-DTI.nii.gz"
 dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
-dti_AD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-AD.nii.gz"
-dti_RD="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-RD.nii.gz"
 dti_ADC="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-ADC.nii.gz"
 if [[ ! -f "$dti_FA" ]]; then ((N++))
       Info "Calculating basic DTI metrics"
       dwi2tensor -mask "$dwi_mask" -nthreads "$threads" "$dwi_corr" "$dwi_dti"
-      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" -ad "$dti_AD" -rd "$dti_RD" "$dwi_dti"
+      tensor2metric -nthreads "$threads" -fa "$dti_FA" -adc "$dti_ADC" "$dwi_dti"
       if [[ -f "$dti_FA" ]]; then ((Nsteps++)); fi
 else
       Info "Subject ${id} has diffusion tensor metrics"; ((Nsteps++)); ((N++))
@@ -506,9 +504,9 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
     # Apply transformation of each DTI derived map to T1nativepro
-    for metric in FA AD RD ADC; do
+    for metric in FA ADC; do
         dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
-        dti_map_nativepro="${proc_dwi}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+        dti_map_nativepro="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
         Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map}" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -n NearestNeighbor
     done
     # Apply transformation T1nativepro to DWI space
@@ -547,6 +545,12 @@ fi
 # Remove unused warped files
 Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_str_}.json" ${trans_T12dwi// /:} ${trans_dwi2T1// /:}
+
+#------------------------------------------------------------------------------#
+# DTI-maps surface mapping
+# Apply transformations to fsnative surface from nativepro space to dwi space
+# Generate fsLR-32k, fsLR-5k and fsaverage5 in dwi space
+# Map from volume to surface for each surfaces
 
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask

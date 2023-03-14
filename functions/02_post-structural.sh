@@ -72,6 +72,8 @@ else
   IFS=',' read -ra atlas_parc <<< "$atlas"
   for i in "${!atlas_parc[@]}"; do atlas_parc[i]=$(ls lh."${atlas_parc[$i]}"_mics.annot 2>/dev/null); done
   atlas_parc=("${atlas_parc[@]}")
+  # Always runs schaefer-400 for default (QC)
+  if [[ ! "${atlas_parc[*]}" =~ "schaefer-400" ]]; then atlas_parc+=("schaefer-400"); fi
   Natlas="${#atlas_parc[*]}"
   Info "Selected parcellations: $atlas, N=${Natlas}"
 fi
@@ -145,74 +147,158 @@ fi
 
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
-Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
+Info "Surface annnot parcellations to T1-nativepro Volume"
 # Variables
 T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 T1str_fs="${idBIDS}_space-fsnative_T1w"
+
+# Define the workflow
+function map_annot(){
+      parc_annot=$1;
+      parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
+      if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]]; then
+          for hemi in lh rh; do
+          Info "Running surface $hemi $parc_annot to $subject"
+          Do_cmd mri_surf2surf --hemi "$hemi" \
+                      --srcsubject fsaverage5 \
+                      --trgsubject "$idBIDS" \
+                      --sval-annot "${hemi}.${parc_annot}" \
+                      --tval "${dir_subjsurf}/label/${hemi}.${parc_annot}" # change this to /label
+          done
+          fs_mgz="${tmp}/${parc_str}.mgz"
+          fs_tmp="${tmp}/${parc_str}_in_T1.mgz"
+          fs_nii="${tmp}/${T1str_fs}_${parc_str}.nii.gz"                   # labels in fsnative tmp dir
+          labels_nativepro="${dir_volum}/${T1str_nat}-${parc_str}.nii.gz"  # lables in nativepro
+
+          # Register the annot surface parcelation to the T1-surface volume
+          Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
+          Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
+          mrconvert "$fs_tmp" "$fs_nii" -force -quiet # mgz to nifti_gz
+          fslreorient2std "$fs_nii" "$fs_nii"         # reorient to standard
+          fslmaths "$fs_nii" -thr 1000 "$fs_nii"      # threshold the labels
+
+          # Register parcellation to nativepro
+          antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -u int
+      fi
+}
+# Change directory otherwise the script won't work
 cd "$util_parcelations"
-for parc in "${atlas_parc[@]}"; do
-    parc_annot="${parc/lh./}"
-    parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
-    if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]]; then ((N++))
-        for hemi in lh rh; do
-        Info "Running surface $hemi $parc_annot to $subject"
-        Do_cmd mri_surf2surf --hemi "$hemi" \
-               		  --srcsubject fsaverage5 \
-               		  --trgsubject "$idBIDS" \
-               		  --sval-annot "${hemi}.${parc_annot}" \
-               		  --tval "${dir_subjsurf}/label/${hemi}.${parc_annot}"
-        done
-        fs_mgz="${tmp}/${parc_str}.mgz"
-        fs_tmp="${tmp}/${parc_str}_in_T1.mgz"
-        fs_nii="${tmp}/${T1str_fs}_${parc_str}.nii.gz"                   # labels in fsnative tmp dir
-        labels_nativepro="${dir_volum}/${T1str_nat}-${parc_str}.nii.gz"  # lables in nativepro
+Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
+Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
+if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
+  while [ "${Nparc}" != "${Natlas}" ] || [ "${Nannot}" != "${Natlas}" ]; do
+    Info "Mapping $((Natlas-Nparc)) of ${Natlas} parcellations to nativepro"
+    for parc in "${atlas_parc[@]}"; do
+      parc_nom="${parc/lh./}"
+      map_annot "${parc_nom}"
+    done
+    Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
+    Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
+  done
+  ((Nsteps++))
+else
+  Info "Subject ${idBIDS} has surface derived parcellations on nativepro"; ((Nsteps++)); ((N++))
+fi
 
-        # Register the annot surface parcelation to the T1-surface volume
-        Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
-        Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
-        Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
-        Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
-        Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
-
-        # Register parcellation to nativepro
-        Do_cmd antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -v -u int
-        if [[ -f "$labels_nativepro" ]]; then ((Nsteps++)); fi
-    else
-        Info "Subject ${id} has a ${parc_str} segmentation on T1-nativepro space"
-        ((Nsteps++)); ((N++))
-    fi
-done
-Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
-# Compute warp of native structural to surface and apply to 5TT and first
-if [[ ! -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-rh_midthickness.surf.gii" ]]; then
-    for hemisphere in l r; do
-      Info "Native surfaces to conte69-64k vertices (${hemisphere}h hemisphere)"
+# Compute Creating fsnative sphere for registration
+if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii" ]]; then
+    for hemisphere in l r; do ((N++))
+      Info "Creating fsnative sphere surface (${hemisphere}h hemisphere)"
       HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
-        # Build the conte69-32k sphere and midthickness surface
+        # Build the fsLR-32k sphere and midthickness surface
         Do_cmd wb_shortcuts -freesurfer-resample-prep \
             "${dir_subjsurf}/surf/${hemisphere}h.white" \
             "${dir_subjsurf}/surf/${hemisphere}h.pial" \
             "${dir_subjsurf}/surf/${hemisphere}h.sphere.reg" \
-            "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
-            "${dir_subjsurf}/surf/${hemisphere}h.midthickness.surf.gii" \
-            "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_midthickness.surf.gii" \
-            "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii"
-        # Resample white and pial surfaces to conte69-32k
-        for surface in pial white; do ((N++))
-            Do_cmd mris_convert "${dir_subjsurf}/surf/${hemisphere}h.${surface}" "${tmp}/${hemisphere}h.${surface}.surf.gii"
-            Do_cmd wb_command -surface-resample \
-                "${tmp}/${hemisphere}h.${surface}.surf.gii" \
-                "${dir_conte69}/${idBIDS}_${hemisphere}h_space-fsnative_desc-sphere.surf.gii" \
-                "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
-                BARYCENTRIC \
-                "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii"
-            if [[ -f "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemisphere}h_${surface}.surf.gii" ]]; then ((Nsteps++)); fi
-        done
+            "${util_surface}/fsLR-32k.${HEMICAP}.sphere.reg.surf.gii" \
+            "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-midthickness.surf.gii" \
+            "${tmp}/${surf_id}-fsLR-32k_space-fsnative_label-midthickness.surf.gii" \
+            "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii"
+            if [[ -f "${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
     done
 else
-    Info "Subject ${idBIDS} has surfaces on conte69"; Nsteps=$((Nsteps+4)); N=$((N+4))
+    Info "Subject ${idBIDS} has a sphere on fsnative space"; ((Nsteps++)); ((N++))
+fi
+
+#------------------------------------------------------------------------------#
+# Apply transformations to the surface white, midthickness and pial
+function from-fsnative_to-nativepro(){
+    # This function takes a surface generated by freesurfer and an affine transformation to the original nativepro space
+    # Removes the offset RAS from freesurfer, register the surface to the native space,
+    # and resamples to fsLR-32k, fsLR-5k and fsaverage5
+    label=$1
+    wb_affine=$2
+    for hemi in lh rh; do
+        [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
+        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
+        surf_id=${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf
+        Info "Apply transformations to ${hemi} ${label} surface"
+        if [ "${label##*.}" != "gii" ]; then
+            in_surf="${tmp}/${hemi}.${label}.surf.gii"
+            Do_cmd mris_convert "${dir_subjsurf}/surf/${hemi}.${label}" "${in_surf}"
+            out_surf="${dir_conte69}/${surf_id}-fsnative_label-${label}.surf.gii"
+        else
+            in_surf="${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-midthickness.surf.gii"
+            out_surf="${dir_conte69}/${surf_id}-fsnative_label-${label}"
+        fi
+        # Remove offset-to-origin from any gifti surface derived from FS
+        Do_cmd python "$MICAPIPE"/functions/removeFSoffset.py "${in_surf}" ${tmp}/${label}_no_offset.surf.gii
+        # Apply transformation to register surface to nativepro
+        Do_cmd wb_command -surface-apply-affine ${tmp}/${label}_no_offset.surf.gii ${wb_affine} "${out_surf}"
+    done
+}
+
+Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
+if [[ "$Nsurf" -lt 6 ]]; then ((N++))
+    Info "Register surfaces to nativepro space"
+    # Convert the ANTs transformation file for wb_command
+    affine_xfm="${tmp}/${idBIDS}_from-fsnative_to_nativepro_wb.mat"
+    Do_cmd c3d_affine_tool -itk $T1_fsnative_affine -inv -o ${affine_xfm}
+    for Surf in pial midthickness.surf.gii white; do from-fsnative_to-nativepro "${Surf}" "${affine_xfm}"; done
+    # Check outputs
+    Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
+    if [[ "$Nsurf" -eq 6 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has surfaces on nativepro space"; ((Nsteps++)); ((N++))
+fi
+
+# Resample to fsLR-32k fsLR-5k and fsaverage5
+function resample_surfs(){
+  label=$1
+  surfaces=("fsLR-32k" "fsaverage5")
+  for i in "${!surfaces[@]}"; do
+    Info "Resampling to ${surfaces[i]}"
+    for HEMICAP in L R; do
+      sphere="${util_surface}/${surfaces[i]}.${HEMICAP}.sphere.reg.surf.gii"
+      surf_native="${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+      surf_native_sphere="${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii"
+      Do_cmd wb_command -surface-resample \
+                  "${surf_native}" \
+                  "${surf_native_sphere}" \
+                  "${sphere}" \
+                  BARYCENTRIC \
+                  "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii"
+      if [ ${surfaces[i]} == "fsLR-32k" ]; then
+        Do_cmd wb_command -surface-resample \
+                    "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii" \
+                    "${util_surface}/${surfaces[i]}.${HEMICAP}.sphere.surf.gii" \
+                    "${util_surface}/fsLR-5k.${HEMICAP}.sphere.surf.gii" \
+                    BARYCENTRIC \
+                    "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsLR-5k_label-${label}.surf.gii"
+      fi
+    done
+  done
+}
+
+Nsurf=$(ls ${dir_conte69}/${idBIDS}*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
+if [[ "$Nsurf" -lt 12 ]]; then ((N++))
+  for Surf in pial midthickness white; do resample_surfs "${Surf}"; done
+  Nsurf=$(ls ${dir_conte69}/${idBIDS}*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
+  if [[ "$Nsurf" -eq 12 ]]; then ((Nsteps++)); fi
+else
+  Info "Subject ${idBIDS} has surfaces resampled to fsLR-32k, fsaverage5 and fsLR-5k"; ((Nsteps++)); ((N++))
 fi
 
 # Create json file for post_structural
@@ -220,14 +306,17 @@ post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
 json_poststruct "${T1surf}" "${post_struct_json}"
 
 # Running cortical morphology - Requires json_poststruct
-Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 20 ]]; then ((N++))
+Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 10 ]]; then ((N++))
     ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
-    Nmorph=$(ls "${proc_struct}/surf/morphology/"* 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 20 ]]; then ((Nsteps++)); fi
+    Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 10 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
+
+# remove intermediate files
+rm -rf "${dir_subjsurf}/surf/"*giis ${dir_warp}/*Warped.nii.gz 2>/dev/null
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition

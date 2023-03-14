@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE GIFTI SYSTEM "http://www.nitrc.org/frs/download.php/115/gifti.dtd">
+<GIFTI Version="1.0" NumberOfDataArrays="1"><MetaData /><LabelTable /><DataArray Intent="NIFTI_INTENT_SHAPE" DataType="NIFTI_TYPE_INT32" ArrayIndexingOrder="RowMajorOrder" Dimensionality="1" Encoding="GZipBase64Binary" Endian="LittleEndian" ExternalFileName="" ExternalFileOffset="0" Dim0="4842"><MetaData /><CoordinateSystemTransformMatrix><DataSpace>NIFTI_XFORM_UNKNOWN</DataSpace><TransformedSpace>NIFTI_XFORM_UNKNOWN</TransformedSpace><MatrixData>  1.000000   0.000000   0.000000   0.000000
+  0.000000   1.000000   0.000000   0.000000
+  0.000000   0.000000   1.000000   0.000000
+  0.000000   0.000000   0.000000   1.000000</MatrixData></CoordinateSystemTransformMatrix><Data>eJzt1EsOhCAQBUC4/6XdGqLIpxEW1UllIjQPMY45pZQfpJdxAAAAAACAP41Wb+bonrufT+18+fYb8cwjclbcQ2vNvlNqfe3+7wAAAMCIqIre48SsEzJ2rB1Zt7I/su+rpzbfM17m3K/Ls+/+JrR+N07IAAAAACBOraL3OS0r+oxQeqsT8qKyInJmM2bW/7mud01Pf2Rf63zPXOsYsMYFU3kRTQ==</Data></DataArray></GIFTI>

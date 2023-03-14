@@ -629,7 +629,7 @@ if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-umask 001
+umask 002
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
@@ -722,7 +722,7 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${idBIDS} directory doesn't exist, creating..."
-    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat/{first,volumetric,surf/conte69},QC}
+    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat,QC,parc,surf,maps}
     Do_cmd chmod -R 777 $subject_dir
 fi
 
@@ -736,7 +736,7 @@ if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Mo
 # -----------------------------------------------------------------------------------------------#
 if [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_volumetric.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $N4wm $UNI $MF $maskbet"
+    COMMAND="${scriptDir}/01_proc-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $N4wm $UNI $MF $maskbet"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
@@ -761,7 +761,7 @@ fi
 # # #        Surface processing: Freesurfer | FastSurfer
 if [ "$procSurf" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-struc_surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer $fs_licence $t1"
+    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer $fs_licence $t1"
     # mica.q - Surface processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Surface processing"
