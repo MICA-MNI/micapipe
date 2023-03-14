@@ -54,9 +54,6 @@ micapipe_check_json_status "${module_json}" "GD"
 # Define output directory
 outPath="${subject_dir}/dist"
 
-# wb_command
-workbench_path=$(which wb_command)
-
 # Check PARCELLATIONS
 parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
 if [ "${#parcellations[*]}" -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
@@ -66,6 +63,7 @@ Title "Geodesic distance analysis\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
+export OMP_NUM_THREADS="$threads"
 
 #	Timer
 aloita=$(date +%s)
@@ -84,7 +82,7 @@ outName="${outPath}/${idBIDS}_surf-fsLR-5k_GD"
 if [ -f "${outName}.txt" ]; then
     Info "Geodesic Distance vertex-wise on fsLR-5k already exists"; ((Nsteps++))
 else
-    Do_cmd python "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_fdLR5k" -rh_surf "$rh_fdLR5k" -outPath "$outName"
+    Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_fdLR5k" -rh_surf "$rh_fdLR5k" -outPath "$outName"
     if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
 fi
 
@@ -98,7 +96,7 @@ for seg in "${parcellations[@]}"; do ((N++))
         Info "Geodesic Distance on $parc, already exists"; ((Nsteps++))
     else
         Info "Computing Geodesic Distance from $parc"
-        Do_cmd python "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_midsurf" -rh_surf "$rh_midsurf" -outPath "$outName" \
+        Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_midsurf" -rh_surf "$rh_midsurf" -outPath "$outName" \
                 -lh_annot "$lh_annot" -rh_annot "$rh_annot" -parcel_wise
         if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
     fi

@@ -44,6 +44,7 @@ Updated by rcruces march 2023
 import os
 import sys
 import argparse
+import subprocess
 import numpy as np
 import nibabel as nb
 from scipy import spatial
@@ -88,12 +89,12 @@ args = parser.parse_args()
 # get the real paths
 lh_surf = args.lh_surf[0]
 rh_surf = args.rh_surf[0]
-
+outPath = args.outPath
 # Print the arguments
 print("\nCheck inputs")
 print(f'  -lh_surf      : "{lh_surf}"')
 print(f'  -rh_surf      : "{rh_surf}"')
-print(f'  -outPath      : "{args.outPath}"')
+print(f'  -outPath      : "{outPath}"')
 print(f'  -parcel_wise  : "{args.parcel_wise}"')
 if args.parcel_wise==True:
     lh_annot = args.lh_annot
@@ -111,12 +112,12 @@ rh = nb.load(rh_surf)
 vertices_rh = rh.agg_data('NIFTI_INTENT_POINTSET')
 faces_rh = rh.agg_data('NIFTI_INTENT_TRIANGLE')
 
-# Initialize class to calculate geodesic distance
-geoalg_L = geodesic.PyGeodesicAlgorithmExact(vertices_lh,faces_lh)
-geoalg_R = geodesic.PyGeodesicAlgorithmExact(vertices_rh,faces_rh)
-
 # Calculate GD parcel-wise
 if args.parcel_wise == True:
+    # WORKBENCH COMMAND PATH
+    wbPath = os.popen("which wb_command").read()
+    wbPath = wbPath.replace('wb_command\n', 'wb_command')
+
     vertices = np.append(vertices_lh, vertices_rh, axis = 0)
     faces = np.append(faces_lh, faces_rh+len(vertices_lh), axis = 0)
 
@@ -148,31 +149,57 @@ if args.parcel_wise == True:
 
     # ---------------------------------------------------------------------
     # Calculate distance from VERTEX to all other central VERTICES
+    cpus = os.environ['OMP_NUM_THREADS']
     # Left hemisphere
     parcL = parc[0:len(labels_lh)]
-    print("[ INFO ]..... Running geodesic distance on the left hemisphere")
+    print("[ INFO ]..... Running geodesic distance using {cpus} threads".format(cpus=cpus))
     N = len(np.unique(labels_lh))
-    # Define array with left center vertices
-    target_vertices = voi[:,0:N][0]
     # Iterate over each central vertex
     for ii in range(N):
-        vertex = np.array([ int(voi[0,ii]) ])
-        parcGD = geoalg_L.geodesicDistances(vertex, target_vertices)[0]
-        GD[ii,:] = np.concatenate((parcGD, np.zeros(N)), axis = 0)
+        vertex = int(voi[0,ii])
+        voiStr = str(vertex)
+        # Calculate the GD from tha vertex to the rest of the vertices
+        cmdStr = "{wbPath} -surface-geodesic-distance {lh_surf} {voiStr} {outPath}_this_voi.func.gii".format(wbPath=wbPath, lh_surf=lh_surf, voiStr=voiStr, outPath=outPath)
+        subprocess.run(cmdStr.split())
+        # Load file with GD column format
+        tmpname = outPath + '_this_voi.func.gii'
+        tmp = nb.load(tmpname).agg_data()
+        parcGD = np.empty((1, N))
+        for n in range(N):
+            tmpData = tmp[parcL == uparcel[n]]
+            tmpMean = np.mean(tmpData)
+            parcGD[0, n] = tmpMean
+        # Save column on GD matrix
+        GD[ii,:] = np.append(parcGD, np.zeros((parcGD.shape[0], parcGD.shape[1])), axis = 1)
 
     # Right hemisphere
-    print("[ INFO ]..... Running geodesic distance on the right hemisphere")
     N = len(np.unique(labels_rh))
-    # Define array with right center vertices
-    target_vertices = voi[:,N:][0] - len(vertices_lh)
+    parcR = parc[-len(labels_rh):]
     # Iterate over each central vertex
-    for ii in range(len(np.unique(labels_rh))):
+    for ii in range(N):
         ii_rh = int(ii + len(uparcel)/2)
-        vertex = np.array([ int(voi[0,ii_rh] - len(vertices_lh)) ])
-        parcGD = geoalg_R.geodesicDistances(vertex, target_vertices)[0]
-        GD[ii_rh,:] = np.concatenate((np.zeros(N), parcGD), axis = 0)
+        vertex = int(voi[0,ii_rh] - len(vertices_lh))
+        voiStr = str(vertex)
+        # Calculate the GD from tha vertex to the rest of the vertices
+        cmdStr = "{wbPath} -surface-geodesic-distance {rh_surf} {voiStr} {outPath}_this_voi.func.gii".format(wbPath=wbPath, rh_surf=rh_surf, voiStr=voiStr, outPath=outPath)
+        subprocess.run(cmdStr.split())
+        # Load file with GD column format
+        tmpname = outPath + '_this_voi.func.gii'
+        tmp = nb.load(tmpname).agg_data()
+        parcGD = np.empty((1, N))
+        for n in range(N):
+            n_rh = int(n + len(uparcel)/2)
+            tmpData = tmp[parcR == uparcel[n_rh]]
+            tmpMean = np.mean(tmpData)
+            parcGD[0, n] = tmpMean
+        # Save column on GD matrix
+        GD[ii_rh,:] = np.append(np.zeros((parcGD.shape[0], parcGD.shape[1])), parcGD, axis = 1)
 else:
     print("[ INFO ]..... Running geodesic distance vertex-wise")
+    # Initialize class to calculate geodesic distance
+    geoalg_L = geodesic.PyGeodesicAlgorithmExact(vertices_lh,faces_lh)
+    geoalg_R = geodesic.PyGeodesicAlgorithmExact(vertices_rh,faces_rh)
+
     N = vertices_lh.shape[0]
     GD = np.empty((N*2,N*2), dtype=float)
     for x in range(0,N,1):
@@ -183,5 +210,5 @@ else:
         dist_R = geoalg_R.geodesicDistances(np.array([x]))[0]
         GD[x+N,:] =  np.concatenate((np.zeros(N), dist_R), axis = 0)
 
-np.savetxt(args.outPath + '.txt', GD, fmt='%.12f')
+np.savetxt(outPath + '.txt', GD, fmt='%.12f')
 print("[ INFO ]..... Geodesic distance completed")

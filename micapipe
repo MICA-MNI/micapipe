@@ -41,7 +41,7 @@ echo -e "
 \t\t\t      ( Requires: -proc_dwi, -post_structural)
 \t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
-\t\033[38;5;197m-dist\033[0m               : Geodesic distance analysis
+\t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
@@ -339,7 +339,7 @@ do
     postDWI=TRUE
     shift
   ;;
-  -dist)
+  -GD)
     postGD=TRUE
     shift
   ;;
@@ -531,7 +531,7 @@ Error "A processing flag is missing:
                     -proc_func
                     -SC
                     -MPC
-                    -dist
+                    -GD
                     -QC_subj
                     -cleanup"
 exit 1; fi
