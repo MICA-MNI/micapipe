@@ -225,7 +225,7 @@ fi
 
 # STRUCTRAL CONNECTOME --------------------------------------------------------------------------
 if false; then
-dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
 for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do
