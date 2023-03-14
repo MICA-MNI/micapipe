@@ -3,7 +3,7 @@
 
 """
 Compute geodesic distance matrix vertex-wise or parcel-wise (centroids) of native surface.
-For parcel-wise GD, centroid vertices will be selected for each parcel and distance will only be propogated from these points.
+For parcel-wise GD, centroid vertices will be selected for each parcel and distance will only be propagated from these points.
 
     Parameters
     ----------
