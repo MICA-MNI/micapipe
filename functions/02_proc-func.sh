@@ -724,54 +724,76 @@ fi
 
 #------------------------------------------------------------------------------#
 #                                 C O R T E X
+surf_dir="${out}/${subject}/ses-${sesAnat}/surf"
 # Transform surface to func space
-Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_space-func_surf-*_label-midthickness.surf.gii" 2>/dev/null | wc -l)
-SURF='fsLR-5k fsLR-32k fsnative fsaverage5'
+if [[ ! -f '${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii' ]]; then
+    for HEMICAP in L R; do
+        Do_cmd wb_command -surface-apply-affine \
+            ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+            ${mat_func_affine} \
+            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        if [[ ${regAffine}  == "FALSE" ]]; then
+            Do_cmd wb_command -surface-apply-warpfield \
+                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${SyN_func_warp} \
+                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        fi
+        Do_cmd wb_command -volume-to-surface-mapping \
+            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+            $func_processed \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+            -trilinear
+    Info "Subject ${id} hemi-${HEMICAP} mapped to fsnative"; ((Nsteps++)); ((N++))
+    done
+else
+    Info "Subject ${id} hemi-${HEMICAP} was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+fi
+
+# Propagate to other surfaces
+Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_surf-*.func.gii" 2>/dev/null | wc -l)
+SURFLIST='fsLR-5k fsLR-32k fsaverage5'
 if [ "$Nsurf" -lt 8 ]; then
     for HEMICAP in L R; do
-        for surf in $SURF; do
-            Do_cmd wb_command -surface-apply-affine \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surf}_label-midthickness.surf.gii \
-                ${mat_func_affine} \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii
-            if [[ ${regAffine}  == "FALSE" ]]; then
-                Do_cmd wb_command -surface-apply-warpfield \
-                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii \
-                    ${SyN_func_warp} \
-                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii
-            fi
-        Info "Subject ${id} fsLR-${DEN}k hemi-${HEMICAP} surfaces mapped to space-func"; ((Nsteps++)); ((N++))
+        for SURF in $SURFLIST; do
+            wb_command -metric-resample \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii \
+                ${MICAPIPE}/$SURF.$HEMICAP.sphere.reg.surf.gii \
+                ADAP_BARY_AREA \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}.func.gii \
+                -area-surfs \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${SURF}_label-midthickness.surf.gii \
+            Info "Subject ${id} hemi-${HEMICAP} mapped to $SURF"; ((Nsteps++)); ((N++))
         done
     done
 else
-    Info "Subject ${id} already has a fsLR-32k and fsLR-5k right and left surfaces mapped to space-func"; Nsteps=$((Nsteps+8)); N=$((N+8))
+    Info "Subject ${id} hemi-${HEMICAP} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
 fi
 
-# Map to surface
-Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_func_space-*.func.gii" 2>/dev/null | wc -l)
-if [ "$Nsurf" -lt 8 ]; then
+# ONLY for tSNR (will get deleted after):
+if [[ ! '${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii' -f ]]; then
     for HEMICAP in L R; do
-        for surf in $SURF; do
-            Do_cmd wb_command -volume-to-surface-mapping \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii \
-                $func_processed \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-${surf}.func.gii \
-                -trilinear
-            Info "Subject ${id} func data mapped to surfaces ${surf} hemi-${HEMICAP}"; ((Nsteps++)); ((N++))
-        done
+        Do_cmd wb_command -surface-apply-affine \
+            ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+            ${mat_func_affine} \
+            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        if [[ ${regAffine}  == "FALSE" ]]; then
+            Do_cmd wb_command -surface-apply-warpfield \
+                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${SyN_func_warp} \
+                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        fi
+        Do_cmd wb_command -volume-to-surface-mapping \
+            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+            $func_nii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+            -trilinear
+    Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
     done
 else
-    Info "Subject ${id} aleady has func data mapped to surfaces $SURF"; Nsteps=$((Nsteps+8)); N=$((N+8))
+    Info "Subject ${id} hemi-${HEMICAP} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
-
-# Also for tSNR:
-for HEMICAP in L R; do
-    Do_cmd wb_command -volume-to-surface-mapping \
-        ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-32k_label-midthickness.surf.gii \
-        $func_nii \
-        ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-fsLR-32k_NoHP.func.gii \
-        -trilinear
-done
 
 #------------------------------------------------------------------------------#
 #                           S U B C O R T E X
@@ -810,7 +832,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-func
-cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean${gsr}.txt"
+cleanTS="${func_surf}/${idBIDS}_surf-fsnative_desc-timeseries_clean${gsr}.txt"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${dir_subjsurf}/label/"
