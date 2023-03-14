@@ -23,7 +23,7 @@ Generates multiple functional connectomes based on micapipe's provided parcellat
                     Path to micapipe parcellations directory.
 
     volmDir     :  str
-                    Path to subject anat/volumetric directory (parcellations).
+                    Path to subject anat/parc directory (parcellations).
 
     performNSR  :  int
                     YES: 1, NO: 0. Performs Nuisance Signal Regression

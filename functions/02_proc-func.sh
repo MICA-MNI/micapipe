@@ -73,7 +73,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
-  dir_volum="${dir_anat}/volumetric"
+  dir_volum="${dir_anat}/parc"
   dir_conte69="${dir_anat}/surf/conte69"
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_T1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain.nii.gz"
@@ -725,50 +725,53 @@ fi
 #------------------------------------------------------------------------------#
 #                                 C O R T E X
 # Transform surface to func space
-Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_space-func_surf-fsLR-*k_label-midthickness.surf.gii" 2>/dev/null | wc -l)
-if [ "$Nsurf" -lt 4 ]; then
+Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_space-func_surf-*_label-midthickness.surf.gii" 2>/dev/null | wc -l)
+SURF='fsLR-5k fsLR-32k fsnative fsaverage5'
+if [ "$Nsurf" -lt 8 ]; then
     for HEMICAP in L R; do
-        for DEN in 5 32; do
+        for surf in $SURF; do
             Do_cmd wb_command -surface-apply-affine \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsLR-${DEN}k_label-midthickness.surf.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surf}_label-midthickness.surf.gii \
                 ${mat_func_affine} \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${DEN}k_label-midthickness.surf.gii
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii
             if [[ ${regAffine}  == "FALSE" ]]; then
                 Do_cmd wb_command -surface-apply-warpfield \
-                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${DEN}k_label-midthickness.surf.gii \
+                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii \
                     ${SyN_func_warp} \
-                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${DEN}k_label-midthickness.surf.gii
+                    ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii
             fi
         Info "Subject ${id} fsLR-${DEN}k hemi-${HEMICAP} surfaces mapped to space-func"; ((Nsteps++)); ((N++))
         done
     done
 else
-    Info "Subject ${id} already has a fsLR-32k and fsLR-5k right and left surfaces mapped to space-func"; Nsteps=$((Nsteps+4)); N=$((N+4))
+    Info "Subject ${id} already has a fsLR-32k and fsLR-5k right and left surfaces mapped to space-func"; Nsteps=$((Nsteps+8)); N=$((N+8))
 fi
 
-#------------------------------------------------------------------------------#
 # Map to surface
-Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_func_space-fsLR*k.func.gii" 2>/dev/null | wc -l)
-if [ "$Nsurf" -lt 4 ]; then
+Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_func_space-*.func.gii" 2>/dev/null | wc -l)
+if [ "$Nsurf" -lt 8 ]; then
     for HEMICAP in L R; do
-        for DEN in 5 32; do
+        for surf in $SURF; do
             Do_cmd wb_command -volume-to-surface-mapping \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${DEN}k_label-midthickness.surf.gii \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${surf}_label-midthickness.surf.gii \
                 $func_processed \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-fsLR-{DEN}k.func.gii \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-${surf}.func.gii \
                 -trilinear
-            # Also for tSNR:
-            Do_cmd wb_command -volume-to-surface-mapping \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-${DEN}k_label-midthickness.surf.gii \
-                $func_nii \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-fsLR-{DEN}k_NoHP.func.gii \
-                -trilinear
-            Info "Subject ${id} func data mapped to surfaces fsLR-${DEN}k hemi-${HEMICAP}"; ((Nsteps++)); ((N++))
+            Info "Subject ${id} func data mapped to surfaces ${surf} hemi-${HEMICAP}"; ((Nsteps++)); ((N++))
         done
     done
 else
-    Info "Subject ${id} aleady has func data mapped to surfaces fsLR-${DEN}k hemi-${HEMICAP}"; Nsteps=$((Nsteps+4)); N=$((N+4))
+    Info "Subject ${id} aleady has func data mapped to surfaces $SURF"; Nsteps=$((Nsteps+8)); N=$((N+8))
 fi
+
+# Also for tSNR:
+for HEMICAP in L R; do
+    Do_cmd wb_command -volume-to-surface-mapping \
+        ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsLR-32k_label-midthickness.surf.gii \
+        $func_nii \
+        ${func_surf}/${idBIDS}_hemi-${HEMICAP}_func_space-fsLR-32k_NoHP.func.gii \
+        -trilinear
+done
 
 #------------------------------------------------------------------------------#
 #                           S U B C O R T E X
@@ -816,6 +819,9 @@ if [[ ! -f "$cleanTS" ]]; then ((N++))
 else
     Info "Subject ${id} has post-processed fsLR time-series"; ((Nsteps++)); ((N++))
 fi
+
+# a bit of extra cleanup
+rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz 
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
