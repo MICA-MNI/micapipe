@@ -219,14 +219,18 @@ sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR
 #     C O R T E X  processing
 # ------------------------------------------
 
+def funcgii_load(gii):
+    out = np.zeros([len(gii.darrays),gii.darrays[0].data.shape])
+    for n in range(len(gii.darrays)):
+        out[n,:] = gii.darrays[n].data.shape
+    return out
+
 # Find and load surface-registered cortical timeseries
 os.chdir(funcDir+'/surf/')
 x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-L_surf-fsnative.func.gii'))
 x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-R_surf-fsnative.func.gii'))
-lh_data = nib.load(x_lh)
-lh_data = np.squeeze(lh_data.get_fdata())
-rh_data = nib.load(x_rh)
-rh_data = np.squeeze(rh_data.get_fdata())
+lh_data = funcgii_load(nib.load(x_lh))
+rh_data = funcgii_load(nib.load(x_rh))
 
 # exit if more than one scan exists
 if len(x_lh.split(" ")) == 1:
@@ -343,11 +347,10 @@ del fd
 
 # tSNR
 lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-L_surf-fsnative_NoHP.func.gii'))
-lh_nat_noHP_data = nib.load(lh_nat_noHP)
-lh_nat_noHP_data = np.squeeze(lh_nat_noHP_data.get_fdata())
+lh_nat_noHP_data = funcgii_load(nib.load(lh_nat_noHP))
 rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-R_surf-fsnative_NoHP.func.gii'))
-rh_nat_noHP_data = nib.load(rh_nat_noHP)
-rh_nat_noHP_data = np.squeeze(rh_nat_noHP_data.get_fdata())
+rh_nat_noHP_data = funcgii_load(nib.load(rh_nat_noHP))
+
 # delete NoHP (no longer needed)
 os.remove(lh_nat_noHP)
 os.remove(rh_nat_noHP)

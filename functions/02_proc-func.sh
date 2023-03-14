@@ -73,7 +73,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
-  dir_volum="${dir_anat}/parc"
+  dir_volum="${out}/${subject}/ses-${sesAnat}/parc"
   dir_conte69="${dir_anat}/surf/conte69"
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_T1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain.nii.gz"
@@ -84,8 +84,8 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
-T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
+T1_seg_subcortex="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
+T1_seg_cerebellum="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
 
 ### CHECK INPUTS: func, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -724,75 +724,77 @@ fi
 
 #------------------------------------------------------------------------------#
 #                                 C O R T E X
-surf_dir="${out}/${subject}/ses-${sesAnat}/surf"
+surf_dir="${out}/${subject}/${SES}/surf"
 # Transform surface to func space
-if [[ ! -f '${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii' ]]; then
+if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
+    # convert affines
+    Do_cmd c3d_affine_tool -itk ${mat_func_affine} -o $tmp/affine1.mat
+    mat_func_affine=$tmp/affine1.mat
+    if [[ ${regAffine}  == "FALSE" ]]; then
+        Do_cmd c3d_affine_tool -itk ${SyN_func_affine} -o $tmp/affine2.mat -inv
+        SyN_func_affine=$tmp/affine2.mat
+    fi
+    # apply registrations to surface
     for HEMICAP in L R; do
         Do_cmd wb_command -surface-apply-affine \
             ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
             ${mat_func_affine} \
-            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
         if [[ ${regAffine}  == "FALSE" ]]; then
+            Do_cmd wb_command -surface-apply-affine \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${SyN_func_affine} \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
             Do_cmd wb_command -surface-apply-warpfield \
-                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
                 ${SyN_func_warp} \
-                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
         fi
         Do_cmd wb_command -volume-to-surface-mapping \
-            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
             $func_processed \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
             ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
             -trilinear
-    Info "Subject ${id} hemi-${HEMICAP} mapped to fsnative"; ((Nsteps++)); ((N++))
+        Info "Subject ${id} hemi-${HEMICAP} mapped to fsnative"; ((Nsteps++)); ((N++))
     done
 else
-    Info "Subject ${id} hemi-${HEMICAP} was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+    Info "Subject ${id} was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
 
 # Propagate to other surfaces
-Nsurf=$(ls "${func_surf}/${idBIDS}_hemi-*_surf-*.func.gii" 2>/dev/null | wc -l)
+Nsurf=$(ls ${func_surf}/${idBIDS}_hemi-*_surf-*.func.gii | wc -l)
 SURFLIST='fsLR-5k fsLR-32k fsaverage5'
-if [ "$Nsurf" -lt 8 ]; then
+if [ $Nsurf -lt 8 ]; then
     for HEMICAP in L R; do
         for SURF in $SURFLIST; do
-            wb_command -metric-resample \
+            Do_cmd wb_command -metric-resample \
                 ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
                 ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii \
-                ${MICAPIPE}/$SURF.$HEMICAP.sphere.reg.surf.gii \
+                ${MICAPIPE}/surfaces/$SURF.$HEMICAP.sphere.reg.surf.gii \
                 ADAP_BARY_AREA \
                 ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}.func.gii \
                 -area-surfs \
                 ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${SURF}_label-midthickness.surf.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${SURF}_label-midthickness.surf.gii
             Info "Subject ${id} hemi-${HEMICAP} mapped to $SURF"; ((Nsteps++)); ((N++))
         done
     done
 else
-    Info "Subject ${id} hemi-${HEMICAP} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
+    Info "Subject ${id} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
 fi
 
 # ONLY for tSNR (will get deleted after):
-if [[ ! '${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii' -f ]]; then
+if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative_NoHP.func.gii" ]]; then
     for HEMICAP in L R; do
-        Do_cmd wb_command -surface-apply-affine \
-            ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
-            ${mat_func_affine} \
-            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
-        if [[ ${regAffine}  == "FALSE" ]]; then
-            Do_cmd wb_command -surface-apply-warpfield \
-                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
-                ${SyN_func_warp} \
-                ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
-        fi
         Do_cmd wb_command -volume-to-surface-mapping \
-            ${tmp}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
             $func_nii \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_NoHP.func.gii \
             -trilinear
-    Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
+        Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
     done
 else
-    Info "Subject ${id} hemi-${HEMICAP} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+    Info "Subject ${id} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
 
 #------------------------------------------------------------------------------#
@@ -803,7 +805,7 @@ timese_subcortex="${func_volum}/${idBIDS}${func_lab}_timeseries_subcortical.txt"
 
 if [[ ! -f "$timese_subcortex" ]]; then ((N++))
       Info "Getting subcortical timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_subcortex" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n MultiLabel "${transformsInv}" -o "$func_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$func_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
@@ -820,7 +822,7 @@ stats_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum_roi_stats.txt"
 
 if [[ ! -f "$timese_cerebellum" ]]; then ((N++))
       Info "Getting cerebellar timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n MultiLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$func_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
@@ -835,7 +837,7 @@ fi
 cleanTS="${func_surf}/${idBIDS}_surf-fsnative_desc-timeseries_clean${gsr}.txt"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
-    labelDirectory="${dir_subjsurf}/label/"
+    labelDirectory="${MICAPIPE}/parcellations/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC" "${GSRtag}"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
@@ -844,7 +846,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # a bit of extra cleanup
-rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz 
+# rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz 
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
