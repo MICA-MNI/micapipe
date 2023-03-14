@@ -209,6 +209,11 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         Data_corr = check_arrays()
     return Data_corr
 
+# Process subcortex and cerebellum
+sctx_cereb = np.append(sctx, cereb, axis=1)
+del sctx
+del cereb
+sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR, 'sctx_cereb')
 
 # ------------------------------------------
 #  C O R T E X processing
@@ -238,12 +243,11 @@ for surf in ['fsLR-5k', 'fsLR-32k' 'fsnative' 'fsaverage5']:
     # Reformat data
     data = []
     data = np.transpose(np.append(lh_data, rh_data, axis=0))
-    n_vertex_ctx_fsLR = data.shape[1]
-    data = np.append(np.append(sctx, cereb, axis=1), data, axis=1)
+    n_vertex_ctx = data.shape[1]
     del lh_data
     del rh_data
 
-    # fsLR
+    # correlation matrices
     data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
     # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
@@ -259,26 +263,37 @@ for surf in ['fsLR-5k', 'fsLR-32k' 'fsnative' 'fsaverage5']:
     parcellationList.remove('subcortical')
     parcellationList.remove('cerebellum')
 
-    if noFC!="TRUE":
+    if noFC!="TRUE" and surf == 'fsnative':
         for parcellation in parcellationList:
-            parcSaveName = parcellation.split('_conte')[0]
-            parcPath = os.path.join(parcDir, parcellation) + '.csv'
-
-            if parcellation == "aparc-a2009s_conte69":
-                print("parcellation " + parcellation + " currently not supported")
-                continue
+            # Load left and right annot files
+            fname_lh = 'lh.' + parcellation + '_mics.annot'
+            ipth_lh = os.path.join(labelDir, fname_lh)
+            [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
+            fname_rh = 'rh.' + parcellation + '_mics.annot'
+            ipth_rh = os.path.join(labelDir, fname_rh)
+            [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
+            # Join hemispheres
+            nativeLength = len(labels_lh)+len(labels_rh)
+            if dataNative_corr.shape[1] != nativeLength:
+                print('ERROR..' + parcellation + '_mics.annot' + ' has a mismatch between the native surface and the annot file!!')
             else:
-                thisparc = np.loadtxt(parcPath)
+                native_parc = np.zeros((nativeLength))
+                for (x, _) in enumerate(labels_lh):
+                    native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
+                for (x, _) in enumerate(labels_rh):
+                    native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
 
+            # Generate connectome on native space parcellation
             # Parcellate cortical timeseries
-            data_corr_ctx = data_corr[:, -n_vertex_ctx_fsLR:]
-            uparcel = np.unique(thisparc)
-            ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
-            for lab in range(len(uparcel)):
-                tmpData = data_corr_ctx[:, thisparc == lab]
-                ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+            uparcel = np.unique(native_parc)
+            ts_native_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
+            for (lab, _) in enumerate(uparcel):
+                tmpData = data_corr[:, native_parc == int(uparcel[lab])]
+                ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-            ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
+            ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
+            np.savetxt(funcDir + '/surf/' + subject + '_func_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
+
             ts_r = np.corrcoef(np.transpose(ts))
 
             if np.isnan(exclude_labels[0]) == False:
@@ -289,11 +304,11 @@ for surf in ['fsLR-5k', 'fsLR-32k' 'fsnative' 'fsaverage5']:
             else:
                 ts_r = np.triu(ts_r)
 
-            np.savetxt(funcDir + '/surf/' + subject + '_func_space-' + surf + '_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
-                       ts_r, fmt='%.6f')
+            np.savetxt(funcDir + '/surf/' + subject + '_func_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
+            del ts_native_ctx
+            del native_parc
             del ts_r
             del ts
-            del thisparc
     else:
         print('')
         print('...... no FC was selected, will skipp the functional connectome generation')
