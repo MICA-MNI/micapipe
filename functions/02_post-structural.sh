@@ -147,7 +147,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # Create parcellation on nativepro space
-Info "fsaverage5 annnot parcellations to T1-nativepro Volume"
+Info "Surface annnot parcellations to T1-nativepro Volume"
 # Variables
 T1str_nat="${idBIDS}_space-nativepro_T1w_atlas"
 T1str_fs="${idBIDS}_space-fsnative_T1w"
@@ -156,7 +156,7 @@ T1str_fs="${idBIDS}_space-fsnative_T1w"
 function map_annot(){
       parc_annot=$1;
       parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
-      if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]] || [[ ! -f "${dir_subjsurf}/label/rh.${parc_annot}_mics.annot" ]]; then
+      if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]]; then
           for hemi in lh rh; do
           Info "Running surface $hemi $parc_annot to $subject"
           Do_cmd mri_surf2surf --hemi "$hemi" \
@@ -173,28 +173,31 @@ function map_annot(){
           # Register the annot surface parcelation to the T1-surface volume
           Do_cmd mri_aparc2aseg --s "$idBIDS" --o "$fs_mgz" --annot "${parc_annot/.annot/}" --new-ribbon
           Do_cmd mri_label2vol --seg "$fs_mgz" --temp "$T1surf" --o "$fs_tmp" --regheader "${dir_subjsurf}/mri/aseg.mgz"
-          Do_cmd mrconvert "$fs_tmp" "$fs_nii" -force      # mgz to nifti_gz
-          Do_cmd fslreorient2std "$fs_nii" "$fs_nii"       # reorient to standard
-          Do_cmd fslmaths "$fs_nii" -thr 1000 "$fs_nii"    # threshold the labels
+          mrconvert "$fs_tmp" "$fs_nii" -force -quiet # mgz to nifti_gz
+          fslreorient2std "$fs_nii" "$fs_nii"         # reorient to standard
+          fslmaths "$fs_nii" -thr 1000 "$fs_nii"      # threshold the labels
 
           # Register parcellation to nativepro
-          Do_cmd antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -v -u int
+          antsApplyTransforms -d 3 -i "$fs_nii" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "$labels_nativepro" -u int
       fi
 }
 # Change directory otherwise the script won't work
 cd "$util_parcelations"
-Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot | wc -l 2>/dev/null)
-if [[ "${Nannot}" != "${Natlas}" ]]; then ((N++))
-  while [ "${Natlas}" != "${Nannot}" ]; do
-    Info "Mapping $((Natlas-Nannot)) of ${Natlas} parcellations to nativepro"
+Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
+Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
+if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
+  while [ "${Nparc}" != "${Natlas}" ] || [ "${Nannot}" != "${Natlas}" ]; do
+    Info "Mapping $((Natlas-Nparc)) of ${Natlas} parcellations to nativepro"
     for parc in "${atlas_parc[@]}"; do
       parc_nom="${parc/lh./}"
-      Do_cmd map_annot "${parc_nom}"
+      map_annot "${parc_nom}"
     done
-    Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot | wc -l 2>/dev/null)
+    Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
+    Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
   done
+  ((Nsteps++))
 else
-  Info "Subject ${idBIDS} surfaced derived parcellations on nativepro"; ((Nsteps++)); ((N++))
+  Info "Subject ${idBIDS} has surface derived parcellations on nativepro"; ((Nsteps++)); ((N++))
 fi
 
 
