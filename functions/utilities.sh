@@ -44,7 +44,7 @@ export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
   export proc_struct=$subject_dir/anat # structural processing directory
-  	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
+  	 export dir_volum=$subject_dir/parc # Cortical segmentations
   	 export dir_conte69=$subject_dir/surf   # conte69
      export dir_maps=$subject_dir/maps
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
@@ -68,7 +68,7 @@ export idBIDS="${subject}${ses}"
       export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz
       export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz
       export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz
-      export T1fast_seg=$proc_struct/volumetric/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz
+      export T1fast_seg=$subject_dir/parc/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz
   fi
 
   # Registration from MNI152 to Native pro
@@ -106,7 +106,7 @@ set_surface_directory() {
   local recon=${1}
   export dir_surf=${out/\/micapipe_v0.2.0/}/${recon}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
-  export T1surf=${dir_subjsurf}/mri/T1.mgz
+  export T1surf=${dir_subjsurf}/volumetric/T1.mgz
 
   # Native midsurface in gifti format
   export lh_midsurf="${dir_conte69}/${idBIDS}_hemi-L_surf-fsnative_label-midthickness.surf.gii"
