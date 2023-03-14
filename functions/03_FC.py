@@ -85,37 +85,6 @@ else:
     exit()
 
 
-# ------------------------------------------
-# fsLR processing
-# ------------------------------------------
-
-# Find and load surface-registered cortical timeseries
-os.chdir(funcDir+'/surf/')
-x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-L_func_space-fsLR-32k.func.gii'))
-x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-R_func_space-fsLR-32k.func.gii'))
-lh_data = nib.load(x_lh)
-lh_data = np.squeeze(lh_data.get_fdata())
-rh_data = nib.load(x_rh)
-rh_data = np.squeeze(rh_data.get_fdata())
-
-# exit if more than one scan exists
-if len(x_lh.split(" ")) == 1:
-    print('')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('only one scan found; all good in the hood')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('')
-else:
-    print('more than one scan found; exiting. Bye-bye')
-    exit()
-
-# Reformat data
-data = []
-data = np.transpose(np.append(lh_data, rh_data, axis=0))
-n_vertex_ctx_fsLR = data.shape[1]
-del lh_data
-del rh_data
-
 # Load subcortical and cerebellar timeseries
 # Subcortex
 sctx = np.loadtxt(funcDir+'/volumetric/' + subject + func_lab + '_timeseries_subcortical.txt')
@@ -158,7 +127,6 @@ else:
 
 # Calculate number of non cortical rows/colunms in matrix and concatenate
 n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx vertices only
-data = np.append(np.append(sctx, cereb, axis=1), data, axis=1)
 
 # Load confound files
 os.chdir(funcDir+'/volumetric/')
@@ -241,64 +209,98 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         Data_corr = check_arrays()
     return Data_corr
 
-# fsLR
-data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
-# save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surf/' + subject + '_func_space-fsLR-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
+# ------------------------------------------
+#  C O R T E X processing
+# ------------------------------------------
 
-# Read the processed parcellations
-parcellationList = os.listdir(volmDir)
+# Find and load surface-registered cortical timeseries
+for surf in ['fsLR-5k', 'fsLR-32k' 'fsnative' 'fsaverage5']:
+    os.chdir(funcDir+'/surf/')
+    x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-L_func_space-' + surf + '.func.gii'))
+    x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-R_func_space-' + surf + '.func.gii'))
+    lh_data = nib.load(x_lh)
+    lh_data = np.squeeze(lh_data.get_fdata())
+    rh_data = nib.load(x_rh)
+    rh_data = np.squeeze(rh_data.get_fdata())
 
-# Slice the file names and remove nii*
-parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
+    # exit if more than one scan exists
+    if len(x_lh.split(" ")) == 1:
+        print('')
+        print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+        print('only one scan found; all good in the hood')
+        print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
+        print('')
+    else:
+        print('more than one scan found; exiting. Bye-bye')
+        exit()
 
-# Remove cerebellum and subcortical strings
-parcellationList.remove('subcortical')
-parcellationList.remove('cerebellum')
+    # Reformat data
+    data = []
+    data = np.transpose(np.append(lh_data, rh_data, axis=0))
+    n_vertex_ctx_fsLR = data.shape[1]
+    data = np.append(np.append(sctx, cereb, axis=1), data, axis=1)
+    del lh_data
+    del rh_data
 
-if noFC!="TRUE":
-    for parcellation in parcellationList:
-        parcSaveName = parcellation.split('_conte')[0]
-        parcPath = os.path.join(parcDir, parcellation) + '.csv'
+    # fsLR
+    data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
-        if parcellation == "aparc-a2009s_conte69":
-            print("parcellation " + parcellation + " currently not supported")
-            continue
-        else:
-            thisparc = np.loadtxt(parcPath)
+    # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
+    np.savetxt(funcDir+'/surf/' + subject + '_func_space-' + surf + '_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
-        # Parcellate cortical timeseries
-        data_corr_ctx = data_corr[:, -n_vertex_ctx_fsLR:]
-        uparcel = np.unique(thisparc)
-        ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
-        for lab in range(len(uparcel)):
-            tmpData = data_corr_ctx[:, thisparc == lab]
-            ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+    # Read the processed parcellations
+    parcellationList = os.listdir(volmDir)
 
-        ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
-        ts_r = np.corrcoef(np.transpose(ts))
+    # Slice the file names and remove nii*
+    parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
 
-        if np.isnan(exclude_labels[0]) == False:
-            for i in exclude_labels:
-                ts_r[:, i + n_sctx] = 0
-                ts_r[i + n_sctx, :] = 0
-            ts_r = np.triu(ts_r)
-        else:
-            ts_r = np.triu(ts_r)
+    # Remove cerebellum and subcortical strings
+    parcellationList.remove('subcortical')
+    parcellationList.remove('cerebellum')
 
-        np.savetxt(funcDir + '/surf/' + subject + '_func_space-fsLR-32k_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
-                   ts_r, fmt='%.6f')
-        del ts_r
-        del ts
-        del thisparc
-else:
-    print('')
-    print('...... no FC was selected, will skipp the functional connectome generation')
+    if noFC!="TRUE":
+        for parcellation in parcellationList:
+            parcSaveName = parcellation.split('_conte')[0]
+            parcPath = os.path.join(parcDir, parcellation) + '.csv'
 
-# Clean up
-del data_corr
-del data
+            if parcellation == "aparc-a2009s_conte69":
+                print("parcellation " + parcellation + " currently not supported")
+                continue
+            else:
+                thisparc = np.loadtxt(parcPath)
+
+            # Parcellate cortical timeseries
+            data_corr_ctx = data_corr[:, -n_vertex_ctx_fsLR:]
+            uparcel = np.unique(thisparc)
+            ts_ctx = np.zeros([data_corr_ctx.shape[0], len(uparcel)])
+            for lab in range(len(uparcel)):
+                tmpData = data_corr_ctx[:, thisparc == lab]
+                ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+
+            ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
+            ts_r = np.corrcoef(np.transpose(ts))
+
+            if np.isnan(exclude_labels[0]) == False:
+                for i in exclude_labels:
+                    ts_r[:, i + n_sctx] = 0
+                    ts_r[i + n_sctx, :] = 0
+                ts_r = np.triu(ts_r)
+            else:
+                ts_r = np.triu(ts_r)
+
+            np.savetxt(funcDir + '/surf/' + subject + '_func_space-' + surf + '_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
+                       ts_r, fmt='%.6f')
+            del ts_r
+            del ts
+            del thisparc
+    else:
+        print('')
+        print('...... no FC was selected, will skipp the functional connectome generation')
+
+    # Clean up
+    del data_corr
+    del data
 
 # ------------------------------------------
 # Additional QC
