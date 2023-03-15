@@ -70,10 +70,9 @@ dataDir="${dir_subjsurf}/surf"
 ### Register morphology to surfaces ###
 function reg_surfaces(){
   morph_data=$1
-  smooth=$2
   Info "Mapping ${morph_data}"
-  # Register to fsa5 and apply 10mm smooth
-  if [[ ! -f "${outDir}/${idBIDS}_hemi-R_surf-fsaverage5_label-${morph_data}_10mm.func.gii" ]]; then
+  # Register to fsa5 and apply
+  if [[ ! -f "${outDir}/${idBIDS}_hemi-R_surf-fsaverage5_label-${morph_data}.func.gii" ]]; then
       for hemi in lh rh; do
         [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
         HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
@@ -89,22 +88,14 @@ function reg_surfaces(){
               --trgsurfval "${tmp_morph}/${surf_id}-fsaverage5_label-${morph_data}.mgh"
           Do_cmd mri_convert "${tmp_morph}/${surf_id}-fsaverage5_label-${morph_data}.mgh" "${outDir}/${surf_id}-fsaverage5_label-${morph_data}.func.gii"
 
-          Do_cmd mri_surf2surf --hemi "$hemi" \
-              --fwhm-trg "${smooth}" \
-              --srcsubject "$idBIDS" \
-              --srcsurfval "${tmp_morph}/${surf_id}-fsnative_label-${morph_data}.mgh" \
-              --trgsubject fsaverage5 \
-              --trgsurfval "${tmp_morph}/${surf_id}-fsaverage5_label-${morph_data}_${smooth}mm.mgh"
-          Do_cmd mri_convert "${tmp_morph}/${surf_id}-fsaverage5_label-${morph_data}_${smooth}mm.mgh" "${outDir}/${surf_id}-fsaverage5_label-${morph_data}_${smooth}mm.func.gii"
-
-          if [[ -f "${outDir}/${surf_id}-fsaverage5_label-${morph_data}_${smooth}mm.func.gii" ]]; then ((Nsteps++)); fi
+          if [[ -f "${outDir}/${surf_id}-fsaverage5_label-${morph_data}.func.gii" ]]; then ((Nsteps++)); fi
       done
   else
       Info "Subject ${id} cortical ${morph_data} is registered to fsa5"
   fi
 
-  # Register to fsLR-32k and fsLR-5k and apply 10mm smooth
-  if [[ ! -f "${outDir}/${idBIDS}_surf-fsLR-32k_desc-rh_${morph_data}_${smooth}mm.mgh" ]]; then
+  # Register to fsLR-32k and fsLR-5k
+  if [[ ! -f "${outDir}/${idBIDS}_hemi-R_surf-fsLR-5k_label-${morph_data}.func.gii" ]]; then
     for Surf in "fsLR-32k" "fsLR-5k"; do
       Info "Resampling ${morph_data} to ${Surf}"
       for hemi in lh rh; do
@@ -117,22 +108,15 @@ function reg_surfaces(){
               "${util_surface}/${Surf}.${HEMICAP}.sphere.reg.surf.gii" \
               BARYCENTRIC \
               "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" #\
-          # Smoothing
-          # changed   "${util_surface}/fsaverage.${HEMICAP}.midthickness_orig.32k_fs_LR.surf.gii" >>>
-          Do_cmd wb_command -metric-smoothing \
-              "${util_surface}/${Surf}.${HEMICAP}.sphere.reg.surf.gii" \
-              "${outDir}/${surf_id}-${Surf}_label-${morph_data}.func.gii" \
-              10 \
-              "${outDir}/${surf_id}-${Surf}_label-${morph_data}_${smooth}mm.func.gii"
       done
     done
   else
-      Info "Subject ${idBIDS} cortical ${morph_data} is registered to conte69"
+      Info "Subject ${idBIDS} cortical ${morph_data} is registered to all surfaces"
   fi
 }
 
-reg_surfaces "thickness" 10
-reg_surfaces "curv" 10
+reg_surfaces "thickness"
+reg_surfaces "curv"
 
 #------------------------------------------------------------------------------#
 # End if module has been processed
