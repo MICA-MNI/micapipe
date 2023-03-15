@@ -73,7 +73,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
-  dir_volum="${dir_anat}/volumetric"
+
   dir_conte69="${dir_anat}/surf/conte69"
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_T1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain.nii.gz"
@@ -84,8 +84,9 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
-T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
+dir_volum="${out}/${subject}/${SES}/parc"
+T1_seg_subcortex="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
+T1_seg_cerebellum="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
 
 ### CHECK INPUTS: func, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -612,21 +613,9 @@ fi
 proc_func_transformations "${dir_warp}/${idBIDS}_transformations-proc_func.json" ${transformsInv// /:} ${transform// /:}
 
 #------------------------------------------------------------------------------#
-# Register func to Surface space with Freesurfer
-fmri2fs_dat="${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr.dat"
-if [[ ! -f "${fmri2fs_dat}" ]]; then ((N++))
-  Info "Registering func to FreeSurfer space"
-    Do_cmd bbregister --s "$BIDSanat" --mov "$fmri_brain" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_mode-image_desc-bbregister.nii.gz" --init-fsl --bold --12
-    #Do_cmd bbregister --s "$BIDSanat" --mov "$T1nativepro_in_func" --reg "${fmri2fs_dat}" --o "${dir_warp}/${idBIDS}_from-${tagMRI}_to-fsnative_bbr_outbbreg_FIX.nii.gz" --init-rr --t1 --12
-    if [[ -f "${fmri2fs_dat}" ]] ; then ((Nsteps++)); fi
-else
-    Info "Subject ${id} has a dat transformation matrix from fmri to Freesurfer space"; ((Nsteps++)); ((N++))
-fi
-
-#------------------------------------------------------------------------------#
 # run ICA-FIX IF melodic ran succesfully
 fix_output="${func_ICA}/filtered_func_data_clean.nii.gz"
-func_processed="${func_volum}/${idBIDS}${func_lab}_clean.nii.gz"
+func_processed="${func_volum}/${idBIDS}${func_lab}_preproc.nii.gz"
 
 # Run if fmri_clean does not exist
 if [[ "$noFIX" -eq 0 ]]; then
@@ -735,133 +724,78 @@ else
 fi
 
 #------------------------------------------------------------------------------#
+#                                 C O R T E X
+surf_dir="${out}/${subject}/${SES}/surf"
 # Transform surface to func space
-
-
-#------------------------------------------------------------------------------#
-# Register to surface
-# If three surfaces are found skipp this step
-Nsurf=$(ls "${func_surf}/${idBIDS}"_func_space-fsnative_?h.mgh \
-            "${func_surf}/${idBIDS}"_func_space-fsnative_?h_10mm.mgh \
-            "${func_surf}/${idBIDS}"_func_space-fsaverage5_?h_10mm.mgh \
-            "${func_surf}/${idBIDS}"_func_space-conte69-32k_?h_10mm.mgh 2>/dev/null | wc -l)
-
-if [ "$Nsurf" -lt 8 ]; then
-for hemisphere in lh rh; do
-    HEMI=$(echo "${hemisphere/h/}" | tr [:lower:] [:upper:])
-    Info "Mapping volumetric timeseries to native surface ${hemisphere}"
-    vol2surfTS="${func_surf}/${idBIDS}"_func_space-fsnative_${hemisphere}.mgh
-    if [[ ! -f "$vol2surfTS" ]]; then ((N++))
-
-          # Map the non high-passed volumetric timeseries to the surface so we can compute tSNR
-          Do_cmd mri_vol2surf \
-              --mov "$func_nii" \
-              --reg "$fmri2fs_dat" \
-              --projfrac-avg 0.2 0.8 0.1 \
-              --trgsubject "$BIDSanat" \
-              --interp trilinear \
-              --hemi "${hemisphere}" \
-              --out "${func_surf}/${idBIDS}"_func_space-fsnative_"${hemisphere}"_NoHP.mgh
-
-          # Map processed timeseries to surface
-          Do_cmd mri_vol2surf \
-              --mov "$func_processed "\
-              --reg "$fmri2fs_dat" \
-              --projfrac-avg 0.2 0.8 0.1 \
-              --trgsubject "$BIDSanat" \
-              --interp trilinear \
-              --hemi "${hemisphere}" \
-              --out "$vol2surfTS"
-
-          if [[ -f "$vol2surfTS" ]] ; then ((Nsteps++)); fi
-    else
-        Info "Subject ${id} volumetric timeseries have been mapped to ${HEMI} cortical surface"; ((Nsteps++)); ((N++))
+if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
+    # convert affines
+    Do_cmd c3d_affine_tool -itk ${mat_func_affine} -o $tmp/affine1.mat
+    mat_func_affine=$tmp/affine1.mat
+    if [[ ${regAffine}  == "FALSE" ]]; then
+        Do_cmd c3d_affine_tool -itk ${SyN_func_affine} -o $tmp/affine2.mat -inv
+        SyN_func_affine=$tmp/affine2.mat
     fi
-
-    # Convert native timeseries to gifti
-    Do_cmd mri_convert "${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}.mgh" "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii"
-
-    # Apply smoothing on native surface
-    out_surf_native="${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf_native" ]]; then ((N++))
-          if [[ "$smooth" == 1 ]]; then
-            Do_cmd wb_command -metric-smoothing \
-                "${dir_subjsurf}/surf/${hemisphere}.midthickness.surf.gii"  \
-                "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
-                10 \
-                "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}_10mm.func.gii"
-            Do_cmd mri_convert "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}_10mm.func.gii" "$out_surf_native"
-          else
-            Do_cmd mri_surf2surf \
-                --hemi "${hemisphere}" \
-                --srcsubject "$BIDSanat" \
-                --sval "${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}.mgh" \
-                --trgsubject "$BIDSanat" \
-                --tval "$out_surf_native" \
-                --fwhm-trg 10
-          fi
-    if [[ -f "$out_surf_native" ]] ; then ((Nsteps++)); fi
-    else
-        Info "Subject ${id} has native timeseries smoothed on ${HEMI} surface"; ((Nsteps++)); ((N++))
-    fi
-
-    # Register to fsa5 and smooth
-    out_surf_fsa5="${func_surf}/${idBIDS}_func_space-fsaverage5_${hemisphere}.mgh"
-    if [[ ! -f "$out_surf_fsa5" ]]; then ((N++))
-         Do_cmd mri_surf2surf \
-            --hemi "${hemisphere}" \
-            --srcsubject "$BIDSanat" \
-            --sval "${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}.mgh" \
-            --trgsubject fsaverage5 \
-            --tval "$out_surf_fsa5"
-         if [[ -f "$out_surf_fsa5" ]] ; then ((Nsteps++)); fi
-    else
-         Info "Subject ${id} has timeseries mapped to ${HEMI} fsa5"; ((Nsteps++)); ((N++))
-    fi
-
-    out_surf_fsa5_sm="${func_surf}/${idBIDS}_func_space-fsaverage5_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf_fsa5_sm" ]]; then ((N++))
-         Do_cmd mri_surf2surf \
-            --hemi "${hemisphere}" \
-            --srcsubject "$BIDSanat" \
-            --sval "${func_surf}/${idBIDS}_func_space-fsnative_${hemisphere}.mgh" \
-            --trgsubject fsaverage5 \
-            --tval "$out_surf_fsa5_sm" \
-            --fwhm-trg 10
-         if [[ -f "$out_surf_fsa5_sm" ]] ; then ((Nsteps++)); fi
-    else
-         Info "Subject ${id} has smoothed timeseries mapped to ${HEMI} fsa5"; ((Nsteps++)); ((N++))
-    fi
-
-    # Register to conte69 and smooth
-    out_surf="${func_surf}/${idBIDS}_func_space-conte69-32k_${hemisphere}_10mm.mgh"
-    if [[ ! -f "$out_surf" ]]; then ((N++))
-          # Register to conte69
-          Do_cmd wb_command -metric-resample \
-              "${tmp}/${idBIDS}_func_space-fsnative_${hemisphere}.func.gii" \
-              "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-fsnative_label-sphere.surf.gii" \
-              "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMI}.sphere.32k_fs_LR.surf.gii" \
-              ADAP_BARY_AREA \
-              "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" \
-              -area-surfs \
-              "${dir_subjsurf}/surf/${hemisphere}.midthickness.surf.gii" \
-              "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-conte69-32k_label-midthickness.surf.gii"
-          # Apply smooth on conte69
-          Do_cmd wb_command -metric-smoothing \
-              "${util_surface}/fsaverage.${HEMI}.midthickness_orig.32k_fs_LR.surf.gii" \
-              "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" \
-              10 \
-              "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}_10mm.func.gii"
-
-          Do_cmd mri_convert "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}.func.gii" "${func_surf}/${idBIDS}_func_space-conte69-32k_${hemisphere}.mgh"
-          Do_cmd mri_convert "${tmp}/${idBIDS}_func_space-conte69-32k_${hemisphere}_10mm.func.gii" "${out_surf}"
-          if [[ -f "$out_surf" ]] ; then ((Nsteps++)); fi
-    else
-          Info "Subject ${id} has a func MRI fmri2fs ${hemisphere} on conte69-32k 10mm surface"; ((Nsteps++)); ((N++))
-    fi
-done
+    # apply registrations to surface
+    for HEMICAP in L R; do
+        Do_cmd wb_command -surface-apply-affine \
+            ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+            ${mat_func_affine} \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        if [[ ${regAffine}  == "FALSE" ]]; then
+            Do_cmd wb_command -surface-apply-affine \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${SyN_func_affine} \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+            Do_cmd wb_command -surface-apply-warpfield \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+                ${SyN_func_warp} \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+        fi
+        Do_cmd wb_command -volume-to-surface-mapping \
+            $func_processed \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+            -trilinear
+        Info "Subject ${id} hemi-${HEMICAP} mapped to fsnative"; ((Nsteps++)); ((N++))
+    done
 else
-  Info "Subject ${id} has a func MRI fmri2fs on all surfaces: native, native_fwhm-10mm, fsa5, fsa5_fwhm-10mm, and conte69fwhm_10mm"; Nsteps=$((Nsteps+10)); N=$((N+10))
+    Info "Subject ${id} was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+fi
+
+# Propagate to other surfaces
+Nsurf=$(ls ${func_surf}/${idBIDS}_hemi-*_surf-*.func.gii | wc -l)
+SURFLIST='fsLR-5k fsLR-32k fsaverage5'
+if [ $Nsurf -lt 8 ]; then
+    for HEMICAP in L R; do
+        for SURF in $SURFLIST; do
+            Do_cmd wb_command -metric-resample \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii \
+                ${MICAPIPE}/surfaces/$SURF.$HEMICAP.sphere.reg.surf.gii \
+                ADAP_BARY_AREA \
+                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}.func.gii \
+                -area-surfs \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${SURF}_label-midthickness.surf.gii
+            Info "Subject ${id} hemi-${HEMICAP} mapped to $SURF"; ((Nsteps++)); ((N++))
+        done
+    done
+else
+    Info "Subject ${id} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
+fi
+
+# ONLY for tSNR (will get deleted after):
+if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative_NoHP.func.gii" ]]; then
+    for HEMICAP in L R; do
+        Do_cmd wb_command -volume-to-surface-mapping \
+            $func_nii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
+            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_NoHP.func.gii \
+            -trilinear
+        Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
+    done
+else
+    Info "Subject ${id} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
 
 #------------------------------------------------------------------------------#
@@ -872,7 +806,7 @@ timese_subcortex="${func_volum}/${idBIDS}${func_lab}_timeseries_subcortical.txt"
 
 if [[ ! -f "$timese_subcortex" ]]; then ((N++))
       Info "Getting subcortical timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_subcortex" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_subcortex" -r "$fmri_mean" -n MultiLabel "${transformsInv}" -o "$func_subcortex" -v -u int
       # Extract subcortical timeseries
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$func_processed" --seg "$func_subcortex" --exclude 0 --exclude 16 --avgwf "$timese_subcortex"
@@ -889,7 +823,7 @@ stats_cerebellum="${func_volum}/${idBIDS}${func_lab}_cerebellum_roi_stats.txt"
 
 if [[ ! -f "$timese_cerebellum" ]]; then ((N++))
       Info "Getting cerebellar timeseries"
-      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n GenericLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
+      Do_cmd antsApplyTransforms -d 3 -i "$T1_seg_cerebellum" -r "$fmri_mean" -n MultiLabel "${transformsInv}" -o "$func_cerebellum" -v -u int
       # Extract cerebellar timeseries (mean, one ts per segemented structure, exluding nuclei because many are too small for our resolution)
       # Output: ascii text file with number of rows equal to the number of frames and number of columns equal to the number of segmentations reported
       Do_cmd mri_segstats --i "$func_processed" --seg "$func_cerebellum" --exclude 0 --avgwf "$timese_cerebellum"
@@ -901,15 +835,19 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-func
-cleanTS="${func_surf}/${idBIDS}_func_space-conte69-32k_desc-timeseries_clean${gsr}.txt"
+cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean${gsr}.txt"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
-    labelDirectory="${dir_subjsurf}/label/"
+    labelDirectory="${MICAPIPE}/parcellations/"
     Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC" "${GSRtag}"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has post-processed conte69 time-series"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has post-processed fsLR time-series"; ((Nsteps++)); ((N++))
 fi
+
+#------------------------------------------------------------------------------#
+# a bit of extra cleanup
+rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
