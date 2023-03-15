@@ -223,7 +223,7 @@ sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR
 def funcgii_load(gii):
     out = np.zeros((len(gii.darrays),len(gii.darrays[0].data)))
     for n in range(len(gii.darrays)):
-        out[n,:] = gii.darrays[n].data.shape
+        out[n,:] = gii.darrays[n].data
     return out
 
 # Find and load surface-registered cortical timeseries
@@ -352,9 +352,6 @@ rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
 np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
-# delete NoHP (no longer needed)
-os.remove(lh_nat_noHP)
-os.remove(rh_nat_noHP)
 
 print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
