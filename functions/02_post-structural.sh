@@ -130,7 +130,7 @@ export SUBJECTS_DIR=${dir_surf}
 
 #------------------------------------------------------------------------------#
 # Compute affine matrix from surface space to nativepro
-T1_in_fs=${tmp}/T1.nii.gz
+T1_in_fs=${tmp}/orig.mgz
 T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz
 mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
@@ -156,7 +156,7 @@ T1str_fs="${idBIDS}_space-fsnative_T1w"
 function map_annot(){
       parc_annot=$1;
       parc_str=$(echo "${parc_annot}" | awk -F '_mics' '{print $1}')
-      if [[ ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" ]]; then
+      if [[ ( ! -f "${dir_volum}/${T1str_nat}-${parc_str}.nii.gz" || ! -f "${dir_subjsurf}/label/rh.${parc_annot}" ) ]]; then
           for hemi in lh rh; do
           Info "Running surface $hemi $parc_annot to $subject"
           Do_cmd mri_surf2surf --hemi "$hemi" \
@@ -187,7 +187,7 @@ Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
 Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
 if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
   while [ "${Nparc}" != "${Natlas}" ] || [ "${Nannot}" != "${Natlas}" ]; do
-    Info "Mapping $((Natlas-Nparc)) of ${Natlas} parcellations to nativepro"
+    Info "Mapping Nparc=${Nparc} from Nannot=${Nannot} of ${Natlas} parcellations to nativepro"
     for parc in "${atlas_parc[@]}"; do
       parc_nom="${parc/lh./}"
       map_annot "${parc_nom}"
@@ -250,7 +250,7 @@ function from-fsnative_to-nativepro(){
     done
 }
 
-Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
+Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii 2>/dev/null | wc -l)
 if [[ "$Nsurf" -lt 6 ]]; then ((N++))
     Info "Register surfaces to nativepro space"
     # Convert the ANTs transformation file for wb_command
@@ -306,11 +306,11 @@ post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
 json_poststruct "${T1surf}" "${post_struct_json}"
 
 # Running cortical morphology - Requires json_poststruct
-Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 10 ]]; then ((N++))
+Nmorph=$(ls "${dir_maps}/"*thickness* "${dir_maps}/"*curv* 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
-    Nmorph=$(ls "${dir_maps}/"*thickness* 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 10 ]]; then ((Nsteps++)); fi
+    Nmorph=$(ls "${dir_maps}/"*thickness* "${dir_maps}/"*curv* 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has cortical morphology"; ((Nsteps++)); ((N++))
 fi
