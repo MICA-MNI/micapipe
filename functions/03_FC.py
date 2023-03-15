@@ -246,7 +246,7 @@ data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 np.savetxt(funcDir+'/surf/' + subject + '_surf-fsnative_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
-parcellationList = os.listdir(volmDir)
+parcellationList = glob.glob(volmDir + "/*.nii.gz")
 
 # Slice the file names and remove nii*
 parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
@@ -258,22 +258,20 @@ parcellationList.remove('cerebellum')
 if noFC!="TRUE":
     for parcellation in parcellationList:
         parcPath = os.path.join(parcDir, parcellation) + '_conte69.csv'
-        if parcellation == "aparc-a2009s_conte69":
+        if parcellation == "aparc-a2009s":
             print("parcellation " + parcellation + " currently not supported")
             continue
         else:
             thisparc = np.loadtxt(parcPath)
 
         # Parcellate cortical timeseries
-        uparcel = np.unique(native_parc)
-        ts_native_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
-        for (lab, _) in enumerate(uparcel):
-            tmpData = data_corr[:, native_parc == int(uparcel[lab])]
-            ts_native_ctx[:,lab] = np.mean(tmpData, axis = 1)
+        uparcel = np.unique(thisparc)
+        ts_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
+        for lab in range(len(uparcel)):
+            tmpData = data_corr[:, thisparc == lab]
+            ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
 
-        ts = np.append(sctx_cereb_corr, ts_native_ctx, axis=1)
-        np.savetxt(funcDir + '/surf/' + subject + '_atlas-' + parcellation + '_desc-timeseries' + gsr + '.txt', ts, fmt='%.12f')
-
+        ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
         ts_r = np.corrcoef(np.transpose(ts))
 
         if np.isnan(exclude_labels[0]) == False:
@@ -284,11 +282,11 @@ if noFC!="TRUE":
         else:
             ts_r = np.triu(ts_r)
 
-        np.savetxt(funcDir + '/surf/' + subject + '_atlas-' + parcellation + '_desc-FC' + gsr + '.txt', ts_r, fmt='%.6f')
-        del ts_native_ctx
-        del native_parc
+        np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-32k_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
+                   ts_r, fmt='%.6f')
         del ts_r
         del ts
+        del thisparc
 else:
     print('')
     print('...... no FC was selected, will skipp the functional connectome generation')
@@ -298,7 +296,7 @@ del data_corr
 del data
 
 # fsLR-5k FC
-
+# TODO
 
 
 # ------------------------------------------
