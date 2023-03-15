@@ -73,7 +73,7 @@ if [[ "$sesAnat" != FALSE  ]]; then
   sesAnat=${sesAnat/ses-/}
   BIDSanat="${subject}_ses-${sesAnat}"
   dir_anat="${out}/${subject}/ses-${sesAnat}/anat"
-  dir_volum="${out}/${subject}/ses-${sesAnat}/parc"
+
   dir_conte69="${dir_anat}/surf/conte69"
   T1nativepro="${dir_anat}/${BIDSanat}_space-nativepro_T1w.nii.gz"
   T1nativepro_brain="${dir_anat}/${BIDSanat}_space-nativepro_T1w_brain.nii.gz"
@@ -84,6 +84,7 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
+dir_volum="${out}/${subject}/${SES}/parc"
 T1_seg_subcortex="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
 T1_seg_cerebellum="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
 

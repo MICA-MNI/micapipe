@@ -220,32 +220,21 @@ sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR
 # ------------------------------------------
 
 def funcgii_load(gii):
-    out = np.zeros([len(gii.darrays),gii.darrays[0].data.shape])
+    out = np.zeros((len(gii.darrays),len(gii.darrays[0].data)))
     for n in range(len(gii.darrays)):
         out[n,:] = gii.darrays[n].data.shape
     return out
 
 # Find and load surface-registered cortical timeseries
 os.chdir(funcDir+'/surf/')
-x_lh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-L_surf-fsnative.func.gii'))
-x_rh = " ".join(glob.glob(funcDir+'/surf/'+'*_hemi-R_surf-fsnative.func.gii'))
-lh_data = funcgii_load(nib.load(x_lh))
-rh_data = funcgii_load(nib.load(x_rh))
-
-# exit if more than one scan exists
-if len(x_lh.split(" ")) == 1:
-    print('')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('only one scan found; all good in the hood')
-    print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-    print('')
-else:
-    print('more than one scan found; exiting. Bye-bye')
-    exit()
+x_lh = glob.glob(funcDir+'/surf/'+'*_hemi-L_surf-fsLR-32k.func.gii')
+x_rh = glob.glob(funcDir+'/surf/'+'*_hemi-R_surf-fsLR-32k.func.gii')
+lh_data = funcgii_load(nib.load(x_lh[0]))
+rh_data = funcgii_load(nib.load(x_rh[0]))
 
 # Reformat data
 data = []
-data = np.transpose(np.append(lh_data, rh_data, axis=0))
+data = np.append(lh_data, rh_data, axis=1)
 n_vertex_ctx = data.shape[1]
 del lh_data
 del rh_data
@@ -268,25 +257,13 @@ parcellationList.remove('cerebellum')
 
 if noFC!="TRUE":
     for parcellation in parcellationList:
-        # Load left and right annot files
-        fname_lh = 'lh.' + parcellation + '_mics.annot'
-        ipth_lh = os.path.join(labelDir, fname_lh)
-        [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
-        fname_rh = 'rh.' + parcellation + '_mics.annot'
-        ipth_rh = os.path.join(labelDir, fname_rh)
-        [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
-        # Join hemispheres
-        nativeLength = len(labels_lh)+len(labels_rh)
-        if dataNative_corr.shape[1] != nativeLength:
-            print('ERROR..' + parcellation + '_mics.annot' + ' has a mismatch between the native surface and the annot file!!')
+        parcPath = os.path.join(parcDir, parcellation) + '_conte69.csv'
+        if parcellation == "aparc-a2009s_conte69":
+            print("parcellation " + parcellation + " currently not supported")
+            continue
         else:
-            native_parc = np.zeros((nativeLength))
-            for (x, _) in enumerate(labels_lh):
-                native_parc[x] = np.where(ctab_lh[:,4] == labels_lh[x])[0][0]
-            for (x, _) in enumerate(labels_rh):
-                native_parc[x + len(labels_lh)] = np.where(ctab_rh[:,4] == labels_rh[x])[0][0] + len(ctab_lh)
+            thisparc = np.loadtxt(parcPath)
 
-        # Generate connectome on native space parcellation
         # Parcellate cortical timeseries
         uparcel = np.unique(native_parc)
         ts_native_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
