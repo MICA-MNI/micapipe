@@ -244,7 +244,7 @@ del rh_data
 data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-np.savetxt(funcDir+'/surf/' + subject + '_surf-fsnative_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
+np.savetxt(funcDir+'/surf/' + subject + '_surf-fsLR-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
 parcellationList = glob.glob(volmDir + "/*.nii.gz")
