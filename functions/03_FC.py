@@ -84,8 +84,9 @@ else:
     print('')
     exit()
 
-
+# ------------------------------------------
 # Load subcortical and cerebellar timeseries
+# ------------------------------------------
 # Subcortex
 sctx = np.loadtxt(funcDir+'/volumetric/' + subject + func_lab + '_timeseries_subcortical.txt')
 if sctx.shape:
@@ -105,6 +106,9 @@ startROIs = s1 + len("nii.gz") + 6
 values = cerebLabels[startROIs:].split("\t")
 roiLabels = values[0::2]
 
+# ------------------------------------------
+# Functions and confounds for cleaning timeseries
+# ------------------------------------------
 def missing_elements(roiList):
     start, end = 0, 33
     return sorted(set(range(start, end + 1)).difference(roiList))
@@ -125,11 +129,8 @@ else:
     exclude_labels = missing_elements(roiLabelsInt[0])
     print('Matrix entries for following ROIs will be zero: ', exclude_labels)
 
-# Calculate number of non cortical rows/colunms in matrix and concatenate
-n = sctx.shape[1] + cereb.shape[1] # so we know data.shape[1] - n = num of ctx vertices only
-
 # Load confound files
-os.chdir(funcDir+'/volumetric/')
+#os.chdir(funcDir+'/volumetric/')
 x_spike = " ".join(glob.glob(funcDir+'/volumetric/'+'*spikeRegressors_FD.1D'))
 x_dof = " ".join(glob.glob(funcDir+'/volumetric/*'+func_lab+'.1D'))
 # x_refmse = " ".join(glob.glob(funcDir+'/volumetric/'+'*metric_REFMSE.1D'))
@@ -226,7 +227,7 @@ def funcgii_load(gii):
     return out
 
 # Find and load surface-registered cortical timeseries
-os.chdir(funcDir+'/surf/')
+#os.chdir(funcDir+'/surf/')
 x_lh = glob.glob(funcDir+'/surf/'+'*_hemi-L_surf-fsLR-32k.func.gii')
 x_rh = glob.glob(funcDir+'/surf/'+'*_hemi-R_surf-fsLR-32k.func.gii')
 lh_data = funcgii_load(nib.load(x_lh[0]))
@@ -269,18 +270,16 @@ if noFC!="TRUE":
         ts_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
         for lab in range(len(uparcel)):
             tmpData = data_corr[:, thisparc == lab]
-            ts_ctx[:,lab] = np.mean(tmpData, axis = 1)
+            ts_ctx[:,lab] = np.nanmean(tmpData, axis = 1)
 
-        ts = np.append(data_corr[:, :n], ts_ctx, axis=1)
+        # get correlation amtrix
+        ts = np.append(sctx_cereb_corr, ts_ctx, axis=1)
         ts_r = np.corrcoef(np.transpose(ts))
-
         if np.isnan(exclude_labels[0]) == False:
             for i in exclude_labels:
                 ts_r[:, i + n_sctx] = 0
                 ts_r[i + n_sctx, :] = 0
-            ts_r = np.triu(ts_r)
-        else:
-            ts_r = np.triu(ts_r)
+        ts_r = np.triu(ts_r)
 
         np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-32k_atlas-' + parcellation + '_desc-FC' + gsr + '.txt',
                    ts_r, fmt='%.6f')
@@ -295,9 +294,28 @@ else:
 del data_corr
 del data
 
+# ------------------------------------------
 # fsLR-5k FC
-# TODO
-
+# ------------------------------------------
+x_lh = glob.glob(funcDir+'/surf/'+'*_hemi-L_surf-fsLR-5k.func.gii')
+x_rh = glob.glob(funcDir+'/surf/'+'*_hemi-R_surf-fsLR-5k.func.gii')
+lh_data = funcgii_load(nib.load(x_lh[0]))
+rh_data = funcgii_load(nib.load(x_rh[0]))
+data = []
+data = np.append(lh_data, rh_data, axis=1)
+n_vertex_ctx = data.shape[1]
+del lh_data
+del rh_data
+ts = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
+ts_r = np.corrcoef(np.transpose(ts))
+ts_r = np.triu(ts_r)
+np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-5k_desc-FC' + gsr + '.txt',
+           ts_r, fmt='%.6f')
+# Clean up
+del data_corr
+del data 
+del ts_r
+del ts
 
 # ------------------------------------------
 # Additional QC
@@ -317,31 +335,27 @@ ax.set(xlabel='')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacement.png', dpi=300)
-
 del fd
 
+# ------------------------------------------
 # tSNR
 lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-L_surf-fsnative_NoHP.func.gii'))
 lh_nat_noHP_data = funcgii_load(nib.load(lh_nat_noHP))
 rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-R_surf-fsnative_NoHP.func.gii'))
 rh_nat_noHP_data = funcgii_load(nib.load(rh_nat_noHP))
-
+lhM = np.mean(lh_nat_noHP_data, axis = 1)
+lhSD = np.std(lh_nat_noHP_data, axis = 1)
+lh_tSNR = np.divide(lhM, lhSD)
+rhM = np.mean(rh_nat_noHP_data, axis = 1)
+rhSD = np.std(rh_nat_noHP_data, axis = 1)
+rh_tSNR = np.divide(rhM, rhSD)
+tSNR = np.append(lh_tSNR, rh_tSNR)
+tSNR = np.expand_dims(tSNR, axis=1)
+np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
 # delete NoHP (no longer needed)
 os.remove(lh_nat_noHP)
 os.remove(rh_nat_noHP)
 
-lhM = np.mean(lh_nat_noHP_data, axis = 1)
-lhSD = np.std(lh_nat_noHP_data, axis = 1)
-lh_tSNR = np.divide(lhM, lhSD)
-
-rhM = np.mean(rh_nat_noHP_data, axis = 1)
-rhSD = np.std(rh_nat_noHP_data, axis = 1)
-rh_tSNR = np.divide(rhM, rhSD)
-
-tSNR = np.append(lh_tSNR, rh_tSNR)
-tSNR = np.expand_dims(tSNR, axis=1)
-
-np.savetxt(funcDir+'/volumetric/' + subject + func_lab + '_tSNR' + gsr + '.txt', tSNR, fmt='%.12f')
 print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 print('func regression and FC ran successfully')
