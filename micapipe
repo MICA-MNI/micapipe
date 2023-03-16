@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE November 2022 (Version v0.2.0 'Northern flicker')\n"
+  echo -e "\nMICAPIPE March 2023 (Version v0.2.0 'Northern flicker')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -95,16 +95,6 @@ echo -e "
 \t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
 \t\t\t            Default is scaling. See more on MRtrix3 documentation
 
-\t\033[38;5;197m-proc_asl\033[0m
-\t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
-\t\t\t            Default='asl'
-\t   \033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
-\t\t\t            Default='m0scan'
-
-\t\033[38;5;197m-proc_flair\033[0m
-\t   \033[38;5;120m-flairScanStr\033[0m          : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
-\t\t\t            Default='FLAIR'
-
 \t\033[38;5;197m-proc_func\033[0m
 \t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
 \t\t\t            Default='task-rest_acq-AP_bold'
@@ -148,7 +138,6 @@ echo -e "
 \t   \033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
 \t   \033[38;5;120m-weighted_SC\033[0m         : Weight the SC by a quantitative map in DWI space (e.g. FA, ADC, qT1 or MT). None by default.
 
-
 \t\033[38;5;197m-MPC\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
@@ -160,6 +149,15 @@ echo -e "
 \t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
 
+\t\033[38;5;197m-proc_asl\033[0m
+\t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
+\t\t\t            Default='asl'
+\t   \033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
+\t\t\t            Default='m0scan'
+
+\t\033[38;5;197m-proc_flair\033[0m
+\t   \033[38;5;120m-flairScanStr\033[0m          : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
+\t\t\t            Default='FLAIR'
 
 
 \033[38;5;141mOPTIONS:\033[0m
