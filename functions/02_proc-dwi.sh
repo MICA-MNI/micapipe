@@ -550,80 +550,22 @@ proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_st
 # DTI-maps surface mapping
 Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 48 ]]; then ((N++))
-    # Affine matrix
-    affine_xfm="${tmp}/${idBIDS}_from-nativepro_to_dwi_mode-image_desc-affine_0GenericAffine.mat"
-
-    # Apply transformations to fsnative surface from nativepro space to dwi space
-    if [[ ${regAffine} == "TRUE" ]]; then
-      # Select the transformation file from ANTs
-      Do_cmd ConvertTransformFile 3 "${mat_dwi_affine}" "${mat_dwi_affine/.mat/}.txt"
-      Do_cmd lta_convert --initk "${mat_dwi_affine/.mat/}.txt" \
-                --outitk "${tmp}/${idBIDS}_from-nativepro_to_dwi_mode-image_desc-affine_0GenericAffine.txt" \
-                --src "${T1nativepro_brain}" \
-                --trg "${fod}" \
-                --invert
-
-      Do_cmd lta_convert --initk "${tmp}/${idBIDS}_from-nativepro_to_dwi_mode-image_desc-affine_0GenericAffine.txt" \
-                --outfsl "${affine_xfm}" \
-                --src "${T1nativepro_brain}" \
-                --trg "${fod}"
-
-    elif [[ ${regAffine} == "FALSE" ]]; then
-      SyN_affine="${tmp}/CombinedAffine.mat"
-      Do_cmd antsApplyTransforms -v -d 3 -o Linear["${tmp}/CombinedAffine.mat",0] -t "${dwi_SyN_affine}" -t ["${mat_dwi_affine}",1] -r "${fod}"
-
-      Do_cmd ConvertTransformFile 3 "${SyN_affine}" "${SyN_affine/.mat/}.txt"
-      Do_cmd lta_convert --initk "${SyN_affine/.mat/}.txt" \
-                --outitk "${tmp}/${idBIDS}_from-nativepro_to_dwi_mode-image_desc-affine_0GenericAffine.txt" \
-                --src "${T1nativepro_brain}" \
-                --trg "${fod}"
-
-      Do_cmd lta_convert --initk "${tmp}/${idBIDS}_from-nativepro_to_dwi_mode-image_desc-affine_0GenericAffine.txt" \
-                --outfsl "${affine_xfm}" \
-                --src "${T1nativepro_brain}" \
-                --trg "${fod}"
-    fi
-
-    # Apply transformation to midthickness and white matter surface: from nativepro to DWI space
+    Info "Mapping FA and ADC to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
-        for label in pial midthickness white; do
+        for label in midthickness white; do
             surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
-            surf_dwi="${proc_dwi}/${idBIDS}_hemi-${HEMI}_space-dwi_surf-fsnative_label-${label}.surf.gii"
-            if [[ ${regAffine} == "FALSE" ]]; then
-                Info "Apply SyN transformations to ${HEMI} ${label} surface"
-                surf_dwi_tmp="${tmp}/${idBIDS}_hemi-${HEMI}_space-dwi_surf-fsnative_label-${label}_TMP.surf.gii"
-                # Affine transformation from T1nativepro to DWI
-                Do_cmd wb_command -surface-apply-affine "${surf_fsnative}" \
-                          "${affine_xfm}" \
-                          "${surf_dwi_tmp}" \
-                          -flirt "${T1nativepro_brain}" \
-                          "${fod}"
-                # Warp transformation from spcae-dwi_T1nativepro to DWI
-                world_warp=${tmp}/from-t1nativepro_space-dwi_to-dwi_world_warpfield.nii.gz
-                Do_cmd wb_command -convert-warpfield -from-itk "${dwi_SyN_Invwarp}" -to-world ${world_warp}
-                Do_cmd wb_command -surface-apply-warpfield "${surf_dwi_tmp}" \
-                          ${world_warp} \
-                          "${surf_dwi}"
-            elif [[ ${regAffine} == "TRUE" ]]; then
-                Info "Apply Affine transformation to ${HEMI} ${label} surface"
-                Do_cmd wb_command -surface-apply-affine "${surf_fsnative}" \
-                          "${affine_xfm}" \
-                          "${surf_dwi}" \
-                          -flirt "${T1nativepro_brain}" \
-                          "${fod}"
-            fi
             # MAPPING metric to surfaces
             for metric in FA ADC; do
-                Info "Resampling ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
-                dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
-                map_to-surfaces "${dti_map}" "${surf_dwi}" "${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}"
+                # Info "Mapping ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
+                dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}"
             done
         done
     done
     Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 48 ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${idBIDS} has FA and ADC mapped on surface"; ((Nsteps++)); ((N++))
+    Info "Subject ${idBIDS} has FA and ADC mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
