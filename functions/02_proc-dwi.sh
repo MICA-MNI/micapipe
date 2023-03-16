@@ -548,9 +548,25 @@ proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_st
 
 #------------------------------------------------------------------------------#
 # DTI-maps surface mapping
-# Apply transformations to fsnative surface from nativepro space to dwi space
-# Generate fsLR-32k, fsLR-5k and fsaverage5 in dwi space
-# Map from volume to surface for each surfaces
+Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 48 ]]; then ((N++))
+    Info "Mapping FA and ADC to fsLR-32k, fsLR-5k and fsaverage5"
+    for HEMI in L R; do
+        for label in midthickness white; do
+            surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+            # MAPPING metric to surfaces
+            for metric in FA ADC; do
+                # Info "Mapping ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
+                dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}"
+            done
+        done
+    done
+    Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 48 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has FA and ADC mapped to surfaces"; ((Nsteps++)); ((N++))
+fi
 
 #------------------------------------------------------------------------------#
 # Gray matter White matter interface mask

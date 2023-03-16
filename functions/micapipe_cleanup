@@ -29,6 +29,7 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_surf\033[0m        : DELETES Surface processing
 \t  \033[38;5;120m-fastsurfer\033[0m        Use this to delete fastsurfer processing
+\t\033[38;5;197m-proc_flair\033[0m       : DELETES FLAIR processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t  \033[38;5;120m-acqStr\033[0m            Use this option if -proc_dwi was used with -dwi_acq
 \t\033[38;5;197m-proc_func\033[0m        : DELETES Funtional MRI processing
@@ -96,6 +97,10 @@ do
   ;;
   -proc_func)
     procFunc=TRUE
+    shift
+  ;;
+  -proc_flair)
+    procFlair=TRUE
     shift
   ;;
   -post_structural)
@@ -179,7 +184,7 @@ if [ "$procVOL" = "TRUE" ]; then
                   "$dir_warp"/*-nativepro_brain_to-MNI152_* \
                   "$dir_warp"/*_transformations-proc_structural.json \
                   "$dir_logs"/proc_structural_* \
-                  "$dir_QC"/*module-proc_structural.json \
+                  "$dir_QC"/*module-proc_structural* \
                   "${proc_struct}/"*_space-nativepro_T1w.json \
                   "${dir_warp}/${idBIDS}_transformations-proc_structural.json" \
                   "$dir_volum"/*T1w_atlas-cerebellum.nii.gz \
@@ -210,12 +215,12 @@ if [ "$procFS" = "TRUE" ]; then
     if [[ -L "$dir_subjsurf" ]]; then
       Info "Surface directory is symlink"; Do_cmd unlink "$dir_subjsurf"
     else
-      rm -rf "$dir_subjsurf"
+      Warning "RUN manually: rm -rf $dir_subjsurf"
     fi
-    Do_cmd rm -rf "${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json" \
+    Do_cmd rm -rf "${dir_QC}/${idBIDS}_module-proc_surf-${recon}*" \
                   "${proc_struct}/surf/${idBIDS}_proc_surf.json" \
                   "$dir_logs"/proc_surf*
-    grep -v "${id}, ${SES/ses-/}, proc_surf" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -229,11 +234,21 @@ if [ "$postVOL" = "TRUE" ]; then
                   "${dir_conte69}"/* \
                   "${dir_subjsurf}"/label/*_mics* \
                   "${dir_subjsurf}"/surf/*.midthickness.surf.gii \
-                  "${dir_QC}/${idBIDS}"_module-post_structural.json \
+                  "${dir_QC}/${idBIDS}"_module-post_structural* \
                   "${proc_struct}/${idBIDS}"_post_structural.json \
                   "${subject_dir}/anat/surf/morphology" \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -proc_flair
+if [ "$procFlair" = "TRUE" ]; then
+    Warning "Erasing proc_flair output files and logs"
+    Do_cmd rm -rf "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.nii.gz \
+        "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.json \
+        "${dir_QC}/${idBIDS}"_module-flair*
+    grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -248,7 +263,7 @@ if [ "$procFunc" = "TRUE" ]; then
                   "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
                   "${dir_warp}/${idBIDS}_from-${acqStr}_to-fsnative_bbr"* \
                   "$proc_struct"/${idBIDS}_space-nativepro_desc-T1wbold.nii.gz \
-                  "${dir_QC}/${idBIDS}"_module-proc_func-desc-*"${acqStr}".json \
+                  "${dir_QC}/${idBIDS}"_module-proc_func-desc-*"${acqStr}"* \
                   "${dir_warp}/${idBIDS}_transformations-proc_func.json" \
                   "${func_volum}/${idBIDS}${acqStr}_clean*.json" \
                   "$dir_logs"/proc_func_*${acqStr}*
@@ -268,7 +283,7 @@ if [ "$procDWI" = "TRUE" ]; then
                   "${dir_warp}"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
                   "${dir_warp}"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "${dir_warp}/${idBIDS}_transformations-proc_dwi.json" \
-                  "${dir_QC}/${idBIDS}_module-proc_dwi.json" \
+                  "${dir_QC}/${idBIDS}_module-proc_dwi"* \
                   "${dir_logs}"/proc_dwi_*
     grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     else
@@ -278,7 +293,7 @@ if [ "$procDWI" = "TRUE" ]; then
                   "${dir_warp}"/*_space-dwi_from-dwi_${acqStr}_to-nativepro_mode-image_desc-affine_* \
                   "${dir_warp}"/*_space-dwi_${acqStr}_from-dwi_to-dwi_mode-image_desc-SyN_* \
                   "${dir_warp}/${idBIDS}_transformations-proc_dwi_${acqStr}.json" \
-                  "${dir_QC}/${idBIDS}_module-proc_dwi_${acqStr}.json" \
+                  "${dir_QC}/${idBIDS}_module-proc_dwi_${acqStr}"* \
                   "${dir_logs}"/proc_dwi_${acqStr}*
       grep -v "${id}, ${SES/ses-/}, proc_dwi_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     fi
@@ -289,16 +304,16 @@ if [ "$postDWI" = "TRUE" ]; then
     filter=SIFT2
     Warning "Erasing post_tractography output files and logs"
     if [ -z ${acqStr} ]; then
-      proc_dwi=$subject_dir/dwi; acqStr=""
+      proc_dwi=$subject_dir/dwi; acqStr=""; acqStr_=""
     else
       if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
-      proc_dwi=$subject_dir/dwi/"${acqStr}"
+      proc_dwi=$subject_dir/dwi/"${acqStr}"; acqStr_="_${acqStr}"
     fi
     Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
                   "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_* \
-                  "${dir_QC}/${idBIDS}_module-SC-${tracts}_${acqStr}.json" \
+                  "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
-    grep -v "${id}, ${SES/ses-/}, SC-${tracts}_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
@@ -311,7 +326,7 @@ if [ "${postMPC}" = "TRUE" ]; then
         Do_cmd rm -rf "${dir_mpc}" \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
                       "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
-                      "${dir_QC}/${idBIDS}_module-MPC-${mpc_str}".json \
+                      "${dir_QC}/${idBIDS}_module-MPC-${mpc_str}"* \
                       "$dir_logs"/MPC_*"${acqStr}"*
         grep -v "${id}, ${SES/ses-/}, MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -320,8 +335,8 @@ fi
 # CLEAN -GD
 if [ "$postGD" = "TRUE" ]; then
     Warning "Erasing '-GD' output files and logs"
-    Do_cmd rm -rf "${subject_dir}/anat/surf/geo_dist" \
-              "${dir_QC}/${idBIDS}_module-GD.json" \
+    Do_cmd rm -rf "${subject_dir}/dist" \
+              "${dir_QC}/${idBIDS}_module-GD"* \
               "$dir_logs"/GD_*
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi

@@ -181,7 +181,6 @@ Title "Generating necessary files for QC report"
 # -----------------------------------------------------------------------------------------------
 
 # PROC_STRUC ------------------------------------------------------------------------------------
-
 if false; then
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
@@ -207,6 +206,8 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Functional processing
 # -----------------------------------------------------------------------------------------------
+
+# PROC_FUNC -------------------------------------------------------------------------------------
 if false; then
 for func_scan in `ls ${subject_bids}/func/${idBIDS}_task-rest_echo-*_bold.nii.gz`; do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
@@ -223,9 +224,27 @@ fi
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
 
-# STRUCTRAL CONNECTOME --------------------------------------------------------------------------
+# PROC_DWI --------------------------------------------------------------------------------------
 if false; then
-dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.mif"
+for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}_acq-*.nii.gz`; do
+    dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
+    Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
+done
+
+Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
+
+dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+
+dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
+
+fi
+
+
+# SC --------------------------------------------------------------------------------------------
+if false; then
+dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
 for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do

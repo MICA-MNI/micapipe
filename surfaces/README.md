@@ -3,24 +3,26 @@
 ## fsLR-32k
 | **File**                                | **Type** | **Description**                                  |
 |-----------------------------------------|----------|--------------------------------------------------|
-| fsLR-32k.?.sphere.reg.surf.gii          | gifti surface  | sphere to register between fsnative and fsLR-32k |
-| fsLR-32k.?.inflated.surf.gii            | gifti surface  | Inflated canonical surface for data projection   |
-| fsLR-32k.?.surf.gii                     | gifti surface  | Canonical surface for data projection            |
+| fsLR-32k.?.inflated.surf.gii            | gifti surface  | Inflated surface for data projection       |
+| fsLR-32k.?.sphere.reg.surf.gii          | gifti surface  | Sphere to register between fsnative and fsLR-32k |
+| fsLR-32k.?.sphere.surf.gii              | gifti surface  | Regular sphere of fsLR-32k                 |
+| fsLR-32k.?.surf.gii                     | gifti surface  | Regular surface for data projection        |
+| fsLR-32k.?.midthickness.surf.gii        | gifti surface  | Midthickness surface for data projection   |
 
 ## fsLR-5k
 | **File**                               | **Type** | **Description**                                  |
 |----------------------------------------|----------|--------------------------------------------------|
-| fsLR-5k.?.sphere.reg.surf.gii          | gifti surface  | ???    to register between fsnative and fsLR-32k |
-| fsLR-5k.?.sphere.reg.deformed.surf.gii | gifti surface  | ???                                              |
 | fsLR-5k.?.inflated.surf.gii            | gifti surface  | Inflated canonical surface for data projection   |
-| fsLR-5k.?.surf.gii                     | gifti surface  | Canonical surface for data projection            |
-| fsLR-5k.?.mask.shape.gii               | gifti data     | Medial wall mask int{0,1}                        |
+| fsLR-5k.?.sphere.reg.surf.gii          | gifti surface  | Sphere to register between fsnative and fsLR-5k  |
+| fsLR-5k.?.sphere.surf.gii              | gifti surface  | Regular sphere of fsLR-5k                  |
+| fsLR-5k.?.surf.gii                     | gifti surface  | Regular surface for data projection        |
+| fsLR-5k.?.mask.shape.gii               | gifti data     | Medial wall mask int{0,1}                  |
+| fsLR-5k.?.indices.shape.gii            | gifti data     | Indices of each vertex excluding the medial wall |
 
 ## fsaverage5
 | **File**                         | **Type** | **Description** |
 |----------------------------------|----------|-----------------------|
 | fsaverage5.?.sphere.reg.surf.gii | gifti surface  | sphere to register between fsnative and fsaverage5         |
-| fsaverage.?.midthickness_orig.32k_fs_LR.surf.gii   | gifti surface  | ???           |
 
 ## fsaverage5/surf
 | **File**      | **Type**         | **Description**                                                  |

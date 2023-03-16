@@ -106,7 +106,7 @@ set_surface_directory() {
   local recon=${1}
   export dir_surf=${out/\/micapipe_v0.2.0/}/${recon}    # surf
   export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
-  export T1surf=${dir_subjsurf}/volumetric/T1.mgz
+  export T1surf=${dir_subjsurf}/mri/orig.mgz
 
   # Native midsurface in gifti format
   export lh_midsurf="${dir_conte69}/${idBIDS}_hemi-L_surf-fsnative_label-midthickness.surf.gii"
@@ -752,6 +752,51 @@ function json_nativepro_mask() {
   }" > "$3"
 }
 
+function json_nativepro_flair() {
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  Info "Creating T1nativepro_flair json file"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"fileName\": \"${1}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"TransformCmd\": \"BinaryMask_antsApplyTransforms\": \"$2\"
+    \"Transform\": [
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
+        \"${Transform[@]:12:8}\"
+      ],
+    \"inputNIFTI\": {
+      \"Name\": \"$bids_flair\",
+      \"qform\": [
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
+      ],
+      \"sform\": [
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
+      ]
+    }
+    ]
+  }" > "$3"
+}
+
 function json_poststruct() {
   Info "Creating post_structural json file"
   res=$(mrinfo "$1" -spacing)
@@ -1048,6 +1093,31 @@ function inputs_realpath() {
   BIDS=$(realpath $BIDS)
   id=${id/sub-/}
   here=$(pwd)
+}
+
+map_to-surfaces(){
+  # -----------------------------------------------
+  # Volume to surface mapping
+  # Function that maps a MRI volume to a surfaces
+  # Using work bench commands and multiple surfaces:
+  # fsnative, fsaverage5, fsLR-5k and fsLR-32k
+  # -----------------------------------------------
+  # Input variables
+  mri_map=$1                      # MRI map from where data will be mapped
+  surf_fs=$2                      # Surface to map the MRI (MUST be surf-fsnative, same space ast mri_map)
+  map_on_surf="${dir_maps}"/${3}  # Outname of the data mapped on the surface
+  hemi=$4                         # Hemisphere {L, R}
+  label_data=$5                   # label of the map (e.g. FA, ADC, flair, T2star, MTR)
+  # Map to highest resolution surface (fsnative: more vertices)
+  wb_command -volume-to-surface-mapping "${mri_map}" "${surf_fs}" "${map_on_surf}" -trilinear
+  # Map from volume to surface for each surfaces
+  for Surf in "fsLR-32k" "fsaverage5" "fsLR-5k"; do
+    surf_id=${idBIDS}_hemi-${hemi}_surf
+    wb_command -metric-resample "${map_on_surf}" \
+        "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
+        "${util_surface}/${Surf}.${hemi}.sphere.reg.surf.gii" \
+        BARYCENTRIC "${dir_maps}/${surf_id}-${Surf}_label-${label_data}.func.gii"
+  done
 }
 
 function micapipe_group_QC() {

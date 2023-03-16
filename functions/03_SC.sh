@@ -115,6 +115,22 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 Do_cmd cd "$tmp"
 
 # -----------------------------------------------------------------------------------------------
+# Create fsLR-5k rois volume
+for HEMI in R L; do
+  fsLR5k_indx="${util_surface}/fsLR-5k.${HEMI}.indices.shape.gii"
+  fsLR5k_midt="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
+  fsLR5k_rois=${tmp}/${idBIDS}_fsLR-5k_hemi-${HEMI}_rois.nii.gz
+  wb_command -metric-to-volume-mapping ${fsLR5k_indx} ${fsLR5k_midt} ${T1nativepro} ${fsLR5k_rois} -nearest-vertex 3
+done
+seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-fsRL5k.nii.gz"
+
+# Threshold overlaping ROIs
+fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz"
+fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz"
+fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz" -thr 2 -binv "${tmp}/fsLR-5k_rois_bin.nii.gz"
+fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -mul "${tmp}/fsLR-5k_rois_bin.nii.gz" ${seg_fsLR5k}
+
+# -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
 parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
 # Transformations from T1nativepro to DWI
@@ -232,6 +248,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # save the tractogram and the SIFT2 weights
 if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; Do_cmd mv "$weights" "${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography_weights.txt"; fi
+if [[ $nocleanup == "FALSE" ]]; then rm -Rf "$seg_fsLR5k"; else mv "${seg_fsLR5k}" ${tmp}; fi
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
