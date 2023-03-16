@@ -599,7 +599,7 @@ def qc_post_structural(post_structural_json=''):
     )
 
     surf_dir = "%s/%s/%s/surf/"%(out,sub,ses)
-    for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-32k', 'fsLR-5k']):
+    for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']):
         lhM, rhM = load_surface(surf_dir+sbids+'_hemi-L_space-nativepro_surf-'+surf+'_label-midthickness.surf.gii',
                                 surf_dir+sbids+'_hemi-R_space-nativepro_surf-'+surf+'_label-midthickness.surf.gii', with_normals=True, join=False)
         lhP, rhP = load_surface(surf_dir+sbids+'_hemi-L_space-nativepro_surf-'+surf+'_label-pial.surf.gii',
@@ -738,15 +738,18 @@ def qc_proc_dwi(proc_dwi_json=''):
     dwipeScan = preproc_dwi_json["DWIpe"]["fileName"].split()
     for i, s in enumerate(dwipeScan):
         acq = s.split("acq-")[1].split("_")[0]
-        outPath = tmpDir + '/' + s.split("%s/%s/%s/dwi/"%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + s.split("dwi/")[1].split('.nii.gz')[0] + '_mean.nii.gz'
         outName = "DWI pe %s (mean)"%(acq)
         figPath = "%s/dwipe_scan%s.png"%(tmpDir,i+1)
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
 
     dwirpeScan = preproc_dwi_json["DWIrpe"]["fileName"].split()
     for i, s in enumerate(dwirpeScan):
-        acq = s.split("acq-")[1].split("_")[0]
-        outPath = tmpDir + '/' + s.split("%s/%s/%s/dwi/"%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        try:
+            acq = s.split("acq-")[1].split("_")[0]
+        except:
+            acq = 'b0'
+        outPath = tmpDir + '/' + s.split("dwi/")[1].split('.nii.gz')[0] + '_mean.nii.gz'
         outName = "DWI rpe scan %s (mean)"%(acq)
         figPath = "%s/dwirpe_scan%s.png"%(tmpDir,i+1)
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
@@ -813,7 +816,7 @@ def qc_proc_dwi(proc_dwi_json=''):
 
     outPath = "%s/%s/%s/dwi/%s_space-dwi_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
     refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
-    figPath = "%s/DWII_subcortical_screenshot.png"%(tmpDir)
+    figPath = "%s/DWI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in DWI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
     _static_block += (
@@ -843,11 +846,10 @@ def qc_proc_dwi(proc_dwi_json=''):
             dti_surf_table += (
                      '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{surface}</b></td>'
                      '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{measure_c69_32k_png}"></td></tr>'
-            )
-
-            _static_block += dti_surf_table.format(surface=surface,
+            ).format(surface=surface,
                 measure_c69_32k_png=measure_c69_32k_png
             )
+        _static_block += dti_surf_table
 
         _static_block += '</table>'
 
@@ -879,18 +881,30 @@ def qc_proc_func(proc_func_json=''):
 
     mainScan = func_clean_json["Preprocess"]["MainScan"].split()
     for i, s in enumerate(mainScan):
-        outPath = tmpDir + '/' + s.split("%s/%s/%s/func/"%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + s.split("func/")[1].split('.nii.gz')[0] + '_mean.nii.gz'
         outName = "Main scan (mean)" if len(mainScan) == 1 else "Main scan - echo %s (mean)"%(i+1)
         figPath = "%s/fmri_mainScan%s.png"%(tmpDir,i+1)
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
 
     mainPhaseScan = func_clean_json["Preprocess"]["MainPhaseScan"]
-    outPath = tmpDir + '/' + mainPhaseScan.split('%s/%s/%s/fmap/'%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+    print(mainPhaseScan)
+    if mainPhaseScan == 'DEFAULT':
+        #mainPhaseScan = os.popen("echo $bids_mainPhase").read()[:-1]
+        print(mainPhaseScan)
+        exit()
+        outPath = tmpDir + '/' + mainPhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
+    else:
+        outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+
     figPath = "%s/fmri_mainPhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Main phase scan (mean)", outPath=outPath, figPath=figPath)
 
     reversePhaseScan = func_clean_json["Preprocess"]["ReversePhaseScan"]
-    outPath = tmpDir + '/' + reversePhaseScan.split('%s/%s/%s/fmap/'%(bids,sub,ses))[1].split('.nii.gz')[0] + '_mean.nii.gz'
+    if reversePhaseScan == 'DEFAULT':
+        reversePhaseScan = os.popen("echo $bids_reversePhase").read()[:-1]
+        outPath = tmpDir + '/' + reversePhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
+    else:
+        outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
     figPath = "%s/fmri_reveresePhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Reverse phase scan (mean)", outPath=outPath, figPath=figPath)
 
@@ -947,14 +961,13 @@ def qc_proc_func(proc_func_json=''):
     fc_pos[0>fc_pos] = 0
     deg = np.sum(fc_pos,axis=1)
     deg_fig = tmpDir + "/" + sbids + "_surf-fsLR-5k_fc_degree.png"
-    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Reds', layout_style='grid', transparent_bg=False,
-                     screenshot = True, filename = deg_fig)
+    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, filename = deg_fig)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
-    ).format(def_fig=deg_fig)
+    ).format(deg_fig=deg_fig)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -973,8 +986,8 @@ def qc_proc_func(proc_func_json=''):
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
         # fc connectomes
-        fc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_fc.png"
-        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
+        fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
+        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
 
         if os.path.isfile(fc_file):
             annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
@@ -994,7 +1007,7 @@ def qc_proc_func(proc_func_json=''):
             fc_pos = np.copy(fcz)
             fc_pos[0>fc_pos] = 0
             deg = np.sum(fc_pos,axis=1)
-
+            deg.shape
             annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
             if os.path.isfile(annot_file):
                 labels_c69 = np.loadtxt(open(annot_file), dtype=int)
@@ -1040,7 +1053,7 @@ def qc_sc(sc_json=''):
     )
 
     dti_fod = tdi_json["fileInfo"]["Name"]
-    outPath = tmpDir + '/' + dti_fod.split("%s/%s/%s/dwi/"%(out,sub,ses))[1].split('.mif')[0] + '.nii.gz'
+    outPath = tmpDir + '/' + dti_fod.split("dwi/")[1].split('.mif')[0] + '.nii.gz'
     figPath = "%s/dti_FOD.png"%(tmpDir)
     _static_block += nifti_check(outName="Fiber orientation distribution", outPath=outPath, figPath=figPath)
 
@@ -1420,10 +1433,10 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_func', 'SC', 'MPC', 'GD'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_func, qc_sc, qc_mpc, qc_gd]
-    'modules':   ['proc_dwi'],
-    'functions': [qc_proc_dwi]
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
+    'modules':   ['proc_surf', 'proc_func'],
+    'functions': [qc_proc_surf, qc_proc_func]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
