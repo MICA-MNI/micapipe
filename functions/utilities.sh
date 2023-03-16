@@ -771,7 +771,9 @@ function json_nativepro_flair() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"TransformCmd\": \"BinaryMask_antsApplyTransforms\": \"$2\"
+    \"TransformCmd\": {
+        \"BinaryMask_antsApplyTransforms\": \"$2\"
+      },
     \"Transform\": [
         \"${Transform[@]:0:4} \",
         \"${Transform[@]:4:4} \",
@@ -793,7 +795,6 @@ function json_nativepro_flair() {
         \"${sform[@]:12:8}\"
       ]
     }
-    ]
   }" > "$3"
 }
 
