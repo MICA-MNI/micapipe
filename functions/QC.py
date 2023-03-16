@@ -825,8 +825,6 @@ def qc_proc_dwi(proc_dwi_json=''):
     )
 
     for measure in ['ADC', 'FA']:
-        measure_crange = (0.00045, 0.0009) if measure=='ADC' else (0.1, 0.9)
-
         dti_surf_table = '<br>' if measure == 'FA' else ''
 
         dti_surf_table += (
@@ -839,6 +837,7 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s.func.gii"%(out,sub,ses,sbids,surface,measure)
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
+            measure_crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='Spectral_r', transparent_bg=False,
                              screenshot = True, filename = measure_c69_32k_png)
