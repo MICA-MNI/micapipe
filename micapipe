@@ -18,12 +18,9 @@ echo -e "
 \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
 \t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
-\t\033[38;5;120m-QC_subj\033[0m 	  : OPTIONAL flag for INDIVIDUAL level Quality Control
-\t\033[38;5;120m-QC\033[0m 	          : OPTIONAL flag for group level Quality Control (Requires -out)
-
    Flags for basic stages of processing:
 \t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
-\t\033[38;5;197m-proc_surf\033[0m  : Cortical surface reconstruction processing
+\t\033[38;5;197m-proc_surf\033[0m        : Cortical surface reconstruction processing
 \t\t\t      ( Requires: -proc_structural )
 
    Flags for second stages of structural processing:
@@ -33,7 +30,7 @@ echo -e "
 \t\t\t      ( Requires: -proc_structural )
 \t\033[38;5;197m-proc_asl\033[0m         : ASL-Arterial spin labelling processing
 \t\t\t      ( Requires: -proc_structural )
-\t\033[38;5;197m-proc_flair\033[0m         : T2/FLAIR processing
+\t\033[38;5;197m-proc_flair\033[0m       : T2/FLAIR processing
 \t\t\t      ( Requires: -proc_structural )
 
    Flags for third stage, the  connectome generation:
@@ -45,6 +42,12 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
+
+   Other functions:
+\t\033[38;5;197m-cleanup\033[0m          : Use this flag with a module flag to erase its outputs
+\t\t\t      ( Modules with multiple acquisitions require -acqStr (e.g. -proc_func, -MPC)
+\t\033[38;5;197m-QC\033[0m               : Creates a group level quality control report
+
 
 \033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
 \t\033[38;5;197m-proc_structural\033[0m
@@ -156,8 +159,11 @@ echo -e "
 \t\t\t            Default='m0scan'
 
 \t\033[38;5;197m-proc_flair\033[0m
-\t   \033[38;5;120m-flairScanStr\033[0m          : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
+\t   \033[38;5;120m-flairScanStr\033[0m        : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
 \t\t\t            Default='FLAIR'
+
+\t\033[38;5;197m-cleanup\033[0m
+\t   \033[38;5;120m-acqStr\033[0m              : String to manually identify the acquisition to be erase
 
 
 \033[38;5;141mOPTIONS:\033[0m
@@ -165,7 +171,6 @@ echo -e "
 \t\033[38;5;197m-v|-version\033[0m 	  : Print software version
 \t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory
 \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
-\t\033[38;5;197m-cleanup\033[0m 	        : WARNING this option will erase the module(s) selected
 \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
 \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
 \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
@@ -179,6 +184,9 @@ echo -e "
     \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
 
 \033[38;5;141mDOCUMENTATION:\033[0m
+    https://micapipe.readthedocs.io
+
+\033[38;5;141mREPOSITORY:\033[0m
     https://github.com/MICA-MNI/micapipe
 
 \033[38;5;141mDEPENDENCIES:\033[0m

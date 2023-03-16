@@ -209,7 +209,7 @@ fi
 
 # PROC_FUNC -------------------------------------------------------------------------------------
 if false; then
-for func_scan in `ls ${subject_bids}/func/${idBIDS}_task-rest_echo-*_bold.nii.gz`; do
+for func_scan in `ls ${subject_bids}/func/${idBIDS}_*_bold.nii.gz`; do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
 done
@@ -220,13 +220,16 @@ for fmap_scan in `ls ${subject_bids}/fmap/${idBIDS}_acq-fmri_dir-*_epi.nii.gz`; 
 done
 fi
 
+export default_mainPhase=${bids_mainPhase[0]}
+export default_reversePhase=${bids_reversePhase[0]}
+
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
 
 # PROC_DWI --------------------------------------------------------------------------------------
 if false; then
-for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}_acq-*.nii.gz`; do
+for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}*.nii.gz`; do
     dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
 done
