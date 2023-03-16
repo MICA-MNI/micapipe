@@ -259,11 +259,7 @@ parcellationList.remove('cerebellum')
 if noFC!="TRUE":
     for parcellation in parcellationList:
         parcPath = os.path.join(parcDir, parcellation) + '_conte69.csv'
-        if parcellation == "aparc-a2009s":
-            print("parcellation " + parcellation + " currently not supported")
-            continue
-        else:
-            thisparc = np.loadtxt(parcPath)
+        thisparc = np.loadtxt(parcPath)
 
         # Parcellate cortical timeseries
         uparcel = np.unique(thisparc)
