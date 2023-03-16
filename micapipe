@@ -627,7 +627,6 @@ if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
-umask 002
 
 # Check BIDS Directory
 if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
@@ -712,6 +711,9 @@ fi
 #			  Timer & Beginning
 aloita=$(date +%s)
 
+# micapipe working Directory
+if [ ! -d "${out}" ]; then Do_cmd mkdir -m 770 -p "$out"; fi
+
 # Create tmp dir
 if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 
@@ -720,8 +722,8 @@ if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 # Creates subject directory if it doesn't exist
 if [ ! -d "${subject_dir}" ]; then
     Info "Subject ${idBIDS} directory doesn't exist, creating..."
-    Do_cmd mkdir -p "$subject_dir"/{logs,xfm,dwi,func,anat,QC,parc,surf,maps}
-    Do_cmd chmod -R 777 $subject_dir
+    Do_cmd mkdir -m 770 -p "${subject_dir}"/{logs,xfm,dwi,func,anat,QC,parc,surf,maps}
+    chmod g+xX -R "${out}"
 fi
 
 # Pipeline description json
