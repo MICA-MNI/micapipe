@@ -220,7 +220,9 @@ for fmap_scan in `ls ${subject_bids}/fmap/${idBIDS}_acq-fmri_dir-*_epi.nii.gz`; 
 done
 fi
 
-export $bids_mainPhaseScan
+export default_mainPhase=${bids_mainPhase[0]}
+export default_reversePhase=${bids_reversePhase[0]}
+
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------

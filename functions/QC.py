@@ -886,11 +886,8 @@ def qc_proc_func(proc_func_json=''):
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
 
     mainPhaseScan = func_clean_json["Preprocess"]["MainPhaseScan"]
-    print(mainPhaseScan)
     if mainPhaseScan == 'DEFAULT':
-        #mainPhaseScan = os.popen("echo $bids_mainPhase").read()[:-1]
-        print(mainPhaseScan)
-        exit()
+        mainPhaseScan = os.getenv('default_mainPhase')
         outPath = tmpDir + '/' + mainPhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
     else:
         outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
@@ -900,10 +897,10 @@ def qc_proc_func(proc_func_json=''):
 
     reversePhaseScan = func_clean_json["Preprocess"]["ReversePhaseScan"]
     if reversePhaseScan == 'DEFAULT':
-        reversePhaseScan = os.popen("echo $bids_reversePhase").read()[:-1]
-        outPath = tmpDir + '/' + reversePhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
+        reversePhaseScan = os.getenv('default_reversePhase')
+        outPath = tmpDir + '/' + reversePhaseScan.split('.nii.gz')[0] + '_mean.nii.gz'
     else:
-        outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + reversePhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
     figPath = "%s/fmri_reveresePhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Reverse phase scan (mean)", outPath=outPath, figPath=figPath)
 
@@ -960,7 +957,7 @@ def qc_proc_func(proc_func_json=''):
     fc_pos[0>fc_pos] = 0
     deg = np.sum(fc_pos,axis=1)
     deg_fig = tmpDir + "/" + sbids + "_surf-fsLR-5k_fc_degree.png"
-    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, filename = deg_fig)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -989,12 +986,8 @@ def qc_proc_func(proc_func_json=''):
         fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
 
         if os.path.isfile(fc_file):
-            annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
-            Ndim = max(np.unique(annot_lh_fs5[0]))
-
             fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
             fc = fc_mtx[49:, 49:]
-            fc = np.delete(np.delete(fc, Ndim, axis=0), Ndim, axis=1)
             fcz = np.arctanh(fc)
             fcz[~np.isfinite(fcz)] = 0
             fcz = np.triu(fcz,1)+fcz.T
@@ -1006,7 +999,6 @@ def qc_proc_func(proc_func_json=''):
             fc_pos = np.copy(fcz)
             fc_pos[0>fc_pos] = 0
             deg = np.sum(fc_pos,axis=1)
-            deg.shape
             annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
             if os.path.isfile(annot_file):
                 labels_c69 = np.loadtxt(open(annot_file), dtype=int)
@@ -1094,9 +1086,8 @@ def qc_sc(sc_json=''):
         c[c==0] = np.finfo(float).eps
         deg = np.sum(c,axis=1)
         deg_fig = tmpDir + "/" + sbids + "space-dwi_surf-fsLR-5k_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + "_degree.png"
-        plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), color_range='sym', cmap='Purples', layout_style='grid', transparent_bg=False,
-                         screenshot = True, filename = deg_fig)
+        plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range='sym', cmap='Purples', transparent_bg=False, screenshot = True, filename = deg_fig)
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
         ).format(deg_fig=deg_fig)
@@ -1236,7 +1227,7 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
+    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids)
     mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
     mpc = np.triu(mpc,1)+mpc.T
     mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
@@ -1244,14 +1235,14 @@ def qc_mpc(mpc_json=''):
     mpc[mpc==0] = np.finfo(float).eps
     deg = np.sum(mpc,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_desc-" + acquisition + "_mpc_degree.png"
-    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Greens', layout_style='grid', transparent_bg=False,
                      screenshot = True, filename = deg_fig)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
-    ).format(def_fig=deg_fig)
+    ).format(deg_fig=deg_fig)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -1345,17 +1336,16 @@ def qc_gd(gd_json=''):
 
     gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.txt"%(out,sub,ses,sbids)
     gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
-    gd = np.delete(np.delete(gd, 0, axis=0), 0, axis=1)
-    deg = np.sum(mpc,axis=1)
+    deg = np.sum(gd,axis=1)
+    print(deg.shape)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
-    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Blues', layout_style='grid', transparent_bg=False,
-                     screenshot = True, filename = deg_fig)
+    plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, filename = deg_fig)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
-    ).format(def_fig=deg_fig)
+    ).format(deg_fig=deg_fig)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
