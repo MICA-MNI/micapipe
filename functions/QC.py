@@ -715,6 +715,84 @@ def qc_post_structural(post_structural_json=''):
 
     return _static_block
 
+## --------------------------- PROC_FLAIR MODULE --------------------------- ##
+def qc_proc_flair(proc_flair_json=''):
+
+    _static_block = qc_header()
+    _static_block +=  report_module_header_template(module='proc_flair')
+
+    # QC summary
+    _static_block += report_qc_summary_template(proc_flair_json)
+
+    preproc_flair_json = os.path.realpath("%s/%s/%s/maps/%s_space-nativepro_map-flair.json"%(out,sub,ses,sbids))
+    with open( preproc_flair_json ) as f:
+        preproc_flair_json = json.load(f)
+
+    # Inputs
+    _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+            '<b>Inputs</b> </p>'
+    )
+
+    outPath = preproc_flair_json["inputNIFTI"]["Name"]
+    figPath = "%s/flair_screenshot.png"%(tmpDir)
+    _static_block += nifti_check(outName="FLAIR", outPath=outPath, figPath=figPath)
+
+    # Outputs
+    _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+            '<b>Main outputs</b> </p>'
+    )
+
+    outPath = preproc_flair_json["fileName"]
+    refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    figPath = "%s/flair_nativepro_screenshot.png"%(tmpDir)
+    _static_block += nifti_check(outName="Registration: FLAIR in T1w nativepro space", outPath=outPath, refPath=refPath, figPath=figPath)
+
+    _static_block += (
+        '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+        '<b> FLAIR surface mapping</b> </p>'
+    )
+
+    flair_table = (
+        '<table style="border:1px solid #666;width:100%">'
+    )
+    for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']):
+        flair_lh = nb.load('%s/%s/%s/maps/%s_hemi-L_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
+        flair_rh = nb.load('%s/%s/%s/maps/%s_hemi-R_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
+        flair = np.concatenate((dat_lh, dat_rh), axis=0)
+        flair_fig = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness_flair.png'
+        if surf == 'fsnative':
+            surf_lh = inf_lh
+            surf_rh = inf_rh
+        elif surf == 'fsaverage5':
+            surf_lh = fs5I_lh
+            surf_rh = fs5I_rh
+        elif surf == 'fsLR-5k':
+            surf_lh = c69_5k_I_lh
+            surf_rh = c69_5k_I_rh
+        elif surf == 'fsLR-32k':
+            surf_lh = c69_32k_I_lh
+            surf_rh = c69_32k_I_rh
+
+        crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
+
+        plot_hemispheres(surf_lh, surf_rh, array_name=f, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=crange, cmap='afmhot', transparent_bg=False,
+                         screenshot = True, filename = flair_fig)
+
+        flair_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center;width:25%><b>{surf}</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{flair_fig}"></td></tr>'
+        ).format(surf=surf,flair_fig=flair_fig)
+
+    flair_table += (
+        '</table>'
+    )
+
+    _static_block += flair_table
+
+    return _static_block
 
 ## ---------------------------- PROC_DWI MODULE ---------------------------- ##
 def qc_proc_dwi(proc_dwi_json=''):
@@ -1424,8 +1502,8 @@ def convert_html_to_pdf(source_html, output_filename):
 qc_module_function = {
     #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
     #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
-    'modules':   ['proc_surf', 'proc_func'],
-    'functions': [qc_proc_surf, qc_proc_func]
+    'modules':   ['proc_surf', 'proc_flair'],
+    'functions': [qc_proc_surf, qc_proc_flair]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
