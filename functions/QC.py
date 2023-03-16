@@ -760,7 +760,7 @@ def qc_proc_flair(proc_flair_json=''):
     for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']):
         flair_lh = nb.load('%s/%s/%s/maps/%s_hemi-L_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
         flair_rh = nb.load('%s/%s/%s/maps/%s_hemi-R_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
-        flair = np.concatenate((dat_lh, dat_rh), axis=0)
+        flair = np.concatenate((flair_lh, flair_rh), axis=0)
         flair_fig = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness_flair.png'
         if surf == 'fsnative':
             surf_lh = inf_lh
@@ -775,14 +775,14 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
+        crange=(np.quantile(flair, 0.1), np.quantile(flair, 0.98))
 
-        plot_hemispheres(surf_lh, surf_rh, array_name=f, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+        plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=crange, cmap='afmhot', transparent_bg=False,
                          screenshot = True, filename = flair_fig)
 
         flair_table += (
-            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center;width:25%><b>{surf}</b></td>'
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center;width:30%><b>{surf}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{flair_fig}"></td></tr>'
         ).format(surf=surf,flair_fig=flair_fig)
 
