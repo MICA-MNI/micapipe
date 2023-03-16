@@ -47,13 +47,14 @@ source "$MICAPIPE/functions/utilities.sh"
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Check inputs: Nativepro T1 or custom T1
-Info ${t1}
-if [[ "$t1" != "DEFAULT" ]]; then
-    if [ ! -f "${t1}" ]; then Error "The provided T1 volume does not exist:\n\t${t1}"; exit; fi
-    t1_2proc=${t1}
-  else
-    if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
-    t1_2proc=${T1nativepro}
+if [[ "$surfdir" == "FALSE" ]]; then
+  if [[ "$t1" != "DEFAULT" ]]; then
+      if [ ! -f "${t1}" ]; then Error "The provided T1 volume does not exist:\n\t${t1}"; exit; fi
+      t1_2proc=${t1}
+    else
+      if [ ! -f "${T1nativepro}" ]; then Error "Subject $id doesn't have T1_nativepro"; exit; fi
+      t1_2proc=${T1nativepro}
+  fi
 fi
 
 # Surface Directory
@@ -62,9 +63,10 @@ set_surface_directory "${recon}"
 Note "Surface software" "${recon}"
 
 # Surface Directories
-if [ ! -d "${dir_surf}" ]; then mkdir "${dir_surf}" && chmod -R 770 "${dir_surf}"; fi
+if [ ! -d "${dir_surf}" ]; then mkdir -m 770 "${dir_surf}"; fi
 if [ ! -L "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
-if [ ! -d "${dir_surf}/conte69" ]; then Do_cmd mkdir -p "${dir_surf}"/conte69/surf; cp ${MICAPIPE}/surfaces/*conte69.gii "${dir_surf}"/conte69/surf; fi
+if [ ! -d "${dir_surf}/fsLR-32k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-32k/surf; cp ${MICAPIPE}/surfaces/fsLR-32k*.gii "${dir_surf}"/fsLR-32k/surf; fi
+if [ ! -d "${dir_surf}/fsLR-5k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-5k/surf; cp ${MICAPIPE}/surfaces/fsLR-5k*.gii "${dir_surf}"/fsLR-5k/surf; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
