@@ -129,7 +129,7 @@ for HEMI in R L; do
       -ribbon-constrained "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-white.surf.gii" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-pial.surf.gii" \
       -greedy -voxel-subdiv 1
 done
-seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_surf-fsRL-5k.nii.gz"
+seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_surf-fsLR-5k.nii.gz"
 
 # Threshold overlaping ROIs
 Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz"
@@ -139,7 +139,7 @@ Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idB
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
-parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" ! -name "*fsRL-5k*"))
+parcellations=($(find "${dir_volum}" -name "*atlas*" ! -name "*cerebellum*" ! -name "*subcortical*"))
 # Transformations from T1nativepro to DWI
 if [[ ${regAffine}  == "FALSE" ]]; then
     trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
