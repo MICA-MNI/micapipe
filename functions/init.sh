@@ -33,6 +33,8 @@ export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
 export FSL_BIN="${FSLDIR}/bin"
 # MRtrix3 3.0.1
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
+# ITK utils
+export itk_dir="/opt/minc-itk4/bin"
 # Python 3.7
 export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
 # Export fs fs_licence
@@ -75,7 +77,7 @@ export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${PATH}"
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
