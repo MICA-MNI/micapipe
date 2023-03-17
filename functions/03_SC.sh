@@ -27,7 +27,8 @@ autoTract=$9
 keep_tck=${10}
 dwi_str=${11}
 weighted_SC=${12}
-PROC=${13}
+tck_file=${13}
+PROC=${14}
 filter=SIFT2
 here=$(pwd)
 
@@ -80,6 +81,9 @@ micapipe_check_dependency "proc_dwi" "${dir_QC}/${idBIDS}_module-proc_dwi${dwi_s
 if [ ${weighted_SC} != "FALSE" ]; then
   if [ ! -f "$weighted_SC" ]; then Error "The provided weighted map does NOT exist: ${weighted_SC}"; exit 1; fi
 fi
+if [ ${tck_file} != "FALSE" ]; then
+  if [ ! -f "$tck_file" ]; then Error "The provided tractography (tck) does NOT exist: ${tck_file}"; exit 1; fi
+fi
 if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE"; fi
 
 # -----------------------------------------------------------------------------------------------
@@ -95,8 +99,9 @@ Note "Auto-tractograms     :" "${autoTract}"
 Note "Saving tractography  :" "${keep_tck}"
 Note "Saving temporal dir  :" "${nocleanup}"
 Note "MRtrix will use      :" "${threads} threads"
-Note "DWi acquisition      :" "${dwi_str}"
+Note "DWI acquisition      :" "${dwi_str}"
 Note "Weighted SC          :" "${weighted_SC}"
+Note "tck file             :" "${tck_file}"
 
 #	Timer
 aloita=$(date +%s)
@@ -120,19 +125,21 @@ for HEMI in R L; do
   fsLR5k_indx="${util_surface}/fsLR-5k.${HEMI}.indices.shape.gii"
   fsLR5k_midt="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
   fsLR5k_rois=${tmp}/${idBIDS}_fsLR-5k_hemi-${HEMI}_rois.nii.gz
-  wb_command -metric-to-volume-mapping ${fsLR5k_indx} ${fsLR5k_midt} ${T1nativepro} ${fsLR5k_rois} -nearest-vertex 3
+  Do_cmd wb_command -metric-to-volume-mapping ${fsLR5k_indx} ${fsLR5k_midt} ${T1nativepro} ${fsLR5k_rois} \
+      -ribbon-constrained "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-white.surf.gii" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-pial.surf.gii" \
+      -greedy -voxel-subdiv 1
 done
-seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_atlas-fsRL5k.nii.gz"
+seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_surf-fsRL-5k.nii.gz"
 
 # Threshold overlaping ROIs
-fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz"
-fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz"
-fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz" -thr 2 -binv "${tmp}/fsLR-5k_rois_bin.nii.gz"
-fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -mul "${tmp}/fsLR-5k_rois_bin.nii.gz" ${seg_fsLR5k}
+Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz"
+Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz"
+Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz" -thr 2 -binv "${tmp}/fsLR-5k_rois_bin.nii.gz"
+Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -mul "${tmp}/fsLR-5k_rois_bin.nii.gz" ${seg_fsLR5k}
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
-parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" ! -name "*fsRL-5k*"))
 # Transformations from T1nativepro to DWI
 if [[ ${regAffine}  == "FALSE" ]]; then
     trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
@@ -145,30 +152,34 @@ Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"
 
 # -----------------------------------------------------------------------------------------------
 # Generate probabilistic tracts
-tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
-Info "Building the ${tracts} streamlines connectome!!!"
-export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
 weights=${tmp}/SIFT2_${tracts}.txt
-Do_cmd tckgen -nthreads "$threads" \
-        "$fod_wmN" \
-        "$tck" \
-        -act "$dwi_5tt" \
-        -crop_at_gmwmi \
-        -backtrack \
-        -seed_dynamic "$fod_wmN" \
-        -algorithm iFOD2 \
-        -step 0.5 \
-        -angle 22.5 \
-        -cutoff 0.06 \
-        -maxlength 400 \
-        -minlength 10 \
-        -select "$tracts"
+if [ ${tck_file} != "FALSE" ]; then
+  tck=${tck_file}
+else
+  tck="${tmp}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.tck"
+  Info "Building the ${tracts} streamlines connectome!!!"
+  export tckjson="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography.json"
+  Do_cmd tckgen -nthreads "$threads" \
+          "$fod_wmN" \
+          "$tck" \
+          -act "$dwi_5tt" \
+          -crop_at_gmwmi \
+          -backtrack \
+          -seed_dynamic "$fod_wmN" \
+          -algorithm iFOD2 \
+          -step 0.5 \
+          -angle 22.5 \
+          -cutoff 0.06 \
+          -maxlength 400 \
+          -minlength 10 \
+          -select "$tracts"
 
-# Exit if tractography fails
-if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
+  # Exit if tractography fails
+  if [ ! -f "$tck" ]; then Error "Tractogram failed, check the logs: $(ls -Art "$dir_logs"/post-dwi_*.txt | tail -1)"; exit; fi
 
-# json file of tractogram
-tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
+  # json file of tractogram
+  tck_json iFOD2 0.5 22.5 0.06 400 10 seed_dynamic "$tck"
+fi
 
 # SIFT2
 Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
@@ -189,22 +200,27 @@ function build_connectomes(){
     Do_cmd tck2connectome -nthreads "$threads" \
     	"${tck}" "${nodes}" "${sc_file}-connectome.txt" \
         -tck_weights_in "$weights" -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+    if [[ ${sc_file} != *"fsLR-5k"* ]]; then Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
 
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads "$threads" \
         "${tck}" "${nodes}" "${sc_file}-edgeLengths.txt" \
         -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-    Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+    if [[ ${sc_file} != *"fsLR-5k"* ]]; then  Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
 
     # Weighted connectome with a NIFTI map
 	if [ ${weighted_SC} != "FALSE" ]; then
 		Do_cmd tck2connectome -nthreads "$threads" \
 			"${tck}" "${nodes}" "${sc_file}-weighted_connectome.txt" \
 			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet
-      Do_cmd Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
+      if [[ ${sc_file} != *"fsLR-5k"* ]]; then  Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
 	fi
 }
+
+# Vertex-wise connectome
+fs5k_cortex="${tmp}/${id}_fsLR5k-cor_dwi.nii.gz" # Segmentation in dwi space
+Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg_fsLR5k" -r "${fod}" -n GenericLabel "$trans_T12dwi" -o "$fs5k_cortex" -v -u int
+build_connectomes "$fs5k_cortex" "${dwi_cnntm}/${idBIDS}_surf-fsLR-5k_desc-iFOD2-${tracts}-${filter}_full"
 
 # Create a connectome per parcellation
 for seg in "${parcellations[@]}"; do
@@ -248,7 +264,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # save the tractogram and the SIFT2 weights
 if [ "$keep_tck" == "TRUE" ]; then Do_cmd mv "$tck" "$proc_dwi"; Do_cmd mv "$weights" "${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tractography_weights.txt"; fi
-if [[ $nocleanup == "FALSE" ]]; then rm -Rf "$seg_fsLR5k"; else mv "${seg_fsLR5k}" ${tmp}; fi
+#if [[ $nocleanup == "FALSE" ]]; then rm -Rf "$seg_fsLR5k"; else mv "${seg_fsLR5k}" ${tmp}; fi
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completition
