@@ -893,8 +893,6 @@ function json_mpc() {
     \"acquisition\": \"${mpc_str}\",
     \"microstructural_img\": \"${1}\",
     \"microstructural_reg\": \"${regImage}\",
-    \"microstructural_dat\": \"${input_dat}\",
-    \"surfaceTransformation\": \"${2}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
@@ -918,7 +916,7 @@ function json_mpc() {
         \"${sform[@]:8:4} \",
         \"${sform[@]:12:8}\"
       ]
-  }" > "$3"
+  }" > "$2"
 }
 
 function json_dwipreproc() {
@@ -1106,18 +1104,19 @@ map_to-surfaces(){
   # Input variables
   mri_map=$1                      # MRI map from where data will be mapped
   surf_fs=$2                      # Surface to map the MRI (MUST be surf-fsnative, same space ast mri_map)
-  map_on_surf="${dir_maps}"/${3}  # Outname of the data mapped on the surface
-  hemi=$4                         # Hemisphere {L, R}
+  map_on_surf=${3}                # Outname of the data mapped on the surface
+  H=$4                            # Hemisphere {L, R}
   label_data=$5                   # label of the map (e.g. FA, ADC, flair, T2star, MTR)
+  out_map=$6
   # Map to highest resolution surface (fsnative: more vertices)
   wb_command -volume-to-surface-mapping "${mri_map}" "${surf_fs}" "${map_on_surf}" -trilinear
   # Map from volume to surface for each surfaces
   for Surf in "fsLR-32k" "fsaverage5" "fsLR-5k"; do
-    surf_id=${idBIDS}_hemi-${hemi}_surf
+    surf_id=${idBIDS}_hemi-${H}_surf
     wb_command -metric-resample "${map_on_surf}" \
         "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
-        "${util_surface}/${Surf}.${hemi}.sphere.reg.surf.gii" \
-        BARYCENTRIC "${dir_maps}/${surf_id}-${Surf}_label-${label_data}.func.gii"
+        "${util_surface}/${Surf}.${H}.sphere.reg.surf.gii" \
+        BARYCENTRIC "${out_map}/${surf_id}-${Surf}_label-${label_data}.func.gii"
   done
 }
 
