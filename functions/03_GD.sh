@@ -55,7 +55,7 @@ micapipe_check_json_status "${module_json}" "GD"
 outPath="${subject_dir}/dist"
 
 # Check PARCELLATIONS
-parcellations=($(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+parcellations=($(find "${dir_volum}" -name "*atlas*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
 if [ "${#parcellations[*]}" -eq "0" ]; then Error "Subject $id doesn't have -post_structural processing"; exit; fi
 
 #------------------------------------------------------------------------------#
@@ -79,7 +79,7 @@ lh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-5k_label-mi
 rh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
 outName="${outPath}/${idBIDS}_surf-fsLR-5k_GD"
 if [ -f "${outName}.shape.gii" ]; then
-    Info "Geodesic Distance vertex-wise on fsLR-5k already exists"; ((Nsteps++))
+    Info "Geodesic Distance vertex-wise on fsLR-5k already exists"; ((Nsteps++)); ((N++))
 else
     Info "Computing Geodesic Distance vertex-wise from surface fsLR-5k"; ((N++))
     Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_fdLR5k" -rh_surf "$rh_fdLR5k" -outPath "$outName"
