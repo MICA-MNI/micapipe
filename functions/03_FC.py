@@ -69,7 +69,7 @@ else:
     gsr=''
 
 # check if surface directory exist; exit if false
-if os.listdir(funcDir+'/surf/'):
+if os.path.isdir(funcDir+"/surf/"):
     print('')
     print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
     print('surf directory found; lets get the party started!')

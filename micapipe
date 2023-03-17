@@ -697,6 +697,8 @@ else
     if [[ -z $(which fix) ]]; then Warning "fix was not found, ICA-FIX will be skipped"; fi
     # R
     if [[ -z $(which R) ]]; then Warning "R was not found"; fi
+    # c3d
+    if [[ -z $(which c3d_affine_tool) ]]; then Warning "c3d was not found"; fi
 fi
 
 # Freesurfer fs_licence
