@@ -517,7 +517,7 @@ else
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "$fmri_HP" ]]; then ((N++))
+if [[ ! -f "$fmri_HP" ]] || [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc.nii.gz" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
@@ -531,6 +531,7 @@ melodic_IC="${func_ICA}/filtered_func_data.ica/melodic_IC.nii.gz"
 fmri_filtered="${func_ICA}/filtered_func_data.nii.gz"
 
 # melodic will run ONLY no FIX option is selected
+if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc.nii.gz" ]]; then
 if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
     [[ ! -d "${func_ICA}" ]] && Do_cmd mkdir -p "${func_ICA}"
     Info "Running melodic"
@@ -548,6 +549,7 @@ if [[ "$noFIX" -eq 0 ]] && [[ ! -f "${melodic_IC}" ]]; then
     if [[ -f "${melodic_IC}" ]]; then export statusMel="YES"; else export statusMel="FAILED"; fi
 else
     Info "Subject ${id} has MELODIC outputs"; export statusMel="YES"
+fi
 fi
 if [[ "$noFIX" -eq 1 ]]; then export statusMel="NO"; fi
 #------------------------------------------------------------------------------#
