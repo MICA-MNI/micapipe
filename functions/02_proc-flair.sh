@@ -184,7 +184,7 @@ if [[ "$Nmorph" -lt 8 ]]; then ((N++))
     for HEMI in L R; do
         surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-midthickness.surf.gii"
         # MAPPING metric to surfaces
-        map_to-surfaces "${flairNP}" "${surf_fsnative}" "${idBIDS}_hemi-${HEMI}_surf-fsnative_label-midthickness_flair.func.gii" "${HEMI}" "midthickness_flair"
+        map_to-surfaces "${flairNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-midthickness_flair.func.gii" "${HEMI}" "midthickness_flair" "${dir_maps}"
     done
     Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 8 ]]; then ((Nsteps++)); fi

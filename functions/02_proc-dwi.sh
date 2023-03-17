@@ -401,7 +401,7 @@ str_dwi_affine="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-nativepro
 mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 T1nativepro_in_dwi="${tmp}/${idBIDS}_space-dwi_desc-T1w_nativepro_Only-Affine.nii.gz"
 
-if [[ ! -f "$mat_dwi_affine" ]]; then ((N++))
+if [[ ! -f "$mat_dwi_affine" ]] || [[ ! -f "$dwi_mask" ]]; then ((N++))
       Info "Affine registration from DWI-b0 to T1nativepro"
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
@@ -558,7 +558,7 @@ if [[ "$Nmorph" -lt 48 ]]; then ((N++))
             for metric in FA ADC; do
                 # Info "Mapping ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
                 dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
-                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}"
+                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}" "${dir_maps}"
             done
         done
     done
