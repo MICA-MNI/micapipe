@@ -69,7 +69,7 @@ else:
     gsr=''
 
 # check if surface directory exist; exit if false
-if os.listdir(funcDir+'/surf/'):
+if os.path.isdir(funcDir+"/surf/"):
     print('')
     print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
     print('surf directory found; lets get the party started!')
@@ -308,7 +308,6 @@ ts_r = np.triu(ts_r)
 np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-5k_desc-FC' + gsr + '.txt',
            ts_r, fmt='%.6f')
 # Clean up
-del data_corr
 del data 
 del ts_r
 del ts
