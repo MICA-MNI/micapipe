@@ -154,17 +154,18 @@ MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
 ##                      Helper functions to generate PDF                     ##
 ##                                                                           ##
 ## ------------------------------------------------------------------------- ##
-def check_json_exist_complete(jsonPath=''):
-    # Check if json file exists:
+def check_json_exist(jsonPath=''):
     json_exist = os.path.isfile(jsonPath)
 
-    # Check if module is complete
+    return json_exist
+
+def check_json_complete(jsonPath=''):
     module_description = os.path.realpath(jsonPath)
     with open( module_description ) as f:
         module_description = json.load(f)
     json_complete = module_description["Status"] == "COMPLETED"
 
-    return json_exist and json_complete
+    return json_complete
 
 
 def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
@@ -377,6 +378,9 @@ def qc_proc_structural(proc_structural_json=''):
     # QC summary
     _static_block += report_qc_summary_template(proc_structural_json)
 
+    if not check_json_complete(proc_structural_json):
+        return _static_block
+
     # Inputs
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -446,6 +450,9 @@ def qc_proc_surf(proc_surf_json=''):
 
     # QC summary
     _static_block += report_qc_summary_template(proc_surf_json)
+
+    if not check_json_complete(proc_surf_json):
+        return _static_block
 
     # Outputs
     _static_block += (
@@ -534,6 +541,9 @@ def qc_post_structural(post_structural_json=''):
 
     # QC summary
     _static_block += report_qc_summary_template(post_structural_json)
+
+    if not check_json_complete(post_structural_json):
+        return _static_block
 
     # Main outputs
     _static_block += (
@@ -728,6 +738,9 @@ def qc_proc_flair(proc_flair_json=''):
     with open( preproc_flair_json ) as f:
         preproc_flair_json = json.load(f)
 
+    if not check_json_complete(proc_flair_json):
+        return _static_block
+
     # Inputs
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -802,6 +815,9 @@ def qc_proc_dwi(proc_dwi_json=''):
 
     # QC summary
     _static_block += report_qc_summary_template(proc_dwi_json)
+
+    if not check_json_complete(proc_dwi_json):
+        return _static_block
 
     preproc_dwi_json = os.path.realpath("%s/%s/%s/dwi/%s_desc-preproc_dwi.json"%(out,sub,ses,sbids))
     with open( preproc_dwi_json ) as f:
@@ -944,6 +960,9 @@ def qc_proc_func(proc_func_json=''):
 
     # QC summary
     _static_block += report_qc_summary_template(proc_func_json)
+
+    if not check_json_complete(proc_func_json):
+        return _static_block
 
     func_clean_json = glob.glob("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(out,sub,ses,tag,sbids))[0]
     with open( func_clean_json ) as f:
@@ -1093,8 +1112,56 @@ def qc_proc_func(proc_func_json=''):
                 ).format(annot=annot,fc_fig=fc_fig,deg_fig=deg_fig)
 
     fc_connectome_table += "</table>"
-
     _static_block += fc_connectome_table
+
+    # Yeon networks
+    _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
+            '<b> Yeo networks (schaefer-400) </b> </p>'
+    )
+
+    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.txt"%(out,sub,ses,tag,sbids)
+    fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+    fc = fc_mtx[49:, 49:]
+    fcz = np.arctanh(fc)
+    fcz[~np.isfinite(fcz)] = 0
+    fcz = np.triu(fcz,1)+fcz.T
+    fc_pos = np.copy(fcz)
+    fc_pos[(0>fc_pos)] = 0
+
+    lh_annot = nb.freesurfer.io.read_annot(MICAPIPE + '/parcellations/lh.schaefer-400_mics.annot')
+    rh_annot = nb.freesurfer.io.read_annot(MICAPIPE + '/parcellations/rh.schaefer-400_mics.annot')
+    annot = lh_annot[2][1:] + rh_annot[2][1:]
+
+    labels_c69 = np.loadtxt(open(MICAPIPE + '/parcellations/schaefer-400_conte69.csv'))
+    mask_c69 = labels_c69 != 0
+
+    networks = ['Vis', 'SomMot', 'Default', 'SalVentAttn', 'DorsAttn', 'Cont', 'Limbic' ]
+
+    yeo_table = (
+        '<table style="border:1px solid #666;width:100%">'
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:center><b>Network</b></td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
+    )
+
+    for i, n in enumerate(networks):
+        idx = [n in str(x) for x in annot]
+        net = np.sum(fc_pos[idx,:], axis=0)
+        net_surf = map_to_labels(net, labels_c69, fill=np.nan, mask=mask_c69)
+        net_fig = '%s/%s_atlas-schaefer400_desc-%s.png'%(tmpDir,sbids,n)
+        plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap='RdGy_r', transparent_bg=False,
+                         screenshot = True, filename = net_fig)
+        yeo_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{n}</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{net_fig}"></td>'
+        ).format(n=n,net_fig=net_fig)
+
+    yeo_table += (
+        '</table>'
+    )
+
+    _static_block += yeo_table
 
     return _static_block
 
@@ -1110,6 +1177,9 @@ def qc_sc(sc_json=''):
 
     # QC summary
     _static_block += report_qc_summary_template(sc_json)
+
+    if not check_json_complete(sc_json):
+        return _static_block
 
     tdi_json = os.path.realpath("%s/%s/%s/dwi/%s_space-dwi_desc-iFOD2-%s_tractography.json"%(out,sub,ses,sbids,streamlines))
     with open( tdi_json ) as f:
@@ -1257,6 +1327,9 @@ def qc_mpc(mpc_json=''):
     # QC summary
     _static_block += report_qc_summary_template(mpc_json)
 
+    if not check_json_complete(mpc_json):
+        return _static_block
+
     # Inputs:
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -1284,10 +1357,9 @@ def qc_mpc(mpc_json=''):
     )
 
     outPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
-    refPath = "%s/%s/%s/anat/%s_space-fsnative_desc-%s.nii.gz"%(out,sub,ses,sbids,acquisition)
+    refPath = "%s/%s/%s/anat/%s_space-fsnative_%s.nii.gz"%(out,sub,ses,sbids,acquisition)
     figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
     _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
-
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>MPC connectomes</b> </p>'
@@ -1302,7 +1374,7 @@ def qc_mpc(mpc_json=''):
     deg.shape
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_desc-" + acquisition + "_mpc_degree.png"
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Greens', transparent_bg=False, screenshot = True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='Greens', color_range='sym', transparent_bg=False, screenshot = True, filename = deg_fig)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -1336,15 +1408,15 @@ def qc_mpc(mpc_json=''):
         pltpy.savefig(ip_fig)
 
         # MPC connectomes
-        #annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
-        #Ndim = max(np.unique(annot_lh_fs5[0]))
+        annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
+        Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
         mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
         mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
         mpc = np.triu(mpc,1)+mpc.T
-        #mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
-        #mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
+        mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
+        mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
 
         mpc[~np.isfinite(mpc)] = np.finfo(float).eps
         mpc[mpc==0] = np.finfo(float).eps
@@ -1389,6 +1461,9 @@ def qc_gd(gd_json=''):
     # QC summary
     _static_block += report_qc_summary_template(gd_json)
 
+    if not check_json_complete(gd_json):
+        return _static_block
+
     # Outputs
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -1400,10 +1475,9 @@ def qc_gd(gd_json=''):
             '<b>GD connectomes</b> </p>'
     )
 
-    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.txt"%(out,sub,ses,sbids)
-    gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(out,sub,ses,sbids)
+    gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
-    print(deg.shape)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, filename = deg_fig)
@@ -1431,19 +1505,20 @@ def qc_gd(gd_json=''):
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
 
+        # gd connectomes
         annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
-        # gd connectomes
         gd_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd.png"
-        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
-        gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
-        gd = np.delete(np.delete(gd, 0, axis=0), 0, axis=1)
-        gd = np.delete(np.delete(gd, Ndim, axis=0), Ndim, axis=1)
+        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.shape.gii"%(out,sub,ses,sbids,annot)
+        gd = nb.load(gd_file).darrays[0].data
         pltpy.imshow(gd, cmap="Blues", aspect='auto')
         pltpy.savefig(gd_fig)
 
         # Degree
+        gd = np.delete(np.delete(gd, 0, axis=0), 0, axis=1)
+        gd = np.delete(np.delete(gd, Ndim, axis=0), Ndim, axis=1)
+
         deg_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd_degree.png"
         deg = np.sum(gd,axis=1)
 
@@ -1488,13 +1563,15 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
-    'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
+    'modules': ['proc_surf', 'proc_func'],
+    'functions': [qc_proc_surf, qc_proc_func]
+    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
+    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/%s/%s/QC/%s_module-%s*.json"%(out,sub,ses,sbids,m))
     for j in module_qc_json:
-        if check_json_exist_complete(j):
+        if check_json_exist(j):
             static_report = qc_module_function['functions'][i](j)
             convert_html_to_pdf(static_report, j.replace('.json','_qc-report.pdf'))
