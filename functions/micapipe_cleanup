@@ -319,8 +319,8 @@ fi
 # CLEAN -MPC
 if [ "${postMPC}" = "TRUE" ]; then
     if [ -z ${acqStr} ]; then acqStr="qMRI"; else acqStr=${acqStr/acq-/}; fi
-    dir_mpc="${subject_dir}/anat/surf/micro_profiles/acq-${acqStr}"
-    if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/anat/surf/micro_profiles/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+    dir_mpc="${subject_dir}/mpc/acq-${acqStr}"
+    if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
         Warning "Erasing MPC output files and logs: ${acqStr}"
         acqStr=${acqStr/acq-/}
         Do_cmd rm -rf "${dir_mpc}" \
