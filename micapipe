@@ -140,6 +140,8 @@ echo -e "
 \t   \033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
 \t   \033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
 \t   \033[38;5;120m-weighted_SC\033[0m         : Weight the SC by a quantitative map in DWI space (e.g. FA, ADC, qT1 or MT). None by default.
+\t   \033[38;5;120m-tck\033[0m                 : Provide a pre-calculated whole brain tractography (tck) in DWI space to generate the connectomes.
+
 
 \t\033[38;5;197m-MPC\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
@@ -414,6 +416,10 @@ do
     weighted_SC=$2
     shift;shift
   ;;
+  -tck)
+    tck_file=$2
+    shift;shift
+  ;;
   -tmpDir)
     tmpDir=$2
     shift;shift;
@@ -595,6 +601,7 @@ if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
 if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
 if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
 if [ -z ${weighted_SC} ]; then weighted_SC=FALSE; else weighted_SC=$(realpath ${weighted_SC}); fi
+if [ -z ${tck_file} ]; then tck_file=FALSE; else tck_file=$(realpath ${tck_file}); fi
 
 # Optional arguments proc_dwi
 # User provided DWI main phase
@@ -977,8 +984,8 @@ fi
 #   REQUIRES -proc_dwi
 if [ "$postDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
-    log_file_str=$dir_logs/SC_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
-    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str $weighted_SC"
+    log_file_str=$dir_logs/SC_${tracts}_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
+    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str $weighted_SC $tck_file"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - POST DWI processing (tractography)"
