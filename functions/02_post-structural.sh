@@ -184,7 +184,7 @@ function map_annot(){
 # Change directory otherwise the script won't work
 cd "$util_parcelations"
 Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
-Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
+Nparc=$(find "${dir_volum}" -name "*atlas*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
 if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
   while [ "${Nparc}" != "${Natlas}" ] || [ "${Nannot}" != "${Natlas}" ]; do
     Info "Mapping Nparc=${Nparc} from Nannot=${Nannot} of ${Natlas} parcellations to nativepro"
