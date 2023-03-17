@@ -247,7 +247,7 @@ data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 np.savetxt(funcDir+'/surf/' + subject + '_surf-fsLR-32k_desc-timeseries_clean' + gsr + '.txt', data_corr, fmt='%.6f')
 
 # Read the processed parcellations
-parcellationList = glob.glob(volmDir + "/*.nii.gz")
+parcellationList = glob.glob(volmDir + "/*atlas*.nii.gz")
 
 # Slice the file names and remove nii*
 parcellationList=[sub.split('atlas-')[1].split('.nii')[0] for sub in parcellationList]
@@ -308,7 +308,7 @@ ts_r = np.triu(ts_r)
 np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-5k_desc-FC' + gsr + '.txt',
            ts_r, fmt='%.6f')
 # Clean up
-del data 
+del data
 del ts_r
 del ts
 
