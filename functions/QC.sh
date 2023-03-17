@@ -259,9 +259,8 @@ Title "Generating QC report"
 
 Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
-exit
 # -----------------------------------------------------------------------------------------------
-# QC notification of completition
+# QC notification of completion
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
