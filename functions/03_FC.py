@@ -308,7 +308,6 @@ ts_r = np.triu(ts_r)
 np.savetxt(funcDir + '/surf/' + subject + '_surf-fsLR-5k_desc-FC' + gsr + '.txt',
            ts_r, fmt='%.6f')
 # Clean up
-del data_corr
 del data 
 del ts_r
 del ts
