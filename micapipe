@@ -146,11 +146,10 @@ echo -e "
 \t\033[38;5;197m-MPC\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t   \033[38;5;120m-microstructural_dat\033[0m : Path to transformation lta from microstructural scan space to native surface space ( ./file.lta )
-\t\t\t            If left blank or omitted, registration will be computed in the script.
-\t\t\t            Note that there is currently no built-in mechanism to verify the accuracy of this registration!
 \t   \033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
 \t\t\t            It MUST be on the same space as the main microstructural image!!
+\t\t\t            If it is EMPTY will try to find a T1map from here: anat/*mp2rage*T1map.nii*
+\t\t\t            Set to 'FALSE' to use microstructural_img for registrations
 \t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
 
@@ -370,13 +369,7 @@ do
     shift
   ;;
   -microstructural_img)
-    input_im_spec=TRUE
     input_im=$2
-    shift;shift
-  ;;
-  -microstructural_dat)
-    transform_spec=TRUE
-    input_dat=$2
     shift;shift
   ;;
   -microstructural_reg)
@@ -588,13 +581,15 @@ if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
 if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments mpc
-optarg_mpc=($input_im $input_dat)
-if [[ $input_im_spec == "TRUE" ]]; then optarg_mpc[0]=$(realpath $input_im)
-else optarg_mpc[0]=DEFAULT; fi
-if [[ $transform_spec == "TRUE" ]]; then optarg_mpc[1]=$(realpath $input_dat)
-else optarg_mpc[1]=DEFAULT; fi
-if [ -z ${mpc_reg} ]; then mpc_reg=DEFAULT; else mpc_reg=$(realpath $mpc_reg); fi
-if [[ $mpc_acq == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
+if [[ ${mpc_acq} == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
+if [ -z ${input_im} ]; then input_im=DEFAULT; else input_im=$(realpath $input_im); fi
+if [ -z ${mpc_reg} ]; then
+    mpc_reg=DEFAULT
+elif [ ${mpc_reg} == "FALSE" ]; then
+    mpc_reg=$(realpath $input_im)
+else
+    mpc_reg=$(realpath $mpc_reg)
+fi
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -923,7 +918,7 @@ fi
 if [ "$postMPC" = "TRUE" ]; then
     rand=${RANDOM}
     log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_mpc[0]} ${optarg_mpc[1]} ${mpc_reg} ${mpc_str}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str}"
     jobName="q${rand}_mpc"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
@@ -986,7 +981,7 @@ fi
 #   REQUIRES -proc_dwi
 if [ "$postDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
-    log_file_str=$dir_logs/SC_${tracts}_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
+    log_file_str=$dir_logs/SC-${tracts}_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
     COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str $weighted_SC $tck_file"
     # mica.q - post-DWI processing (tractography)
     if [[ $micaq == "TRUE" ]]; then
