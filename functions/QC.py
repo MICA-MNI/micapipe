@@ -1283,18 +1283,6 @@ def qc_mpc(mpc_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    surfaceTransform = mpc_description["surfaceTransformation"]
-    _static_block += (
-        '<table style="border:1px solid #666;width:100%">'
-            # Acquisition
-            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left;width:20%>Acquisition</td>'
-            '<td style=padding-top:4px;padding-left:3px;text-align:left>{acquisition}</td></tr>'
-            # Surface Transformation
-            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left>Surface transformation</td>'
-            '<td style=padding-top:4px;padding-left:3px;text-align:left>{surfaceTransform}</td></tr>'
-        '</table>'
-    ).format(acquisition=acquisition,surfaceTransform=surfaceTransform)
-
     outPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
     refPath = "%s/%s/%s/anat/%s_space-fsnative_desc-%s.nii.gz"%(out,sub,ses,sbids,acquisition)
     figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
@@ -1305,17 +1293,17 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids)
-    mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids)
+    mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
-    mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
     mpc[mpc==0] = np.finfo(float).eps
     deg = np.sum(mpc,axis=1)
+    deg.shape
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_desc-" + acquisition + "_mpc_degree.png"
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Greens', layout_style='grid', transparent_bg=False,
-                     screenshot = True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='Greens', transparent_bg=False, screenshot = True, filename = deg_fig)
+
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1341,22 +1329,22 @@ def qc_mpc(mpc_json=''):
     for annot in atlas:
 
         # Intensity profiles
-        ip_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/%s/%s/mpc/acq-%s/%s_space-fsnative_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
+        ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
+        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
         ip = np.loadtxt(ip_file, dtype=float, delimiter=' ')
         pltpy.imshow(ip, cmap="Greens", aspect='auto')
         pltpy.savefig(ip_fig)
 
         # MPC connectomes
-        annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
-        Ndim = max(np.unique(annot_lh_fs5[0]))
+        #annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
+        #Ndim = max(np.unique(annot_lh_fs5[0]))
 
-        mpc_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_space-fsnative_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
+        mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
+        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
         mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
         mpc = np.triu(mpc,1)+mpc.T
-        mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
-        mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
+        #mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
+        #mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
 
         mpc[~np.isfinite(mpc)] = np.finfo(float).eps
         mpc[mpc==0] = np.finfo(float).eps
@@ -1365,7 +1353,7 @@ def qc_mpc(mpc_json=''):
         pltpy.savefig(mpc_fig)
 
         # Degree
-        deg_fig = tmpDir + "/" + sbids + "space-fsnative_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
+        deg_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc_degree.png"
         deg = np.sum(mpc,axis=1)
 
         annot_file = MICAPIPE + '/parcellations/' + annot + '_conte69.csv'
@@ -1500,10 +1488,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
-    'modules':   ['proc_surf', 'proc_flair'],
-    'functions': [qc_proc_surf, qc_proc_flair]
+    'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
+    'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):

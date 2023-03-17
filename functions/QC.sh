@@ -181,7 +181,6 @@ Title "Generating necessary files for QC report"
 # -----------------------------------------------------------------------------------------------
 
 # PROC_STRUC ------------------------------------------------------------------------------------
-if false; then
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
@@ -201,34 +200,34 @@ for mm in 2 0.8; do
             -r "${MNI152_brain}" \
             "${transformation}"
 done
-fi
+
 
 # -----------------------------------------------------------------------------------------------
 # Functional processing
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-if false; then
 for func_scan in `ls ${subject_bids}/func/${idBIDS}_*_bold.nii.gz`; do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
 done
 
-for fmap_scan in `ls ${subject_bids}/fmap/${idBIDS}_acq-fmri_dir-*_epi.nii.gz`; do
-    fmap_scan_mean=$(basename $fmap_scan | sed "s/.nii.gz/_mean.nii.gz/")
-    Do_cmd fslmaths "${fmap_scan}" -Tmean "${tmpDir}/${fmap_scan_mean}"
-done
-fi
+mainPhase_scan_mean=$(basename ${bids_mainPhase[0]} | sed "s/.nii.gz/_mean.nii.gz/")
+Do_cmd fslmaths "${bids_mainPhase[0]}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
+
+reversePhase_scan_mean=$(basename ${bids_reversePhase[0]} | sed "s/.nii.gz/_mean.nii.gz/")
+Do_cmd fslmaths "${bids_reversePhase[0]}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
 
 export default_mainPhase=${bids_mainPhase[0]}
 export default_reversePhase=${bids_reversePhase[0]}
+
+
 
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
 
 # PROC_DWI --------------------------------------------------------------------------------------
-if false; then
 for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}*.nii.gz`; do
     dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
@@ -242,11 +241,8 @@ Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-d
 dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
 Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
 
-fi
-
 
 # SC --------------------------------------------------------------------------------------------
-if false; then
 dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
@@ -254,7 +250,7 @@ for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do
     tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
 done
-fi
+
 
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF
