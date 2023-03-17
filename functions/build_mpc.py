@@ -38,11 +38,6 @@ def build_mpc(data, parc=None, idxExclude=None):
         I = np.zeros([data.shape[0], len(uparcel)])
 
         # Parcellate data by averaging profiles within nodes
-        print("")
-        print("----------------------------------------------------------")
-        print("Parcellating microstructural profiles with provided labels")
-        print("----------------------------------------------------------")
-        print("")
         for (ii, _) in enumerate(uparcel):
 
             # Get vertices within parcel
@@ -100,8 +95,10 @@ def build_mpc(data, parc=None, idxExclude=None):
 
         # Calculate mean across columns, excluding mask and any excluded labels input
         I_mask = I
-        for i in idxExclude:
-            I_mask[:, i] = np.nan
+        NoneType = type(None)
+        if type(idxExclude) != NoneType:
+            for i in idxExclude:
+                I_mask[:, i] = np.nan
         I_M = np.nanmean(I_mask, axis = 1)
 
         # Get residuals of all columns (controlling for mean)

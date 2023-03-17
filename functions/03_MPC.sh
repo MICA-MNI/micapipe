@@ -24,10 +24,9 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 input_im=$8
-input_dat=$9
-mpc_reg=${10}
-mpc_str=${11}
-PROC=${12}
+mpc_reg=$9
+mpc_str=${10}
+PROC=${11}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -65,42 +64,16 @@ module_json="${dir_QC}/${idBIDS}_module-MPC-${mpc_str}.json"
 micapipe_check_json_status "${module_json}" "MPC"
 
 # Check microstructural image input flag and set parameters accordingly
-if [[ "$input_im" == "DEFAULT" ]]; then
-    Warning "MPC processing will be performed from default input image: qT1"
-    microImage="$bids_T1map"
-else
-    Warning "MPC processing will be performed from provided input file"
-    microImage="${input_im}"
-fi
+if [[ "$input_im" == "DEFAULT" ]]; then microImage="$bids_T1map"; else microImage="${input_im}"; fi
 Note "Microstructural image =" "$microImage"
 
 # Check microstructural image to registrer
-if [[ "$mpc_reg" != "DEFAULT" ]]; then
-    Warning "MPC will register the provided input image to the surface: \n\t$mpc_reg"
-    regImage="$mpc_reg"
-else
-    if [[ "$input_im" == "DEFAULT" ]]; then
-        Warning "MPC will register the default input image to the surface: inv1_T1map"
-        regImage="$bids_inv1"
-    else
-        Warning "MPC will register the provided input file"
-        microImage="$input_im"
-    fi
-fi
-Note "micro2fs registration image =" "$regImage"
-
-# Check .dat file input flag and set parameters accordingly
-if [[ "$input_dat" == "DEFAULT" ]]; then
-    Warning "Registration to surface space will be performed within script"
-else
-    Warning "Applying provided .dat file to perform registration to native surface space"
-    Note "micro2fs transform =" "$input_dat"
-    if [ -z "${input_dat}" ] || [ ! -f "${input_dat}" ]; then Error "Provided registration for MPC was not found or the path is wrong!!!"; exit; fi
-fi
+if [[ "$mpc_reg" == "DEFAULT" ]]; then regImage="${bids_inv1}"; else regImage="${mpc_reg}"; fi
+Note "Microstructural image for registration =" "$regImage"
 
 # Exit if microImage or Registration image do not exists
-if [ -z "${microImage}" ] || [ ! -f "${microImage}" ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
-if [ -z "${regImage}" ] || [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found or the path is wrong!!!"; exit; fi
+if [ ! -f "${microImage}" ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
+if [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found or the path is wrong!!!"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Microstructural Profiles Covariance\n\t\tmicapipe $Version, $PROC"
@@ -126,36 +99,37 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 export SUBJECTS_DIR="$dir_surf"
 outDir="${subject_dir}/mpc/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
+
 #------------------------------------------------------------------------------#
-# If no lta specified by user, register to surface space using T1w as intermediate volume
-T1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz
-if [[ ${input_dat} == "DEFAULT" ]]; then
-    fs_transform="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat"
-    if [[ ! -f "${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_bbr.dat" ]]; then ((N++))
-        Info "Running microstructural -> Surface registration for Subject ${id}" #            --int "$T1_fsnative" \
-        Do_cmd bbregister --s "$idBIDS" \
-            --mov "$regImage" \
-            --init-rr \
-            --reg "$fs_transform" \
-            --o "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" \
-            --t1
-        if [[ -f "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${mpc_str}.nii.gz" ]]; then ((Nsteps++)); fi
-    else
-        Info "Subject ${id} already has a microstructural -> Surface space transformation"; ((Nsteps++)); ((N++))
-    fi
+# Affine registration between both images
+T1_in_fs=${tmp}/orig.mgz
+qT1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz
+mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_${mpc_str}_
+qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
+
+if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
+    Do_cmd mrconvert "$T1surf" "$T1_in_fs"
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$regImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
+    if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
 else
-    Info "Using provided input .dat for vol2surf"
-    fs_transform="$input_dat"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has a ${mpc_str} on Surface space"; ((Nsteps++)); ((N++))
 fi
+
+# Convert the ANTs transformation file for wb_command
+wb_affine="${tmp}/${idBIDS}_from-fsnative_to_qMRI_wb.mat"
+Do_cmd c3d_affine_tool -itk $qT1_fsnative_affine -inv -o ${wb_affine}
 
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
 num_surfs=14
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
-json_mpc "$microImage" "$fs_transform" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
+json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
 
-if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
+MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
+if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
     for hemi in lh rh ; do
+        [[ "$hemi" == lh ]] && HEMI=L || HEMI=R
         unset LD_LIBRARY_PATH
         tot_surfs=$((num_surfs + 2))
         Do_cmd python "$MICAPIPE"/functions/generate_equivolumetric_surfaces.py \
@@ -171,83 +145,50 @@ if [[ ! -f "${outDir}/${idBIDS}_space-fsnative_desc-rh_MPC-14.mgh" ]]; then
 
         # find all equivolumetric surfaces and list by creation time
         x=$(ls -t "$outDir"/"$hemi".${num_surfs}surfs*)
-        for n in $(seq 1 1 "$num_surfs") ; do ((N++))
+        for n in $(seq 1 1 "$num_surfs") ; do
             which_surf=$(sed -n "$n"p <<< "$x")
-            cp "$which_surf" "${dir_subjsurf}/surf/${hemi}.${n}by${num_surf}surf"
-            # sample intensity
-            Do_cmd mri_vol2surf \
-                --mov "$microImage" \
-                --reg "$fs_transform" \
-                --hemi "$hemi" \
-                --out_type mgh \
-                --interp trilinear \
-                --out "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" \
-                --surf "${n}by${num_surf}surf"
-
-            #Remove surfaces used by vol2surf
-            Do_cmd rm -rfv "$which_surf" "${dir_subjsurf}/surf/${hemi}.${n}by${num_surf}surf"
-            if [[ -f "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" ]]; then ((Nsteps++)); fi
+            surf_gii="${tmp}/${hemi}.${n}by${num_surf}_space-fsnative.surf.gii"
+            surf_tmp="${tmp}/${hemi}.${n}by${num_surf}_no_offset.surf.gii"
+            out_surf="${tmp}/${hemi}.${n}by${num_surf}_space-qMRI.surf.gii"
+            out_feat="${outDir}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-MPC-${n}.func.gii"
+            # Register surface to qMRI space
+            Do_cmd mris_convert "$which_surf" "${surf_gii}"
+            # Remove offset-to-origin from any gifti surface derived from FS
+            Do_cmd python "$MICAPIPE"/functions/removeFSoffset.py "${surf_gii}" "${surf_tmp}"
+            # Apply transformation to register surface to nativepro
+            Do_cmd wb_command -surface-apply-affine "${surf_tmp}" "${wb_affine}" "${out_surf}"
+            # Sample intensity and resample to other surfaces
+            map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "MPC-${n}" "${outDir}"
+            # remove tmp surfaces
+            rm "${surf_tmp}" "${which_surf}"
         done
     done
+    ((Nsteps++))
 else
-    Info "Subject ${id} has microstructural intensities mapped to native surface"; Nsteps=$((Nsteps+28)); N=$((N+28))
+    Info "Subject ${id} has microstructural intensities mapped to native surface";((Nsteps++)); ((N++));
 fi
-
-# Register to fsa5
-for hemi in lh rh; do
-    for n in $(seq 1 1 "$num_surfs"); do ((N++))
-        MPC_fs5="${outDir}/${idBIDS}_space-fsaverage5_desc-${hemi}_MPC-${n}.mgh"
-        if [[ ! -f "$MPC_fs5" ]]; then
-            Do_cmd mri_surf2surf --hemi "$hemi" \
-                --srcsubject "$idBIDS" \
-                --srcsurfval "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" \
-                --trgsubject fsaverage5 \
-                --trgsurfval "$MPC_fs5"
-            if [[ -f "$MPC_fs5" ]]; then ((Nsteps++)); fi
-        else
-            Info "Subject ${id} ${hemi}_MPC-${n} is registered to fsaverage5"; ((Nsteps++))
-        fi
-    done
-done
-
-# Register to conte69
-for hemi in lh rh; do
-    [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
-    HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
-    for n in $(seq 1 1 "$num_surfs"); do
-        MPC_c69="$outDir/${idBIDS}_space-conte69-32k_desc-${hemi}_MPC-${n}.mgh"
-        if [[ ! -f "$MPC_c69" ]]; then ((N++))
-            Do_cmd mri_convert "${outDir}/${idBIDS}_space-fsnative_desc-${hemi}_MPC-${n}.mgh" "${tmp}/${hemi}_${n}.func.gii"
-            Do_cmd wb_command -metric-resample \
-                    "${tmp}/${hemi}_${n}.func.gii" \
-                    "${dir_conte69}/${idBIDS}_${hemi}_space-fsnative_desc-sphere.surf.gii" \
-                    "${util_surface}/fs_LR-deformed_to-fsaverage.${HEMICAP}.sphere.32k_fs_LR.surf.gii" \
-                    ADAP_BARY_AREA \
-                    "${tmp}/${hemi}_${n}_c69-32k.func.gii" \
-                    -area-surfs \
-                    "${dir_subjsurf}/surf/${hemi}.midthickness.surf.gii" \
-                    "${dir_conte69}/${idBIDS}_space-conte69-32k_desc-${hemi}_midthickness.surf.gii"
-            Do_cmd mri_convert "${tmp}/${hemi}_${n}_c69-32k.func.gii" "$MPC_c69"
-            if [[ -f "$MPC_c69" ]]; then ((Nsteps++)); fi
-        else
-            Info "Subject ${id} ${hemi}_MPC-${n} is registered to conte69"; ((Nsteps++)); ((N++))
-        fi
-    done
-done
 
 #------------------------------------------------------------------------------#
 # Create MPC connectomes and Intensity profiles per parcellations
-parcellations=($(find "$dir_volum" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*"))
+parcellations=($(find "$dir_volum" -name "*atlas*" ! -name "*cerebellum*" ! -name "*subcortical*"))
 for seg in "${parcellations[@]}"; do
     parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     parc_annot="${parc}_mics.annot"
-    MPC_int="${outDir}/${idBIDS}_space-fsnative_atlas-${parc}_desc-intensity_profiles.txt"
+    MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.txt"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
         Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
-    else Info "Subject ${id} MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
+    else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
+
+#------------------------------------------------------------------------------#
+# Create vertex-wise MPC connectome and directory cleanup
+if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
+  Info "Running MPC vertex-wise on fsLR-5k"
+  Do_cmd python $MICAPIPE/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
+  ((Nsteps++))
+else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
