@@ -5,6 +5,7 @@
 # and a whole lot from Sara (August 2019)
 # and incorporation to mica-pipe by Raul (August-September 2020)
 # and addition of a bunch of fancy flags by Jessica (October-November 2020)
+# and updated mapping by Jordan (March 2023)
 #
 # Resting state fMRI processing with bash:
 #
@@ -503,7 +504,7 @@ fmri_HP="${func_volum}/${idBIDS}${func_lab}_HP.nii.gz"
 fmri_brain="${func_volum}/${idBIDS}${func_lab}_brain.nii.gz"
 fmri_mask="${func_volum}/${idBIDS}${func_lab}_brain_mask.nii.gz"
 
-if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then ((N++))
+if [[ ! -f "$fmri_brain" ]]; then ((N++))
     Info "Generating a func binary mask"
     # Calculates the mean func volume
     Do_cmd fslmaths "$func_nii" -Tmean "$fmri_mean"
@@ -513,11 +514,11 @@ if [[ ! -f "$fmri_mask" ]] || [[ ! -f "$fmri_brain" ]]; then ((N++))
     Do_cmd mri_synthstrip -i "$fmri_mean" -o "$fmri_brain" -m "$fmri_mask"
     if [[ -f "${fmri_mask}" ]] ; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a binary mask of the func"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} has a brain masked from func"; ((Nsteps++)); ((N++))
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "$fmri_HP" ]] || [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc.nii.gz" ]]; then ((N++))
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.txt" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
@@ -580,7 +581,7 @@ fi
 # Registration to native pro
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then ((N++))
-    Info "Creating a synthetic T1natipro image for registration"
+    Info "Creating a synthetic T1nativepro image for registration"
     voxels=$(mrinfo ${fmri_mean} -spacing); voxels=${voxels// /,}
     Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
 
@@ -773,7 +774,7 @@ if [ $Nsurf -lt 8 ]; then
             Do_cmd wb_command -metric-resample \
                 ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
                 ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii \
-                ${MICAPIPE}/surfaces/$SURF.$HEMICAP.sphere.reg.surf.gii \
+                ${MICAPIPE}/surfaces/${SURF}.${HEMICAP}.sphere.reg.surf.gii \
                 ADAP_BARY_AREA \
                 ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}.func.gii \
                 -area-surfs \
