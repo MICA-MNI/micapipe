@@ -265,7 +265,7 @@ if noFC!="TRUE":
         uparcel = np.unique(thisparc)
         ts_ctx = np.zeros([data_corr.shape[0], len(uparcel)])
         for lab in range(len(uparcel)):
-            tmpData = data_corr[:, thisparc == lab]
+            tmpData = data_corr[:, thisparc == uparcel[lab]]
             ts_ctx[:,lab] = np.nanmean(tmpData, axis = 1)
 
         # get correlation amtrix
