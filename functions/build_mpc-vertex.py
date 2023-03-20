@@ -12,7 +12,7 @@
 
     Usage
     -----
-    nifti_capture.py -out outname.png -img img1.nii.gz img2nii.gz -roi -title 'My NIFTI'
+    build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
 
 @author: rcruces
 """
@@ -48,17 +48,6 @@ if acq=="DEFAULT":
 else:
     OPATH = "{subject_dir}/mpc/{acq}/".format(subject_dir=ses_str, acq=acq)
 
-# Save GIFTI
-def save_gii(data_array, file_name):
-    # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
-    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
-
-    # this is the GiftiImage class
-    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
-
-    # Save the new GIFTI file
-    nb.save(img=gifti_img, filename=file_name)
-
 # Load all the surfaces and create a numpy.array
 def get_hemisphere(surface_number, hemi, surf):
     thisname_gii = "{output}{bids_id}_hemi-{hemi}_surf-{surf}_label-MPC-{surface_number:d}.func.gii".format(output=OPATH, bids_id=bids_id, hemi=hemi, surface_number=surface_number+1, surf=surf)
@@ -86,11 +75,11 @@ for x in surfaces: get_feature_array(x)
 # Create a vertex-wise MPC from fsLR-5k
 surf_array_fsLR5k = get_feature_array('fsLR-5k', Save=False)
 (MPC_fsLR5k, I, problemNodes) = build_mpc(surf_array_fsLR5k)
-fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.shape.gii".format(output=OPATH, bids_id=bids_id)
+fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.txt".format(output=OPATH, bids_id=bids_id)
 
 # Save it as shape GIFTI
 print('[INFO]... saving '+fileName)
-save_gii(MPC_fsLR5k, fileName)
+np.savetxt(fileName, MPC_fsLR5k, fmt='%.12f'))
 
 # cleanup - remove all feature-surf
 tmp_files=sorted(glob.glob("{output}/*label-MPC-*.func.gii".format(output=OPATH)))

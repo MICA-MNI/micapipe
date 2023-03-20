@@ -86,17 +86,6 @@ parser.add_argument('-rh_annot',
                     )
 args = parser.parse_args()
 
-# Save GIFTI function
-def save_gii(data_array, file_name):
-    # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
-    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
-
-    # this is the GiftiImage class
-    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
-
-    # Save the new GIFTI file
-    nb.save(img=gifti_img, filename=file_name)
-
 # get the real paths
 lh_surf = args.lh_surf[0]
 rh_surf = args.rh_surf[0]
@@ -221,5 +210,5 @@ else:
         dist_R = geoalg_R.geodesicDistances(np.array([x]))[0]
         GD[x+N,:] =  np.concatenate((np.zeros(N), dist_R), axis = 0)
 
-save_gii(GD, outPath + '.shape.gii')
+np.savetxt(outPath + '.txt', GD, fmt='%.12f'))
 print("[ INFO ]..... Geodesic distance completed")
