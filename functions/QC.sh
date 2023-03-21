@@ -180,6 +180,8 @@ Title "Generating necessary files for QC report"
 # Structural processing
 # -----------------------------------------------------------------------------------------------
 
+if false; then
+
 # PROC_STRUC ------------------------------------------------------------------------------------
 # T1w nativepro 5 tissue segmentation (5tt)
 Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
@@ -200,33 +202,41 @@ for mm in 2 0.8; do
             -r "${MNI152_brain}" \
             "${transformation}"
 done
-
-
+fi
 # -----------------------------------------------------------------------------------------------
 # Functional processing
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-for func_scan in `ls ${subject_bids}/func/${idBIDS}_*_bold.nii.gz`; do
-    func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
+if false; then
+for func_scan in `ls ${subject_bids}/func/${idBIDS}_task-rest*_bold.nii.gz`; do
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
 done
 
-mainPhase_scan_mean=$(basename ${bids_mainPhase[0]} | sed "s/.nii.gz/_mean.nii.gz/")
-Do_cmd fslmaths "${bids_mainPhase[0]}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
+if [ -d ${subject_bids}/fmap/ ]; then
+  mainPhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*AP*.nii* 2>/dev/null))
+  reversePhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*PA*.nii* 2>/dev/null))
+else
+  mainPhase_scan=${bids_mainPhase[0]}
+  reversePhase_scan=${bids_reversePhase[0]}
+fi
 
-reversePhase_scan_mean=$(basename ${bids_reversePhase[0]} | sed "s/.nii.gz/_mean.nii.gz/")
-Do_cmd fslmaths "${bids_reversePhase[0]}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
+mainPhase_scan_mean=$(basename $mainPhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+echo $mainPhase_scan_mean
+Do_cmd fslmaths "${mainPhase_scan}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
 
+reversePhase_scan_mean=$(basename $reversePhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+Do_cmd fslmaths "${reversePhase_scan}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
+fi
+echo ${bids_mainPhase[0]}
 export default_mainPhase=${bids_mainPhase[0]}
 export default_reversePhase=${bids_reversePhase[0]}
-
 
 
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
-
+if false; then
 # PROC_DWI --------------------------------------------------------------------------------------
 for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}*.nii.gz`; do
     dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
@@ -250,7 +260,7 @@ for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do
     tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
 done
-
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF
@@ -259,6 +269,7 @@ Title "Generating QC report"
 
 Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
 
+exit
 # -----------------------------------------------------------------------------------------------
 # QC notification of completion
 lopuu=$(date +%s)

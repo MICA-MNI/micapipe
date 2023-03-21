@@ -977,7 +977,8 @@ def qc_proc_func(proc_func_json=''):
 
     mainScan = func_clean_json["Preprocess"]["MainScan"].split()
     for i, s in enumerate(mainScan):
-        outPath = tmpDir + '/' + s.split("func/")[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        mainScan_string = os.path.basename(s)
+        outPath = tmpDir + '/' + mainScan_string.split('.nii.gz')[0] + '_mean.nii.gz'
         outName = "Main scan (mean)" if len(mainScan) == 1 else "Main scan - echo %s (mean)"%(i+1)
         figPath = "%s/fmri_mainScan%s.png"%(tmpDir,i+1)
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
@@ -1224,18 +1225,19 @@ def qc_sc(sc_json=''):
     atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
 
-    connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == False else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
+    connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
     sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
     for connectomeType in connectomes:
-        c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
+        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,streamlines,connectomeType)
         c = np.loadtxt(c_file, dtype=float, delimiter=' ')
         c = np.log(np.triu(c,1)+c.T)
         c[np.isneginf(c)] = 0
         c[c==0] = np.finfo(float).eps
         deg = np.sum(c,axis=1)
+
         deg_fig = tmpDir + "/" + sbids + "space-dwi_surf-fsLR-5k_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + "_degree.png"
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), color_range='sym', cmap='Purples', transparent_bg=False, screenshot = True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='Purples', transparent_bg=False, screenshot = True, filename = deg_fig)
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
         ).format(deg_fig=deg_fig)
@@ -1248,6 +1250,9 @@ def qc_sc(sc_json=''):
         )
 
         for annot in atlas:
+            if annot == 'aparc-a2009s':
+                continue
+
             annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
             Ndim = max(np.unique(annot_lh_fs5[0]))
 
@@ -1272,7 +1277,7 @@ def qc_sc(sc_json=''):
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), color_range='sym', cmap='Purples', layout_style='grid', transparent_bg=False,
+                                 nan_color=(0, 0, 0, 1), cmap='Purples', layout_style='grid', transparent_bg=False,
                                  screenshot = True, filename = deg_fig)
                 connectome_table += (
                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
@@ -1365,8 +1370,8 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids)
-    mpc = nb.load(mpc_file).darrays[0].data
+    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids)
+    mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
     mpc[mpc==0] = np.finfo(float).eps
@@ -1399,6 +1404,9 @@ def qc_mpc(mpc_json=''):
     atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
+
+        if annot == "aparc-2009s":
+            continue
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
@@ -1475,8 +1483,8 @@ def qc_gd(gd_json=''):
             '<b>GD connectomes</b> </p>'
     )
 
-    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(out,sub,ses,sbids)
-    gd = nb.load(gd_file).darrays[0].data
+    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.txt"%(out,sub,ses,sbids)
+    gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1499,19 +1507,21 @@ def qc_gd(gd_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-
     label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
     atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
+
+        if annot == "aparc-2009s":
+            continue
 
         # gd connectomes
         annot_lh_fs5= nb.freesurfer.read_annot(MICAPIPE + '/parcellations/lh.'+annot+'_mics.annot')
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         gd_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd.png"
-        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.shape.gii"%(out,sub,ses,sbids,annot)
-        gd = nb.load(gd_file).darrays[0].data
+        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
+        gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
         pltpy.imshow(gd, cmap="Blues", aspect='auto')
         pltpy.savefig(gd_fig)
 
@@ -1563,8 +1573,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    'modules': ['proc_surf', 'proc_func'],
-    'functions': [qc_proc_surf, qc_proc_func]
+    'modules': ['proc_surf', 'SC'],
+    'functions': [qc_proc_surf, qc_sc]
     #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
     #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
 }
