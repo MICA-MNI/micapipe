@@ -210,5 +210,5 @@ else:
         dist_R = geoalg_R.geodesicDistances(np.array([x]))[0]
         GD[x+N,:] =  np.concatenate((np.zeros(N), dist_R), axis = 0)
 
-np.savetxt(outPath + '.txt', GD, fmt='%.12f'))
+np.savetxt(outPath + '.txt', GD, fmt='%.12f')
 print("[ INFO ]..... Geodesic distance completed")
