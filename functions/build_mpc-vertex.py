@@ -79,7 +79,7 @@ fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.txt".format(output=OPATH, bids
 
 # Save it as shape GIFTI
 print('[INFO]... saving '+fileName)
-np.savetxt(fileName, MPC_fsLR5k, fmt='%.12f'))
+np.savetxt(fileName, MPC_fsLR5k, fmt='%.12f')
 
 # cleanup - remove all feature-surf
 tmp_files=sorted(glob.glob("{output}/*label-MPC-*.func.gii".format(output=OPATH)))
