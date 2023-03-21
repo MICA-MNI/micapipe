@@ -93,18 +93,3 @@ if (dim(M)[1]==length(indx)) { print("Connectome is already sliced!"); # exit()
   print(paste0("    Path=",conn))
   write.table(M, conn, sep = " ", row.names = FALSE, col.names = FALSE)
    }
-
-# Loads the MICs colormaps
-mica.dir <- paste0(argsL$mica,"/functions/")
-load(file=paste0(mica.dir,"cmap_MICs.Rdata"))
-
-# Save png for QC purposes
-nom <-  gsub(".txt","", strsplit(conn, split = "connectomes/")[[1]][2])
-qc <- paste0(strsplit(conn, split = "dwi/")[[1]][1],"QC/png/")
-print(paste0("INFO.... Saving Connectome as png for QC"))
-print(paste0("    Path=",qc, nom, ".png"))
-png(paste0(qc, nom, ".png"))
-  # Mirror matrix completes inferior triangle
-  M[lower.tri(M)] <- t(M)[lower.tri(M)]
-  image(log(M), axes=FALSE, main=nom, col=cmap.SC(256))
-dev.off()

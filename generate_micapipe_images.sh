@@ -9,9 +9,9 @@ generate() {
     --pkg-manager=apt \
     --install "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
     --dcm2niix version=v1.0.20190902 method=source\
-    --fsl version=6.0.0 \
-    --run-bash 'bash /opt/fsl-6.0.0/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.0' \
-    --freesurfer version=6.0.0 \
+    --fsl version=6.0.3 \
+    --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
+    --freesurfer version=7.3.2 \
     --matlabmcr version=2017b\
     --afni version=latest\
     --ants version=2.3.4 \
@@ -26,7 +26,7 @@ generate() {
                      pillow==7.2.0 pyparsing==2.4.7 python-dateutil==2.8.1
                      pytz==2020.1 scikit-learn==0.23.2 scipy==1.5.2
                      six==1.15.0 threadpoolctl==2.1.0 vtk==9.0.1"\
-      pip_install='brainspace==0.1.1 argparse==1.1' \
+      pip_install='brainspace==0.1.4 argparse==1.1' \
       create_env="micapipe" \
       activate=true \
     --run-bash 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1 && pip install git+https://github.com/MICA-MNI/ENIGMA.git' \
@@ -39,16 +39,16 @@ generate() {
            apt update; \
            apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
            rm -rf /var/lib/apt/lists/*;" \
-    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && 
+    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
     --copy . /opt/micapipe \
-    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.0/etc/flirtsch/" \
-    --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects" \
+    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/" \
+    --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.3/subjects" \
     --workdir='/home/mica' \
     --env MICAPIPE='/opt/micapipe'\
-    --add-to-entrypoint "source /opt/freesurfer-6.0.0/SetUpFreeSurfer.sh" \
+    --add-to-entrypoint "source /opt/freesurfer-7.3.2/SetUpFreeSurfer.sh" \
     --add-to-entrypoint "export FIXPATH=/opt/fix && export PATH="${FIXPATH}:${PATH}"" \
-    --entrypoint "/neurodocker/startup.sh /opt/micapipe/mica-pipe" 
+    --entrypoint "/neurodocker/startup.sh /opt/micapipe/micapipe"
   }
 
 

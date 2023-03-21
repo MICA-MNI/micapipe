@@ -10,7 +10,7 @@
 # group of individiuals. The following four variable need to be updated for
 # your individual system/study. It will automatically save the intensity
 # profiles and MPC matrices as a text files in the subject's BIDS folder,
-# alongside the preconstructed equivolumetric surfaces."
+# alongside the preconstructed equivolumetric surf."
 
 # Note that non cortical parcels should be excluded from the MPC computation.
 # This script excludes nodes at index = 0 and = nUniqueParcels/2, as it assumes that these entries are the position of the left and right medial wall.
@@ -49,7 +49,7 @@ acq = sys.argv[7]
 
 # Define default input if none given
 if len(sys.argv) < 5:
-    parc_name = 'vosdewael-200_mics.annot'
+    parc_name = 'schaefer-400_mics.annot'
 
 if len(sys.argv) < 4:
     num_surf = 14
@@ -64,27 +64,24 @@ else:
 
 # setting output directory
 if acq=="DEFAULT":
-    OPATH = "{subject_dir}/anat/surfaces/micro_profiles/".format(subject_dir=ses_str)
+    OPATH = "{subject_dir}/mpc/".format(subject_dir=ses_str)
 else:
-    OPATH = "{subject_dir}/anat/surfaces/micro_profiles/{acq}/".format(subject_dir=ses_str, acq=acq)
+    OPATH = "{subject_dir}/mpc/{acq}/".format(subject_dir=ses_str, acq=acq)
 
 if os.path.exists(OPATH):
     try:
 
         # Get data for specified hemisphere and surface number
         def get_hemisphere(surface_number, hemi):
-            thisname_mgh = "{output}{bids_id}_space-fsnative_desc-{hemi}h_MPC-{surface_number:d}.mgh".format(output=OPATH, bids_id=bids_id, hemi=hemi, surface_number=surface_number+1)
-            img = nib.load(thisname_mgh)
-            data = img.get_fdata()
-            return data.reshape((1,-1))
+            thisname_gii = "{output}{bids_id}_hemi-{hemi}_surf-fsnative_label-MPC-{surface_number:d}.func.gii".format(output=OPATH, bids_id=bids_id, hemi=hemi, surface_number=surface_number+1)
+            data = nib.load(thisname_gii).darrays[0].data
+            return data
 
-        BBl = np.concatenate(
-            [get_hemisphere(ii, 'l') for ii in range(int(num_surf))],
-            axis=0
+        BBl = np.vstack(
+            [get_hemisphere(ii, 'L') for ii in range(int(num_surf))]
         )
-        BBr = np.concatenate(
-            [get_hemisphere(ii, 'r') for ii in range(int(num_surf))],
-            axis=0
+        BBr = np.vstack(
+            [get_hemisphere(ii, 'R') for ii in range(int(num_surf))]
         )
 
         # Concatenate hemispheres and flip so pial surface is at the top
@@ -134,11 +131,6 @@ if os.path.exists(OPATH):
         exclude_labels = exclude_labels.astype(int)
 
         # Create MPC matrix (and nodal intensity profiles if parcellating)
-        print("")
-        print("--------------------------")
-        print("Ello! Let's build the MPC!")
-        print("--------------------------")
-        print("")
         (MPC, I, problemNodes) = build_mpc(BB, parc, exclude_labels)
 
         # Check success of MPC and save output
@@ -151,12 +143,11 @@ if os.path.exists(OPATH):
             sys.exit(1)
         else:
             parc_str = parc_name.replace('_mics.annot', "")
-            np.savetxt("{output}/{bids_id}_space-fsnative_atlas-{parc_str}_desc-MPC.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), MPC, fmt='%.6f')
-            np.savetxt("{output}/{bids_id}_space-fsnative_atlas-{parc_str}_desc-intensity_profiles.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), I, fmt='%.12f')
+            np.savetxt("{output}/{bids_id}_atlas-{parc_str}_desc-MPC.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), MPC, fmt='%.6f')
+            np.savetxt("{output}/{bids_id}_atlas-{parc_str}_desc-intensity_profiles.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), I, fmt='%.12f')
             print("")
             print("-------------------------------------")
-            print("MPC building successful for subject {sub}".format(sub=sub))
-            print("Check it out in {output}".format(output=OPATH))
+            print("MPC {parc} building successful for subject {sub}".format(sub=sub, parc=parc_name.replace('_mics.annot', '')))
             print("-------------------------------------")
             print("")
             sys.exit(0)

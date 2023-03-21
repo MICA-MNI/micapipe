@@ -127,13 +127,7 @@ do
 done
 
 # argument check out & WARNINGS
-arg=($id $out $BIDS)
-if [ "${#arg[@]}" -lt 3 ]; then
-Error "One or more mandatory arguments are missing:
-               -sub  : $id
-               -out  : $out
-               -bids : $BIDS"
-help; exit 1; fi
+missing_arg
 
 # Number of session (Default is "ses-pre")
 if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -warpface or -all"; help; exit; fi
@@ -185,12 +179,12 @@ Title "Running MICA-anonymize by $METHOD method(s)"
 Info "micapipe will use $threads threads for multicore processing"
 
 # Creates OUT directory if it doesn't exist
-out_warps=${out}/${id}
+out_warps=${out}
 Info "Output directory: $out_warps"
-if [ ! -d ${out_warps} ]; then Do_cmd mkdir ${out_warps}; fi
+if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
 
 # Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
-t1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
+T1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
 for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
 
 # Go to BIDS/anat to create a list of all the Volumes
@@ -200,7 +194,7 @@ anat=(`ls *gz`)
 anatT1map=`find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz"`
 T1map_inv1=`find . -name "*inv1_T1map.nii.gz"`; T1map_inv1=${T1map_inv1/.\//}
 
-Info "T1w to register: $t1w_run1\n\t\tOther anatomical volumes:"
+Info "T1w to register: $T1w_run1\n\t\tOther anatomical volumes:"
 for i in ${anat[*]}; do echo -e "\t\t$i"; done
 if [ "${#anatT1map[@]}" -gt 0 ]; then
   Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
@@ -208,14 +202,14 @@ if [ "${#anatT1map[@]}" -gt 0 ]; then
 fi
 
 # T1w for registrations
-T1_orig=${subject_bids}/anat/${t1w_run1}
+T1_orig=${subject_bids}/anat/${T1w_run1}
 
 # move to tmp directory
 Do_cmd cd $tmp
 
 # -----------------------------------------------------------------------------------------------
 # Affine registration to MICs60_T1w-atlas
-T1w_run1_str=${t1w_run1/.nii.gz/}
+T1w_run1_str=${T1w_run1/.nii.gz/}
 T1w_2_MICs=${tmp}/T1w_2_MICs60
 T1w_2_mics_mat=${T1w_2_MICs}_0GenericAffine.mat
 Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $threads -p f
@@ -224,19 +218,19 @@ if [ ! -f ${T1w_2_mics_mat} ]; then Error "Affine registration failed"; cd $here
 # -----------------------------------------------------------------------------------------------
 # DEFACE
 if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
-    Info "DEFACING $t1w_run1"
-    roi_deface_t1w=${T1w_2_MICs}_defaceROI.nii.gz
+    Info "DEFACING $T1w_run1"
+    roi_deface_T1w=${T1w_2_MICs}_defaceROI.nii.gz
     defaced=${out_warps}/${T1w_run1_str}_defaced.nii.gz
 
     # Apply face ROI to native T1w volume
-    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_ROI -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $roi_deface_t1w
-    Do_cmd fslmaths $roi_deface_t1w -binv -mul $T1_orig $defaced
+    Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_ROI -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $roi_deface_T1w
+    Do_cmd fslmaths $roi_deface_T1w -binv -mul $T1_orig $defaced
 fi
 
 # -----------------------------------------------------------------------------------------------
 # REFACE
 if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all" ]; then
-    Info "REFACING $t1w_run1"
+    Info "REFACING $T1w_run1"
     # Apply NEW face to native T1w volume
     T1w_mask_brain=${tmp}/mask-brainNeck.nii.gz
     face=${tmp}/face.nii.gz
@@ -256,8 +250,8 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all
     # # -----------------------------------------------------------------------------------------------
     # # WARPFACE
     if [ "$METHOD" == "warpface" ] || [ "$METHOD" = "all" ]; then
-        Info "WARP-FACING $t1w_run1"
-        # Binary mask over original t1w_run
+        Info "WARP-FACING $T1w_run1"
+        # Binary mask over original T1w_run
         T1w_mask_dil=${tmp}/mask_dil.nii.gz
         T1w_mask_inv=${tmp}/mask_inv.nii.gz
 
@@ -321,7 +315,7 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
           roi_deface_anat=${tmp}/${nii/.nii.gz/_}defaceROI.nii.gz
           nii_defaced=${out_warps}/${nii/.nii.gz/_}defaced.nii.gz
           # Apply face ROI to native T1w volume
-          Do_cmd antsApplyTransforms -d 3 -u int -i $roi_deface_t1w -r $nii_pwd -n GenericLabel -t [${nii_2_T1_mat},1] -o $roi_deface_anat
+          Do_cmd antsApplyTransforms -d 3 -u int -i $roi_deface_T1w -r $nii_pwd -n GenericLabel -t [${nii_2_T1_mat},1] -o $roi_deface_anat
           Do_cmd fslmaths $roi_deface_anat -binv -mul $nii_pwd $nii_defaced
   fi
 

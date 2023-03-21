@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.2.0 'dev'"
+export Version="v0.2.0 'Northern flicker'"
 
 bids_variables() {
   # This functions assignes variables names acording to:
@@ -15,6 +15,7 @@ bids_variables() {
   id=$2
   out=$3
   SES=$4
+  umask 002
 
   #   Define UTILITIES directories
   export scriptDir=${MICAPIPE}/functions
@@ -23,7 +24,7 @@ bids_variables() {
   # Directory with all the parcellations
   export util_parcelations=${MICAPIPE}/parcellations
   export util_lut=${MICAPIPE}/parcellations/lut
-  # Directory with the resampled freesurfer surfaces
+  # Directory with the resampled surfaces
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
 
@@ -42,43 +43,36 @@ bids_variables() {
 export idBIDS="${subject}${ses}"
 
   # Structural directories derivatives/
-  export dir_surf=${out/\/micapipe/}/freesurfer    # surfaces
-  	 export dir_freesurfer=${dir_surf}/${idBIDS}  # freesurfer dir
   export proc_struct=$subject_dir/anat # structural processing directory
-  	 export dir_volum=$proc_struct/volumetric # Cortical segmentations
-  	 export dir_conte69=${proc_struct}/surfaces/conte69   # conte69
+  	 export dir_volum=$subject_dir/parc # Cortical segmentations
+  	 export dir_conte69=$subject_dir/surf   # conte69
+     export dir_maps=$subject_dir/maps
   export proc_dwi=$subject_dir/dwi               # DWI processing directory
     export dwi_cnntm=$proc_dwi/connectomes
     export autoTract_dir=$proc_dwi/auto_tract
   export proc_func=$subject_dir/func
     export func_ICA=$proc_func/ICA_MELODIC
     export func_volum=$proc_func/volumetric
-    export func_surf=$proc_func/surfaces
+    export func_surf=$proc_func/surf
   export proc_asl=$subject_dir/perf # ASL processing directory
     export asl_volum=$proc_asl/volumetric
-    export asl_surf=$proc_asl/surfaces
+    export asl_surf=$proc_asl/surf
   export dir_warp=$subject_dir/xfm              # Transformation matrices
   export dir_logs=$subject_dir/logs              # directory with log files
   export dir_QC=$subject_dir/QC                  # directory with QC files
-  export dir_QC_png=$subject_dir/QC/png                  # directory with QC files
 
   # post structural Files (the resolution might vary depending on the dataset)
-  if [ -f "${proc_struct}"/"${idBIDS}"_space-nativepro_t1w.nii.gz ]; then
-      export res=$(mrinfo "${proc_struct}"/"${idBIDS}"_space-nativepro_t1w.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
-      export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_t1w.nii.gz
-      export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain.nii.gz
-      export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_t1w_brain_mask.nii.gz
-      export T1freesurfr=${dir_freesurfer}/mri/T1.mgz
-      export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_t1w_5TT.nii.gz
-      export T1fast_seg=$proc_struct/first/${idBIDS}_space-nativepro_t1w_all_fast_firstseg.nii.gz
+  if [ -f "${proc_struct}"/"${idBIDS}"_space-nativepro_T1w.nii.gz ]; then
+      export res=$(mrinfo "${proc_struct}"/"${idBIDS}"_space-nativepro_T1w.nii.gz -spacing | awk '{printf "%.1f\n", $2}')
+      export T1nativepro=${proc_struct}/${idBIDS}_space-nativepro_T1w.nii.gz
+      export T1nativepro_brain=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain.nii.gz
+      export T1nativepro_mask=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz
+      export T15ttgen=${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz
+      export T1fast_seg=$subject_dir/parc/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz
   fi
 
-  # Native midsurface in gifti format
-  export lh_midsurf=${dir_freesurfer}/surf/lh.midthickness.surf.gii
-  export rh_midsurf=${dir_freesurfer}/surf/rh.midthickness.surf.gii
-
   # Registration from MNI152 to Native pro
-  export T1str_nat=${idBIDS}_space-nativepro_t1w
+  export T1str_nat=${idBIDS}_space-nativepro_T1w
   export mat_MNI152_SyN=${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_    # transformation strings nativepro to MNI152_0.8mm
   export T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
   export T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
@@ -101,11 +95,22 @@ export idBIDS="${subject}${ses}"
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
   bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
-  bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*.nii* 2>/dev/null)
-  bids_inv1=$(ls "$subject_bids"/anat/*inv1*.nii* 2>/dev/null)
-  bids_inv2=$(ls "$subject_bids"/anat/*inv2*.nii* 2>/dev/null)
+  bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*T1map.nii* 2>/dev/null)
+  bids_inv1=$(ls "$subject_bids"/anat/*inv1*T1map.nii* 2>/dev/null)
+  bids_inv2=$(ls "$subject_bids"/anat/*inv2*T1map.nii* 2>/dev/null)
   bids_flair=$(ls "$subject_bids"/anat/*FLAIR*.nii* 2>/dev/null)
   dwi_reverse=($(ls "${subject_bids}/dwi/${subject}${ses}"_dir-PA_*dwi.nii* 2>/dev/null))
+}
+
+set_surface_directory() {
+  local recon=${1}
+  export dir_surf=${out/\/micapipe_v0.2.0/}/${recon}    # surf
+  export dir_subjsurf=${dir_surf}/${idBIDS}  # Subject surface dir
+  export T1surf=${dir_subjsurf}/mri/orig.mgz
+
+  # Native midsurface in gifti format
+  export lh_midsurf="${dir_conte69}/${idBIDS}_hemi-L_surf-fsnative_label-midthickness.surf.gii"
+  export rh_midsurf="${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-midthickness.surf.gii"
 }
 
 bids_print.variables() {
@@ -135,7 +140,7 @@ bids_print.variables() {
   Note "dir_warp        :" "$dir_warp"
   Note "dir_logs        :" "$dir_logs"
   Note "dir_QC          :" "$dir_QC"
-  Note "dir_freesurfer  :" "$dir_freesurfer"
+  Note "dir_subjsurf  :" "$dir_subjsurf"
 
   Info "Utilities directories"
   Note "scriptDir         :" "$scriptDir"
@@ -154,6 +159,18 @@ file.exist(){
   fi
 }
 
+bids_print.variables-structural() {
+  Info "Main structural image(s) for processing"
+  Note "T1w string(s):" "$T1wStr, N=${Nimgs}"
+  if [[ "${UNI}" == "TRUE" ]]; then
+    Note "UNI" "${bids_T1ws[0]}"
+    Note "INV1" "${bids_inv1}"
+    Note "INV2" "${bids_inv2}"
+    Note "Multiplying Factor" "${MF}"
+  fi
+  Note "mp2rage-UNI" "${UNI}"
+}
+
 bids_print.variables-post() {
   # This functions prints BIDS variables names and files if found
   Info "Structural processing output variables"
@@ -165,7 +182,7 @@ bids_print.variables-post() {
 
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for DWI processing"
+  Info "Variables for DWI processing"
   Note "proc_dwi dir    :" "$proc_dwi"
   Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
   Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
@@ -177,9 +194,9 @@ bids_print.variables-dwi() {
 
 bids_print.variables-func() {
   # This functions prints BIDS variables names and files if found
-  Info "mica-pipe variables for rs-fMRI processing"
+  Info "Variables for functional processing"
   Note "T1 nativepro       :" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 freesurfer      :" "$(find "$T1freesurfr" 2>/dev/null)"
+  Note "T1 surface      :" "$(find "$T1surf" 2>/dev/null)"
   for i in "${!mainScan[@]}"; do
   file.exist "mainScan${i/0/}         :" ${mainScan[i]}
   file.exist "mainScan${i/0/} json    :" ${mainScanJson[i]}
@@ -205,7 +222,7 @@ bids_variables_unset() {
   unset proc_struct
   unset dir_volum
   unset dir_surf
-  unset dir_freesurfer
+  unset dir_subjsurf
   unset dir_conte69
   unset proc_dwi
   unset dwi_cnntm
@@ -222,7 +239,7 @@ bids_variables_unset() {
   unset dir_QC_png
   unset T1nativepro
   unset T1nativepro_brain
-  unset T1freesurfr
+  unset T1surf
   unset T15ttgen
   unset T1fast_seg
   unset res
@@ -279,6 +296,38 @@ function micapipe_procStatus() {
   echo "${id}, ${session}, ${mod}, ${status}, $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N"), $(whoami), $(uname -n), $(date), $(printf "%0.3f\n" "$eri"), ${PROC}, ${Version}" >> "${outfile}"
 }
 
+function micapipe_completition_status() {
+  if [ -z "${2}" ]; then logaqc=""; else logaqc="${2}"; fi
+    # Processing time
+    lopuu=$(date +%s)
+    eri=$(echo "$lopuu - $aloita" | bc)
+    eri=$(echo print "$eri"/60 | perl)
+
+    # Print logs
+    if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
+    Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+    \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
+    \tStatus          : ${status}
+    \tCheck logs      : $(ls "$dir_logs"/${1}_*"${logaqc}.txt")"
+}
+
+function micapipe_procStatus_json() {
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"${3}\",
+    \"Subject\": \"${1}\",
+    \"Session\": \"${2}\",
+    \"Status\": \"${status}\",
+    \"Progress\": \"$(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")\",
+    \"User\": \"$(whoami)\",
+    \"Workstation\": \"$(uname -n)\",
+    \"Date\": \"$(date)\",
+    \"Processing.time\": \"$(printf "%0.3f\n" "$eri")\",
+    \"Processing\": \"${PROC}\",
+    \"Threads\": \"${threads}\"
+  }" > "${4}"
+}
+
 function micapipe_json() {
   # Name is the name of the raw-BIDS directory
   if [ -f "${BIDS}/dataset_description.json" ]; then
@@ -293,122 +342,376 @@ function micapipe_json() {
     \"Name\": \"${Name}\",
     \"BIDSVersion\": \"${BIDSVersion}\",
     \"DatasetType\": \"derivative\",
-    \"GeneratedBy\": [
-      {
+    \"GeneratedBy\": [{
         \"Name\": \"micapipe\",
         \"Version\": \"${Version}\",
+        \"Reference\": \"Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Ilana Leppert, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022) Micapipe: a pipeline for multimodal neuroimaging and connectome analysis. NeuroImage, 2022, 119612, ISSN 1053-8119.\",
+        \"DOI\": \"https://doi.org/10.1016/j.neuroimage.2022.119612\",
+        \"URL\": \"https://micapipe.readthedocs.io/en/latest\",
+        \"GitHub\": \"https://github.com/MICA-MNI/micapipe\",
         \"Container\": {
-          \"Type\": \"github\",
-          \"Tag\": \"MICA-MNI/micapipe:${Version}\"
-          }
-      },
-      {
-        \"Name\": \"$(whoami)\",
-        \"Workstation\": \"$(uname -n)\"
-        \"LastRun\": \"$(date)\"
+          \"Type\": \"docker\",
+          \"Tag\": \"micalab/micapipe:$(echo ${Version} | awk '{print $1}')\"
+        },
+        \"RunBy\": \"$(whoami)\",
+        \"Workstation\": \"$(uname -n)\",
+        \"LastRun\": \"$(date)\",
         \"Processing\": \"${PROC}\"
-      }
-    ],
-    \"SourceDatasets\": [
-      {
-        \"DOI\": \"doi:\",
-        \"URL\": \"https://micapipe.readthedocs.io/en/latest/\",
-        \"Version\": \"${Version}\"
-      }
-    ]
-  }" > "${out}/pipeline-description.json"
+      }]
+  }" > "${out}/dataset_description.json"
+}
+
+function micapipe_check_json_status() {
+  local mod_json="${1}"
+  local mod_func="${2}"
+  if [ -f "${module_json}" ]; then
+    status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+    if [ "$status" == "COMPLETED" ]; then
+    Note "${mod_func} json" "${module_json}"
+    Warning "Subject ${idBIDS} has been processed with -${mod_func}
+              If you want to re-run this step again, first erase all the outputs with:
+
+              micapipe_cleanup -sub <subject_id> -out <derivatives> -bids <BIDS_dir> -${mod_func}"; exit
+    else
+        Info "${mod_func} is ${status}, processing will continute"
+    fi
+  fi
+}
+
+function micapipe_check_dependency() {
+  local mod_str="${1}"
+  local module_json="${2}"
+  if [[ ! -f "${module_json}" ]]; then Error "${mod_str} outputs were not found: \n\t\t\tRun -${mod_str}"; exit 1; fi
+  status=$(grep "Status" "${module_json}" | awk -F '"' '{print $4}')
+  if [ "$status" != "COMPLETED" ]; then
+    Error "${mod_str} output has an $status status, try re-running -${mod_str}"; exit 1
+  fi
 }
 
 function tck_json() {
-  qform=$(fslhd "$dwi_b0" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$dwi_b0" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$dwi_b0" | grep sto_ | awk -F "\t" '{print $2}'))
   Info "Creating tractography json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${8}\",
-    \"inputNIFTI\": [
-      {
+    \"fileInfo\": {
       \"Name\": \"${fod_wmN}\",
-      \"sform\": [
-\"${qform}\"
-      ],
       \"qform\": [
-\"${sform}\"
+          \"${qform[@]:0:4} \",
+          \"${qform[@]:4:4} \",
+          \"${qform[@]:8:4} \",
+          \"${qform[@]:12:8}\"
       ],
-      }
-    ],
-    \"Tractography\": [
-      {
-        \"TractographyClass\": \"local\",
-        \"TractographyMethod\": \"probabilistic\",
-        \"TractographyAlgorithm\": \"$1\",
-        \"StepSizeUnits\": [\"mm\"],
-        \"StepSize\": \"$2\",
-        \"AngleCurvature\": \"$3\",
-        \"cutoff\": \"$4\",
-        \"maxlength\": \"$5\",
-        \"minlength\": \"$6\",
-        \"SeedingMethod\": \"$7\",
-        \"SeedingNumberMethod\": \"${tracts}\",
-        \"TerminationCriterion\": [\"reachingTissueType”],
-        \"TerminationCriterionTest\": [\"ACT\"],
-        \"TractographySaved\": \"${nocleanup}\"
-      }
-    ]
+      \"sform\": [
+          \"${sform[@]:0:4} \",
+          \"${sform[@]:4:4} \",
+          \"${sform[@]:8:4} \",
+          \"${sform[@]:12:8}\"
+      ]
+    },
+    \"Tractography\": {
+      \"TractographyMethod\": \"probabilistic\",
+      \"TractographyAlgorithm\": \"$1\",
+      \"StepSizeUnits\": [\"mm\"],
+      \"StepSize\": \"$2\",
+      \"AngleCurvature\": \"$3\",
+      \"cutoff\": \"$4\",
+      \"maxlength\": \"$5\",
+      \"minlength\": \"$6\",
+      \"SeedingMethod\": \"$7\",
+      \"SeedingNumberMethod\": \"${tracts}\",
+      \"TerminationCriteria\": [\"ACT\"],
+      \"weighted_SC\": \"${weighted_SC}\",
+      \"TractographySaved\": \"${nocleanup}\"
+    }
   }" > "${tckjson}"
 }
 
-function json_nativepro_t1w() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+function json_nativepro_T1w() {
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "$1" -transform))
+  if [[ "${UNI}" == "FALSE" ]]; then MF="NONE"; fi
+  if [[ "${maskbet}" == "TRUE" ]]; then BrainMask="bet"; else BrainMask="mri_synthstrip"; fi
   Info "Creating T1w_nativepro json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"fileName\": \"${1}\",
-    \"VoxelSize\": \"${res}\",
-    \"Dimensions\": \"${Size}\",
-    \"Strides\": \"${Strides}\",
-    \"Offset\": \"${Offset}\",
-    \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
-    \"sform\": [
-\"${qform}\"
-    ],
-    \"qform\": [
-\"${sform}\"
-    ],
+    \"fileInfo\": {
+        \"VoxelSize\": \"${res}\",
+        \"Dimensions\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": [
+          \"${Transform[@]:0:4} \",
+          \"${Transform[@]:4:4} \",
+          \"${Transform[@]:8:4} \",
+          \"${Transform[@]:12:8}\"
+      ],
+        \"qform\": [
+          \"${qform[@]:0:4} \",
+          \"${qform[@]:4:4} \",
+          \"${qform[@]:8:4} \",
+          \"${qform[@]:12:8}\"
+        ],
+        \"sform\": [
+          \"${sform[@]:0:4} \",
+          \"${sform[@]:4:4} \",
+          \"${sform[@]:8:4} \",
+          \"${sform[@]:12:8}\"
+        ]
+      },
     \"inputsRawdata\": \"${3}\",
     \"anatPreproc\": [
       {
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
-        \"NumberofT1w\": \"$2\",
+        \"NumberOfT1w\": \"$2\",
+        \"UNI-T1map\": \"${UNI}\",
+        \"UNI-T1map-mf\": \"${MF}\",
         \"BiasFieldCorrection\": \"ANTS N4BiasFieldCorrection\",
-        \"WMweightedN4BFC\": \"${N4wm}\",
-        \"RescaleRange\": \"0:100\"
+        \"WMweightedN4B\": \"${N4wm}\",
+        \"N4wmProcessed\": \"${N4wmStatus}\",
+        \"RescaleRange\": \"0:100\",
+        \"BrainMask\": \"${BrainMask}\"
       }
     ]
   }" > "$4"
 }
 
-function json_nativepro_mask() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+function json_surf() {
+  Info "Creating proc_surf json file"
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
-  Info "Creating T1natipro_brain json file"
+  Transform=($(mrinfo "${1}" -transform))
+  if [[ "$surfdir" == "FALSE" ]]; then
+      echo -e "{
+        \"micapipeVersion\": \"${Version}\",
+        \"LastRun\": \"$(date)\",
+        \"fileName\": \"${1}\",
+        \"fileInfo\": {
+            \"Cropped\": \"${crop}\",
+            \"VoxelSize\": \"${res}\",
+            \"Dimensions\": \"${Size}\",
+            \"Strides\": \"${Strides}\",
+            \"Offset\": \"${Offset}\",
+            \"Multiplier\": \"${Multiplier}\",
+            \"Transform\": [
+              \"${Transform[@]:0:4} \",
+              \"${Transform[@]:4:4} \",
+              \"${Transform[@]:8:4} \",
+              \"${Transform[@]:12:8}\"
+      ],
+            \"qform\": [
+              \"${qform[@]:0:4} \",
+              \"${qform[@]:4:4} \",
+              \"${qform[@]:8:4} \",
+              \"${qform[@]:12:8}\"
+            ],
+            \"sform\": [
+              \"${sform[@]:0:4} \",
+              \"${sform[@]:4:4} \",
+              \"${sform[@]:8:4} \",
+              \"${sform[@]:12:8}\"
+            ]
+          },
+        \"SurfaceDir\": \"${2}\",
+        \"SurfRecon\": \"${3}\",
+      }" > "$4"
+  elif [[ "$surfdir" != "FALSE" ]]; then
+    echo -e "{
+      \"micapipeVersion\": \"${Version}\",
+      \"LastRun\": \"$(date)\",
+      \"originalDir\": \"${surfdir}\",
+      \"SurfaceDir\": \"${2}\",
+      \"SurfRecon\": \"${3}\"
+    }" > "$4"
+  fi
+}
+
+function proc_struct_transformations() {
+  Info "Creating transformations file: MNI152 >><< T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_structural\",
+    \"LastRun\": \"$(date)\",
+    \"T1nativepro\": \"${1}\",
+    \"MNI152_0p8mm\": \"${2}\",
+    \"MNI152_2mm\": \"${3}\",
+    \"from-t1nativepro_to-MNI152_0p8mm\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$1\",
+        \"reference\": \"$2\",
+        \"transformations\": \"-t ${T1_MNI152_Warp} -t ${T1_MNI152_affine}\",
+        \"output\": \"-o from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-MNI152_0p8mm_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$2\",
+        \"reference\": \"$1\",
+        \"transformations\": \"-t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp}\",
+        \"output\": \"-o from-MNI152_0.8mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-t1nativepro_to-MNI152_2mm\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${1}\",
+        \"reference\": \"${3}\",
+        \"transformations\": \"-t ${T1_MNI152_Warp/0.8mm/2mm} -t ${T1_MNI152_affine/0.8mm/2mm}\",
+        \"output\": \"-o from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-MNI152_2mm_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${3}\",
+        \"reference\": \"${1}\",
+        \"transformations\": \"-t [${T1_MNI152_affine/0.8mm/2mm},1] -t ${T1_MNI152_InvWarp/0.8mm/2mm}\",
+        \"output\": \"-o from-MNI152_2mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > "$4"
+}
+
+function post_struct_transformations() {
+  Info "Creating transformations file: Surface Native >><< T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"post_structural\",
+    \"LastRun\": \"$(date)\",
+    \"T1nativepro\": \"${1}\",
+    \"T1surf\": \"${T1surf}\",
+    \"from-t1nativepro_to-fsnative\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$1\",
+        \"reference\": \"$2\",
+        \"transformations\": \"[${T1_fsnative_affine},1]\",
+        \"output\": \"-o from-nativepro_to-fsnative_mode-image_desc-affine.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-fsnative_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"$2\",
+        \"reference\": \"$1\",
+        \"transformations\": \"-t ${T1_fsnative_affine}\",
+        \"output\": \"-o from-fsnative_to-nativepro_mode-image_desc-affine.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > "$3"
+}
+
+function proc_func_transformations() {
+  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
+  Info "Creating transformations file: func space <<>> T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_func\",
+    \"LastRun\": \"$(date)\",
+    \"Only affine\": \"${regAffine}\",
+    \"T1nativepro brain\": \"${T1nativepro_brain}\",
+    \"func brain\": \"${fmri_brain}\",
+    \"from-t1nativepro_to-func\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${T1nativepro_brain}\",
+        \"reference\": \"${fmri_brain}\",
+        \"transformations\": \"$(echo ${2} | sed 's/:/ /g')\",
+        \"output\": \"-o from-nativepro_to-${tagMRI}_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-func_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${fmri_brain}\",
+        \"reference\": \"${t1bold}\",
+        \"transformations\": \"$(echo ${3} | sed 's/:/ /g')\",
+        \"output\": \"-o from-${tagMRI}_to-nativepro_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > ${1}
+}
+
+function proc_dwi_transformations() {
+  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
+  Info "Creating transformations file: DWI space <<>> T1nativepro"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"Module\": \"proc_dwi\",
+    \"LastRun\": \"$(date)\",
+    \"transform\": \"${Mode}\",
+    \"T1nativepro\": \"${T1nativepro}\",
+    \"DWI b0\": \"${dwi_b0}\",
+    \"from-t1nativepro_to-dwi\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${T1nativepro}\",
+        \"reference\": \"${fod}\",
+        \"transformations\": \"$(echo ${2} | sed 's/:/ /g')\",
+        \"output\": \"-o from-nativepro_to-dwi${dwi_str_}_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ],
+    \"from-dwi_to-t1nativepro\": [
+      {
+        \"Command\": \"antsApplyTransforms\",
+        \"input\": \"${dwi_b0}\",
+        \"reference\": \"${T1nativepro_brain}\",
+        \"transformations\": \"$(echo ${3} | sed 's/:/ /g')\",
+        \"output\": \"-o from-dwi${dwi_str_}_to-nativepro_mode-image_desc-${Mode}.nii.gz\",
+        \"options\": \"-d 3 -v -u int\"
+      }
+    ]
+  }" > ${1}
+}
+
+function slim_proc_struct(){
+  Info "Erasing temporary files"
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_to_std_sub*
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_pveseg.nii.gz
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mixeltype.nii.gz
+  Do_cmd rm -rf ${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_seg.nii.gz
+  Do_cmd rm -rf ${proc_struct}/first
+  Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+}
+
+function json_nativepro_mask() {
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  Info "Creating T1nativepro_brain json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
@@ -418,18 +721,27 @@ function json_nativepro_mask() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
-    \"inputNIFTI\": [
-      {
+    \"Transform\": [
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
+        \"${Transform[@]:12:8}\"
+      ],
+    \"inputNIFTI\": {
       \"Name\": \"${T1nativepro}\",
-      \"sform\": [
-\"${qform}\"
-      ],
       \"qform\": [
-\"${sform}\"
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
       ],
-      }
-    ],
+      \"sform\": [
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
+      ]
+    },
     \"BinaryMask\": [
       {
         \"BinaryMask_original\": \"$2\",
@@ -440,30 +752,113 @@ function json_nativepro_mask() {
   }" > "$3"
 }
 
+function json_nativepro_flair() {
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  Info "Creating T1nativepro_flair json file"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"fileName\": \"${1}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"TransformCmd\": {
+        \"BinaryMask_antsApplyTransforms\": \"$2\"
+      },
+    \"Transform\": [
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
+        \"${Transform[@]:12:8}\"
+      ],
+    \"inputNIFTI\": {
+      \"Name\": \"$bids_flair\",
+      \"qform\": [
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
+      ],
+      \"sform\": [
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
+      ]
+    }
+  }" > "$3"
+}
+
+function json_poststruct() {
+  Info "Creating post_structural json file"
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"SurfaceProc\": \"${recon}\",
+    \"Atlas\": [
+        \"${atlas}\"
+      ],
+    \"NativeSurfSpace\": {
+        \"fileName\": \"${1}\",
+        \"VoxelSize\": \"${res}\",
+        \"Dimensions\": \"${Size}\",
+        \"Strides\": \"${Strides}\",
+        \"Offset\": \"${Offset}\",
+        \"Multiplier\": \"${Multiplier}\",
+        \"Transform\": [
+          \"${Transform[@]:0:4} \",
+          \"${Transform[@]:4:4} \",
+          \"${Transform[@]:8:4} \",
+          \"${Transform[@]:12:8}\"
+          ]
+      }
+  }" > "$2"
+}
+
 function json_func() {
-  qform=$(fslhd "$fmri_processed" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$fmri_processed" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$func_processed" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$func_processed" | grep sto_ | awk -F "\t" '{print $2}'))
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Tag\": \"${tagMRI}\",
     \"Acquisition\": \"${acq}\",
-    \"Name\": \"${fmri_processed}\",
+    \"Name\": \"${func_processed}\",
     \"sform\": [
-\t\t\"${sform}\"
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
       ],
     \"qform\": [
-  \t\t\"${sform}\"
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
       ],
-    \"Preprocess\": [
-      {
+    \"Preprocess\": {
         \"MainScan\": \"${mainScan[*]}\",
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
         \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
         \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
-        \"MainPhaseScan\": \"${mainPhaseScan}\",
-        \"ReversePhaseScan\": \"${reversePhaseScan}\",
+        \"MainPhaseScan\": \"${func_pe}\",
+        \"ReversePhaseScan\": \"${func_rpe}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
@@ -476,42 +871,53 @@ function json_func() {
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
         \"dropTR\": \"${dropTR}\",
-        \"procStatus\": \"${status}\",
+        \"SurfaceProc\": \"${recon}\"
       }
-    ]
   }" > "$1"
 }
 
 function json_mpc() {
-  qform=$(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}')
-  sform=$(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}')
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
   res=$(mrinfo "$1" -spacing)
   Size=$(mrinfo "$1" -size)
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${1}" -transform))
   Info "Creating MPC json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"Class\": \"Microstructural profile covariance\",
-    \"acquisition\": \"${mpc_acq}\",
-    \"input\": \"${1}\",
-    \"freesurferTransformation\": \"${2}\",
+    \"Module\": \"Microstructural profile covariance\",
+    \"acquisition\": \"${mpc_str}\",
+    \"microstructural_img\": \"${1}\",
+    \"microstructural_reg\": \"${regImage}\",
+    \"registered_img\": \"${qT1_fsnative}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"Transform\": \"${Transform}\",
-    \"sform\": [
-\"${qform}\"
+    \"Transform\": [
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
+        \"${Transform[@]:12:8}\"
       ],
     \"qform\": [
-\"${sform}\"
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
+      ],
+    \"sform\": [
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
       ]
-  }" > "$3"
+  }" > "$2"
 }
 
 function json_dwipreproc() {
@@ -520,21 +926,26 @@ function json_dwipreproc() {
   Strides=$(mrinfo "$1" -strides)
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
-  Transform=$(mrinfo "$1" -transform)
+  Transform=($(mrinfo "${1}" -transform))
 
   res_rpe=$(mrinfo "$4" -spacing)
   Size_rpe=$(mrinfo "$4" -size)
   Strides_rpe=$(mrinfo "$4" -strides)
   Offset_rpe=$(mrinfo "$4" -offset)
   Multiplier_rpe=$(mrinfo "$4" -multiplier)
-  Transform_rpe=$(mrinfo "$4" -transform)
+  Transform_rpe=($(mrinfo "$4" -transform))
 
   Info "Creating DWI preproc json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
     \"Class\": \"DWI preprocessing\",
-    \"DWIpe\": [
+    \"rpe_all\": \"${rpe_all}\",
+    \"dwi_acq\": \"${dwi_acq}\",
+    \"Only Affine\": \"${regAffine}\",
+    \"B0 threshold\": \"${b0thr}\",
+    \"Bvalue scaling\": \"${bvalscale}\",
+    \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",
         \"VoxelSizepe\": \"${res}\",
@@ -542,9 +953,14 @@ function json_dwipreproc() {
         \"Strides\": \"${Strides}\",
         \"Offset\": \"${Offset}\",
         \"Multiplier\": \"${Multiplier}\",
-        \"Transform\": \"${Transform}\"
-    ],
-    \"DWIrpe\": [
+        \"Transform\": [
+          \"${Transform[@]:0:4} \",
+          \"${Transform[@]:4:4} \",
+          \"${Transform[@]:8:4} \",
+          \"${Transform[@]:12:8}\"
+      ]
+    },
+    \"DWIrpe\": {
         \"fileName\": \"${dwi_reverse[*]}\",
         \"NumberOfInputs\": \"${#dwi_reverse[*]}\",
         \"VoxelSizepe\": \"${res_rpe}\",
@@ -552,11 +968,16 @@ function json_dwipreproc() {
         \"Strides\": \"${Strides_rpe}\",
         \"Offset\": \"${Offset_rpe}\",
         \"Multiplier\": \"${Multiplier_rpe}\",
-        \"Transform\": \"${Transform_rpe}\",
-    ],
+        \"Transform\": [
+          \"${Transform_rpe[@]:0:4} \",
+          \"${Transform_rpe[@]:4:4} \",
+          \"${Transform_rpe[@]:8:4} \",
+          \"${Transform_rpe[@]:12:8}\"
+      ]
+    },
     \"Denoising\": \"Marchenko-Pastur PCA denoising, dwidenoise\",
     \"GibbsRingCorrection\": \"mrdegibbs\",
-    \"dwiflspreproc\": [
+    \"dwiflspreproc\": {
         \"input\": \"${dwi_4proc}\",
         \"output\": \"${dwi_corr}\",
         \"Shells\": \"${shells[*]}\",
@@ -564,9 +985,9 @@ function json_dwipreproc() {
         \"ReadoutTime\": \"${ReadoutTime}\",
         \"Options\": \"${opt}\",
         \"slm\": \"linear\"
-    ],
+    },
     \"B1fieldCorrection\": \"ANTS N4BiasFieldCorrection\",
-    \"DWIprocessed\": \"$2\",
+    \"DWIprocessed\": \"$2\"
   }" > "$3"
 }
 
@@ -646,99 +1067,58 @@ function cleanup() {
   here=$3
   # Clean temporal directory and temporal fsaverage5
   if [[ $nocleanup == "FALSE" ]]; then
-      echo -e "Erasing temporal directory: $tmp"
       rm -Rf "$tmp" 2>/dev/null
   else
       echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
   fi
   cd "$here"
   bids_variables_unset
-  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; else echo "OLD_PATH is unset or empty"; fi
+  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
 }
 
-function QC_proc-func() {
-  outname=$1
-  html="$dir_QC/${outname}"
-  if [ -f "$html" ]; then rm "$html"; fi
-  echo -e "            <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainScan" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">bids_mainScanJson</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainScanJson" 2>/dev/null)</td>
-              </tr>" >> "$html"
-            if [ -f "$mainPhaseScan" ]; then
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mainPhaseScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mainPhaseScan" 2>/dev/null)</td>
-              </tr>"  >> "$html"
-            fi
-            if [ -f "$reversePhaseScan" ]; then
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">reversePhaseScan</span></td>
-                <td class=\"tg-8pnm\">BIDS func<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$reversePhaseScan" 2>/dev/null)</td>
-              </tr>"  >> "$html"
-            fi
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">topupConfigFile</span></td>
-                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$topupConfigFile" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">icafixTraining</span></td>
-                <td class=\"tg-8pnm\">Default/Defined<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$icafixTraining" 2>/dev/null)</td>
-              </tr>"   > "$html"
+function missing_arg() {
+  arg=($id $out $BIDS)
+  if [ ${#arg[@]} -lt 3 ]; then
+  Error "One or more mandatory arguments are missing:
+                 -sub  : $id
+                 -out  : $out
+                 -bids : $BIDS
+          \033[0m-h | -help (print help)\033[38;5;9m"
+  exit 1; fi
 }
 
-function QC_SC() {
-  html=$1
-  if [ -f "$html" ]; then rm "$html"; fi
-  echo -e "          <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fod</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$fod_wmN" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_b0</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$dwi_b0" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">mat_dwi_affine</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$mat_dwi_affine" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_5tt</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$dwi_5tt" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_cerebellum</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$T1_seg_cerebellum" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">T1_seg_subcortex</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$T1_seg_subcortex" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">dwi_mask</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$dwi_mask" 2>/dev/null)</td>
-              </tr>
-              <tr>
-                <td class=\"tg-8pnm\"><span style=\"font-weight:bold\">fa</span></td>
-                <td class=\"tg-8pnm\">proc-dwi<br><br></td>
-                <td class=\"tg-8pnm\">$(find "$dti_FA" 2>/dev/null)</td>
-              </tr>"   >> "$html"
+function inputs_realpath() {
+  # Get the real path of the Inputs
+  out=$(realpath $out)/micapipe_v0.2.0
+  BIDS=$(realpath $BIDS)
+  id=${id/sub-/}
+  here=$(pwd)
+}
+
+map_to-surfaces(){
+  # -----------------------------------------------
+  # Volume to surface mapping
+  # Function that maps a MRI volume to a surfaces
+  # Using work bench commands and multiple surfaces:
+  # fsnative, fsaverage5, fsLR-5k and fsLR-32k
+  # -----------------------------------------------
+  # Input variables
+  mri_map=$1                      # MRI map from where data will be mapped
+  surf_fs=$2                      # Surface to map the MRI (MUST be surf-fsnative, same space ast mri_map)
+  map_on_surf=${3}                # Outname of the data mapped on the surface
+  H=$4                            # Hemisphere {L, R}
+  label_data=$5                   # label of the map (e.g. FA, ADC, flair, T2star, MTR)
+  out_map=$6
+  # Map to highest resolution surface (fsnative: more vertices)
+  wb_command -volume-to-surface-mapping "${mri_map}" "${surf_fs}" "${map_on_surf}" -trilinear
+  # Map from volume to surface for each surfaces
+  for Surf in "fsLR-32k" "fsaverage5" "fsLR-5k"; do
+    surf_id=${idBIDS}_hemi-${H}_surf
+    wb_command -metric-resample "${map_on_surf}" \
+        "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
+        "${util_surface}/${Surf}.${H}.sphere.reg.surf.gii" \
+        BARYCENTRIC "${out_map}/${surf_id}-${Surf}_label-${label_data}.func.gii"
+  done
 }
 
 function micapipe_group_QC() {

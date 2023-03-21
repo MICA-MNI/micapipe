@@ -126,9 +126,9 @@ print(f'  -subDir   : "{subDir}"')
 # Set paths and variables
 dir_fS = derivatives + '/freesurfer/'
 dir_fs_label = dir_fS + subBIDS + '/label/'
-dir_conte = subDir + '/anat/surfaces/conte69/'
-dir_morph = subDir + '/anat/surfaces/morphology/'
-dir_mpc = subDir + '/anat/surfaces/micro_profiles/'
+dir_conte = subDir + '/anat/surf/conte69/'
+dir_morph = subDir + '/anat/surf/morphology/'
+dir_mpc = subDir + '/anat/surf/micro_profiles/'
 dir_QC_png = subDir + '/QC/png/'
 
 # Colormap
@@ -331,8 +331,8 @@ else:
 # ------------------------------------------------------------------------------ #
 # conte69 surfaces
 try:
-    c69_lhS, c69_rhS = load_surface(dir_conte+subBIDS+'_lh_sphereReg.surf.gii',
-                                  dir_conte+subBIDS+'_rh_sphereReg.surf.gii', with_normals=True, join=False)
+    c69_lhS, c69_rhS = load_surface(dir_conte+subBIDS+'_lh_space-fsnative_desc-sphere.surf.gii',
+                                  dir_conte+subBIDS+'_rh_space-fsnative_desc-sphere.surf.gii', with_normals=True, join=False)
     c69_lhM, c69_rhM = load_surface(dir_conte+subBIDS+'_space-conte69-32k_desc-lh_midthickness.surf.gii',
                                   dir_conte+subBIDS+'_space-conte69-32k_desc-rh_midthickness.surf.gii', with_normals=True, join=False)
     c69_lhP, c69_rhP = load_surface(dir_conte+subBIDS+'_space-conte69-32k_desc-lh_pial.surf.gii',

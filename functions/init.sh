@@ -4,6 +4,9 @@
 ### Set variables beneath this ###
 ##################################
 
+# Permissions
+umask 011
+
 # Save OLD PATH
 export OLD_PATH=$PATH
 
@@ -20,15 +23,25 @@ export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
 # ICA-FIX
 export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
-export FREESURFER_HOME="/data/mica1/01_programs/Freesurfer-6.0"
+export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
+# fastsurfer
+export FASTSURFER_HOME="/data_/mica1/01_programs/fastsurfer"
+export fs_licence="/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
 # FSL 6.0
-export FSLDIR="/data_/mica1/01_programs/fsl-6-0-1"
-export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-1"
+export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
+export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
 export FSL_BIN="${FSLDIR}/bin"
 # MRtrix3 3.0.1
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
+# ITK utils
+export itk_dir="/opt/minc-itk4/bin"
 # Python 3.7
 export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
+# Export fs fs_licence
+export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
+# Fastsurfer singularity container
+export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
+unset TMPDIR
 
 #------------------------------------------------------------------------------#
 # Remove any other instance from the PATH
@@ -64,7 +77,7 @@ export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${PATH}"
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#

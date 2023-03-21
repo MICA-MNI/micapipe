@@ -11,7 +11,6 @@
 #   $2 : participant
 #   $3 : Out parcDirectory
 #
-umask 003
 BIDS=$1
 id=$2
 out=$3
@@ -27,7 +26,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ]; then
-    export MICAPIPE=/host/yeatman/local_raid/ango/micapipe/ #rcruces/git_here/micapipe
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 

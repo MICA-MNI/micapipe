@@ -1,7 +1,7 @@
 # R script
 #
 # Generates PNG images for micapipe Quality Check
-# micapipe v0.1.2
+# micapipe v0.2.0
 # Extra functions
 #
 # Created by RRC on Feb-Apr 2021 (the second year of the pademic)
@@ -68,22 +68,22 @@ module.col <- function() {
   # List of all the main outputs
   files <- data.frame(
     module=c(rep("proc_structural",7), rep("proc_freesurfer",2), rep("Morphology",12), rep("post_structural", 13), rep("proc_dwi", 12), rep("SC", 3), rep("proc_func", 20)),
-    variables=c("t1w.nativepro", "t1w.firstout", "t1w.fast", "t1w.MNI0.8", "t1w.MNI2.0", "t1w.mask", "t1w.5tt", "fs.t1w", "fs.reconall",
+    variables=c("T1w.nativepro", "T1w.firstout", "T1w.fast", "T1w.MNI0.8", "T1w.MNI2.0", "T1w.mask", "T1w.5tt", "fs.T1w", "fs.reconall",
                 "morph.lh.thick", "morph.rh.thick", "morph.lh.thick.fsa5", "morph.rh.thick.fsa5", "morph.lh.thick.c69", "morph.rh.thick.c69",
                 "morph.lh.curv", "morph.rh.curv", "morph.lh.curv.fsa5", "morph.rh.curv.fsa5", "morph.lh.curv.c69", "morph.rh.curv.c69",
-                "t1w.fsnative", "t1w.cerebellum", "t1w.subcortical", "c69.lh.mid", "c69.rh.mid", "c69.lh.pial", "c69.rh.pial", "c69.lh.white",
+                "T1w.fsnative", "T1w.cerebellum", "T1w.subcortical", "c69.lh.mid", "c69.rh.mid", "c69.lh.pial", "c69.rh.pial", "c69.lh.white",
                 "c69.rh.white", "c69.lh.sphere", "c69.rh.sphere", "c69.lh.midth", "c69.rh.midth",
                 "dwi_res", "dwi_corr", "T1nativepro_in_dwi", "dwi_mask", "dwi_dti", "dti_FA", "dti_ADC", "fod_wmN", "dwi_in_T1nativepro", "dwi_5ttm", "dwi_gmwmi", "tdi_1M", "dwi_cere", "dwi_subc", "tck.tdi",
                 "singleecho", "fmri_brain", "fmri_HP", "fmri_mean", "fix_output", "fmri_processed", "global_signal", "spikeRegressors","vol2surfTS.lh","out_surf_native.lh",
                 "out_surf_fsa5.lh", "out_surf.lh", "vol2surfTS.rh", "out_surf_native.rh", "out_surf_fsa5.rh", "out_surf.rh", "func_subcortex", "timese_subcortex", "fmri_tSNR", "fmri.surf.c69.timeseries"
     ),
-    files=c(paste0(proc_struct, "/", BIDSid, "_space-nativepro_t1w.nii.gz"),
-            paste0(proc_struct, "/first/", BIDSid, "_space-nativepro_t1w_all_fast_firstseg.nii.gz"),
-            paste0(proc_struct, "/", BIDSid, "_space-nativepro_t1w_brain_pve_0.nii.gz"),
+    files=c(paste0(proc_struct, "/", BIDSid, "_space-nativepro_T1w.nii.gz"),
+            paste0(proc_struct, "/first/", BIDSid, "_space-nativepro_T1w_all_fast_firstseg.nii.gz"),
+            paste0(proc_struct, "/", BIDSid, "_space-nativepro_T1w_brain_pve_0.nii.gz"),
             paste0(dir_warp, "/", BIDSid,  "_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_1Warp.nii.gz"),
             paste0(dir_warp, "/", BIDSid,  "_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz"),
-            paste0(proc_struct, "/", BIDSid, "_space-nativepro_t1w_brain_mask.json"),
-            paste0(proc_struct, "/", BIDSid, "_space-nativepro_t1w_5TT.nii.gz"),
+            paste0(proc_struct, "/", BIDSid, "_space-nativepro_T1w_brain_mask.json"),
+            paste0(proc_struct, "/", BIDSid, "_space-nativepro_T1w_5TT.nii.gz"),
             paste0(dir_fs, "/",BIDSid,"/mri/T1.mgz"),
             paste0(dir_fs, "/",BIDSid,"/scripts/recon-all.log"),
             paste0(dir_morpho,"/",BIDSid,"_space-fsnative_desc-lh_thickness.mgh"),
@@ -98,22 +98,22 @@ module.col <- function() {
             paste0(dir_morpho,"/",BIDSid,"_space-fsaverage5_desc-rh_curvature_10mm.mgh"),
             paste0(dir_morpho,"/",BIDSid,"_space-conte69-32k_desc-lh_curvature.mgh"),
             paste0(dir_morpho,"/",BIDSid,"_space-conte69-32k_desc-rh_curvature.mgh"),
-            paste0(proc_struct, "/", BIDSid, "_space-fsnative_t1w.nii.gz"),
-            paste0(dir_volum, "/", BIDSid, "_space-nativepro_t1w_atlas-cerebellum.nii.gz"),
-            paste0(dir_volum, "/", BIDSid, "_space-nativepro_t1w_atlas-subcortical.nii.gz"),
+            paste0(proc_struct, "/", BIDSid, "_space-fsnative_T1w.nii.gz"),
+            paste0(dir_volum, "/", BIDSid, "_space-nativepro_T1w_atlas-cerebellum.nii.gz"),
+            paste0(dir_volum, "/", BIDSid, "_space-nativepro_T1w_atlas-subcortical.nii.gz"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-lh_midthickness.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-rh_midthickness.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-lh_pial.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-rh_pial.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-lh_white.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-rh_white.surf.gii"),
-            paste0(dir_conte69, "/", BIDSid, "_lh_sphereReg.surf.gii"),
-            paste0(dir_conte69, "/", BIDSid, "_rh_sphereReg.surf.gii"),
+            paste0(dir_conte69, "/", BIDSid, "_lh_space-fsnative_desc-sphere.surf.gii"),
+            paste0(dir_conte69, "/", BIDSid, "_rh_space-fsnative_desc-sphere.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-lh_midthickness.surf.gii"),
             paste0(dir_conte69, "/", BIDSid, "_space-conte69-32k_desc-rh_midthickness.surf.gii"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-MP-PCA_residuals-dwi.mif"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-dwi_preproc.mif"),
-            paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-t1w_nativepro.nii.gz"),
+            paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-T1w_nativepro.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_desc-brain_mask.nii.gz"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_model-DTI.mif"),
             paste0(proc_dwi, "/", BIDSid, "_space-dwi_model-DTI_map-FA.mif"),
@@ -152,7 +152,7 @@ module.col <- function() {
   files[] <- lapply(files, as.character)
 
   # post_structural
-  for (seg in parc) { files <- rbind(files, c("post_structural", paste0("t1w.annot",".",seg), paste0(dir_volum, "/", BIDSid, "_space-nativepro_t1w_atlas-",seg,".nii.gz")))}
+  for (seg in parc) { files <- rbind(files, c("post_structural", paste0("T1w.annot",".",seg), paste0(dir_volum, "/", BIDSid, "_space-nativepro_T1w_atlas-",seg,".nii.gz")))}
   # GD
   for (seg in parc) { files <- rbind(files, c("GD", paste0("GD",".",seg), paste0(dir_geo,"/",BIDSid,"_space-fsnative_atlas-",seg,"_GD.txt")))}
   # MPC
@@ -188,7 +188,7 @@ module.col <- function() {
 # Paths
 proc_struct <- paste0(subject_dir, "/anat")          # Structural processing directory
   dir_volum <- paste0(proc_struct, "/volumetric" )      # Cortical segmentations
-  dir_surf <- paste0(proc_struct, "/surfaces")         # Structural surfaces
+  dir_surf <- paste0(proc_struct, "/surf")         # Structural surfaces
     dir_conte69 <- paste0(dir_surf, "/conte69")
     dir_mpc <- paste0(dir_surf, "/micro_profiles")       # MPC outputs
     dir_morpho <- paste0(dir_surf, "/morphology")        # morphometry
@@ -198,7 +198,7 @@ proc_dwi <- paste0(subject_dir, "/dwi")              # dwi processing directory
   dwi_cnntm <- paste0(proc_dwi, "/connectomes")
 proc_func <- paste0(subject_dir, "/func")
   func_volum <- paste0(proc_func, "/volumetric" )
-  func_surf <- paste0(proc_func, "/surfaces") # func surfaces
+  func_surf <- paste0(proc_func, "/surf") # func surfaces
   func_ICA <- paste0(proc_func, "/ICA_MELODIC")
 dir_warp <- paste0(subject_dir, "/xfm")
   dir_fs.label <- paste0(dir_fs,"/",BIDSid,"/label")
