@@ -31,6 +31,16 @@ sub = sys.argv[2]
 ses_num = sys.argv[3]
 acq = sys.argv[4]
 
+def save_gii(data_array, file_name):
+    # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
+    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
+
+    # this is the GiftiImage class
+    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
+
+    # Save the new GIFTI file
+    nb.save(img=gifti_img, filename=file_name)
+
 # Number of surfaces (Harcoded since the begining)
 num_surf = 14
 
