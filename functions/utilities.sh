@@ -1074,6 +1074,7 @@ function cleanup() {
   cd "$here"
   bids_variables_unset
   if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
+  conda deactivate
 }
 
 function missing_arg() {
