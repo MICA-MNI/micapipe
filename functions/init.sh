@@ -36,12 +36,15 @@ export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
 # ITK utils
 export itk_dir="/opt/minc-itk4/bin"
 # Python 3.7
-export PYTHON_3="/data_/mica1/01_programs/anaconda/anaconda3/bin"
+export micapipe_conda="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe"
+conda activate ${micapipe_conda}
+export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
 # Export fs fs_licence
 export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
 # Fastsurfer singularity container
 export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
 unset TMPDIR
+# Fastsurfer conda env
 
 #------------------------------------------------------------------------------#
 # Remove any other instance from the PATH
