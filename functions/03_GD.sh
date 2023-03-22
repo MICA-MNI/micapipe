@@ -21,7 +21,7 @@ out=$3
 SES=$4
 # nocleanup=$5
 threads=$6
-# tmpDir=$7
+tmpDir=$7
 PROC=$8
 export OMP_NUM_THREADS=$threads
 export here=$(pwd)
@@ -64,6 +64,8 @@ micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
 export OMP_NUM_THREADS="$threads"
+mkdir $tmpDir
+tmp=$tmpDir
 
 #	Timer
 aloita=$(date +%s)
@@ -78,7 +80,7 @@ N=0
 lh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
 rh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
 outName="${outPath}/${idBIDS}_surf-fsLR-5k_GD"
-if [ -f "${outName}.shape.gii" ]; then
+if [ -f "${outName}.txt" ]; then
     Info "Geodesic Distance vertex-wise on fsLR-5k already exists"; ((Nsteps++)); ((N++))
 else
     Info "Computing Geodesic Distance vertex-wise from surface fsLR-5k"; ((N++))
@@ -92,13 +94,13 @@ for seg in "${parcellations[@]}"; do ((N++))
     lh_annot="${dir_subjsurf}/label/lh.${parc}_mics.annot"
     rh_annot="${dir_subjsurf}/label/rh.${parc}_mics.annot"
     outName="${outPath}/${idBIDS}_atlas-${parc}_GD"
-    if [ -f "${outName}.shape.gii" ]; then
+    if [ -f "${outName}.txt" ]; then
         Info "Geodesic Distance on $parc, already exists"; ((Nsteps++))
     else
         Info "Computing Geodesic Distance from $parc"
         Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_midsurf" -rh_surf "$rh_midsurf" -outPath "$outName" \
                 -lh_annot "$lh_annot" -rh_annot "$rh_annot" -parcel_wise
-        if [[ -f "${outName}.shape.gii" ]]; then ((Nsteps++)); fi
+        if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
     fi
 done
 
