@@ -85,7 +85,7 @@ if [ -f "${outName}.txt" ]; then
 else
     Info "Computing Geodesic Distance vertex-wise from surface fsLR-5k"; ((N++))
     Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_fdLR5k" -rh_surf "$rh_fdLR5k" -outPath "$outName"
-    if [[ -f "${outName}.shape.gii" ]]; then ((Nsteps++)); fi
+    if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
 fi
 
 # Compute geodesic distance on all parcellations
