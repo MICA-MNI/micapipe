@@ -281,10 +281,12 @@ micapipe_software() {
   Note "            " "$FREESURFER_HOME"
   Note "fix........." "$(which fix)"
   Note "            " "$FIXPATH"
-  Note "python......" "$(python --version)"
+  Note "python......" "$(python --version | awk 'NR==1{print $2}')"
   Note "            " "$(which python)"
   Note "R..........." "$(R --version | awk 'NR==1{print $3}')"
   Note "            " "$(which R)"
+  Note "conda......." "$(conda --version)"
+  Note "            " "$(which conda)"
 }
 
 function micapipe_procStatus() {

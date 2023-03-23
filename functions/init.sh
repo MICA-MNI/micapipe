@@ -5,7 +5,7 @@
 ##################################
 
 # Permissions
-umask 011
+umask 002
 
 # Save OLD PATH
 export OLD_PATH=$PATH
@@ -36,9 +36,7 @@ export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
 # ITK utils
 export itk_dir="/opt/minc-itk4/bin"
 # Python 3.7
-export micapipe_conda="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe"
-conda activate ${micapipe_conda}
-export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
+#export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
 # Export fs fs_licence
 export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
 # Fastsurfer singularity container
@@ -59,8 +57,8 @@ PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*fsl*});IFS=':';echo "${p[*]}";uns
 # revome any other MRtrix3 version from path
 PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*mrtrix*});IFS=':';echo "${p[*]}";unset IFS)
 # REMOVES any other python configuration from the PATH the conda from the PATH and LD_LIBRARY_PATH variable
-PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
-LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*anaconda*});IFS=':';echo "${p[*]}";unset IFS)
+PATH=$(IFS=':';p=($PATH);unset IFS;p=(${p[@]%%*conda*});IFS=':';echo "${p[*]}";unset IFS)
+LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*conda*});IFS=':';echo "${p[*]}";unset IFS)
 
 #------------------------------------------------------------------------------#
 # Software configuration
@@ -73,6 +71,8 @@ unset PYTHONPATH
 unset PYTHONHOME
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
+conda3_bin=/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/bin/
+source /data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/etc/profile.d/conda.sh
 
 #------------------------------------------------------------------------------#
 # Set the libraries paths for mrtrx and fsl
@@ -80,7 +80,9 @@ export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with al the necessary binaries
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
+#export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
+export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${conda3_bin}:${PATH}"
+conda activate /data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#

@@ -30,7 +30,7 @@ here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
-if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
     export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
@@ -109,9 +109,9 @@ bids_print.variables-post
 
 # GLOBAL variables for this script
 Note "Saving temporal dir:" "${nocleanup}"
-Note "ANTs threads:" "$threads"
-Note "wb_command threads:" "${OMP_NUM_THREADS}"
-Note "Surface software:" "${recon}"
+Note "ANTs threads       :" "$threads"
+Note "wb_command threads :" "${OMP_NUM_THREADS}"
+Note "Surface software   :" "${recon}"
 
 #	Timer
 aloita=$(date +%s)

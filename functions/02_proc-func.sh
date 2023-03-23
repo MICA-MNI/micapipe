@@ -51,7 +51,7 @@ here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
-if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
     export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
