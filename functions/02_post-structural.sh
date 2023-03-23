@@ -73,12 +73,12 @@ else
   for i in "${!atlas_parc[@]}"; do atlas_parc[i]=$(ls lh."${atlas_parc[$i]}"_mics.annot 2>/dev/null); done
   atlas_parc=("${atlas_parc[@]}")
   # Always runs schaefer-400 for default (QC)
-  if [[ ! "${atlas_parc[*]}" =~ "schaefer-400" ]]; then atlas_parc+=("schaefer-400"); fi
+  if [[ ! "${atlas_parc[*]}" =~ "schaefer-400" ]]; then atlas_parc+=("lh.schaefer-400_mics.annot"); fi
   Natlas="${#atlas_parc[*]}"
   Info "Selected parcellations: $atlas, N=${Natlas}"
 fi
 cd "$here"
-
+Info "${atlas_parc[*]}"
 # Check inputs: Nativepro T1
 if [ "${Natlas}" -eq 0 ]; then
   Error "Provided -atlas do not match with any on MICAPIPE, try one of the following list:
@@ -194,6 +194,7 @@ if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
     done
     Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
     Nparc=$(find "${dir_volum}" -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
+    if [[ $((Nannot)) -gt $((Nparc)) && $((Nparc)) -eq $((Natlas)) ]]; then break; fi
   done
   ((Nsteps++))
 else
@@ -216,7 +217,7 @@ if [[ ! -f "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-m
             "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-midthickness.surf.gii" \
             "${tmp}/${surf_id}-fsLR-32k_space-fsnative_label-midthickness.surf.gii" \
             "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii"
-            if [[ -f "${dir_conte69}/${idBIDS}_hemi-R_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
+            if [[ -f "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii" ]]; then ((Nsteps++)); fi
     done
 else
     Info "Subject ${idBIDS} has a sphere on fsnative space"; ((Nsteps++)); ((N++))
