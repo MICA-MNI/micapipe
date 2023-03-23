@@ -25,8 +25,8 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe
-    source ${MICAPIPE}/functions/init.sh;
+    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
 # source utilities
@@ -38,15 +38,8 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 # Check dependencies Status: POST_STRUCTURAL
 micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
 
-Info "Inputs of T2/FLAIR:"
-Note "tmpDir     : " "$tmpDir"
-Note "flairScanStr : " "$flairScanStr"
-Note "Processing : " "$PROC"
-
 #------------------------------------------------------------------------------#
 # Check inputs: T2-FLAIR
-if [ ! -f "$bids_flair" ]; then Error "T2-flair not found for Subject $id : ${subject_bids}/anat/${idBIDS}*FLAIR.nii.gz"; exit; fi
-
 if [[ "$flairScanStr" == DEFAULT ]]; then
     # T2/FLAIR scan
     N_flairScan=${#bids_flair[@]}
@@ -58,9 +51,10 @@ if [[ "$flairScanStr" == DEFAULT ]]; then
         flairScan=${bids_flair[0]}
     fi
 else
-    Info "Using user provided FLAIR scan string: ${flairScanStr}"
-    flairScan=;$(ls "${subject_bids}/anat/${idBIDS}_${flairScanStr}".nii* 2>/dev/null);
+    Info "Using full path to FLAIR scan: ${flairScanStr}"
+    flairScan=$(realpath "${flairScanStr}" 2>/dev/null)
 fi
+if [ ! -f "$flairScan" ]; then Error "T2-flair not found for Subject $id : ${flairScan}"; exit; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_flair.json"
@@ -69,8 +63,13 @@ micapipe_check_json_status "${module_json}" "proc_flair"
 #------------------------------------------------------------------------------#
 Title "T2-FLAIR intensities\n\t\tmicapipe $Version, $PROC"
 micapipe_software
-Info "wb_command will use $OMP_NUM_THREADS threads"
-Info "Saving temporary dir: $nocleanup"
+Info "Module inputs:"
+Note "wb_command threads  :" "${OMP_NUM_THREADS}"
+Note "threads             :" "${threads}"
+Note "Saving temporary dir:" "$nocleanup"
+Note "tmpDir              : " "$tmpDir"
+Note "flairScanStr        : " "$flairScanStr"
+Note "Processing          : " "$PROC"
 
 # Timer
 aloita=$(date +%s)
@@ -102,7 +101,7 @@ flairNP="${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz"
 flair_N4="${tmp}/${idBIDS}_space-flair_desc-flair_N4.nii.gz"
 if [[ ! -f "$flairNP" ]]; then
     ((N++))
-    Do_cmd N4BiasFieldCorrection -d 3 -i "$bids_flair" -r \
+    Do_cmd N4BiasFieldCorrection -d 3 -i "$flairScan" -r \
                                 -o "$flair_N4"
     ((Nsteps++))
 else
