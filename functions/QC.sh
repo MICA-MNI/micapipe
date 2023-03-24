@@ -15,7 +15,7 @@
 # TEST=ON
 Version="(v0.2.0 'Northern flicker')"
 version() {
-  echo -e "\nMICAPIPE November 2022 ${Version}\n"
+  echo -e "\nMICAPIPE March 2023 ${Version}\n"
 }
 
 #---------------- FUNCTION: HELP ----------------#
@@ -52,7 +52,6 @@ help() {
 # Source utilities functions from MICAPIPE
 MICAPIPE=$(dirname $(dirname $(realpath "$0")))
 source "${MICAPIPE}/functions/utilities.sh"
-umask 003
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -90,6 +89,14 @@ do
   ;;
   -mica)
     mica=TRUE
+    shift
+  ;;
+  -qsub)
+    micaq=TRUE
+    shift
+  ;;
+  -qall)
+    qall=TRUE
     shift
   ;;
   -nocleanup)
@@ -141,10 +148,11 @@ if [ -z "${tmpDir}" ]; then export tmpDir="/tmp/${RANDOM}_micapipe_QC_${id}"; el
 # Erase temporal files by default
 if [ -z "${nocleanup}" ]; then nocleanup=FALSE; fi
 
-# Processing
+# Launch the init file for local processing at MICA lab
 if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
-if [ "$mica" = "TRUE" ]; then source "${MICAPIPE}/functions/init.sh"; fi
-
+if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
+    source "${MICAPIPE}/functions/init.sh" "$threads"
+else
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
@@ -209,7 +217,7 @@ fi
 
 # PROC_FUNC -------------------------------------------------------------------------------------
 if false; then
-for func_scan in `ls ${subject_bids}/func/${idBIDS}_task-rest*_bold.nii.gz`; do
+for func_scan in $(ls ${subject_bids}/func/${idBIDS}_task-rest*_bold.nii.gz); do
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
 done
 
@@ -238,7 +246,7 @@ export default_reversePhase=${bids_reversePhase[0]}
 # -----------------------------------------------------------------------------------------------
 if false; then
 # PROC_DWI --------------------------------------------------------------------------------------
-for dwi_scan in `ls ${subject_bids}/dwi/${idBIDS}*.nii.gz`; do
+for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
     dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
 done
@@ -256,7 +264,7 @@ Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-d
 dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
-for tdi in `ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz`; do
+for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
     tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
 done
