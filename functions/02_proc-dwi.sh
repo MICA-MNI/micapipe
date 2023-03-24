@@ -549,7 +549,7 @@ proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_st
 #------------------------------------------------------------------------------#
 # DTI-maps surface mapping
 Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 48 ]]; then ((N++))
+if [[ "$Nmorph" -lt 32 ]]; then ((N++))
     Info "Mapping FA and ADC to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
         for label in midthickness white; do
@@ -563,7 +563,7 @@ if [[ "$Nmorph" -lt 48 ]]; then ((N++))
         done
     done
     Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 48 ]]; then ((Nsteps++)); fi
+    if [[ "$Nmorph" -eq 32 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has FA and ADC mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
