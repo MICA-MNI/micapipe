@@ -476,10 +476,6 @@ do
     qall=TRUE
     shift
   ;;
-  -qtest)
-    qtest=TRUE
-    shift
-  ;;
   -nocleanup)
     nocleanup=TRUE
     shift
