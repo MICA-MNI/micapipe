@@ -1405,7 +1405,7 @@ def qc_mpc(mpc_json=''):
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
 
-        if annot == "aparc-2009s":
+        if annot == 'aparc-a2009s':
             continue
 
         # Intensity profiles
@@ -1512,7 +1512,7 @@ def qc_gd(gd_json=''):
     atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
     for annot in atlas:
 
-        if annot == "aparc-2009s":
+        if annot == 'aparc-a2009s':
             continue
 
         # gd connectomes
@@ -1573,10 +1573,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    'modules': ['proc_surf', 'SC'],
-    'functions': [qc_proc_surf, qc_sc]
-    #'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'SC', 'MPC', 'GD'],
-    #'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_sc, qc_mpc, qc_gd]
+    'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+    'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
