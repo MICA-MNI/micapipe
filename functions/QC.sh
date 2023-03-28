@@ -216,6 +216,7 @@ done
 
 # PROC_FUNC -------------------------------------------------------------------------------------
 for func_scan in $(ls ${subject_bids}/func/${idBIDS}_task-rest*_bold.nii.gz); do
+  func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
 done
 
