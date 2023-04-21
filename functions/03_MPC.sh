@@ -100,6 +100,9 @@ export SUBJECTS_DIR="$dir_surf"
 outDir="${subject_dir}/mpc/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 
+# json file
+qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-qt1.json"
+
 #------------------------------------------------------------------------------#
 # Affine registration between both images
 T1_in_fs=${tmp}/orig.mgz
@@ -166,6 +169,43 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
     ((Nsteps++))
 else
     Info "Subject ${id} has microstructural intensities mapped to native surface";((Nsteps++)); ((N++));
+fi
+
+#------------------------------------------------------------------------------#
+### qT1 registration to nativepro ###
+
+# Register nativepro and qt1
+str_qt1_affine="${dir_warp}/${idBIDS}_from-qt1_to-nativepro_mode-image_desc-affine_"
+qt1NP="${dir_maps}/${idBIDS}_space-nativepro_map-qt1.nii.gz"
+if [[ ! -f "$qt1NP" ]]; then
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$regImage" -o "$str_qt1_affine" -t a -n "$threads" -p d
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "$str_qt1_affine"0GenericAffine.mat -o "$qt1NP" -v -u float
+    ((Nsteps++)); ((N++))
+else
+    Info "Subject ${id} qT1 is registered to nativepro"; ((Nsteps++)); ((N++))
+fi
+
+# Write json file
+json_nativepro_qt1 "$qt1NP" \
+    "antsApplyTransforms -d 3 -i ${microImage} -r ${T1nativepro_brain} -t ${str_qt1_affine}0GenericAffine.mat -o ${qt1NP} -v -u float" \
+    "$qt1_json"
+
+#------------------------------------------------------------------------------#
+# Map to surface: midthickness, white
+Nmorph=$(ls "${dir_maps}/"*qt1*gii 2>/dev/null | wc -l)
+if [[ "$Nmorph" -lt 8 ]]; then ((N++))
+    Info "Mapping qT1 to fsLR-32k, fsLR-5k and fsaverage5"
+    for HEMI in L R; do
+        for label in midthickness white; do
+            surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+            # MAPPING metric to surfaces
+            map_to-surfaces "${qt1NP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_qt1.func.gii" "${HEMI}" "${label}_qt1" "${dir_maps}"
+        done
+    done
+    Nmorph=$(ls "${dir_maps}/"*qt1*gii 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 8 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has qt1 mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#

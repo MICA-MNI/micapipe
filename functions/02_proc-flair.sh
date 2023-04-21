@@ -181,9 +181,11 @@ Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 8 ]]; then ((N++))
     Info "Mapping flair to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
-        surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-midthickness.surf.gii"
-        # MAPPING metric to surfaces
-        map_to-surfaces "${flairNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-midthickness_flair.func.gii" "${HEMI}" "midthickness_flair" "${dir_maps}"
+        for label in midthickness white; do
+            surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+            # MAPPING metric to surfaces
+            map_to-surfaces "${flairNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_flair.func.gii" "${HEMI}" "${label}_flair" "${dir_maps}"
+        done
     done
     Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 8 ]]; then ((Nsteps++)); fi

@@ -800,6 +800,52 @@ function json_nativepro_flair() {
   }" > "$3"
 }
 
+function json_nativepro_qt1() {
+  qform=($(fslhd "$1" | grep qto_ | awk -F "\t" '{print $2}'))
+  sform=($(fslhd "$1" | grep sto_ | awk -F "\t" '{print $2}'))
+  res=$(mrinfo "$1" -spacing)
+  Size=$(mrinfo "$1" -size)
+  Strides=$(mrinfo "$1" -strides)
+  Offset=$(mrinfo "$1" -offset)
+  Multiplier=$(mrinfo "$1" -multiplier)
+  Transform=($(mrinfo "$1" -transform))
+  Info "Creating T1nativepro_qt1 json file"
+  echo -e "{
+    \"micapipeVersion\": \"${Version}\",
+    \"LastRun\": \"$(date)\",
+    \"fileName\": \"${1}\",
+    \"VoxelSize\": \"${res}\",
+    \"Dimensions\": \"${Size}\",
+    \"Strides\": \"${Strides}\",
+    \"Offset\": \"${Offset}\",
+    \"Multiplier\": \"${Multiplier}\",
+    \"TransformCmd\": {
+        \"BinaryMask_antsApplyTransforms\": \"$2\"
+      },
+    \"Transform\": [
+        \"${Transform[@]:0:4} \",
+        \"${Transform[@]:4:4} \",
+        \"${Transform[@]:8:4} \",
+        \"${Transform[@]:12:8}\"
+      ],
+    \"inputNIFTI\": {
+      \"Name\": \"$bids_T1map\",
+      \"qform\": [
+        \"${qform[@]:0:4} \",
+        \"${qform[@]:4:4} \",
+        \"${qform[@]:8:4} \",
+        \"${qform[@]:12:8}\"
+      ],
+      \"sform\": [
+        \"${sform[@]:0:4} \",
+        \"${sform[@]:4:4} \",
+        \"${sform[@]:8:4} \",
+        \"${sform[@]:12:8}\"
+      ]
+    }
+  }" > "$3"
+}
+
 function json_poststruct() {
   Info "Creating post_structural json file"
   res=$(mrinfo "$1" -spacing)
