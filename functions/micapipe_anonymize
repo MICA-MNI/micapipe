@@ -34,6 +34,7 @@ echo -e "
 \t\033[38;5;197m-all\033[0m 	        : Runs all the previous algorithms
 
 \033[38;5;141mOPTIONAL ARGUMENTS:\033[0m
+\t\033[38;5;120m-T1\033[0m      : Path to manually identify the main scan for registration (ONE, e.g. '-T1 ./sub-1/anat/sub-1_T1w.nii.gz').
 \t\033[38;5;197m-dilate\033[0m 	: Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
 \t\033[38;5;197m-robust\033[0m 	: If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
 \t\033[38;5;197m-nocleanup\033[0m 	: Do NOT DELETE temporal directory at script completion.
@@ -110,6 +111,10 @@ do
     robust=TRUE
     shift
   ;;
+  -T1)
+    T1w="$2"
+    shift;shift;
+  ;;
   -threads)
     threads=$2
     shift;shift
@@ -129,7 +134,7 @@ done
 # argument check out & WARNINGS
 missing_arg
 
-# Number of session (Default is "ses-pre")
+# Define the method
 if [ -z ${METHOD} ]; then Error "The method is missing, add a flag: -deface, -reface -warpface or -all"; help; exit; fi
 
 # Get the real path of the Inputs
@@ -152,13 +157,56 @@ bids_variables $BIDS $id $out $SES
 # Check BIDS directory
 if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
 
-Warning "This cript ANONYMIZEs the anatomical images from the BIDS directory
+Warning "This script ANONYMIZEs the anatomical images from the BIDS directory
          The anonimized images will be saved in the OUT directory
          Is up to the user to replace the BIDS anatomical by the outputs of this script
-         We strongly recomend that the OUT directory is not the BIDS nor the DERIVATIVES"
+         If OUT directory is the same as BIDS the user should move the non-deface data elsewhere"
 
 # -----------------------------------------------------------------------------------------------#
-#			  Timer & Beginning
+# Assign variables
+mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
+mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz
+mics_t1_face=$util_mics/MICs60_T1_0.8mm_face.nii.gz
+mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
+here=$(pwd)
+
+# Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
+T1w_run1=$(echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}')
+for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
+
+# Go to BIDS/anat to create a list of all the Volumes
+cd ${subject_bids}/anat
+# Create a list with all anat volumes
+anat=($(ls *gz))
+anatT1map=$(find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz")
+T1map_inv1=$(find . -name "*inv1_T1map.nii.gz"); T1map_inv1=${T1map_inv1/.\//}
+
+Info "T1w to register: $T1w_run1\n\t\tOther anatomical volumes:"
+for i in ${anat[*]}; do echo -e "\t\t$i"; done
+if [ "${#anatT1map[@]}" -gt 0 ]; then
+  Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
+  for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
+fi
+${subject}
+# T1w for registrations
+# Manage the T1wStr in case is not found automatically
+if [ -z ${T1w} ]; then 
+	T1_orig=${subject_bids}/anat/${T1w_run1} 
+else 
+	T1_orig=$(realpath ${T1w})
+	T1w_run1=$(echo ${T1_orig} | awk -F 'anat/' '{print $2}')
+fi
+
+# T1w for registrations: exit if file is not found
+if [ ! -f ${T1_orig} ]; then 
+	Error "T1w image for registrations DO NOT exist: try using -T1wStr"
+	ls "${subject_bids}/anat/"*nii* | awk -F '/' '{print $(NF)}'; Do_cmd exit 0
+fi
+
+#------------------------------------------------------------------------------#
+Title "Running MICA-anonymize by $METHOD method(s)"
+Info "micapipe will use $threads threads for multicore processing"
+# Timer & Beginning
 aloita=$(date +%s)
 
 # if temporary directory is empty
@@ -167,42 +215,10 @@ if [ -z ${tmp} ]; then tmp=/tmp; fi
 tmp=${tmp}/${RANDOM}_micapipe_anonymize_${id}
 if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
-# Assign variables
-mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
-mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz
-mics_t1_face=$util_mics/MICs60_T1_0.8mm_face.nii.gz
-mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
-here=$(pwd)
-
-#------------------------------------------------------------------------------#
-Title "Running MICA-anonymize by $METHOD method(s)"
-Info "micapipe will use $threads threads for multicore processing"
-
 # Creates OUT directory if it doesn't exist
-out_warps=${out}
+out_warps=${out}/${subject}/${SES}/anat
 Info "Output directory: $out_warps"
 if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
-
-# Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
-T1w_run1=`echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}'`
-for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
-
-# Go to BIDS/anat to create a list of all the Volumes
-cd ${subject_bids}/anat
-# Create a list with all anat volumes
-anat=(`ls *gz`)
-anatT1map=`find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz"`
-T1map_inv1=`find . -name "*inv1_T1map.nii.gz"`; T1map_inv1=${T1map_inv1/.\//}
-
-Info "T1w to register: $T1w_run1\n\t\tOther anatomical volumes:"
-for i in ${anat[*]}; do echo -e "\t\t$i"; done
-if [ "${#anatT1map[@]}" -gt 0 ]; then
-  Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
-  for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
-fi
-
-# T1w for registrations
-T1_orig=${subject_bids}/anat/${T1w_run1}
 
 # move to tmp directory
 Do_cmd cd $tmp
@@ -240,7 +256,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all
     Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_face -r $T1_orig -n linear -t [${T1w_2_mics_mat},1] -o $face
 
     # Reescale the new face
-    MaxI=`fslstats $T1_orig -R | awk '{print $2}'`
+    MaxI=$(fslstats $T1_orig -R | awk '{print $2}')
     Do_cmd ImageMath 3 $face RescaleImage $face 0 $MaxI
 
     # Apply face to native T1w volume
@@ -331,7 +347,7 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
           Do_cmd antsApplyTransforms -d 3 -u int -i $T1w_mask_brain -r $nii_pwd -n linear -t [${nii_2_T1_mat},1] -o $nii_mask
 
           # Match histogram of the new face and paste it
-          MatchI=`fslstats $nii_pwd -R`
+          MatchI=$(fslstats $nii_pwd -R)
           Do_cmd ImageMath 3 $nii_face RescaleImage $nii_face $MatchI
 
           # Apply face to native T1w volume
@@ -360,6 +376,6 @@ Note "Output directory:    " $out_warps
 #			 Total Running Time
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=`echo print $eri/60 | perl`
+eri=$(echo print $eri/60 | perl)
 Title "TOTAL running time:\033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
 bids_variables_unset
