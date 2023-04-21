@@ -102,7 +102,7 @@ Note "acqMRI:" "${mpc_str}"
 
 #------------------------------------------------------------------------------#
 # Affine registration between both images
-T1_in_fs=${tmp}/orig.mgz
+T1_in_fs=${tmp}/orig.nii.gz
 qT1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz
 mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_${mpc_str}_
 qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
@@ -110,7 +110,7 @@ qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
     Do_cmd mrconvert "$T1surf" "$T1_in_fs"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
-    Do_cmd antsApplyTransforms -d 3 -i "$regImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
     if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a ${mpc_str} on Surface space"; ((Nsteps++)); ((N++))
