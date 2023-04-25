@@ -193,7 +193,7 @@ json_nativepro_qt1 "$qmriNP" \
 #------------------------------------------------------------------------------#
 # Map to surface: midthickness, white
 Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 8 ]]; then ((N++))
+if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     Info "Mapping ${mpc_str} to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
         for label in midthickness white; do
@@ -203,7 +203,7 @@ if [[ "$Nmorph" -lt 8 ]]; then ((N++))
         done
     done
     Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 8 ]]; then ((Nsteps++)); fi
+    if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has ${mpc_str} mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
