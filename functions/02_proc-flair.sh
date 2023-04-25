@@ -131,14 +131,8 @@ if [[ ! -f "$flairNP" ]]; then ((N++))
     # Get gm/wm interface mask
     t1_gmwmi="${tmp}/${idBIDS}_space-nativepro_desc-gmwmi-mask.nii.gz"
     t1_5tt="${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz"
-    if [[ ! -f "$t1_gmwmi" ]]; then ((N++))
-        Info "Calculating Gray matter White matter interface mask"
-        Do_cmd 5tt2gmwmi "$t1_5tt" "$t1_gmwmi"
-        ((Nsteps++))
-    else
-        Info "Subject ${id} has Gray matter White matter interface mask"; ((Nsteps++)); ((N++))
-    fi
-
+    Info "Calculating Gray matter White matter interface mask"
+    Do_cmd 5tt2gmwmi "$t1_5tt" "$t1_gmwmi"
     # Register nativepro and flair
     str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-affine_"
     Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$flair_rescale" -o "$str_flair_affine" -t a -n "$threads" -p d
@@ -163,9 +157,9 @@ fi
 
 #------------------------------------------------------------------------------#
 ### FLAIR registration to nativepro ###
-if [[ ! -f "$flairNP" ]]; then
+if [[ ! -f "$flairNP" ]]; then ((N++))
     Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$str_flair_affine"0GenericAffine.mat -o "$flairNP" -v -u float
-    ((Nsteps++)); ((N++))
+    ((Nsteps++))
 else
     Info "Subject ${id} T2-FLAIR is registered to nativepro"; ((Nsteps++)); ((N++))
 fi
@@ -178,7 +172,7 @@ json_nativepro_flair "$flairNP" \
 #------------------------------------------------------------------------------#
 # Map to surface
 Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 8 ]]; then ((N++))
+if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     Info "Mapping flair to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
         for label in midthickness white; do
@@ -188,7 +182,7 @@ if [[ "$Nmorph" -lt 8 ]]; then ((N++))
         done
     done
     Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 8 ]]; then ((Nsteps++)); fi
+    if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has flair mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
