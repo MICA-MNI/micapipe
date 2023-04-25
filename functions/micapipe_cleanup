@@ -245,9 +245,13 @@ fi
 # CLEAN -proc_flair
 if [ "$procFlair" = "TRUE" ]; then
     Warning "Erasing proc_flair output files and logs"
+    outDir="${subject_dir}/maps"
     Do_cmd rm -rf "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.nii.gz \
         "${dir_conte69}/${idBIDS}"_space-nativepro_map-flair.json \
-        "${dir_QC}/${idBIDS}"_module-flair*
+        "${dir_QC}/${idBIDS}"_module-proc_flair.json \
+        "${outDir}/${idBIDS}_space-nativepro_map-flair.json" \
+        "${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz" \
+        "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii"
     grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
@@ -320,14 +324,17 @@ fi
 if [ "${postMPC}" = "TRUE" ]; then
     if [ -z ${acqStr} ]; then acqStr="qMRI"; else acqStr=${acqStr/acq-/}; fi
     dir_mpc="${subject_dir}/mpc/acq-${acqStr}"
-    if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+    #if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
         Warning "Erasing MPC output files and logs: ${acqStr}"
         acqStr=${acqStr/acq-/}
-        Do_cmd rm -rf "${dir_mpc}" \
+        Do_cmd rm -rvf "${dir_mpc}" \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
+                      "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
                       "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
-                      "${dir_QC}/${idBIDS}_module-MPC-${mpc_str}"* \
-                      "$dir_logs"/MPC_*"${acqStr}"*
+                      "${dir_QC}/${idBIDS}_module-MPC-${acqStr}"* \
+                      "$dir_logs"/MPC_*"${acqStr}"* \
+                      "${dir_maps}/"${idBIDS}*${acqStr}*gii \
+                      "${dir_maps}/"${idBIDS}_space-nativepro_map-${acqStr}*
         grep -v "${id}, ${SES/ses-/}, MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
