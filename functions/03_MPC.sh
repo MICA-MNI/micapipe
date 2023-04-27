@@ -26,7 +26,8 @@ tmpDir=$7
 input_im=$8
 mpc_reg=$9
 mpc_str=${10}
-PROC=${11}
+synth_reg=${11}
+PROC=${12}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -79,9 +80,10 @@ if [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found 
 Title "Microstructural Profiles Covariance\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-post
-Note "Saving temporal dir:" "$nocleanup"
-Note "Temporal dir:" "${tmp}"
-Note "Parallel processing:" "$threads threads"
+Note "Saving temporal dir:" "${nocleanup}"
+Note "Parallel processing:" "${threads} threads"
+Note "Temporal dir:" "${tmpDir}"
+Note "synth_reg:" ${synth_reg}
 
 #	Timer
 aloita=$(date +%s)
@@ -112,7 +114,21 @@ qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 
 if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
     Do_cmd mrconvert "$T1surf" "$T1_in_fs"
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+    # Registration with synthseg
+    if [[ "${synth_reg}"=="TRUE" ]]; then
+      qT1_synth="${tmp}/qT1_synthsegGM.nii.gz"
+      T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
+      Do_cmd mri_synthseg --i "${T1_in_fs}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
+
+      Do_cmd mri_synthseg --i "$regImage" --o "${tmp}/qT1_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd fslmaths "${tmp}/qT1_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/qT1_synthseg.nii.gz" "${qT1_synth}"
+
+      # Affine from func to t1-nativepro
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$qT1_synth" -m "$T1_synth" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+    else
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+    fi
     Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
     if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
 else
@@ -178,7 +194,16 @@ fi
 str_qt1_affine="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_mode-image_desc-affine_"
 qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
 if [[ ! -f "$qmriNP" ]]; then
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$regImage" -o "$str_qt1_affine" -t a -n "$threads" -p d
+    if [[ "${synth_reg}"=="TRUE" ]]; then
+      T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
+      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"
+
+      # Affine from func to t1-nativepro
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1natpro_synth" -m "$qT1_synth" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+    else
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$regImage" -o "$str_qt1_affine" -t a -n "$threads" -p d
+    fi
     Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "$str_qt1_affine"0GenericAffine.mat -o "$qmriNP" -v -u float
     ((Nsteps++)); ((N++))
 else
