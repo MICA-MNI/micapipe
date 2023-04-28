@@ -190,6 +190,7 @@ if [ "$procVOL" = "TRUE" ]; then
                   "$dir_volum"/*T1w_atlas-cerebellum.nii.gz \
                   "$dir_volum"/*T1w_atlas-subcortical.nii.gz
     grep -v "${id}, ${SES/ses-/}, proc_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},proc_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -proc_surf
@@ -221,6 +222,7 @@ if [ "$procFS" = "TRUE" ]; then
                   "${proc_struct}/surf/${idBIDS}_proc_surf.json" \
                   "$dir_logs"/proc_surf*
     grep -v "${id}, ${SES/ses-/}, proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -239,6 +241,7 @@ if [ "$postVOL" = "TRUE" ]; then
                   "${subject_dir}/anat/surf/morphology" \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -252,6 +255,7 @@ if [ "$procFlair" = "TRUE" ]; then
         "${outDir}/${idBIDS}_space-nativepro_map-flair.json" \
         "${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz" \
         "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii"
+    grep -v "${id},${SES/ses-/},proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
@@ -272,6 +276,7 @@ if [ "$procFunc" = "TRUE" ]; then
                   "${func_volum}/${idBIDS}${acqStr}_clean*.json" \
                   "$dir_logs"/proc_func_*${acqStr}*
     grep -v "${id}, ${SES/ses-/}, proc_func_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},proc_func_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -290,6 +295,7 @@ if [ "$procDWI" = "TRUE" ]; then
                   "${dir_QC}/${idBIDS}_module-proc_dwi"* \
                   "${dir_logs}"/proc_dwi_*
     grep -v "${id}, ${SES/ses-/}, proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},proc_dwi" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     else
       proc_dwi_acq=${proc_dwi}/${acqStr}
       if [ ! -d ${proc_dwi_acq} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
@@ -300,6 +306,7 @@ if [ "$procDWI" = "TRUE" ]; then
                   "${dir_QC}/${idBIDS}_module-proc_dwi_${acqStr}"* \
                   "${dir_logs}"/proc_dwi_${acqStr}*
       grep -v "${id}, ${SES/ses-/}, proc_dwi_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+      grep -v "${id},${SES/ses-/},proc_dwi_${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     fi
 fi
 # ---------------------------------------------------------------------------------------
@@ -318,6 +325,7 @@ if [ "$postDWI" = "TRUE" ]; then
                   "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
     grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
@@ -326,6 +334,7 @@ if [ "${postMPC}" = "TRUE" ]; then
     dir_mpc="${subject_dir}/mpc/acq-${acqStr}"
     #if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
         Warning "Erasing MPC output files and logs: ${acqStr}"
+        Warning "${id},${SES/ses-/},MPC-${acqStr}"
         acqStr=${acqStr/acq-/}
         Do_cmd rm -rvf "${dir_mpc}" \
                       ${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz \
@@ -336,6 +345,7 @@ if [ "${postMPC}" = "TRUE" ]; then
                       "$dir_logs"/MPC_*"${acqStr}"* \
                       "${dir_maps}/"${idBIDS}*${acqStr}*gii \
                       "${dir_maps}/"${idBIDS}_space-nativepro_map-${acqStr}*
+        grep -v "${id},${SES/ses-/},MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
         grep -v "${id}, ${SES/ses-/}, MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
@@ -346,6 +356,7 @@ if [ "$postGD" = "TRUE" ]; then
     Do_cmd rm -rf "${subject_dir}/dist" \
               "${dir_QC}/${idBIDS}_module-GD"* \
               "$dir_logs"/GD_*
+    grep -v "${id},${SES/ses-/},GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
