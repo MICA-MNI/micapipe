@@ -47,6 +47,17 @@ parc_name = sys.argv[5]
 dir_fs = sys.argv[6]
 acq = sys.argv[7]
 
+# Function save as gifti
+def save_gii(data_array, file_name):
+    # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
+    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
+
+    # this is the GiftiImage class
+    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
+
+    # Save the new GIFTI file
+    nb.save(img=gifti_img, filename=file_name)
+
 # Define default input if none given
 if len(sys.argv) < 5:
     parc_name = 'schaefer-400_mics.annot'
@@ -143,8 +154,8 @@ if os.path.exists(OPATH):
             sys.exit(1)
         else:
             parc_str = parc_name.replace('_mics.annot', "")
-            np.savetxt("{output}/{bids_id}_atlas-{parc_str}_desc-MPC.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), MPC, fmt='%.6f')
-            np.savetxt("{output}/{bids_id}_atlas-{parc_str}_desc-intensity_profiles.txt".format(output=OPATH, parc_str=parc_str, bids_id=bids_id), I, fmt='%.12f')
+            save_gii(MPC, "{output}/{bids_id}_atlas-{parc_str}_desc-MPC.shape.gii")
+            save_gii(I, "{output}/{bids_id}_atlas-{parc_str}_desc-intensity_profiles.shape.gii")
             print("")
             print("-------------------------------------")
             print("MPC {parc} building successful for subject {sub}".format(sub=sub, parc=parc_name.replace('_mics.annot', '')))

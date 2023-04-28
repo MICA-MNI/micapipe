@@ -85,11 +85,11 @@ for x in surfaces: get_feature_array(x)
 # Create a vertex-wise MPC from fsLR-5k
 surf_array_fsLR5k = get_feature_array('fsLR-5k', Save=False)
 (MPC_fsLR5k, I, problemNodes) = build_mpc(surf_array_fsLR5k)
-fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.txt".format(output=OPATH, bids_id=bids_id)
+fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.shape.gii".format(output=OPATH, bids_id=bids_id)
 
 # Save it as shape GIFTI
 print('[INFO]... saving '+fileName)
-np.savetxt(fileName, MPC_fsLR5k, fmt='%.12f')
+save_gii(MPC_fsLR5k, fileName)
 
 # cleanup - remove all feature-surf
 tmp_files=sorted(glob.glob("{output}/*label-MPC-*.func.gii".format(output=OPATH)))

@@ -240,7 +240,7 @@ parcellations=($(find "$dir_volum" -name "*atlas*" ! -name "*cerebellum*" ! -nam
 for seg in "${parcellations[@]}"; do
     parc=$(echo "${seg/.nii.gz/}" | awk -F 'atlas-' '{print $2}')
     parc_annot="${parc}_mics.annot"
-    MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.txt"
+    MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
         Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
