@@ -80,12 +80,12 @@ N=0
 lh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
 rh_fdLR5k="${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
 outName="${outPath}/${idBIDS}_surf-fsLR-5k_GD"
-if [ -f "${outName}.txt" ]; then
+if [ -f "${outName}.shape.gii" ]; then
     Info "Geodesic Distance vertex-wise on fsLR-5k already exists"; ((Nsteps++)); ((N++))
 else
     Info "Computing Geodesic Distance vertex-wise from surface fsLR-5k"; ((N++))
     Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_fdLR5k" -rh_surf "$rh_fdLR5k" -outPath "$outName"
-    if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
+    if [[ -f "${outName}.shape.gii" ]]; then ((Nsteps++)); fi
 fi
 
 # Compute geodesic distance on all parcellations
@@ -94,13 +94,13 @@ for seg in "${parcellations[@]}"; do ((N++))
     lh_annot="${dir_subjsurf}/label/lh.${parc}_mics.annot"
     rh_annot="${dir_subjsurf}/label/rh.${parc}_mics.annot"
     outName="${outPath}/${idBIDS}_atlas-${parc}_GD"
-    if [ -f "${outName}.txt" ]; then
+    if [ -f "${outName}.shape.gii" ]; then
         Info "Geodesic Distance on $parc, already exists"; ((Nsteps++))
     else
         Info "Computing Geodesic Distance from $parc"
         Do_cmd "$MICAPIPE"/functions/geoDistMapper.py -lh_surf "$lh_midsurf" -rh_surf "$rh_midsurf" -outPath "$outName" \
                 -lh_annot "$lh_annot" -rh_annot "$rh_annot" -parcel_wise
-        if [[ -f "${outName}.txt" ]]; then ((Nsteps++)); fi
+        if [[ -f "${outName}.shape.gii" ]]; then ((Nsteps++)); fi
     fi
 done
 

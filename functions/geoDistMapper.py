@@ -29,7 +29,7 @@ For parcel-wise GD, centroid vertices will be selected for each parcel and dista
     Returns
     -------
     GD  : numpy.ndarray file
-        Geodesic distance matrix (.txt) { (Vertex x Vertex) | (nParcel x nParcel) }
+        Geodesic distance matrix (.shape.gii) { (Vertex x Vertex) | (nParcel x nParcel) }
 
     Usage
     -----
@@ -85,6 +85,17 @@ parser.add_argument('-rh_annot',
                     help='Path to right annotation files in the same surface as rh_surf.'
                     )
 args = parser.parse_args()
+
+# Function save as gifti
+def save_gii(data_array, file_name):
+    # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
+    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
+
+    # this is the GiftiImage class
+    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
+
+    # Save the new GIFTI file
+    nb.save(img=gifti_img, filename=file_name)
 
 # get the real paths
 lh_surf = args.lh_surf[0]
@@ -210,5 +221,5 @@ else:
         dist_R = geoalg_R.geodesicDistances(np.array([x]))[0]
         GD[x+N,:] =  np.concatenate((np.zeros(N), dist_R), axis = 0)
 
-np.savetxt(outPath + '.txt', GD, fmt='%.12f')
+save_gii(GD, outPath+'.shape.gii')
 print("[ INFO ]..... Geodesic distance completed")
