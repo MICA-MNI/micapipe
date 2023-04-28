@@ -194,13 +194,14 @@ fi
 str_qt1_affine="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_mode-image_desc-affine_"
 qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
 if [[ ! -f "$qmriNP" ]]; then
+  Info "${mpc_str} registration to nativepro"
     if [[ "${synth_reg}"=="TRUE" ]]; then
       T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
       Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads $threads --cpu
       Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"
 
       # Affine from func to t1-nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1natpro_synth" -m "$qT1_synth" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1natpro_synth" -m "$qT1_synth" -o "$str_qt1_affine" -t a -n "$threads" -p d
     else
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$regImage" -o "$str_qt1_affine" -t a -n "$threads" -p d
     fi
@@ -254,6 +255,7 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Do_cmd python $MICAPIPE/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
   ((Nsteps++))
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
+rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
