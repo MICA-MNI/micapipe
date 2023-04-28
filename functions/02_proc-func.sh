@@ -838,7 +838,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-func
-cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean${gsr}.txt"
+cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean${gsr}.shape.gii"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${MICAPIPE}/parcellations/"
