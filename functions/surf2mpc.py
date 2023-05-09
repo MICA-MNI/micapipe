@@ -35,7 +35,7 @@
 import sys
 import os
 import numpy as np
-import nibabel as nib
+import nibabel as nb
 from build_mpc import build_mpc
 
 # Define input arguments
@@ -85,7 +85,7 @@ if os.path.exists(OPATH):
         # Get data for specified hemisphere and surface number
         def get_hemisphere(surface_number, hemi):
             thisname_gii = "{output}{bids_id}_hemi-{hemi}_surf-fsnative_label-MPC-{surface_number:d}.func.gii".format(output=OPATH, bids_id=bids_id, hemi=hemi, surface_number=surface_number+1)
-            data = nib.load(thisname_gii).darrays[0].data
+            data = nb.load(thisname_gii).darrays[0].data
             return data
 
         BBl = np.vstack(
@@ -103,10 +103,10 @@ if os.path.exists(OPATH):
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)
-        [labels_lh, ctab_lh, names_lh] = nib.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
+        [labels_lh, ctab_lh, names_lh] = nb.freesurfer.io.read_annot(ipth_lh, orig_ids=True)
         fname_rh = 'rh.' + parc_name
         ipth_rh = os.path.join(pathToParc, fname_rh)
-        [labels_rh, ctab_rh, names_rh] = nib.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
+        [labels_rh, ctab_rh, names_rh] = nb.freesurfer.io.read_annot(ipth_rh, orig_ids=True)
         # Join hemispheres
         parcLength = len(labels_lh)+len(labels_rh)
         parc = np.zeros((parcLength))
@@ -154,8 +154,8 @@ if os.path.exists(OPATH):
             sys.exit(1)
         else:
             parc_str = parc_name.replace('_mics.annot', "")
-            save_gii(MPC, "{output}/{bids_id}_atlas-{parc_str}_desc-MPC.shape.gii")
-            save_gii(I, "{output}/{bids_id}_atlas-{parc_str}_desc-intensity_profiles.shape.gii")
+            save_gii(MPC, "{output}/{bids_id}_atlas-{parc_str}_desc-MPC.shape.gii".format(output=OPATH, bids_id=bids_id, parc_str=parc_str))
+            save_gii(I, "{output}/{bids_id}_atlas-{parc_str}_desc-intensity_profiles.shape.gii".format(output=OPATH, bids_id=bids_id, parc_str=parc_str))
             print("")
             print("-------------------------------------")
             print("MPC {parc} building successful for subject {sub}".format(sub=sub, parc=parc_name.replace('_mics.annot', '')))

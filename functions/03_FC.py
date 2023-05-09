@@ -87,13 +87,13 @@ else:
 # Function save as gifti
 def save_gii(data_array, file_name):
     # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
-    gifti_data = nb.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
+    gifti_data = nib.gifti.GiftiDataArray(data=data_array, intent=2005, datatype=16)
 
     # this is the GiftiImage class
-    gifti_img = nb.gifti.GiftiImage(meta=None, darrays=[gifti_data])
+    gifti_img = nib.gifti.GiftiImage(meta=None, darrays=[gifti_data])
 
     # Save the new GIFTI file
-    nb.save(img=gifti_img, filename=file_name)
+    nib.save(img=gifti_img, filename=file_name)
 
 # ------------------------------------------
 # Load subcortical and cerebellar timeseries
