@@ -5,6 +5,9 @@ set -e
 # Generate Dockerfile.
 # change ANTs version manually to 2.3.4 in the generated Dockerfile (from 2.3.1)
 # change Freesurfer version manually to 7.4.0 in the generated Dockerfile (from 6.0.0)
+# Manually erased the next lines from the Dockerfile see commit :
+# -    && echo "Installing FSL conda environment ..." \
+# -    && bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2
 
 generate() {
   docker run --rm repronim/neurodocker:0.7.0 generate "$1" \
