@@ -145,7 +145,7 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         #  mri/T1.mgz is replaced by mri/norm.mgz with fastsurfer
         cp ${SUBJECTS_DIR}/${idBIDS}/mri/norm.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz
     else
-        Info "Running Freesurfer 7.3.2 comform volume to minimum"
+        Info "Running Freesurfer 7.4.0 comform volume to minimum"
 
         # FIX FOV greater than 256
         t1nii="${t1_2proc}"

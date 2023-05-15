@@ -37,8 +37,8 @@ You can find the latest version of the container in [Docker](https://hub.docker.
 | *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
-| Freesurfer | 7.3.2         | https://surfer.nmr.mgh.harvard.edu/ |
-| FSl        | 6.0.3          | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
+| Freesurfer | 7.4.0         | https://surfer.nmr.mgh.harvard.edu/ |
+| FSl        | 6.0.2          | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
 | AFNI       | 20.3.03       | https://afni.nimh.nih.gov/download |
 | MRtrix3    | 3.0.1         | https://www.mrtrix.org |
 | ANTs       | 2.3.4         | https://github.com/ANTsX/ANTs |
