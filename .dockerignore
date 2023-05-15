@@ -1,0 +1,6 @@
+./docs
+.circleci
+.git
+.github
+.gitignore
+.vscode
