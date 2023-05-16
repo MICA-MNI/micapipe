@@ -34,7 +34,7 @@ export FSL_BIN="${FSLDIR}/bin"
 # MRtrix3 3.0.1
 export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
 # ITK utils
-export itk_dir="/opt/minc-itk4/bin"
+export itk_dir="/data_/mica1/01_programs/c3d-1.0.0-Linux-x86_64/bin"
 # Python 3.7
 #export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
 # Export fs fs_licence
