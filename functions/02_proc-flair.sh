@@ -195,7 +195,7 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 module_name="proc_flair"
-micapipe_completition_status ${module_name}
+micapipe_completition_status "${module_name}"
 micapipe_procStatus "${id}" "${SES/ses-/}" "${module_name}" "${out}/micapipe_processed_sub.csv"
 Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "${module_name}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
