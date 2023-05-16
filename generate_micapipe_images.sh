@@ -71,11 +71,20 @@ generate docker > Dockerfile
 echo -e "###########################################################################################\n
 NOTES:
 > change ANTs version manually to 2.3.4 in the generated Dockerfile (from 2.3.1)
+
 > change Freesurfer version manually to 7.4.0 in the generated Dockerfile (from 6.0.0)
     REPLACE: surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.0/freesurfer-Linux-centos6_x86_64-stable-pub-v7.4.0.tar.gz
     with surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.0/freesurfer-linux-ubuntu18_amd64-7.4.0.tar.gz
 
 > Manually erased the next lines from the Dockerfile see commit :
--    && echo 'Installing FSL conda environment ...' \
--    && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3\n
+-  && echo Installing FSL conda environment ... \
+-  && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
+
+-  RUN bash -c 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3'
+
+> libxp6 issue
+&& curl -sSL --retry 5 -o /tmp/libxp6_1.0.2-2_amd64.deb http://launchpadlibrarian.net/160108232/libxp6_1.0.2-1ubuntu1_amd64.deb \
+&& dpkg -i /tmp/libxp6_1.0.2-2_amd64.deb \
+&& rm /tmp/libxp6_1.0.2-2_amd64.deb \
+
 ###########################################################################################\n"
