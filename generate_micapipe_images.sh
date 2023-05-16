@@ -7,7 +7,8 @@ set -e
 # change Freesurfer version manually to 7.4.0 in the generated Dockerfile (from 6.0.0)
 # Manually erased the next lines from the Dockerfile see commit :
 # -    && echo "Installing FSL conda environment ..." \
-# -    && bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2
+# -    && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
+# workbench    --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
 
 generate() {
   docker run --rm repronim/neurodocker:0.7.0 generate "$1" \
@@ -15,13 +16,13 @@ generate() {
     --pkg-manager=apt \
     --install "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
     --dcm2niix version=v1.0.20190902 method=source\
-    --fsl version=6.0.2 \
-    --run-bash 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2' \
+    --fsl version=6.0.3 \
+    --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
     --freesurfer version=6.0.0 \
     --matlabmcr version=2017b\
     --afni version=latest\
     --ants version=2.3.1 \
-    --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
+    --install connectome-workbench \
     --run-bash "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz" \
     --user=mica \
     --miniconda \
@@ -48,18 +49,33 @@ generate() {
            apt update; \
            apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
            rm -rf /var/lib/apt/lists/*;" \
+    --run-bash "wget https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download -O itksnap.tar.gz &&
+                tar -xfv itksnap.tar.gz -C /opt/" \
+    --env PATH="/opt/itksnap/bin/:${PATH}" \
     --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
     --copy . /opt/micapipe \
-    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/" \
+    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/" \
     --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-6.0.0/subjects" \
     --workdir='/home/mica' \
     --env MICAPIPE='/opt/micapipe'\
     --env PROC='container-micapipe v0.2.0' \
-    --add-to-entrypoint "source /opt/freesurfer-6.0.0/SetUpFreeSurfer.sh" \
+    --add-to-entrypoint "source /opt/freesurfer-7.4.0/SetUpFreeSurfer.sh" \
     --add-to-entrypoint "export FIXPATH=/opt/fix && export PATH="${FIXPATH}:${PATH}"" \
     --entrypoint "/neurodocker/startup.sh /opt/micapipe/micapipe"
   }
 
 
 generate docker > Dockerfile
+
+echo -e "###########################################################################################\n
+NOTES:
+> change ANTs version manually to 2.3.4 in the generated Dockerfile (from 2.3.1)
+> change Freesurfer version manually to 7.4.0 in the generated Dockerfile (from 6.0.0)
+    REPLACE: surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.0/freesurfer-Linux-centos6_x86_64-stable-pub-v7.4.0.tar.gz
+    with surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.0/freesurfer-linux-ubuntu18_amd64-7.4.0.tar.gz
+
+> Manually erased the next lines from the Dockerfile see commit :
+-    && echo 'Installing FSL conda environment ...' \
+-    && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3\n
+###########################################################################################\n"
