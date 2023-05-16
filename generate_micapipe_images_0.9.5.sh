@@ -1,0 +1,83 @@
+#!/bin/bash
+
+set -e
+
+# Generate Dockerfile.
+# change ANTs version manually to 2.3.4 in the generated Dockerfile (from 2.3.1)
+# change Freesurfer version manually to 7.3.0 in the generated Dockerfile (from 7.3.0)
+# Manually erased the next lines from the Dockerfile see commit :
+# -    && echo "Installing FSL conda environment ..." \
+# -    && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
+# workbench    --run-bash "apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1" \
+
+generate() {
+  docker run -i --rm repronim/neurodocker:0.9.5 generate "$1" \
+    --base-image=ubuntu:bionic-20201119 \
+    --pkg-manager=apt \
+    --install "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
+    --dcm2niix version=v1.0.20190902 method=source\
+    --fsl version=6.0.3 \
+    --run-bash 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3' \
+    --freesurfer version=7.3.0 \
+    --matlabmcr version=2017b\
+    --afni version=latest\
+    --ants version=2.3.4 \
+    --install connectome-workbench \
+    --run-bash "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz" \
+    --user=mica \
+    --miniconda version=22.11.1 \
+      create_env="micapipe" \
+      activate=true \
+      conda_install="python=3.9 certifi==2020.6.20
+                     cycler==0.10.0 joblib==0.16.0
+                     kiwisolver==1.2.0 matplotlib==3.4.3 nibabel==4.0.2
+                     numpy==1.21.5 packaging==20.4 pandas==1.4.4
+                     pillow==7.2.0 pyparsing==2.4.7 python-dateutil==2.8.1
+                     pytz==2020.1 scikit-learn==1.0.2 scipy==1.9.1
+                     six==1.15.0 threadpoolctl==2.1.0 vtk==9.2.2"\
+      pip_install='brainspace==0.1.4 seaborn==0.11.2 tedana==0.0.12 pygeodesic==0.1.8 xhtml2pdf==0.2.9' \
+      pip_install='sys os glob argparse==1.1 copy time re warnings subprocess' \
+    --run-bash 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1 && pip install git+https://github.com/MICA-MNI/ENIGMA.git' \
+    --run-bash 'git clone https://github.com/Deep-MI/FastSurfer.git && mv FastSurfer /opt/ && conda env create -f /opt/FastSurfer/fastsurfer_env_cpu.yml' \
+    --run-bash 'source activate fastsurfer_cpu && python /opt/FastSurfer/FastSurferCNN/download_checkpoints.py --all && source deactivate' \
+    --user=root\
+    --run "set -uex; \
+           LD_LIBRARY_PATH=/lib64/:$PATH; \
+           apt install -y software-properties-common apt-transport-https; \
+           apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
+           add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
+           apt update; \
+           apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
+           rm -rf /var/lib/apt/lists/*;" \
+    --run-bash "wget https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download -O itksnap.tar.gz &&
+                tar -xfv itksnap.tar.gz -C /opt/" \
+    --env PATH="/opt/itksnap/bin/:${PATH}" \
+    --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&
+                bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
+    --copy . /opt/micapipe \
+    --run-bash "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/" \
+    --run-bash "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.3.0/subjects" \
+    --workdir='/home/mica' \
+    --env MICAPIPE='/opt/micapipe'\
+    --env PROC='container-micapipe v0.2.0' \
+    --env FIXPATH="/opt/fix" \
+    --env PATH="${FIXPATH}:${PATH}" \
+    --entrypoint "source /opt/freesurfer-7.3.0/SetUpFreeSurfer.sh /neurodocker/startup.sh /opt/micapipe/micapipe"
+  }
+
+
+generate docker > Dockerfile_0.9.5
+
+echo -e "###########################################################################################\n
+NOTES:
+> change ANTs version manually to 2.3.4 in the generated Dockerfile (from 2.3.1)
+> change Freesurfer version manually to 7.4.0 in the generated Dockerfile (from 7.3.0)
+    REPLACE: surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.0/freesurfer-Linux-centos6_x86_64-stable-pub-v7.3.0.tar.gz
+    with surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.0/freesurfer-linux-ubuntu18_amd64-7.3.0.tar.gz
+
+> Manually erased the next lines from the Dockerfile see commit :
+-  && echo Installing FSL conda environment ... \
+-  && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
+
+-  RUN bash -c 'bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3'
+###########################################################################################\n"
