@@ -300,6 +300,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
              "argparse==1.1" \
              "brainspace==0.1.4" \
              "tedana==0.0.12" \
+             "duecredit" \
              "pyhanko==0.17.2" \
              "mapca==0.0.3" \
              "xhtml2pdf==0.2.9" \
@@ -314,7 +315,8 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
 
 RUN bash -c 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1 && pip install git+https://github.com/MICA-MNI/ENIGMA.git'
 
-ENV PATH="/opt/fastsurfer:$PATH"
+ENV PATH="/opt/FastSurfer:$PATH"
+ENV FASTSURFER_HOME=/opt/FastSurfer
 RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
   && cd /opt/FastSurfer \
   && bash -c 'wget --no-check-certificate -qO /tmp/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh \
@@ -348,7 +350,7 @@ RUN set -uex; \
     wget -O itksnap.tar.gz https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download && \
     tar -xf itksnap.tar.gz -C /opt/ && \
     rm itksnap.tar.gz
-ENV PATH="/opt/itksnap/bin/:${PATH}"
+ENV PATH="/opt/itksnap/c3d-1.0.0-Linux-x86_64/:${PATH}"
 
 COPY . /opt/micapipe/
 
@@ -362,7 +364,11 @@ ENV MICAPIPE="/opt/micapipe"
 
 ENV PROC="container-micapipe v0.2.0"
 
-RUN sed -i '$iexport FIXPATH=/opt/fix && export PATH=/data_/mica1/01_programs/fix-1.06.15:${PATH}' $ND_ENTRYPOINT
+ENV FIXPATH=/opt/fix1.068
+
+ENV PATH="/opt/fix1.068/:${PATH}"
+
+ENV PATH="/opt/micapipe/:/opt/micapipe/functions:${PATH}"
 
 ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/micapipe"]
 
@@ -585,7 +591,7 @@ RUN echo '{ \
     \n    ], \
     \n    [ \
     \n      "add_to_entrypoint", \
-    \n      "export FIXPATH=/opt/fix && export PATH=/data_/mica1/01_programs/fix-1.06.15:${PATH}" \
+    \n      "export FIXPATH=/opt/fix && export PATH=/opt/fix1.068:${PATH}" \
     \n    ], \
     \n    [ \
     \n      "entrypoint", \
