@@ -123,24 +123,36 @@ if [[ "$surfdir" != "FALSE" ]]; then ((N++))
 elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     # Define SUBJECTS_DIR for surface processing as a global variable
     export SUBJECTS_DIR=${tmp} # Will work on a temporal directory
-    t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
-    Do_cmd cp "${t1_2proc}" "${t1}"
+
 
     # Recontruction method
     if [[ "$FastSurfer" == "TRUE" ]]; then
         Info "FastSurfer: running the singularity image"
         Do_cmd mkdir -p "${SUBJECTS_DIR}/${idBIDS}"
         cp ${fs_licence} ${SUBJECTS_DIR}/license.txt
+        if [[ ${PROC} == "container-micapipe v0.2.0" ]]; then
+          source activate fastsurfer_cpu
+          run_fastsurfer.sh \
+           --fs_license fs_licence \
+           --t1 "${t1_2proc}" \
+           --sid "${idBIDS}" --sd ${SUBJECTS_DIR} --no_fs_T1 \
+           --parallel --threads "${threads}"
+          source activate micapipe
+        else
+          t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
+          Do_cmd cp "${t1_2proc}" "${t1}"
+          singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
+                                -B "${SUBJECTS_DIR}":/output \
+                                -B "${tmp}/nii":/anat \
+                                 "${fastsurfer_img}" \
+                                 /fastsurfer/run_fastsurfer.sh \
+                                --fs_license /output/license.txt \
+                                --t1 /anat/"${idBIDS}"_T1w.nii.gz \
+                                --sid "${idBIDS}" --sd /output --no_fs_T1 \
+                                --parallel --threads "${threads}"
+          rm -rfv "${SUBJECTS_DIR}/nii"
 
-        singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
-                              -B "${SUBJECTS_DIR}":/output \
-                              -B "${tmp}/nii":/anat \
-                               "${fastsurfer_img}" \
-                               /fastsurfer/run_fastsurfer.sh \
-                              --fs_license /output/license.txt \
-                              --t1 /anat/"${idBIDS}"_T1w.nii.gz \
-                              --sid "${idBIDS}" --sd /output --no_fs_T1 \
-                              --parallel --threads "${threads}"
+        fi
         chmod aug+wr -R ${SUBJECTS_DIR}/${idBIDS}
         #  mri/T1.mgz is replaced by mri/norm.mgz with fastsurfer
         cp ${SUBJECTS_DIR}/${idBIDS}/mri/norm.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz
