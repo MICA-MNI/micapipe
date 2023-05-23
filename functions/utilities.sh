@@ -942,6 +942,7 @@ function json_mpc() {
     \"microstructural_img\": \"${1}\",
     \"microstructural_reg\": \"${regImage}\",
     \"registered_img\": \"${qT1_fsnative}\",
+    \"synth_reg\": \"${synth_reg}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",

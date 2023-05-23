@@ -115,7 +115,8 @@ qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
 if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
     Do_cmd mrconvert "$T1surf" "$T1_in_fs"
     # Registration with synthseg
-    if [[ "${synth_reg}"=="TRUE" ]]; then
+    if [[ "${synth_reg}" == "TRUE" ]]; then
+      Info "Running label based affine registrations"
       qT1_synth="${tmp}/qT1_synthsegGM.nii.gz"
       T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
       Do_cmd mri_synthseg --i "${T1_in_fs}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
@@ -127,8 +128,10 @@ if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
       # Affine from func to t1-nativepro
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$qT1_synth" -m "$T1_synth" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     else
+      Info "Running volume based affine registrations"
       Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
     fi
+
     Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
     if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
 else
@@ -195,7 +198,7 @@ str_qt1_affine="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_mode-image_de
 qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
 if [[ ! -f "$qmriNP" ]]; then
   Info "${mpc_str} registration to nativepro"
-    if [[ "${synth_reg}"=="TRUE" ]]; then
+    if [[ "${synth_reg}" == "TRUE" ]]; then
       T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
       Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads $threads --cpu
       Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"

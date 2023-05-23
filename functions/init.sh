@@ -40,7 +40,7 @@ export itk_dir="/data_/mica1/01_programs/c3d-1.0.0-Linux-x86_64/bin"
 # Export fs fs_licence
 export fs_licence=/data_/mica1/01_programs/freesurfer-7.4.0/license.txt
 # Fastsurfer singularity container
-export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
+export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.4.sif
 unset TMPDIR
 # Fastsurfer conda env
 
