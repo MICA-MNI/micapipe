@@ -350,7 +350,7 @@ RUN set -uex; \
     wget -O itksnap.tar.gz https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download && \
     tar -xf itksnap.tar.gz -C /opt/ && \
     rm itksnap.tar.gz
-ENV PATH="/opt/itksnap/c3d-1.0.0-Linux-x86_64/:${PATH}"
+ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 
 COPY . /opt/micapipe/
 
