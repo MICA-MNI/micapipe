@@ -1036,7 +1036,7 @@ if [ "$procFunc" = "TRUE" ]; then
     else
         # LOCAL - Resting state fMRI processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     fi
 fi
 
