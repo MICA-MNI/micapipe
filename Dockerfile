@@ -72,12 +72,12 @@ RUN apt-get update -qq \
     && make install \
     && rm -rf /tmp/dcm2niix
 
-ENV FSLDIR="/opt/fsl-6.0.3" \
-    PATH="/opt/fsl-6.0.3/bin:$PATH" \
+ENV FSLDIR="/opt/fsl-6.0.2" \
+    PATH="/opt/fsl-6.0.2/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl-6.0.3/bin/fsltclsh" \
-    FSLWISH="/opt/fsl-6.0.3/bin/fslwish" \
+    FSLTCLSH="/opt/fsl-6.0.2/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.2/bin/fslwish" \
     FSLLOCKDIR="" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
@@ -105,13 +105,15 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
-    && mkdir -p /opt/fsl-6.0.3 \
-    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.3-centos6_64.tar.gz \
-    | tar -xz -C /opt/fsl-6.0.3 --strip-components 1 \
+    && mkdir -p /opt/fsl-6.0.2 \
+    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
+    | tar -xz -C /opt/fsl-6.0.2 --strip-components 1 \
     && sed -i '$iecho Some packages in this Docker container are non-free' $ND_ENTRYPOINT \
     && sed -i '$iecho If you are considering commercial use of this container, please consult the relevant license:' $ND_ENTRYPOINT \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
+
+RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2'
 
 ENV FREESURFER_HOME="/opt/freesurfer-7.4.0" \
     PATH="/opt/freesurfer-7.4.0/bin:$PATH"
@@ -354,7 +356,7 @@ ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 
 COPY . /opt/micapipe/
 
-RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/'
+RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
 
 RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.4.0/subjects'
 
@@ -395,12 +397,12 @@ RUN echo '{ \
     \n    [ \
     \n      "fsl", \
     \n      { \
-    \n        "version": "6.0.3" \
+    \n        "version": "6.0.2" \
     \n      } \
     \n    ], \
     \n    [ \
     \n      "run_bash", \
-    \n      "bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3" \
+    \n      "bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2" \
     \n    ], \
     \n    [ \
     \n      "freesurfer", \
@@ -567,7 +569,7 @@ RUN echo '{ \
     \n    ], \
     \n    [ \
     \n      "run_bash", \
-    \n      "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.3/etc/flirtsch/" \
+    \n      "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/" \
     \n    ], \
     \n    [ \
     \n      "run_bash", \
