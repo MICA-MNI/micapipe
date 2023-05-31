@@ -167,6 +167,10 @@ help; exit 1; fi
 parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort)
 workflow="${dir_QC}/${idBIDS}_desc-qc_micapipe_workflow.html"
 
+qc_jsons=$(ls ${subject_dir}/QC/${idBIDS}_module-*.json 2>/dev/null | wc -l)
+Note "Modules processed:" $qc_jsons
+if [[ "$qc_jsons" -lt 1 ]]; then exit; fi
+
 #------------------------------------------------------------------------------#
 Title "MICAPIPE: Creating a QC rport for $idBIDS"
 #	Timer
@@ -215,56 +219,59 @@ done
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-for func_scan in $(ls ${subject_bids}/func/${idBIDS}_task-rest*_bold.nii.gz); do
-  func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
-    Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
-done
+func_acq=desc-se_task-rest_acq-AP_bold # <<<This should be dynamic
+if [ -f ${subject_bids}/QC/${idBIDS}_module-proc_func-${func_acq}.json ]; then
+  for func_scan in $(ls ${subject_bids}/func/${func_acq}/${idBIDS}_task-rest*_bold.nii.gz); do
+    func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
+      Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
+  done
 
-if [ -d ${subject_bids}/fmap/ ]; then
-  mainPhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*AP*.nii* 2>/dev/null))
-  reversePhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*PA*.nii* 2>/dev/null))
-else
-  mainPhase_scan=${bids_mainPhase[0]}
-  reversePhase_scan=${bids_reversePhase[0]}
+  if [ -d ${subject_bids}/fmap/ ]; then
+    mainPhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*AP*.nii* 2>/dev/null))
+    reversePhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*PA*.nii* 2>/dev/null))
+  else
+    mainPhase_scan=${bids_mainPhase[0]}
+    reversePhase_scan=${bids_reversePhase[0]}
+  fi
+
+  mainPhase_scan_mean=$(basename $mainPhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+  Do_cmd fslmaths "${mainPhase_scan}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
+
+  reversePhase_scan_mean=$(basename $reversePhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+  Do_cmd fslmaths "${reversePhase_scan}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
+
+  export default_mainPhase=${bids_mainPhase[0]}
+  export default_reversePhase=${bids_reversePhase[0]}
 fi
-
-mainPhase_scan_mean=$(basename $mainPhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
-Do_cmd fslmaths "${mainPhase_scan}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
-
-reversePhase_scan_mean=$(basename $reversePhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
-Do_cmd fslmaths "${reversePhase_scan}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
-
-export default_mainPhase=${bids_mainPhase[0]}
-export default_reversePhase=${bids_reversePhase[0]}
-
 
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
 # PROC_DWI --------------------------------------------------------------------------------------
-for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
-    dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
-    Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
-done
+if [ -f ${subject_bids}/QC/${idBIDS}_module-proc_dwi.json ]; then
+  for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
+      dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
+      Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
+  done
 
-Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
+  Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
 
-dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+  dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" -force
 
-dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
-Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
-
+  dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+  Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
+fi
 
 # SC --------------------------------------------------------------------------------------------
-dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+if [ -f ${subject_bids}/QC/${idBIDS}_module-SC-${tracts}.json ]; then
+  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
-for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
-    tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
-    Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
-done
-
+  for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
+      tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
+      Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
+  done
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF

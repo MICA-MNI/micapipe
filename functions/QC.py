@@ -144,7 +144,7 @@ else:
     sbids = sub + "_" + ses
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
-
+derivatives = derivatives+'/micapipe_v0.2.0'
 # Path to MICAPIPE
 MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
 
@@ -172,7 +172,7 @@ def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
     # Header
     report_header = (
         # Micapipe banner
-        '<img id=\"top\" src=\"{MICAPIPE}/docs/figures/micapipe_long.png\" alt=\"micapipe\">'
+        '<img id=\"top\" src=\"{MICAPIPE}/micapipe_long.png\" alt=\"micapipe\">'
 
         # Dataset name
         '<h1 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:center;margn-bottom:0">'
@@ -435,11 +435,11 @@ def qc_proc_structural(proc_structural_json=''):
 
 ## --------------------------- PROC-SURF MODULE ---------------------------- ##
 def qc_proc_surf(proc_surf_json=''):
-
     # QC header
     _static_block = qc_header()
 
     surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
+    print(surf_json)
     with open( surf_json ) as f:
         surf_description = json.load(f)
     global recon

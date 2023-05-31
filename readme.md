@@ -1,4 +1,4 @@
-![micapipe logo](/docs/figures/micapipe_long.png)
+![micapipe logo](micapipe_long.png)
 
 ## Multimodal connectome processing with the `micapipe` ##
 
