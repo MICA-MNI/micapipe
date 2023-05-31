@@ -53,20 +53,16 @@ echo -e "
 \t\033[38;5;197m-proc_structural\033[0m
 \t   \033[38;5;120m-T1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
 \t\t\t            Default string is 'T1w.nii'. Multiple inputs example = '-T1wStr run-01_T1w,run-02_T1w'
-\t   \033[38;5;120m-N4wm\033[0m                : Applies a second N4BiasFieldCorrection weighted by a probabilistic white matter mask (eg. for 7T T1w-mprage).
-\t\t\t            Default = no second N4 bias field corretion weighted by white matter
 \t   \033[38;5;120m-uni\033[0m                 : Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
 \t\t\t            Default = no processing of UNI-T1maps
 \t   \033[38;5;120m-mf\033[0m                  : Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
 \t\t\t            Default = 3 (7T), recomended value of 45 for 3T MP2RAGE
-\t   \033[38;5;120m-bet\033[0m                 : Use this option to apply the FSL-bet algorithm to generate the brain mask.
-\t\t\t            Default brain mask uses 'mri_synthstrip' from freesurfer
 
 \t\033[38;5;197m-proc_surf\033[0m
 \t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link for compatibility
 \t\t\t            Prove full path to the subject's directory: e.g. <path_to>/freesurfer/sub-001_ses-01
-\t   \033[38;5;120m-fastsurfer\033[0m          : Use this option to reconstruct the cortical surface with FastSurfer.
-\t\t\t            Default surface reconstruction uses 'Freesurfer 7'
+\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
+\t\t\t            Default surface reconstruction uses 'FastSurfer'
 \t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
 \t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
 \t   \033[38;5;120m-T1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
@@ -76,8 +72,8 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t            Default is the 18 parcellations provided in the pipeline
-\t   \033[38;5;120m-fastsurfer\033[0m          : Use this option to reconstruct the cortical surface with FastSurfer.
-\t\t\t            Default surface reconstruction uses 'Freesurfer 7'
+\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
+\t\t\t            Default surface reconstruction uses 'FastSurfer'
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
@@ -112,22 +108,16 @@ echo -e "
 \t\t\t            you must specify which one to process ( e.g. '1' )
 \t   \033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup
 \t\t\t            ( distortion correction; eg. file.cnf )
-\t   \033[38;5;120m-smoothWithWB\033[0m        : Specify this option to use workbench tools for surface-based smoothing (more memory intensive)
-\t\t\t            ( default = smoothing is performed with freesurfer tools: mri_surf2surf )
 \t   \033[38;5;120m-NSR\033[0m                 : Specify this option to perform white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no white matter and CSF signal regression )
 \t   \033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
 \t\t\t            ( default = no global, white matter and CSF signal regression )
-\t   \033[38;5;120m-GSRtag\033[0m              : Specify this option in addition to -GSR, to perform GSR and generate new outputs
-\t\t\t            ( the new output files will contain the tag 'desc-gsr' )
 \t   \033[38;5;120m-noFIX\033[0m               : Specify this option to skip ICA-FIX processing.
 \t\t\t            ( default = FIX is run with specified training file )
 \t   \033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
 \t\t\t            ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
 \t   \033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
 \t\t\t            ( default processing is independent )
-\t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from func to T1w.
-\t\t\t            ( default is non linear registration SyN )
 \t   \033[38;5;120m-dropTR\033[0m              : Specify this option to drop the first five TRs.
 \t\t\t            ( default is FALSE  )
 \t   \033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
@@ -321,20 +311,12 @@ do
     GSReg=TRUE
     shift
   ;;
-  -GSRtag)
-    GSRtag=TRUE
-    shift
-  ;;
   -regAffine)
     regAffine=TRUE
     shift
   ;;
   -noFIX)
     skipFIX=TRUE
-    shift
-  ;;
-  -smoothWithWB)
-    smoothWB=TRUE
     shift
   ;;
   -dropTR)
@@ -426,10 +408,6 @@ do
     T1wStr="$2"
     shift;shift;
   ;;
-  -bet)
-    maskbet=TRUE
-    shift
-  ;;
   -atlas)
     atlas="$2"
     shift;shift;
@@ -438,8 +416,8 @@ do
     surfdir=$2
     shift;shift;
   ;;
-  -fastsurfer)
-    FastSurfer=TRUE
+  -freesurfer)
+    FreeSurfer=TRUE
     shift
   ;;
   -fs_licence)
@@ -449,10 +427,6 @@ do
   -T1)
     t1="$2"
     shift;shift;
-  ;;
-  -N4wm)
-    N4wm=TRUE
-    shift
   ;;
   -uni)
     UNI=TRUE
@@ -569,7 +543,6 @@ if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optar
 if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
 if [[ $specMainScan == "TRUE" ]]; then optarg_func[2]=$thisMainScan; else optarg_func[2]=DEFAULT; fi
 if [[ $specPhase == "TRUE" ]]; then optarg_func[3]=$thisPhase; else optarg_func[3]=DEFAULT; fi
-if [[ $smoothWB == "TRUE" ]]; then wbSmoothing=1; else wbSmoothing=0; fi
 if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
 if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
 if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
@@ -580,7 +553,6 @@ if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
 if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
-if [ -z "${GSRtag}" ]; then GSRtag=FALSE; fi
 
 # Optional arguments mpc
 if [[ ${mpc_acq} == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
@@ -655,7 +627,7 @@ if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); f
 
 # Surface directory (if already exists)
 if [ -z ${surfdir} ]; then surfdir="FALSE"; else  surfdir=$(realpath $surfdir); fi
-if [ -z ${FastSurfer} ]; then FastSurfer="FALSE"; else  FastSurfer="TRUE"; fi
+if [ -z ${FreeSurfer} ]; then FreeSurfer="FALSE"; else  FreeSurfer="TRUE"; fi
 if [ -z ${t1} ]; then t1=DEFAULT; else t1=$(realpath $t1); fi
 
 # Altas selection (DEFAULT is the 18 of micapipe)
@@ -663,10 +635,8 @@ if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
 # T1w image to process (DEFAULT is *T1w.nii*)
 if [ -z ${T1wStr} ]; then T1wStr=DEFAULT; else T1wStr="$T1wStr"; fi
-if [ -z ${N4wm} ]; then N4wm="FALSE"; else N4wm="TRUE"; fi
 if [ -z ${UNI} ]; then UNI="FALSE"; else UNI="TRUE"; fi
 if [ -z ${MF} ]; then MF=3; else MF="${MF}"; fi
-if [ -z ${maskbet} ]; then maskbet="FALSE"; else maskbet="TRUE"; fi
 
 # Processed DWI
 if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
@@ -710,7 +680,7 @@ fi
 if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; fi
 if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
 Note "Freesurfer licence:" ${fs_licence}
-
+export FS_LICENSE=${fs_licence}
 # Processing
 if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
 
@@ -752,7 +722,7 @@ if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Mo
 # -----------------------------------------------------------------------------------------------#
 if [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $N4wm $UNI $MF $maskbet"
+    COMMAND="${scriptDir}/01_proc-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $UNI $MF"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Structural processing: Volumetric"
@@ -777,7 +747,7 @@ fi
 # # #        Surface processing: Freesurfer | FastSurfer
 if [ "$procSurf" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FastSurfer $fs_licence $t1"
+    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FreeSurfer $fs_licence $t1"
     # mica.q - Surface processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Surface processing"
@@ -794,6 +764,36 @@ if [ "$procSurf" = "TRUE" ]; then
         qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_surf -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
     else
         #  LOCAL - Surface processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Structural processing mica-02
+# -----------------------------------------------------------------------------------------------#
+# # #         POST Structural processing
+#     REQUIRES -proc_structural and -proc_surf
+if [ "$postVOL" = "TRUE" ]; then
+    log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas $FreeSurfer"
+    # mica.q - POST Structural processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - POST Structural processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - POST Structural processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - POST Structural processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - post_structural processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
@@ -880,36 +880,6 @@ if [ "$procFLAIR" = "TRUE" ]; then
              $COMMAND $PROC
     else
       # LOCAL - flair processing
-        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
-    fi
-fi
-
-# -----------------------------------------------------------------------------------------------#
-#                   POST Structural processing mica-02
-# -----------------------------------------------------------------------------------------------#
-# # #         POST Structural processing
-#     REQUIRES -proc_structural and -proc_surf
-if [ "$postVOL" = "TRUE" ]; then
-    log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas $FastSurfer"
-    # mica.q - POST Structural processing
-    if [[ $micaq == "TRUE" ]]; then
-        Info "MICA qsub - POST Structural processing"
-        Warning "This option only works on the MICA workstations"
-        export PROC="qsub-MICA"
-        # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    # all.q - POST Structural processing
-    elif [[ $qall == "TRUE" ]]; then
-        Info "all.q qsub - POST Structural processing"
-        Warning "This option only works on the McGill BIC network"
-        export PROC="qsub-all.q"
-        # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
-             $COMMAND $PROC
-    else
-      # LOCAL - post_structural processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
@@ -1015,7 +985,7 @@ fi
 if [ "$procFunc" = "TRUE" ]; then
     rand=${RANDOM}
     log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')"-${rand}"
-    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${wbSmoothing} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${regAffine} ${dropTR} ${noFC} ${GSRtag}"
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${dropTR} ${noFC}"
     jobName="q${rand}_fun"
     # mica.q - Resting state fMRI processing
     if [[ $micaq == "TRUE" ]]; then
