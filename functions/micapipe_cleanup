@@ -28,7 +28,7 @@ echo -e "
    Flags for erasing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_surf\033[0m        : DELETES Surface processing
-\t  \033[38;5;120m-fastsurfer\033[0m        Use this to delete fastsurfer processing
+\t  \033[38;5;120m-freesurfer\033[0m        Use this to delete freesurfer processing
 \t\033[38;5;197m-proc_flair\033[0m       : DELETES FLAIR processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t  \033[38;5;120m-acqStr\033[0m            Use this option if -proc_dwi was used with -dwi_acq
@@ -131,8 +131,8 @@ do
     acqStr=$2
     shift;shift
   ;;
-  -fastsurfer)
-    FastSurfer=TRUE
+  -freesurfer)
+    FreeSurfer=TRUE
     shift
   ;;
   -mica)
@@ -203,10 +203,10 @@ if [ "$procFS" = "TRUE" ]; then
       recon="$(echo ${module_qc/.json/} | awk -F 'proc_surf-' '{print $2}')"
     elif [[ "$Nrecon" -gt 1 ]]; then
       Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
-      if [[ "$FastSurfer" == "TRUE" ]]; then
-        Note "fastsurfer will run: $FastSurfer\n"; recon="fastsurfer";
+      if [[ "$FreeSurfer" == "TRUE" ]]; then
+        Note "freesurfer will run: $FreeSurfer\n"; recon="freesurfer";
       else
-        Note "freesurfer is the default"; recon="freesurfer"
+        Note "fastsurfer is the default"; recon="fastsurfer"
       fi
     fi
     # Set surface directory
