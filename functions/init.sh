@@ -6,6 +6,8 @@
 
 # Permissions
 umask 002
+#export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+export MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
 
 # Save OLD PATH
 export OLD_PATH=$PATH
