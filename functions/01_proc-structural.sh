@@ -23,17 +23,14 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 T1wStr=$8
-N4wm=$9
-UNI=${10}
-MF=${11}
-maskbet=${12}
-PROC=${13}
+UNI=${9}
+MF=${10}
+PROC=${11}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -62,7 +59,6 @@ micapipe_check_json_status "${module_json}" "proc_structural"
 # 1:UNI, 2:INV1, 3:INV2
 if [[ "${UNI}" == "TRUE" ]]; then
   if [ "$Nimgs" -gt 1 ]; then
-    N4wm="TRUE"
     bids_inv1=${bids_T1ws[1]}
     bids_inv2=${bids_T1ws[2]}
     bids_T1ws=(${bids_T1ws[0]})
@@ -108,7 +104,6 @@ T1nativepro_mask="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.nii.gz
 T1nativepro_first="${proc_struct}/first/${T1str_nat}.nii.gz"
 T1nativepro_5tt="${T1nativepro/.nii.gz/_5tt.nii.gz}"
 procstruct_json="${proc_struct}/${T1str_nat}.json"
-export N4wmStatus="FALSE"
 
 # Creates the T1w_nativepro for structural processing
 if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1str_nat}"_brain.nii.gz ]; then ((N++))
@@ -172,14 +167,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if [ ! -f "$T1nativepro" ]; then Error "$T1str_nat was not generated"; Do_cmd exit; fi
 
     # Brainmask
-    if [ ${maskbet} == "TRUE" ]; then
-      vox=($(mrinfo $T1nativepro -spacing)); x3=$(bc -l <<< "scale=3; ${vox[0]} * ${vox[1]} * ${vox[2]}")
-      # Fractional intensity is based in the linear relationship of the voxel resolution
-      fractional_intensity=$(bc -l <<< "scale=3; 0.4 * $x3 + 0.1")
-      Do_cmd bet "$T1nativepro" "$T1nativepro_brain" -B -f "${fractional_intensity}" -v
-    else
-      Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask" --no-csf
-    fi
+    Do_cmd mri_synthstrip -i "$T1nativepro" -o "$T1nativepro_brain" -m "$T1nativepro_mask" --no-csf
 
     # If no T1native pro exit_status "something is wrong" exit
     if [ ! -f "$T1nativepro_brain" ]; then Error "$T1str_nat masked was not generated"; Do_cmd exit; else ((Nsteps++)); fi
@@ -264,7 +252,7 @@ fi
 
 # Bias field correction weighted by white matter (e.g. 7T data or lost of signal in temporal areas
 N4wmStatus_check=$(grep "N4wmProcessed" ${procstruct_json} | awk -F '"' '{print $4}')
-if [ "$N4wm" == "TRUE" ] && [ "$N4wmStatus_check" == "FALSE" ]; then
+if [ "$N4wmStatus_check" == "FALSE" ]; then ((N++))
   Info "N4 bias field corretion weighted by white matter"
   pve2=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_pve_2.nii.gz
   T1_n4="${tmp}/${idBIDS}_space-nativepro_T1w_N4w.nii.gz"
@@ -272,7 +260,9 @@ if [ "$N4wm" == "TRUE" ] && [ "$N4wmStatus_check" == "FALSE" ]; then
   Do_cmd ImageMath 3 "$T1nativepro" RescaleImage "$T1_n4" 0 100
   export N4wmStatus="TRUE"
   # Update json file for T1native
-  json_nativepro_T1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"
+  json_nativepro_T1w "$T1nativepro" "$Nimgs" "${bids_T1ws[*]}" "${procstruct_json}"; ((Nsteps++))
+else
+    Info "Subject ${id} has N4 bias field corretion weighted by white matter"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
