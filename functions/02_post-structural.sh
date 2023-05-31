@@ -23,7 +23,7 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 atlas=$8
-FastSurfer=$9
+FreeSurfer=$9
 PROC=${10}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
@@ -31,7 +31,6 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -50,10 +49,10 @@ elif [[ "$Nrecon" -eq 1 ]]; then
   recon="$(echo ${module_qc/.json/} | awk -F 'proc_surf-' '{print $2}')"
 elif [[ "$Nrecon" -gt 1 ]]; then
   Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
-  if [[ "$FastSurfer" == "TRUE" ]]; then
-    Note "fastsurfer will run: $FastSurfer\n"; recon="fastsurfer";
+  if [[ "$FreeSurfer" == "TRUE" ]]; then
+    Note "FreeSurfer will run: $FreeSurfer\n"; recon="freesurfer";
   else
-    Note "freesurfer is the default"; recon="freesurfer"
+    Note "FastSurfer is the default"; recon="fastsurfer"
   fi
 fi
 # Set surface directory
