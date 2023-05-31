@@ -26,7 +26,7 @@ nocleanup=$5
 export threads=$6
 tmpDir=$7
 surfdir=$8
-FastSurfer=$9
+FreeSurfer=$9
 fs_licence=${10}
 t1=${11}
 PROC=${12}
@@ -36,7 +36,6 @@ export OMP_NUM_THREADS=$threads
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -58,13 +57,13 @@ if [[ "$surfdir" == "FALSE" ]]; then
 fi
 
 # Surface Directory
-if [[ "$FastSurfer" == "TRUE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
+if [[ "$FreeSurfer" == "FALSE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
 set_surface_directory "${recon}"
 Note "Surface software" "${recon}"
 
 # Surface Directories
-if [ ! -d "${dir_surf}" ]; then mkdir -m 770 "${dir_surf}"; fi
-if [ ! -L "${dir_surf}/fsaverage5" ]; then Do_cmd ln -s "$FREESURFER_HOME/subjects/fsaverage5/" "${dir_surf}"; fi
+if [ ! -d "${dir_surf}" ]; then mkdir -m 777 "${dir_surf}"; fi
+if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd mkdir -p "${dir_surf}"/fsaverage5/surf; cp  "$FREESURFER_HOME/subjects/fsaverage5/surf/"* "${dir_surf}"/fsaverage5/surf; fi
 if [ ! -d "${dir_surf}/fsLR-32k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-32k/surf; cp ${MICAPIPE}/surfaces/fsLR-32k*.gii "${dir_surf}"/fsLR-32k/surf; fi
 if [ ! -d "${dir_surf}/fsLR-5k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-5k/surf; cp ${MICAPIPE}/surfaces/fsLR-5k*.gii "${dir_surf}"/fsLR-5k/surf; fi
 
@@ -89,6 +88,7 @@ Note "fs licence:" "${fs_licence}"
 Note "fastsurfer img:" "${fastsurfer_img}"
 Note "t1 to process:" "${t1_2proc}"
 Do_cmd mkdir -p "${tmp}/nii"
+export FS_LICENSE="${fs_licence}"
 
 #	Timer and steps progress
 aloita=$(date +%s)
@@ -126,21 +126,25 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
 
 
     # Recontruction method
-    if [[ "$FastSurfer" == "TRUE" ]]; then
-        Info "FastSurfer: running the singularity image"
-        Do_cmd mkdir -p "${SUBJECTS_DIR}/${idBIDS}"
-        cp ${fs_licence} ${SUBJECTS_DIR}/license.txt
-        if [[ ${PROC} == "container-micapipe v0.2.0" ]]; then
+    Note PROC $PROC
+    if [[ "$recon" == "fastsurfer" ]]; then
+        Do_cmd mkdir -p "${dir_surf}/${idBIDS}"
+        if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then
+          Info "FastSurfer: running fastsurfer_cpu environment"
           source activate fastsurfer_cpu
-          run_fastsurfer.sh \
-           --fs_license fs_licence \
+          Note "conda" "$(conda info --env | grep '*' | awk '{print $1}')"
+          run_fastsurfer.sh --allow_root \
+           --fs_license ${fs_licence} \
            --t1 "${t1_2proc}" \
-           --sid "${idBIDS}" --sd ${SUBJECTS_DIR} --no_fs_T1 \
+           --sid "${idBIDS}" --sd ${dir_surf} --no_fs_T1 \
            --parallel --threads "${threads}"
           source activate micapipe
+          sudo chmod aug+wr -R ${dir_surf}/${idBIDS}
         else
           t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
           Do_cmd cp "${t1_2proc}" "${t1}"
+          cp ${fs_licence} ${SUBJECTS_DIR}/license.txt
+          Info "FastSurfer: running the singularity image"
           singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
                                 -B "${SUBJECTS_DIR}":/output \
                                 -B "${tmp}/nii":/anat \
@@ -164,7 +168,6 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         dim=($(mrinfo ${t1nii} -size))
         res=($(mrinfo ${t1nii} -spacing))
         fov=$(printf "%.0f" $(bc -l <<< "scale=2; ${dim[2]}*${res[2]}"))
-
         if [ ${fov} -gt 256 ]; then
           Info "Cropping structural image to 256 for surface reconstruction compatibility"
           crop=$(bc -l <<< "scale=0; (${fov}-256)/${res[2]}")
@@ -173,37 +176,9 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         else
           crop="FALSE"
         fi
-
+        if (( $(echo "${res[1]} > 1" |bc -l) )); then cm=""; else cm="-cm"; fi
         # Run recon-all -autorecon1
-        Do_cmd recon-all -autorecon1 -cm -parallel -openmp ${threads} -i "${t1nii}" -s "${idBIDS}"
-
-        # Replace brainmask.mgz with mri_synthstrip mask
-        Do_cmd mri_synthstrip -i ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz -o ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.auto.mgz --no-csf
-        Do_cmd cp ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.auto.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/brainmask.mgz
-
-        # Run recon-all -autorecon2 weird bug on recon2 is skipping -careg (will run each step manually)
-        Do_cmd recon-all -gcareg -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -canorm -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -careg -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -calabel -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -normalization2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -maskbfs -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -segmentation -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -fill -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -tessellate -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -smooth1 -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -inflate1 -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -qsphere -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -fix -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -autorecon-pial -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        Do_cmd recon-all -autorecon2-wm -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Do_cmd recon-all -white -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Do_cmd recon-all -smooth2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Do_cmd recon-all -inflate2 -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Do_cmd recon-all -curvHK -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Do_cmd recon-all -curvstats -cm -parallel -openmp ${threads} -s "${idBIDS}"
-        # Run autorecon3
-        Do_cmd recon-all -autorecon3 -cm -parallel -openmp ${threads} -s "${idBIDS}"
+        Do_cmd recon-all -all ${cm} -parallel -openmp ${threads} -i "${t1nii}" -s "${idBIDS}"
     fi
 
     # Copy the freesurfer log to our MICA-log Directory
