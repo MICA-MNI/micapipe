@@ -25,7 +25,6 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -54,7 +53,7 @@ else
     Info "Using full path to FLAIR scan: ${flairScanStr}"
     flairScan=$(realpath "${flairScanStr}" 2>/dev/null)
 fi
-if [ ! -f "$flairScan" ]; then Error "T2-flair not found for Subject $id : ${flairScan}"; exit; fi
+if [ ! -f "$flairScan" ]; then Error "T2-flair not found for Subject $idBIDS : ${flairScan}"; exit; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_flair.json"
