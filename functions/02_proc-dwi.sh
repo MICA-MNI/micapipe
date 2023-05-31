@@ -36,7 +36,6 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -99,7 +98,7 @@ if [[ "$dwi_processed" != "FALSE" ]]; then
 fi
 
 # Check dependencies Status: PROC_STRUCTURAL
-micapipe_check_dependency "proc_structural" "${dir_QC}/${idBIDS}_module-proc_structural.json"
+micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "DWI string or path does not match the default:\n\t\t TRY to set it with -dwi_main <path to DWI.nii.gz>"; exit; fi
 if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI was not found:\n\t\t TRY to set it with -dwi_main <path to DWI.nii>"; exit; fi
 
