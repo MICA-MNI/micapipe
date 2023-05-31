@@ -115,8 +115,8 @@ RUN apt-get update -qq \
 
 RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2'
 
-ENV FREESURFER_HOME="/opt/freesurfer-7.4.0" \
-    PATH="/opt/freesurfer-7.4.0/bin:$PATH"
+ENV FREESURFER_HOME="/opt/freesurfer-7.3.2" \
+    PATH="/opt/freesurfer-7.3.2/bin:$PATH"
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc \
@@ -128,9 +128,9 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer-7.4.0 \
-    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.0/freesurfer-linux-ubuntu18_amd64-7.4.0.tar.gz \
-    | tar -xz -C /opt/freesurfer-7.4.0 --strip-components 1 \
+    && mkdir -p /opt/freesurfer-7.3.2 \
+    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer-linux-ubuntu18_amd64-7.3.2.tar.gz \
+    | tar -xz -C /opt/freesurfer-7.3.2 --strip-components 1 \
          --exclude='freesurfer/average/mult-comp-cor' \
          --exclude='freesurfer/lib/cuda' \
          --exclude='freesurfer/lib/qt' \
@@ -144,7 +144,7 @@ RUN apt-get update -qq \
          --exclude='freesurfer/subjects/fsaverage6' \
          --exclude='freesurfer/subjects/fsaverage_sym' \
          --exclude='freesurfer/trctrain' \
-    && sed -i '$isource "/opt/freesurfer-7.4.0/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
+    && sed -i '$isource "/opt/freesurfer-7.3.2/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
     MATLABCMD="/opt/matlabmcr-2017b/v93/toolbox/matlab"
@@ -203,11 +203,11 @@ RUN apt-get update -qq \
     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
     | tar -xz -C /opt/afni-latest --strip-components 1
 
-ENV ANTSPATH="/opt/ants-2.3.4" \
+ENV ANTSPATH="/opt/ants-2.3.4/" \
     PATH="/opt/ants-2.3.4:$PATH"
-RUN echo "Downloading ANTs ..." \
+RUN  echo "Downloading ANTs ..." \
     && mkdir -p /opt/ants-2.3.4 \
-    && curl -fsSL --retry 5 https://dl.dropbox.com/s/1xfhydsf4t4qoxg/ants-Linux-centos6_x86_64-v2.3.4.tar.gz \
+    && curl -fsSL https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz \
     | tar -xz -C /opt/ants-2.3.4 --strip-components 1
 
 RUN apt-get update -qq \
@@ -358,13 +358,13 @@ COPY . /opt/micapipe/
 
 RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
 
-RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.4.0/subjects'
+RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.3.2/subjects'
 
 WORKDIR /home/mica
 
 ENV MICAPIPE="/opt/micapipe"
 
-ENV PROC="container-micapipe v0.2.0"
+ENV PROC="container_micapipe-v0.2.0"
 
 ENV FIXPATH=/opt/fix1.068
 
@@ -407,7 +407,7 @@ RUN echo '{ \
     \n    [ \
     \n      "freesurfer", \
     \n      { \
-    \n        "version": "7.4.0" \
+    \n        "version": "7.3.2" \
     \n      } \
     \n    ], \
     \n    [ \
@@ -573,7 +573,7 @@ RUN echo '{ \
     \n    ], \
     \n    [ \
     \n      "run_bash", \
-    \n      "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.4.0/subjects" \
+    \n      "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.3.2/subjects" \
     \n    ], \
     \n    [ \
     \n      "workdir", \
@@ -588,7 +588,7 @@ RUN echo '{ \
     \n    [ \
     \n      "env", \
     \n      { \
-    \n        "PROC": "container-micapipe v0.2.0" \
+    \n        "PROC": "container_micapipe-v0.2.0" \
     \n      } \
     \n    ], \
     \n    [ \
