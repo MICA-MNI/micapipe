@@ -33,26 +33,22 @@ changeTopupConfig=$8
 changeIcaFixTraining=$9
 thisMainScan=${10}
 thisPhase=${11}
-smooth=${12}
-mainScanStr=${13}
-func_pe=${14}
-func_rpe=${15}
-performNSR=${16}
-performGSR=${17}
-noFIX=${18}
-sesAnat=${19}
-regAffine=${20}
-dropTR=${21}
-noFC=${22}
-GSRtag=${23}
-PROC=${24}
+mainScanStr=${12}
+func_pe=${13}
+func_rpe=${14}
+performNSR=${15}
+performGSR=${16}
+noFIX=${17}
+sesAnat=${18}
+dropTR=${19}
+noFC=${20}
+PROC=${21}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -97,13 +93,10 @@ if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainSca
 Note "Main scan        :" "$mainScanStr"; fi
 Note "Phase scan       :" "$func_pe"
 Note "Reverse Phase    :" "$func_rpe"
-Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
-Note "Tag GSR files    :" "$GSRtag"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
-Note "regAffine        :" "${regAffine}"
 Note "Drop TR          :" "${dropTR}"
 Note "Surface          :" "${recon}"
 
@@ -236,13 +229,6 @@ else
     fi
 fi
 
-# Check smoothing
-if [[ $smooth == 1 ]]; then
-    Info "Smoothing of native surface timeseries will be performed using workbench command"
-else
-    Info "Smoothing of native surface timeseries will be performed using FreeSurfer tools (default)"
-fi
-
 # Check nuisance signal regression
 if [[ $performNSR == 1 ]]; then
     Info "White matter and CSF signals will be regressed from processed timeseries"
@@ -250,13 +236,6 @@ elif [[ $performGSR == 1 ]]; then
     Info "Global, white matter and CSF signals will be regressed from processed timeseries"
 else
     Info "Global, white matter and CSF signal regression will not be performed (default)"
-fi
-# Global signal regression with different name
-if [[ $GSRtag == TRUE ]]; then
-  Info "Clean output series will have the tag 'desc-gsr'"
-  gsr="_gsr"
-else
-  gsr=""
 fi
 # gettin dat from mainScanJson exit if Not found
 unset readoutTime RepetitionTime EchoNumber EchoTime
@@ -564,7 +543,7 @@ str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
 SyN_func_warp="${str_func_SyN}1Warp.nii.gz"
 SyN_func_Invwarp="${str_func_SyN}1InverseWarp.nii.gz"
-
+regAffine="FALSE"
 if [[ ${regAffine}  == "FALSE" ]]; then
     # SyN from T1_nativepro to t1-nativepro
     export reg="Affine+SyN"
@@ -680,13 +659,13 @@ if [[ "$noFIX" -eq 0 ]]; then
     else
         Info "Subject ${id} has a clean fMRI processed with FIX"; export statusFIX="YES"
     fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Clean fMRI image has been processed (no FIX)."
     cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 fi
 
 #------------------------------------------------------------------------------#
@@ -838,11 +817,11 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-func
-cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean${gsr}.shape.gii"
+cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean.shape.gii"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${MICAPIPE}/parcellations/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC" "${GSRtag}"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed fsLR time-series"; ((Nsteps++)); ((N++))
