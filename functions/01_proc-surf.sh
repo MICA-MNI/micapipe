@@ -136,10 +136,11 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
           run_fastsurfer.sh --allow_root \
            --fs_license ${fs_licence} \
            --t1 "${t1_2proc}" \
-           --sid "${idBIDS}" --sd ${dir_surf} --no_fs_T1 \
+           --sid "${idBIDS}" --sd ${dir_surf} \
            --parallel --threads "${threads}"
           source activate micapipe
           sudo chmod aug+wr -R ${dir_surf}/${idBIDS}
+          Do_cmd cp "${dir_surf}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
         else
           t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
           Do_cmd cp "${t1_2proc}" "${t1}"
@@ -155,11 +156,14 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
                                 --sid "${idBIDS}" --sd /output --no_fs_T1 \
                                 --parallel --threads "${threads}"
           rm -rfv "${SUBJECTS_DIR}/nii"
-
+          chmod aug+wr -R ${SUBJECTS_DIR}/${idBIDS}
+          #  mri/T1.mgz is replaced by mri/norm.mgz with fastsurfer
+          cp ${SUBJECTS_DIR}/${idBIDS}/mri/norm.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz
+          # Copy the freesurfer log to our MICA-log Directory
+          Do_cmd cp "${SUBJECTS_DIR}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
+          # Copy results from TMP to deviratives/SUBJECTS_DIR directory
+          Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
         fi
-        chmod aug+wr -R ${SUBJECTS_DIR}/${idBIDS}
-        #  mri/T1.mgz is replaced by mri/norm.mgz with fastsurfer
-        cp ${SUBJECTS_DIR}/${idBIDS}/mri/norm.mgz ${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz
     else
         Info "Running Freesurfer 7.4.0 comform volume to minimum"
 
@@ -179,13 +183,11 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         if (( $(echo "${res[1]} > 1" |bc -l) )); then cm=""; else cm="-cm"; fi
         # Run recon-all -autorecon1
         Do_cmd recon-all -all ${cm} -parallel -openmp ${threads} -i "${t1nii}" -s "${idBIDS}"
+        # Copy the freesurfer log to our MICA-log Directory
+        Do_cmd cp "${SUBJECTS_DIR}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
+        # Copy results from TMP to deviratives/SUBJECTS_DIR directory
+        Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
     fi
-
-    # Copy the freesurfer log to our MICA-log Directory
-    Do_cmd cp "${SUBJECTS_DIR}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
-
-    # Copy results from TMP to deviratives/SUBJECTS_DIR directory
-    Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
 fi
 Note "Check log file:" "${dir_logs}/recon-all.log"
 
