@@ -220,7 +220,8 @@ done
 
 # PROC_FUNC -------------------------------------------------------------------------------------
 func_acq=desc-se_task-rest_acq-AP_bold # <<<This should be dynamic
-if [ -f ${subject_bids}/QC/${idBIDS}_module-proc_func-${func_acq}.json ]; then
+Note "func json:" ${subject_dir}/QC/${idBIDS}_module-proc_func-${func_acq}.json
+if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_func-${func_acq}.json ]; then
   for func_scan in $(ls ${subject_bids}/func/${func_acq}/${idBIDS}_task-rest*_bold.nii.gz); do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
       Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
@@ -248,7 +249,7 @@ fi
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
 # PROC_DWI --------------------------------------------------------------------------------------
-if [ -f ${subject_bids}/QC/${idBIDS}_module-proc_dwi.json ]; then
+if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
   for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
       dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
       Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
@@ -264,7 +265,7 @@ if [ -f ${subject_bids}/QC/${idBIDS}_module-proc_dwi.json ]; then
 fi
 
 # SC --------------------------------------------------------------------------------------------
-if [ -f ${subject_bids}/QC/${idBIDS}_module-SC-${tracts}.json ]; then
+if [ -f ${subject_dir}/QC/${idBIDS}_module-SC-${tracts}.json ]; then
   Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
   for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
