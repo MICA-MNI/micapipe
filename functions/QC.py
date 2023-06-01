@@ -154,6 +154,9 @@ MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
 ##                      Helper functions to generate PDF                     ##
 ##                                                                           ##
 ## ------------------------------------------------------------------------- ##
+def file_exists(file_path):
+    return os.path.isfile(file_path)
+
 def check_json_exist(jsonPath=''):
     json_exist = os.path.isfile(jsonPath)
 
@@ -487,15 +490,17 @@ def qc_proc_surf(proc_surf_json=''):
                      nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
                      screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
     # Destrieux atlas (aparc.a2009s)
-    parc = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc-a2009s_mics.annot')[0]), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_a2009s.png')
+    if file_exists(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot'):
+        parc = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc-a2009s_mics.annot')[0]), axis=0)
+        plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_a2009s.png')
     # Desikan-Killiany Atlas (aparc)
-    parcDK = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc_mics.annot')[0]), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_aparc.png')
+    if file_exists(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot'):
+        parcDK = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc_mics.annot')[0]), axis=0)
+        plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
+                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_aparc.png')
 
     native_surface_table = (
         '<table style="border:1px solid #666;width:100%">'
@@ -530,10 +535,15 @@ def qc_proc_surf(proc_surf_json=''):
 ## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
 def qc_post_structural(post_structural_json=''):
 
+    # Load native surface
+    surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
+    surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
+
     post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
-    recon = post_struct_description["SurfaceProc"]
+    recon = post_struct_description["SurfRecon"]
+    surfaceDir
 
     # QC header
     _static_block = qc_header()
@@ -579,16 +589,25 @@ def qc_post_structural(post_structural_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Surface labels</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    annot_dir = os.path.realpath(surfaceDir+'/'+sbids+'/label/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
+
+    print('-----------------------------')
+    print('')
+    print(atlas)
+    print('')
+    print('-----------------------------')
     for annot in atlas:
         fig = sbids + "_atlas-" + annot + "_desc-surf.png"
-        fileL= "%s/lh.%s.annot"%(label_dir,annot)
-        fileR= "%s/rh.%s.annot"%(label_dir,annot)
+        fileL= "%s/lh.%s_mics.annot"%(annot_dir,annot)
+        fileR= "%s/rh.%s_mics.annot"%(annot_dir,annot)
         figPath = tmpDir + '/' + fig
         label = np.concatenate((nb.freesurfer.read_annot(fileL)[0], nb.freesurfer.read_annot(fileR)[0]), axis=0)
         if os.path.exists(fileL) and os.path.exists(fileR):
+            print("[INFO].... Creating PNG of " + annot + " on native surface")
             plot_hemispheres(surf_lh, surf_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(label)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
                              screenshot = True, filename = figPath)
@@ -788,7 +807,7 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.1), np.quantile(flair, 0.98))
+        crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
 
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=crange, cmap='afmhot', transparent_bg=False,
@@ -953,7 +972,6 @@ def qc_proc_dwi(proc_dwi_json=''):
 def qc_proc_func(proc_func_json=''):
 
     tag = proc_func_json.split('%s_module-proc_func-desc-'%(sbids))[1].split('.json')[0]
-
     # QC header
     _static_block = qc_header()
     _static_block +=  report_module_header_template(module='proc_func (%s)'%(tag))
@@ -986,6 +1004,7 @@ def qc_proc_func(proc_func_json=''):
     mainPhaseScan = func_clean_json["Preprocess"]["MainPhaseScan"]
     if mainPhaseScan == 'DEFAULT':
         mainPhaseScan = os.getenv('default_mainPhase')
+        print(mainPhaseScan)
         outPath = tmpDir + '/' + mainPhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
     else:
         outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
@@ -1045,8 +1064,8 @@ def qc_proc_func(proc_func_json=''):
             '<b>Functional connectomes</b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.txt"%(out,sub,ses,tag,sbids)
-    fc = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc = nb.load(fc_file).darrays[0].data
     np.seterr(divide='ignore')
     fcz = np.arctanh(fc)
     fcz[~np.isfinite(fcz)] = 0
@@ -1121,8 +1140,8 @@ def qc_proc_func(proc_func_json=''):
             '<b> Yeo networks (schaefer-400) </b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.txt"%(out,sub,ses,tag,sbids)
-    fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc_mtx = nb.load(fc_file).darrays[0].data
     fc = fc_mtx[49:, 49:]
     fcz = np.arctanh(fc)
     fcz[~np.isfinite(fcz)] = 0
@@ -1370,8 +1389,8 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids)
-    mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids)
+    mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
     mpc[mpc==0] = np.finfo(float).eps
@@ -1400,9 +1419,10 @@ def qc_mpc(mpc_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
         if annot == 'aparc-a2009s':
@@ -1410,8 +1430,8 @@ def qc_mpc(mpc_json=''):
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
-        ip = np.loadtxt(ip_file, dtype=float, delimiter=' ')
+        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        ip = nb.load(ip_file).darrays[0].data
         pltpy.imshow(ip, cmap="Greens", aspect='auto')
         pltpy.savefig(ip_fig)
 
@@ -1420,8 +1440,8 @@ def qc_mpc(mpc_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
-        mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        mpc = nb.load(mpc_file).darrays[0].data
         mpc = np.triu(mpc,1)+mpc.T
         mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
         mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
@@ -1483,8 +1503,8 @@ def qc_gd(gd_json=''):
             '<b>GD connectomes</b> </p>'
     )
 
-    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.txt"%(out,sub,ses,sbids)
-    gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(out,sub,ses,sbids)
+    gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1507,9 +1527,10 @@ def qc_gd(gd_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
         if annot == 'aparc-a2009s':
@@ -1520,8 +1541,8 @@ def qc_gd(gd_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         gd_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd.png"
-        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
-        gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.shape.gii"%(out,sub,ses,sbids,annot)
+        gd = nb.load(gd_file).darrays[0].data
         pltpy.imshow(gd, cmap="Blues", aspect='auto')
         pltpy.savefig(gd_fig)
 
@@ -1582,4 +1603,9 @@ for i, m in enumerate(qc_module_function['modules']):
     for j in module_qc_json:
         if check_json_exist(j):
             static_report = qc_module_function['functions'][i](j)
-            convert_html_to_pdf(static_report, j.replace('.json','_qc-report.pdf'))
+            file_pdf=j.replace('.json','_qc-report.pdf')
+            if not os.path.isfile(file_pdf):
+                print('----------------------------')
+                print('creating: '+file_pdf)
+                print('----------------------------')
+                convert_html_to_pdf(static_report, file_pdf)
