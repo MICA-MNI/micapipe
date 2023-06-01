@@ -63,8 +63,6 @@ micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
 export OMP_NUM_THREADS="$threads"
-mkdir $tmpDir
-tmp=$tmpDir
 
 #	Timer
 aloita=$(date +%s)
