@@ -98,7 +98,7 @@ if [ ! -f "${dir_subjsurf}/mri/T1.mgz" ]; then Error "Subject $id doesn't have a
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
-micapipe_check_json_status "${module_json}" "post_structural"
+micapipe_check_json_status "${module_json}" "${dir_surf}" "post_structural"
 
 #------------------------------------------------------------------------------#
 Title "POST-structural processing\n\t\tmicapipe $Version, $PROC "
@@ -303,7 +303,7 @@ fi
 
 # Create json file for post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-json_poststruct "${T1surf}" "${post_struct_json}"
+json_poststruct "${T1surf}" "${dir_surf}" "${post_struct_json}"
 
 # Running cortical morphology - Requires json_poststruct
 Nmorph=$(ls "${dir_maps}/"*thickness* "${dir_maps}/"*curv* 2>/dev/null | wc -l)
