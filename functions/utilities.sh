@@ -532,7 +532,7 @@ function json_surf() {
             ]
           },
         \"SurfaceDir\": \"${2}\",
-        \"SurfRecon\": \"${3}\",
+        \"SurfRecon\": \"${3}\"
       }" > "$4"
   elif [[ "$surfdir" != "FALSE" ]]; then
     echo -e "{
@@ -857,7 +857,8 @@ function json_poststruct() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"SurfaceProc\": \"${recon}\",
+    \"SurfRecon\": \"${recon}\",
+    \"SurfaceDir\": \"${2}\",
     \"Atlas\": [
         \"${atlas}\"
       ],
@@ -875,7 +876,7 @@ function json_poststruct() {
           \"${Transform[@]:12:8}\"
           ]
       }
-  }" > "$2"
+  }" > "$3"
 }
 
 function json_func() {
