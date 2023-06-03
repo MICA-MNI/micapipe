@@ -1094,13 +1094,14 @@ def qc_proc_func(proc_func_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
         # fc connectomes
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
-        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
+        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(out,sub,ses,tag,sbids,annot)
 
         if os.path.isfile(fc_file):
             fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
@@ -1240,9 +1241,10 @@ def qc_sc(sc_json=''):
     figPath = "%s/tdi_%s.png"%(tmpDir,streamlines)
     _static_block += nifti_check(outName="Track density imaging (%s tracks)"%(streamlines), outPath=outPath, figPath=figPath)
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
 
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
     sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
