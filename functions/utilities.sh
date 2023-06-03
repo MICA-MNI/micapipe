@@ -901,13 +901,13 @@ function json_func() {
         \"${qform[@]:12:8}\"
       ],
     \"Preprocess\": {
-        \"MainScan\": \"${mainScan[*]}\",
+        \"MainScan\": \"${mainScan_orig}\",
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
         \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
         \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
-        \"MainPhaseScan\": \"${func_pe}\",
-        \"ReversePhaseScan\": \"${func_rpe}\",
+        \"MainPhaseScan\": \"${mainPhaseScan_orig}\",
+        \"ReversePhaseScan\": \"${reversePhaseScan_orig}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
