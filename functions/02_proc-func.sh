@@ -274,6 +274,11 @@ Note "Parallel processing      :" "${threads} threads"
 Note "proc_fun outputs:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
 
+# Save original files for the json file
+export mainScan_orig=${mainScan[0]}
+export mainPhaseScan_orig=${mainPhaseScan}
+export reversePhaseScan_orig=${reversePhaseScan}
+
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
@@ -412,7 +417,7 @@ function func_topup() {
 # Begining of the REAL processing
 status="INCOMPLETE"
 # Processing fMRI acquisitions.
-if [[ ! -f "${func_nii}" ]]; then
+if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     # Reorient and motion correct main(s) fMRI
     for i in "${!mainScan[@]}"; do n=$((i+1))
       func_reoMC ${mainScan[i]} "mainScan${n/1/}" $n
@@ -497,7 +502,7 @@ else
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.txt" ]]; then ((N++))
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
@@ -767,7 +772,7 @@ else
 fi
 
 # ONLY for tSNR (will get deleted after):
-if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative_NoHP.func.gii" ]]; then
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
             $func_nii \
@@ -829,7 +834,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # a bit of extra cleanup
-rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii ${func_volum}/${idBIDS}${func_lab}.nii.gz
+rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii ${func_volum}/${idBIDS}${func_lab}.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # QC notification of completition
