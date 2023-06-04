@@ -592,14 +592,9 @@ def qc_post_structural(post_structural_json=''):
     label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
     annot_dir = os.path.realpath(surfaceDir+'/'+sbids+'/label/')
     files = os.listdir(label_dir)
-    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
 
-    print('-----------------------------')
-    print('')
-    print(atlas)
-    print('')
-    print('-----------------------------')
     for annot in atlas:
         fig = sbids + "_atlas-" + annot + "_desc-surf.png"
         fileL= "%s/lh.%s_mics.annot"%(annot_dir,annot)
@@ -1007,7 +1002,7 @@ def qc_proc_func(proc_func_json=''):
         print(mainPhaseScan)
         outPath = tmpDir + '/' + mainPhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
     else:
-        outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + os.path.basename(mainPhaseScan).split('.nii.gz')[0] + '_mean.nii.gz'
 
     figPath = "%s/fmri_mainPhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Main phase scan (mean)", outPath=outPath, figPath=figPath)
@@ -1017,7 +1012,7 @@ def qc_proc_func(proc_func_json=''):
         reversePhaseScan = os.getenv('default_reversePhase')
         outPath = tmpDir + '/' + reversePhaseScan.split('.nii.gz')[0] + '_mean.nii.gz'
     else:
-        outPath = tmpDir + '/' + reversePhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + os.path.basename(reversePhaseScan).split('.nii.gz')[0] + '_mean.nii.gz'
     figPath = "%s/fmri_reveresePhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Reverse phase scan (mean)", outPath=outPath, figPath=figPath)
 
@@ -1096,7 +1091,7 @@ def qc_proc_func(proc_func_json=''):
 
     label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
     files = os.listdir(label_dir)
-    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
         # fc connectomes
@@ -1244,7 +1239,7 @@ def qc_sc(sc_json=''):
 
     label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
     files = os.listdir(label_dir)
-    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
 
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
@@ -1424,7 +1419,7 @@ def qc_mpc(mpc_json=''):
 
     label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
     files = os.listdir(label_dir)
-    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
@@ -1532,7 +1527,7 @@ def qc_gd(gd_json=''):
 
     label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
     files = os.listdir(label_dir)
-    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file]
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
