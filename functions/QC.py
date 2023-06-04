@@ -1103,8 +1103,9 @@ def qc_proc_func(proc_func_json=''):
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
         fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(out,sub,ses,tag,sbids,annot)
 
+        # Load shape.gii
         if os.path.isfile(fc_file):
-            fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+            fc_mtx = nb.load(fc_file).darrays[0].data
             fc = fc_mtx[49:, 49:]
             fcz = np.arctanh(fc)
             fcz[~np.isfinite(fcz)] = 0
@@ -1249,8 +1250,8 @@ def qc_sc(sc_json=''):
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
     sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
     for connectomeType in connectomes:
-        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,streamlines,connectomeType)
-        c = np.loadtxt(c_file, dtype=float, delimiter=' ')
+        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,streamlines,connectomeType)
+        c = nb.load(c_file).darrays[0].data
         c = np.log(np.triu(c,1)+c.T)
         c[np.isneginf(c)] = 0
         c[c==0] = np.finfo(float).eps
@@ -1278,8 +1279,8 @@ def qc_sc(sc_json=''):
             Ndim = max(np.unique(annot_lh_fs5[0]))
 
             c_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + ".png"
-            c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
-            c = np.loadtxt(c_file, dtype=float, delimiter=' ')
+            c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
+            c = nb.load(c_file).darrays[0].data
             c = np.log(np.triu(c,1)+c.T)
             c[np.isneginf(c)] = 0
             c[c==0] = np.finfo(float).eps
