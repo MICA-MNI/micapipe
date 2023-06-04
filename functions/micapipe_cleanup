@@ -320,10 +320,11 @@ if [ "$postDWI" = "TRUE" ]; then
       if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
       proc_dwi=$subject_dir/dwi/"${acqStr}"; acqStr_="_${acqStr}"
     fi
-    Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
+    Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.shape.gii \
+                  "$proc_dwi"/connectomes/"$idBIDS"_surf-fsLR-5k_desc-iFOD2-"$tracts"-"${filter}"_*.shape.gii \
                   "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_* \
                   "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
-                  "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
+                  "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC-${tracts}*
     grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
