@@ -28,6 +28,7 @@ Created on June 2023 (the year of light)
 import argparse
 import pandas as pd
 import nibabel as nib
+import numpy as np
 import os
 
 # Function save as gifti
@@ -70,8 +71,8 @@ else:
     else:
         print("INFO.... Connectome new dimensions: {} x {}".format(len(indx), len(indx)))
         indx = [i - 1 for i in indx]
-        M = M[indx, indx]
-
+        M = M[np.ix_(indx, indx)]
+        print(M.shape)
         # Save the GIFTI data to a file
         output_file = args.conn.replace("txt", "shape.gii")
         save_gii(M, output_file)

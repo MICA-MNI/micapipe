@@ -242,7 +242,6 @@ for seg in "${parcellations[@]}"; do
         Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
         # Build the Cortical-Subcortical-Cerebellum connectomes
         build_connectomes "$dwi_all" "${connectome_str}_full"
-        Warning "${connectome_str}_full-connectome.shape.gii"
         if [[ -f "${connectome_str}_full-connectome.shape.gii" ]]; then ((Nsteps++)); fi
     else
         ((Nsteps++))
