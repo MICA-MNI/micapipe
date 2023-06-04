@@ -48,7 +48,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 # Variables naming for multiple acquisitions
