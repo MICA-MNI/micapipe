@@ -919,8 +919,7 @@ function json_func() {
         \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
-        \"dropTR\": \"${dropTR}\",
-        \"SurfaceProc\": \"${recon}\"
+        \"dropTR\": \"${dropTR}\"
       }
   }" > "$1"
 }
