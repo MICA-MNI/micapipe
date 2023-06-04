@@ -210,11 +210,7 @@ RUN  echo "Downloading ANTs ..." \
     && curl -fsSL https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz \
     | tar -xz -C /opt/ants-2.3.4 --strip-components 1
 
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           connectome-workbench \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN bash -c 'apt-get update && apt-get install -y gnupg2 && wget -O- http://neuro.debian.net/lists/xenial.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list && apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9 && apt-get update && apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1'
 
 RUN bash -c 'cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz'
 
@@ -343,8 +339,10 @@ RUN set -uex; \
     apt update; \
     apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
     rm -rf /var/lib/apt/lists/*;
-RUN bash -c 'wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh && \
-                    bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL'
+
+COPY ./install_R_env.sh /opt/install_R_env.sh
+
+RUN bash -c 'bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL'
 
 # Install c3d
 RUN set -uex; \
