@@ -270,16 +270,15 @@ def load_sc(File, Ndim):
 # json csv and table
 # --------------------------------------------------------------------
 # Get the list of json files and sessions
-dir_list = glob.glob(out+'/sub*/ses*')
+dir_list = glob.glob(out+'/sub*/*')
 dir_ses = [entry.split('/')[-1] for entry in dir_list]
 dir_ses = list(set(dir_ses))
 
 if any('ses-' in string for string in dir_ses):
-    jsons = sorted(glob.glob(out+'/sub*/ses*/QC/*json'))
+    dir_str='sub*/ses*'
 else:
-    jsons = sorted(glob.glob(out+'/sub*/QC/*json'))
-    dir_ses = 'SINGLE'
-    
+    dir_str = 'sub*'
+jsons = sorted(glob.glob(out+'/'+dir_str+'/QC/*json'))   
 
 # Sort the JSON files by creation time (newest at the bottom)
 jsons = sorted(jsons, key=lambda x: os.path.getctime(x))
@@ -483,7 +482,7 @@ html_table = stats_df[['mean_std']].style.set_table_styles([
     {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]},
 ])
 # Render the styled table
-styled_table = html_table.render()
+styled_table = html_table.to_html()
 
 
 
@@ -520,7 +519,7 @@ def report_module_header_template(module=''):
     # Module header:
     report_module_header = (
         '<p style="border:2px solid #666;padding-top:10px;padding-left:5px;background-color:#eee;font-family:Helvetica, '
-        'sans-serif;font-size:14px">'
+        'sans-serif;font-size:14px;text-align:center;">'
         '<b>{module}</b> <p>'
     )
     return report_module_header.format(module=module)
@@ -535,6 +534,14 @@ def report_module_output_figure(outName='', figPath=''):
         '<center> <img style="width:500px%;margin-top:0px" src="{figPath}"> </center>'
     )
     return report_module_output.format(outName=outName, figPath=figPath)
+
+def report_titleh2(Title='', Size='12'):
+    # Module Outputs
+    report_module_output = (
+        '<h2 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:Left;margin-bottom:0">'
+        '{Title} </h2>'
+    )
+    return report_module_output.format(Title=Title)
 
 # --------------------------------------------------------------------
 # Surface and similarity matrix
@@ -583,50 +590,50 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
     # Get the position indices where colmean < 0.2
     indices = np.where(colmean < 0.25)[0]
     
+    # Write html code
+    _static_block = '<div style="page-break-after: always;"></div>'
+    _static_block +=  report_module_header_template(module=f'{out_png} | vertex-wise')
+    _static_block += report_titleh2(f'{out_png} | vertex-wise Group Mean')
+    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}.png')
+    _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
+    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
+    
     # Print the position indices
     if len(indices) > 0:
-        # Create the bar plot
-        bids_outliers = [bids_ids[i] for i in indices]
-        plt.bar(bids_outliers, colmean[indices])
-    
-        # Set the title, x-label, and y-label
-        plt.title('Outliers <0.25')
-        plt.xlabel('Subjects')
-        plt.ylabel('Mean similarity value')
-    
-        # Rotate the x-axis labels for better visibility if needed
-        plt.xticks(rotation=90)
-    
-        # Save the plot as a PNG file
-        plt.savefig(f'{tmpDir}/micapipe_qc_{out_png}_outliers.png', dpi=300, bbox_inches='tight')
-        # Close the plot to release resources
-        plt.close()
-    
-    # Create the block chunck of html code
-    _static_block = report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}.png')
-    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
-    if os.path.isfile(f'{tmpDir}/micapipe_qc_{out_png}_outliers.png'):
-        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_outliers.png')
+        # Create a dictionary with the data for the table
+        table_data = {
+            "Subject": [bids_ids[i] for i in indices],
+            "Mean similarity Value": colmean[indices]
+        }
+        
+        # Create a DataFrame from the table data
+        table_df = pd.DataFrame(table_data)
+        
+        # Apply the table styles
+        table_style = [
+            {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
+            {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
+        ]
+        styled_table = table_df.style.set_table_styles(table_style)
+        
+        # Display the styled table
+        _static_block += report_titleh2(f'{out_png} | subjects with low within group similarity')
+        _static_block += styled_table.to_html()
     
     return(_static_block)
 
-def get_aqc():
-    dir_list = glob.glob(out+'/sub*/ses*')
-    dir_ses = [entry.split('/')[-1] for entry in dir_list]
-    dir_ses = list(set(dir_ses))
+def get_acqs(Str):
+    acqs = sorted(glob.glob(out+'/'+dir_str+f'/{Str}/*'))
+    acqs_uni = [entry.split('/')[-1] for entry in acqs]
+    acqs_uni = list(set(acqs_uni))
     
-    if any('ses-' in string for string in dir_ses):
-        jsons = sorted(glob.glob(out+'/sub*/ses*/QC/*json'))
-    else:
-        jsons = sorted(glob.glob(out+'/sub*/QC/*json'))
-        dir_ses = 'SINGLE'
-    return(jsons)
+    return(acqs_uni)
 
 def qc_group():
 
     # QC header
     _static_block = qc_header()
-    
+    # -------------------------------------------------------
     # Progress
     _static_block +=  report_module_header_template(module='Processing progress')
     
@@ -635,40 +642,50 @@ def qc_group():
     for png in tables_png:
         _static_block += report_module_output_figure('', png)
     print( 'Module progress')
-    _static_block += report_module_output_figure('Module progress', f'{tmpDir}/micapipe_qc_module_progress_plot.png')
+    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_module_progress_plot.png')
     print( 'Processing times')
-    _static_block += report_module_output_figure('Processing times', f'{tmpDir}/micapipe_qc_time.png')
+    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_time.png')
     
     _static_block += styled_table.replace('mean_std', 'Time in minutes (mean | SD)')
-
-    _static_block +=  report_module_header_template(module='Vertex-wise Group Mean Maps and Subject Similarity')
     
+    # -------------------------------------------------------
     # Vertex-wise thickness
-    _static_block += report_surface_similarity(out, 'sub-*/ses-*/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
-                              'sub-*/ses-*/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
+    _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
 
     # Vertex-wise DWI derived map (dynamic)
-    _static_block += report_surface_similarity(out, 'sub-*/ses-*/maps/*_hemi-L_surf-fsLR-5k_label-white_ADC.func.gii',
-                              'sub-*/ses-*/maps/*_hemi-R_surf-fsLR-5k_label-white_ADC.func.gii', 'ADC', 'cmo.ice')
+    _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-white_ADC.func.gii',
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-white_ADC.func.gii', 'ADC', 'cmo.ice')
     
     # Vertex-wise func (dynamic)
+    for acq in get_acqs('func'):
+        _static_block += report_surface_similarity(out, f'{dir_str}/func/{acq}/surf/*_hemi-L_surf-fsLR-5k.func.gii',
+                                  f'{dir_str}/func/{acq}/surf/*_hemi-R_surf-fsLR-5k.func.gii', acq.replace('desc-',''), 'cmo.dense_r', quantile=(0.05, 0.9))
     
     # Vertex-wise MPC (dynamic)
+    for acq in get_acqs('mpc'):
+        acq_qmri=acq.replace('acq-','')
+        _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii',
+                                  f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', acq_qmri, 'cmo.deep_r', quantile=(0.01, 0.99))
     
     # Vertex-wise flair
-    _static_block += report_surface_similarity(out, 'sub-*/ses-*/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_flair.func.gii',
-                              'sub-*/ses-*/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_flair.func.gii', 'flair', 'afmhot', quantile=(0.15, 0.999))
+    _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_flair.func.gii',
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_flair.func.gii', 'flair', 'afmhot', quantile=(0.15, 0.999))
 
-    
+    # -------------------------------------------------------
+    # ROI based
+    _static_block += '<div style="page-break-after: always;"></div>'
     _static_block +=  report_module_header_template(module='ROI Group Mean Maps and Subject Similarity')
     
-    # ROI GD
+    # ROI GDs
 
     # ROI SC (dynamic)
     
     # ROI func (dynamic)
+    get_acqs('func')
     
     # ROI MPC (dynamic)
+    get_acqs('mpc')
 
 
     return _static_block
