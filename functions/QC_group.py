@@ -63,7 +63,6 @@ This script will create a pdf with the QC at group level of the outputs of the m
 @author: rcruces
 """
 from xhtml2pdf import pisa
-import sys
 import pandas as pd
 import numpy as np
 import os
@@ -73,11 +72,9 @@ import nibabel as nb
 import argparse
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.plotting import plot_hemispheres
-from brainspace.mesh.array_operations import smooth_array
-from brainspace.gradient import GradientMaps
+from brainspace.utils.parcellation import map_to_labels
 import seaborn as sns
 import math
-import numpy as np
 from matplotlib.cm import Spectral
 import matplotlib.pyplot as plt
 import cmocean
@@ -117,7 +114,6 @@ args = parser.parse_args()
 # Arguments
 out = os.path.realpath(args.out)
 version = args.version
-#out='/data_/mica3/BIDS_CI/dev_mica'
 
 # Set the paths
 derivatives = out.split('/micapipe_v0.2.0')[0]
@@ -144,7 +140,13 @@ if version == True:
 
 # ----------------------------------------------------------- #
 #bids = os.path.realpath(args.bids)
+# Check if tmpDir exists, otherwise set it to '/tmp' as default
 tmpDir = args.tmpDir
+if not os.path.exists(tmpDir):
+    tmpDir = '/tmp'
+
+tmpDir = tmpDir+'/micapipe_QC-group_'+str(np.random.randint(low=1000, high=10000))
+os.mkdir(tmpDir)
 
 # ----------------------------------------------------------- #
 # Path to MICAPIPE
@@ -189,16 +191,11 @@ def plot_connectome(mtx, Title='matrix plot', xlab='X', ylab='Y', col='rocket', 
     if save_path is not None:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
-def upper_tri_indexing(A):
-    m = A.shape[0]
-    r,c = np.triu_indices(m,1)
-    return A[r,c]
-
 def load_mpc(File, Ndim):
     """Loads and process a MPC"""
     
     # load the matrix
-    mtx_mpc = np.loadtxt(File, dtype=float, delimiter=' ')
+    mtx_mpc = nb.load(File).darrays[0].data
     
     # Mirror the matrix
     MPC = np.triu(mtx_mpc,1)+mtx_mpc.T
@@ -213,7 +210,7 @@ def load_gd(File, Ndim):
     """Loads and process a GD"""
     
     # load the matrix
-    mtx_gd = np.loadtxt(File, dtype=float, delimiter=' ')
+    mtx_gd = nb.load(File).darrays[0].data
     
     # Remove the Mediall Wall
     mtx_gd = np.delete(np.delete(mtx_gd, 0, axis=0), 0, axis=1)
@@ -225,14 +222,10 @@ def load_fc(File, Ndim, parc=''):
     """Loads and process a functional connectome"""
     
     # load the matrix
-    mtx_fs = np.loadtxt(File, dtype=float, delimiter=' ')
+    mtx_fs = nb.load(File).darrays[0].data
     
     # slice the matrix remove subcortical nodes and cerebellum
     FC = mtx_fs[49:, 49:]
-    
-    # Remove the medial wall
-    #if parc != 'glasser-360':
-    #    FC = np.delete(np.delete(FC, Ndim, axis=0), Ndim, axis=1)
     
     # Fisher transform
     FCz = np.arctanh(FC)
@@ -248,7 +241,7 @@ def load_sc(File, Ndim):
     """Loads and process a structura connectome"""
     
     # load the matrix
-    mtx_sc = np.loadtxt(File, dtype=float, delimiter=' ')
+    mtx_sc = nb.load(File).darrays[0].data
     
     # Mirror the matrix
     mtx_sc = np.log(np.triu(mtx_sc,1)+mtx_sc.T)
@@ -262,6 +255,26 @@ def load_sc(File, Ndim):
     SC[SC==0] = np.finfo(float).eps
     
     return SC
+
+# Load files
+def load_connectomes(files, Ndim, func):
+    # Load all the matrices
+    M=np.empty([Ndim*2, Ndim*2, len(files)], dtype=float)
+    for i, f in enumerate(files):
+        M[:,:,i] = func(f, Ndim)
+        
+    return M
+
+# Load annotation file in fsaverage5
+atlas='schaefer-400'
+annot_lh_fs5= nb.freesurfer.read_annot(micapipe + '/parcellations/lh.' + atlas + '_mics.annot')
+Ndim = max(np.unique(annot_lh_fs5[0]))
+
+# Read label for conte69
+labels_c69 = np.loadtxt(open(micapipe + '/parcellations/'+atlas+'_conte69.csv'), dtype=int)
+
+# mask of the medial wall
+mask_c69 = labels_c69 != 0
 
 ## ---------------------------- MICAPIPE header ---------------------------- ##
 
@@ -400,7 +413,7 @@ else:
         cmap = 'vlag'  # Use original color map if only 0 or 1 values exist
     # Set the size of the plot according to the number of rows in df
     fig, ax = plt.subplots(figsize=(8, len(df)*0.3))
-    sns.heatmap(df, cmap=cmap, annot=True, cbar=False, fmt='.0f', linewidths=1, linecolor='black', annot_kws={'fontsize':12, 'color':'white'})
+    sns.heatmap(df, cmap=cmap, annot=True, cbar=False, fmt='.0f', linewidths=1, linecolor='white', annot_kws={'fontsize':12, 'color':'white'})
     # Set the x and y axis labels to white
     plt.xlabel('Module-Status', fontsize=14, color='white')
     plt.ylabel('Subject-Session', color='white')
@@ -554,72 +567,151 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
     lh_files=sorted(glob.glob(lh_str))
     rh_files=sorted(glob.glob(rh_str))
     
-    # get the BIDS ids
-    bids_ids = [elem.split('/')[0] + '_' + elem.split('/')[1] for elem in lh_files]
-    
-    # Load all the thickness data
-    Nth=np.concatenate((nb.load(lh_files[0]).darrays[0].data, nb.load(rh_files[0]).darrays[0].data), axis=0).shape[0]
-    
-    surf_map=np.empty([len(lh_files), Nth], dtype=float)
-    for i, f in enumerate(lh_files):
-        #print(f)
-        surf_map[i,:] = np.hstack(np.concatenate((nb.load(lh_files[i]).darrays[0].data, nb.load(rh_files[i]).darrays[0].data), axis=0))
-    # Mean matrix across the x axis (vertices)
-    map_mean = np.mean(surf_map, axis=0)
-    
-    # Plot the mean thickness 10mm on conte69 surface
-    Range=(np.quantile(map_mean, quantile[0]), np.quantile(map_mean, quantile[1]))
-    plot_hemispheres(i5_lh, i5_rh, array_name=map_mean, cmap=cmap, nan_color=(0, 0, 0, 1),
-                          zoom=1.3, size=(900, 750), embed_nb=True,
-                          color_bar='right', layout_style='grid', color_range=Range,
-                          label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
-                          screenshot=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
-    # Calculate the similarity matrix
-    ## correlation matrix
-    corr = np.corrcoef(surf_map)
-    plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
-                   yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
-    plt.close()
-    # plot a barplot if the subjects mean similarity is below a threshold 0.2???
-    # Exclude diagonal values
-    np.fill_diagonal(corr, np.nan)
-    
-    # Calculate column means
-    colmean = np.nanmean(corr, axis=0)
-    
-    # Get the position indices where colmean < 0.2
-    indices = np.where(colmean < 0.25)[0]
-    
-    # Write html code
-    _static_block = '<div style="page-break-after: always;"></div>'
-    _static_block +=  report_module_header_template(module=f'{out_png} | vertex-wise')
-    _static_block += report_titleh2(f'{out_png} | vertex-wise Group Mean')
-    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}.png')
-    _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
-    _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
-    
-    # Print the position indices
-    if len(indices) > 0:
-        # Create a dictionary with the data for the table
-        table_data = {
-            "Subject": [bids_ids[i] for i in indices],
-            "Mean similarity Value": colmean[indices]
-        }
+    if len(lh_files) > 0:
+        # get the BIDS ids
+        bids_ids = [elem.split('/')[0] + '_' + elem.split('/')[1] for elem in lh_files]
         
-        # Create a DataFrame from the table data
-        table_df = pd.DataFrame(table_data)
+        # Load all the thickness data
+        Nth=np.concatenate((nb.load(lh_files[0]).darrays[0].data, nb.load(rh_files[0]).darrays[0].data), axis=0).shape[0]
         
-        # Apply the table styles
-        table_style = [
-            {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
-            {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
-        ]
-        styled_table = table_df.style.set_table_styles(table_style)
+        surf_map=np.empty([len(lh_files), Nth], dtype=float)
+        for i, f in enumerate(lh_files):
+            #print(f)
+            surf_map[i,:] = np.hstack(np.concatenate((nb.load(lh_files[i]).darrays[0].data, nb.load(rh_files[i]).darrays[0].data), axis=0))
+        # Mean matrix across the x axis (vertices)
+        map_mean = np.mean(surf_map, axis=0)
         
-        # Display the styled table
-        _static_block += report_titleh2(f'{out_png} | subjects with low within group similarity')
-        _static_block += styled_table.to_html()
+        # Plot the mean thickness 10mm on conte69 surface
+        Range=(np.quantile(map_mean, quantile[0]), np.quantile(map_mean, quantile[1]))
+        plot_hemispheres(i5_lh, i5_rh, array_name=map_mean, cmap=cmap, nan_color=(0, 0, 0, 1),
+                              zoom=1.3, size=(900, 750), embed_nb=True,
+                              color_bar='right', layout_style='grid', color_range=Range,
+                              label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
+                              screenshot=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
+        # Calculate the similarity matrix
+        ## correlation matrix
+        corr = np.corrcoef(surf_map)
+        plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
+                       yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
+        plt.close()
+        # plot a barplot if the subjects mean similarity is below a threshold 0.2???
+        # Exclude diagonal values
+        np.fill_diagonal(corr, np.nan)
+        
+        # Calculate column means
+        colmean = np.nanmean(corr, axis=0)
+        
+        # Get the position indices where colmean < 0.2
+        indices = np.where(colmean < 0.25)[0]
+        
+        # Write html code
+        _static_block = '<div style="page-break-after: always;"></div>'
+        _static_block +=  report_module_header_template(module=f'{out_png} | vertex-wise')
+        _static_block += report_titleh2(f'{out_png} | vertex-wise Group Mean')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}.png')
+        _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
+        
+        # Print the position indices
+        if len(indices) > 0:
+            # Create a dictionary with the data for the table
+            table_data = {
+                "Subject": [bids_ids[i] for i in indices],
+                "Mean similarity Value": colmean[indices]
+            }
+            
+            # Create a DataFrame from the table data
+            table_df = pd.DataFrame(table_data)
+            
+            # Apply the table styles
+            table_style = [
+                {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
+                {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
+            ]
+            styled_table = table_df.style.set_table_styles(table_style)
+            
+            # Display the styled table
+            _static_block += report_titleh2(f'{out_png} | subjects with low within group similarity')
+            _static_block += styled_table.to_html()
+    else:
+        _static_block = ''
+        
+    return(_static_block)
+
+def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
+    # change working directory
+    os.chdir(out)
+    # Loads and plots all the connectomes
+    files=sorted(glob.glob(file_str))
     
+    if len(files) > 0:
+        # get the BIDS ids
+        bids_ids = [elem.split('/')[0] + '_' + elem.split('/')[1] for elem in files]
+        
+        # Load all the thickness data
+        mtxs=load_connectomes(files, Ndim, load_cnn)
+
+        # Mean matrix across the z axis (subjects)
+        mtxs_mean = np.mean(mtxs, axis=2)
+        # Mean acros columns
+        mtxs_colM = np.mean(mtxs_mean, axis=1)
+        # map to labels
+        mtxs_surf = map_to_labels(mtxs_colM, labels_c69, fill=np.nan, mask=mask_c69)
+        
+        # Plot the mean thickness 10mm on conte69 surface
+        plot_hemispheres(inf_lh, inf_rh, array_name=mtxs_surf, cmap=cmap, nan_color=(0, 0, 0, 1),
+                              zoom=1.3, size=(900, 750), embed_nb=True,
+                              color_bar='right', layout_style='grid', color_range='sym',
+                              label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
+                              screenshot=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
+        # Calculate the similarity matrix
+        ## correlation matrix
+        corr = np.corrcoef(np.mean(mtxs, axis=1).T)
+        plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
+                       yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
+        plt.close()
+        # plot a barplot if the subjects mean similarity is below a threshold 0.2???
+        # Exclude diagonal values
+        np.fill_diagonal(corr, np.nan)
+        
+        # Calculate column means
+        colmean = np.nanmean(corr, axis=0)
+        
+        # Get the position indices where colmean < 0.2
+        indices = np.where(colmean < 0.25)[0]
+        
+        # Write html code
+        _static_block = '<div style="page-break-after: always;"></div>'
+        _static_block +=  report_module_header_template(module=f'{out_png} | ROI Schaeffer-400')
+        _static_block += report_titleh2(f'{out_png} | ROI Schaeffer-400 Group Mean')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
+        _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
+        
+        # Print the position indices
+        if len(indices) > 0:
+            # Create a dictionary with the data for the table
+            table_data = {
+                "Subject": [bids_ids[i] for i in indices],
+                "Mean similarity Value": colmean[indices]
+            }
+            
+            # Create a DataFrame from the table data
+            table_df = pd.DataFrame(table_data)
+            
+            # Apply the table styles
+            table_style = [
+                {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
+                {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
+            ]
+            styled_table = table_df.style.set_table_styles(table_style)
+            
+            # Display the styled table
+            _static_block += report_titleh2(f'{out_png} | subjects with low within group similarity')
+            _static_block += styled_table.to_html()
+    else:
+        _static_block = ''
+        
     return(_static_block)
 
 def get_acqs(Str):
@@ -627,7 +719,50 @@ def get_acqs(Str):
     acqs_uni = [entry.split('/')[-1] for entry in acqs]
     acqs_uni = list(set(acqs_uni))
     
+    if Str == 'dwi' and 'acq-' not in acqs_uni:
+        acqs_uni = ''
+    
     return(acqs_uni)
+
+def report_micapipe():
+    # Read the JSON data from file
+    with open(f'{out}/dataset_description.json', 'r') as json_file:
+        json_data = json.load(json_file)
+    
+    # Extract the relevant information from the JSON
+    info = {
+        "Info": ["Name", "Version", "Reference", "DOI", "URL", "GitHub", "Tag", "RunBy", "Workstation", "LastRun", "Processing"],
+        "Description": [json_data["Name"],
+                        json_data["GeneratedBy"][0]["Version"],
+                        json_data["GeneratedBy"][0]["Reference"],
+                        json_data["GeneratedBy"][0]["DOI"],
+                        json_data["GeneratedBy"][0]["URL"],
+                        json_data["GeneratedBy"][0]["GitHub"],
+                        json_data["GeneratedBy"][0]["Container"]["Tag"],
+                        json_data["GeneratedBy"][0]["RunBy"],
+                        json_data["GeneratedBy"][0]["Workstation"],
+                        json_data["GeneratedBy"][0]["LastRun"],
+                        json_data["GeneratedBy"][0]["Processing"]]
+    }
+    
+    # Create a DataFrame from the extracted information
+    table_df = pd.DataFrame(info)
+    
+    # Remove the row index
+    table_df.index = [""] * len(table_df)
+           
+    # Apply the table styles
+    table_style = [
+               {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
+               {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
+           ]
+    styled_table = table_df.style.set_table_styles(table_style)
+           
+    # Display the styled table
+    _static_block = report_titleh2('Processing details')
+    _static_block += styled_table.to_html()
+           
+    return(_static_block)
 
 def qc_group():
 
@@ -637,19 +772,20 @@ def qc_group():
     # Progress
     _static_block +=  report_module_header_template(module='Processing progress')
     
-    print( 'plot tables')
+    print( 'Creating... plot tables')
     tables_png = sorted(glob.glob(tmpDir+'/micapipe_qc_module_status*.png'))
     for png in tables_png:
         _static_block += report_module_output_figure('', png)
-    print( 'Module progress')
+    print( 'Creating... Module progress')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_module_progress_plot.png')
-    print( 'Processing times')
+    print( 'Creating... Processing times')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_time.png')
     
     _static_block += styled_table.replace('mean_std', 'Time in minutes (mean | SD)')
     
     # -------------------------------------------------------
-    # Vertex-wise thickness
+    print( 'Creating... Mean vertex-wise maps')
+    # Vertex-wise Thickness
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
                               f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
 
@@ -666,7 +802,7 @@ def qc_group():
     for acq in get_acqs('mpc'):
         acq_qmri=acq.replace('acq-','')
         _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii',
-                                  f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', acq_qmri, 'cmo.deep_r', quantile=(0.01, 0.99))
+                                  f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', 'MPC-'+acq_qmri, 'crest', quantile=(0.01, 0.99))
     
     # Vertex-wise flair
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_flair.func.gii',
@@ -674,20 +810,28 @@ def qc_group():
 
     # -------------------------------------------------------
     # ROI based
-    _static_block += '<div style="page-break-after: always;"></div>'
-    _static_block +=  report_module_header_template(module='ROI Group Mean Maps and Subject Similarity')
-    
+    print( 'Creating... ROI based maps')
     # ROI GDs
-
+    _static_block += report_roi_similarity(out, f'{dir_str}/dist/*_atlas-schaefer-400_GD.shape.gii', 'GD', 'vlag', load_gd)
+    
     # ROI SC (dynamic)
+    for acq in get_acqs('dwi'):
+        _static_block += report_roi_similarity(out, f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'.replace('//','/'), 'SC', 'flare_r', load_sc)
     
     # ROI func (dynamic)
-    get_acqs('func')
+    for acq in get_acqs('func'):
+        _static_block += report_roi_similarity(out, f'{dir_str}/func/'+acq+'/surf/*_atlas-schaefer-400_desc-FC.shape.gii', 'FC', 'cmo.dense_r', load_fc)
     
     # ROI MPC (dynamic)
-    get_acqs('mpc')
+    for acq in get_acqs('mpc'):
+        acq_qmri=acq.replace('acq-','')
+        _static_block += report_roi_similarity(out, f'{dir_str}/mpc/'+acq+'/*_atlas-schaefer-400_desc-MPC.shape.gii', 'MPC-'+acq_qmri, 'crest', load_mpc)
 
-
+    _static_block += '<div style="page-break-after: always;"></div>'
+    _static_block += qc_header()
+    _static_block += report_micapipe()
+    
+    print( 'Done')
     return _static_block
 
 # --------------------------------------------------------------------
@@ -704,7 +848,7 @@ def convert_html_to_pdf(source_html, output_filename):
 
     # close output file
     result_file.close()                 # close output file
-
+    print('Out pdf group level report: '+output_filename)
     # return True on success and False on errors
     return pisa_status.err
 
@@ -712,7 +856,7 @@ def convert_html_to_pdf(source_html, output_filename):
 convert_html_to_pdf(qc_group(), f'{out}/micapipe_group-QC.pdf')
 
 # ------------------------------------------
-
-
-# erase temporary files
-# {tmpDir}/micapipe_qc_*
+# Delete the temporary directory and its contents
+tmp_files=sorted(glob.glob(tmpDir+'/*'))
+for x in tmp_files: os.remove(x)
+os.rmdir(tmpDir)
