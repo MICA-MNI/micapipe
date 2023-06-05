@@ -194,37 +194,38 @@ Title "Generating necessary files for QC report"
 # -----------------------------------------------------------------------------------------------
 
 # PROC_STRUC ------------------------------------------------------------------------------------
-# T1w nativepro 5 tissue segmentation (5tt)
-Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
+if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_structural.json ]; then
+  # T1w nativepro 5 tissue segmentation (5tt)
+  Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
-# Registration: T1wnatipro to MNI152 (2mm and 0.8mm)
-xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
-for mm in 2 0.8; do
-    T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
+  # Registration: T1wnatipro to MNI152 (2mm and 0.8mm)
+  xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
+  for mm in 2 0.8; do
+      T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
 
-    if [[ ${mm} == 2 ]] ; then
-      transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
-    else
-      transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
-    fi
-    MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -v -u int -o "${T1w_in_MNI}" \
-            -i "${T1nativepro_brain}" \
-            -r "${MNI152_brain}" \
-            "${transformation}"
-done
+      if [[ ${mm} == 2 ]] ; then
+        transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
+      else
+        transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
+      fi
+      MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
+      Do_cmd antsApplyTransforms -d 3 -v -u int -o "${T1w_in_MNI}" \
+              -i "${T1nativepro_brain}" \
+              -r "${MNI152_brain}" \
+              "${transformation}"
+  done
+fi
 
 # -----------------------------------------------------------------------------------------------
 # Functional processing
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-func_acq=desc-se_task-rest_acq-AP_bold # <<<This should be dynamic
-Note "func json:" ${subject_dir}/QC/${idBIDS}_module-proc_func-${func_acq}.json
-if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_func-${func_acq}.json ]; then
-  for func_scan in $(ls ${subject_bids}/func/${func_acq}/${idBIDS}_task-rest*_bold.nii.gz); do
+func_acq=($(ls -d ${subject_bids}/func/*.nii.gz | awk -F 'func/' '{print $2}' | awk -F 'task-' '{print $2}' | awk -F '_' '{print "task-"$1}' | sort -u))
+if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_func-*${func_acq}*.json ]; then
+  for func_scan in $(ls -d ${subject_bids}/func/${idBIDS}_${func_acq}*_bold.nii.gz); do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
-      Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
+    Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
   done
 
   if [ -d ${subject_bids}/fmap/ ]; then

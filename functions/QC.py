@@ -145,6 +145,7 @@ else:
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
 derivatives = derivatives+'/micapipe_v0.2.0'
+
 # Path to MICAPIPE
 MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
 
@@ -438,18 +439,12 @@ def qc_proc_structural(proc_structural_json=''):
 
 ## --------------------------- PROC-SURF MODULE ---------------------------- ##
 def qc_proc_surf(proc_surf_json=''):
+
     # QC header
     _static_block = qc_header()
 
-    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
-    print(surf_json)
-    with open( surf_json ) as f:
-        surf_description = json.load(f)
-    global recon
-    recon = surf_description["SurfRecon"]
-    global surfaceDir
-    surfaceDir = surf_description["SurfaceDir"]
-    _static_block +=  report_module_header_template(module="proc_surf (%s)"%(surf_description["SurfRecon"]))
+    processing = proc_surf_json.split('proc_surf-')[1].split('.json')[0]
+    _static_block +=  report_module_header_template(module="proc_surf (%s)"%(processing))
 
     # QC summary
     _static_block += report_qc_summary_template(proc_surf_json)
@@ -465,8 +460,10 @@ def qc_proc_surf(proc_surf_json=''):
             '<b>Native surfaces</b> </p>'
     )
 
+    global recon, surfaceDir, surf_lh, surf_rh, wm_lh, wm_rh, inf_lh, inf_rh
+
     # Load native surface
-    global surf_lh, surf_rh, wm_lh, wm_rh, inf_lh, inf_rh
+    surfaceDir = "%s/%s"%(out.split('/micapipe_v0.2.0')[0],processing)
     surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
     surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
     wm_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.white', itype='fs')
@@ -529,6 +526,13 @@ def qc_proc_surf(proc_surf_json=''):
         parcDKPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_aparc.png'
     )
 
+
+    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
+    with open( surf_json ) as f:
+        surf_description = json.load(f)
+    recon = surf_description["SurfRecon"]
+    surfaceDir = surf_description["SurfaceDir"]
+
     return _static_block
 
 
@@ -542,8 +546,8 @@ def qc_post_structural(post_structural_json=''):
     post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
-    recon = post_struct_description["SurfRecon"]
-    surfaceDir
+    recon = post_struct_description["SurfaceProc"]
+
 
     # QC header
     _static_block = qc_header()
@@ -1595,6 +1599,7 @@ qc_module_function = {
     'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
     'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
+
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/%s/%s/QC/%s_module-%s*.json"%(out,sub,ses,sbids,m))
