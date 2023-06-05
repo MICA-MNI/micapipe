@@ -546,7 +546,7 @@ def qc_post_structural(post_structural_json=''):
     post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
-    recon = post_struct_description["SurfaceProc"]
+    recon = post_struct_description["SurfRecon"]
 
 
     # QC header
@@ -1607,8 +1607,4 @@ for i, m in enumerate(qc_module_function['modules']):
         if check_json_exist(j):
             static_report = qc_module_function['functions'][i](j)
             file_pdf=j.replace('.json','_qc-report.pdf')
-            if not os.path.isfile(file_pdf):
-                print('----------------------------')
-                print('creating: '+file_pdf)
-                print('----------------------------')
-                convert_html_to_pdf(static_report, file_pdf)
+            convert_html_to_pdf(static_report, file_pdf)
