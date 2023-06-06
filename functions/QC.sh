@@ -82,6 +82,10 @@ do
     tmpDir=$2
     shift;shift;
   ;;
+  -PROC)
+    PROC=$2
+    shift;shift;
+  ;;
   -*)
     Error "Unknown option ${2}"
     help
@@ -89,6 +93,13 @@ do
   ;;
     esac
 done
+
+
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
+    source "${MICAPIPE}/functions/init.sh" "$threads"
+fi
 
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
