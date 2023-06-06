@@ -17,7 +17,10 @@ Version="(v0.2.0 'Northern flicker')"
 version() {
   echo -e "\nMICAPIPE March 2023 ${Version}\n"
 }
-
+Error() {
+echo -e "\033[38;5;9m\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
+-------------------------------------------------------------\033[0m\n"
+}
 #---------------- FUNCTION: HELP ----------------#
 help() {
   echo -e "
@@ -44,9 +47,6 @@ help() {
   "
 }
 
-# Source utilities functions from MICAPIPE
-MICAPIPE=$(dirname $(dirname $(realpath "$0")))
-source "${MICAPIPE}/functions/utilities.sh"
 
 # -----------------------------------------------------------------------------------------------#
 #			ARGUMENTS
@@ -94,14 +94,6 @@ do
     esac
 done
 
-
-#------------------------------------------------------------------------------#
-# qsub configuration
-if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
-    source "${MICAPIPE}/functions/init.sh" "$threads"
-fi
-
 # argument check out & WARNINGS
 arg=($id $out $BIDS)
 if [ "${#arg[@]}" -lt 3 ]; then
@@ -110,6 +102,16 @@ Error "One or more mandatory arguments are missing:
                -out  : $out
                -bids : $BIDS"
 help; exit 1; fi
+
+#------------------------------------------------------------------------------#
+# qsub configuration
+if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+else
+  # Source utilities functions from MICAPIPE
+  MICAPIPE=$(dirname $(dirname $(realpath "$0")))
+fi
+source "${MICAPIPE}/functions/utilities.sh"
 
 # Get the real path of the Inputs
 out=$(realpath $out)/micapipe_v0.2.0
@@ -131,15 +133,6 @@ if [ -z "${tracts}" ]; then tracts=40M; else tracts="$tracts"; fi
 
 # Temporal directory
 if [ -z "${tmpDir}" ]; then export tmpDir="/tmp/${RANDOM}_micapipe_QC_${id}"; else tmpDir=$(realpath "$tmpDir"); fi
-
-# Launch the init file for local processing at MICA lab
-if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
-if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
-    source "${MICAPIPE}/functions/init.sh" "$threads"
-fi
-
-# Assigns variables names
-bids_variables "$BIDS" "$id" "$out" "$SES"
 
 procDirs=$(ls -d "${subject_dir}/anat" "${subject_dir}/dwi" "${subject_dir}/func" | wc -l)
 if [ "${procDirs}" -lt 3 ]; then
