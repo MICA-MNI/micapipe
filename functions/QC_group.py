@@ -366,14 +366,14 @@ df = df.reindex(sorted(df.columns), axis=1)
 df = df.sort_index()
 
 
-# Check if the number of rows in df is greater than 20
-if len(df) > 20:
+# Check if the number of rows in df is greater than 50
+if len(df) > 50:
     # Calculate the number of subplots needed
-    num_subplots = math.ceil(len(df) / 20)
+    num_subplots = math.ceil(len(df) / 50)
     # Loop through the subplots and create each one
     for i in range(num_subplots):
-        start_idx = i * 20
-        end_idx = (i+1) * 20
+        start_idx = i * 50
+        end_idx = (i+1) * 50
         subset_df = df.iloc[start_idx:end_idx]
         # Determine if there are both 0 and 1 values in the data
         has_zeros = any(0 in row.values for _, row in subset_df.iterrows())
@@ -718,11 +718,19 @@ def get_acqs(Str):
     acqs = sorted(glob.glob(out+'/'+dir_str+f'/{Str}/*'))
     acqs_uni = [entry.split('/')[-1] for entry in acqs]
     acqs_uni = list(set(acqs_uni))
-    
-    if Str == 'dwi' and 'acq-' not in acqs_uni:
-        acqs_uni = ''
+    if Str == 'dwi' and not any('acq-' in entry for entry in acqs_uni):
+        acqs_uni = ['-']
     
     return(acqs_uni)
+
+def get_tracts(dwi_str):
+    acqs = sorted(glob.glob(out+f'/{dwi_str}/connectomes/*schaefer-400*full-connectome*'))
+    acqs_uni = [entry.split('iFOD2-')[-1] for entry in acqs]
+    tracts = [entry.replace('-SIFT2_full-connectome.txt','').split('_')[0].split('-')[0] for entry in acqs_uni]
+    
+    tracts = list(set(tracts))
+    
+    return tracts
 
 def report_micapipe():
     # Read the JSON data from file
@@ -816,11 +824,23 @@ def qc_group():
     
     # ROI SC (dynamic)
     for acq in get_acqs('dwi'):
-        _static_block += report_roi_similarity(out, f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'.replace('//','/'), 'SC', 'flare_r', load_sc)
+        print(acq)
+        acq_dir=f'{dir_str}/dwi/{acq}/'.replace('/-/','/')
+        print(acq_dir)
+        dwi_tracts=get_tracts(acq_dir)
+        print(dwi_tracts)
+        for tracts in dwi_tracts:
+            dwi_name=f'SC_{acq}_{tracts}'.replace('_-','')
+            print( f'   dwi id: {dwi_name}')
+            cnn_files=f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-{tracts}-SIFT2_full-connectome.shape.gii'.replace('/-/','/')
+            print(cnn_files)
+            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc)
     
     # ROI func (dynamic)
     for acq in get_acqs('func'):
-        _static_block += report_roi_similarity(out, f'{dir_str}/func/'+acq+'/surf/*_atlas-schaefer-400_desc-FC.shape.gii', 'FC', 'cmo.dense_r', load_fc)
+        func_name='FC'+acq.replace('desc-','')
+        print( f'   func id: {func_name}')
+        _static_block += report_roi_similarity(out, f'{dir_str}/func/'+acq+'/surf/*_atlas-schaefer-400_desc-FC.shape.gii', func_name, 'cmo.dense_r', load_fc)
     
     # ROI MPC (dynamic)
     for acq in get_acqs('mpc'):
