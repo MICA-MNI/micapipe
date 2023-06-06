@@ -258,7 +258,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "multidict" \
            "nibabel" \
            "nilearn" \
-           "numpy" \
+           "numpy==1.21.5" \
            "packaging" \
            "pandas" \
            "pillow" \
