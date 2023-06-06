@@ -486,18 +486,6 @@ def qc_proc_surf(proc_surf_json=''):
     plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
                      screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
-    # Destrieux atlas (aparc.a2009s)
-    if file_exists(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot'):
-        parc = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc-a2009s_mics.annot')[0]), axis=0)
-        plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
-                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_a2009s.png')
-    # Desikan-Killiany Atlas (aparc)
-    if file_exists(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot'):
-        parcDK = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc_mics.annot')[0]), axis=0)
-        plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
-                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_aparc.png')
 
     native_surface_table = (
         '<table style="border:1px solid #666;width:100%">'
@@ -510,12 +498,6 @@ def qc_proc_surf(proc_surf_json=''):
             # Sulcal depth
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Sulcal depth</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{sdPath}"></td></tr>'
-            # Destrieux Atlas (aparc.a2009s)
-            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Destrieux Atlas (aparc.a2009s)</b></td>'
-            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcPath}"></td></tr>'
-            # Desikan-Killiany Atlas (aparc)
-            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Desikan-Killiany Atlas (aparc)</b></td>'
-            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcDKPath}"></td></tr>'
         '</table>'
     )
 
@@ -547,7 +529,6 @@ def qc_post_structural(post_structural_json=''):
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
     recon = post_struct_description["SurfRecon"]
-
 
     # QC header
     _static_block = qc_header()
@@ -1026,14 +1007,36 @@ def qc_proc_func(proc_func_json=''):
             '<b>Main outputs</b> </p>'
     )
 
+    clean_json = os.path.realpath("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(out,sub,ses,tag,sbids,acquisition))
+    with open( clean_json ) as f:
+        clean_json = json.load(f)
+
+    fmripreproc = clean_json["Preprocess"]
+    fmripreproc_table = (
+        '<table style="border:1px solid #666;width:100%">'
+        '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>fMRI processing options</b></td></tr>'
+    )
+
+    if acquisition == "me":
+        fmripreproc_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left;width:50%><b>Tedana</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left;width:50%>YES</td></tr>'
+        )
+
+    preproc_info = ["TotalReadoutTime", "EchoTime", "Melodic", "FIX", "GlobalSignalRegression", "CSFWMSignalRegression", "dropTR"]
+    for k in preproc_info:
+        fmripreproc_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left;width:50%><b>{left}</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left;width:50%>{right}</td></tr>'
+        ).format(left=k, right=fmripreproc[k])
+
+    fmripreproc_table += "</table>"
+
+    _static_block += fmripreproc_table
+
     outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
     figPath = "%s/func_brain_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="fMRI brain", outPath=outPath, figPath=figPath)
-
-    outPath = "%s/%s/%s/xfm/%s_from-%s_to-fsnative_bbr_mode-image_desc-bbregister.nii.gz"%(out,sub,ses,sbids,tag)
-    refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
-    figPath = "%s/fmri_fsnative_screenshot.png"%(tmpDir)
-    _static_block += nifti_check(outName="Registration: fMRI in %s native space"%(recon), outPath=outPath, refPath=refPath, figPath=figPath)
 
     outPath = "%s/%s/%s/anat/%s_space-nativepro_desc-%s_mean.nii.gz"%(out,sub,ses,sbids,tag)
     refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
@@ -1185,7 +1188,6 @@ def qc_proc_func(proc_func_json=''):
     _static_block += yeo_table
 
     return _static_block
-
 
 ## ------------------------------- SC MODULE ------------------------------ ##
 def qc_sc(sc_json=''):
@@ -1596,10 +1598,9 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
-    'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
+   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
-
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/%s/%s/QC/%s_module-%s*.json"%(out,sub,ses,sbids,m))
