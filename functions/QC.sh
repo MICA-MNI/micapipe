@@ -145,11 +145,17 @@ parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -nam
 workflow="${dir_QC}/${idBIDS}_desc-qc_micapipe_workflow.html"
 
 qc_jsons=$(ls ${subject_dir}/QC/${idBIDS}_module-*.json 2>/dev/null | wc -l)
-Note "Modules processed:" $qc_jsons
 if [[ "$qc_jsons" -lt 1 ]]; then exit; fi
 
 #------------------------------------------------------------------------------#
 Title "MICAPIPE: Creating a QC rport for $idBIDS"
+Note "Modules processed:" $qc_jsons
+Note "sub:" "$id"
+Note "out:" "$out"
+Note "bids:" "$BIDS"
+Note "ses:" "$SES"
+Note "PROC:" "${PROC}"
+Note "MICAPIPE:" "${MICAPIPE}"
 #	Timer
 aloita=$(date +%s)
 
