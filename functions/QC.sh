@@ -29,21 +29,16 @@ help() {
   \t\033[38;5;197m-out\033[0m 	          : Output directory for the processed files <derivatives>.
   \t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
   \t\033[38;5;120m-ses <str>\033[0m 	  : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
-  \t\033[38;5;120m-tracts <int>\033[0m     : OPTIONAL Number of streamlines, where 'M' stands for millions (default=40M)
 
   \033[38;5;141mOPTIONS:\033[0m
   \t\033[38;5;197m-h|-help\033[0m          : Print help
   \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
-  \t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
-  \t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
   \t\033[38;5;197m-version\033[0m 	  : Print software version
 
   \033[38;5;141mUSAGE:\033[0m
       \033[38;5;141m$(basename $0)\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
-  \033[38;5;141mDEPENDENCIES:\033[0m
-
-  McGill University, MNI, MICA-lab, May-September 2020
+  McGill University, MNI, MICA-lab, June, 2023
   https://github.com/MICA-MNI/micapipe
   http://mica-mni.github.io/
   "
@@ -82,26 +77,6 @@ do
   -ses)
     SES=$2
     shift;shift
-  ;;
-  -tracts)
-    tracts=$2
-    shift;shift
-  ;;
-  -mica)
-    mica=TRUE
-    shift
-  ;;
-  -qsub)
-    micaq=TRUE
-    shift
-  ;;
-  -qall)
-    qall=TRUE
-    shift
-  ;;
-  -nocleanup)
-    nocleanup=TRUE
-    shift
   ;;
   -tmpDir)
     tmpDir=$2
@@ -144,9 +119,6 @@ if [ -z "${tracts}" ]; then tracts=40M; else tracts="$tracts"; fi
 
 # Temporal directory
 if [ -z "${tmpDir}" ]; then export tmpDir="/tmp/${RANDOM}_micapipe_QC_${id}"; else tmpDir=$(realpath "$tmpDir"); fi
-
-# Erase temporal files by default
-if [ -z "${nocleanup}" ]; then nocleanup=FALSE; fi
 
 # Launch the init file for local processing at MICA lab
 if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
