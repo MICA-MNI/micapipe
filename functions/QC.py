@@ -139,7 +139,7 @@ tracts = args.tracts
 tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
-MICAPIPE = args.micapipe_QC
+MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
@@ -278,9 +278,9 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
     if os.path.exists(outPath):
         if os.path.exists(refPath):
             ROI = '-roi' if roi else ''
-            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, ROI, figPath))
+            os.system("%s/functions/nifti_capture.py -img %s %s %s -out %s"%(MICAPIPE, refPath, outPath, ROI, figPath))
         else:
-            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s -out %s"%(outPath, figPath))
+            os.system("%s/functions/nifti_capture.py -img %s -out %s"%(MICAPIPE, outPath, figPath))
 
         _static_block = report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
     else:
