@@ -585,7 +585,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
                               zoom=1.3, size=(900, 750), embed_nb=True,
                               color_bar='right', layout_style='grid', color_range=Range,
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
-                              screenshot=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
+                              screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
         # Calculate the similarity matrix
         ## correlation matrix
         corr = np.corrcoef(surf_map)
@@ -661,7 +661,7 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
                               zoom=1.3, size=(900, 750), embed_nb=True,
                               color_bar='right', layout_style='grid', color_range='sym',
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
-                              screenshot=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
+                              screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
         # Calculate the similarity matrix
         ## correlation matrix
         corr = np.corrcoef(np.mean(mtxs, axis=1).T)

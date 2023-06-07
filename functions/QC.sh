@@ -107,6 +107,7 @@ help; exit 1; fi
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
     MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    source "${MICAPIPE}/functions/init.sh"
 else
   # Source utilities functions from MICAPIPE
   MICAPIPE=$(dirname $(dirname $(realpath "$0")))
@@ -156,6 +157,7 @@ Note "bids:" "$BIDS"
 Note "ses:" "$SES"
 Note "PROC:" "${PROC}"
 Note "MICAPIPE:" "${MICAPIPE}"
+Note "conda" "$(conda info --env | grep '*' | awk '{print $2}')"
 #	Timer
 aloita=$(date +%s)
 
@@ -268,7 +270,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 Title "Generating QC report"
 
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir}
+Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} -micapipe ${MICAPIPE}
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completion

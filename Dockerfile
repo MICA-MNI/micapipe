@@ -256,7 +256,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "markupsafe" \
            "matplotlib" \
            "multidict" \
-           "nibabel" \
+           "nibabel==4.0.2" \
            "nilearn" \
            "numpy==1.21.5" \
            "packaging" \
@@ -287,7 +287,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "tzlocal" \
            "uritools" \
            "urllib3" \
-           "vtk" \
+           "vtk==9.2.2" \
            "webencodings" \
            "wslink" \
            "yarl" \
@@ -296,7 +296,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && bash -c "source activate micapipe \
     &&   pip install --no-cache-dir  \
              "argparse==1.1" \
-             "brainspace==0.1.4" \
+             "brainspace==0.1.10" \
              "tedana==0.0.12" \
              "duecredit" \
              "pyhanko==0.17.2" \
