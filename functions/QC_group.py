@@ -437,8 +437,8 @@ fig, ax = plt.subplots(figsize=(8, 6))
 module_progress_sorted.plot.barh(ax=ax, color=Spectral(module_progress_sorted))
 
 # set the x and y axis labels and title
-ax.set_xlabel('Progress percentage')
-ax.set_title('Module Progress')
+ax.set_xlabel('Completition percentage (total/processed)')
+ax.set_title('Completition status by module')
 
 # Save the figure as a PNG file
 plt.savefig(f'{tmpDir}/micapipe_qc_module_progress_plot.png', dpi=300, bbox_inches='tight')
@@ -794,6 +794,10 @@ def qc_group():
     # Vertex-wise Thickness
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
                               f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
+
+    # Vertex-wise Thickness
+    _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-curv.func.gii',
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-curv.func.gii', 'curvature', 'cividis', quantile=(0.05, 0.99))
 
     # Vertex-wise DWI derived map (dynamic)
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-white_ADC.func.gii',
