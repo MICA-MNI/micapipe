@@ -76,6 +76,7 @@ import seaborn as sns
 import math
 from matplotlib.cm import Spectral
 import matplotlib.pyplot as plt
+from pyvirtualdisplay import Display
 
 
 # Arguments
@@ -295,7 +296,7 @@ jsons = sorted(glob.glob(out+'/'+dir_str+'/QC/*json'))
 jsons = sorted(jsons, key=lambda x: os.path.getctime(x))
 
 # Define the keys to extract from each JSON file
-keys_to_extract = ['Subject', 'Session', 'Module', 'Status', 'Progress', 'User', 'Workstation', 'Date', 'Processing.time', 'Processing', 'micapipeVersion']
+keys_to_extract = ['Subject', 'Session', 'Module', 'Status', 'Progress', 'User', 'Workstation', 'Date', 'Processing.time', 'Processing', 'micapipeVersion', 'Threads']
 
 # Initialize an empty list to hold the individual dataframes
 dataframes = []
@@ -363,6 +364,7 @@ df = df.reindex(sorted(df.columns), axis=1)
 # Sort the rows by subject and session
 df = df.sort_index()
 
+# unique number of subjects by session
 
 # Check if the number of rows in df is greater than 50
 if len(df) > 50:
@@ -423,9 +425,32 @@ else:
     # Close the plot to release resources
     plt.close()
 
+
+# --------------------------------------------------------------------
+# Session table
+# --------------------------------------------------------------------
+
+session_counts = result.groupby('Session')['Subject'].nunique().reset_index()
+session_counts.columns = ['Session', 'Number of subjects']
+
+# Create a DataFrame from the extracted information
+table_ses = pd.DataFrame(session_counts)
+
+# Remove the row index
+table_ses.index = [""] * len(table_ses)
+
+# Apply the table styles
+table_style = [
+    {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
+    {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]}
+]
+
+styled_ses = table_ses.style.set_table_styles(table_style)
+
 # --------------------------------------------------------------------
 # Progress barplot
 # --------------------------------------------------------------------
+
 # Get progress percentage
 module_progress = np.sum(df, axis=0)/len(df)
 
@@ -482,20 +507,32 @@ plt.close()
 # --------------------------------------------------------------------
 # Processing time table
 # --------------------------------------------------------------------
+
 # Calculate the mean and standard deviation by module and sort by mean processing time
 stats_df = result.groupby('Module')['Processing.time'].agg(['mean', 'std'])
 stats_df = stats_df.sort_values('mean')
 stats_df['mean_std'] = stats_df.apply(lambda row: '{:.1f} ± {:.1f}'.format(row['mean'], row['std']), axis=1)
 
+# Number of subjects processed by module
+subject_count = result.groupby('Module')['Subject'].nunique()
+stats_df = stats_df.merge(subject_count, on='Module', how='left')
+stats_df = stats_df.rename(columns={'Subject': 'Subjects Processed'})
+
+# Total processing time
+total_processing_time = result.groupby('Module')['Processing.time'].sum()
+stats_df = stats_df.merge(total_processing_time, on='Module', how='left')
+stats_df = stats_df.rename(columns={'Processing.time': 'Total Time (min)'})
+stats_df['Total Time (min)'] = stats_df['Total Time (min)'].astype(int)
+stats_df = stats_df.drop('std', axis=1)
+stats_df = stats_df.drop('mean', axis=1)
+
 # Generate the HTML table with pandas Styler
-html_table = stats_df[['mean_std']].style.set_table_styles([
+html_table = stats_df.style.set_table_styles([
     {'selector': 'th', 'props': [('text-align', 'left'), ('background-color', '#f2f2f2'), ('padding', '1px')]},
     {'selector': 'td', 'props': [('border', '1px solid #ddd'), ('padding', '1px'), ('white-space', 'nowrap')]},
 ])
 # Render the styled table
 styled_table = html_table.to_html()
-
-
 
 # --------------------------------------------------------------------
 # Write pdf
@@ -581,11 +618,15 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
 
         # Plot the mean thickness 10mm on conte69 surface
         Range=(np.quantile(map_mean, quantile[0]), np.quantile(map_mean, quantile[1]))
+        dsize = (900, 750)
+        display = Display(visible=0, size=dsize)
+        display.start()
         plot_hemispheres(i5_lh, i5_rh, array_name=map_mean, cmap=cmap, nan_color=(0, 0, 0, 1),
                               zoom=1.3, size=(900, 750), embed_nb=True,
                               color_bar='right', layout_style='grid', color_range=Range,
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
+        display.stop()
         # Calculate the similarity matrix
         ## correlation matrix
         corr = np.corrcoef(surf_map)
@@ -620,6 +661,9 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
 
             # Create a DataFrame from the table data
             table_df = pd.DataFrame(table_data)
+            
+            # Remove the row index
+            table_df.index = [""] * len(table_df)
 
             # Apply the table styles
             table_style = [
@@ -657,11 +701,15 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
         mtxs_surf = map_to_labels(mtxs_colM, labels_c69, fill=np.nan, mask=mask_c69)
 
         # Plot the mean thickness 10mm on conte69 surface
+        dsize = (900, 750)
+        display = Display(visible=0, size=dsize)
+        display.start()
         plot_hemispheres(inf_lh, inf_rh, array_name=mtxs_surf, cmap=cmap, nan_color=(0, 0, 0, 1),
                               zoom=1.3, size=(900, 750), embed_nb=True,
                               color_bar='right', layout_style='grid', color_range='sym',
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
+        display.stop()
         # Calculate the similarity matrix
         ## correlation matrix
         corr = np.corrcoef(np.mean(mtxs, axis=1).T)
@@ -696,6 +744,9 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
 
             # Create a DataFrame from the table data
             table_df = pd.DataFrame(table_data)
+
+            # Remove the row index
+            table_df.index = [""] * len(table_df)
 
             # Apply the table styles
             table_style = [
@@ -765,7 +816,7 @@ def report_micapipe():
     styled_table = table_df.style.set_table_styles(table_style)
 
     # Display the styled table
-    _static_block = report_titleh2('Processing details')
+    _static_block = report_module_header_template('Pipeline details')
     _static_block += styled_table.to_html()
 
     return(_static_block)
@@ -774,19 +825,31 @@ def qc_group():
 
     # QC header
     _static_block = qc_header()
+    _static_block += report_micapipe()
+
     # -------------------------------------------------------
     # Progress
-    _static_block +=  report_module_header_template(module='Processing progress')
+    _static_block +=  report_module_header_template(module='Subjects per session')
+    
+    _static_block +=  styled_ses.to_html()
 
     print( 'Creating... plot tables')
+    _static_block += '<div style="page-break-after: always;"></div>'
+    _static_block +=  report_module_header_template(module='Processing progress')
     tables_png = sorted(glob.glob(tmpDir+'/micapipe_qc_module_status*.png'))
     for png in tables_png:
         _static_block += report_module_output_figure('', png)
     print( 'Creating... Module progress')
+    _static_block += '<div style="page-break-after: always;"></div>'
+    _static_block +=  report_module_header_template(module='Completition status')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_module_progress_plot.png')
+    
     print( 'Creating... Processing times')
+    _static_block +=  report_module_header_template(module='Processing times')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_time.png')
-
+    
+    _static_block += '<div style="page-break-after: always;"></div>'
+    _static_block +=  report_module_header_template(module='Processing details')
     _static_block += styled_table.replace('mean_std', 'Time in minutes (mean | SD)')
 
     # -------------------------------------------------------
@@ -805,12 +868,15 @@ def qc_group():
 
     # Vertex-wise func (dynamic)
     for acq in get_acqs('func'):
+        func_name='FC_'+acq.replace('desc-','')
+        print( f'   func id: {func_name}')
         _static_block += report_surface_similarity(out, f'{dir_str}/func/{acq}/surf/*_hemi-L_surf-fsLR-5k.func.gii',
-                                  f'{dir_str}/func/{acq}/surf/*_hemi-R_surf-fsLR-5k.func.gii', acq.replace('desc-',''), 'rocket', quantile=(0.05, 0.9))
+                                  f'{dir_str}/func/{acq}/surf/*_hemi-R_surf-fsLR-5k.func.gii', func_name, 'rocket', quantile=(0.05, 0.9))
 
     # Vertex-wise MPC (dynamic)
     for acq in get_acqs('mpc'):
         acq_qmri=acq.replace('acq-','')
+        print( f'   MPC id: MPC-{acq_qmri}')
         _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii',
                                   f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', 'MPC-'+acq_qmri, 'crest', quantile=(0.01, 0.99))
 
@@ -836,18 +902,15 @@ def qc_group():
 
     # ROI func (dynamic)
     for acq in get_acqs('func'):
-        func_name='FC'+acq.replace('desc-','')
+        func_name='FC_'+acq.replace('desc-','')
         print( f'   func id: {func_name}')
         _static_block += report_roi_similarity(out, f'{dir_str}/func/'+acq+'/surf/*_atlas-schaefer-400_desc-FC.shape.gii', func_name, 'rocket', load_fc)
 
     # ROI MPC (dynamic)
     for acq in get_acqs('mpc'):
         acq_qmri=acq.replace('acq-','')
+        print( f'   MPC id: MPC-{acq_qmri}')
         _static_block += report_roi_similarity(out, f'{dir_str}/mpc/'+acq+'/*_atlas-schaefer-400_desc-MPC.shape.gii', 'MPC-'+acq_qmri, 'crest', load_mpc)
-
-    _static_block += '<div style="page-break-after: always;"></div>'
-    _static_block += qc_header()
-    _static_block += report_micapipe()
 
     print( 'Done')
     return _static_block
@@ -872,6 +935,12 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 convert_html_to_pdf(qc_group(), f'{out}/micapipe_group-QC.pdf')
+
+# Define the new permissions
+new_permissions = 0o775  # -rwxrwxr-x
+
+# Change the file permissions
+os.chmod(f'{out}/micapipe_group-QC.pdf', new_permissions)
 
 # ------------------------------------------
 # Delete the temporary directory and its contents
