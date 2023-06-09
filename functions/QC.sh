@@ -133,7 +133,7 @@ if [ ! -d "${subject_dir}" ]; then Error "$id was not found on the OUTPUT direct
 if [ -z "${tracts}" ]; then tracts=40M; else tracts="$tracts"; fi
 
 # Temporal directory
-if [ -z "${tmpDir}" ]; then export tmpDir="/tmp/${RANDOM}_micapipe_QC_${id}"; else tmpDir=$(realpath "$tmpDir"); fi
+if [ -z "${tmpDir}" ]; then export tmpDir="/tmp"; else tmpDir=$(realpath "$tmpDir"); fi
 
 procDirs=$(ls -d "${subject_dir}/anat" "${subject_dir}/dwi" "${subject_dir}/func" | wc -l)
 if [ "${procDirs}" -lt 3 ]; then
@@ -158,16 +158,19 @@ Note "ses:" "$SES"
 Note "PROC:" "${PROC}"
 Note "MICAPIPE:" "${MICAPIPE}"
 Note "conda" "$(conda info --env | grep '*' | awk '{print $2}')"
+Note "tmpDir" "${tmpDir}"
 #	Timer
 aloita=$(date +%s)
 
 #------------------------------------------------------------------------------#
 # Create files and png for QC
 # Create tmp dir
+tmpDir="${tmpDir}/${RANDOM}_micapipe_QC_${id}"
 if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
 
 # TRAP in case the script fails
-trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
+nocleanup="FALSE"
+trap 'cleanup $tmpDir $nocleanup $here' SIGINT SIGTERM
 
 # Calculate everythin on a tmpDir dir
 cd $tmpDir
@@ -239,6 +242,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 # Diffusion processing
 # -----------------------------------------------------------------------------------------------
+fod="${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 # PROC_DWI --------------------------------------------------------------------------------------
 if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
   for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
@@ -249,7 +253,8 @@ if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
   Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
 
   dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" -force
+  Info ${dwi_fod}
+  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}" -force
 
   dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
   Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
@@ -257,7 +262,7 @@ fi
 
 # SC --------------------------------------------------------------------------------------------
 if [ $(ls ${subject_dir}/QC/${idBIDS}_module-SC-*.json 2>/dev/null | wc -l) -gt 0 ]; then
-  Do_cmd mrconvert "$fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+  if [ ! -f "${fod}" ]; then Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}"; fi
 
   for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
       tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
@@ -278,10 +283,6 @@ lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print $eri/60 | perl)
 
-# Cleanup if processing was local
-#if [ -d $tmpDir ]; then
-#    cleanup $tmpDir $nocleanup $here
-#fi
-
 Title "QC html creation ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
 \t\tOutput file path: $QC_html"
+cleanup "$tmpDir" "$nocleanup" "$here"
