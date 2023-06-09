@@ -40,24 +40,22 @@ Generates a pdf file for QC of the processing
 """
 
 from xhtml2pdf import pisa
-import sys
-import pandas as pd
 import os
 import argparse
 import json
 import glob
 import nibabel as nb
-from nibabel.freesurfer.mghformat import load
 import numpy as np
 import matplotlib as plt
 import matplotlib.pyplot as pltpy
+import seaborn
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
 from brainspace.utils.parcellation import map_to_labels
 from brainspace.vtk_interface import wrap_vtk, serial_connect
-from brainspace.datasets import load_conte69
 from vtk import vtkPolyDataNormals
+from pyvirtualdisplay import Display
 
 # Arguments
 parser = argparse.ArgumentParser()
@@ -350,8 +348,6 @@ def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
 
-ColCurv= plt.colors.ListedColormap(['#A2CD5A', '#A0CA5B', '#9FC85C', '#9EC55D', '#9DC35E', '#9CC05F', '#9BBE61', '#9ABB62', '#99B963', '#98B664', '#96B465', '#95B166', '#94AF68', '#93AC69', '#92AA6A', '#91A76B', '#90A56C', '#8FA26D', '#8EA06F', '#8C9D70', '#8B9B71', '#8A9972', '#899673', '#889475', '#879176', '#868F77', '#858C78', '#848A79', '#82877A', '#81857C', '#80827D', '#7F807E', '#807D7D', '#827A7A', '#857777', '#877575', '#8A7272', '#8C6F6F', '#8F6C6C', '#916969', '#946666', '#966464', '#996161', '#9B5E5E', '#9D5B5B', '#A05858', '#A25656', '#A55353', '#A75050', '#AA4D4D', '#AC4A4A', '#AF4747', '#B14545', '#B44242', '#B63F3F', '#B93C3C', '#BB3939', '#BE3636', '#C03434', '#C33131', '#C52E2E', '#C82B2B', '#CA2828', '#CD2626'])
-
 fs5I_lh = read_surface(MICAPIPE+'/surfaces/fsaverage5/surf/lh.inflated', itype='fs')
 fs5I_rh = read_surface(MICAPIPE+'/surfaces/fsaverage5/surf/rh.inflated', itype='fs')
 c69_32k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
@@ -476,21 +472,24 @@ def qc_proc_surf(proc_surf_json=''):
     inf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.inflated', itype='fs')
 
     # Native thickness
+    dsize = (900, 250)
+    display = Display(visible=0, size=dsize)
+    display.start()
     th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=th, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(surf_lh, surf_rh, array_name=th, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
     # Native curvature
     cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
-    plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
+    plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='icefire',transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
     # Native sulcal depth
     sd = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.sulc')), axis=0)
-    plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
-
+    display.stop()
     native_surface_table = (
         '<table style="border:1px solid #666;width:100%">'
             # Thickness
@@ -513,7 +512,7 @@ def qc_proc_surf(proc_surf_json=''):
     )
 
 
-    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
+    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf-%s.json"%(out,sub,ses,sbids,processing))
     with open( surf_json ) as f:
         surf_description = json.load(f)
     recon = surf_description["SurfRecon"]
@@ -525,14 +524,15 @@ def qc_proc_surf(proc_surf_json=''):
 ## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
 def qc_post_structural(post_structural_json=''):
 
-    # Load native surface
-    surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
-    surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
-
     post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
     recon = post_struct_description["SurfRecon"]
+    surfaceDir = post_struct_description["SurfaceDir"]
+
+    # Load native surface
+    surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
+    surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
 
     # QC header
     _static_block = qc_header()
@@ -592,10 +592,13 @@ def qc_post_structural(post_structural_json=''):
         label = np.concatenate((nb.freesurfer.read_annot(fileL)[0], nb.freesurfer.read_annot(fileR)[0]), axis=0)
         if os.path.exists(fileL) and os.path.exists(fileR):
             print("[INFO].... Creating PNG of " + annot + " on native surface")
+            dsize = (900, 750)
+            display = Display(visible=0, size=dsize)
+            display.start()
             plot_hemispheres(surf_lh, surf_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(label)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
                              screenshot = True, offscreen=True, filename = figPath)
-
+            display.stop()
         parcellation_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{annot}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{figPath}"></td></tr>'
@@ -623,6 +626,9 @@ def qc_post_structural(post_structural_json=''):
         grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
 
         # Sphere native
+        dsize = (900, 250)
+        display = Display(visible=0, size=dsize)
+        display.start()
         plot_hemispheres(lhM, rhM, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False,
                          screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness.png')
@@ -632,7 +638,7 @@ def qc_post_structural(post_structural_json=''):
         plot_hemispheres(lhW, rhW, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
                          screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-white.png')
-
+        display.stop()
         surface_table = '<br />' if i != 0 else ''
         surface_table += (
             '<table style="border:1px solid #666;width:100%">'
@@ -661,11 +667,12 @@ def qc_post_structural(post_structural_json=''):
         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
         '<b>Morphological features</b></p>'
     )
-
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     for feature in ['curv', 'thickness']:
 
         feature_title = 'Curvature' if feature=='curv' else 'Thickness'
-        feature_cmap = ColCurv if feature=='curv' else 'inferno'
+        feature_cmap = 'icefire' if feature=='curv' else 'inferno'
         feature_crange = (-0.2, 0.2) if feature=='curv' else (1.5,4)
 
         feature_fsn_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsnative_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -725,7 +732,7 @@ def qc_post_structural(post_structural_json=''):
             feature_c69_5k_png=feature_c69_5k_png,
             feature_c69_32k_png=feature_c69_32k_png
         )
-
+    display.stop()
     return _static_block
 
 ## --------------------------- PROC_FLAIR MODULE --------------------------- ##
@@ -792,11 +799,12 @@ def qc_proc_flair(proc_flair_json=''):
             surf_rh = c69_32k_I_rh
 
         crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
-
+        display = Display(visible=0, size=(900, 250))
+        display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=crange, cmap='afmhot', transparent_bg=False,
                          screenshot = True, offscreen=True, filename = flair_fig)
-
+        display.stop()
         flair_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center;width:30%><b>{surf}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{flair_fig}"></td></tr>'
@@ -935,10 +943,12 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
             measure_crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
+            display = Display(visible=0, size=(900, 250))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='Spectral_r', transparent_bg=False,
                              screenshot = True, offscreen=True, filename = measure_c69_32k_png)
-
+            display.stop()
             dti_surf_table += (
                      '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{surface}</b></td>'
                      '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{measure_c69_32k_png}"></td></tr>'
@@ -1080,8 +1090,11 @@ def qc_proc_func(proc_func_json=''):
     fc_pos[0>fc_pos] = 0
     deg = np.sum(fc_pos,axis=1)
     deg_fig = tmpDir + "/" + sbids + "_surf-fsLR-5k_fc_degree.png"
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1130,9 +1143,12 @@ def qc_proc_func(proc_func_json=''):
                 mask_c69 = labels_c69 != 0
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                display = Display(visible=0, size=(900, 750))
+                display.start()
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                                  nan_color=(0, 0, 0, 1), cmap='Reds', layout_style='grid', transparent_bg=False,
                                  screenshot = True, offscreen=True, filename = deg_fig)
+                display.stop()
                 fc_connectome_table += (
                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{annot}</b></td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{fc_fig}"></td>'
@@ -1177,9 +1193,12 @@ def qc_proc_func(proc_func_json=''):
         net = np.sum(fc_pos[idx,:], axis=0)
         net_surf = map_to_labels(net, labels_c69, fill=np.nan, mask=mask_c69)
         net_fig = '%s/%s_atlas-schaefer400_desc-%s.png'%(tmpDir,sbids,n)
+        display = Display(visible=0, size=(900, 750))
+        display.start()
         plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap='RdGy_r', transparent_bg=False,
                          screenshot = True, offscreen=True, filename = net_fig)
+        display.stop()
         yeo_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{n}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{net_fig}"></td>'
@@ -1253,7 +1272,7 @@ def qc_sc(sc_json=''):
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
 
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
-    sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
+
     for connectomeType in connectomes:
         c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,streamlines,connectomeType)
         c = nb.load(c_file).darrays[0].data
@@ -1263,8 +1282,11 @@ def qc_sc(sc_json=''):
         deg = np.sum(c,axis=1)
 
         deg_fig = tmpDir + "/" + sbids + "space-dwi_surf-fsLR-5k_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + "_degree.png"
+        display = Display(visible=0, size=(900, 250))
+        display.start()
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap='Purples', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='BuPu', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+        display.stop()
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
         ).format(deg_fig=deg_fig)
@@ -1303,9 +1325,12 @@ def qc_sc(sc_json=''):
                 mask_c69 = labels_c69 != 0
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                display = Display(visible=0, size=(900, 750))
+                display.start()
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), cmap='Purples', layout_style='grid', transparent_bg=False,
+                                 nan_color=(0, 0, 0, 1), cmap='BuPu', layout_style='grid', transparent_bg=False,
                                  screenshot = True, offscreen=True, filename = deg_fig)
+                display.stop()
                 connectome_table += (
                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{c_fig}"></td>'
@@ -1405,9 +1430,12 @@ def qc_mpc(mpc_json=''):
     deg = np.sum(mpc,axis=1)
     deg.shape
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_desc-" + acquisition + "_mpc_degree.png"
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Greens', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
-
+                     nan_color=(0, 0, 0, 1), cmap='mako', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
+    
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1440,7 +1468,7 @@ def qc_mpc(mpc_json=''):
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
         ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
         ip = nb.load(ip_file).darrays[0].data
-        pltpy.imshow(ip, cmap="Greens", aspect='auto')
+        pltpy.imshow(ip, cmap="crest", aspect='auto')
         pltpy.savefig(ip_fig)
 
         # MPC connectomes
@@ -1457,7 +1485,7 @@ def qc_mpc(mpc_json=''):
         mpc[~np.isfinite(mpc)] = np.finfo(float).eps
         mpc[mpc==0] = np.finfo(float).eps
 
-        pltpy.imshow(mpc, cmap="Greens", aspect='auto')
+        pltpy.imshow(mpc, cmap="crest", aspect='auto')
         pltpy.savefig(mpc_fig)
 
         # Degree
@@ -1470,9 +1498,13 @@ def qc_mpc(mpc_json=''):
             mask_c69 = labels_c69 != 0
 
             deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+            display = Display(visible=0, size=(900, 750))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='Greens', layout_style='grid', transparent_bg=False,
+                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='mako', layout_style='grid', transparent_bg=False,
                              screenshot = True, offscreen=True, filename = deg_fig)
+            display.stop()
+            
             mpc_connectome_table += (
                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{ip_fig}"></td>'
@@ -1515,8 +1547,13 @@ def qc_gd(gd_json=''):
     gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
+    
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
+    
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1567,9 +1604,12 @@ def qc_gd(gd_json=''):
             mask_c69 = labels_c69 != 0
 
             deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+            display = Display(visible=0, size=(900, 750))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(1, 1, 1, 1), cmap='Blues', layout_style='grid', transparent_bg=False,
                              screenshot=True, filename=deg_fig)
+            display.stop()
 
             gd_connectome_table += (
                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'

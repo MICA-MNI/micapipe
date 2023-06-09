@@ -107,6 +107,7 @@ help; exit 1; fi
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
     MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    #MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh"
 else
   # Source utilities functions from MICAPIPE
@@ -253,7 +254,7 @@ if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
   Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
 
   dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-  Info ${dwi_fod}
+
   Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}" -force
 
   dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
@@ -275,7 +276,7 @@ fi
 # -----------------------------------------------------------------------------------------------
 Title "Generating QC report"
 
-Do_cmd python "$MICAPIPE"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} -micapipe ${MICAPIPE}
+Do_cmd python "${MICAPIPE}"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} -micapipe ${MICAPIPE}
 
 # -----------------------------------------------------------------------------------------------
 # QC notification of completion
