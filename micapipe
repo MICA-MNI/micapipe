@@ -507,7 +507,7 @@ if [ "$QCgroup" = "TRUE" ]; then
             exit 1;
     else
             out=$(realpath $out)
-            python ${MICAPIPE}/functions/QC_group.py -out ${out}
+            Do_cmd python ${MICAPIPE}/functions/QC_group.py -out ${out}
             exit 0
     fi
 fi
