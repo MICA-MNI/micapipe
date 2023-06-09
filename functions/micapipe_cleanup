@@ -219,7 +219,7 @@ if [ "$procFS" = "TRUE" ]; then
       Warning "RUN manually: rm -rf $dir_subjsurf"
     fi
     Do_cmd rm -rf "${dir_QC}/${idBIDS}_module-proc_surf-${recon}*" \
-                  "${proc_struct}/surf/${idBIDS}_proc_surf.json" \
+                  "${dir_conte69}/${idBIDS}_proc_surf-${recon}.json" \
                   "$dir_logs"/proc_surf*
     grep -v "${id}, ${SES/ses-/}, proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id},${SES/ses-/},proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
