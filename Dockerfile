@@ -260,7 +260,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "nilearn" \
            "numpy==1.21.5" \
            "packaging" \
-           "pandas" \
+           "pandas==1.4.4" \
            "pillow" \
            "pycparser" \
            "pyhanko-certvalidator" \
@@ -277,7 +277,6 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "requests" \
            "scikit-learn" \
            "scipy" \
-           "seaborn" \
            "six" \
            "svglib" \
            "threadpoolctl" \
@@ -292,6 +291,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "wslink" \
            "yarl" \
            "zipp" \
+           "pyvirtualdisplay==3.0" \
     && sync && conda clean -y --all && sync \
     && bash -c "source activate micapipe \
     &&   pip install --no-cache-dir  \
@@ -306,7 +306,8 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
              "tzdata==2022.7" \
              "arabic-reshaper==3.0.0" \
              "cssselect2==0.7.0" \
-             "pygeodesic==0.1.8"" \
+             "pygeodesic==0.1.8" \
+             "seaborn==0.11.2" \
     && rm -rf ~/.cache/pip/* \
     && sync \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
