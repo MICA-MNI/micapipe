@@ -773,6 +773,7 @@ function json_nativepro_flair() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
+    \"regSynth\": \"${synth_reg}\",
     \"TransformCmd\": {
         \"BinaryMask_antsApplyTransforms\": \"$2\"
       },
@@ -942,7 +943,7 @@ function json_mpc() {
     \"microstructural_img\": \"${1}\",
     \"microstructural_reg\": \"${regImage}\",
     \"registered_img\": \"${qT1_fsnative}\",
-    \"synth_reg\": \"${synth_reg}\",
+    \"regSynth\": \"${synth_reg}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
@@ -994,6 +995,7 @@ function json_dwipreproc() {
     \"Only Affine\": \"${regAffine}\",
     \"B0 threshold\": \"${b0thr}\",
     \"Bvalue scaling\": \"${bvalscale}\",
+    \"regSynth\": \"${synth_reg}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",

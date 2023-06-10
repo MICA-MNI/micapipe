@@ -30,7 +30,8 @@ regAffine=${12}
 dwi_str=${13}
 b0thr=${14}
 bvalscale=${15}
-PROC=${16}
+synth_reg=${16}
+PROC=${17}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -55,6 +56,7 @@ Note "dwi_acq       :" "$dwi_str"
 Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
+Note "synth_reg:" ${synth_reg}
 Note "Processing    :" "$PROC"
 Note "Saving temporal dir     :" "$nocleanup"
 Note "ANTs and MRtrix will use: " "$threads threads"
@@ -489,7 +491,22 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     if [[ ${regAffine}  == "FALSE" ]]; then
         Info "Non-linear registration from T1w_dwi-space to DWI"
         T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
+        if [[ "${synth_reg}" == "TRUE" ]]; then
+          Info "Running label based affine registrations"
+          b0_synth="${tmp}/b0_synthsegGM.nii.gz"
+          T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
+          Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+          Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
+
+          Do_cmd mri_synthseg --i "$dwi_b0" --o "${tmp}/b0_synthseg.nii.gz" --robust --threads $threads --cpu
+          Do_cmd fslmaths "${tmp}/b0_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/b0_synthseg.nii.gz" "${b0_synth}"
+
+          # Affine from func to t1-nativepro
+          Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1_synth" -f "$b0_synth" -o "$dwi_SyN_str" -t s -n "$threads"
+        else
+          Info "Running volume based affine registrations"
+          Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
+        fi
         export reg="Affine+SyN"
         trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
         trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro

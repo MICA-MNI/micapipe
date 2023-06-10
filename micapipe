@@ -93,6 +93,7 @@ echo -e "
 \t\t\t            Default = 61 . This value will vary from DWI acquisition and from scanner to scanner (3T or 7T)
 \t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
 \t\t\t            Default is scaling. See more on MRtrix3 documentation
+\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
 
 \t\033[38;5;197m-proc_func\033[0m
 \t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -153,6 +154,7 @@ echo -e "
 \t\033[38;5;197m-proc_flair\033[0m
 \t   \033[38;5;120m-flairScanStr\033[0m        : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
 \t\t\t            Default='FLAIR'
+\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
 
 \t\033[38;5;197m-cleanup\033[0m
 \t   \033[38;5;120m-acqStr\033[0m              : String to manually identify the acquisition to be erase
@@ -804,7 +806,7 @@ fi
 if [ "$procDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale  $synth_reg"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -861,7 +863,7 @@ fi
 #  T2/FLAIR processing
 if [ "$procFLAIR" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_flair_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr"
+    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr $synth_reg"
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - T2/FLAIR processing"
         Warning "This option only works on the MICA workstations"

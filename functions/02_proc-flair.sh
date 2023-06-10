@@ -18,7 +18,8 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 flairScanStr=$8
-PROC=$9
+synth_reg=$9
+PROC=${10}
 here=$(pwd)
 
 
@@ -69,6 +70,7 @@ Note "threads             :" "${threads}"
 Note "Saving temporary dir:" "$nocleanup"
 Note "tmpDir              : " "$tmpDir"
 Note "flairScanStr        : " "$flairScanStr"
+Note "synth_reg:" ${synth_reg}
 Note "Processing          : " "$PROC"
 
 # Timer
@@ -135,7 +137,23 @@ if [[ ! -f "$flairNP" ]]; then ((N++))
     Do_cmd 5tt2gmwmi "$t1_5tt" "$t1_gmwmi"
     # Register nativepro and flair
     str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-affine_"
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$flair_rescale" -o "$str_flair_affine" -t a -n "$threads" -p d
+    if [[ "${synth_reg}" == "TRUE" ]]; then
+      Info "Running label based affine registrations"
+      flair_synth="${tmp}/flair_synthsegGM.nii.gz"
+      T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
+      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
+
+      Do_cmd mri_synthseg --i "$flair_rescale" --o "${tmp}/flair_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd fslmaths "${tmp}/flair_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/flair_synthseg.nii.gz" "${flair_synth}"
+
+      # Affine from func to t1-nativepro
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1_synth" -m "$flair_synth" -o "$str_flair_affine" -t a -n "$threads" -p d
+    else
+      Info "Running volume based affine registrations"
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$flair_rescale" -o "$str_flair_affine" -t a -n "$threads" -p d
+    fi
+
     t1_gmwmi_in_flair="${tmp}/${idBIDS}_space-flair_desc-gmwmi-mask.nii.gz"
     Do_cmd antsApplyTransforms -d 3 -i "$t1_gmwmi" -r "$flair_rescale" -t ["$str_flair_affine"0GenericAffine.mat,1] -o "$t1_gmwmi_in_flair" -v -u float
 

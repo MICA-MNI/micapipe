@@ -34,17 +34,18 @@ echo -e "
 \t\033[38;5;197m-all\033[0m 	        : Runs all the previous algorithms
 
 \033[38;5;141mOPTIONAL ARGUMENTS:\033[0m
-\t\033[38;5;120m-T1\033[0m      : Path to manually identify the main scan for registration (ONE, e.g. '-T1 ./sub-1/anat/sub-1_T1w.nii.gz').
-\t\033[38;5;197m-dilate\033[0m 	: Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
-\t\033[38;5;197m-robust\033[0m 	: If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
-\t\033[38;5;197m-nocleanup\033[0m 	: Do NOT DELETE temporal directory at script completion.
-\t\033[38;5;197m-threads\033[0m        : Number of threads (Default is 6)
+\t\033[38;5;120m-T1\033[0m        : Path to manually identify the main scan for registration (ONE, e.g. '-T1 ./sub-1/anat/sub-1_T1w.nii.gz').
+\t\033[38;5;197m-dilate\033[0m 	  : Dilation of the refaced mask (default is 6, set higher if the brain is cropped)
+\t\033[38;5;197m-robust\033[0m 	  : If reface-warped isn't great, TRY this option to run a ROBUST registration (More computation time)
+\t\033[38;5;120m-regSynth\033[0m  : Specify this option to perform the registration based on synthseg.
+\t\033[38;5;197m-nocleanup\033[0m : Do NOT DELETE temporal directory at script completion.
+\t\033[38;5;197m-threads\033[0m   : Number of threads (Default is 6)
 
 \033[38;5;141mUSAGE:\033[0m
 \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n \033[38;5;197m-all\033[0m
 
 \033[38;5;141mDEPENDENCIES:\033[0m
-    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
+    > ANTs        2.3.4   (https://github.com/ANTsX/ANTs)
     > FSL         6.0     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
     > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
 
@@ -111,6 +112,10 @@ do
     robust=TRUE
     shift
   ;;
+  -regSynth)
+    synth_reg=TRUE
+    shift
+  ;;
   -T1)
     T1w="$2"
     shift;shift;
@@ -151,6 +156,9 @@ if [ -z ${dil} ]; then dil=6; fi
 # THREADS should be defined as GLOBAL variable maybe
 if [[ -z $threads ]]; then export threads=6; Info "ANTs will use $threads threads"; fi
 
+# sythreg based registration
+if [[ ${synth_reg} == "TRUE" ]]; then synth_reg=${synth_reg}; else synth_reg="FALSE"; fi
+
 # Assigns BIDS variables names
 bids_variables $BIDS $id $out $SES
 
@@ -190,15 +198,15 @@ fi
 ${subject}
 # T1w for registrations
 # Manage the T1wStr in case is not found automatically
-if [ -z ${T1w} ]; then 
-	T1_orig=${subject_bids}/anat/${T1w_run1} 
-else 
+if [ -z ${T1w} ]; then
+	T1_orig=${subject_bids}/anat/${T1w_run1}
+else
 	T1_orig=$(realpath ${T1w})
 	T1w_run1=$(echo ${T1_orig} | awk -F 'anat/' '{print $2}')
 fi
 
 # T1w for registrations: exit if file is not found
-if [ ! -f ${T1_orig} ]; then 
+if [ ! -f ${T1_orig} ]; then
 	Error "T1w image for registrations DO NOT exist: try using -T1wStr"
 	ls "${subject_bids}/anat/"*nii* | awk -F '/' '{print $(NF)}'; Do_cmd exit 0
 fi
@@ -228,7 +236,23 @@ Do_cmd cd $tmp
 T1w_run1_str=${T1w_run1/.nii.gz/}
 T1w_2_MICs=${tmp}/T1w_2_MICs60
 T1w_2_mics_mat=${T1w_2_MICs}_0GenericAffine.mat
-Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $threads -p f
+if [[ "${synth_reg}" == "TRUE" ]]; then
+  Info "Running label based affine registrations"
+  micst1_synth="${tmp}/micst1_synthsegGM.nii.gz"
+  T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
+  Do_cmd mri_synthseg --i "${T1_orig}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+  Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
+
+  Do_cmd mri_synthseg --i "$mics_t1" --o "${tmp}/micst1_synthseg.nii.gz" --robust --threads $threads --cpu
+  Do_cmd fslmaths "${tmp}/micst1_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/micst1_synthseg.nii.gz" "${micst1_synth}"
+
+  # Affine from func to t1-nativepro
+  Do_cmd antsRegistrationSyN.sh -d 3 -f $micst1_synth -m $T1_synth -o ${T1w_2_MICs}_ -t a -n $threads -p f
+else
+  Info "Running volume based affine registrations"
+  Do_cmd antsRegistrationSyN.sh -d 3 -f $mics_t1 -m $T1_orig -o ${T1w_2_MICs}_ -t a -n $threads -p f
+fi
+
 if [ ! -f ${T1w_2_mics_mat} ]; then Error "Affine registration failed"; cd $here;  Do_cmd exit 0; fi
 
 # -----------------------------------------------------------------------------------------------
@@ -322,7 +346,18 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
       Info "REGISTERING $nii_pwd to $T1w_run1_str"
       nii_out=${tmp}/${nii/.nii.gz/_}
       nii_2_T1_mat=${nii_out}0GenericAffine.mat
-      Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
+      if [[ "${synth_reg}" == "TRUE" ]]; then
+        Info "Running label based affine registrations"
+        nii_synth="${tmp}/nii_synthsegGM.nii.gz"
+        Do_cmd mri_synthseg --i "$nii_pwd" --o "${tmp}/nii_synthseg.nii.gz" --robust --threads $threads --cpu
+        Do_cmd fslmaths "${tmp}/nii_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/nii_synthseg.nii.gz" "${nii_synth}"
+
+        # Affine from func to t1-nativepro
+        Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
+      else
+        Info "Running volume based affine registrations"
+        Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
+      fi
   fi
 
   # -----------------------------------------------------------------------------------------------
