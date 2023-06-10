@@ -28,7 +28,7 @@ echo -e "
    Flags for erasing specific processing outputs:\n
 \t\033[38;5;197m-proc_structural\033[0m  : DELETES volumetric processing
 \t\033[38;5;197m-proc_surf\033[0m        : DELETES Surface processing
-\t  \033[38;5;120m-fastsurfer\033[0m        Use this to delete fastsurfer processing
+\t  \033[38;5;120m-freesurfer\033[0m        Use this to delete freesurfer processing
 \t\033[38;5;197m-proc_flair\033[0m       : DELETES FLAIR processing
 \t\033[38;5;197m-proc_dwi\033[0m         : DELETES DWI-Diffusion weighted images processing with MRtrix3
 \t  \033[38;5;120m-acqStr\033[0m            Use this option if -proc_dwi was used with -dwi_acq
@@ -131,8 +131,8 @@ do
     acqStr=$2
     shift;shift
   ;;
-  -fastsurfer)
-    FastSurfer=TRUE
+  -freesurfer)
+    FreeSurfer=TRUE
     shift
   ;;
   -mica)
@@ -203,10 +203,10 @@ if [ "$procFS" = "TRUE" ]; then
       recon="$(echo ${module_qc/.json/} | awk -F 'proc_surf-' '{print $2}')"
     elif [[ "$Nrecon" -gt 1 ]]; then
       Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
-      if [[ "$FastSurfer" == "TRUE" ]]; then
-        Note "fastsurfer will run: $FastSurfer\n"; recon="fastsurfer";
+      if [[ "$FreeSurfer" == "TRUE" ]]; then
+        Note "freesurfer will run: $FreeSurfer\n"; recon="freesurfer";
       else
-        Note "freesurfer is the default"; recon="freesurfer"
+        Note "fastsurfer is the default"; recon="fastsurfer"
       fi
     fi
     # Set surface directory
@@ -219,7 +219,7 @@ if [ "$procFS" = "TRUE" ]; then
       Warning "RUN manually: rm -rf $dir_subjsurf"
     fi
     Do_cmd rm -rf "${dir_QC}/${idBIDS}_module-proc_surf-${recon}*" \
-                  "${proc_struct}/surf/${idBIDS}_proc_surf.json" \
+                  "${dir_conte69}/${idBIDS}_proc_surf-${recon}.json" \
                   "$dir_logs"/proc_surf*
     grep -v "${id}, ${SES/ses-/}, proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id},${SES/ses-/},proc_surf-${recon}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
@@ -320,10 +320,11 @@ if [ "$postDWI" = "TRUE" ]; then
       if [ ! -d ${proc_dwi} ]; then Warning "The selected acquisition does not exist, select one from:"; ls ${proc_dwi}; exit; fi
       proc_dwi=$subject_dir/dwi/"${acqStr}"; acqStr_="_${acqStr}"
     fi
-    Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.txt \
+    Do_cmd rm -rf "$proc_dwi"/connectomes/"$idBIDS"_space-dwi_atlas-*_desc-iFOD2-"$tracts"-"${filter}"_*.shape.gii \
+                  "$proc_dwi"/connectomes/"$idBIDS"_surf-fsLR-5k_desc-iFOD2-"$tracts"-"${filter}"_*.shape.gii \
                   "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_* \
                   "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
-                  "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC_*
+                  "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC-${tracts}*
     grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi

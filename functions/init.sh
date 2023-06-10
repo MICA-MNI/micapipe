@@ -23,10 +23,10 @@ export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
 # ICA-FIX
 export FIXPATH="/data_/mica1/01_programs/fix"
 # FreeSurfer
-export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
+export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.4.0"
 # fastsurfer
 export FASTSURFER_HOME="/data_/mica1/01_programs/fastsurfer"
-export fs_licence="/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
+export fs_licence="/data_/mica1/01_programs/freesurfer-7.4.0/license.txt"
 # FSL 6.0
 export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
 export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
@@ -38,9 +38,9 @@ export itk_dir="/data_/mica1/01_programs/c3d-1.0.0-Linux-x86_64/bin"
 # Python 3.7
 #export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
 # Export fs fs_licence
-export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
+export fs_licence=/data_/mica1/01_programs/freesurfer-7.4.0/license.txt
 # Fastsurfer singularity container
-export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.0.sif
+export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.4.sif
 unset TMPDIR
 # Fastsurfer conda env
 

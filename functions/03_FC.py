@@ -60,13 +60,6 @@ performNSR = sys.argv[6]
 performGSR = sys.argv[7]
 func_lab = sys.argv[8]
 noFC = sys.argv[9]
-GSRtag = sys.argv[10]
-
-# Rename outputs with GSR
-if GSRtag == 'TRUE':
-    gsr='_gsr'
-else:
-    gsr=''
 
 # check if surface directory exist; exit if false
 if os.path.isdir(funcDir+"/surf/"):
@@ -255,7 +248,7 @@ del rh_data
 data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
-save_gii(data_corr, funcDir+'/surf/'+subject+'_surf-fsLR-32k_desc-timeseries_clean'+gsr+'.shape.gii')
+save_gii(data_corr, funcDir+'/surf/'+subject+'_surf-fsLR-32k_desc-timeseries_clean.shape.gii')
 
 # Read the processed parcellations
 parcellationList = glob.glob(volmDir + "/*atlas*.nii.gz")
@@ -288,7 +281,7 @@ if noFC!="TRUE":
                 ts_r[i + n_sctx, :] = 0
         ts_r = np.triu(ts_r)
 
-        save_gii(ts_r, funcDir+'/surf/'+subject+'_surf-fsLR-32k_atlas-'+parcellation+'_desc-FC'+ gsr+'.shape.gii')
+        save_gii(ts_r, funcDir+'/surf/'+subject+'_surf-fsLR-32k_atlas-'+parcellation+'_desc-FC.shape.gii')
         del ts_r
         del ts
         del thisparc
@@ -315,7 +308,7 @@ del rh_data
 ts = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
 ts_r = np.corrcoef(np.transpose(ts))
 ts_r = np.triu(ts_r)
-save_gii(ts_r, funcDir+'/surf/'+subject+'_surf-fsLR-5k_desc-FC'+gsr+'.shape.gii')
+save_gii(ts_r, funcDir+'/surf/'+subject+'_surf-fsLR-5k_desc-FC.shape.gii')
 # Clean up
 del data
 del ts_r
@@ -355,7 +348,7 @@ rhSD = np.std(rh_nat_noHP_data, axis = 1)
 rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
-save_gii(tSNR, funcDir+'/volumetric/'+subject+func_lab+'_tSNR'+gsr+'.shape.gii')
+save_gii(tSNR, funcDir+'/volumetric/'+subject+func_lab+'_tSNR.shape.gii')
 print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 print('func regression and FC ran successfully')

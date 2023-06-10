@@ -40,24 +40,22 @@ Generates a pdf file for QC of the processing
 """
 
 from xhtml2pdf import pisa
-import sys
-import pandas as pd
 import os
 import argparse
 import json
 import glob
 import nibabel as nb
-from nibabel.freesurfer.mghformat import load
 import numpy as np
 import matplotlib as plt
 import matplotlib.pyplot as pltpy
+import seaborn
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
 from brainspace.utils.parcellation import map_to_labels
 from brainspace.vtk_interface import wrap_vtk, serial_connect
-from brainspace.datasets import load_conte69
 from vtk import vtkPolyDataNormals
+from pyvirtualdisplay import Display
 
 # Arguments
 parser = argparse.ArgumentParser()
@@ -115,6 +113,13 @@ parser.add_argument('-nocleanup',
                     help='Delete temporary directory at script completion? {True, False}'
                     )
 
+parser.add_argument('-micapipe',
+                    dest='MICAPIPE',
+                    type=str,
+                    help='Path to MICAPIPE Directory',
+                    required=True
+                    )
+
 
 parser.add_argument('-version',
                     action='store_false',
@@ -132,6 +137,7 @@ tracts = args.tracts
 tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
+MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
@@ -144,16 +150,16 @@ else:
     sbids = sub + "_" + ses
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
-
-# Path to MICAPIPE
-MICAPIPE=os.popen("echo $MICAPIPE").read()[:-1]
-
+derivatives = derivatives+'/micapipe_v0.2.0'
 
 ## ------------------------------------------------------------------------- ##
 ##                                                                           ##
 ##                      Helper functions to generate PDF                     ##
 ##                                                                           ##
 ## ------------------------------------------------------------------------- ##
+def file_exists(file_path):
+    return os.path.isfile(file_path)
+
 def check_json_exist(jsonPath=''):
     json_exist = os.path.isfile(jsonPath)
 
@@ -172,7 +178,7 @@ def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
     # Header
     report_header = (
         # Micapipe banner
-        '<img id=\"top\" src=\"{MICAPIPE}/docs/figures/micapipe_long.png\" alt=\"micapipe\">'
+        '<img id=\"top\" src=\"{MICAPIPE}/micapipe_long.png\" alt=\"micapipe\">'
 
         # Dataset name
         '<h1 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:center;margn-bottom:0">'
@@ -270,9 +276,9 @@ def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
     if os.path.exists(outPath):
         if os.path.exists(refPath):
             ROI = '-roi' if roi else ''
-            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s %s %s -out %s"%(refPath, outPath, ROI, figPath))
+            os.system("%s/functions/nifti_capture.py -img %s %s %s -out %s"%(MICAPIPE, refPath, outPath, ROI, figPath))
         else:
-            os.system("${MICAPIPE}/functions/nifti_capture.py -img %s -out %s"%(outPath, figPath))
+            os.system("%s/functions/nifti_capture.py -img %s -out %s"%(MICAPIPE, outPath, figPath))
 
         _static_block = report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
     else:
@@ -439,14 +445,8 @@ def qc_proc_surf(proc_surf_json=''):
     # QC header
     _static_block = qc_header()
 
-    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf.json"%(out,sub,ses,sbids))
-    with open( surf_json ) as f:
-        surf_description = json.load(f)
-    global recon
-    recon = surf_description["SurfRecon"]
-    global surfaceDir
-    surfaceDir = surf_description["SurfaceDir"]
-    _static_block +=  report_module_header_template(module="proc_surf (%s)"%(surf_description["SurfRecon"]))
+    processing = proc_surf_json.split('proc_surf-')[1].split('.json')[0]
+    _static_block +=  report_module_header_template(module="proc_surf (%s)"%(processing))
 
     # QC summary
     _static_block += report_qc_summary_template(proc_surf_json)
@@ -462,8 +462,10 @@ def qc_proc_surf(proc_surf_json=''):
             '<b>Native surfaces</b> </p>'
     )
 
+    global recon, surfaceDir, surf_lh, surf_rh, wm_lh, wm_rh, inf_lh, inf_rh
+
     # Load native surface
-    global surf_lh, surf_rh, wm_lh, wm_rh, inf_lh, inf_rh
+    surfaceDir = "%s/%s"%(out.split('/micapipe_v0.2.0')[0],processing)
     surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
     surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
     wm_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.white', itype='fs')
@@ -472,31 +474,24 @@ def qc_proc_surf(proc_surf_json=''):
     inf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.inflated', itype='fs')
 
     # Native thickness
+    dsize = (900, 250)
+    display = Display(visible=0, size=dsize)
+    display.start()
     th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=th, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(surf_lh, surf_rh, array_name=th, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
+                     screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
     # Native curvature
     cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
-    plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
+                     screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
     # Native sulcal depth
     sd = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.sulc')), axis=0)
-    plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
-    # Destrieux atlas (aparc.a2009s)
-    parc = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc-a2009s_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc-a2009s_mics.annot')[0]), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=parc, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parc)), ['inferno', 'hsv', 'hsv', 'tab20b']),transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_a2009s.png')
-    # Desikan-Killiany Atlas (aparc)
-    parcDK = np.concatenate((nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/lh.aparc_mics.annot')[0], nb.freesurfer.read_annot(surfaceDir + '/' + sbids + '/label/rh.aparc_mics.annot')[0]), axis=0)
-    plot_hemispheres(surf_lh, surf_rh, array_name=parcDK, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(parcDK)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
-                     screenshot = True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_aparc.png')
-
+                     screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
+    display.stop()
     native_surface_table = (
         '<table style="border:1px solid #666;width:100%">'
             # Thickness
@@ -508,12 +503,6 @@ def qc_proc_surf(proc_surf_json=''):
             # Sulcal depth
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Sulcal depth</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{sdPath}"></td></tr>'
-            # Destrieux Atlas (aparc.a2009s)
-            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Destrieux Atlas (aparc.a2009s)</b></td>'
-            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcPath}"></td></tr>'
-            # Desikan-Killiany Atlas (aparc)
-            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><b>Desikan-Killiany Atlas (aparc)</b></td>'
-            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{parcDKPath}"></td></tr>'
         '</table>'
     )
 
@@ -524,6 +513,13 @@ def qc_proc_surf(proc_surf_json=''):
         parcDKPath=tmpDir+'/'+sbids+'_space-fsnative_desc-surf_aparc.png'
     )
 
+
+    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf-%s.json"%(out,sub,ses,sbids,processing))
+    with open( surf_json ) as f:
+        surf_description = json.load(f)
+    recon = surf_description["SurfRecon"]
+    surfaceDir = surf_description["SurfaceDir"]
+
     return _static_block
 
 
@@ -533,7 +529,12 @@ def qc_post_structural(post_structural_json=''):
     post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
-    recon = post_struct_description["SurfaceProc"]
+    recon = post_struct_description["SurfRecon"]
+    surfaceDir = post_struct_description["SurfaceDir"]
+
+    # Load native surface
+    surf_lh = read_surface(surfaceDir+'/'+sbids+'/surf/lh.pial', itype='fs')
+    surf_rh = read_surface(surfaceDir+'/'+sbids+'/surf/rh.pial', itype='fs')
 
     # QC header
     _static_block = qc_header()
@@ -579,20 +580,27 @@ def qc_post_structural(post_structural_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Surface labels</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    annot_dir = os.path.realpath(surfaceDir+'/'+sbids+'/label/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
+
     for annot in atlas:
         fig = sbids + "_atlas-" + annot + "_desc-surf.png"
-        fileL= "%s/lh.%s.annot"%(label_dir,annot)
-        fileR= "%s/rh.%s.annot"%(label_dir,annot)
+        fileL= "%s/lh.%s_mics.annot"%(annot_dir,annot)
+        fileR= "%s/rh.%s_mics.annot"%(annot_dir,annot)
         figPath = tmpDir + '/' + fig
         label = np.concatenate((nb.freesurfer.read_annot(fileL)[0], nb.freesurfer.read_annot(fileR)[0]), axis=0)
         if os.path.exists(fileL) and os.path.exists(fileR):
+            print("[INFO].... Creating PNG of " + annot + " on native surface")
+            dsize = (900, 750)
+            display = Display(visible=0, size=dsize)
+            display.start()
             plot_hemispheres(surf_lh, surf_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), cmap=cmap_gradient(len(np.unique(label)), ['inferno', 'hsv', 'hsv', 'tab20b']), transparent_bg=False,
-                             screenshot = True, filename = figPath)
-
+                             screenshot = True, offscreen=True, filename = figPath)
+            display.stop()
         parcellation_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{annot}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{figPath}"></td></tr>'
@@ -620,16 +628,19 @@ def qc_post_structural(post_structural_json=''):
         grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
 
         # Sphere native
+        dsize = (900, 250)
+        display = Display(visible=0, size=dsize)
+        display.start()
         plot_hemispheres(lhM, rhM, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness.png')
+                         screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness.png')
         plot_hemispheres(lhP, rhP, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-pial.png')
+                         screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-pial.png')
         plot_hemispheres(lhW, rhW, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False,
-                         screenshot = True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-white.png')
-
+                         screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-white.png')
+        display.stop()
         surface_table = '<br />' if i != 0 else ''
         surface_table += (
             '<table style="border:1px solid #666;width:100%">'
@@ -658,7 +669,8 @@ def qc_post_structural(post_structural_json=''):
         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
         '<b>Morphological features</b></p>'
     )
-
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     for feature in ['curv', 'thickness']:
 
         feature_title = 'Curvature' if feature=='curv' else 'Thickness'
@@ -671,7 +683,7 @@ def qc_post_structural(post_structural_json=''):
         f = np.concatenate((nb.load(feature_fsn_lh).darrays[0].data, nb.load(feature_fsn_rh).darrays[0].data), axis=0)
         plot_hemispheres(inf_lh, inf_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
-                         screenshot = True, filename = feature_fsn_png)
+                         screenshot = True, offscreen=True, filename = feature_fsn_png)
 
         feature_fs5_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsaverage5_label-%s.func.gii"%(out,sub,ses,sbids,feature)
         feature_fs5_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsaverage5_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -679,7 +691,7 @@ def qc_post_structural(post_structural_json=''):
         f = np.concatenate((nb.load(feature_fs5_lh).darrays[0].data, nb.load(feature_fs5_rh).darrays[0].data), axis=0)
         plot_hemispheres(fs5I_lh, fs5I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
-                         screenshot = True, filename = feature_fs5_png)
+                         screenshot = True, offscreen=True, filename = feature_fs5_png)
 
         feature_c69_5k_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsLR-5k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
         feature_c69_5k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-5k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -687,7 +699,7 @@ def qc_post_structural(post_structural_json=''):
         f = np.concatenate((nb.load(feature_c69_5k_lh).darrays[0].data, nb.load(feature_c69_5k_rh).darrays[0].data), axis=0)
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
-                         screenshot = True, filename = feature_c69_5k_png)
+                         screenshot = True, offscreen=True, filename = feature_c69_5k_png)
 
         feature_c69_32k_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
         feature_c69_32k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -695,7 +707,7 @@ def qc_post_structural(post_structural_json=''):
         f = np.concatenate((nb.load(feature_c69_32k_lh).darrays[0].data, nb.load(feature_c69_32k_rh).darrays[0].data), axis=0)
         plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
-                         screenshot = True, filename = feature_c69_32k_png)
+                         screenshot = True, offscreen=True, filename = feature_c69_32k_png)
 
         morph_table = '<br />' if feature == 'thickness' else ''
         morph_table += (
@@ -722,7 +734,7 @@ def qc_post_structural(post_structural_json=''):
             feature_c69_5k_png=feature_c69_5k_png,
             feature_c69_32k_png=feature_c69_32k_png
         )
-
+    display.stop()
     return _static_block
 
 ## --------------------------- PROC_FLAIR MODULE --------------------------- ##
@@ -788,12 +800,13 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.1), np.quantile(flair, 0.98))
-
+        crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
+        display = Display(visible=0, size=(900, 250))
+        display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=crange, cmap='afmhot', transparent_bg=False,
-                         screenshot = True, filename = flair_fig)
-
+                         screenshot = True, offscreen=True, filename = flair_fig)
+        display.stop()
         flair_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center;width:30%><b>{surf}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{flair_fig}"></td></tr>'
@@ -932,10 +945,12 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
             measure_crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
+            display = Display(visible=0, size=(900, 250))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='Spectral_r', transparent_bg=False,
-                             screenshot = True, filename = measure_c69_32k_png)
-
+                             screenshot = True, offscreen=True, filename = measure_c69_32k_png)
+            display.stop()
             dti_surf_table += (
                      '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{surface}</b></td>'
                      '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{measure_c69_32k_png}"></td></tr>'
@@ -953,7 +968,6 @@ def qc_proc_dwi(proc_dwi_json=''):
 def qc_proc_func(proc_func_json=''):
 
     tag = proc_func_json.split('%s_module-proc_func-desc-'%(sbids))[1].split('.json')[0]
-
     # QC header
     _static_block = qc_header()
     _static_block +=  report_module_header_template(module='proc_func (%s)'%(tag))
@@ -986,9 +1000,10 @@ def qc_proc_func(proc_func_json=''):
     mainPhaseScan = func_clean_json["Preprocess"]["MainPhaseScan"]
     if mainPhaseScan == 'DEFAULT':
         mainPhaseScan = os.getenv('default_mainPhase')
+        print(mainPhaseScan)
         outPath = tmpDir + '/' + mainPhaseScan.split('nii.gz')[0] + '_mean.nii.gz'
     else:
-        outPath = tmpDir + '/' + mainPhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + os.path.basename(mainPhaseScan).split('.nii.gz')[0] + '_mean.nii.gz'
 
     figPath = "%s/fmri_mainPhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Main phase scan (mean)", outPath=outPath, figPath=figPath)
@@ -998,7 +1013,7 @@ def qc_proc_func(proc_func_json=''):
         reversePhaseScan = os.getenv('default_reversePhase')
         outPath = tmpDir + '/' + reversePhaseScan.split('.nii.gz')[0] + '_mean.nii.gz'
     else:
-        outPath = tmpDir + '/' + reversePhaseScan.split('fmap/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + os.path.basename(reversePhaseScan).split('.nii.gz')[0] + '_mean.nii.gz'
     figPath = "%s/fmri_reveresePhaseScan.png"%(tmpDir)
     _static_block += nifti_check(outName="Reverse phase scan (mean)", outPath=outPath, figPath=figPath)
 
@@ -1008,14 +1023,36 @@ def qc_proc_func(proc_func_json=''):
             '<b>Main outputs</b> </p>'
     )
 
+    clean_json = os.path.realpath("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(out,sub,ses,tag,sbids,acquisition))
+    with open( clean_json ) as f:
+        clean_json = json.load(f)
+
+    fmripreproc = clean_json["Preprocess"]
+    fmripreproc_table = (
+        '<table style="border:1px solid #666;width:100%">'
+        '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>fMRI processing options</b></td></tr>'
+    )
+
+    if acquisition == "me":
+        fmripreproc_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left;width:50%><b>Tedana</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left;width:50%>YES</td></tr>'
+        )
+
+    preproc_info = ["TotalReadoutTime", "EchoTime", "Melodic", "FIX", "GlobalSignalRegression", "CSFWMSignalRegression", "dropTR"]
+    for k in preproc_info:
+        fmripreproc_table += (
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:left;width:50%><b>{left}</b></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:left;width:50%>{right}</td></tr>'
+        ).format(left=k, right=fmripreproc[k])
+
+    fmripreproc_table += "</table>"
+
+    _static_block += fmripreproc_table
+
     outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
     figPath = "%s/func_brain_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="fMRI brain", outPath=outPath, figPath=figPath)
-
-    outPath = "%s/%s/%s/xfm/%s_from-%s_to-fsnative_bbr_mode-image_desc-bbregister.nii.gz"%(out,sub,ses,sbids,tag)
-    refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
-    figPath = "%s/fmri_fsnative_screenshot.png"%(tmpDir)
-    _static_block += nifti_check(outName="Registration: fMRI in %s native space"%(recon), outPath=outPath, refPath=refPath, figPath=figPath)
 
     outPath = "%s/%s/%s/anat/%s_space-nativepro_desc-%s_mean.nii.gz"%(out,sub,ses,sbids,tag)
     refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
@@ -1045,8 +1082,8 @@ def qc_proc_func(proc_func_json=''):
             '<b>Functional connectomes</b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.txt"%(out,sub,ses,tag,sbids)
-    fc = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc = nb.load(fc_file).darrays[0].data
     np.seterr(divide='ignore')
     fcz = np.arctanh(fc)
     fcz[~np.isfinite(fcz)] = 0
@@ -1055,8 +1092,11 @@ def qc_proc_func(proc_func_json=''):
     fc_pos[0>fc_pos] = 0
     deg = np.sum(fc_pos,axis=1)
     deg_fig = tmpDir + "/" + sbids + "_surf-fsLR-5k_fc_degree.png"
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1075,16 +1115,18 @@ def qc_proc_func(proc_func_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
         # fc connectomes
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
-        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.txt"%(out,sub,ses,tag,sbids,annot)
+        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(out,sub,ses,tag,sbids,annot)
 
+        # Load shape.gii
         if os.path.isfile(fc_file):
-            fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+            fc_mtx = nb.load(fc_file).darrays[0].data
             fc = fc_mtx[49:, 49:]
             fcz = np.arctanh(fc)
             fcz[~np.isfinite(fcz)] = 0
@@ -1103,9 +1145,12 @@ def qc_proc_func(proc_func_json=''):
                 mask_c69 = labels_c69 != 0
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                display = Display(visible=0, size=(900, 750))
+                display.start()
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                                  nan_color=(0, 0, 0, 1), cmap='Reds', layout_style='grid', transparent_bg=False,
-                                 screenshot = True, filename = deg_fig)
+                                 screenshot = True, offscreen=True, filename = deg_fig)
+                display.stop()
                 fc_connectome_table += (
                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{annot}</b></td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{fc_fig}"></td>'
@@ -1121,8 +1166,8 @@ def qc_proc_func(proc_func_json=''):
             '<b> Yeo networks (schaefer-400) </b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.txt"%(out,sub,ses,tag,sbids)
-    fc_mtx = np.loadtxt(fc_file, dtype=float, delimiter=' ')
+    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc_mtx = nb.load(fc_file).darrays[0].data
     fc = fc_mtx[49:, 49:]
     fcz = np.arctanh(fc)
     fcz[~np.isfinite(fcz)] = 0
@@ -1150,9 +1195,12 @@ def qc_proc_func(proc_func_json=''):
         net = np.sum(fc_pos[idx,:], axis=0)
         net_surf = map_to_labels(net, labels_c69, fill=np.nan, mask=mask_c69)
         net_fig = '%s/%s_atlas-schaefer400_desc-%s.png'%(tmpDir,sbids,n)
+        display = Display(visible=0, size=(900, 750))
+        display.start()
         plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap='RdGy_r', transparent_bg=False,
-                         screenshot = True, filename = net_fig)
+                         screenshot = True, offscreen=True, filename = net_fig)
+        display.stop()
         yeo_table += (
             '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{n}</b></td>'
             '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{net_fig}"></td>'
@@ -1165,7 +1213,6 @@ def qc_proc_func(proc_func_json=''):
     _static_block += yeo_table
 
     return _static_block
-
 
 ## ------------------------------- SC MODULE ------------------------------ ##
 def qc_sc(sc_json=''):
@@ -1221,23 +1268,27 @@ def qc_sc(sc_json=''):
     figPath = "%s/tdi_%s.png"%(tmpDir,streamlines)
     _static_block += nifti_check(outName="Track density imaging (%s tracks)"%(streamlines), outPath=outPath, figPath=figPath)
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
 
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
-    sc_connectome_table = el_connectome_table = wsc_connectome_table = ''
+
     for connectomeType in connectomes:
-        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,streamlines,connectomeType)
-        c = np.loadtxt(c_file, dtype=float, delimiter=' ')
+        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,streamlines,connectomeType)
+        c = nb.load(c_file).darrays[0].data
         c = np.log(np.triu(c,1)+c.T)
         c[np.isneginf(c)] = 0
         c[c==0] = np.finfo(float).eps
         deg = np.sum(c,axis=1)
 
         deg_fig = tmpDir + "/" + sbids + "space-dwi_surf-fsLR-5k_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + "_degree.png"
+        display = Display(visible=0, size=(900, 250))
+        display.start()
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap='Purples', transparent_bg=False, screenshot = True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='BuPu', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+        display.stop()
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
         ).format(deg_fig=deg_fig)
@@ -1257,8 +1308,8 @@ def qc_sc(sc_json=''):
             Ndim = max(np.unique(annot_lh_fs5[0]))
 
             c_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + ".png"
-            c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.txt"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
-            c = np.loadtxt(c_file, dtype=float, delimiter=' ')
+            c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
+            c = nb.load(c_file).darrays[0].data
             c = np.log(np.triu(c,1)+c.T)
             c[np.isneginf(c)] = 0
             c[c==0] = np.finfo(float).eps
@@ -1276,9 +1327,12 @@ def qc_sc(sc_json=''):
                 mask_c69 = labels_c69 != 0
 
                 deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+                display = Display(visible=0, size=(900, 750))
+                display.start()
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), cmap='Purples', layout_style='grid', transparent_bg=False,
-                                 screenshot = True, filename = deg_fig)
+                                 nan_color=(0, 0, 0, 1), cmap='BuPu', layout_style='grid', transparent_bg=False,
+                                 screenshot = True, offscreen=True, filename = deg_fig)
+                display.stop()
                 connectome_table += (
                     '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                     '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{c_fig}"></td>'
@@ -1370,16 +1424,19 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.txt"%(out,sub,ses,acquisition,sbids)
-    mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids)
+    mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
     mpc[mpc==0] = np.finfo(float).eps
     deg = np.sum(mpc,axis=1)
     deg.shape
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_desc-" + acquisition + "_mpc_degree.png"
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Greens', color_range='sym', transparent_bg=False, screenshot = True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='mako', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -1400,9 +1457,10 @@ def qc_mpc(mpc_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
         if annot == 'aparc-a2009s':
@@ -1410,9 +1468,9 @@ def qc_mpc(mpc_json=''):
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.txt"%(out,sub,ses,acquisition,sbids,annot)
-        ip = np.loadtxt(ip_file, dtype=float, delimiter=' ')
-        pltpy.imshow(ip, cmap="Greens", aspect='auto')
+        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        ip = nb.load(ip_file).darrays[0].data
+        pltpy.imshow(ip, cmap="crest", aspect='auto')
         pltpy.savefig(ip_fig)
 
         # MPC connectomes
@@ -1420,8 +1478,8 @@ def qc_mpc(mpc_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.txt"%(out,sub,ses,acquisition,sbids,annot)
-        mpc = np.loadtxt(mpc_file, dtype=float, delimiter=' ')
+        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        mpc = nb.load(mpc_file).darrays[0].data
         mpc = np.triu(mpc,1)+mpc.T
         mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
         mpc = np.delete(np.delete(mpc, Ndim, axis=0), Ndim, axis=1)
@@ -1429,7 +1487,7 @@ def qc_mpc(mpc_json=''):
         mpc[~np.isfinite(mpc)] = np.finfo(float).eps
         mpc[mpc==0] = np.finfo(float).eps
 
-        pltpy.imshow(mpc, cmap="Greens", aspect='auto')
+        pltpy.imshow(mpc, cmap="crest", aspect='auto')
         pltpy.savefig(mpc_fig)
 
         # Degree
@@ -1442,9 +1500,13 @@ def qc_mpc(mpc_json=''):
             mask_c69 = labels_c69 != 0
 
             deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+            display = Display(visible=0, size=(900, 750))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='Greens', layout_style='grid', transparent_bg=False,
-                             screenshot = True, filename = deg_fig)
+                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='mako', layout_style='grid', transparent_bg=False,
+                             screenshot = True, offscreen=True, filename = deg_fig)
+            display.stop()
+
             mpc_connectome_table += (
                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{ip_fig}"></td>'
@@ -1483,12 +1545,17 @@ def qc_gd(gd_json=''):
             '<b>GD connectomes</b> </p>'
     )
 
-    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.txt"%(out,sub,ses,sbids)
-    gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(out,sub,ses,sbids)
+    gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
+
+    display = Display(visible=0, size=(900, 250))
+    display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+    display.stop()
+
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1507,9 +1574,10 @@ def qc_gd(gd_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = "%s/%s/%s/label/"%(derivatives,recon,sbids)
-    atlas = glob.glob(label_dir + 'lh.*_mics.annot', recursive=True)
-    atlas = sorted([f.replace(label_dir, '').replace('.annot','').replace('lh.','').replace('_mics','') for f in atlas])
+    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    files = os.listdir(label_dir)
+    filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
+    atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
 
         if annot == 'aparc-a2009s':
@@ -1520,8 +1588,8 @@ def qc_gd(gd_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         gd_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd.png"
-        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.txt"%(out,sub,ses,sbids,annot)
-        gd = np.loadtxt(gd_file, dtype=float, delimiter=' ')
+        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.shape.gii"%(out,sub,ses,sbids,annot)
+        gd = nb.load(gd_file).darrays[0].data
         pltpy.imshow(gd, cmap="Blues", aspect='auto')
         pltpy.savefig(gd_fig)
 
@@ -1538,9 +1606,12 @@ def qc_gd(gd_json=''):
             mask_c69 = labels_c69 != 0
 
             deg_surf = map_to_labels(deg, labels_c69, fill=np.nan, mask=mask_c69)
+            display = Display(visible=0, size=(900, 750))
+            display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(1, 1, 1, 1), cmap='Blues', layout_style='grid', transparent_bg=False,
                              screenshot=True, filename=deg_fig)
+            display.stop()
 
             gd_connectome_table += (
                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
@@ -1573,8 +1644,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-    'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
-    'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
+   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
@@ -1582,4 +1653,5 @@ for i, m in enumerate(qc_module_function['modules']):
     for j in module_qc_json:
         if check_json_exist(j):
             static_report = qc_module_function['functions'][i](j)
-            convert_html_to_pdf(static_report, j.replace('.json','_qc-report.pdf'))
+            file_pdf=j.replace('.json','_qc-report.pdf')
+            convert_html_to_pdf(static_report, file_pdf)

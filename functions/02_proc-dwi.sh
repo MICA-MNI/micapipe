@@ -36,7 +36,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -99,7 +99,7 @@ if [[ "$dwi_processed" != "FALSE" ]]; then
 fi
 
 # Check dependencies Status: PROC_STRUCTURAL
-micapipe_check_dependency "proc_structural" "${dir_QC}/${idBIDS}_module-proc_structural.json"
+micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
 if [ "${#bids_dwis[@]}" -lt 1 ]; then Error "DWI string or path does not match the default:\n\t\t TRY to set it with -dwi_main <path to DWI.nii.gz>"; exit; fi
 if [ ! -f "${bids_dwis[0]}" ]; then Error "Main DWI was not found:\n\t\t TRY to set it with -dwi_main <path to DWI.nii>"; exit; fi
 
@@ -585,8 +585,8 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-micapipe_completition_status "proc_dwi${dwi_str_}"
-# IF completition STATUS is COMPLETED run dwi-QC and erase EVERYTHING!!!!!! intermediate files
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_dwi${dwi_str_}" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "proc_dwi${dwi_str_}" "${module_json}"
+module_name="proc_dwi${dwi_str_}"
+micapipe_completition_status "${module_name}"
+micapipe_procStatus "${id}" "${SES/ses-/}" "${module_name}" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "${module_name}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"

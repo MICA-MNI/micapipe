@@ -31,7 +31,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -43,7 +43,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 #------------------------------------------------------------------------------#

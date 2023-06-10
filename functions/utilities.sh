@@ -532,7 +532,7 @@ function json_surf() {
             ]
           },
         \"SurfaceDir\": \"${2}\",
-        \"SurfRecon\": \"${3}\",
+        \"SurfRecon\": \"${3}\"
       }" > "$4"
   elif [[ "$surfdir" != "FALSE" ]]; then
     echo -e "{
@@ -857,7 +857,8 @@ function json_poststruct() {
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
-    \"SurfaceProc\": \"${recon}\",
+    \"SurfRecon\": \"${recon}\",
+    \"SurfaceDir\": \"${2}\",
     \"Atlas\": [
         \"${atlas}\"
       ],
@@ -875,7 +876,7 @@ function json_poststruct() {
           \"${Transform[@]:12:8}\"
           ]
       }
-  }" > "$2"
+  }" > "$3"
 }
 
 function json_func() {
@@ -900,13 +901,13 @@ function json_func() {
         \"${qform[@]:12:8}\"
       ],
     \"Preprocess\": {
-        \"MainScan\": \"${mainScan[*]}\",
+        \"MainScan\": \"${mainScan_orig}\",
         \"Resample\": \"LPI\",
         \"Reorient\": \"fslreorient2std\",
         \"MotionCorrection\": \"3dvolreg AFNI $(afni -version | awk -F ':' '{print $2}')\",
         \"MotionCorrection\": [\"${func_volum}/${idBIDS}_space-func_spikeRegressors_FD.1D\"],
-        \"MainPhaseScan\": \"${func_pe}\",
-        \"ReversePhaseScan\": \"${func_rpe}\",
+        \"MainPhaseScan\": \"${mainPhaseScan_orig}\",
+        \"ReversePhaseScan\": \"${reversePhaseScan_orig}\",
         \"TOPUP\": \"${statusTopUp}\",
         \"HighPassFilter\": \"${fmri_HP}\",
         \"Passband\": \"0.01 666\",
@@ -918,8 +919,7 @@ function json_func() {
         \"Registration\": \"${reg}\",
         \"GlobalSignalRegression\": \"${performGSR}\",
         \"CSFWMSignalRegression\": \"${performNSR}\",
-        \"dropTR\": \"${dropTR}\",
-        \"SurfaceProc\": \"${recon}\"
+        \"dropTR\": \"${dropTR}\"
       }
   }" > "$1"
 }
@@ -1123,7 +1123,6 @@ function cleanup() {
   cd "$here"
   bids_variables_unset
   if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
-  conda deactivate
 }
 
 function missing_arg() {

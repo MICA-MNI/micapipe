@@ -33,26 +33,23 @@ changeTopupConfig=$8
 changeIcaFixTraining=$9
 thisMainScan=${10}
 thisPhase=${11}
-smooth=${12}
-mainScanStr=${13}
-func_pe=${14}
-func_rpe=${15}
-performNSR=${16}
-performGSR=${17}
-noFIX=${18}
-sesAnat=${19}
-regAffine=${20}
-dropTR=${21}
-noFC=${22}
-GSRtag=${23}
-PROC=${24}
+mainScanStr=${12}
+func_pe=${13}
+func_rpe=${14}
+performNSR=${15}
+performGSR=${16}
+noFIX=${17}
+sesAnat=${18}
+dropTR=${19}
+noFC=${20}
+PROC=${21}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -67,7 +64,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 if [[ "$sesAnat" != FALSE  ]]; then
@@ -97,13 +94,10 @@ if [[ "$mainScanStr" == DEFAULT ]]; then Note "Main scan        :" "$thisMainSca
 Note "Main scan        :" "$mainScanStr"; fi
 Note "Phase scan       :" "$func_pe"
 Note "Reverse Phase    :" "$func_rpe"
-Note "Smoothing        :" "$smooth"
 Note "Perform NSR      :" "$performNSR"
 Note "Perform GSR      :" "$performGSR"
-Note "Tag GSR files    :" "$GSRtag"
 Note "No FIX           :" "$noFIX"
 Note "Longitudinal ses :" "$sesAnat"
-Note "regAffine        :" "${regAffine}"
 Note "Drop TR          :" "${dropTR}"
 Note "Surface          :" "${recon}"
 
@@ -236,13 +230,6 @@ else
     fi
 fi
 
-# Check smoothing
-if [[ $smooth == 1 ]]; then
-    Info "Smoothing of native surface timeseries will be performed using workbench command"
-else
-    Info "Smoothing of native surface timeseries will be performed using FreeSurfer tools (default)"
-fi
-
 # Check nuisance signal regression
 if [[ $performNSR == 1 ]]; then
     Info "White matter and CSF signals will be regressed from processed timeseries"
@@ -250,13 +237,6 @@ elif [[ $performGSR == 1 ]]; then
     Info "Global, white matter and CSF signals will be regressed from processed timeseries"
 else
     Info "Global, white matter and CSF signal regression will not be performed (default)"
-fi
-# Global signal regression with different name
-if [[ $GSRtag == TRUE ]]; then
-  Info "Clean output series will have the tag 'desc-gsr'"
-  gsr="_gsr"
-else
-  gsr=""
 fi
 # gettin dat from mainScanJson exit if Not found
 unset readoutTime RepetitionTime EchoNumber EchoTime
@@ -294,6 +274,11 @@ Note "Saving temporal dir:" "$nocleanup"
 Note "Parallel processing      :" "${threads} threads"
 Note "proc_fun outputs:" "${proc_func}"
 Note "tagMRI:" "${tagMRI}"
+
+# Save original files for the json file
+export mainScan_orig=${mainScan[0]}
+export mainPhaseScan_orig=${mainPhaseScan}
+export reversePhaseScan_orig=${reversePhaseScan}
 
 #	Timer
 aloita=$(date +%s)
@@ -433,7 +418,7 @@ function func_topup() {
 # Begining of the REAL processing
 status="INCOMPLETE"
 # Processing fMRI acquisitions.
-if [[ ! -f "${func_nii}" ]]; then
+if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     # Reorient and motion correct main(s) fMRI
     for i in "${!mainScan[@]}"; do n=$((i+1))
       func_reoMC ${mainScan[i]} "mainScan${n/1/}" $n
@@ -518,7 +503,7 @@ else
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.txt" ]]; then ((N++))
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
@@ -564,7 +549,7 @@ str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
 SyN_func_warp="${str_func_SyN}1Warp.nii.gz"
 SyN_func_Invwarp="${str_func_SyN}1InverseWarp.nii.gz"
-
+regAffine="FALSE"
 if [[ ${regAffine}  == "FALSE" ]]; then
     # SyN from T1_nativepro to t1-nativepro
     export reg="Affine+SyN"
@@ -680,13 +665,13 @@ if [[ "$noFIX" -eq 0 ]]; then
     else
         Info "Subject ${id} has a clean fMRI processed with FIX"; export statusFIX="YES"
     fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Clean fMRI image has been processed (no FIX)."
     cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean${gsr}.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
 fi
 
 #------------------------------------------------------------------------------#
@@ -788,7 +773,7 @@ else
 fi
 
 # ONLY for tSNR (will get deleted after):
-if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative_NoHP.func.gii" ]]; then
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
             $func_nii \
@@ -838,11 +823,11 @@ fi
 
 #------------------------------------------------------------------------------#
 # run post-func
-cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean${gsr}.shape.gii"
+cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean.shape.gii"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${MICAPIPE}/parcellations/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC" "${GSRtag}"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed fsLR time-series"; ((Nsteps++)); ((N++))
@@ -850,7 +835,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # a bit of extra cleanup
-rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii ${func_volum}/${idBIDS}${func_lab}.nii.gz
+rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii ${func_volum}/${idBIDS}${func_lab}.nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

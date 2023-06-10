@@ -35,7 +35,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -199,27 +199,28 @@ function build_connectomes(){
 	# Build the weighted connectomes
     Do_cmd tck2connectome -nthreads "$threads" \
     	"${tck}" "${nodes}" "${sc_file}-connectome.txt" \
-        -tck_weights_in "$weights" -quiet
-    if [[ ${sc_file} != *"fsLR-5k"* ]]; then Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
+        -tck_weights_in "$weights" -quiet -force
+    Do_cmd python "${MICAPIPE}"/functions/connectome_slicer.py --conn="${sc_file}-connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
     # Calculate the edge lenghts
     Do_cmd tck2connectome -nthreads "$threads" \
         "${tck}" "${nodes}" "${sc_file}-edgeLengths.txt" \
-        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet
-    if [[ ${sc_file} != *"fsLR-5k"* ]]; then  Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
+        -tck_weights_in "$weights" -scale_length -stat_edge mean -quiet -force
+    Do_cmd python "${MICAPIPE}"/functions/connectome_slicer.py --conn="${sc_file}-edgeLengths.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 
     # Weighted connectome with a NIFTI map
 	if [ ${weighted_SC} != "FALSE" ]; then
 		Do_cmd tck2connectome -nthreads "$threads" \
 			"${tck}" "${nodes}" "${sc_file}-weighted_connectome.txt" \
-			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet
-      if [[ ${sc_file} != *"fsLR-5k"* ]]; then  Rscript "$MICAPIPE"/functions/connectome_slicer.R --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"; fi
+			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet  -force
+      Do_cmd python "${MICAPIPE}"/functions/connectome_slicer.py --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 	fi
 }
 
 # Vertex-wise connectome
 fs5k_cortex="${tmp}/${id}_fsLR5k-cor_dwi.nii.gz" # Segmentation in dwi space
-Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg_fsLR5k" -r "${fod}" -n GenericLabel "$trans_T12dwi" -o "$fs5k_cortex" -v -u int
+lut="${util_lut}/lut_fsLR-5k_mics.csv"
+Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg_fsLR5k" -r "${fod}" -n GenericLabel "$trans_T12dwi" -o "$fs5k_cortex" -u int
 build_connectomes "$fs5k_cortex" "${dwi_cnntm}/${idBIDS}_surf-fsLR-5k_desc-iFOD2-${tracts}-${filter}_full"
 
 # Create a connectome per parcellation
@@ -232,7 +233,7 @@ for seg in "${parcellations[@]}"; do
     dwi_all="${tmp}/${id}_${parc_name}-full_dwi.nii.gz"
     # -----------------------------------------------------------------------------------------------
     # Build the Full connectome (Cortical-Subcortical-Cerebellar)
-    if [[ ! -f "${connectome_str}_full-connectome.txt" ]]; then ((N++))
+    if [[ ! -f "${connectome_str}_full-connectome.shape.gii" ]]; then ((N++))
         Info "Building $parc_name cortical-subcortical-cerebellum connectome"
         # Take parcellation into DWI space
         Do_cmd antsApplyTransforms -d 3 -e 3 -i "$seg" -r "${fod}" -n GenericLabel "$trans_T12dwi" -o "$dwi_cortex" -v -u int
@@ -242,7 +243,7 @@ for seg in "${parcellations[@]}"; do
         Do_cmd fslmaths "$dwi_cortex" -binv -mul "$dwi_cere" -add "$dwi_cortexSub" "$dwi_all" -odt int # added the cerebellar parcellation
         # Build the Cortical-Subcortical-Cerebellum connectomes
         build_connectomes "$dwi_all" "${connectome_str}_full"
-        if [[ -f "${connectome_str}_full-connectome.txt" ]]; then ((Nsteps++)); fi
+        if [[ -f "${connectome_str}_full-connectome.shape.gii" ]]; then ((Nsteps++)); fi
     else
         ((Nsteps++))
     fi

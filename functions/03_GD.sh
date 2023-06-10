@@ -29,7 +29,7 @@ export here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -44,7 +44,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 # End if module has been processed
@@ -64,8 +64,6 @@ micapipe_software
 bids_print.variables-post
 Info "wb_command will use $OMP_NUM_THREADS threads"
 export OMP_NUM_THREADS="$threads"
-mkdir $tmpDir
-tmp=$tmpDir
 
 #	Timer
 aloita=$(date +%s)

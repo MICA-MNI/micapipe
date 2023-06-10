@@ -34,7 +34,7 @@ here=$(pwd)
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    export MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -49,7 +49,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfaceProc ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 # Variables naming for multiple acquisitions
@@ -198,7 +198,7 @@ str_qt1_affine="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_mode-image_de
 qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
 if [[ ! -f "$qmriNP" ]]; then
   Info "${mpc_str} registration to nativepro"
-    if [  "${synth_reg}" == "TRUE"  ]; then
+    if [[ "${synth_reg}" == "TRUE" ]]; then
       T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
       Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads $threads --cpu
       Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"
