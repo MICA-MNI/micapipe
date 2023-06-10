@@ -348,6 +348,8 @@ def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
 
+ColCurv= plt.colors.ListedColormap(['#A2CD5A', '#A0CA5B', '#9FC85C', '#9EC55D', '#9DC35E', '#9CC05F', '#9BBE61', '#9ABB62', '#99B963', '#98B664', '#96B465', '#95B166', '#94AF68', '#93AC69', '#92AA6A', '#91A76B', '#90A56C', '#8FA26D', '#8EA06F', '#8C9D70', '#8B9B71', '#8A9972', '#899673', '#889475', '#879176', '#868F77', '#858C78', '#848A79', '#82877A', '#81857C', '#80827D', '#7F807E', '#807D7D', '#827A7A', '#857777', '#877575', '#8A7272', '#8C6F6F', '#8F6C6C', '#916969', '#946666', '#966464', '#996161', '#9B5E5E', '#9D5B5B', '#A05858', '#A25656', '#A55353', '#A75050', '#AA4D4D', '#AC4A4A', '#AF4747', '#B14545', '#B44242', '#B63F3F', '#B93C3C', '#BB3939', '#BE3636', '#C03434', '#C33131', '#C52E2E', '#C82B2B', '#CA2828', '#CD2626'])
+
 fs5I_lh = read_surface(MICAPIPE+'/surfaces/fsaverage5/surf/lh.inflated', itype='fs')
 fs5I_rh = read_surface(MICAPIPE+'/surfaces/fsaverage5/surf/rh.inflated', itype='fs')
 c69_32k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
@@ -482,7 +484,7 @@ def qc_proc_surf(proc_surf_json=''):
     # Native curvature
     cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
     plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='icefire',transparent_bg=False,
+                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
     # Native sulcal depth
     sd = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.sulc')), axis=0)
@@ -672,7 +674,7 @@ def qc_post_structural(post_structural_json=''):
     for feature in ['curv', 'thickness']:
 
         feature_title = 'Curvature' if feature=='curv' else 'Thickness'
-        feature_cmap = 'icefire' if feature=='curv' else 'inferno'
+        feature_cmap = ColCurv if feature=='curv' else 'inferno'
         feature_crange = (-0.2, 0.2) if feature=='curv' else (1.5,4)
 
         feature_fsn_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsnative_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -1435,7 +1437,7 @@ def qc_mpc(mpc_json=''):
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='mako', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
-    
+
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
@@ -1504,7 +1506,7 @@ def qc_mpc(mpc_json=''):
                              nan_color=(0, 0, 0, 1), color_range='sym', cmap='mako', layout_style='grid', transparent_bg=False,
                              screenshot = True, offscreen=True, filename = deg_fig)
             display.stop()
-            
+
             mpc_connectome_table += (
                 '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center>{annot}</td>'
                 '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{ip_fig}"></td>'
@@ -1547,13 +1549,13 @@ def qc_gd(gd_json=''):
     gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
-    
+
     display = Display(visible=0, size=(900, 250))
     display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
-    
+
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
