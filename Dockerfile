@@ -307,7 +307,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
              "arabic-reshaper==3.0.0" \
              "cssselect2==0.7.0" \
              "pygeodesic==0.1.8" \
-             "seaborn==0.11.2" \
+             "seaborn==0.11.2"" \
     && rm -rf ~/.cache/pip/* \
     && sync \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
@@ -330,6 +330,8 @@ RUN bash -c "source activate fastsurfer_cpu && cd /opt/FastSurfer && python Fast
 
 USER root
 
+RUN apt-get update -qq && apt-get install -y -q --no-install-recommends xvfb && apt-get clean
+
 # R and libraries
 RUN set -uex; \
     LD_LIBRARY_PATH=/lib64/:${PATH}; \
@@ -341,7 +343,7 @@ RUN set -uex; \
     apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
     rm -rf /var/lib/apt/lists/*;
 
-COPY ./install_R_env.sh /opt/install_R_env.sh
+COPY ./R_config/* /opt/
 
 RUN bash -c 'bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL'
 
@@ -372,231 +374,3 @@ ENV PATH="/opt/fix1.068/:${PATH}"
 ENV PATH="/opt/micapipe/:/opt/micapipe/functions:${PATH}"
 
 ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/micapipe"]
-
-RUN echo '{ \
-    \n  "pkg_manager": "apt", \
-    \n  "instructions": [ \
-    \n    [ \
-    \n      "base", \
-    \n      "ubuntu:bionic-20201119" \
-    \n    ], \
-    \n    [ \
-    \n      "install", \
-    \n      [ \
-    \n        "gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6" \
-    \n      ] \
-    \n    ], \
-    \n    [ \
-    \n      "dcm2niix", \
-    \n      { \
-    \n        "version": "v1.0.20190902", \
-    \n        "method": "source" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "fsl", \
-    \n      { \
-    \n        "version": "6.0.2" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2" \
-    \n    ], \
-    \n    [ \
-    \n      "freesurfer", \
-    \n      { \
-    \n        "version": "7.3.2" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "matlabmcr", \
-    \n      { \
-    \n        "version": "2017b" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "afni", \
-    \n      { \
-    \n        "version": "latest" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "ants", \
-    \n      { \
-    \n        "version": "2.3.4" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "install", \
-    \n      [ \
-    \n        "connectome-workbench" \
-    \n      ] \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "cd /opt/ && wget http://www.fmrib.ox.ac.uk/~steve/ftp/fix1.068.tar.gz && tar xvfz fix1.068.tar.gz && rm fix1.068.tar.gz" \
-    \n    ], \
-    \n    [ \
-    \n      "user", \
-    \n      "mica" \
-    \n    ], \
-    \n    [ \
-    \n      "miniconda", \
-    \n      { \
-    \n        "version": "22.11.1", \
-    \n        "conda_install": [ \
-    \n          "python=3.9.13", \
-    \n          "aiohttp==3.8.4", \
-    \n          "aiosignal==1.3.1", \
-    \n          "asn1crypto==1.5.1", \
-    \n          "async-timeout==4.0.2", \
-    \n          "attrs==22.2.0", \
-    \n          "bokeh==2.2.3", \
-    \n          "cffi==1.15.1", \
-    \n          "charset-normalizer==3.1.0", \
-    \n          "click==8.1.3", \
-    \n          "contourpy==1.0.7", \
-    \n          "cryptography==39.0.2", \
-    \n          "cycler==0.11.0", \
-    \n          "fonttools==4.39.2", \
-    \n          "frozenlist==1.3.3", \
-    \n          "html5lib==1.1", \
-    \n          "idna==3.4", \
-    \n          "importlib-resources==5.12.0", \
-    \n          "jinja2==3.0.1", \
-    \n          "joblib==1.2.0", \
-    \n          "kiwisolver==1.4.4", \
-    \n          "lxml==4.9.2", \
-    \n          "markupsafe==2.1.2", \
-    \n          "matplotlib==3.4.3", \
-    \n          "multidict==6.0.4", \
-    \n          "nibabel==4.0.2", \
-    \n          "nilearn==0.10.0", \
-    \n          "numpy==1.21.5", \
-    \n          "packaging==23.0", \
-    \n          "pandas==1.4.4", \
-    \n          "pillow==9.4.0", \
-    \n          "pycparser==2.21", \
-    \n          "pyhanko-certvalidator==0.20.1", \
-    \n          "pyparsing==3.0.9", \
-    \n          "pypdf==3.6.0", \
-    \n          "pypng==0.20220715.0", \
-    \n          "python-bidi==0.4.2", \
-    \n          "python-dateutil==2.8.2", \
-    \n          "pytz==2022.7.1", \
-    \n          "pytz-deprecation-shim==0.1.0.post0", \
-    \n          "pyyaml==6.0", \
-    \n          "qrcode==7.4.2", \
-    \n          "reportlab==3.6.12", \
-    \n          "requests==2.28.2", \
-    \n          "scikit-learn==1.0.2", \
-    \n          "scipy==1.9.1", \
-    \n          "seaborn==0.11.2", \
-    \n          "six==1.16.0", \
-    \n          "svglib==1.5.1", \
-    \n          "threadpoolctl==3.1.0", \
-    \n          "tinycss2==1.2.1", \
-    \n          "tornado==6.2", \
-    \n          "typing-extensions==4.5.0", \
-    \n          "tzlocal==4.3", \
-    \n          "uritools==4.0.1", \
-    \n          "urllib3==1.26.15", \
-    \n          "vtk==9.2.2", \
-    \n          "webencodings==0.5.1", \
-    \n          "wslink==1.10.1", \
-    \n          "yarl==1.8.2", \
-    \n          "zipp==3.15.0" \
-    \n        ], \
-    \n        "pip_install": [ \
-    \n          "argparse==1.1", \
-    \n          "brainspace==0.1.4", \
-    \n          "tedana==0.0.12", \
-    \n          "pyhanko==0.17.2", \
-    \n          "mapca==0.0.3", \
-    \n          "xhtml2pdf==0.2.9", \
-    \n          "oscrypto==1.3.0", \
-    \n          "tzdata==2022.7", \
-    \n          "arabic-reshaper==3.0.0", \
-    \n          "cssselect2==0.7.0", \
-    \n          "pygeodesic==0.1.8" \
-    \n        ], \
-    \n        "create_env": "micapipe", \
-    \n        "activate": true \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1 && pip install git+https://github.com/MICA-MNI/ENIGMA.git" \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "git clone https://github.com/Deep-MI/FastSurfer.git && mv FastSurfer /opt/ && conda env create -f /opt/FastSurfer/fastsurfer_env_cpu.yml" \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "source activate fastsurfer_cpu && python /opt/FastSurfer/FastSurferCNN/download_checkpoints.py --all && source deactivate" \
-    \n    ], \
-    \n    [ \
-    \n      "user", \
-    \n      "root" \
-    \n    ], \
-    \n    [ \
-    \n      "run", \
-    \n      "set -uex;            LD_LIBRARY_PATH=/lib64/:${PATH};            apt install -y software-properties-common apt-transport-https;            apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9;            add-apt-repository '"'"'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'"'"';            apt update;            apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx;            rm -rf /var/lib/apt/lists/*;" \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "wget https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download -O itksnap.tar.gz &&\\n                tar -xfv itksnap.tar.gz -C /opt/" \
-    \n    ], \
-    \n    [ \
-    \n      "env", \
-    \n      { \
-    \n        "PATH": "/opt/itksnap/bin/:${PATH}" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&\\n                bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
-    \n    ], \
-    \n    [ \
-    \n      "copy", \
-    \n      [ \
-    \n        ".", \
-    \n        "/opt/micapipe" \
-    \n      ] \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/" \
-    \n    ], \
-    \n    [ \
-    \n      "run_bash", \
-    \n      "mv /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.3.2/subjects" \
-    \n    ], \
-    \n    [ \
-    \n      "workdir", \
-    \n      "/home/mica" \
-    \n    ], \
-    \n    [ \
-    \n      "env", \
-    \n      { \
-    \n        "MICAPIPE": "/opt/micapipe" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "env", \
-    \n      { \
-    \n        "PROC": "container_micapipe-v0.2.0" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "add_to_entrypoint", \
-    \n      "export FIXPATH=/opt/fix && export PATH=/opt/fix1.068:${PATH}" \
-    \n    ], \
-    \n    [ \
-    \n      "entrypoint", \
-    \n      "/neurodocker/startup.sh /opt/micapipe/micapipe" \
-    \n    ] \
-    \n  ] \
-    \n}' > /neurodocker/neurodocker_specs.json
