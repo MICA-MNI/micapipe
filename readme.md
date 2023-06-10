@@ -1,4 +1,4 @@
-![micapipe logo](micapipe_long.png)
+![micapipe logo](img/micapipe_long.png)
 
 ## Multimodal connectome processing with the `micapipe` ##
 
@@ -8,7 +8,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7da8a9a3524745bc9616fd465a17f41b)](https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade)
 [![GitHub stars](https://img.shields.io/github/stars/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/MICA-MNI/micapipe)](https://github.com/MICA-MNI/micapipe/issues)
-[![version](https://img.shields.io/badge/version-v0.1.2.RC-blue)](https://github.com/MICA-MNI/micapipe)
+[![version](https://img.shields.io/badge/version-v0.2.0)](https://github.com/MICA-MNI/micapipe)
 [![Docker Pulls](https://img.shields.io/docker/pulls/micalab/micapipe)](https://hub.docker.com/r/micalab/micapipe)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version)
 
@@ -17,11 +17,16 @@
 > The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory.
 > The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI* and *Diffusion weighted images*.
 
+![micapipe](img/micapipe_logo_black.jpg)
+
 ## Documentation ##
 You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/)
 
 ## Container ##
 You can find the latest version of the container in [Docker](https://hub.docker.com/r/micalab/micapipe/)
+
+## Workflow ##
+![micapipe](img/workflow-outputs_black.png)
 
 ## Advantages ##
 -   Microstructure Profile Covariance ([Paquola C et al. Plos Biology 2019](https://doi.org/10.1371/journal.pbio.3000284)).  
@@ -37,45 +42,44 @@ You can find the latest version of the container in [Docker](https://hub.docker.
 | *Software*   |     *Version*   | *Further info* |
 |------------|---------------|--------------|  
 | dcm2niix   | v1.0.20190902 | https://github.com/rordenlab/dcm2niix |
-| Freesurfer | 7.4.0         | https://surfer.nmr.mgh.harvard.edu/ |
+| Freesurfer | 7.3.2         | https://surfer.nmr.mgh.harvard.edu/ |
 | FSl        | 6.0.2          | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki |
 | AFNI       | 20.3.03       | https://afni.nimh.nih.gov/download |
 | MRtrix3    | 3.0.1         | https://www.mrtrix.org |
-| ANTs       | 2.3.4         | https://github.com/ANTsX/ANTs |
-| workbench  | 1.4.2         | https://www.humanconnectome.org/software/connectome-workbench |
+| ANTs       | 2.3.3         | https://github.com/ANTsX/ANTs |
+| workbench  | 1.3.2         | https://www.humanconnectome.org/software/connectome-workbench |
 | FIX        | 1.06          | https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX |
 | R          | 3.6.3         | https://www.r-project.org |
-| python     | 3.9.13         | https://www.python.org/downloads/ |
+| python     | 3.9.16         | https://www.python.org/downloads/ |
+| conda     | 22.11.1         | https://docs.conda.io/en/latest/ |
 
  > The FIX package (FMRIB's ICA-based Xnoiseifier) requires FSL, R and one of MATLAB Runtime Component, full MATLAB or Octave. We recommend the use of the MATLAB Runtime Component. Additionally, it requires the following R libraries:  'kernlab 0.9.24','ROCR 1.0.7','class 7.3.14','party 1.0.25','e1071 1.6.7','randomForest 4.6.12'
 
 
-### `python` packages ###
+### `python` mandatory packages `conda` ###
 |       *Package*        |  *Version* |
 |------------------------|------------|
-| certifi                |  2020.6.20 |
-| cycler                 |  0.10.0    |
-| joblib                 |  0.16.0    |
-| kiwisolver             |  1.2.0     |
-| matplotlib             |  3.4.3     |
 | nibabel                |  4.0.2     |
 | numpy                  |  1.21.5    |
-| packaging              | 20.4       |
 | pandas                 |  1.4.4     |
-| pillow                 |  7.2.0     |
-| pip_install=brainspace |  0.1.4     |
-| pygeodesic             |  0.1.8     |
-| pyparsing              |  2.4.7     |
-| python-dateutil        |  2.8.1     |
-| pytz                   | 2020.1     |
-| scikit-learn           |  1.0.2     |
-| scipy                  |  1.9.1     |
-| seaborn                |  0.11.2    |
-| six                    |  1.15.0    |
-| tedana                 |  0.0.12    |
-| threadpoolctl          |  2.1.0     |
 | vtk                    |  9.2.2     |
+| pyvirtualdisplay       |  3.0       |
+
+### `python` mandatory packages `pip` ###
+|       *Package*        |  *Version* |
+|------------------------|------------|
+| argparse               |  1.1       |
+| brainspace             |  0.1.10    |
+| tedana                 |  0.0.12    |
+| pyhanko                |  0.17.2    |
+| mapca                  |  0.0.3     |
 | xhtml2pdf              |  0.2.9     |
+| oscrypto               |  1.3.0     |
+| tzdata                 |  2022.7    |
+| arabic-reshaper        |  3.0.0     |
+| cssselect2             |  0.7.0     |
+| pygeodesic             |  0.1.8     |
+| seaborn                |  0.11.2    |
 
 ### `R` libraries ###
 | *library*    | *version* |
