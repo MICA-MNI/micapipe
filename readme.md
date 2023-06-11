@@ -17,7 +17,7 @@
 > The `micapipe` utilizes a set of known software dependencies, different brain atlases, and software developed in our laboratory.
 > The basic cutting edge processing of our pipelines aims the *T1 weighted images*, *resting state fMRI*, *quantitative MRI* and *Diffusion weighted images*.
 
-![micapipe](img/micapipe_logo_black.jpg)
+<img src="img/micapipe_logo_black.jpg" alt="micapipe" width="30%">
 
 ## Documentation ##
 You can find the documentation in [micapipe.readthedocs.io](http://micapipe.readthedocs.io/en/latest/)
