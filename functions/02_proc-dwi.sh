@@ -492,7 +492,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
         Info "Non-linear registration from T1w_dwi-space to DWI"
         T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
         if [[ "${synth_reg}" == "TRUE" ]]; then
-          Info "Running label based affine registrations"
+          Info "Running label based non linear registrations"
           b0_synth="${tmp}/b0_synthsegGM.nii.gz"
           T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
           Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
