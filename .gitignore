@@ -2,3 +2,4 @@ docs/__pycache__/
 .DS_Store
 functions/__pycache__/
 micapipe_*.sif
+docs/build/*

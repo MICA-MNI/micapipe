@@ -24,7 +24,7 @@ Derived from a full brain tractogram, 35 bundles are virtually dissected using t
 
       .. tab:: Usage
 
-          There are two ways to run the *automatic bundle segmentation*. The first is integrated within the main script ``mica-pipe`` under the ``-SC`` module by adding a specific flag for this purpose, as shown in the following example: 
+          There are two ways to run the *automatic bundle segmentation*. The first is integrated within the main script ``mica-pipe`` under the ``-SC`` module by adding a specific flag for this purpose, as shown in the following example:
 
          .. code-block:: bash
             :linenos:
@@ -38,7 +38,7 @@ Derived from a full brain tractogram, 35 bundles are virtually dissected using t
                  -bids <BIDS> \
                  -SC -autoTract \
                  -tracts 40M
-          
+
          Automatic bundle segmentation can also be performed using the stand alone script ``03_auto_tracts.sh``. Note that the stand alone script requires that all inputs are in DWI space.
 
          .. code-block:: bash
@@ -75,7 +75,7 @@ Derived from a full brain tractogram, 35 bundles are virtually dissected using t
 
             * - **Optional argument**
               - **Description**
-            * - ``-keep_tmp`` 
+            * - ``-keep_tmp``
               - If specific, the temporary directory will not be delted after processing is completed
             * - ``-tmpDir`` ``path``
               - Specify location of temporary directory
@@ -85,7 +85,7 @@ Derived from a full brain tractogram, 35 bundles are virtually dissected using t
               - This option to run a ROBUST registration, at the expense of more computation time
             * - ``-weights`` ``path``
               - Use this option if you calculated a weights file from SIFT2
-            * - ``threads`` ``num``  
+            * - ``threads`` ``num``
               - Number of threads (Default is 6)
             * - ``version```
               - Print software version
@@ -138,7 +138,7 @@ Derived from a full brain tractogram, 35 bundles are virtually dissected using t
 
          The description (``desc-``) refers to the algorithm used to generate the tractogram (here, *iFOD2*), its number of streamlines (here, *40M*) and the filtering algorithm (here, *SIFT2*).
 
-         Full names for here tract and their associated acronyms are listed below: 
+List of names and their acronyms obtained with the integrated automatic virtual dissection of the main brain tracts based on auto_tracto:
 
           +---------+--------------------------------------+
           | Acronym | Tract name                           |

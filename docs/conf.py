@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'micapipe'
-copyright = '2020, micapipe'
+copyright = '2022, micapipe'
 author = 'Raul-Rodriguez-Cruces, Jessica Royer, Janie Degré-Pelletier, Sara Larivière, Bo-yong Park, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Reinder Vos de Wael, Boris Bernhardt'
 
 
@@ -91,3 +91,5 @@ def setup(app):
 
 def setup(app):
     app.add_css_file('css/custom.css')
+
+sphinx_tabs_valid_builders = ['linkcheck']

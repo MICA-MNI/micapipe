@@ -63,6 +63,11 @@
 
    <br>
 
+Breaking news ️‍📰
+--------------------------------------------------------
+`micapipe version 2` soon to be released!! stay tuned!
+
+
 About 👁️‍🗨️
 --------------------------------------------------------
 *Micapipe* generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. Most results are mapped to three different surfaces spaces: native, conte69 and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.
@@ -85,7 +90,7 @@ To encourage reproducibility and robustness of investigations using micapipe, we
 
 Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_ and `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_, `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_ and `HCP <https://www.humanconnectome.org>`.
 
 .. raw:: html
 
@@ -102,7 +107,6 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 
    pages/01.install/index
    pages/01.whatyouneed/index
-   pages/01.execution/index
    pages/01.whatsnew/index
 
 .. toctree::
@@ -115,6 +119,7 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/02.restingstateproc/index
    pages/02.microstructproc/index
    pages/02.qc/index
+   pages/02.aslproc/index
 
 .. toctree::
    :maxdepth: 1
@@ -131,10 +136,12 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    :hidden:
    :caption: Tutorials
 
+   pages/04.start2end/index
    pages/04.databases/index
    pages/04.matrices/index
    pages/04.surfaces/index
    pages/04.gradients/index
+   pages/04.tckdownsample/index
    pages/04.faq/index
 
 .. toctree::
