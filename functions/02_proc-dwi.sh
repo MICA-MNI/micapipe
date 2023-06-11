@@ -495,7 +495,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
           Info "Running label based non linear registrations"
           b0_synth="${tmp}/b0_synthsegGM.nii.gz"
           T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-          Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+          Do_cmd mri_synthseg --i "${T1nativepro_in_dwi}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
           Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
 
           Do_cmd mri_synthseg --i "$dwi_b0" --o "${tmp}/b0_synthseg.nii.gz" --robust --threads $threads --cpu
