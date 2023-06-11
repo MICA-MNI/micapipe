@@ -195,7 +195,7 @@ if [ "${#anatT1map[@]}" -gt 0 ]; then
   Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
   for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
 fi
-${subject}
+
 # T1w for registrations
 # Manage the T1 in case is not found automatically
 if [ -z ${T1w} ]; then
