@@ -197,7 +197,7 @@ if [ "${#anatT1map[@]}" -gt 0 ]; then
 fi
 ${subject}
 # T1w for registrations
-# Manage the T1wStr in case is not found automatically
+# Manage the T1 in case is not found automatically
 if [ -z ${T1w} ]; then
 	T1_orig=${subject_bids}/anat/${T1w_run1}
 else
@@ -207,7 +207,7 @@ fi
 
 # T1w for registrations: exit if file is not found
 if [ ! -f ${T1_orig} ]; then
-	Error "T1w image for registrations DO NOT exist: try using -T1wStr"
+	Error "T1w image for registrations DO NOT exist: try using -T1"
 	ls "${subject_bids}/anat/"*nii* | awk -F '/' '{print $(NF)}'; Do_cmd exit 0
 fi
 
