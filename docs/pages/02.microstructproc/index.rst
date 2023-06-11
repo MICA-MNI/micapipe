@@ -37,7 +37,7 @@ Intracortical equivolumetric surfaces are generated using scripts from the `surf
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-MPC** <options>
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-MPC** <options>
 
         **Docker command:**
 

@@ -20,40 +20,40 @@ For this dataset, the main structure should look like this:
 .. code-block:: bash
 
     out
-    ├── freesurfer
-    └── micapipe
+    ├── fastsurfer
+    └── micapipe_v0.2.0
 
 Inside the directory called *micapipe* a new directory will be created for each subject processed, defined with the string *sub-* and the subject's identification. Three more files can be found:
 
-   - ``pipeline-description.json``: This file contains the last version of micapipe that was used and, the inherited information about the dataset used.
+   - ``dataset_description.json``: This file contains the last version of micapipe that was used and, the inherited information about the dataset used.
 
    - ``micapipe_processed_sub.csv``: This is a csv table stores information about the modules processed by subject, date of last run and the status (complete or incomplete).
 
-   - ``micapipe_progress.html``: This file is generated with the option ``-QC``, it is a html that eases the visualization of the processed subjects.
+   - ``micapipe_group-QC.pdf``: This file is generated with the option ``-QC``, it is a html that eases the visualization of the processed subjects.
 
 
 .. code-block:: bash
     :caption:  The subject list is truncated to the first three subjects
 
-    micapipe/
+    micapipe_v0.2.0/
     ├── micapipe_processed_sub.csv
-    ├── pipeline-description.json
-    ├── micapipe_progress.html
+    ├── dataset_description.json
+    ├── micapipe_group-QC.pdf
     ├── sub-HC001
     ├── sub-HC002
     ├── sub-HC003
     ...
 
 Inside each subject's directory you'll find the session folders, unless you have a single session and you don't specify the ``ses-`` in your dataset.
-Six main directories are inside each subject folder: *anat*, *dwi*, *func*, *logs*, *QC* and *xfm*. The connectomes are stored in four main directories:
+Six main directories are inside each subject folder: *anat*, *dist*, *dwi*, *func*, *logs*, *maps*, *mpc*, *parc*, *QC* and *xfm*. The connectomes are stored in four main directories:
 
-   - Geodesic distance connectome: ``anat/surfaces/geo_dist``
+   - Geodesic distance connectome: ``dist``
 
-   - Microstructural profile connectome: ``anat/surfaces/micro_profiles``
+   - Microstructural profile connectome: ``mpc/<acquisition>``
 
    - Structural connectome (DWI): ``dwi/connectomes``
 
-   - Functional connectome (rsfMRI): ``func/surfaces``
+   - Functional connectome (rsfMRI): ``func/<acquisition>/surfaces``
 
 The structure of the subject ``HC001`` directories is shown below:
 
@@ -62,13 +62,7 @@ The structure of the subject ``HC001`` directories is shown below:
     sub-HC001/
     └── ses-01
         ├── **anat**
-        │   ├── first                # fsl first outputs
-        │   ├── surfaces
-        │   │   ├── conte69          # conte69 surfaces
-        │   │   ├── **geo_dist         # Geodesic distance connectomes**
-        │   │   ├── **micro_profiles   # MPC connectomes and surfaces**
-        │   │   └── morphology       # Thickness and curvature surfaces
-        │   └── volumetric           # Parceellations in nativepro space
+        ├── **dist**
         ├── **dwi**
         │   ├── **connectomes          # DWI connectomes**
         │   └── eddy                 # fsl eddy outputs
@@ -76,9 +70,11 @@ The structure of the subject ``HC001`` directories is shown below:
         │   ├── **surfaces             # rsfMRI surfaces and connectomes**
         │   └── volumetric           # rsfMRI volumes
         ├── logs                     # log files
+        ├── **maps**
+        ├── **mpc**
         ├── QC
-        │   ├── eddy_QC              # fsl eddy_quad outputs
-        │   └── png                  # PNG images for QC
+        │   └── eddy_QC              # fsl eddy_quad outputs
+        ├── **surf**
         └── xfm                      # Trasnformation matrices and warpfields
 
 In the following examples we'll focus on how to load and visualize the connectome matrices of a single subject.

@@ -17,6 +17,11 @@ The basic usage of ``micapipe_cleanup`` requires the same inputs as in mica-pipe
 Terminal:
 
 .. parsed-literal::
+   $ micapipe -cleanup **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> **-<module-to-erase>**
+
+Terminal:
+
+.. parsed-literal::
    $ micapipe_cleanup **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> **-<module-to-erase>**
 
 Docker:
@@ -37,17 +42,18 @@ The module(s) you want to erase should be specified with a flag(s) (e.g. ``-proc
       - Optional flag that indicates the session name (if omitted, will be managed as a SINGLE session)
     * - ``-proc_structural``
       - Deletes volumetric processing derivatives
-    * - ``-proc_freesurfer``
-      - Deletes Freesurfer recon-all processing outputs
+    * - ``-proc_surf``
+      - Deletes surface processing outputs
     * - ``-post_structural``
       - Deletes post structural volumetric and surface-based processing derivatives
     * - ``-proc_dwi``
       - Deletes diffusion-weighted image processing derivatives
     * - ``-SC``
       - Deletes tractography files and structural connectomes
-    * - ``-proc_rsfmri``
+    * - ``-proc_func``
       - Deletes resting-state funtional MRI processing derivatives
     * - ``-MPC``
       - Deletes microstructural profile and covariance analysis derivatives
     * - ``-GD``
       - Deletes geodesic distance analysis derivatives
+      

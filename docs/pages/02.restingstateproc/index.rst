@@ -2,12 +2,12 @@
 
 .. title:: Functional processing
 
-fMRI processing
+func processing
 ============================================================
 
-This module performs all pre-processing of a subject's task or resting-state functional MRI (fMRI) scans, in preparation for the sampling of regional timeseries and construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction. The pipeline is mainly based on tools from FSL and AFNI for volumetric processing, and FreeSurfer and Workbench for surface-based mapping. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.
+This module performs all pre-processing of a subject's task or resting-state functional MRI (fMRI) scans, in preparation for the sampling of regional timeseries and construction of functional connectomes. This pipeline is optimized for spin-echo images with reverse phase encoding used for distortion correction and multi echo acquisitionstions. The pipeline is mainly based on tools from FSL and AFNI for volumetric processing, and FreeSurfer and Workbench for surface-based mapping. For increased functionality, micapipe can also handle protocols in which a single fieldmap is acquired.
 
-.. image:: sankey_rsfmri.png
+.. image:: sankey_proc_func.png
    :align: center
 
 -proc_func
@@ -51,16 +51,12 @@ This module performs all pre-processing of a subject's task or resting-state fun
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_func**
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_func**
 
         **Docker command:**
 
         .. parsed-literal::
             $ docker -proc_func
-
-        .. admonition:: Deprecated ❌
-
-             Note that the flag ``proc_rsfmri`` is deprecated and has been replaced by ``-proc_func``.
 
         **Optional arguments:**
 
@@ -127,7 +123,7 @@ This module performs all pre-processing of a subject's task or resting-state fun
                    :caption: Example
                    :linenos:
 
-                   mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
+                   micapipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                              -proc_func -noFIX -NSR -GSR
 
 
@@ -151,8 +147,8 @@ This module performs all pre-processing of a subject's task or resting-state fun
                     :caption: Example
                     :linenos:
 
-                     mica-pipe -sub 01 -ses func01 -proc_func -sesAnat struct01 -bids <bidsDir> -out <outDir>
-                     mica-pipe -sub 01 -ses func02 -proc_func -sesAnat struct01 -bids <bidsDir> -out <outDir>
+                     micapipe -sub 01 -ses func01 -proc_func -sesAnat struct01 -bids <bidsDir> -out <outDir>
+                     micapipe -sub 01 -ses func02 -proc_func -sesAnat struct01 -bids <bidsDir> -out <outDir>
 
     .. tab:: Outputs
 

@@ -21,7 +21,7 @@ But how exactly does one run micapipe?
 
 .. admonition:: Help! 🥺
 
-	A list and brief descripton of each argument and flag can be displayed using the command: ``mica-pipe -help`` or ``mica-pipe -h``. It will display something like this:
+	A list and brief descripton of each argument and flag can be displayed using the command: ``micapipe -help`` or ``micapipe -h``. It will display something like this:
 
   .. figure:: help.png
 	:height: 480
@@ -30,12 +30,12 @@ But how exactly does one run micapipe?
 Basic usage of micapipe, with no options specified, will look like:
 
     .. parsed-literal::
-        $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-<module-flag>**
+        $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-<module-flag>**
 
 If your dataset contains multiple scanning sessions for each subject, you may specify the name of the session (e.g. 01, 02, pre, post...) using the ``-ses`` option, like in the example below:
 
     .. parsed-literal::
-        $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> **-<module-flag>**
+        $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-ses** <session-name> **-<module-flag>**
 
 Let's break this down:
 
@@ -80,14 +80,12 @@ Processing modules for :ref:`T1-weighted structural imaging<structproc>` consist
 
   * - ``-proc_structural``
     - Basic volumetric processing on T1-weighted data.
-  * - ``-proc_freesurfer``
+  * - ``-proc_surf``
     - Run freesurfer's recon-all pipeline on T1-weighted data.
   * - ``-post-structural``
     - Further structural processing relying on qualtiy-controlled cortical surface segmentations.
   * - ``-GD``
     - Generate geodesic distance matrices from participant's native midsurface mesh.
-  * - ``-Morphology``
-    - Registration and smoothing of surface-based morphological features of the cortex.
 
 
 Microstructure-sensitive Image Processing
@@ -102,6 +100,18 @@ Processing module for :ref:`quantitative T1 imaging<microstructproc>`:
   * - ``-MPC``
     - Equivolumetric surface mapping and computation of microstructural profile covariance matrices `(Paquola et al., 2019) <https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000284>`_ and `(Wagstyl et al., 2018) <https://github.com/kwagstyl/surface_tools>`_.
 
+
+Flair
+^^^^^
+
+Processing module for :ref:`Flair<flair>`:
+
+.. list-table::
+  :widths: 10 1000
+  :header-rows: 0
+
+  * - ``-proc_flair``
+    - T2/FLAIR processing
 
 DWI Processing
 ^^^^^^^^^^^^^^
@@ -118,16 +128,16 @@ Processing modules for :ref:`diffusion-weighted imaging<dwiproc>` processing ste
     - Diffusion tractography and generate structural connectomes.
 
 
-Resting-State fMRI
+Functional MRI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Processing module for :ref:`resting-state functional MRI data<restingstateproc>`:
+Processing module for :ref:`functional MRI data<restingstateproc>`:
 
 .. list-table::
   :widths: 10 1000
   :header-rows: 0
 
-  * - ``-proc_rsfmri``
+  * - ``-proc_func``
     - Resting-state functional processing and generate functional connectomes.
 
 
@@ -144,21 +154,6 @@ Flags for :ref:`quality control<qc>`:
     - Creates an individual report of the different modules already processed with the different outputs by module.
   * - ``-QC``
     - Creates a group-level table of the subjects already processed.
-
-
-Run all modules
-^^^^^^^^^^^^^^^^^^^
-
-Lastly, to run all processing steps while making sure module interdependencies are respected:
-
-.. list-table::
-  :widths: 10 1000
-  :header-rows: 0
-
-  * - ``-all``
-    - Run all the modules! This could take a while...
-
-.. WARNING:: This flag might not be suitable for all databases, and should be use with caution!
 
 
 More options
@@ -190,13 +185,10 @@ You can specify additional options when running micapipe:
     - Change number of threads (default = 6).
   * - ``-tmpDir``
     - Specify custom location in with temporary directory will be created (default = /tmp).
-  * - ``-slim``
-    - Keep only crucial outputs and erase all the intermediary files (work in progress - see below)
+  * - ``-regSynth``
+    - Specify this option to perform the registration based on synthseg.
 
 .. admonition:: Clean up 🧹
 
 	If you have to erase the outputs of a specific module, you don't have to do this task manually. Check `micapipe_cleanup <../05.micapipe_cleanup/index.html>`_ for details!
 
-.. admonition:: Slim run 👙 (Work in progress!)
-
-	Including the **-slim** flag will considerably reduce the number of outputs saved at the end of each module. This can be useful when storage is limited or when processing a very large number of subjects. Files affected by this flag are specified in each module's section.

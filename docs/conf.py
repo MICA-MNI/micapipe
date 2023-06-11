@@ -59,11 +59,18 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 
 html_theme_options = {
-    'style_nav_header_background': '#261F4A',
-    'logo_only': 'True'
+    'style_nav_header_background': '#111111',
+    'logo_only': True,
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 3,
+    'includehidden': True,
+    'titles_only': False,
+    'style_external_links': True,
+    'display_version': False
 }
 
-html_logo = 'figures/html_logo.png'
+html_logo = 'figures/micapipe_small_black.png'
 
 # The name of the Pygments (syntax highlighting) style to use.
 import os
@@ -71,19 +78,20 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 pygments_style = 'micapipelexer.micapipeLexerStyle'
 
-#def setup(app):
-#    app.add_stylesheet('css/saratheriver_enigma.css')  # may also be an URL
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_context = {
+    'css_files': [
+        '_static/css/mica-pipe_colors.css',  # Add path to your custom CSS file
+    ],
+}
+
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
 html_css_files = ['css/mica-pipe_colors.css']
-
-#html_style = 'css/saratheriver_enigma.css'
 
 # add custom files that are stored in _static
 def setup(app):

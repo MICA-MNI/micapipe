@@ -9,7 +9,7 @@
       hr {
       width: 100%;
       height: 1px;
-      background-color: #261F4A;
+      background-color: #D9D9D9;
       margin-top: 24px;
       }
    </style>
@@ -18,10 +18,10 @@
   :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-**Welcome to micapipe's documentation!**
+**Welcome to micapipe's documentation! v0.2.0**
 ========================================================
 
-.. image:: https://img.shields.io/badge/version-v0.1.2.RC-blue
+.. image:: https://img.shields.io/github/v/tag/MICA-MNI/micapipe
   :target: https://github.com/MICA-MNI/micapipe
   :alt: version
 
@@ -65,7 +65,8 @@
 
 Breaking news ️‍📰
 --------------------------------------------------------
-`micapipe version 2` soon to be released!! stay tuned!
+`micapipe version 0.2.0` is finally here!!
+Optimized to process 3T and 7T datasets!!
 
 
 About 👁️‍🗨️
@@ -164,19 +165,28 @@ Should you have any problems, questions, or suggestions about micapipe, please p
 Core development team 🧠
 --------------------------------------------------------
 
-.. figure:: ./figures/micapipe.png
-   :alt: alternate text
-   :align: left
-   :scale: 20 %
-
 Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) and collaborators at the McConnell Brain Imaging Centre of the Montreal Neurological Institute.
 
+
+.. figure:: ./figures/micapipe_black.png
+   :alt: alternate text
+   :align: left
+   :scale: 10 %
+
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
+- **Alex Ngo**, *MICA Lab - Montreal Neurological Institute*
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
-- **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
 - **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
-- **Bo-yong Park**, *MICA Lab - Montreal Neurological Institute*
-- **Reinder Vos de Wael**, *MICA Lab - Montreal Neurological Institute*
-- **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
+- **Jordan DeKraker**, *MICA Lab - Montreal Neurological Institute*
+- **Donna Cabalo**, *MICA Lab - Montreal Neurological Institute*
+- **Judy Chen**, *MICA Lab - Montreal Neurological Institute*
+- **Valeria Kebets**, *MICA Lab - Montreal Neurological Institute*
+- **Nicole Eichert**, *Jesus College, Oxford*
+- **Hans Auer**, *MICA Lab - Montreal Neurological Institute*
 - **Oualid Benkarim**, *MICA Lab - Montreal Neurological Institute*
+- **Yezhou Wang**, *MICA Lab - Montreal Neurological Institute*
+- **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
+- **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
 - **Boris Bernhardt**, *MICA Lab - Montreal Neurological Institute*
+
+

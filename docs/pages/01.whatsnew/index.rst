@@ -5,8 +5,76 @@
 What's new?
 ================================================
 
+v0.2.0
+-------------------------------------
+👥   Compatible with multiple acquisitions (func, dwi, MPC). multiple quantitative maps, DWI acquisitions and func acquisitions including task
+
+🧠   Improved registrations between modalities. We improved the registration between multiple acquisitions to optimize the performance.
+
+🌐   Surface mapping from native space in all modules. 
+
+🔬   Optimized for high resolution processing (tested on 0.5-1mm3, e.g 7T)
+
+💦   MP2RAGE processing workflow (3T and 7T) for structural images, including a cleaning of the salt and pepper background noise.
+
+✨   Optimize to process ultra high resolution 7T datasets, with new CNN based processing tools.
+
+⚡️   NEW FLAIR processing module
+
+🔍   New QC subject and group level more informative with a lot of new features and pdf (new json files for QC)
+
+👾   New algorithms  (brain mask, surface reconstructions - fastsurfer) 
+
+🛥️   Docker container
+
+🐛   A lot of bugs fixed 
+
+
+v0.1.5
+-------------------------------------
+
+**General changes**
+-  Update print help
+-  Removed unused flags
+-  Update the documentation (partially)
+-  UPDATE jsons to increase `pyBIDS` compatibility
+-  FIX bug on MPC output directory 
+
+**`proc_func` and `FC`**
+-  Rename flags on `proc_func`  `-regress_WM_CSF` to `-NSR`
+-  FIX bug on glm regression matrix of cofounding (higher precision)
+
+**`proc_dwi` and `SC` upgrade**
+-  Manage multiple acquisitions `-dwi_acq`
+-  `micapipe_cleanup` is up to date to erase multiple acquisitions
+-  `-b0thr` allows the user to set a threshold to determine the volumes that correspond to b=0, default=61
+-  `-no_bvalue_scaling` disable the diffusion b-values scaling of the corresponding DWI norm (see Mrtrix3 for further info)
+
+
+v0.1.4
+-------------------------------------
+-  Update FSL from 6.0.0 to 6.0.3
+-  `mica-pipe` command goes to `micapipe`
+-  To print help should specify it with the flag `micapipe -h` or `micapipe -help` 
+-  `post_structural` will always run schefer-400 by default if is not included in the `-atlas` list
+-  `proc_rsfmri` is deprecated and replaced by `proc_func`
+-  `proc_func` handles more than one functional acquisition (e.g. tasks), as well as multi echo data (tedana https://github.com/ME-ICA/tedana).
+-  `proc_func` Added option to drop the first 5 TRs -dropTR (by default is not dropped)
+-  `proc_func` Added option to not run the functional connectomes -noFC (only func surface data)
+-  `proc_func` Added 6 parameters of motion to the regression of -regress_WM_CSF (func\~spikes+6motion+wm+csf)
+-  `proc_func` Added 6 parameters of motion to the regression of -GSR (func\~spikes+6motion+wm+csf+gs)
+-  `MPC` can processes more than one quantitative map (at a time) with the flag `-mpc_acq <qMRI_name>`
+-  `micapipe_cleanup` can be called from `micapipe` command: `micapipe -cleanup`
+-  `micapipe -cleanup` uses the string `-acqStr` to erase multiple acquisitions of `-proc_func` and `-MPC`
+-  Improved comments and print logs of `-proc_func` and `FC.py`
+-  `proc_func` generates new jsons files of each acquisition with metadata about processing and completion status
+-  `proc_func` exit status when Melodic/FIX fail
+-  `-QC_subj` is not compatible with `proc_func` yet.... or with MPC multiple acquisitions but it is still with the old `proc_rsfmri` outputs
+-  NOTE: the read the docs is not updated yet.
+
+
 v0.1.2
-------------------------
+-------------------------------------
 **Fixed**
 
 -  Added missing semicolon to SC line 74
@@ -67,7 +135,7 @@ v0.1.2
 
 
 v0.1.1
-------------------------
+-------------------------------------
 
 - Documentation update
 
@@ -87,8 +155,9 @@ v0.1.1
 
 - Fixed an error in *02_proc-rsfmri.sh*, wrong assignation of fmri_pe!
 
+
 v0.1.0 (Roadrunner)
-------------------------
+-------------------------------------
 
 - We are currently on the initial release version of the **micapipe**
 
