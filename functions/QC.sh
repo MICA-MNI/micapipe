@@ -278,6 +278,7 @@ Title "Generating QC report"
 
 Do_cmd python "${MICAPIPE}"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} -micapipe ${MICAPIPE}
 
+Info "Outputs: \n $(ls ${subject_dir}/QC/*pdf)"
 # -----------------------------------------------------------------------------------------------
 # QC notification of completion
 lopuu=$(date +%s)

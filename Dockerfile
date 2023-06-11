@@ -254,7 +254,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "kiwisolver" \
            "lxml" \
            "markupsafe" \
-           "matplotlib" \
+           "matplotlib==3.4.3" \
            "multidict" \
            "nibabel==4.0.2" \
            "nilearn" \
