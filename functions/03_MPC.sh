@@ -83,6 +83,7 @@ bids_print.variables-post
 Note "Saving temporal dir:" "${nocleanup}"
 Note "Parallel processing:" "${threads} threads"
 Note "Temporal dir:" "${tmpDir}"
+Note "recon:" ${recon}
 Note "synth_reg:" ${synth_reg}
 
 #	Timer
