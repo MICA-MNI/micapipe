@@ -7,7 +7,7 @@ Processing databases with ``micapipe``
 
 .. contents:: Table of Contents
 
-In this section, you will find examples of how ``mica-pipe`` optional arguments where used to process a variety of databases with different acquisitions parameters.
+In this section, you will find examples of how ``micapipe`` optional arguments where used to process a variety of databases with different acquisitions parameters.
 Under the tab ``database structure`` the file organization of each dataset is listed. However you'll only find those files relevant for the pipeline, not the full structure.
 Further information about the datasets such as the *source*, and *references* can be found here as well.
 
@@ -78,13 +78,13 @@ Reference
         .. code-block:: bash
            :linenos:
 
-            mica-pipe -bids rawdata -out derivatives -sub HC001 -ses 01 -all
+            micapipe -bids rawdata -out derivatives -sub HC001 -ses 01 -all
 
         .. code-block:: bash
            :caption:  Using the -all flag is the same as using all the processing flags!
            :linenos:
 
-            mica-pipe -bids rawdata -out derivatives -sub HC001 -ses 01 \
+            micapipe -bids rawdata -out derivatives -sub HC001 -ses 01 \
                       -proc_structural \
                       -proc_freesurfer \
                       -post_structural \
@@ -182,7 +182,7 @@ Reference
         .. code-block:: bash
            :linenos:
 
-            mica-pipe -bids rawdata -out derivatives -sub 00367 -ses 01
+            micapipe -bids rawdata -out derivatives -sub 00367 -ses 01
                       -proc_structural \
                       -proc_freesurfer \
                         -freesurfer_dir ./freesurfer_processed_00367 \
@@ -267,7 +267,7 @@ Reference
         .. code-block:: bash
            :linenos:
 
-            mica-pipe -bids rawdata -out derivatives -sub CC110045 -ses pre \
+            micapipe -bids rawdata -out derivatives -sub CC110045 -ses pre \
                       -proc_structural \
                       -proc_freesurfer \
                         -freesurfer_dir ./freesurfer_processed_CC110045 \
@@ -357,7 +357,7 @@ Reference
 
             subjectDir=ds003346/sub-010
 
-            mica-pipe -bids ds003346 -out derivatives -sub 010 \
+            micapipe -bids ds003346 -out derivatives -sub 010 \
                       -proc_structural \
                       -proc_freesurfer \
                         -freesurfer_dir ./freesurfer_processed_010 \
@@ -473,7 +473,7 @@ Reference
                :linenos:
 
                # Pipeline for the anatomical images struct01
-               mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 \
+               micapipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 \
                           -proc_structural -t1wStr run-01_T1w,run-02_T1w \
                           -proc_freesurfer \
                           -post_structural \
@@ -486,7 +486,7 @@ Reference
 
                # Pipeline for the functional images
                for N in {01..10}; do
-               mica-pipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func${N} \
+               micapipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func${N} \
                           -proc_rsfmri \
                           -mainScanStr task-rest_bold \
                           -regress_WM_CSF \
@@ -594,7 +594,7 @@ Reference
                 dwiDir=./ds001942/sub-S01/ses-SES01/dwi
                 sub=sub-S02_ses-SES01
 
-                mica-pipe -bids ds001942/ -out . -sub S01 -ses SES01 \
+                micapipe -bids ds001942/ -out . -sub S01 -ses SES01 \
                           -proc_structural -t1wStr run-01_T1w,run-02_T1w \
                           -proc_freesurfer -hires \
                           -post_structural \

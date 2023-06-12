@@ -13,19 +13,18 @@ Individual QC
 This module generates an individual html report with detailed information of each processing step, which can be used for rapid visualization of the processing status, core registrations, and data matrices by parcellation scheme and module.
 
 .. figure:: qc_subj.png
-   :scale: 40 %
 
-There are two ways to run the *individual quality control* module, one is integrated within the main script ``mica-pipe``. The second is using the stand alone script ``micapipe_qc``. Both options use the same optional arguments.
+There are two ways to run the *individual quality control* module, one is integrated within the main script ``micapipe``. The second is using the stand alone script ``micapipe_qc``. Both options use the same optional arguments.
 
 .. tabs::
 
-    .. tab:: mica-pipe
+    .. tab:: micapipe
 
         .. code-block:: bash
            :linenos:
            :emphasize-lines: 2
 
-           mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
+           micapipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
            -QC_subj
 
         **Optional arguments:**
@@ -103,10 +102,8 @@ There are two ways to run the *individual quality control* module, one is integr
           - Microstructural Intensity profiles and connectomes
           - Microstructural profiles (image intensities at each cortical depth) plotted on native surface
 
-        .. figure:: qc_subj_html.png
-          :height: 420
-          :width: 760
-
+        .. figure:: qc_subj.png
+  
 Group level QC
 --------------------------------------------------------
 
@@ -126,7 +123,7 @@ The group level quality control generates a report with all completed and proces
         .. code-block:: bash
            :linenos:
 
-           mica-pipe -out <outputDirectory> -QC
+           micapipe -out <outputDirectory> -QC
 
         **Optional arguments:**
 
@@ -136,4 +133,4 @@ The group level quality control generates a report with all completed and proces
 
         The QC table output by ``-QC`` can be found here:
 
-        **Main output:** ``<outputDirectory>/micapipe/micapipe_progress.html``
+        **Main output:** ``<outputDirectory>/micapipe/micapipe_group-QC.pdf``

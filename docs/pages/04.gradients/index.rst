@@ -441,6 +441,10 @@ Geodesic distance gradients
         .. figure:: gd_c69.png
 
 
+******************
+fsLR-5k gradients
+******************
+
 
 Download the code!
 ============================================================

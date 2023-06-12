@@ -8,13 +8,14 @@ Structural processing
 
 .. contents:: Table of Contents
 
-This section describes all structural processing modules, which include pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (``-proc_structural``) and surface-based (``-proc-freesurfer``, ``-post_structural``, ``-GD``, ``-Morphology``) processing. These modules map subject data to volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to multiple parcellation schemes as well as vertexwise cortical thickness and curvature data.
+This section describes all structural processing modules, which include pre-processing and post-processing of T1-weighted images found in the BIDS directory. Structural processing modules perform volumetric (``-proc_structural``) and surface-based (``-proc_surf``, ``-post_structural``, ``-GD``) processing. These modules map subject data to volumetric and surface templates providing several useful structural metrics for further analyses, including geodesic distance matrices mapped to multiple parcellation schemes as well as vertexwise cortical thickness and curvature data.
 
-.. image:: sankey_struct.png
-   :align: center
 
 -proc_structural
 ============================================================
+
+.. image:: sankey_proc_structural.png
+   :align: center
 
 This module performs initial structural pre-processing, keeping data in volumetric format. Two main spaces are found in this stream: *nativepro* as well as *MNI152*.
 
@@ -45,7 +46,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_structural** **<options>**
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_structural** **<options>**
 
         **Docker command:**
 
@@ -75,12 +76,12 @@ This module performs initial structural pre-processing, keeping data in volumetr
            :linenos:
            :emphasize-lines: 2
 
-            mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
+            micapipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                       -proc_structural -t1wStr run-02_T1w
 
         .. admonition:: Multiple T1-weighted images 🧠 🧠 🧠
 
-            Be sure you use the same T1w images in ``-proc_structural`` and ``-proc_freesurfer``. Although they are independent modules, when using the same image the registrations will be much better.
+            Be sure you use the same T1w images in ``-proc_structural`` and ``-proc_surf``. Although they are independent modules, when using the same image the registrations will be much better.
 
     .. tab:: Outputs
 
@@ -140,8 +141,11 @@ This module performs initial structural pre-processing, keeping data in volumetr
                 - <sub>_space-nativepro_t1w_brain_mask.json
                 - <sub>_space-nativepro_t1w.json
 
--proc_freesurfer
+-proc_surf
 ============================================================
+
+.. image:: sankey_proc_surf.png
+   :align: center
 
 This modules performs cortical surface segmentation from all native T1w acquisitions stored in the subject's BIDS directory.
 
@@ -153,23 +157,23 @@ This modules performs cortical surface segmentation from all native T1w acquisit
 
     .. tab:: Processing steps
 
-        - Run FreeSurfer's recon-all pipeline will all T1-weighted scans found in raw data directory
+        - Run surface reconstruction (fastsurfer or freesurfer) pipeline will all T1-weighted scans found in raw data directory
 
     .. tab:: Usage
 
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_freesurfer** **<options>**
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-proc_surf** **<options>**
 
         **Docker command:**
 
         .. parsed-literal::
-            $ docker -proc_freesurfer -<options>
+            $ docker -proc_surf -<options>
 
         **Optional arguments**
 
-        ``-proc_freesurfer`` has a few optional arguments, including an option for T1w scan selection as in ``proc_volumetric``.
+        ``-proc_surf`` has a few optional arguments, including an option for T1w scan selection as in ``proc_volumetric``.
 
         .. list-table:: 
             :widths: 10 500
@@ -202,11 +206,14 @@ This modules performs cortical surface segmentation from all native T1w acquisit
 -post_structural
 ============================================================
 
+.. image:: sankey_post_structural.png
+   :align: center
+
 This first structural post-processing module registers native FreeSurfer-space cortical surfaces to a standard template, in addition to mapping all cortical parcellation schemes to the subject's native surface space and volumetric nativepro space.
 
 .. admonition:: Prerequisites 🖐🏼
 
-     You need to run ``-proc_structural`` and ``-proc_freesurfer`` before this stage.
+     You need to run ``-proc_structural`` and ``-proc_surf`` before this stage.
 
 .. image:: post_structural.png
    :scale: 85 %
@@ -229,7 +236,7 @@ This first structural post-processing module registers native FreeSurfer-space c
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-post_structural** **<options>**
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-post_structural** **<options>**
 
         **Docker command:**
 
@@ -281,7 +288,7 @@ This first structural post-processing module registers native FreeSurfer-space c
            :linenos:
            :emphasize-lines: 2
 
-            mica-pipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
+            micapipe -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
                       -post_structural -atlas schaefer-200,economo,aparc
 
         .. admonition:: Thinking ahead ☂️
@@ -338,6 +345,9 @@ This first structural post-processing module registers native FreeSurfer-space c
 -GD
 ============================================================
 
+.. image:: sankey_GD.png
+   :align: center
+
 .. figure:: gd.png
     :align: left
     :scale: 20 %
@@ -346,7 +356,7 @@ This module calculates geodesic distance between all cortical parcels from the s
 
 .. admonition:: Prerequisites 🖐🏼
 
-     You need to run ``-proc_structural``, ``-proc_freesurfer`` and ``-post_structural`` before this stage
+     You need to run ``-proc_structural``, ``-proc_surf`` and ``-post_structural`` before this stage
 
 .. tabs::
 
@@ -361,7 +371,7 @@ This module calculates geodesic distance between all cortical parcels from the s
         **Terminal:**
 
         .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-GD**
+            $ micapipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-GD**
 
         **Docker command:**
 
@@ -386,70 +396,3 @@ This module calculates geodesic distance between all cortical parcels from the s
 
         ``<parcellation>`` stands for the name of each of the 18 parcellations.
 
-
--Morphology
-============================================================
-
-.. figure:: morph.png
-    :align: left
-    :scale: 15 %
-
-Here, surface-based morphological features are registered and smoothed on two distinct templates.
-
-.. admonition:: Prerequisites 🖐🏼
-
-     You need to run ``-proc_structural``, ``-proc_freesurfer`` and ``-post_structural`` before this stage
-
-.. tabs::
-
-    .. tab:: Processing steps
-
-        - Register cortical thickness and curvature to fsaverage5 and conte69 templates
-        - Apply 10mm Gaussian smooth on template-mapped outputs
-
-    .. tab:: Usage
-
-        **Terminal:**
-
-        .. parsed-literal::
-            $ mica-pipe **-sub** <subject_id> **-out** <outputDirectory> **-bids** <BIDS-directory> **-Morphology**
-
-        **Docker command:**
-
-        .. parsed-literal::
-            $ docker -Morphology
-
-        **No optional arguments**
-
-    .. tab:: Outputs
-
-        Directories created or populated by **-Morphology**:
-
-        .. parsed-literal::
-
-            - <SubjectDir>/anat/surfaces/morphology/
-
-        Files generated by **-Morphology**:
-
-        .. parsed-literal::
-            - Native surface space cortical thickness and curvature:
-                - *<sub>_space-fsnative_desc-<hemi>_curvature.mgh*
-                - *<sub>_space-fsnative_desc-<hemi>_thickness.mgh*
-
-            - fsaverage5-mapped cortical thickness and curvature:
-                - *<sub>_space-fsaverage5_desc-<hemi>_curvature.mgh*
-                - *<sub>_space-fsaverage5_desc-<hemi>_thickness.mgh*
-
-            - Smoothed fsaverage5-mapped cortical thickness and curvature:
-                - *<sub>_space-fsaverage5_desc-<hemi>_curvature_10mm.mgh*
-                - *<sub>_space-fsaverage5_desc-<hemi>_thickness_10mm.mgh*
-
-            - Conte69-mapped cortical thickness and curvature:
-                - *<sub>_space-conte69-32k_desc-<hemi>_curvature.mgh*
-                - *<sub>_space-conte69-32k_desc-<hemi>_thickness.mgh*
-
-            - Smoothed Conte69-mapped cortical thickness and curvature:
-                - *<sub>_space-conte69-32k_desc-<hemi>_curvature_10mm.mgh*
-                - *<sub>_space-conte69-32k_desc-<hemi>_thickness_10mm.mgh*
-
-        ``<hemi>`` is either ``lh`` or ``rh``

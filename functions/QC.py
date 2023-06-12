@@ -178,7 +178,7 @@ def report_header_template(sub='', ses_number='', dataset_name='', MICAPIPE=''):
     # Header
     report_header = (
         # Micapipe banner
-        '<img id=\"top\" src=\"{MICAPIPE}/micapipe_long.png\" alt=\"micapipe\">'
+        '<img id=\"top\" src=\"{MICAPIPE}/img/micapipe_long.png\" alt=\"micapipe\">'
 
         # Dataset name
         '<h1 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:center;margn-bottom:0">'
