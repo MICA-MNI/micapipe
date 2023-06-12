@@ -628,20 +628,23 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
         display.stop()
         # Calculate the similarity matrix
-        ## correlation matrix
-        corr = np.corrcoef(surf_map)
-        plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
-                       yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
-        plt.close()
-        # plot a barplot if the subjects mean similarity is below a threshold 0.2???
-        # Exclude diagonal values
-        np.fill_diagonal(corr, np.nan)
+        if len(files) == 1:
+            indices = 0
+        else:
+            ## correlation matrix
+            corr = np.corrcoef(surf_map)
+            plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
+                           yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
+            plt.close()
+            # plot a barplot if the subjects mean similarity is below a threshold 0.2???
+            # Exclude diagonal values
+            np.fill_diagonal(corr, np.nan)
 
-        # Calculate column means
-        colmean = np.nanmean(corr, axis=0)
+            # Calculate column means
+            colmean = np.nanmean(corr, axis=0)
 
-        # Get the position indices where colmean < 0.2
-        indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.2
+            indices = np.where(colmean < 0.25)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
@@ -661,7 +664,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
 
             # Create a DataFrame from the table data
             table_df = pd.DataFrame(table_data)
-            
+
             # Remove the row index
             table_df.index = [""] * len(table_df)
 
@@ -711,20 +714,23 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
         display.stop()
         # Calculate the similarity matrix
-        ## correlation matrix
-        corr = np.corrcoef(np.mean(mtxs, axis=1).T)
-        plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
-                       yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
-        plt.close()
-        # plot a barplot if the subjects mean similarity is below a threshold 0.2???
-        # Exclude diagonal values
-        np.fill_diagonal(corr, np.nan)
+        if len(files) == 1:
+            indices = 0
+        else:
+            ## correlation matrix
+            corr = np.corrcoef(np.mean(mtxs, axis=1).T)
+            plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
+                           yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
+            plt.close()
+            # plot a barplot if the subjects mean similarity is below a threshold 0.2???
+            # Exclude diagonal values
+            np.fill_diagonal(corr, np.nan)
 
-        # Calculate column means
-        colmean = np.nanmean(corr, axis=0)
+            # Calculate column means
+            colmean = np.nanmean(corr, axis=0)
 
-        # Get the position indices where colmean < 0.2
-        indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.2
+            indices = np.where(colmean < 0.25)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
@@ -830,7 +836,7 @@ def qc_group():
     # -------------------------------------------------------
     # Progress
     _static_block +=  report_module_header_template(module='Subjects per session')
-    
+
     _static_block +=  styled_ses.to_html()
 
     print( 'Creating... plot tables')
@@ -843,11 +849,11 @@ def qc_group():
     _static_block += '<div style="page-break-after: always;"></div>'
     _static_block +=  report_module_header_template(module='Completition status')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_module_progress_plot.png')
-    
+
     print( 'Creating... Processing times')
     _static_block +=  report_module_header_template(module='Processing times')
     _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_time.png')
-    
+
     _static_block += '<div style="page-break-after: always;"></div>'
     _static_block +=  report_module_header_template(module='Processing details')
     _static_block += styled_table.replace('mean_std', 'Time in minutes (mean | SD)')
