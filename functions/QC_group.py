@@ -628,7 +628,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
         display.stop()
         # Calculate the similarity matrix
-        if len(files) == 1:
+        if len(lh_files) == 1:
             indices = 0
         else:
             ## correlation matrix
