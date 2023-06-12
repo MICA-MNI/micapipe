@@ -245,7 +245,7 @@ for seg in "${parcellations[@]}"; do
         build_connectomes "$dwi_all" "${connectome_str}_full"
         if [[ -f "${connectome_str}_full-connectome.shape.gii" ]]; then ((Nsteps++)); fi
     else
-        ((Nsteps++))
+        ((N++)); ((Nsteps++))
     fi
 done
 
