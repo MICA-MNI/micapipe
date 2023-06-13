@@ -903,7 +903,7 @@ def qc_group():
             dwi_name=f'SC_{acq}_{tracts}'.replace('_-','')
             print( f'   dwi id: {dwi_name}')
             cnn_files=f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-{tracts}-SIFT2_full-connectome.shape.gii'.replace('/-/','/')
-            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc)
+            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'BuPu', load_sc)
 
     # ROI func (dynamic)
     for acq in get_acqs('func'):
