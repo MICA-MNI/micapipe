@@ -36,7 +36,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -47,7 +47,7 @@ if [[ "$Nrecon" -lt 1 ]]; then
   Error "Subject $id doesn't have a module-proc_surf: run -proc_surf"; exit 1
 elif [[ "$Nrecon" -eq 1 ]]; then
   module_qc=$(ls "${dir_QC}/${idBIDS}_module-proc_surf-"*.json 2>/dev/null)
-  recon="$(echo ${module_qc/.json/} | awk -F 'proc_surf-' '{print $2}')"
+  recon=$(echo "${module_qc/.json/}" | awk -F 'proc_surf-' '{print $2}')
 elif [[ "$Nrecon" -gt 1 ]]; then
   Warning "${idBIDS} has been processed with freesurfer and fastsurfer."
   if [[ "$FreeSurfer" == "TRUE" ]]; then
@@ -183,7 +183,7 @@ function map_annot(){
 }
 # Change directory otherwise the script won't work
 cd "$util_parcelations"
-Nannot=$(ls ${dir_subjsurf}/label/lh.*_mics.annot 2>/dev/null | wc -l)
+Nannot=$(ls "${dir_subjsurf}"/label/lh.*_mics.annot 2>/dev/null | wc -l)
 Nparc=$(find "${dir_volum}" -name "*atlas*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | wc -l 2>/dev/null)
 if [[ ( ${Nparc} != ${Natlas} || ${Nannot} != ${Natlas} ) ]]; then ((N++))
   while [ "${Nparc}" != "${Natlas}" ] || [ "${Nannot}" != "${Natlas}" ]; do
@@ -233,8 +233,8 @@ function from-fsnative_to-nativepro(){
     wb_affine=$2
     for hemi in lh rh; do
         [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
-        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
-        surf_id=${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf
+        HEMICAP=$(echo "$hemisphere" | tr [:lower:] [:upper:])
+        surf_id="${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf"
         Info "Apply transformations to ${hemi} ${label} surface"
         if [ "${label##*.}" != "gii" ]; then
             in_surf="${tmp}/${hemi}.${label}.surf.gii"
@@ -245,21 +245,21 @@ function from-fsnative_to-nativepro(){
             out_surf="${dir_conte69}/${surf_id}-fsnative_label-${label}"
         fi
         # Remove offset-to-origin from any gifti surface derived from FS
-        Do_cmd python "$MICAPIPE"/functions/removeFSoffset.py "${in_surf}" ${tmp}/${label}_no_offset.surf.gii
+        Do_cmd python "$MICAPIPE"/functions/removeFSoffset.py "${in_surf}" "${tmp}/${label}"_no_offset.surf.gii
         # Apply transformation to register surface to nativepro
-        Do_cmd wb_command -surface-apply-affine ${tmp}/${label}_no_offset.surf.gii ${wb_affine} "${out_surf}"
+        Do_cmd wb_command -surface-apply-affine "${tmp}/${label}"_no_offset.surf.gii "${wb_affine}" "${out_surf}"
     done
 }
 
-Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii 2>/dev/null | wc -l)
+Nsurf=$(ls "${dir_conte69}/${idBIDS}"_hemi-*_space-nativepro_surf-*_label-*.surf.gii 2>/dev/null | wc -l)
 if [[ "$Nsurf" -lt 6 ]]; then ((N++))
     Info "Register surfaces to nativepro space"
     # Convert the ANTs transformation file for wb_command
     affine_xfm="${tmp}/${idBIDS}_from-fsnative_to_nativepro_wb.mat"
-    Do_cmd c3d_affine_tool -itk $T1_fsnative_affine -inv -o ${affine_xfm}
+    Do_cmd c3d_affine_tool -itk "$T1_fsnative_affine" -inv -o "${affine_xfm}"
     for Surf in pial midthickness.surf.gii white; do from-fsnative_to-nativepro "${Surf}" "${affine_xfm}"; done
     # Check outputs
-    Nsurf=$(ls ${dir_conte69}/${idBIDS}_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
+    Nsurf=$(ls "${dir_conte69}/${idBIDS}"_hemi-*_space-nativepro_surf-*_label-*.surf.gii | wc -l 2>/dev/null)
     if [[ "$Nsurf" -eq 6 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has surfaces on nativepro space"; ((Nsteps++)); ((N++))
@@ -281,7 +281,7 @@ function resample_surfs(){
                   "${sphere}" \
                   BARYCENTRIC \
                   "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii"
-      if [ ${surfaces[i]} == "fsLR-32k" ]; then
+      if [ "${surfaces[i]}" == "fsLR-32k" ]; then
         Do_cmd wb_command -surface-resample \
                     "${dir_conte69}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${surfaces[i]}_label-${label}.surf.gii" \
                     "${util_surface}/${surfaces[i]}.${HEMICAP}.sphere.surf.gii" \
@@ -293,10 +293,10 @@ function resample_surfs(){
   done
 }
 
-Nsurf=$(ls ${dir_conte69}/${idBIDS}*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
+Nsurf=$(ls "${dir_conte69}/${idBIDS}"*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
 if [[ "$Nsurf" -lt 12 ]]; then ((N++))
   for Surf in pial midthickness white; do resample_surfs "${Surf}"; done
-  Nsurf=$(ls ${dir_conte69}/${idBIDS}*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
+  Nsurf=$(ls "${dir_conte69}/${idBIDS}"*space-nativepro_surf-fsLR-*gii 2>/dev/null | wc -l)
   if [[ "$Nsurf" -eq 12 ]]; then ((Nsteps++)); fi
 else
   Info "Subject ${idBIDS} has surfaces resampled to fsLR-32k, fsaverage5 and fsLR-5k"; ((Nsteps++)); ((N++))
@@ -309,7 +309,7 @@ json_poststruct "${T1surf}" "${dir_surf}" "${post_struct_json}"
 # Running cortical morphology - Requires json_poststruct
 Nmorph=$(ls "${dir_maps}/"*thickness* "${dir_maps}/"*curv* 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 16 ]]; then ((N++))
-    ${MICAPIPE}/functions/03_morphology.sh ${BIDS} ${id} ${out} ${SES} ${nocleanup} ${threads} ${tmpDir} ${PROC}
+    "${MICAPIPE}"/functions/03_morphology.sh "${BIDS}" "${id}" "${out}" "${SES}" "${nocleanup}" "${threads}" "${tmpDir}" "${PROC}"
     Nmorph=$(ls "${dir_maps}/"*thickness* "${dir_maps}/"*curv* 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
@@ -317,7 +317,7 @@ else
 fi
 
 # remove intermediate files
-rm -rf "${dir_subjsurf}/surf/"*giis ${dir_warp}/*Warped.nii.gz 2>/dev/null
+rm -rf "${dir_subjsurf}/surf/"*giis "${dir_warp}"/*Warped.nii.gz 2>/dev/null
 
 # -----------------------------------------------------------------------------------------------
 # Notification of completition

@@ -78,10 +78,10 @@ tdi="${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}_tdi.nii.gz"
 micapipe_check_dependency "proc_structural" "${dir_QC}/${idBIDS}_module-proc_structural.json"
 micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_structural.json"
 micapipe_check_dependency "proc_dwi" "${dir_QC}/${idBIDS}_module-proc_dwi${dwi_str_}.json"
-if [ ${weighted_SC} != "FALSE" ]; then
+if [ "${weighted_SC}" != "FALSE" ]; then
   if [ ! -f "$weighted_SC" ]; then Error "The provided weighted map does NOT exist: ${weighted_SC}"; exit 1; fi
 fi
-if [ ${tck_file} != "FALSE" ]; then
+if [ "${tck_file}" != "FALSE" ]; then
   if [ ! -f "$tck_file" ]; then Error "The provided tractography (tck) does NOT exist: ${tck_file}"; exit 1; fi
 fi
 if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE"; fi
@@ -124,8 +124,8 @@ Do_cmd cd "$tmp"
 for HEMI in R L; do
   fsLR5k_indx="${util_surface}/fsLR-5k.${HEMI}.indices.shape.gii"
   fsLR5k_midt="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-midthickness.surf.gii"
-  fsLR5k_rois=${tmp}/${idBIDS}_fsLR-5k_hemi-${HEMI}_rois.nii.gz
-  Do_cmd wb_command -metric-to-volume-mapping ${fsLR5k_indx} ${fsLR5k_midt} ${T1nativepro} ${fsLR5k_rois} \
+  fsLR5k_rois="${tmp}/${idBIDS}_fsLR-5k_hemi-${HEMI}_rois.nii.gz"
+  Do_cmd wb_command -metric-to-volume-mapping "${fsLR5k_indx}" "${fsLR5k_midt}" "${T1nativepro}" "${fsLR5k_rois}" \
       -ribbon-constrained "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-white.surf.gii" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsLR-5k_label-pial.surf.gii" \
       -greedy -voxel-subdiv 1
 done
@@ -135,7 +135,7 @@ seg_fsLR5k="${dir_volum}/${idBIDS}_space-nativepro_T1w_surf-fsLR-5k.nii.gz"
 Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz"
 Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -bin "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz"
 Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_bin.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_bin.nii.gz" -thr 2 -binv "${tmp}/fsLR-5k_rois_bin.nii.gz"
-Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -mul "${tmp}/fsLR-5k_rois_bin.nii.gz" ${seg_fsLR5k}
+Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idBIDS}_fsLR-5k_hemi-R_rois.nii.gz" -mul "${tmp}/fsLR-5k_rois_bin.nii.gz" "${seg_fsLR5k}"
 
 # -----------------------------------------------------------------------------------------------
 # Prepare the segmentatons
@@ -186,10 +186,10 @@ Do_cmd tcksift2 -nthreads "$threads" "$tck" "$fod_wmN" "$weights"
 
 # TDI for QC
 Info "Creating a Track Density Image (tdi) of the $tracts connectome for QC"
-Do_cmd tckmap -template ${fod} -dec -nthreads "$threads" "$tck" "$tdi" -force
+Do_cmd tckmap -template "${fod}" -dec -nthreads "$threads" "$tck" "$tdi" -force
 
 # Map the weighted image to the whole brain tractography
-if [ ${weighted_SC} != "FALSE" ]; then Do_cmd tcksample "${tck}" ${weighted_SC} ${tmp}/mean_map_per_streamline.txt -stat_tck mean -nthreads "$threads"; fi
+if [ "${weighted_SC}" != "FALSE" ]; then Do_cmd tcksample "${tck}" "${weighted_SC}" "${tmp}"/mean_map_per_streamline.txt -stat_tck mean -nthreads "$threads"; fi
 
 # -----------------------------------------------------------------------------------------------
 # Build the Connectomes
@@ -212,7 +212,7 @@ function build_connectomes(){
 	if [ ${weighted_SC} != "FALSE" ]; then
 		Do_cmd tck2connectome -nthreads "$threads" \
 			"${tck}" "${nodes}" "${sc_file}-weighted_connectome.txt" \
-			-tck_weights_in "$weights" -scale_file ${tmp}/mean_map_per_streamline.txt -stat_edge mean -quiet  -force
+			-tck_weights_in "$weights" -scale_file "${tmp}"/mean_map_per_streamline.txt -stat_edge mean -quiet  -force
       Do_cmd python "${MICAPIPE}"/functions/connectome_slicer.py --conn="${sc_file}-weighted_connectome.txt" --lut1="$lut_sc" --lut2="$lut" --mica="$MICAPIPE"
 	fi
 }

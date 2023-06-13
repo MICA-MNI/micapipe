@@ -176,7 +176,7 @@ def plot_connectome(mtx, Title='matrix plot', xlab='X', ylab='Y', col='rocket', 
     Returns
     -------
     '''
-    ax = plt.subplots(figsize=(15,10))
+    f, ax = plt.subplots(figsize=(15,10))
     g = sns.heatmap(mtx, ax=ax, cmap=col, vmin=vmin, vmax=vmax, xticklabels=xticklabels, yticklabels=yticklabels)
     g.set_xlabel(xlab)
     g.set_ylabel(ylab)

@@ -54,7 +54,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -64,7 +64,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon "${post_struct_json}" | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 if [[ "$sesAnat" != FALSE  ]]; then
@@ -258,7 +258,7 @@ elif [ ${#mainScan[@]} -gt 1 ]; then
 fi
 
 # func directories
-fmri_tag=$(echo ${mainScan[0]/echo-1_/} | awk -F ${idBIDS}_ '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
+fmri_tag=$(echo "${mainScan[0]/echo-1_/}" | awk -F "${idBIDS}_" '{print $2}' | cut -d'.' -f1); fmri_tag="desc-${acq}_${fmri_tag}"
 tagMRI="${fmri_tag/desc-/}"
 proc_func="$subject_dir/func/${fmri_tag}"
 
@@ -339,7 +339,7 @@ function func_reoMC() {
             Do_cmd 3dvolreg -Fourier -twopass -base "${tmp}/${tag}_reoMean.nii.gz" \
                             -zpad 4 -prefix "${tmp}/${tag}_mc.nii.gz" \
                             -1Dfile "${func_volum}/${idBIDS}${func_lab}_${tag}.1D" \
-                            -1Dmatrix_save ${tmp}/${tag}_mat_mc.1D \
+                            -1Dmatrix_save "${tmp}/${tag}"_mat_mc.1D \
                             "${tmp}/${tag}_reo.nii.gz"
             Do_cmd fslmaths "${tmp}/${tag}_mc.nii.gz" -Tmean "${tmp}/${tag}_mcMean.nii.gz"
         fi
@@ -421,11 +421,11 @@ status="INCOMPLETE"
 if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     # Reorient and motion correct main(s) fMRI
     for i in "${!mainScan[@]}"; do n=$((i+1))
-      func_reoMC ${mainScan[i]} "mainScan${n/1/}" $n
+      func_reoMC "${mainScan[i]}" "mainScan${n/1/}" $n
     done
     # Reorient and motion correct fMRI rpe and pe
     for i in "${!toProcess[@]}"; do
-      func_reoMC ${toProcess[i]} ${tags[i]} 1
+      func_reoMC "${toProcess[i]}" "${tags[i]}" 1
     done
 
     # Run Tedana
@@ -433,43 +433,43 @@ if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         GSR=1
-        scans4tedana=($(ls ${tmp}/mainScan?_reo.nii.gz))
+        scans4tedana=($(ls "${tmp}"/mainScan?_reo.nii.gz))
         Info "Apply motion correction to echos"
         for me in ${!scans4tedana[@]}; do
-          3dAllineate -base ${tmp}/mainScan_mcMean.nii.gz \
-            -input ${scans4tedana[${me}]} -1Dmatrix_apply ${tmp}/mainScan_mat_mc.1D -prefix ${scans4tedana[${me}]/_reo/_mc}
+          3dAllineate -base "${tmp}"/mainScan_mcMean.nii.gz \
+            -input "${scans4tedana[${me}]}" -1Dmatrix_apply "${tmp}"/mainScan_mat_mc.1D -prefix "${scans4tedana[${me}]/_reo/_mc}"
         done
-        scans4tedana=(${tmp}/mainScan_mc.nii.gz $(ls ${tmp}/mainScan?_mc.nii.gz))
+        scans4tedana=("${tmp}"/mainScan_mc.nii.gz $(ls "${tmp}"/mainScan?_mc.nii.gz))
         Note "Files      :" "${scans4tedana[*]/${tmp}/}" # this will print the string full path is in mainScan
         Note "EchoNumber :" "${EchoNumber[*]}"
         Note "EchoTime   :" "${EchoTime[*]}"
 
-        tedana_dir=${tmp}/tedana
+        tedana_dir="${tmp}"/tedana
 
         # prepare files for tedana
         mkdir -p "${tedana_dir}"
         # create a mask for tedana
-        tmp_func_mean=${tmp}/mainScan01_mean.nii.gz
-        tmp_t1w_brain_res=${tmp}/nativepro_brain_rescaled.nii.gz
+        tmp_func_mean="${tmp}/mainScan01_mean.nii.gz"
+        tmp_t1w_brain_res="${tmp}/nativepro_brain_rescaled.nii.gz"
         tmp_affineStr="${tmp}/from-nativepro_to-mainScan01_"
         tmp_aff_mat="${tmp_affineStr}0GenericAffine.mat"
-        tmp_func_mask=${tmp}/mainScan01_mean_mask.nii.gz
+        tmp_func_mask="${tmp}/mainScan01_mean_mask.nii.gz"
 
         # Create a loose mask for tedana
-        fslmaths "${scans4tedana[0]}" -Tmean ${tmp_func_mean}
-        voxels=$(mrinfo ${tmp_func_mean} -spacing); voxels=${voxels// /,}
-        Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref ${T1nativepro_brain} -out "${tmp_t1w_brain_res}"
+        fslmaths "${scans4tedana[0]}" -Tmean "${tmp_func_mean}"
+        voxels=$(mrinfo "${tmp_func_mean}" -spacing); voxels="${voxels// /,}"
+        Do_cmd flirt -applyisoxfm "${voxels}" -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${tmp_t1w_brain_res}"
         Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d
         Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_mask" -r "$tmp_func_mean" -t "$tmp_aff_mat" -o "${tmp_func_mask}" -u int
 
         # Run tedana
-        tedana -d $(printf "%s " "${scans4tedana[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}" --mask ${tmp_func_mask}
+        tedana -d $(printf "%s " "${scans4tedana[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}" --mask "${tmp_func_mask}"
 
         # Overwite the motion corrected to insert this into topup.
         ## TODO: func_topup should take proper input arguments instead of relying on architecture implemented in other functions.
-        mainScan=$(find $tmp -maxdepth 1 -name "*mainScan_mc.nii.gz")
+        mainScan=$(find "$tmp" -maxdepth 1 -name "*mainScan_mc.nii.gz")
         if [ ! -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" ]; then Error "tedana failed: $(which tedana)"; cleanup "$tmp" "$nocleanup" "$here"; exit 1; fi
-        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" $mainScan
+        Do_cmd cp -f "${tedana_dir}/desc-optcomDenoised_bold.nii.gz" "$mainScan"
     fi
 
     # FSL MC outliers
@@ -569,16 +569,16 @@ fi
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
 if [[ "$Nreg" -lt 3 ]]; then ((N++))
     Info "Creating a synthetic T1nativepro image for registration"
-    voxels=$(mrinfo ${fmri_mean} -spacing); voxels=${voxels// /,}
-    Do_cmd flirt -applyisoxfm ${voxels} -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
+    voxels=$(mrinfo "${fmri_mean}" -spacing); voxels="${voxels// /,}"
+    Do_cmd flirt -applyisoxfm "${voxels}" -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
 
     Info "Registering func MRI to nativepro"
     bold_synth="${tmp}/func_brain_synthsegGM.nii.gz"
     t1_synth="${tmp}/T1bold_synthsegGM.nii.gz"
-    Do_cmd mri_synthseg --i "${t1bold}" --o "${tmp}/T1bold_synthseg.nii.gz" --robust --threads $threads --cpu
+    Do_cmd mri_synthseg --i "${t1bold}" --o "${tmp}/T1bold_synthseg.nii.gz" --robust --threads "$threads" --cpu
     Do_cmd fslmaths "${tmp}/T1bold_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1bold_synthseg.nii.gz" "${t1_synth}"
 
-    Do_cmd mri_synthseg --i ""$fmri_brain"" --o "${tmp}/func_brain_synthseg.nii.gz" --robust --threads $threads --cpu
+    Do_cmd mri_synthseg --i "$fmri_brain" --o "${tmp}/func_brain_synthseg.nii.gz" --robust --threads "$threads" --cpu
     Do_cmd fslmaths "${tmp}/func_brain_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/func_brain_synthseg.nii.gz" "${bold_synth}"
 
     # Affine from func to t1-nativepro
@@ -589,7 +589,7 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
         # SyN from T1_nativepro to t1-nativepro
         Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "${bold_synth}" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
     fi
-    Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
+    Do_cmd rm -rf "${dir_warp}"/*Warped.nii.gz 2>/dev/null
     # func to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
     # t1-nativepro to func
@@ -719,32 +719,32 @@ surf_dir="${out}/${subject}/${SES}/surf"
 # Transform surface to func space
 if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
     # convert affines
-    Do_cmd c3d_affine_tool -itk ${mat_func_affine} -o $tmp/affine1.mat
+    Do_cmd c3d_affine_tool -itk "${mat_func_affine}" -o "$tmp/affine1.mat"
     mat_func_affine=$tmp/affine1.mat
     if [[ ${regAffine}  == "FALSE" ]]; then
-        Do_cmd c3d_affine_tool -itk ${SyN_func_affine} -o $tmp/affine2.mat -inv
-        SyN_func_affine=$tmp/affine2.mat
+        Do_cmd c3d_affine_tool -itk "${SyN_func_affine}" -o "$tmp/affine2.mat" -inv
+        SyN_func_affine="$tmp/affine2.mat"
     fi
     # apply registrations to surface
     for HEMICAP in L R; do
         Do_cmd wb_command -surface-apply-affine \
-            ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
-            ${mat_func_affine} \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+            "${surf_dir}/${idBIDS}_hemi-${HEMICAP}"_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+            "${mat_func_affine}" \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
         if [[ ${regAffine}  == "FALSE" ]]; then
             Do_cmd wb_command -surface-apply-affine \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
-                ${SyN_func_affine} \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+                "${SyN_func_affine}" \
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
             Do_cmd wb_command -surface-apply-warpfield \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
-                ${SyN_func_warp} \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+                "${SyN_func_warp}" \
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
         fi
         Do_cmd wb_command -volume-to-surface-mapping \
-            $func_processed \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
+            "${func_processed}" \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative.func.gii \
             -trilinear
         Info "Subject ${id} hemi-${HEMICAP} mapped to fsnative"; ((Nsteps++)); ((N++))
     done
@@ -753,20 +753,20 @@ else
 fi
 
 # Propagate to other surfaces
-Nsurf=$(ls ${func_surf}/${idBIDS}_hemi-*_surf-*.func.gii | wc -l)
+Nsurf=$(ls "${func_surf}/${idBIDS}"_hemi-*_surf-*.func.gii | wc -l)
 SURFLIST='fsLR-5k fsLR-32k fsaverage5'
 if [ $Nsurf -lt 8 ]; then
     for HEMICAP in L R; do
         for SURF in $SURFLIST; do
             Do_cmd wb_command -metric-resample \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative.func.gii \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_label-sphere.surf.gii \
-                ${MICAPIPE}/surfaces/${SURF}.${HEMICAP}.sphere.reg.surf.gii \
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative.func.gii \
+                "${surf_dir}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative_label-sphere.surf.gii \
+                "${MICAPIPE}/surfaces/${SURF}.${HEMICAP}".sphere.reg.surf.gii \
                 ADAP_BARY_AREA \
-                ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}.func.gii \
+                "${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-${SURF}".func.gii \
                 -area-surfs \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
-                ${surf_dir}/${idBIDS}_hemi-${HEMICAP}_space-nativepro_surf-${SURF}_label-midthickness.surf.gii
+                "${surf_dir}/${idBIDS}_hemi-${HEMICAP}"_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
+                "${surf_dir}/${idBIDS}_hemi-${HEMICAP}"_space-nativepro_surf-"${SURF}"_label-midthickness.surf.gii
             Info "Subject ${id} hemi-${HEMICAP} mapped to $SURF"; ((Nsteps++)); ((N++))
         done
     done
@@ -778,9 +778,9 @@ fi
 if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
-            $func_nii \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_surf-fsnative_label-midthickness.surf.gii \
-            ${func_surf}/${idBIDS}_hemi-${HEMICAP}_surf-fsnative_NoHP.func.gii \
+            "$func_nii" \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative_NoHP.func.gii \
             -trilinear
         Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
     done
@@ -837,7 +837,7 @@ fi
 
 #------------------------------------------------------------------------------#
 # a bit of extra cleanup
-rm ${func_volum}/${idBIDS}_*brain_mask.nii.gz ${func_volum}/${idBIDS}_*HP.nii.gz ${func_volum}/${idBIDS}_*mean.nii.gz ${func_surf}/${idBIDS}_*surf-fsnative_NoHP.func.gii ${func_volum}/${idBIDS}${func_lab}.nii.gz 2>/dev/null
+rm "${func_volum}/${idBIDS}"_*brain_mask.nii.gz "${func_volum}/${idBIDS}"_*HP.nii.gz "${func_volum}/${idBIDS}"_*mean.nii.gz "${func_surf}/${idBIDS}"_*surf-fsnative_NoHP.func.gii "${func_volum}/${idBIDS}${func_lab}".nii.gz 2>/dev/null
 
 #------------------------------------------------------------------------------#
 # QC notification of completition

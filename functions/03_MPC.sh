@@ -39,7 +39,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -49,7 +49,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon "${post_struct_json}" | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 # Variables naming for multiple acquisitions
@@ -80,11 +80,11 @@ if [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found 
 Title "Microstructural Profiles Covariance\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 bids_print.variables-post
-Note "Saving temporal dir:" "${nocleanup}"
-Note "Parallel processing:" "${threads} threads"
-Note "Temporal dir:" "${tmpDir}"
-Note "recon:" ${recon}
-Note "synth_reg:" ${synth_reg}
+Note "Saving temporal dir : " "${nocleanup}"
+Note "Parallel processing : " "${threads} threads"
+Note "tmp dir   : " "${tmpDir}"
+Note "recon     : " "${recon}"
+Note "synth_reg : " ${synth_reg}
 
 #	Timer
 aloita=$(date +%s)
@@ -120,10 +120,10 @@ if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
       Info "Running label based affine registrations"
       qT1_synth="${tmp}/qT1_synthsegGM.nii.gz"
       T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1_in_fs}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd mri_synthseg --i "${T1_in_fs}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
       Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
 
-      Do_cmd mri_synthseg --i "$regImage" --o "${tmp}/qT1_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd mri_synthseg --i "$regImage" --o "${tmp}/qT1_synthseg.nii.gz" --robust --threads "$threads" --cpu
       Do_cmd fslmaths "${tmp}/qT1_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/qT1_synthseg.nii.gz" "${qT1_synth}"
 
       # Affine from func to t1-nativepro
@@ -141,7 +141,7 @@ fi
 
 # Convert the ANTs transformation file for wb_command
 wb_affine="${tmp}/${idBIDS}_from-fsnative_to_qMRI_wb.mat"
-Do_cmd c3d_affine_tool -itk $qT1_fsnative_affine -inv -o ${wb_affine}
+Do_cmd c3d_affine_tool -itk "$qT1_fsnative_affine" -inv -o "${wb_affine}"
 
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
@@ -201,7 +201,7 @@ if [[ ! -f "$qmriNP" ]]; then
   Info "${mpc_str} registration to nativepro"
     if [[ "${synth_reg}" == "TRUE" ]]; then
       T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads "$threads" --cpu
       Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"
 
       # Affine from func to t1-nativepro
@@ -222,7 +222,7 @@ json_nativepro_qt1 "$qmriNP" \
 
 #------------------------------------------------------------------------------#
 # Map to surface: midthickness, white
-Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
+Nmorph=$(ls "${dir_maps}/"*"${mpc_str}"*gii 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     Info "Mapping ${mpc_str} to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
@@ -247,7 +247,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
-        Do_cmd python $MICAPIPE/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
+        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
@@ -256,7 +256,7 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python $MICAPIPE/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
   ((Nsteps++))
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz

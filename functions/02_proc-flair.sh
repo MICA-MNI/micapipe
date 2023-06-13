@@ -31,7 +31,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -65,12 +65,12 @@ micapipe_check_json_status "${module_json}" "proc_flair"
 Title "T2-FLAIR intensities\n\t\tmicapipe $Version, $PROC"
 micapipe_software
 Info "Module inputs:"
-Note "wb_command threads  :" "${OMP_NUM_THREADS}"
-Note "threads             :" "${threads}"
-Note "Saving temporary dir:" "$nocleanup"
+Note "wb_command threads  : " "${OMP_NUM_THREADS}"
+Note "threads             : " "${threads}"
+Note "Saving temporary dir: " "$nocleanup"
 Note "tmpDir              : " "$tmpDir"
 Note "flairScanStr        : " "$flairScanStr"
-Note "synth_reg:" ${synth_reg}
+Note "synth_reg           : " "${synth_reg}"
 Note "Processing          : " "$PROC"
 
 # Timer
@@ -141,10 +141,10 @@ if [[ ! -f "$flairNP" ]]; then ((N++))
       Info "Running label based affine registrations"
       flair_synth="${tmp}/flair_synthsegGM.nii.gz"
       T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
       Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
 
-      Do_cmd mri_synthseg --i "$flair_rescale" --o "${tmp}/flair_synthseg.nii.gz" --robust --threads $threads --cpu
+      Do_cmd mri_synthseg --i "$flair_rescale" --o "${tmp}/flair_synthseg.nii.gz" --robust --threads "$threads" --cpu
       Do_cmd fslmaths "${tmp}/flair_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/flair_synthseg.nii.gz" "${flair_synth}"
 
       # Affine from func to t1-nativepro
@@ -165,7 +165,7 @@ if [[ ! -f "$flairNP" ]]; then ((N++))
     gmwmi_mean=$(fslstats "$flair_rescale" -M -k "$t1_gmwmi_in_flair_thr")
 
     # Normalize flair
-    fslmaths "$flair_rescale" -div $gmwmi_mean "$flair_preproc"
+    fslmaths "$flair_rescale" -div "$gmwmi_mean" "$flair_preproc"
 
     ((Nsteps++))
 else

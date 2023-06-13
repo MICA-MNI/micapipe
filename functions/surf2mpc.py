@@ -99,7 +99,7 @@ if os.path.exists(OPATH):
         BB = np.flipud(np.concatenate((BBl, BBr), axis = 1))
 
         # Load parcellation in native surface space
-        pathToParc = "{dir_fs}/label/".format(subject_dir=ses_str, sub=sub, dir_fs=dir_fs)
+        pathToParc = "{dir_fs}/label/".format(dir_fs=dir_fs)
         # Load annot files
         fname_lh = 'lh.' + parc_name
         ipth_lh = os.path.join(pathToParc, fname_lh)

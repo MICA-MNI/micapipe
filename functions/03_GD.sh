@@ -34,7 +34,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ];then
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -44,7 +44,7 @@ micapipe_check_dependency "post_structural" "${dir_QC}/${idBIDS}_module-post_str
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon "${post_struct_json}" | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 # End if module has been processed

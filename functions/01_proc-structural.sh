@@ -36,7 +36,7 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -85,8 +85,8 @@ Nsteps=0
 N=0
 
 # Create script specific temp directory
-tmp=${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}
-Do_cmd mkdir -p "$tmp" ${proc_struct}/first
+tmp="${tmpDir}/${RANDOM}_micapipe_proc_struc-vol_${id}"
+Do_cmd mkdir -p "$tmp" "${proc_struct}"/first
 Note "Saving temporal dir:" "$nocleanup"
 Note "\t\ttmp:" "${tmp}"
 
@@ -152,7 +152,7 @@ if [ ! -f "${proc_struct}/${T1str_nat}".nii.gz ] || [ ! -f "${proc_struct}/${T1s
     if  [[ "${UNI}" == "TRUE" ]]; then
       Info "Removing background noise from mp2rage UNI-T1map"
       # UNI mp2rage denoising
-      Do_cmd ${MICAPIPE}/functions/mp2rage_denoise.py "$T1reo" "${bids_inv1[0]}" "${bids_inv2[0]}" "$T1n4" --mf "${MF}"
+      Do_cmd "${MICAPIPE}"/functions/mp2rage_denoise.py "$T1reo" "${bids_inv1[0]}" "${bids_inv2[0]}" "$T1n4" --mf "${MF}"
     else
       mv "$T1reo" "$T1n4"
     fi
@@ -252,7 +252,7 @@ else
 fi
 
 # Bias field correction weighted by white matter (e.g. 7T data or lost of signal in temporal areas
-N4wmStatus_check=$(grep "N4wmProcessed" ${procstruct_json} | awk -F '"' '{print $4}')
+N4wmStatus_check=$(grep "N4wmProcessed" "${procstruct_json}" | awk -F '"' '{print $4}')
 if [ "$N4wmStatus_check" == "FALSE" ]; then ((N++))
   Info "N4 bias field corretion weighted by white matter"
   pve2=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_pve_2.nii.gz

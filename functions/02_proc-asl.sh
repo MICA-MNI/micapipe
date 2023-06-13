@@ -116,18 +116,18 @@ asl_brain="${asl_str}_brain.nii.gz"
 asl_mask="${asl_str}_brain_mask.nii.gz"
 aslref="${asl_str}ref.nii.gz"
 
-if [[ ! -f ${proc_asl}/${asl_mask} ]] || [[ ! -f ${proc_asl}/${aslref} ]]; then
+if [[ ! -f "${proc_asl}/${asl_mask}" ]] || [[ ! -f "${proc_asl}/${aslref}" ]]; then
     Info "Generating ASL binary mask"
 
     # Calculate mean ASL volume (reference image)
-    Do_cmd fslmaths ${aslScan} -Tmean ${tmp}/${aslref}
+    Do_cmd fslmaths "${aslScan}" -Tmean "${tmp}/${aslref}"
 
     # Creat mask from reference image
-    Do_cmd bet ${tmp}/${aslref} ${tmp}/${asl_brain} -B -m -n # ASL brain
+    Do_cmd bet "${tmp}/${aslref}" "${tmp}/${asl_brain}" -B -m -n # ASL brain
 
     # Move important files to derivatives
-    Do_cmd mv ${tmp}/${asl_mask} ${proc_asl}/${asl_mask}
-    Do_cmd mv ${tmp}/${aslref} ${proc_asl}/${aslref}
+    Do_cmd mv "${tmp}/${asl_mask}" "${proc_asl}/${asl_mask}"
+    Do_cmd mv "${tmp}/${aslref}" "${proc_asl}/${aslref}"
 
     if [[ -f ${proc_asl}/${asl_mask} ]] && [[ -f ${proc_asl}/${aslref} ]]; then ((Nsteps++)); fi
 else
@@ -145,26 +145,26 @@ if [[ ! -f ${proc_asl}/${cbf} ]]; then
     Info "Processing ASL scan with oxford_asl from the BASIL toolbox"
 
     # Mask ASl and M0 timeseries
-    Do_cmd bet ${aslScan} ${tmp}/${asl_brain} -F -B -m # ASL brain
-    Do_cmd bet ${m0Scan} ${tmp}/${m0_brain} -F -B -m # M0 brain
+    Do_cmd bet "${aslScan}" "${tmp}/${asl_brain}" -F -B -m # ASL brain
+    Do_cmd bet "${m0Scan}" "${tmp}/${m0_brain}" -F -B -m # M0 brain
 
-    Do_cmd fslmaths ${aslScan} -mul ${tmp}/${asl_mask} ${tmp}/${asl_brain}
-    Do_cmd fslmaths ${m0Scan} -mul ${tmp}/${m0_mask} ${tmp}/${m0_brain}
+    Do_cmd fslmaths "${aslScan}" -mul "${tmp}/${asl_mask}" "${tmp}/${asl_brain}"
+    Do_cmd fslmaths "${m0Scan}" -mul "${tmp}/${m0_mask}" "${tmp}/${m0_brain}"
 
     # Compute absolute CBF map using oxford_asl
     Do_cmd fsl_anat --clobber --nosubcortseg \
-                    -i ${T1nativepro} \
-                    -o ${tmp}/fsl_anat
+                    -i "${T1nativepro}" \
+                    -o "${tmp}"/fsl_anat
 
     # Change flag to fit with ASL protocol
-    Do_cmd oxford_asl -i ${tmp}/${asl_brain} \
-                      -o ${tmp}/oxford_asl \
+    Do_cmd oxford_asl -i "${tmp}/${asl_brain}" \
+                      -o "${tmp}"/oxford_asl \
                       --iaf=tc --tis=3.25 --bolus 1.7 --slicedt=0.04571 --casl --wp --mc --pvcorr \
-                      -c ${tmp}/${m0_brain} \
-                      --tr 10 --fslanat=${tmp}/fsl_anat.anat
+                      -c "${tmp}/${m0_brain}" \
+                      --tr 10 --fslanat="${tmp}"/fsl_anat.anat
 
     # Move important files to derivatives
-    Do_cmd mv ${tmp}/oxford_asl/native_space/perfusion_calib.nii.gz ${proc_asl}/${cbf} # CBF map
+    Do_cmd mv "${tmp}"/oxford_asl/native_space/perfusion_calib.nii.gz "${proc_asl}/${cbf}" # CBF map
 
     if [[ -f ${proc_asl}/${cbf} ]]; then ((Nsteps++)); fi
 else
@@ -183,23 +183,23 @@ if [[ ! -f ${proc_asl}/${cbf_in_nativepro} ]]; then
     Info "Registering ASL MRI to nativepro T1w"
 
     # Mask ASL reference scan
-    Do_cmd fslmaths ${proc_asl}/${aslref} -mul ${proc_asl}/${asl_mask} ${tmp}/${aslref_brain}
+    Do_cmd fslmaths "${proc_asl}/${aslref}" -mul "${proc_asl}/${asl_mask}" "${tmp}/${aslref_brain}"
 
     # Resample/reorient asl reference/cbf to nativepro T1w orientation (LPI)
-    Do_cmd 3dresample -orient LPI -dxyz 0.8 0.8 0.8 -prefix ${tmp}/${aslref_brain_LPI_orient} -inset ${tmp}/${aslref_brain}
-    Do_cmd fslreorient2std ${tmp}/${aslref_brain_LPI_orient} ${tmp}/${aslref_brain_LPI_orient}
-    Do_cmd 3dresample -orient LPI -dxyz 0.8 0.8 0.8 -prefix ${tmp}/${cbf_LPI_orient} -inset ${proc_asl}/${cbf}
-    Do_cmd fslreorient2std ${tmp}/${cbf_LPI_orient} ${tmp}/${cbf_LPI_orient}
+    Do_cmd 3dresample -orient LPI -dxyz 0.8 0.8 0.8 -prefix "${tmp}/${aslref_brain_LPI_orient}" -inset "${tmp}/${aslref_brain}"
+    Do_cmd fslreorient2std "${tmp}/${aslref_brain_LPI_orient}" "${tmp}/${aslref_brain_LPI_orient}"
+    Do_cmd 3dresample -orient LPI -dxyz 0.8 0.8 0.8 -prefix "${tmp}/${cbf_LPI_orient}" -inset "${proc_asl}/${cbf}"
+    Do_cmd fslreorient2std "${tmp}/${cbf_LPI_orient}" "${tmp}/${cbf_LPI_orient}"
 
     # Generate affine from asl to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f ${T1nativepro_brain} -m ${tmp}/${aslref_brain_LPI_orient} -o ${str_asl_affine} -t a -n "$threads" -p d
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "${T1nativepro_brain}" -m "${tmp}/${aslref_brain_LPI_orient}" -o "${str_asl_affine}" -t a -n "$threads" -p d
 
     # Register CBF to nativepro T1w
-    Do_cmd antsApplyTransforms -d 3 -i ${tmp}/${cbf_LPI_orient} -r ${T1nativepro_brain} -t ${mat_asl_affine} -o ${tmp}/${cbf_in_nativepro} -v -u double -n NearestNeighbor
-    Do_cmd fslmaths ${tmp}/${cbf_in_nativepro} -mul ${T1nativepro_mask} ${tmp}/${cbf_in_nativepro}
+    Do_cmd antsApplyTransforms -d 3 -i "${tmp}/${cbf_LPI_orient}" -r "${T1nativepro_brain}" -t "${mat_asl_affine}" -o "${tmp}/${cbf_in_nativepro}" -v -u double -n NearestNeighbor
+    Do_cmd fslmaths "${tmp}/${cbf_in_nativepro}" -mul "${T1nativepro_mask}" "${tmp}/${cbf_in_nativepro}"
 
     # Move important files to derivatives
-    Do_cmd mv ${tmp}/${cbf_in_nativepro} ${proc_asl}/${cbf_in_nativepro} # CBF in nativepro T1w space
+    Do_cmd mv "${tmp}/${cbf_in_nativepro}" "${proc_asl}/${cbf_in_nativepro}" # CBF in nativepro T1w space
 
     if [[ -f ${proc_asl}/${cbf_in_nativepro} ]]; then ((Nsteps++)); fi
 else

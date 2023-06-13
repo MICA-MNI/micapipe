@@ -25,7 +25,7 @@ echo -e "\033[38;5;9m\n---------------------------------------------------------
 help() {
   echo -e "
   \033[38;5;141mCOMMAND:\033[0m
-  $(basename $0)
+  $(basename ${0})
 
   \033[38;5;141mARGUMENTS:\033[0m
   \t\033[38;5;197m-sub\033[0m 	          : Subject identification
@@ -39,7 +39,7 @@ help() {
   \t\033[38;5;197m-version\033[0m 	  : Print software version
 
   \033[38;5;141mUSAGE:\033[0m
-      \033[38;5;141m$(basename $0)\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+      \033[38;5;141m$(basename ${0})\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
   McGill University, MNI, MICA-lab, June, 2023
   https://github.com/MICA-MNI/micapipe
@@ -116,13 +116,13 @@ fi
 source "${MICAPIPE}/functions/utilities.sh"
 
 # Get the real path of the Inputs
-out=$(realpath $out)/micapipe_v0.2.0
-BIDS=$(realpath $BIDS)
+out=$(realpath "$out")/micapipe_v0.2.0
+BIDS=$(realpath "$BIDS")
 id=${id/sub-/}
 here=$(pwd)
 
 # Number of session (Default is "ses-pre")
-if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
+if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
@@ -143,15 +143,12 @@ Error "Wrong path to subject_dir, Did you forget to set the '-ses' flag (SINGLE 
 help; exit 1; fi
 
 # Variables
-parcellations=$(find ${dir_volum} -name "*.nii.gz" ! -name "*cerebellum*" ! -name "*subcortical*" | sort)
-workflow="${dir_QC}/${idBIDS}_desc-qc_micapipe_workflow.html"
-
-qc_jsons=$(ls ${subject_dir}/QC/${idBIDS}_module-*.json 2>/dev/null | wc -l)
+qc_jsons=$(ls "${subject_dir}/QC/${idBIDS}"_module-*.json 2>/dev/null | wc -l)
 if [[ "$qc_jsons" -lt 1 ]]; then exit; fi
 
 #------------------------------------------------------------------------------#
 Title "MICAPIPE: Creating a QC report for $idBIDS"
-Note "Modules processed:" $qc_jsons
+Note "Modules processed:" "$qc_jsons"
 Note "sub:" "$id"
 Note "out:" "$out"
 Note "bids:" "$BIDS"
@@ -167,14 +164,14 @@ aloita=$(date +%s)
 # Create files and png for QC
 # Create tmp dir
 tmpDir="${tmpDir}/${RANDOM}_micapipe_QC_${id}"
-if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
+if [ ! -d "${tmpDir}" ]; then Do_cmd mkdir -p "$tmpDir"; fi
 
 # TRAP in case the script fails
 nocleanup="FALSE"
 trap 'cleanup $tmpDir $nocleanup $here' SIGINT SIGTERM
 
 # Calculate everythin on a tmpDir dir
-cd $tmpDir
+cd "$tmpDir"
 
 Title "Generating necessary files for QC report"
 
@@ -183,7 +180,7 @@ Title "Generating necessary files for QC report"
 # -----------------------------------------------------------------------------------------------
 
 # PROC_STRUC ------------------------------------------------------------------------------------
-if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_structural.json ]; then
+if [ -f "${subject_dir}/QC/${idBIDS}"_module-proc_structural.json ]; then
   # T1w nativepro 5 tissue segmentation (5tt)
   Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
@@ -193,9 +190,9 @@ if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_structural.json ]; then
       T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
 
       if [[ ${mm} == 2 ]] ; then
-        transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==3{print $4}')
+        transformation=$(grep transformation "$xfm_proc_struc_json" | awk -F '"' 'NR==3{print $4}')
       else
-        transformation=$(grep transformation $xfm_proc_struc_json | awk -F '"' 'NR==1{print $4}')
+        transformation=$(grep transformation "$xfm_proc_struc_json" | awk -F '"' 'NR==1{print $4}')
       fi
       MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
       Do_cmd antsApplyTransforms -d 3 -v -u int -o "${T1w_in_MNI}" \
@@ -210,16 +207,16 @@ fi
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-if [  $( ls -d ${subject_dir}/QC/${idBIDS}_module-proc_func-*.json | wc -l ) -gt 0 ]; then
+if [  $( ls -d "${subject_dir}/QC/${idBIDS}"_module-proc_func-*.json | wc -l ) -gt 0 ]; then
 
-  func_acq=($(ls -d ${subject_bids}/func/*.nii.gz | awk -F 'func/' '{print $2}' | awk -F 'task-' '{print $2}' | awk -F '_' '{print "task-"$1}' | sort -u))
+  func_acq=($(ls -d "${subject_bids}"/func/*.nii.gz | awk -F 'func/' '{print $2}' | awk -F 'task-' '{print $2}' | awk -F '_' '{print "task-"$1}' | sort -u))
 
-  for func_scan in $(ls -d ${subject_bids}/func/${idBIDS}_${func_acq}*_bold.nii.gz); do
-    func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
+  for func_scan in $(ls -d "${subject_bids}/func/${idBIDS}_${func_acq}"*_bold.nii.gz); do
+    func_scan_mean=$(basename "$func_scan" | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"
   done
 
-  if [ -d ${subject_bids}/fmap/ ]; then
+  if [ -d "${subject_bids}"/fmap/ ]; then
     mainPhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*AP*.nii* 2>/dev/null))
     reversePhase_scan=($(ls "${subject_bids}/fmap/${idBIDS}"_*PA*.nii* 2>/dev/null))
   else
@@ -227,10 +224,10 @@ if [  $( ls -d ${subject_dir}/QC/${idBIDS}_module-proc_func-*.json | wc -l ) -gt
     reversePhase_scan=${bids_reversePhase[0]}
   fi
 
-  mainPhase_scan_mean=$(basename $mainPhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+  mainPhase_scan_mean=$(basename "$mainPhase_scan" | sed "s/.nii.gz/_mean.nii.gz/")
   Do_cmd fslmaths "${mainPhase_scan}" -Tmean "${tmpDir}/${mainPhase_scan_mean}"
 
-  reversePhase_scan_mean=$(basename $reversePhase_scan | sed "s/.nii.gz/_mean.nii.gz/")
+  reversePhase_scan_mean=$(basename "$reversePhase_scan" | sed "s/.nii.gz/_mean.nii.gz/")
   Do_cmd fslmaths "${reversePhase_scan}" -Tmean "${tmpDir}/${reversePhase_scan_mean}"
 
   export default_mainPhase=${bids_mainPhase[0]}
@@ -247,13 +244,13 @@ fi
 # -----------------------------------------------------------------------------------------------
 fod="${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 # PROC_DWI --------------------------------------------------------------------------------------
-if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
-  for dwi_scan in $(ls ${subject_bids}/dwi/${idBIDS}*.nii.gz); do
-      dwi_scan_mean=$(basename $dwi_scan | sed "s/.nii.gz/_mean.nii.gz/")
+if [ -f "${subject_dir}/QC/${idBIDS}"_module-proc_dwi.json ]; then
+  for dwi_scan in $(ls "${subject_bids}/dwi/${idBIDS}"*.nii.gz); do
+      dwi_scan_mean=$(basename "$dwi_scan" | sed "s/.nii.gz/_mean.nii.gz/")
       Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
   done
 
-  Do_cmd mrmath ${proc_dwi}/${idBIDS}_space-dwi_desc-preproc_dwi.mif mean ${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
+  Do_cmd mrmath "${proc_dwi}/${idBIDS}"_space-dwi_desc-preproc_dwi.mif mean "${tmpDir}/${idBIDS}"_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
 
   dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
@@ -264,11 +261,11 @@ if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_dwi.json ]; then
 fi
 
 # SC --------------------------------------------------------------------------------------------
-if [ $(ls ${subject_dir}/QC/${idBIDS}_module-SC-*.json 2>/dev/null | wc -l) -gt 0 ]; then
+if [ $(ls "${subject_dir}/QC/${idBIDS}"_module-SC-*.json 2>/dev/null | wc -l) -gt 0 ]; then
   if [ ! -f "${fod}" ]; then Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}"; fi
 
-  for tdi in $(ls ${proc_dwi}/${idBIDS}_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
-      tdi_mean=$(basename $tdi | sed "s/.nii.gz/_mean.nii.gz/")
+  for tdi in $(ls "${proc_dwi}/${idBIDS}"_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
+      tdi_mean=$(basename "$tdi" | sed "s/.nii.gz/_mean.nii.gz/")
       Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
   done
 fi
@@ -278,15 +275,15 @@ fi
 # -----------------------------------------------------------------------------------------------
 Title "Generating QC report"
 
-Do_cmd python "${MICAPIPE}"/functions/QC.py -sub ${subject} -out ${out} -bids ${BIDS} -ses ${SES/ses-/} -tmpDir ${tmpDir} -micapipe ${MICAPIPE}
+Do_cmd python "${MICAPIPE}"/functions/QC.py -sub "${subject}" -out "${out}" -bids "${BIDS}" -ses "${SES/ses-/}" -tmpDir "${tmpDir}" -micapipe "${MICAPIPE}"
 
-Info "Outputs: \n $(ls ${subject_dir}/QC/*pdf)"
+Info "Outputs: \n $(ls "${subject_dir}"/QC/*pdf)"
 # -----------------------------------------------------------------------------------------------
 # QC notification of completion
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
-eri=$(echo print $eri/60 | perl)
+eri=$(echo print "$eri"/60 | perl)
 
-Title "QC html creation ended in \033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m:
+Title "QC html creation ended in \033[38;5;220m $(printf "%0.3f\n" "${eri}") minutes \033[38;5;141m:
 \t\tOutput file path: $QC_html"
 cleanup "$tmpDir" "$nocleanup" "$here"

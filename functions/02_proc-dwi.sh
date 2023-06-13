@@ -56,7 +56,7 @@ Note "dwi_acq       :" "$dwi_str"
 Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
-Note "synth_reg:" ${synth_reg}
+Note "synth_reg     :" "${synth_reg}"
 Note "Processing    :" "$PROC"
 Note "Saving temporal dir     :" "$nocleanup"
 Note "ANTs and MRtrix will use: " "$threads threads"
@@ -377,7 +377,7 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
           Do_cmd dwibiascorrect ants "$dwi_corr" "$dwi_n4" -force -nthreads "$threads" -scratch "$tmp"
           Do_cmd mv "$dwi_n4" "$dwi_corr"
           Do_cmd mrinfo "$dwi_corr" -json_all "${dwi_corr/mif/json}"
-          json_dwipreproc $dwi_dns $dwi_corr ${proc_dwi}/${idBIDS}_desc-preproc_dwi.json ${rpe_dns}
+          json_dwipreproc "$dwi_dns" "$dwi_corr" "${proc_dwi}/${idBIDS}"_desc-preproc_dwi.json "${rpe_dns}"
           Do_cmd rm "$dwi_dns"
           # eddy_quad Quality Check
           Do_cmd cd "$tmp"/dwifslpreproc*
@@ -495,10 +495,10 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
           Info "Running label based non linear registrations"
           b0_synth="${tmp}/b0_synthsegGM.nii.gz"
           T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-          Do_cmd mri_synthseg --i "${T1nativepro_in_dwi}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
+          Do_cmd mri_synthseg --i "${T1nativepro_in_dwi}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
           Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
 
-          Do_cmd mri_synthseg --i "$dwi_b0" --o "${tmp}/b0_synthseg.nii.gz" --robust --threads $threads --cpu
+          Do_cmd mri_synthseg --i "$dwi_b0" --o "${tmp}/b0_synthseg.nii.gz" --robust --threads "$threads" --cpu
           Do_cmd fslmaths "${tmp}/b0_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/b0_synthseg.nii.gz" "${b0_synth}"
 
           # Affine from func to t1-nativepro
@@ -560,8 +560,8 @@ else
     Info "Subject ${id} has a registration from T1w_dwi-space to DWI"; Nsteps=$((Nsteps + 4)); N=$((N + 4))
 fi
 # Remove unused warped files
-Do_cmd rm -rf ${dir_warp}/*Warped.nii.gz 2>/dev/null
-proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_str_}.json" ${trans_T12dwi// /:} ${trans_dwi2T1// /:}
+Do_cmd rm -rf "${dir_warp}"/*Warped.nii.gz 2>/dev/null
+proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_str_}.json" "${trans_T12dwi// /:}" "${trans_dwi2T1// /:}"
 
 #------------------------------------------------------------------------------#
 # DTI-maps surface mapping

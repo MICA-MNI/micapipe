@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #apt-get install -y apt-transport-https software-properties-common build-essential
 #sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
 #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9

@@ -36,14 +36,14 @@ if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL
 fi
 
 # source utilities
-source $MICAPIPE/functions/utilities.sh
+source "$MICAPIPE"/functions/utilities.sh
 
 # Assigns variables names
 bids_variables "$BIDS" "$id" "$out" "$SES"
 
 # Setting Surface Directory from post_structural
 post_struct_json="${proc_struct}/${idBIDS}_post_structural.json"
-recon=$(grep SurfRecon ${post_struct_json} | awk -F '"' '{print $4}')
+recon=$(grep SurfRecon "${post_struct_json}" | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 #------------------------------------------------------------------------------#
@@ -75,8 +75,8 @@ function reg_surfaces(){
   if [[ ! -f "${outDir}/${idBIDS}_hemi-R_surf-fsaverage5_label-${morph_data}.func.gii" ]]; then
       for hemi in lh rh; do
         [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
-        HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
-        surf_id=${idBIDS}_hemi-${HEMICAP}_surf
+        HEMICAP=$(echo "$hemisphere" | tr [:lower:] [:upper:])
+        surf_id="${idBIDS}_hemi-${HEMICAP}_surf"
           # Convert native file to mgh and save in output directory
           Do_cmd mri_convert "${dataDir}/${hemi}.${morph_data} ${tmp_morph}/${surf_id}-fsnative_label-${morph_data}.mgh"
           Do_cmd mri_convert "${dataDir}/${hemi}.${morph_data} ${outDir}/${surf_id}-fsnative_label-${morph_data}.func.gii"
@@ -100,8 +100,8 @@ function reg_surfaces(){
       Info "Resampling ${morph_data} to ${Surf}"
       for hemi in lh rh; do
           [[ "$hemi" == lh ]] && hemisphere=l || hemisphere=r
-          HEMICAP=$(echo $hemisphere | tr [:lower:] [:upper:])
-          surf_id=${idBIDS}_hemi-${HEMICAP}_surf
+          HEMICAP=$(echo "$hemisphere" | tr [:lower:] [:upper:])
+          surf_id="${idBIDS}_hemi-${HEMICAP}"_surf
           Do_cmd wb_command -metric-resample \
               "${outDir}/${surf_id}-fsnative_label-${morph_data}.func.gii" \
               "${dir_conte69}/${surf_id}-fsnative_label-sphere.surf.gii" \
