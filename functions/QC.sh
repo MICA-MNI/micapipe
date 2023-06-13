@@ -150,7 +150,7 @@ qc_jsons=$(ls ${subject_dir}/QC/${idBIDS}_module-*.json 2>/dev/null | wc -l)
 if [[ "$qc_jsons" -lt 1 ]]; then exit; fi
 
 #------------------------------------------------------------------------------#
-Title "MICAPIPE: Creating a QC rport for $idBIDS"
+Title "MICAPIPE: Creating a QC report for $idBIDS"
 Note "Modules processed:" $qc_jsons
 Note "sub:" "$id"
 Note "out:" "$out"
@@ -210,8 +210,10 @@ fi
 # -----------------------------------------------------------------------------------------------
 
 # PROC_FUNC -------------------------------------------------------------------------------------
-func_acq=($(ls -d ${subject_bids}/func/*.nii.gz | awk -F 'func/' '{print $2}' | awk -F 'task-' '{print $2}' | awk -F '_' '{print "task-"$1}' | sort -u))
-if [ -f ${subject_dir}/QC/${idBIDS}_module-proc_func-*${func_acq}*.json ]; then
+if [  $( ls -d ${subject_dir}/QC/${idBIDS}_module-proc_func-*.json | wc -l ) -gt 0 ]; then
+
+  func_acq=($(ls -d ${subject_bids}/func/*.nii.gz | awk -F 'func/' '{print $2}' | awk -F 'task-' '{print $2}' | awk -F '_' '{print "task-"$1}' | sort -u))
+
   for func_scan in $(ls -d ${subject_bids}/func/${idBIDS}_${func_acq}*_bold.nii.gz); do
     func_scan_mean=$(basename $func_scan | sed "s/.nii.gz/_mean.nii.gz/")
     Do_cmd fslmaths "${func_scan}" -Tmean "${tmpDir}/${func_scan_mean}"

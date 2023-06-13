@@ -479,17 +479,17 @@ def qc_proc_surf(proc_surf_json=''):
     display.start()
     th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
     plot_hemispheres(surf_lh, surf_rh, array_name=th, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
+                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="rocket",transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
     # Native curvature
     cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
-    plot_hemispheres(wm_lh, wm_rh, array_name=cv, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap=ColCurv,transparent_bg=False,
+    plot_hemispheres(inf_lh, inf_lh, array_name=cv, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='cividis',transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_curv.png')
     # Native sulcal depth
     sd = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.sulc'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.sulc')), axis=0)
     plot_hemispheres(wm_lh, wm_rh, array_name=sd, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='cividis',transparent_bg=False,
+                     nan_color=(0, 0, 0, 1), color_range=(-5, 5), cmap='mako',transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_sulc.png')
     display.stop()
     native_surface_table = (
@@ -674,7 +674,7 @@ def qc_post_structural(post_structural_json=''):
     for feature in ['curv', 'thickness']:
 
         feature_title = 'Curvature' if feature=='curv' else 'Thickness'
-        feature_cmap = ColCurv if feature=='curv' else 'inferno'
+        feature_cmap = 'cividis' if feature=='curv' else 'rocket'
         feature_crange = (-0.2, 0.2) if feature=='curv' else (1.5,4)
 
         feature_fsn_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsnative_label-%s.func.gii"%(out,sub,ses,sbids,feature)
@@ -948,7 +948,7 @@ def qc_proc_dwi(proc_dwi_json=''):
             display = Display(visible=0, size=(900, 250))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='Spectral_r', transparent_bg=False,
+                             nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='mako', transparent_bg=False,
                              screenshot = True, offscreen=True, filename = measure_c69_32k_png)
             display.stop()
             dti_surf_table += (
@@ -1095,7 +1095,7 @@ def qc_proc_func(proc_func_json=''):
     display = Display(visible=0, size=(900, 250))
     display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Reds', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='rocket', color_range=(np.quantile(deg, 0.001), np.quantile(deg, 0.95)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
@@ -1148,7 +1148,7 @@ def qc_proc_func(proc_func_json=''):
                 display = Display(visible=0, size=(900, 750))
                 display.start()
                 plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                                 nan_color=(0, 0, 0, 1), cmap='Reds', layout_style='grid', transparent_bg=False,
+                                 nan_color=(0, 0, 0, 1), cmap='OrRd', layout_style='grid', transparent_bg=False,
                                  screenshot = True, offscreen=True, filename = deg_fig)
                 display.stop()
                 fc_connectome_table += (
@@ -1287,7 +1287,7 @@ def qc_sc(sc_json=''):
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap='BuPu', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.3), np.quantile(deg,0.9)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
         display.stop()
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
@@ -1435,7 +1435,7 @@ def qc_mpc(mpc_json=''):
     display = Display(visible=0, size=(900, 250))
     display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='mako', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='crest', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
 
     _static_block += (
@@ -1503,7 +1503,7 @@ def qc_mpc(mpc_json=''):
             display = Display(visible=0, size=(900, 750))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='mako', layout_style='grid', transparent_bg=False,
+                             nan_color=(0, 0, 0, 1), color_range='sym', cmap='crest', layout_style='grid', transparent_bg=False,
                              screenshot = True, offscreen=True, filename = deg_fig)
             display.stop()
 
@@ -1553,7 +1553,7 @@ def qc_gd(gd_json=''):
     display = Display(visible=0, size=(900, 250))
     display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='Blues', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='vlag', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
 
     _static_block += (
@@ -1609,7 +1609,7 @@ def qc_gd(gd_json=''):
             display = Display(visible=0, size=(900, 750))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=deg_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(1, 1, 1, 1), cmap='Blues', layout_style='grid', transparent_bg=False,
+                             nan_color=(1, 1, 1, 1), cmap='vlag', layout_style='grid', transparent_bg=False,
                              screenshot=True, filename=deg_fig)
             display.stop()
 
