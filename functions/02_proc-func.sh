@@ -429,8 +429,10 @@ if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     done
 
     # Run Tedana
+    GSR=0
     if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
+        GSR=1
         scans4tedana=($(ls ${tmp}/mainScan?_reo.nii.gz))
         Info "Apply motion correction to echos"
         for me in ${!scans4tedana[@]}; do
@@ -827,7 +829,7 @@ cleanTS="${func_surf}/${idBIDS}_surf-fsLR-32k_desc-timeseries_clean.shape.gii"
 if [[ ! -f "$cleanTS" ]]; then ((N++))
     Info "Running func post processing"
     labelDirectory="${MICAPIPE}/parcellations/"
-    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC"
+    Do_cmd python "$MICAPIPE"/functions/03_FC.py "$idBIDS" "$proc_func" "$labelDirectory" "$util_parcelations" "$dir_volum" "$performNSR" "$performGSR" "$func_lab" "$noFC" "$GSR"
     if [[ -f "$cleanTS" ]] ; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has post-processed fsLR time-series"; ((Nsteps++)); ((N++))

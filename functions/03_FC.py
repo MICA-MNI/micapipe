@@ -29,13 +29,16 @@ Generates multiple functional connectomes based on micapipe's provided parcellat
                     YES: 1, NO: 0. Performs Nuisance Signal Regression
 
     performGSR  :  int
-                    YES: 1, NO: 0. Perform global signal regression to the clean data
+                    YES: 1, NO: 0. Perform global signal regression and the full model to the clean data
 
     func_lab    :  str
                     Identifier of type of sequence multi/single echo.
 
-    noFC      :  str
+    noFC        :  str
                     [TRUE, FALSE]. If True skipps the functional connectomes generation.
+
+    gsr         :  int
+                    YES: 1, NO: 0. Perform global signal and spikes regression to the clean data (multi-echo).
 
 Created and modified from 2019 to 2022
 @author: A collaborative effort of the MICA lab  :D
@@ -60,6 +63,7 @@ performNSR = sys.argv[6]
 performGSR = sys.argv[7]
 func_lab = sys.argv[8]
 noFC = sys.argv[9]
+gsr = sys.argv[10]
 
 # check if surface directory exist; exit if false
 if os.path.isdir(funcDir+"/surf/"):
@@ -150,7 +154,7 @@ def expand_dim(Data):
     return Data
 
 # Function that calculates the regressed data
-def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
+def get_regressed_data(x_spike, Data, performNSR, performGSR, gsr, Data_name):
     """ Nuisance signal regression: spikes and (optional) WM/CSF:
         This function loads and generates the regression matrix according to the input parameters
         and returns the data corrected by the selected regresors (wm, csf, gs).
@@ -162,6 +166,7 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     Data : array
     performNSR : str (0,1)
     performGSR : str (0,1)
+    gsr : str (0,1)
 
     Return
     ------
@@ -193,6 +198,9 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
         elif performGSR == "1":
             print(Data_name + ' model : func ~ spikes + dof + wm + csf + gs')
             mdl = np.append(np.append(np.append(np.append(np.append(ones, spike, axis=1), dof, axis=1), wm, axis=1), csf, axis=1), gs, axis=1)
+        elif gsr == "1":
+            print(Data_name + ' model : func ~ spikes + gs')
+            mdl = np.append(np.append(ones, spike, axis=1), gs, axis=1)
         else:
             print(Data_name + 'Default model : func ~ spikes')
             mdl = np.append(ones, spike, axis=1)
@@ -201,12 +209,15 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
     else:
         ones = np.ones((wm.shape[0], 1))
         print('NO spikeRegressors_FD file, will skip loading: ' + Data_name)
-        if performNSR == 1:
+        if performNSR == "1":
             print(Data_name + ', model : func ~ dof + wm + csf')
             mdl = np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1)
-        elif performGSR == 1:
+        elif performGSR == "1":
             print(Data_name + ', model : func ~ dof + wm + csf + gs')
             mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
+        elif gsr == "1":
+            print(Data_name + ' model : func ~ spikes + gs')
+            mdl = np.append(np.append(ones, spike, axis=1), gs, axis=1)
         else:
             print(Data_name + ', model : none')
             mdl = ones
@@ -218,7 +229,7 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, Data_name):
 sctx_cereb = np.append(sctx, cereb, axis=1)
 del sctx
 del cereb
-sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR, 'sctx_cereb')
+sctx_cereb_corr = get_regressed_data(x_spike, sctx_cereb, performNSR, performGSR, gsr, 'sctx_cereb')
 
 # ------------------------------------------
 #     C O R T E X  processing
@@ -245,7 +256,7 @@ del lh_data
 del rh_data
 
 # correlation matrices
-data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
+data_corr = get_regressed_data(x_spike, data, performNSR, performGSR, gsr, 'fsLR')
 
 # save spike regressed and concatenanted timeseries (subcortex, cerebellum, cortex)
 save_gii(data_corr, funcDir+'/surf/'+subject+'_surf-fsLR-32k_desc-timeseries_clean.shape.gii')
@@ -305,7 +316,7 @@ data = np.append(lh_data, rh_data, axis=1)
 n_vertex_ctx = data.shape[1]
 del lh_data
 del rh_data
-ts = get_regressed_data(x_spike, data, performNSR, performGSR, 'fsLR')
+ts = get_regressed_data(x_spike, data, performNSR, performGSR, gsr, 'fsLR')
 ts_r = np.corrcoef(np.transpose(ts))
 ts_r = np.triu(ts_r)
 save_gii(ts_r, funcDir+'/surf/'+subject+'_surf-fsLR-5k_desc-FC.shape.gii')
