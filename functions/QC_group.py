@@ -175,9 +175,8 @@ def plot_connectome(mtx, Title='matrix plot', xlab='X', ylab='Y', col='rocket', 
     mtx : np.array
     Returns
     -------
-    f : plot
     '''
-    f, ax = plt.subplots(figsize=(15,10))
+    ax = plt.subplots(figsize=(15,10))
     g = sns.heatmap(mtx, ax=ax, cmap=col, vmin=vmin, vmax=vmax, xticklabels=xticklabels, yticklabels=yticklabels)
     g.set_xlabel(xlab)
     g.set_ylabel(ylab)
@@ -293,7 +292,7 @@ else:
 jsons = sorted(glob.glob(out+'/'+dir_str+'/QC/*json'))
 
 # Sort the JSON files by creation time (newest at the bottom)
-jsons = sorted(jsons, key=lambda x: os.path.getctime(x))
+jsons = sorted(jsons, key=os.path.getctime)
 
 # Define the keys to extract from each JSON file
 keys_to_extract = ['Subject', 'Session', 'Module', 'Status', 'Progress', 'User', 'Workstation', 'Date', 'Processing.time', 'Processing', 'micapipeVersion', 'Threads']
@@ -610,7 +609,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
         Nth=np.concatenate((nb.load(lh_files[0]).darrays[0].data, nb.load(rh_files[0]).darrays[0].data), axis=0).shape[0]
 
         surf_map=np.empty([len(lh_files), Nth], dtype=float)
-        for i, f in enumerate(lh_files):
+        for i, _ in enumerate(lh_files):
             #print(f)
             surf_map[i,:] = np.hstack(np.concatenate((nb.load(lh_files[i]).darrays[0].data, nb.load(rh_files[i]).darrays[0].data), axis=0))
         # Mean matrix across the x axis (vertices)
