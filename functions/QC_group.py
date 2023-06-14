@@ -883,7 +883,7 @@ def qc_group():
         acq_qmri=acq.replace('acq-','')
         print( f'   MPC id: MPC-{acq_qmri}')
         _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii',
-                                  f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', 'MPC-'+acq_qmri, 'crest', quantile=(0.01, 0.99))
+                                  f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-midthickness_{acq_qmri}.func.gii', 'MPC-'+acq_qmri, 'crest_r', quantile=(0.01, 0.99))
 
     # Vertex-wise flair
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-midthickness_flair.func.gii',
@@ -915,7 +915,7 @@ def qc_group():
     for acq in get_acqs('mpc'):
         acq_qmri=acq.replace('acq-','')
         print( f'   MPC id: MPC-{acq_qmri}')
-        _static_block += report_roi_similarity(out, f'{dir_str}/mpc/'+acq+'/*_atlas-schaefer-400_desc-MPC.shape.gii', 'MPC-'+acq_qmri, 'crest', load_mpc)
+        _static_block += report_roi_similarity(out, f'{dir_str}/mpc/'+acq+'/*_atlas-schaefer-400_desc-MPC.shape.gii', 'MPC-'+acq_qmri, 'crest_r', load_mpc)
 
     print( 'Done')
     return _static_block
