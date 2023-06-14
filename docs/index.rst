@@ -25,7 +25,7 @@
   :target: https://github.com/MICA-MNI/micapipe
   :alt: version
 
-.. image:: https://img.shields.io/github/license/MICA-MNI/micapipe
+.. image:: https://img.shields.io/github/license/MICA-MNI/micapipe?color=blue
   :target: https://www.gnu.org/licenses/gpl-3.0
   :alt: License: GPL v3
 
@@ -41,7 +41,7 @@
   :target: https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade
   :alt: Codacy Badge
 
-.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe
+.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe?color=brightgreen
   :target: https://github.com/MICA-MNI/micapipe/stargazers
   :alt: GitHub stars
 
@@ -53,7 +53,7 @@
   :target: https://hub.docker.com/r/micalab/micapipe
   :alt: Docker Pulls
 
-.. image:: https://img.shields.io/docker/v/micalab/micapipe?color=orange&label=docker%20version
+.. image:: https://img.shields.io/docker/v/micalab/micapipe?color=blue&label=docker%20version
   :target: https://hub.docker.com/r/micalab/micapipe
   :alt: Docker Image Version (latest by date)
 
