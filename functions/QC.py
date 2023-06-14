@@ -343,7 +343,7 @@ def cmap_gradient(N, base_cmaps=['inferno', 'Dark2', 'Set1', 'Set2']):
 
     # we go from 0.2 to 0.8 below to avoid having several whites and blacks in the resulting cmaps
     colors = np.concatenate([pltpy.get_cmap(name)(np.linspace(0,1,N)) for name in base_cmaps])
-    cmap = plt.colors.ListedColormap(colors)
+    cmap = plt.colors.ListedColormap(colors.tolist())
     return cmap
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
@@ -479,7 +479,7 @@ def qc_proc_surf(proc_surf_json=''):
     display.start()
     th = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.thickness'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.thickness')), axis=0)
     plot_hemispheres(surf_lh, surf_rh, array_name=th, size=dsize, color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="rocket",transparent_bg=False,
+                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno",transparent_bg=False,
                      screenshot = True, offscreen=True, filename = tmpDir + '/' + sbids + '_space-fsnative_desc-surf_thickness.png')
     # Native curvature
     cv = np.concatenate((nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/lh.curv'), nb.freesurfer.read_morph_data(surfaceDir + '/' + sbids + '/surf/rh.curv')), axis=0)
@@ -944,7 +944,7 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s.func.gii"%(out,sub,ses,sbids,surface,measure)
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
-            measure_crange=(np.quantile(f, 0.1), np.quantile(f, 0.98))
+            measure_crange=(np.quantile(f, 0.01), np.quantile(f, 0.98))
             display = Display(visible=0, size=(900, 250))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1287,7 +1287,7 @@ def qc_sc(sc_json=''):
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.3), np.quantile(deg,0.9)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.25), np.quantile(deg,0.9)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
         display.stop()
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
@@ -1435,7 +1435,7 @@ def qc_mpc(mpc_json=''):
     display = Display(visible=0, size=(900, 250))
     display.start()
     plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='crest', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                     nan_color=(0, 0, 0, 1), cmap='crest_r', color_range='sym', transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
     display.stop()
 
     _static_block += (
