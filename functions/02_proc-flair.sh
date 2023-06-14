@@ -21,7 +21,7 @@ flairScanStr=$8
 synth_reg=$9
 PROC=${10}
 here=$(pwd)
-
+export OMP_NUM_THREADS="${threads}"
 
 #------------------------------------------------------------------------------#
 # qsub configuration
@@ -83,7 +83,7 @@ export SUBJECTS_DIR=${dir_surf}
 
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_flair_${idBIDS}"
-Do_cmd mkdir -p "$tmp"
+umask 000; mkdir -m 777 -p "$tmp"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -159,13 +159,13 @@ if [[ ! -f "$flairNP" ]]; then ((N++))
 
     # binarize mask
     t1_gmwmi_in_flair_thr="${tmp}/${idBIDS}_space-flair_desc-gmwmi-thr.nii.gz"
-    fslmaths "$t1_gmwmi_in_flair" -thr 0.5 -bin "$t1_gmwmi_in_flair_thr"
+    Do_cmd fslmaths "$t1_gmwmi_in_flair" -thr 0.5 -bin "$t1_gmwmi_in_flair_thr"
 
     # compute mean flair intensity in non-zero voxels
     gmwmi_mean=$(fslstats "$flair_rescale" -M -k "$t1_gmwmi_in_flair_thr")
 
     # Normalize flair
-    fslmaths "$flair_rescale" -div "$gmwmi_mean" "$flair_preproc"
+    Do_cmd fslmaths "$flair_rescale" -div "$gmwmi_mean" "$flair_preproc"
 
     ((Nsteps++))
 else
