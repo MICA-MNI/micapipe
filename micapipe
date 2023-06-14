@@ -1019,7 +1019,7 @@ fi
 if [ "$qcsubj" = "TRUE" ]; then
   rand=${RANDOM}
   log_file_str=$dir_logs/qc_subj_$(date +'%d-%m-%Y')"-${rand}"
-  COMMAND="${scriptDir}/QC.sh -sub $id -ses "${SES}" -out ${out/\/micapipe_v0.2.0/} -bids $BIDS -tmpDir $tmpDir -PROC -threads $threads"
+  COMMAND="${scriptDir}/QC.sh -sub $id -ses "${SES}" -out ${out/\/micapipe_v0.2.0/} -bids $BIDS -tmpDir $tmpDir -threads $threads -PROC"
   jobName="q${rand}_qc"
   # mica.q - Subject QC
   if [[ $micaq == "TRUE" ]]; then
