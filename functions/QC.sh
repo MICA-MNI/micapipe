@@ -34,6 +34,7 @@ help() {
   \t\033[38;5;120m-ses <str>\033[0m 	  : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
 
   \033[38;5;141mOPTIONS:\033[0m
+  \t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
   \t\033[38;5;197m-h|-help\033[0m          : Print help
   \t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
   \t\033[38;5;197m-version\033[0m 	  : Print software version
@@ -82,6 +83,10 @@ do
     tmpDir=$2
     shift;shift;
   ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
   -PROC)
     PROC=$2
     shift;shift;
@@ -113,7 +118,15 @@ else
   # Source utilities functions from MICAPIPE
   MICAPIPE=$(dirname $(dirname $(realpath "$0")))
 fi
+
+# Source functions
 source "${MICAPIPE}/functions/utilities.sh"
+
+# Force micapipe conda env if container == TRUE
+if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then source activate micapipe; fi
+
+# Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
+if [[ -z $threads ]]; then export threads=6; fi
 
 # Get the real path of the Inputs
 out=$(realpath "$out")/micapipe_v0.2.0
@@ -155,7 +168,7 @@ Note "bids:" "$BIDS"
 Note "ses:" "$SES"
 Note "PROC:" "${PROC}"
 Note "MICAPIPE:" "${MICAPIPE}"
-Note "conda" "$(conda info --env | grep '*' | awk '{print $2}')"
+Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
 Note "tmpDir" "${tmpDir}"
 #	Timer
 aloita=$(date +%s)
@@ -250,23 +263,23 @@ if [ -f "${subject_dir}/QC/${idBIDS}"_module-proc_dwi.json ]; then
       Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
   done
 
-  Do_cmd mrmath "${proc_dwi}/${idBIDS}"_space-dwi_desc-preproc_dwi.mif mean "${tmpDir}/${idBIDS}"_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3
+  Do_cmd mrmath "${proc_dwi}/${idBIDS}"_space-dwi_desc-preproc_dwi.mif mean "${tmpDir}/${idBIDS}"_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3 -nthreads "${threads}"
 
   dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 
-  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}" -force
+  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}" -force -nthreads "${threads}"
 
   dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
-  Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force
+  Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force -nthreads "${threads}"
 fi
 
 # SC --------------------------------------------------------------------------------------------
 if [ $(ls "${subject_dir}/QC/${idBIDS}"_module-SC-*.json 2>/dev/null | wc -l) -gt 0 ]; then
-  if [ ! -f "${fod}" ]; then Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}"; fi
+  if [ ! -f "${fod}" ]; then Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2 "${fod}" -nthreads "${threads}"; fi
 
   for tdi in $(ls "${proc_dwi}/${idBIDS}"_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
       tdi_mean=$(basename "$tdi" | sed "s/.nii.gz/_mean.nii.gz/")
-      Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3
+      Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3 -nthreads "${threads}"
   done
 fi
 
