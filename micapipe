@@ -703,7 +703,7 @@ aloita=$(date +%s)
 if [ ! -d "${out}" ]; then Do_cmd mkdir -m 770 -p "$out"; fi
 
 # Create tmp dir
-if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -p $tmpDir; fi
+if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -m 770 -p $tmpDir; fi
 
 # -----------------------------------------------------------------------------------------------#
 #   subject_dir
