@@ -133,7 +133,7 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then
           Info "FastSurfer: running fastsurfer_cpu environment"
           source activate fastsurfer_cpu
-          Note "conda" "$(conda info --env | grep '*' | awk '{print $1}')"
+          Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
           run_fastsurfer.sh --allow_root \
            --fs_license "${fs_licence}" \
            --t1 "${t1_2proc}" \
