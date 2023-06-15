@@ -417,6 +417,7 @@ function func_topup() {
 #------------------------------------------------------------------------------#
 # Begining of the REAL processing
 status="INCOMPLETE"
+GSR=0
 # Processing fMRI acquisitions.
 if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     # Reorient and motion correct main(s) fMRI
@@ -429,7 +430,6 @@ if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
     done
 
     # Run Tedana
-    GSR=0
     if [[ ${acq} == "me" ]]; then
         Info "Multiecho fMRI acquisition will be process with tedana"
         GSR=1
