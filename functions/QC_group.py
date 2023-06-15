@@ -628,7 +628,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
         display.stop()
         # Calculate the similarity matrix
         if len(lh_files) == 1:
-            indices = 0
+            indices = []
         else:
             ## correlation matrix
             corr = np.corrcoef(surf_map)
@@ -714,7 +714,7 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
         display.stop()
         # Calculate the similarity matrix
         if len(files) == 1:
-            indices = 0
+            indices = []
         else:
             ## correlation matrix
             corr = np.corrcoef(np.mean(mtxs, axis=1).T)
