@@ -461,7 +461,7 @@ fig, ax = plt.subplots(figsize=(8, 6))
 module_progress_sorted.plot.barh(ax=ax, color=Spectral(module_progress_sorted))
 
 # set the x and y axis labels and title
-ax.set_xlabel('Completition percentage (total/processed)')
+ax.set_xlabel('Completition percentage (processed/total)')
 ax.set_title('Completition status by module')
 
 # Save the figure as a PNG file
