@@ -700,10 +700,10 @@ fi
 aloita=$(date +%s)
 
 # micapipe working Directory
-if [ ! -d "${out}" ]; then Do_cmd mkdir -m 770 -p "$out"; fi
+if [ ! -d "${out}" ]; then Do_cmd mkdir -m 777 -p "$out"; fi
 
 # Create tmp dir
-if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -m 770 -p $tmpDir; fi
+if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -m 777 -p $tmpDir; fi
 
 # -----------------------------------------------------------------------------------------------#
 #   subject_dir
@@ -964,7 +964,7 @@ if [ "$postDWI" = "TRUE" ]; then
         Warning "This option only works on the MICA workstations"
         export PROC="qsub-MICA"
         # Info "Setting a warper to run on mica.q"
-        qsub -q mica.q -pe smp 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q mica.q -pe smp $threads -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     # all.q - post-DWI processing (tractography)
     elif [[ $qall == "TRUE" ]]; then
@@ -972,7 +972,7 @@ if [ "$postDWI" = "TRUE" ]; then
         Warning "This option only works on the McGill BIC network"
         export PROC="qsub-all.q"
         # Info "Setting a warper to run on all.q"
-        qsub -q all.q -pe all.pe 20-40 -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
+        qsub -q all.q -pe all.pe $threads -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
              $COMMAND $PROC
     else
         # LOCAL - post-DWI processing (tractography)
