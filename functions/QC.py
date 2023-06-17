@@ -141,12 +141,15 @@ MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
-if ses == "":
-    ses_number = "Not defined"
+print(ses)
+if ses == "" or ses == "SINGLE":
+    ses_number = "SINGLE"
+    subj_dir = "%s/%s"%(out,sub)
     sbids = sub
 else:
     ses_number = ses
     ses = "ses-" + ses_number
+    subj_dir = "%s/%s/%s"%(out,sub,ses)
     sbids = sub + "_" + ses
 
 derivatives = out.split('/micapipe_v0.2.0')[0]
@@ -393,7 +396,7 @@ def qc_proc_structural(proc_structural_json=''):
             '<b>Inputs</b> </p>'
     )
 
-    nativepro_json = os.path.realpath("%s/%s/%s/anat/%s_space-nativepro_T1w.json"%(out,sub,ses,sbids))
+    nativepro_json = os.path.realpath("%s/anat/%s_space-nativepro_T1w.json"%(subj_dir,sbids))
     with open( nativepro_json ) as f:
         nativepro_json = json.load(f)
 
@@ -409,12 +412,12 @@ def qc_proc_structural(proc_structural_json=''):
             '<b>Main outputs </b> </p>'
     )
 
-    T1w_nativepro = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    T1w_nativepro = "%s/anat/%s_space-nativepro_T1w.nii.gz"%(subj_dir,sbids)
 
     figPath = "%s/nativepro_T1w_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="T1w nativepro", outPath=T1w_nativepro, figPath=figPath)
 
-    outPath = "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/anat/%s_space-nativepro_T1w_brain_mask.nii.gz"%(subj_dir,sbids)
     figPath = "%s/nativepro_T1w_brain_mask_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="T1w nativepro brain mask", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
@@ -432,7 +435,7 @@ def qc_proc_structural(proc_structural_json=''):
     figPath = "%s/nativepro_T1w_brain_mni152_2_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 2mm", outPath=MNI152_2mm, refPath=outPath, figPath=figPath)
 
-    outPath =  "%s/%s/%s/anat/%s_space-nativepro_T1w_brain_pve_2.nii.gz"%(out,sub,ses,sbids)
+    outPath =  "%s/anat/%s_space-nativepro_T1w_brain_pve_2.nii.gz"%(subj_dir,sbids)
     figPath = "%s/nativepro_T1w_brain_pve_2_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Partial volume: white matter", outPath=outPath, figPath=figPath)
 
@@ -514,7 +517,7 @@ def qc_proc_surf(proc_surf_json=''):
     )
 
 
-    surf_json = os.path.realpath("%s/%s/%s/surf/%s_proc_surf-%s.json"%(out,sub,ses,sbids,processing))
+    surf_json = os.path.realpath("%s/surf/%s_proc_surf-%s.json"%(subj_dir,sbids,processing))
     with open( surf_json ) as f:
         surf_description = json.load(f)
     recon = surf_description["SurfRecon"]
@@ -526,7 +529,7 @@ def qc_proc_surf(proc_surf_json=''):
 ## ------------------------- POST-STRUCTURAL MODULE ------------------------ ##
 def qc_post_structural(post_structural_json=''):
 
-    post_struct_json = os.path.realpath("%s/%s/%s/anat/%s_post_structural.json"%(out,sub,ses,sbids))
+    post_struct_json = os.path.realpath("%s/anat/%s_post_structural.json"%(subj_dir,sbids))
     with open( post_struct_json ) as f:
         post_struct_description = json.load(f)
     recon = post_struct_description["SurfRecon"]
@@ -554,17 +557,17 @@ def qc_post_structural(post_structural_json=''):
 
     # Regitration/atlases
     outPath = post_struct_description["NativeSurfSpace"]["fileName"]
-    refPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
+    refPath = "%s/anat/%s_space-fsnative_T1w.nii.gz"%(subj_dir,sbids)
     figPath = "%s/nativepro_T1w_fsnative_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: T1w nativepro in %s native space"%(recon), outPath=outPath, refPath=refPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/parc/%s_space-nativepro_T1w_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
-    refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/parc/%s_space-nativepro_T1w_atlas-cerebellum.nii.gz"%(subj_dir,sbids)
+    refPath = "%s/anat/%s_space-nativepro_T1w.nii.gz"%(subj_dir,sbids)
     figPath = "%s/nativepro_T1w_cerebellum_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="T1w nativepro cerebellum atlas", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
-    outPath = "%s/%s/%s/parc/%s_space-nativepro_T1w_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
-    refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/parc/%s_space-nativepro_T1w_atlas-subcortical.nii.gz"%(subj_dir,sbids)
+    refPath = "%s/anat/%s_space-nativepro_T1w.nii.gz"%(subj_dir,sbids)
     figPath = "%s/nativepro_T1w_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="T1w nativepro subcortical atlas", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
@@ -580,7 +583,7 @@ def qc_post_structural(post_structural_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Surface labels</b></td></tr>'
     )
 
-    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
     annot_dir = os.path.realpath(surfaceDir+'/'+sbids+'/label/')
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
@@ -616,7 +619,7 @@ def qc_post_structural(post_structural_json=''):
         '<b> Surfaces </b> </p>'
     )
 
-    surf_dir = "%s/%s/%s/surf/"%(out,sub,ses)
+    surf_dir = "%s/surf/"%(subj_dir)
     for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']):
         lhM, rhM = load_surface(surf_dir+sbids+'_hemi-L_space-nativepro_surf-'+surf+'_label-midthickness.surf.gii',
                                 surf_dir+sbids+'_hemi-R_space-nativepro_surf-'+surf+'_label-midthickness.surf.gii', with_normals=True, join=False)
@@ -677,32 +680,32 @@ def qc_post_structural(post_structural_json=''):
         feature_cmap = 'cividis' if feature=='curv' else 'rocket'
         feature_crange = (-0.2, 0.2) if feature=='curv' else (1.5,4)
 
-        feature_fsn_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsnative_label-%s.func.gii"%(out,sub,ses,sbids,feature)
-        feature_fsn_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsnative_label-%s.func.gii"%(out,sub,ses,sbids,feature)
+        feature_fsn_lh = "%s/maps/%s_hemi-L_surf-fsnative_label-%s.func.gii"%(subj_dir,sbids,feature)
+        feature_fsn_rh = "%s/maps/%s_hemi-R_surf-fsnative_label-%s.func.gii"%(subj_dir,sbids,feature)
         feature_fsn_png = "%s/%s_surf-fsnative_label-%s.png"%(tmpDir,sbids,feature)
         f = np.concatenate((nb.load(feature_fsn_lh).darrays[0].data, nb.load(feature_fsn_rh).darrays[0].data), axis=0)
         plot_hemispheres(inf_lh, inf_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
                          screenshot = True, offscreen=True, filename = feature_fsn_png)
 
-        feature_fs5_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsaverage5_label-%s.func.gii"%(out,sub,ses,sbids,feature)
-        feature_fs5_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsaverage5_label-%s.func.gii"%(out,sub,ses,sbids,feature)
+        feature_fs5_lh = "%s/maps/%s_hemi-L_surf-fsaverage5_label-%s.func.gii"%(subj_dir,sbids,feature)
+        feature_fs5_rh = "%s/maps/%s_hemi-R_surf-fsaverage5_label-%s.func.gii"%(subj_dir,sbids,feature)
         feature_fs5_png = "%s/%s_surf-fsaverage5_label-%s.png"%(tmpDir,sbids,feature)
         f = np.concatenate((nb.load(feature_fs5_lh).darrays[0].data, nb.load(feature_fs5_rh).darrays[0].data), axis=0)
         plot_hemispheres(fs5I_lh, fs5I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
                          screenshot = True, offscreen=True, filename = feature_fs5_png)
 
-        feature_c69_5k_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsLR-5k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
-        feature_c69_5k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-5k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
+        feature_c69_5k_lh = "%s/maps/%s_hemi-L_surf-fsLR-5k_label-%s.func.gii"%(subj_dir,sbids,feature)
+        feature_c69_5k_rh = "%s/maps/%s_hemi-R_surf-fsLR-5k_label-%s.func.gii"%(subj_dir,sbids,feature)
         feature_c69_5k_png = "%s/%s_surf-fsLR-5k_label-%s.png"%(tmpDir,sbids,feature)
         f = np.concatenate((nb.load(feature_c69_5k_lh).darrays[0].data, nb.load(feature_c69_5k_rh).darrays[0].data), axis=0)
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=feature_crange, cmap=feature_cmap, transparent_bg=False,
                          screenshot = True, offscreen=True, filename = feature_c69_5k_png)
 
-        feature_c69_32k_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
-        feature_c69_32k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s.func.gii"%(out,sub,ses,sbids,feature)
+        feature_c69_32k_lh = "%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s.func.gii"%(subj_dir,sbids,feature)
+        feature_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s.func.gii"%(subj_dir,sbids,feature)
         feature_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s.png"%(tmpDir,sbids,feature)
         f = np.concatenate((nb.load(feature_c69_32k_lh).darrays[0].data, nb.load(feature_c69_32k_rh).darrays[0].data), axis=0)
         plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -746,7 +749,7 @@ def qc_proc_flair(proc_flair_json=''):
     # QC summary
     _static_block += report_qc_summary_template(proc_flair_json)
 
-    preproc_flair_json = os.path.realpath("%s/%s/%s/maps/%s_space-nativepro_map-flair.json"%(out,sub,ses,sbids))
+    preproc_flair_json = os.path.realpath("%s/maps/%s_space-nativepro_map-flair.json"%(subj_dir,sbids))
     with open( preproc_flair_json ) as f:
         preproc_flair_json = json.load(f)
 
@@ -770,7 +773,7 @@ def qc_proc_flair(proc_flair_json=''):
     )
 
     outPath = preproc_flair_json["fileName"]
-    refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    refPath = "%s/anat/%s_space-nativepro_T1w.nii.gz"%(subj_dir,sbids)
     figPath = "%s/flair_nativepro_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: FLAIR in T1w nativepro space", outPath=outPath, refPath=refPath, figPath=figPath)
 
@@ -783,8 +786,8 @@ def qc_proc_flair(proc_flair_json=''):
         '<table style="border:1px solid #666;width:100%">'
     )
     for i, surf in enumerate(['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']):
-        flair_lh = nb.load('%s/%s/%s/maps/%s_hemi-L_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
-        flair_rh = nb.load('%s/%s/%s/maps/%s_hemi-R_surf-%s_label-midthickness_flair.func.gii'%(out,sub,ses,sbids,surf)).darrays[0].data
+        flair_lh = nb.load('%s/maps/%s_hemi-L_surf-%s_label-midthickness_flair.func.gii'%(subj_dir,sbids,surf)).darrays[0].data
+        flair_rh = nb.load('%s/maps/%s_hemi-R_surf-%s_label-midthickness_flair.func.gii'%(subj_dir,sbids,surf)).darrays[0].data
         flair = np.concatenate((flair_lh, flair_rh), axis=0)
         flair_fig = tmpDir + '/' + sbids + '_space-nativepro_surf-' + surf + '_label-midthickness_flair.png'
         if surf == 'fsnative':
@@ -832,7 +835,7 @@ def qc_proc_dwi(proc_dwi_json=''):
     if not check_json_complete(proc_dwi_json):
         return _static_block
 
-    preproc_dwi_json = os.path.realpath("%s/%s/%s/dwi/%s_desc-preproc_dwi.json"%(out,sub,ses,sbids))
+    preproc_dwi_json = os.path.realpath("%s/dwi/%s_desc-preproc_dwi.json"%(subj_dir,sbids))
     with open( preproc_dwi_json ) as f:
         preproc_dwi_json = json.load(f)
 
@@ -881,7 +884,7 @@ def qc_proc_dwi(proc_dwi_json=''):
 
     _static_block += dwiflspreproc_table
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_desc-b0.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_desc-b0.nii.gz"%(subj_dir,sbids)
     figPath = "%s/%s_space-dwi_desc-b0.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="DWI b0 pre-processed", outPath=outPath, figPath=figPath)
 
@@ -893,17 +896,17 @@ def qc_proc_dwi(proc_dwi_json=''):
     figPath = "%s/%s_space-dwi_model-CSD_map-FOD_desc-wmNorm.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="White matter fibre orientation (FOD)", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_model-DTI_map-ADC.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_model-DTI_map-ADC.nii.gz"%(subj_dir,sbids)
     figPath = "%s/%s_space-dwi_model-DTI_map-ADC.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="DTI apparent diffusion coefficient (ADC)", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_model-DTI_map-FA.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_model-DTI_map-FA.nii.gz"%(subj_dir,sbids)
     figPath = "%s/%s_space-dwi_model-DTI_map-FA.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="DTI fractional anisotropy (FA)", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_desc-T1w_nativepro_SyN.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_desc-T1w_nativepro_SyN.nii.gz"%(subj_dir,sbids)
     if not os.path.isfile(outPath):
-        outPath = "%s/%s/%s/dwi/%s_space-dwi_desc-T1w_nativepro_Affine.nii.gz"%(out,sub,ses,sbids)
+        outPath = "%s/dwi/%s_space-dwi_desc-T1w_nativepro_Affine.nii.gz"%(subj_dir,sbids)
     refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
     figPath = "%s/t1w_dwi_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: T1w in DWI space", outPath=outPath, refPath=refPath, figPath=figPath)
@@ -912,16 +915,16 @@ def qc_proc_dwi(proc_dwi_json=''):
     figPath = "%s/%s_space-dwi_desc-5tt.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="5 tissue segmentation (5TT) in DWI space", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_desc-gmwmi-mask.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_desc-gmwmi-mask.nii.gz"%(subj_dir,sbids)
     figPath = "%s/%s_space-dwi_gmwmi-mask.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="Gray-white matter interface (GMWMI) in DWI space", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_atlas-cerebellum.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_atlas-cerebellum.nii.gz"%(subj_dir,sbids)
     refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
     figPath = "%s/DWI_cerebellum_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Cerebellum atlas in DWI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
-    outPath = "%s/%s/%s/dwi/%s_space-dwi_atlas-subcortical.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/dwi/%s_space-dwi_atlas-subcortical.nii.gz"%(subj_dir,sbids)
     refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
     figPath = "%s/DWI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in DWI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
@@ -940,8 +943,8 @@ def qc_proc_dwi(proc_dwi_json=''):
          ).format(measure=measure)
 
         for surface in ['midthickness', 'white']:
-            measure_c69_32k_lh = "%s/%s/%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s_%s.func.gii"%(out,sub,ses,sbids,surface,measure)
-            measure_c69_32k_rh = "%s/%s/%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s.func.gii"%(out,sub,ses,sbids,surface,measure)
+            measure_c69_32k_lh = "%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s_%s.func.gii"%(subj_dir,sbids,surface,measure)
+            measure_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s.func.gii"%(subj_dir,sbids,surface,measure)
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
             measure_crange=(np.quantile(f, 0.01), np.quantile(f, 0.98))
@@ -978,7 +981,7 @@ def qc_proc_func(proc_func_json=''):
     if not check_json_complete(proc_func_json):
         return _static_block
 
-    func_clean_json = glob.glob("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(out,sub,ses,tag,sbids))[0]
+    func_clean_json = glob.glob("%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(subj_dir,tag,sbids))[0]
     with open( func_clean_json ) as f:
         func_clean_json = json.load(f)
     acquisition = func_clean_json["Acquisition"]
@@ -1023,7 +1026,7 @@ def qc_proc_func(proc_func_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    clean_json = os.path.realpath("%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(out,sub,ses,tag,sbids,acquisition))
+    clean_json = os.path.realpath("%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(subj_dir,tag,sbids,acquisition))
     with open( clean_json ) as f:
         clean_json = json.load(f)
 
@@ -1050,31 +1053,31 @@ def qc_proc_func(proc_func_json=''):
 
     _static_block += fmripreproc_table
 
-    outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(subj_dir,tag,sbids,acquisition)
     figPath = "%s/func_brain_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="fMRI brain", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/anat/%s_space-nativepro_desc-%s_mean.nii.gz"%(out,sub,ses,sbids,tag)
-    refPath = "%s/%s/%s/anat/%s_space-nativepro_T1w.nii.gz"%(out,sub,ses,sbids)
+    outPath = "%s/anat/%s_space-nativepro_desc-%s_mean.nii.gz"%(subj_dir,sbids,tag)
+    refPath = "%s/anat/%s_space-nativepro_T1w.nii.gz"%(subj_dir,sbids)
     figPath = "%s/fmri_nativepro_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: fMRI in T1w nativepro space", outPath=outPath, refPath=refPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-T1w.nii.gz"%(out,sub,ses,tag,sbids)
-    refPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-T1w.nii.gz"%(subj_dir,tag,sbids)
+    refPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(subj_dir,tag,sbids,acquisition)
     figPath = "%s/nativepro_T1w_fmri_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: T1w nativepro in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath)
 
-    outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_cerebellum.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
-    refPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_cerebellum.nii.gz"%(subj_dir,tag,sbids,acquisition)
+    refPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(subj_dir,tag,sbids,acquisition)
     figPath = "%s/fMRI_cerebellum_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Cerebellum atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
-    outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_subcortical.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
-    refPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(out,sub,ses,tag,sbids,acquisition)
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_subcortical.nii.gz"%(subj_dir,tag,sbids,acquisition)
+    refPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_brain.nii.gz"%(subj_dir,tag,sbids,acquisition)
     figPath = "%s/fMRI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
-    outPath = "%s/%s/%s/func/desc-%s/volumetric/%s_space-func_desc-%s_framewiseDisplacement.png"%(out,sub,ses,tag,sbids,acquisition)
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_framewiseDisplacement.png"%(subj_dir,tag,sbids,acquisition)
     _static_block += report_module_output_template(outName='Framewise displace: fMRI', outPath=outPath, figPath=outPath)
 
     _static_block += (
@@ -1082,7 +1085,7 @@ def qc_proc_func(proc_func_json=''):
             '<b>Functional connectomes</b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-5k_desc-FC.shape.gii"%(subj_dir,tag,sbids)
     fc = nb.load(fc_file).darrays[0].data
     np.seterr(divide='ignore')
     fcz = np.arctanh(fc)
@@ -1115,14 +1118,14 @@ def qc_proc_func(proc_func_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
         # fc connectomes
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
-        fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(out,sub,ses,tag,sbids,annot)
+        fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(subj_dir,tag,sbids,annot)
 
         # Load shape.gii
         if os.path.isfile(fc_file):
@@ -1166,7 +1169,7 @@ def qc_proc_func(proc_func_json=''):
             '<b> Yeo networks (schaefer-400) </b> </p>'
     )
 
-    fc_file = "%s/%s/%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(out,sub,ses,tag,sbids)
+    fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(subj_dir,tag,sbids)
     fc_mtx = nb.load(fc_file).darrays[0].data
     fc = fc_mtx[49:, 49:]
     fcz = np.arctanh(fc)
@@ -1229,7 +1232,7 @@ def qc_sc(sc_json=''):
     if not check_json_complete(sc_json):
         return _static_block
 
-    tdi_json = os.path.realpath("%s/%s/%s/dwi/%s_space-dwi_desc-iFOD2-%s_tractography.json"%(out,sub,ses,sbids,streamlines))
+    tdi_json = os.path.realpath("%s/dwi/%s_space-dwi_desc-iFOD2-%s_tractography.json"%(subj_dir,sbids,streamlines))
     with open( tdi_json ) as f:
         tdi_json = json.load(f)
 
@@ -1268,7 +1271,7 @@ def qc_sc(sc_json=''):
     figPath = "%s/tdi_%s.png"%(tmpDir,streamlines)
     _static_block += nifti_check(outName="Track density imaging (%s tracks)"%(streamlines), outPath=outPath, figPath=figPath)
 
-    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
@@ -1276,7 +1279,7 @@ def qc_sc(sc_json=''):
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
 
     for connectomeType in connectomes:
-        c_file = "%s/%s/%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,streamlines,connectomeType)
+        c_file = "%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(subj_dir,sbids,streamlines,connectomeType)
         c = nb.load(c_file).darrays[0].data
         c = np.log(np.triu(c,1)+c.T)
         c[np.isneginf(c)] = 0
@@ -1308,7 +1311,7 @@ def qc_sc(sc_json=''):
             Ndim = max(np.unique(annot_lh_fs5[0]))
 
             c_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + ".png"
-            c_file = "%s/%s/%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(out,sub,ses,sbids,annot,streamlines,connectomeType)
+            c_file = "%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(subj_dir,sbids,annot,streamlines,connectomeType)
             c = nb.load(c_file).darrays[0].data
             c = np.log(np.triu(c,1)+c.T)
             c[np.isneginf(c)] = 0
@@ -1395,7 +1398,7 @@ def qc_mpc(mpc_json=''):
             '<b>Main inputs:</b> </p>'
     )
 
-    proc_mpc_json = os.path.realpath("%s/%s/%s/mpc/acq-%s/%s_MPC-%s.json"%(out,sub,ses,acquisition,sbids,acquisition))
+    proc_mpc_json = os.path.realpath("%s/mpc/acq-%s/%s_MPC-%s.json"%(subj_dir,acquisition,sbids,acquisition))
     with open( proc_mpc_json ) as f:
         mpc_description = json.load(f)
     microstructural_img = mpc_description["microstructural_img"]
@@ -1415,8 +1418,8 @@ def qc_mpc(mpc_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    outPath = "%s/%s/%s/anat/%s_space-fsnative_T1w.nii.gz"%(out,sub,ses,sbids)
-    refPath = "%s/%s/%s/anat/%s_space-fsnative_%s.nii.gz"%(out,sub,ses,sbids,acquisition)
+    outPath = "%s/anat/%s_space-fsnative_T1w.nii.gz"%(subj_dir,sbids)
+    refPath = "%s/anat/%s_space-fsnative_%s.nii.gz"%(subj_dir,sbids,acquisition)
     figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
     _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
     _static_block += (
@@ -1424,7 +1427,7 @@ def qc_mpc(mpc_json=''):
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/%s/%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids)
+    mpc_file = "%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids)
     mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
@@ -1457,7 +1460,7 @@ def qc_mpc(mpc_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
@@ -1468,7 +1471,7 @@ def qc_mpc(mpc_json=''):
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        ip_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(subj_dir,acquisition,sbids,annot)
         ip = nb.load(ip_file).darrays[0].data
         pltpy.imshow(ip, cmap="crest", aspect='auto')
         pltpy.savefig(ip_fig)
@@ -1478,7 +1481,7 @@ def qc_mpc(mpc_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/%s/%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(out,sub,ses,acquisition,sbids,annot)
+        mpc_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids,annot)
         mpc = nb.load(mpc_file).darrays[0].data
         mpc = np.triu(mpc,1)+mpc.T
         mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
@@ -1545,7 +1548,7 @@ def qc_gd(gd_json=''):
             '<b>GD connectomes</b> </p>'
     )
 
-    gd_file = "%s/%s/%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(out,sub,ses,sbids)
+    gd_file = "%s/dist/%s_surf-fsLR-5k_GD.shape.gii"%(subj_dir,sbids)
     gd = nb.load(gd_file).darrays[0].data
     deg = np.sum(gd,axis=1)
     deg_fig = tmpDir + "/" + sbids + "surf-fsLR-5k_GD_degree.png"
@@ -1574,7 +1577,7 @@ def qc_gd(gd_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = os.path.realpath(out+'/'+sub+'/'+ses+'/parc/')
+    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
@@ -1588,7 +1591,7 @@ def qc_gd(gd_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         gd_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_gd.png"
-        gd_file = "%s/%s/%s/dist/%s_atlas-%s_GD.shape.gii"%(out,sub,ses,sbids,annot)
+        gd_file = "%s/dist/%s_atlas-%s_GD.shape.gii"%(subj_dir,sbids,annot)
         gd = nb.load(gd_file).darrays[0].data
         pltpy.imshow(gd, cmap="Blues", aspect='auto')
         pltpy.savefig(gd_fig)
@@ -1649,7 +1652,7 @@ qc_module_function = {
 }
 
 for i, m in enumerate(qc_module_function['modules']):
-    module_qc_json = glob.glob("%s/%s/%s/QC/%s_module-%s*.json"%(out,sub,ses,sbids,m))
+    module_qc_json = glob.glob("%s/QC/%s_module-%s*.json"%(subj_dir,sbids,m))
     for j in module_qc_json:
         if check_json_exist(j):
             static_report = qc_module_function['functions'][i](j)

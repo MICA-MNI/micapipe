@@ -135,6 +135,7 @@ id=${id/sub-/}
 here=$(pwd)
 
 # Number of session (Default is "ses-pre")
+if [ "${SES}" == "SINGLE" ]; then unset SES; fi
 if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
 
 # Assigns variables names
