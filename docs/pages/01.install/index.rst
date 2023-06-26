@@ -5,7 +5,7 @@
 Installation
 ============================================================
 
-There are two distinct ways to install and use micapipe: Either through virtualization/container technology, that is `Docker`_ or `Singularity`_, or in a `"Bare-metal" installation`_. Using a container-based method is highly recommended as they entail entire operating systems through kernel-level virtualization and thus include all software necessary to run micapipe, while at the same time presenting a lightweight alternative to virtual machines. Once you are ready to run micapipe, please see the `Micapipe usage overview <https://micapipe.readthedocs.io/en/v0.2.0/pages/01.execution/index.html>`_ for details.
+There are two ways to install and use micapipe: Either through virtualization/container technology, that is `Docker`_ or `Singularity`_, or in a `"Bare-metal" installation`_. Using a container-based method is highly recommended as they entail entire operating systems through kernel-level virtualization and thus include all software necessary to run micapipe, while at the same time presenting a lightweight alternative to virtual machines. Once you are ready to run micapipe, please see the `Micapipe usage overview <https://micapipe.readthedocs.io/en/v0.2.0/pages/01.execution/index.html>`_ for details.
 
 Docker
 --------------------------------------------------------
