@@ -113,7 +113,7 @@ RUN apt-get update -qq \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
 
-RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2'
+RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2 -y'
 
 ENV FREESURFER_HOME="/opt/freesurfer-7.3.2" \
     PATH="/opt/freesurfer-7.3.2/bin:$PATH"
