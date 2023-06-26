@@ -260,7 +260,7 @@ if [ "$autoTract" == "TRUE" ]; then
     [[ ! -d "$autoTract_dir" ]] && Do_cmd mkdir -p "$autoTract_dir"
     fa_niigz=${tmp}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz
     Do_cmd mrconvert "${dti_FA}" "${fa_niigz}"
-    echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck "$tck" -outbase "${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter}" -mask "$dwi_mask" -fa "$fa_niigz" -weights "$weights" -tmpDir "$tmp" -keep_tmp  \033[0m"
+    echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck ${tck} -outbase ${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter} -mask ${dwi_mask} -fa ${fa_niigz} -weights ${weights} -tmpDir ${tmp} -keep_tmp  \033[0m"
     "$MICAPIPE"/functions/03_auto_tracts.sh -tck "$tck" -outbase "${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter}" -mask "$dwi_mask" -fa "$fa_niigz" -weights "$weights" -tmpDir "$tmp" -keep_tmp
 fi
 
