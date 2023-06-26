@@ -95,7 +95,7 @@ if [ ! -f "${proc_struct}/${idBIDS}"_space-nativepro_T1w.nii.gz ]; then Error "S
 if [ ! -f "$T1fast_seg" ]; then Error "Subject $id doesn't have FAST: run -proc_structural"; exit; fi
 # Check inputs: surface space T1
 if [ ! -f "$T1surf" ]; then Error "Subject $id doesn't have a T1 on surface space: re-run -proc_surf"; exit; fi
-if [ ! -f "${dir_subjsurf}/mri/T1.mgz" ]; then Error "Subject $id doesn't have a mri/ribbon.mgz: re-run -proc_surf"; exit; fi
+if [ ! -f "${dir_subjsurf}/mri/ribbon.mgz" ]; then Error "Subject $id doesn't have a mri/ribbon.mgz: re-run -proc_surf\n ${dir_subjsurf}/mri/ribbon.mgz"; exit; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-post_structural.json"
