@@ -235,10 +235,10 @@ if [ "$postVOL" = "TRUE" ]; then
                   "${dir_warp}/${idBIDS}"_from-fsnative_to_nativepro_T1w_* \
                   "${dir_conte69}"/* \
                   "${dir_subjsurf}"/label/*_mics* \
-                  "${dir_subjsurf}"/surf/*.midthickness.surf.gii \
                   "${dir_QC}/${idBIDS}"_module-post_structural* \
                   "${proc_struct}/${idBIDS}"_post_structural.json \
-                  "${subject_dir}/anat/surf/morphology" \
+                  "${subject_dir}"/maps/* \
+                  "${subject_dir}"/surf/*surf.gii \
                   "$dir_logs"/post_structural_*
     grep -v "${id}, ${SES/ses-/}, post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id},${SES/ses-/},post_structural" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
@@ -291,6 +291,8 @@ if [ "$procDWI" = "TRUE" ]; then
                   "${proc_dwi}/${idBIDS}"_space-dwi_model-* \
                   "${dir_warp}"/*_space-dwi_from-dwi_to-nativepro_mode-image_desc-* \
                   "${dir_warp}"/*space-dwi_from-dwi_to-dwi_mode-image_desc-SyN_* \
+                  "${subject_dir}"/maps/*ADC* \
+                  "${subject_dir}"/maps/*FA* \
                   "${dir_warp}/${idBIDS}_transformations-proc_dwi.json" \
                   "${dir_QC}/${idBIDS}_module-proc_dwi"* \
                   "${dir_logs}"/proc_dwi_*
