@@ -65,8 +65,8 @@
 
 Breaking news ️‍📰
 --------------------------------------------------------
-`micapipe version 0.2.0` is finally here!!
-Optimized to process 3T and 7T datasets!!
+`micapipe version 0.2.0` is finally here!
+Optimized to process 3T and 7T datasets!
 
 
 About 👁️‍🗨️

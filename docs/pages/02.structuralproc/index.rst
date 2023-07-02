@@ -27,7 +27,7 @@ This module performs initial structural pre-processing, keeping data in volumetr
    :scale: 85 %
    :align: center
 
-.. tabs::
+.. tabs:: 
 
     .. tab:: Processing steps
 
