@@ -59,10 +59,6 @@ Do_cmd mkdir -p "$tmp"
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
-# Make output directory
-outDir="${dir_maps}"
-[[ ! -d "$outDir" ]] && Do_cmd mkdir -p "$outDir"
-
 # Data location
 dataDir="${dir_subjsurf}/surf"
 
@@ -70,16 +66,15 @@ dataDir="${dir_subjsurf}/surf"
 # ImageMath "${tmp}/ventricles.nii.gz" Binarize "${dir_surf}/mri/aparc+aseg.mgz" 4 43 31 63
 
 mkdir -p "${tmp}/"
-mkdir "${proc_struct}/swm/pericort/"
 
 # Get maps
-Do_cmd mri_binarize --i "${dir_surf}/mri/aparc+aseg.mgz" --match 4 --match 43 --match 31 --match 63 \
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 4 --match 43 --match 31 --match 63 \
                         --o "${tmp}/ventricles.nii.gz"
-Do_cmd mri_binarize --i "${dir_surf}/mri/aparc+aseg.mgz" --min 1000 --max 2999 \
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --min 1000 --max 2999 \
                         --o "${tmp}/cortex1.nii.gz"
-Do_cmd mri_binarize --i "${dir_surf}/mri/aparc+aseg.mgz" --match 54 --match 18 \
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 54 --match 18 \
                         --o "${tmp}/cortex2.nii.gz"
-Do_cmd mri_binarize --i "${dir_surf}/mri/aparc+aseg.mgz" --match 2   --match 4   --match 11  --match 12  \
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 2   --match 4   --match 11  --match 12  \
                         --match 26  --match 17  --match 31  --match 10 --match 5  --match 28  --match 13  --match 30 \
                         --match 41  --match 43  --match 50  --match 51  --match 58  --match 53  --match 63  --match 49 \
                         --match 44 --match 60  --match 52  --match 62 --match 77  --match 255 --match 254 --match 253 \
