@@ -90,7 +90,7 @@ Nsteps=0
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_ASL_${id}"
 Do_cmd mkdir -p "$tmp"
-[[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
+# [[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 
 # TRAP in case the script fails
 trap 'rm $mrconf; cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -103,7 +103,7 @@ if [ ! -f "${m0Scan}" ]; then Error "Couldn't find $id m0 calibration scan : \n\
 if [ ! -f "${T1nativepro_brain}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
 
 # Create output directory
-export proc_asl=$subject_dir/perf/
+export proc_asl=${subject_dir}/perf/
 [[ ! -d "$proc_asl" ]] && Do_cmd mkdir -p "$proc_asl" && chmod -R 770 "$proc_asl"
 
 #------------------------------------------------------------------------------#
@@ -206,6 +206,27 @@ else
     Info "Subject ${id} has CBF and transformation matrix in T1nativepro space"; ((Nsteps++))
 fi
 
+#------------------------------------------------------------------------------#
+# Map to surface
+Nmorph=$(ls "${dir_maps}/"*cbf*gii 2>/dev/null | wc -l)
+echo $dir_maps
+exit
+if [[ "$Nmorph" -lt 16 ]]; then ((N++))
+    Info "Mapping cbf to fsLR-32k, fsLR-5k and fsaverage5"
+    for HEMI in L R; do
+        for label in midthickness white; do
+            surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+            # MAPPING metric to surfaces
+            map_to-surfaces "${proc_asl}/${cbf_in_nativepro}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_cbf.func.gii" "${HEMI}" "${label}_cbf" "${dir_maps}"
+        done
+    done
+    Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
+    if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has cbf mapped to surfaces"; ((Nsteps++)); ((N++))
+fi
+
+
 # -----------------------------------------------------------------------------------------------
 # QC: Input files
 # QC_proc-asl "${dir_QC}/micapipe_QC_proc-asl${asl_str_}.txt"
@@ -216,10 +237,10 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-N=3
+N=4
 if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
 Title "ASL processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\t\tSteps completed: $(printf "%02d" "$Nsteps")/3
+\t\tSteps completed: $(printf "%02d" "$Nsteps")/4
 \tStatus          : ${status}
 \tCheck logs:
 $(ls "${dir_logs}"/proc_asl_*.txt)"
