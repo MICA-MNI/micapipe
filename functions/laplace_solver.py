@@ -11,33 +11,25 @@ import sys
 import os
 import glob
 
+print('starting laplace solver')
 in_seg = sys.argv[1]
 out_laplace = sys.argv[2]
 
 # parameters
 convergence_threshold = 1e-5
-max_iters = 10000
+max_iters = 10
 fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80]
 src_labels = np.hstack(([54, 18], np.arange(1000,2999)))
-sink_labels = [4, 43, 31, 63]
-
-
-# initialize foreground , source, and sink
+sink_labels = [4, 43, 31, 63, 5, 44]
 
 lbl_nib = nib.load(in_seg)
 lbl = lbl_nib.get_fdata()
+print('loaded data and parameters')
 
-fg = np.zeros(lbl.shape)
-for i in fg_labels:
-    fg[lbl == i] = 1
-
-source = np.zeros(lbl.shape)
-for i in src_labels:
-    source[lbl == i] = 1
-
-sink = np.zeros(lbl.shape)
-for i in sink_labels:
-    sink[lbl == i] = 1
+# initialize foreground , source, and sink
+fg = np.isin(lbl,fg_labels)
+source = np.isin(lbl,src_labels)
+sink = np.isin(lbl,sink_labels)
 
 # initialize solution with fast marching
 # fast march forward
@@ -82,6 +74,8 @@ coords = init_coords
 coords[bg == 1] = np.nan
 coords[sink == 1] = 1
 
+print('initialized solution')
+
 upd_coords = coords.copy()
 
 # iterate until the solution doesn't change anymore (or reach max iters)
@@ -103,5 +97,6 @@ for i in range(max_iters):
 
 
 # save file
+print('saving')
 coords_nib = nib.Nifti1Image(coords, lbl_nib.affine, lbl_nib.header)
 nib.save(coords_nib, out_laplace)

@@ -66,10 +66,22 @@ dataDir="${dir_subjsurf}/surf"
 # Lapplacian mapping and surface generation
 
 mkdir -p "${tmp}/"
+
+
+# Apply transformation from surface space to nativepro space
+Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${tmp}/aparc+aseg.nii.gz"
+
+mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_
+T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
+Do_cmd antsApplyTransforms -d 3 -i "${tmp}/aparc+aseg.nii.gz" -r "$T1nativepro" -n MultiLabel -t "$T1_fsnative_affine" -o "${tmp}/aparc+aseg_space-nativepro.nii.gz" -u int
+
 # Solve a Laplace field
-Do_cmd python "$MICAPIPE"/functions/laplace_solver.py "${dir_subjsurf}/mri/aparc+aseg.mgz" "${tmp}/wm-laplace.nii.gz"
+Do_cmd python "$MICAPIPE"/functions/laplace_solver.py "${tmp}/aparc+aseg_space-nativepro.nii.gz" "${tmp}/wm-laplace.nii.gz"
 # Shift a given surface along the Laplace field
-Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-R_space-fsnative_surf-fsLR-32k_label-midthickness.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/{idBIDS}_hemi-R_surfdepth-05" 5
+for depths in 1 5 10 100; do
+Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/{idBIDS}_hemi-L_surfdepth-${depths}" $depths
+Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/{idBIDS}_hemi-R_surfdepth-${depths}" $depths
+done
 
 exit
 #------------------------------------------------------------------------------#
