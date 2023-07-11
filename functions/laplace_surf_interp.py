@@ -5,18 +5,23 @@
 
 import nibabel as nib
 import numpy as np
-from scipy.interpolate import griddata
+from scipy.interpolate import LinearNDInterpolator
 
 in_surf = sys.argv[1]
 in_laplace = sys.argv[2]
 out_surf = sys.argv[3]
 depth = sys.argv[4]
 
-in_surf = '/data/mica3/BIDS_PNI/derivatives/micapipe_v0.2.0/sub-PNC003/ses-01/surf/sub-PNC003_ses-01_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii'
+## dev testing
+#in_surf = '/data/mica3/BIDS_PNI/derivatives/micapipe_v0.2.0/sub-PNC003/ses-01/surf/sub-PNC003_ses-01_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii'
+#in_laplace='wm-laplace.nii.gz'
+#depth = 5
+#out_surf = 'tmp.surf.gii'
+
 surf = nib.load(in_surf)
 V = surf.get_arrays_from_intent('NIFTI_INTENT_POINTSET')[0].data
-in_laplace='tmp.nii.gz'
 laplace = nib.load(in_laplace)
+lp = laplace.get_fdata()
 
 # laplace to gradient
 dx,dy,dz = np.gradient(lp)
