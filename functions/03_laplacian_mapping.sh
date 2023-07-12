@@ -79,7 +79,7 @@ Do_cmd antsApplyTransforms -d 3 -i "${tmp}/aparc+aseg.nii.gz" -r "$T1nativepro" 
 Do_cmd python "$MICAPIPE"/functions/laplace_solver.py "${tmp}/aparc+aseg_space-nativepro.nii.gz" "${tmp}/wm-laplace.nii.gz"
 # Shift a given surface along the Laplace field
 mkdir -p "${dir_conte69}/wm-equipotentials"
-for depths in 0.01 0.05 0.10 0.25; do
+for depths in 0.05 0.1 0.2 0.3; do
     Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-L_surfdepth-${depths}" $depths
     Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-R_surfdepth-${depths}" $depths
 done

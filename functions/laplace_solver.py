@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 import skfmm
 from astropy.convolution import convolve as nan_convolve
+from scipy.ndimage import binary_dilation
 import sys
 import os
 import glob
@@ -17,7 +18,7 @@ out_laplace = sys.argv[2]
 
 # parameters
 convergence_threshold = 1e-4
-max_iters = 1000
+max_iters = 10000
 #fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80]
 fg_labels = [41, 2]
 #src_labels = np.hstack(([54, 18], np.arange(1000,2999)))
@@ -30,7 +31,9 @@ print('loaded data and parameters')
 
 # initialize foreground , source, and sink
 fg = np.isin(lbl,fg_labels)
+fg = binary_dilation(fg)
 source = np.isin(lbl,src_labels)
+source[fg] = 0
 #sink = np.isin(lbl,sink_labels)
 sink = 1-fg-source
 
