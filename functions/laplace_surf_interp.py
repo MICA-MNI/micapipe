@@ -30,15 +30,12 @@ V[:,:] = V - laplace.affine[:3,3].T
 for d in range(3):
     V[:,d] = V[:,d]*(1/laplace.affine[d,d])
 # laplace to gradient
-
 dx,dy,dz = np.gradient(lp)
-#mask = np.logical_or(np.logical_or(abs(dx>0), abs(dy>0)), abs(dz>0))
-#points = np.where(mask)
 # make interpolator of gradients
 points = (range(lp.shape[0]), range(lp.shape[1]), range(lp.shape[2]))
-interp_x = RegularGridInterpolator(points, dx,'nearest')
-interp_y = RegularGridInterpolator(points, dy,'nearest')
-interp_z = RegularGridInterpolator(points, dz,'nearest')
+interp_x = RegularGridInterpolator(points, dx)
+interp_y = RegularGridInterpolator(points, dy)
+interp_z = RegularGridInterpolator(points, dz)
 print('gradient interpolator ready')
 
 

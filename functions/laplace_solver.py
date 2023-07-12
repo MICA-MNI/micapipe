@@ -6,8 +6,7 @@
 import nibabel as nib
 import numpy as np
 import skfmm
-from astropy.convolution import convolve as nan_convolve
-from scipy.ndimage import binary_dilation
+from scipy.ndimage import binary_dilation, convolve
 import sys
 import os
 import glob
@@ -31,7 +30,7 @@ print('loaded data and parameters')
 
 # initialize foreground , source, and sink
 fg = np.isin(lbl,fg_labels)
-fg = binary_dilation(fg)
+fg = binary_dilation(fg) # dilate to make sure we always "catch" neighbouring surfaces in our gradient
 source = np.isin(lbl,src_labels)
 source[fg] = 0
 #sink = np.isin(lbl,sink_labels)
@@ -61,23 +60,17 @@ forward = forward / np.max(forward)
 backward = backward / np.max(backward)
 backward = -backward + 1
 init_coords = (forward + backward) / 2
+init_coords = init_coords-np.min(init_coords)
 init_coords = init_coords / np.max(init_coords)
 init_coords[fg == 0] = 0
 
-# set up filter (18NN)
-hl = np.zeros([3, 3, 3])
-hl[1, :, :] = 1
-hl[:, 1, :] = 1
-hl[:, :, 1] = 1
-hl[1, 1, 1] = 0
+# set up filter (27NN)
+hl = np.ones([3, 3, 3])
 hl = hl / np.sum(hl)
 
-# initialize coords, setting outside domain to nan
-bg = 1 - fg
-bg[source == 1] = 0
-bg[sink == 1] = 0
+# initialize coords
 coords = init_coords
-coords[bg == 1] = np.nan
+coords[source == 1] = 0
 coords[sink == 1] = 1
 
 print('initialized solution')
