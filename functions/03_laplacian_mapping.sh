@@ -63,27 +63,36 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 dataDir="${dir_subjsurf}/surf"
 
 #------------------------------------------------------------------------------#
-# Lapplacian mapping and surface generation
+# ImageMath "${tmp}/ventricles.nii.gz" Binarize "${dir_surf}/mri/aparc+aseg.mgz" 4 43 31 63
 
 mkdir -p "${tmp}/"
 
+# Get maps
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 4 --match 43 --match 31 --match 63 \
+                        --o "${tmp}/ventricles.nii.gz"
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --min 1000 --max 2999 \
+                        --o "${tmp}/cortex1.nii.gz"
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 54 --match 18 \
+                        --o "${tmp}/cortex2.nii.gz"
+Do_cmd mri_binarize --i "${dir_subjsurf}/mri/aparc+aseg.mgz" --match 2   --match 4   --match 11  --match 12  \
+                        --match 26  --match 17  --match 31  --match 10 --match 5  --match 28  --match 13  --match 30 \
+                        --match 41  --match 43  --match 50  --match 51  --match 58  --match 53  --match 63  --match 49 \
+                        --match 44 --match 60  --match 52  --match 62 --match 77  --match 255 --match 254 --match 253 \
+                        --match 252 --match 251 --match 72  --match 80 \
+                        --o "${tmp}/wm.nii.gz"
 
+Do_cmd ImageMath 3 "${tmp}/cortex.nii.gz" + "${tmp}/cortex1.nii.gz" "${tmp}/cortex2.nii.gz"
+
+#------------------------------------------------------------------------------#
 # Apply transformation from surface space to nativepro space
-Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${tmp}/aparc+aseg.nii.gz"
-
 mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_
 T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
-Do_cmd antsApplyTransforms -d 3 -i "${tmp}/aparc+aseg.nii.gz" -r "$T1nativepro" -n MultiLabel -t "$T1_fsnative_affine" -o "${tmp}/aparc+aseg_space-nativepro.nii.gz" -u int
 
-# Solve a Laplace field
-Do_cmd python "$MICAPIPE"/functions/laplace_solver.py "${tmp}/aparc+aseg_space-nativepro.nii.gz" "${tmp}/wm-laplace.nii.gz"
-# Shift a given surface along the Laplace field
-mkdir -p "${dir_conte69}/wm-equipotentials"
-for depths in 0.05 0.1 0.2 0.3; do
-    Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-L_surfdepth-${depths}" $depths
-    Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-R_surfdepth-${depths}" $depths
+for i in cortex wm ventricles; do
+Do_cmd antsApplyTransforms -d 3 -i "${tmp}/${i}.nii.gz" -r "$T1nativepro" -n GenericLabel -t "$T1_fsnative_affine" -o "${tmp}/space-nativepro_${i}.nii.gz" -u int
 done
-
+#------------------------------------------------------------------------------#
+# Lapplacian mapping and surface generation
 exit
 #------------------------------------------------------------------------------#
 # End if module has been processed
