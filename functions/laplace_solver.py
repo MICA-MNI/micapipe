@@ -16,11 +16,13 @@ in_seg = sys.argv[1]
 out_laplace = sys.argv[2]
 
 # parameters
-convergence_threshold = 1e-5
-max_iters = 10
-fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80]
-src_labels = np.hstack(([54, 18], np.arange(1000,2999)))
-sink_labels = [4, 43, 31, 63, 5, 44]
+convergence_threshold = 1e-4
+max_iters = 1000
+#fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80]
+fg_labels = [41, 2]
+#src_labels = np.hstack(([54, 18], np.arange(1000,2999)))
+src_labels = np.arange(1000,2999)
+# sink_labels = [4, 43, 31, 63]#, 5, 44]
 
 lbl_nib = nib.load(in_seg)
 lbl = lbl_nib.get_fdata()
@@ -29,7 +31,8 @@ print('loaded data and parameters')
 # initialize foreground , source, and sink
 fg = np.isin(lbl,fg_labels)
 source = np.isin(lbl,src_labels)
-sink = np.isin(lbl,sink_labels)
+#sink = np.isin(lbl,sink_labels)
+sink = 1-fg-source
 
 # initialize solution with fast marching
 # fast march forward
