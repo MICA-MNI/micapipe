@@ -209,8 +209,6 @@ fi
 #------------------------------------------------------------------------------#
 # Map to surface
 Nmorph=$(ls "${dir_maps}/"*cbf*gii 2>/dev/null | wc -l)
-echo $dir_maps
-exit
 if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     Info "Mapping cbf to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
