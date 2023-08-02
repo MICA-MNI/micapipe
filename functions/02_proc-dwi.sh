@@ -523,7 +523,7 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     # Apply transformation of each DTI derived map to T1nativepro
     for metric in FA ADC; do
         dti_map="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-${metric}.nii.gz"
-        dti_map_nativepro="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
+        dti_map_nativepro="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}${dwi_str_}.nii.gz"
         Do_cmd antsApplyTransforms -d 3 -r "$T1nativepro_brain" -i "${dti_map}" "$trans_dwi2T1" -o "$dti_map_nativepro" -v -n NearestNeighbor
     done
     # Apply transformation T1nativepro to DWI space
@@ -565,7 +565,7 @@ proc_dwi_transformations "${dir_warp}/${idBIDS}_transformations-proc_dwi${dwi_st
 
 #------------------------------------------------------------------------------#
 # DTI-maps surface mapping
-Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
+Nmorph=$(ls "${dir_maps}/"*FA${dwi_str_}.func.gii "${dir_maps}/"*ADC${dwi_str_}.func.gii 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 32 ]]; then ((N++))
     Info "Mapping FA and ADC to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
@@ -574,12 +574,12 @@ if [[ "$Nmorph" -lt 32 ]]; then ((N++))
             # MAPPING metric to surfaces
             for metric in FA ADC; do
                 # Info "Mapping ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
-                dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}.nii.gz"
-                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}.func.gii" "${HEMI}" "${label}_${metric}" "${dir_maps}"
+                dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}${dwi_str_}.nii.gz"
+                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}${dwi_str_}.func.gii" "${HEMI}" "${label}_${metric}" "${dir_maps}"
             done
         done
     done
-    Nmorph=$(ls "${dir_maps}/"*FA*gii "${dir_maps}/"*ADC*gii 2>/dev/null | wc -l)
+    Nmorph=$(ls "${dir_maps}/"*FA${dwi_str_}.func.gii "${dir_maps}/"*ADC${dwi_str_}.func.gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 32 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has FA and ADC mapped to surfaces"; ((Nsteps++)); ((N++))
