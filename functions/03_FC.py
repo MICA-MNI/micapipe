@@ -217,7 +217,7 @@ def get_regressed_data(x_spike, Data, performNSR, performGSR, gsr, Data_name):
             mdl = np.append(np.append(np.append(np.append(ones, dof, axis=1), wm, axis=1), csf, axis=1), gs, axis = 1)
         elif gsr == "1":
             print(Data_name + ' model : func ~ spikes + gs')
-            mdl = np.append(np.append(ones, spike, axis=1), gs, axis=1)
+            mdl = np.append(ones, gs, axis=1)
         else:
             print(Data_name + ', model : none')
             mdl = ones
@@ -351,11 +351,11 @@ lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-L_surf-fsnative_NoHP.fu
 lh_nat_noHP_data = funcgii_load(nib.load(lh_nat_noHP))
 rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-R_surf-fsnative_NoHP.func.gii'))
 rh_nat_noHP_data = funcgii_load(nib.load(rh_nat_noHP))
-lhM = np.mean(lh_nat_noHP_data, axis = 1)
-lhSD = np.std(lh_nat_noHP_data, axis = 1)
+lhM = np.mean(lh_nat_noHP_data, axis = 0)
+lhSD = np.std(lh_nat_noHP_data, axis = 0)
 lh_tSNR = np.divide(lhM, lhSD)
-rhM = np.mean(rh_nat_noHP_data, axis = 1)
-rhSD = np.std(rh_nat_noHP_data, axis = 1)
+rhM = np.mean(rh_nat_noHP_data, axis = 0)
+rhSD = np.std(rh_nat_noHP_data, axis = 0)
 rh_tSNR = np.divide(rhM, rhSD)
 tSNR = np.append(lh_tSNR, rh_tSNR)
 tSNR = np.expand_dims(tSNR, axis=1)
