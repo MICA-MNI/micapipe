@@ -593,7 +593,7 @@ def report_titleh2(Title='', Size='12'):
 # --------------------------------------------------------------------
 # Surface and similarity matrix
 # --------------------------------------------------------------------
-def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01, 0.95)):
+def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01, 0.95), simthr=0.25):
     # change working directory
     os.chdir(out)
     # Load and plot the mean maps on the surface
@@ -642,8 +642,8 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
             # Calculate column means
             colmean = np.nanmean(corr, axis=0)
 
-            # Get the position indices where colmean < 0.2
-            indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.25
+            indices = np.where(colmean < simthr)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
@@ -682,7 +682,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
 
     return(_static_block)
 
-def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
+def report_roi_similarity(out, file_str, out_png, cmap, load_cnn, simthr=0.25):
     # change working directory
     os.chdir(out)
     # Loads and plots all the connectomes
@@ -728,8 +728,8 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
             # Calculate column means
             colmean = np.nanmean(corr, axis=0)
 
-            # Get the position indices where colmean < 0.2
-            indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.25
+            indices = np.where(colmean < simthr)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
@@ -861,9 +861,9 @@ def qc_group():
     print( 'Creating... Mean vertex-wise maps')
     # Vertex-wise Thickness
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
-                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995), simthr=0.55)
 
-    # Vertex-wise Thickness
+    # Vertex-wise Curvature
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-curv.func.gii',
                               f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-curv.func.gii', 'curvature', 'cividis', quantile=(0.05, 0.99))
 
@@ -893,7 +893,7 @@ def qc_group():
     # ROI based
     print( 'Creating... ROI based maps')
     # ROI GDs
-    _static_block += report_roi_similarity(out, f'{dir_str}/dist/*_atlas-schaefer-400_GD.shape.gii', 'GD', 'vlag', load_gd)
+    _static_block += report_roi_similarity(out, f'{dir_str}/dist/*_atlas-schaefer-400_GD.shape.gii', 'GD', 'vlag', load_gd, simthr=0.8)
 
     # ROI SC (dynamic)
     for acq in get_acqs('dwi'):
@@ -903,7 +903,7 @@ def qc_group():
             dwi_name=f'SC_{acq}_{tracts}'.replace('_-','')
             print( f'   dwi id: {dwi_name}')
             cnn_files=f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-{tracts}-SIFT2_full-connectome.shape.gii'.replace('/-/','/')
-            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc)
+            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc, simthr=0.5)
 
     # ROI func (dynamic)
     for acq in get_acqs('func'):
