@@ -86,11 +86,11 @@ Note "ANTs and MRtrix will use: " "$threads threads"
 #	Timer
 aloita=$(date +%s)
 Nsteps=0
+N=0
 
 # Create script specific temp directory
 tmp="${tmpDir}/${RANDOM}_micapipe_ASL_${id}"
 Do_cmd mkdir -p "$tmp"
-# [[ ! -d "$dir_QC_png" ]] && Do_cmd mkdir -p "$dir_QC_png" && chmod -R 770 "$dir_QC_png"
 
 # TRAP in case the script fails
 trap 'rm $mrconf; cleanup $tmp $nocleanup $here' SIGINT SIGTERM
@@ -101,6 +101,10 @@ Do_cmd cd "$tmp"
 if [ ! -f "${aslScan}" ]; then Error "Couldn't find $id ASL scan : \n\t ls ${subject_bids}/perf/"; exit; fi
 if [ ! -f "${m0Scan}" ]; then Error "Couldn't find $id m0 calibration scan : \n\t ls ${subject_bids}/perf/"; exit; fi
 if [ ! -f "${T1nativepro_brain}" ]; then Error "Subject $id doesn't have T1_nativepro.\n\t\tRun -proc_structural"; exit; fi
+
+# End if module has been processed
+module_json="${dir_QC}/${idBIDS}_module-proc_asl.json"
+micapipe_check_json_status "${module_json}" "proc_asl"
 
 # Create output directory
 export proc_asl=${subject_dir}/perf/
@@ -116,7 +120,7 @@ asl_brain="${asl_str}_brain.nii.gz"
 asl_mask="${asl_str}_brain_mask.nii.gz"
 aslref="${asl_str}ref.nii.gz"
 
-if [[ ! -f "${proc_asl}/${asl_mask}" ]] || [[ ! -f "${proc_asl}/${aslref}" ]]; then
+if [[ ! -f "${proc_asl}/${asl_mask}" ]] || [[ ! -f "${proc_asl}/${aslref}" ]]; then ((N++));
     Info "Generating ASL binary mask"
 
     # Calculate mean ASL volume (reference image)
@@ -131,7 +135,7 @@ if [[ ! -f "${proc_asl}/${asl_mask}" ]] || [[ ! -f "${proc_asl}/${aslref}" ]]; t
 
     if [[ -f ${proc_asl}/${asl_mask} ]] && [[ -f ${proc_asl}/${aslref} ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has a binary mask of the ASL scan"; ((Nsteps++))
+    Info "Subject ${id} has a binary mask of the ASL scan"; ((Nsteps++)); ((N++));
 fi
 
 #------------ Preprocess ASL image using oxford_asl (from Basil) -------------#
@@ -141,7 +145,7 @@ m0_mask="${m0_str}_brain_mask.nii.gz"
 cbf_str="${idBIDS}_desc-preproc_cbf"
 cbf="${cbf_str}.nii.gz"
 
-if [[ ! -f ${proc_asl}/${cbf} ]]; then
+if [[ ! -f ${proc_asl}/${cbf} ]]; then ((N++));
     Info "Processing ASL scan with oxford_asl from the BASIL toolbox"
 
     # Mask ASl and M0 timeseries
@@ -168,7 +172,7 @@ if [[ ! -f ${proc_asl}/${cbf} ]]; then
 
     if [[ -f ${proc_asl}/${cbf} ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has preprocessed ASL scan from BASIL"; ((Nsteps++))
+    Info "Subject ${id} has preprocessed ASL scan from BASIL"; ((Nsteps++)); ((N++))
 fi
 
 #----------------------- Register CBF to nativepro T1w ------------------------#
@@ -179,7 +183,7 @@ str_asl_affine="${dir_warp}/${idBIDS}_from-asl_to-nativepro_mode-image_desc-affi
 mat_asl_affine="${str_asl_affine}0GenericAffine.mat"
 cbf_in_nativepro="${idBIDS}_space-nativepro_desc-preproc_cbf.nii.gz"
 
-if [[ ! -f ${proc_asl}/${cbf_in_nativepro} ]]; then
+if [[ ! -f ${proc_asl}/${cbf_in_nativepro} ]]; then ((N++))
     Info "Registering ASL MRI to nativepro T1w"
 
     # Mask ASL reference scan
@@ -203,7 +207,7 @@ if [[ ! -f ${proc_asl}/${cbf_in_nativepro} ]]; then
 
     if [[ -f ${proc_asl}/${cbf_in_nativepro} ]]; then ((Nsteps++)); fi
 else
-    Info "Subject ${id} has CBF and transformation matrix in T1nativepro space"; ((Nsteps++))
+    Info "Subject ${id} has CBF and transformation matrix in T1nativepro space"; ((Nsteps++)); ((N++))
 fi
 
 #------------------------------------------------------------------------------#
@@ -218,31 +222,22 @@ if [[ "$Nmorph" -lt 16 ]]; then ((N++))
             map_to-surfaces "${proc_asl}/${cbf_in_nativepro}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_cbf.func.gii" "${HEMI}" "${label}_cbf" "${dir_maps}"
         done
     done
-    Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
+    Nmorph=$(ls "${dir_maps}/"*cbf*gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has cbf mapped to surfaces"; ((Nsteps++)); ((N++))
 fi
 
 
-# -----------------------------------------------------------------------------------------------
-# QC: Input files
-# QC_proc-asl "${dir_QC}/micapipe_QC_proc-asl${asl_str_}.txt"
-
+#------------------------------------------------------------------------------#
 # QC notification of completition
 lopuu=$(date +%s)
 eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-N=4
-if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-Title "ASL processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:
-\t\tSteps completed: $(printf "%02d" "$Nsteps")/4
-\tStatus          : ${status}
-\tCheck logs:
-$(ls "${dir_logs}"/proc_asl_*.txt)"
-# Print QC stamp
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_asl" "${out}/micapipe_processed_sub.csv"
-micapipe_procStatus "${id}" "${SES/ses-/}" "proc_asl" "${dir_QC}/${idBIDS}_micapipe_processed.csv"
+module_name="proc_asl"
+micapipe_completition_status "${module_name}"
+micapipe_procStatus "${id}" "${SES/ses-/}" "${module_name}" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "${module_name}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
