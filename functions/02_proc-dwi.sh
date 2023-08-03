@@ -575,7 +575,7 @@ if [[ "$Nmorph" -lt 32 ]]; then ((N++))
             for metric in FA ADC; do
                 # Info "Mapping ${HEMI}-${metric} ${label} surface to fsLR-32k, fsLR-5k, fsaverage5"
                 dti_map="${dir_maps}/${idBIDS}_space-nativepro_model-DTI_map-${metric}${dwi_str_}.nii.gz"
-                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}${dwi_str_}.func.gii" "${HEMI}" "${label}_${metric}" "${dir_maps}"
+                map_to-surfaces "${dti_map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${metric}${dwi_str_}.func.gii" "${HEMI}" "${label}_${metric}${dwi_str_}" "${dir_maps}"
             done
         done
     done
