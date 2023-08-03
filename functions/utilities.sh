@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.2.0 'Northern flicker'"
+export Version="v0.2.2 'Northern flicker'"
 
 bids_variables() {
   # This functions assignes variables names acording to:

@@ -13,7 +13,7 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(v0.2.0 'Northern flicker')"
+Version="(v0.2.2 'Northern flicker')"
 version() {
   echo -e "\nMICAPIPE March 2023 ${Version}\n"
 }
@@ -123,7 +123,7 @@ fi
 source "${MICAPIPE}/functions/utilities.sh"
 
 # Force micapipe conda env if container == TRUE
-if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then source activate micapipe; fi
+if [[ ${PROC} == "container_micapipe-v0.2.2" ]]; then source activate micapipe; fi
 
 # Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
 if [[ -z $threads ]]; then export threads=6; fi
@@ -254,35 +254,39 @@ if [  $( ls -d "${subject_dir}/QC/${idBIDS}"_module-proc_func-*.json | wc -l ) -
 fi
 
 # -----------------------------------------------------------------------------------------------
-# Diffusion processing
+# Diffusion processing & SC
 # -----------------------------------------------------------------------------------------------
-fod="${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
-# PROC_DWI --------------------------------------------------------------------------------------
-if [ -f "${subject_dir}/QC/${idBIDS}"_module-proc_dwi.json ]; then
+dwi_acq=($(ls "${subject_dir}/QC/${idBIDS}"_module-proc_dwi*.json))
+for dwi_json in ${dwi_acq[@]}; do
+  # Get all the json files per DWI acquisition from the QC directory
+  dwi_mod=$(echo ${dwi_json/.json/} | awk -F 'module-' '{print $2}')
+  Info "${dwi_mod}"
+  if [ $dwi_mod == "proc_dwi" ]; then
+    dwi_dir="${proc_dwi}"; dwi_str=""
+  else
+    dwi_str="${dwi_mod/proc_dwi/}"; dwi_dir="${proc_dwi}/${dwi_str/_/}"
+  fi
   for dwi_scan in $(ls "${subject_bids}/dwi/${idBIDS}"*.nii.gz); do
-      dwi_scan_mean=$(basename "$dwi_scan" | sed "s/.nii.gz/_mean.nii.gz/")
+      dwi_scan_mean=$(basename "$dwi_scan" | sed "s/.nii.gz/_mean${dwi_str}.nii.gz/")
       Do_cmd fslmaths "${dwi_scan}" -Tmean "${tmpDir}/${dwi_scan_mean}"
   done
 
-  Do_cmd mrmath "${proc_dwi}/${idBIDS}"_space-dwi_desc-preproc_dwi.mif mean "${tmpDir}/${idBIDS}"_space-dwi_desc-preproc_dwi_mean.nii.gz -axis 3 -nthreads "${threads}"
+  Do_cmd mrmath "${dwi_dir}/${idBIDS}"_space-dwi_desc-preproc_dwi.mif mean "${tmpDir}/${idBIDS}_space-dwi_desc-preproc_dwi_mean${dwi_str}.nii.gz" -axis 3 -nthreads "${threads}"
 
-  dwi_fod="${proc_dwi}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+  dwi_fod="${dwi_dir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
+  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm${dwi_str}.nii.gz" -force -nthreads "${threads}"
 
-  Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2  "${fod}" -force -nthreads "${threads}"
+  dwi_5tt="${dwi_dir}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
+  Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt${dwi_str}.nii.gz" -force -nthreads "${threads}"
 
-  dwi_5tt="${proc_dwi}/${idBIDS}_space-dwi_desc-5tt.nii.gz"
-  Do_cmd mrconvert "$dwi_5tt" -coord 3 0 -axes 0,1,2  "${tmpDir}/${idBIDS}_space-dwi_desc-5tt.nii.gz" -force -nthreads "${threads}"
-fi
-
-# SC --------------------------------------------------------------------------------------------
-if [ $(ls "${subject_dir}/QC/${idBIDS}"_module-SC-*.json 2>/dev/null | wc -l) -gt 0 ]; then
-  if [ ! -f "${fod}" ]; then Do_cmd mrconvert "$dwi_fod" -coord 3 0 -axes 0,1,2 "${fod}" -nthreads "${threads}"; fi
-
-  for tdi in $(ls "${proc_dwi}/${idBIDS}"_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
-      tdi_mean=$(basename "$tdi" | sed "s/.nii.gz/_mean.nii.gz/")
-      Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3 -nthreads "${threads}"
-  done
-fi
+  # SC --------------------------------------------------------------------------------------------
+  if [ $(ls "${dwi_dir}/${idBIDS}"_space-dwi_desc-iFOD2-*_tdi.nii.gz 2>/dev/null | wc -l) -gt 0 ]; then
+    for tdi in $(ls "${dwi_dir}/${idBIDS}"_space-dwi_desc-iFOD2-*_tdi.nii.gz); do
+        tdi_mean=$(basename "$tdi" | sed "s/.nii.gz/_mean${dwi_str}.nii.gz/")
+        Do_cmd mrmath "${tdi}" mean "${tmpDir}/${tdi_mean}" -axis 3 -nthreads "${threads}"
+    done
+  fi
+done
 
 # -----------------------------------------------------------------------------------------------
 # Generate QC PDF

@@ -66,7 +66,7 @@ mat_dwi_affine="${str_dwi_affine}0GenericAffine.mat"
 dwi_SyN_str="${dir_warp}/${idBIDS}_space-dwi_from-dwi${dwi_str_}_to-dwi_mode-image_desc-SyN_"
 dwi_SyN_warp="${dwi_SyN_str}1Warp.nii.gz"
 dwi_SyN_affine="${dwi_SyN_str}0GenericAffine.mat"
-dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.mif"
+dti_FA="${proc_dwi}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz"
 lut_sc="${util_lut}/lut_subcortical-cerebellum_mics.csv"
 # from proc_structural
 dwi_cere="${proc_dwi}/${idBIDS}_space-dwi_atlas-cerebellum.nii.gz"
@@ -258,10 +258,8 @@ if [ "$autoTract" == "TRUE" ]; then
     Info "Running Auto-tract"
     autoTract_dir="$proc_dwi"/auto_tract
     [[ ! -d "$autoTract_dir" ]] && Do_cmd mkdir -p "$autoTract_dir"
-    fa_niigz=${tmp}/${idBIDS}_space-dwi_model-DTI_map-FA.nii.gz
-    Do_cmd mrconvert "${dti_FA}" "${fa_niigz}"
-    echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck ${tck} -outbase ${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter} -mask ${dwi_mask} -fa ${fa_niigz} -weights ${weights} -tmpDir ${tmp} -keep_tmp  \033[0m"
-    "$MICAPIPE"/functions/03_auto_tracts.sh -tck "$tck" -outbase "${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter}" -mask "$dwi_mask" -fa "$fa_niigz" -weights "$weights" -tmpDir "$tmp" -keep_tmp
+    echo -e "\033[38;5;118m\nCOMMAND -->  \033[38;5;122m03_auto_tracts.sh -tck ${tck} -outbase ${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter} -mask ${dwi_mask} -fa ${dti_FA} -weights ${weights} -tmpDir ${tmp} -keep_tmp  \033[0m"
+    "$MICAPIPE"/functions/03_auto_tracts.sh -tck "$tck" -outbase "${autoTract_dir}/${idBIDS}_space-dwi_desc-iFOD2-${tracts}-${filter}" -mask "$dwi_mask" -fa "$dti_FA" -weights "$weights" -tmpDir "$tmp" -keep_tmp
 fi
 
 # -----------------------------------------------------------------------------------------------

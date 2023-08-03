@@ -76,6 +76,7 @@ import seaborn as sns
 import math
 from matplotlib.cm import Spectral
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from pyvirtualdisplay import Display
 
 
@@ -130,6 +131,7 @@ if check_json_exist(data_desc):
     generated_by = data_json["GeneratedBy"][0]
 else:
     print('ERROR... dataset_description.json does not exit, or this dataset has not been processed with micapipe')
+    print(data_desc)
     exit()
 
 # Print version
@@ -188,6 +190,11 @@ def plot_connectome(mtx, Title='matrix plot', xlab='X', ylab='Y', col='rocket', 
 
     if save_path is not None:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
+
+def upper_tri_indexing(A):
+    m = A.shape[0]
+    r,c = np.triu_indices(m,1)
+    return A[r,c]
 
 def load_mpc(File, Ndim):
     """Loads and process a MPC"""
@@ -572,15 +579,33 @@ def report_module_header_template(module=''):
     return report_module_header.format(module=module)
 
 # OUTPUT TEMPLATE
-def report_module_output_figure(outName='', figPath=''):
+def report_module_output_figure(outName='', figPath='', w=500):
     # Module Outputs
     report_module_output = (
         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
         '<b> {outName} </b> </p>'
 
-        '<center> <img style="width:500px%;margin-top:0px" src="{figPath}"> </center>'
+        '<center> <img style="width:{w}px%;margin-top:0px" src="{figPath}"> </center>'
     )
-    return report_module_output.format(outName=outName, figPath=figPath)
+    return report_module_output.format(outName=outName, figPath=figPath, w=w)
+
+def report_qc_table(Main='', title1='', title2='', fig1='', fig2='', w1=1500, w2=1500):
+
+    # QC summary table
+    report_fig_table = (
+        '<h2 style="color:#343434;font-family:Helvetica, sans-serif !important;text-align:Left;margin-bottom:0">'
+        '{Main} </h2>'
+
+        '<table style="border:1px solid white;width:100%">'
+            # Row 1: title1, title2
+            '<tr><td style=padding-top:4px;padding-left:3px;text-align:left><b>{title1}</b></td>'
+            '<td style=padding-top:4px;padding-left:3px;text-align:left><b>{title2}</b></td></tr>'
+            # Row 2: fig1, fig2
+            '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:{w1}px%;margin-top:0px" src="{fig1}"></td>'
+            '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:{w2}px%;margin-top:0px" src="{fig2}"></td></tr>'
+        '</table>'
+    )
+    return report_fig_table.format(Main=Main, title1=title1, title2=title2, fig1=fig1, fig2=fig2, w1=w1, w2=w2)
 
 def report_titleh2(Title='', Size='12'):
     # Module Outputs
@@ -593,7 +618,7 @@ def report_titleh2(Title='', Size='12'):
 # --------------------------------------------------------------------
 # Surface and similarity matrix
 # --------------------------------------------------------------------
-def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01, 0.95)):
+def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01, 0.95), simthr=0.25):
     # change working directory
     os.chdir(out)
     # Load and plot the mean maps on the surface
@@ -615,7 +640,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
         # Mean matrix across the x axis (vertices)
         map_mean = np.mean(surf_map, axis=0)
 
-        # Plot the mean thickness 10mm on conte69 surface
+        # Plot the mean FEATURE 10mm on conte69 surface
         Range=(np.quantile(map_mean, quantile[0]), np.quantile(map_mean, quantile[1]))
         dsize = (900, 750)
         display = Display(visible=0, size=dsize)
@@ -626,6 +651,72 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}.png')
         display.stop()
+
+        # Plot the mean VARIANCE 10mm on conte69 surface
+        # Variance per vertex (vertices)
+        map_var = np.var(surf_map, axis=0)
+        #map_var = np.abs(map_mean/np.std(surf_map, axis=0))
+
+        dsize = (900, 750)
+        display = Display(visible=0, size=dsize)
+        display.start()
+        plot_hemispheres(i5_lh, i5_rh, array_name=map_var, cmap='Spectral_r', nan_color=(0, 0, 0, 1),
+                              zoom=1.3, size=(900, 750), embed_nb=True,
+                              color_bar='right', layout_style='grid', color_range=(0, np.nanquantile(map_var, 0.95)),
+                              label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
+                              screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_var_{out_png}.png')
+        display.stop()
+
+        # Create the 1x2 layout for histograms
+        plt.figure(figsize=(8, 3))
+
+        # Left subplot - Histogram for feature
+        plt.subplot(1, 2, 1)
+        n, bins, _ = plt.hist(map_mean, bins=100)
+        bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+        colormap = cm.get_cmap(cmap)
+        colored_bins = colormap(np.interp(bin_centers, [Range[0], Range[1]], [0, 1]))
+        plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+        plt.xlabel(out_png, fontsize=10)  # Increase font size for x-label
+        plt.ylabel('Frequency', fontsize=10)       # Increase font size for y-label
+        plt.title(f'Mean {out_png} vertex-wise', fontsize=12)   # Increase font size for title
+
+        # Remove the outer box line
+        for spine in plt.gca().spines.values():
+            spine.set_visible(False)
+        # Set the grid on the back
+        plt.gca().set_axisbelow(True)
+        plt.grid(color='gray', linestyle='dashed')
+
+        # Right subplot - Histogram for variance
+        plt.subplot(1, 2, 2)
+        if out_png == 'curvature':
+            var_ft = np.log(map_var)
+        else:
+            var_ft = map_var[~np.isnan(map_var)]
+        n, bins, _ = plt.hist(var_ft, bins=100)  # Exclude NaN values from the histogram
+        bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+        colored_bins = cm.Spectral_r(np.interp(bin_centers, [0, np.nanquantile(map_var, 0.95)], [0, 1]))
+        plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+        plt.xlabel('Variance', fontsize=10)  # Increase font size for x-label
+        plt.ylabel('Frequency', fontsize=10)      # Increase font size for y-label
+        plt.title(f'Mean {out_png} Variance vertex-wise', fontsize=12)  # Increase font size for title
+
+        # Remove the outer box line
+        for spine in plt.gca().spines.values():
+            spine.set_visible(False)
+
+        # Set the grid on the back
+        plt.gca().set_axisbelow(True)
+        plt.grid(color='gray', linestyle='dashed')
+        # Adjust the x-axis limit to cover the 0.975 quantile of roi_var
+        #plt.xlim(0, np.nanquantile(map_var, 0.99))
+
+        plt.tight_layout()  # Adjust the spacing between subplots
+        # Save the plot as an image file (e.g., PNG or PDF)
+        plt.savefig(f'{tmpDir}/micapipe_qc_hist_{out_png}.png', dpi=300, bbox_inches='tight')
+        plt.close()
+
         # Calculate the similarity matrix
         if len(lh_files) == 1:
             indices = []
@@ -635,23 +726,67 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
             plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
                            yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
             plt.close()
-            # plot a barplot if the subjects mean similarity is below a threshold 0.2???
+
+            # Create the 1x2 layout for histograms
+            corr_sym = upper_tri_indexing(corr)
+            plt.figure(figsize=(6, 4))  # Adjust the figure size as needed
+            # Histogram of the similarity
+            n, bins, _ = plt.hist(corr_sym, bins=corr.shape[0])  # Exclude NaN values from the histogram
+            bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+            colored_bins = cm.Spectral_r(np.interp(bin_centers, [0, 1], [0, 1]))
+            plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+            plt.xlabel('similarity', fontsize=10)  # Increase font size for x-label
+            plt.ylabel('Frequency', fontsize=10)       # Increase font size for y-label
+            plt.title('Subjects Similarity Distribution', fontsize=12)   # Increase font size for title
+
+            # Remove the outer box line
+            for spine in plt.gca().spines.values():
+                spine.set_visible(False)
+
+            # Set the grid on the back
+            plt.gca().set_axisbelow(True)
+            plt.grid(color='gray', linestyle='dashed')
+
+            # Set the Y-axis limit to the maximum frequency for both subplots
+            max_frequency = max(np.max(n), np.max(n))
+            plt.ylim(0, max_frequency)
+
+            # Remove the outer box line
+            for spine in plt.gca().spines.values():
+                spine.set_visible(False)
+
+            # Set the grid on the back
+            plt.gca().set_axisbelow(True)
+            plt.grid(color='gray', linestyle='dashed')
+
+            # Save the plot as an image file (e.g., PNG or PDF)
+            plt.savefig(f'{tmpDir}/micapipe_qc_hist-var_{out_png}.png', dpi=300, bbox_inches='tight')
+            plt.close()
+
+            # Table of the subjects with mean similarity below to a threshold 0.2???
             # Exclude diagonal values
             np.fill_diagonal(corr, np.nan)
 
             # Calculate column means
             colmean = np.nanmean(corr, axis=0)
 
-            # Get the position indices where colmean < 0.2
-            indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.25
+            indices = np.where(colmean < simthr)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
         _static_block +=  report_module_header_template(module=f'{out_png} | vertex-wise')
-        _static_block += report_titleh2(f'{out_png} | vertex-wise Group Mean')
-        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}.png')
-        _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
-        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix.png')
+        _static_block += report_qc_table(Main=out_png,
+                            title1=f'Mean group {out_png}',
+                            title2=f'Mean group variance {out_png}',
+                            fig1=f'{tmpDir}/micapipe_qc_{out_png}.png',
+                            fig2=f'{tmpDir}/micapipe_qc_var_{out_png}.png')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_hist_{out_png}.png', w=600)
+        _static_block += report_qc_table(Main=f'{out_png}: between subjects similarity',
+                            title1=f'{out_png} subjects similarity',
+                            title2=f'{out_png} subjects similarity distribution',
+                            fig1=f'{tmpDir}/micapipe_qc_{out_png}_matrix.png',
+                            fig2=f'{tmpDir}/micapipe_qc_hist-var_{out_png}.png',w2=300)
 
         # Print the position indices
         if len(indices) > 0:
@@ -682,7 +817,7 @@ def report_surface_similarity(out, lh_str, rh_str, out_png, cmap, quantile=(0.01
 
     return(_static_block)
 
-def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
+def report_roi_similarity(out, file_str, out_png, cmap, load_cnn, simthr=0.25):
     # change working directory
     os.chdir(out)
     # Loads and plots all the connectomes
@@ -698,10 +833,9 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
         # Mean matrix across the z axis (subjects)
         mtxs_mean = np.mean(mtxs, axis=2)
         # Mean acros columns
-        mtxs_colM = np.mean(mtxs_mean, axis=1)
+        roi_avg = np.mean(mtxs_mean, axis=1)
         # map to labels
-        mtxs_surf = map_to_labels(mtxs_colM, labels_c69, fill=np.nan, mask=mask_c69)
-
+        mtxs_surf = map_to_labels(roi_avg, labels_c69, fill=np.nan, mask=mask_c69)
         # Plot the mean thickness 10mm on conte69 surface
         dsize = (900, 750)
         display = Display(visible=0, size=dsize)
@@ -712,6 +846,74 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
                               label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
                               screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
         display.stop()
+
+        # Plot the mean VARIANCE 10mm on conte69 surface
+        # Variance matrix per edge
+        mtxs_var = np.var(mtxs, axis=2)
+        # Mean variance per ROI
+        roi_var = np.mean(mtxs_var, axis=1)
+        #mtxs_dev = mtxs_mean / np.nanstd(mtxs, axis=2)
+        #mtxs_dev[np.isnan(mtxs_dev)] = 0
+        #roi_var = np.mean(mtxs_dev, axis=1)
+
+        # map to labels
+        map_var = map_to_labels(roi_var, labels_c69, fill=np.nan, mask=mask_c69)
+        dsize = (900, 750)
+        display = Display(visible=0, size=dsize)
+        display.start()
+        plot_hemispheres(inf_lh, inf_rh, array_name=map_var, cmap='Spectral_r', nan_color=(0, 0, 0, 1),
+                              zoom=1.3, size=(900, 750), embed_nb=True,
+                              color_bar='right', layout_style='grid', color_range=(0, np.nanquantile(map_var, 0.95)),
+                              label_text={'left': ['Lateral', 'Medial'], 'top': ['Left', 'Right']},
+                              screenshot=True, offscreen=True, filename=f'{tmpDir}/micapipe_qc_var_{out_png}-roi.png')
+        display.stop()
+
+        # Create the 1x2 layout for histograms
+        plt.figure(figsize=(8, 3))
+
+        # Left subplot - Histogram for feature
+        plt.subplot(1, 2, 1)
+        n, bins, _ = plt.hist(roi_avg, bins=25)
+        bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+        colormap = cm.get_cmap(cmap)
+        colored_bins = colormap(np.interp(bin_centers, [np.min(roi_avg), np.max(roi_avg)], [0, 1]))
+        plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+        plt.xlabel(out_png, fontsize=10)  # Increase font size for x-label
+        plt.ylabel('Frequency', fontsize=10)       # Increase font size for y-label
+        plt.title(f'Mean {out_png} ROI', fontsize=12)   # Increase font size for title
+
+        # Remove the outer box line
+        for spine in plt.gca().spines.values():
+            spine.set_visible(False)
+        # Set the grid on the back
+        plt.gca().set_axisbelow(True)
+        plt.grid(color='gray', linestyle='dashed')
+
+        # Right subplot - Histogram for variance
+        plt.subplot(1, 2, 2)
+        n, bins, _ = plt.hist(roi_var[~np.isnan(roi_var)], bins=25)  # Exclude NaN values from the histogram
+        bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+        colored_bins = cm.Spectral_r(np.interp(bin_centers, [0, np.nanquantile(roi_var, 0.95)], [0, 1]))
+        plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+        plt.xlabel('Variance', fontsize=10)  # Increase font size for x-label
+        plt.ylabel('Frequency', fontsize=10)      # Increase font size for y-label
+        plt.title(f'Mean {out_png} Variance ROI', fontsize=12)  # Increase font size for title
+
+        # Remove the outer box line
+        for spine in plt.gca().spines.values():
+            spine.set_visible(False)
+        # Set the grid on the back
+        plt.gca().set_axisbelow(True)
+        plt.grid(color='gray', linestyle='dashed')
+
+        # Adjust the x-axis limit to cover the 0.975 quantile of roi_var
+        plt.xlim(0, np.nanquantile(roi_var, 0.975))
+
+        plt.tight_layout()  # Adjust the spacing between subplots
+        # Save the plot as an image file (e.g., PNG or PDF)
+        plt.savefig(f'{tmpDir}/micapipe_qc_hist_{out_png}-roi.png', dpi=300, bbox_inches='tight')
+        plt.close()
+
         # Calculate the similarity matrix
         if len(files) == 1:
             indices = []
@@ -721,6 +923,43 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
             plot_connectome(corr, f'Subject similarity - {out_png}', xlab=None, ylab=None, col='Spectral_r', vmin=0.1, vmax=1,
                            yticklabels=bids_ids, xticklabels=bids_ids, save_path=f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
             plt.close()
+
+            # Create the 1x2 layout for histograms
+            corr_sym = upper_tri_indexing(corr)
+            plt.figure(figsize=(6, 3))  # Adjust the figure size as needed
+            # Histogram of the similarity
+            n, bins, _ = plt.hist(corr_sym, bins=corr.shape[0])  # Exclude NaN values from the histogram
+            bin_centers = (bins[:-1] + bins[1:]) / 2  # Compute the bin centers
+            colored_bins = cm.Spectral_r(np.interp(bin_centers, [0, 1], [0, 1]))
+            plt.bar(bin_centers, n, width=np.diff(bins), color=colored_bins)
+            plt.xlabel('similarity', fontsize=10)  # Increase font size for x-label
+            plt.ylabel('Frequency', fontsize=10)       # Increase font size for y-label
+            plt.title('Subjects Similarity Distribution', fontsize=12)   # Increase font size for title
+
+            # Remove the outer box line
+            for spine in plt.gca().spines.values():
+                spine.set_visible(False)
+
+            # Set the grid on the back
+            plt.gca().set_axisbelow(True)
+            plt.grid(color='gray', linestyle='dashed')
+
+            # Set the Y-axis limit to the maximum frequency for both subplots
+            max_frequency = max(np.max(n), np.max(n))
+            plt.ylim(0, max_frequency)
+
+            # Remove the outer box line
+            for spine in plt.gca().spines.values():
+                spine.set_visible(False)
+
+            # Set the grid on the back
+            plt.gca().set_axisbelow(True)
+            plt.grid(color='gray', linestyle='dashed')
+
+            # Save the plot as an image file (e.g., PNG or PDF)
+            plt.savefig(f'{tmpDir}/micapipe_qc_hist-sim_{out_png}-roi.png', dpi=300, bbox_inches='tight')
+            plt.close()
+
             # plot a barplot if the subjects mean similarity is below a threshold 0.2???
             # Exclude diagonal values
             np.fill_diagonal(corr, np.nan)
@@ -728,16 +967,23 @@ def report_roi_similarity(out, file_str, out_png, cmap, load_cnn):
             # Calculate column means
             colmean = np.nanmean(corr, axis=0)
 
-            # Get the position indices where colmean < 0.2
-            indices = np.where(colmean < 0.25)[0]
+            # Get the position indices where colmean < 0.25
+            indices = np.where(colmean < simthr)[0]
 
         # Write html code
         _static_block = '<div style="page-break-after: always;"></div>'
         _static_block +=  report_module_header_template(module=f'{out_png} | ROI Schaeffer-400')
-        _static_block += report_titleh2(f'{out_png} | ROI Schaeffer-400 Group Mean')
-        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}-roi.png')
-        _static_block += report_titleh2(f'{out_png} | between Subjects Similarity')
-        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png')
+        _static_block += report_qc_table(Main=out_png,
+                            title1=f'Mean group {out_png}',
+                            title2=f'Mean group variance {out_png}',
+                            fig1=f'{tmpDir}/micapipe_qc_{out_png}-roi.png',
+                            fig2=f'{tmpDir}/micapipe_qc_var_{out_png}-roi.png')
+        _static_block += report_module_output_figure('', f'{tmpDir}/micapipe_qc_hist_{out_png}-roi.png', w=600)
+        _static_block += report_qc_table(Main=f'{out_png}: between subjects similarity',
+                            title1=f'{out_png} subjects similarity',
+                            title2=f'{out_png} subjects similarity distribution',
+                            fig1=f'{tmpDir}/micapipe_qc_{out_png}_matrix-roi.png',
+                            fig2=f'{tmpDir}/micapipe_qc_hist-sim_{out_png}-roi.png',w2=300)
 
         # Print the position indices
         if len(indices) > 0:
@@ -772,10 +1018,15 @@ def get_acqs(Str):
     acqs = sorted(glob.glob(out+'/'+dir_str+f'/{Str}/*'))
     acqs_uni = [entry.split('/')[-1] for entry in acqs]
     acqs_uni = list(set(acqs_uni))
-    if Str == 'dwi' and not any('acq-' in entry for entry in acqs_uni):
-        acqs_uni = ['-']
-
-    return(acqs_uni)
+    if Str == 'dwi':
+        if not any('acq-' in entry for entry in acqs_uni):
+            acqs_uni = ['-']
+        if any('acq-' in entry for entry in acqs_uni):
+            acqs_dwi = [entry for entry in acqs_uni if 'acq-' in entry]
+            if any('nii' in entry for entry in acqs_uni):
+                acqs_dwi.append('-')
+            acqs_uni = acqs_dwi
+    return acqs_uni
 
 def get_tracts(dwi_str):
     acqs = sorted(glob.glob(out+f'/{dwi_str}/connectomes/*schaefer-400*full-connectome*'))
@@ -861,9 +1112,9 @@ def qc_group():
     print( 'Creating... Mean vertex-wise maps')
     # Vertex-wise Thickness
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-thickness.func.gii',
-                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995))
+                              f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-thickness.func.gii', 'thickness', 'rocket', quantile=(0.075, 0.995), simthr=0.55)
 
-    # Vertex-wise Thickness
+    # Vertex-wise Curvature
     _static_block += report_surface_similarity(out, f'{dir_str}/maps/*_hemi-L_surf-fsLR-5k_label-curv.func.gii',
                               f'{dir_str}/maps/*_hemi-R_surf-fsLR-5k_label-curv.func.gii', 'curvature', 'cividis', quantile=(0.05, 0.99))
 
@@ -893,7 +1144,7 @@ def qc_group():
     # ROI based
     print( 'Creating... ROI based maps')
     # ROI GDs
-    _static_block += report_roi_similarity(out, f'{dir_str}/dist/*_atlas-schaefer-400_GD.shape.gii', 'GD', 'vlag', load_gd)
+    _static_block += report_roi_similarity(out, f'{dir_str}/dist/*_atlas-schaefer-400_GD.shape.gii', 'GD', 'vlag', load_gd, simthr=0.8)
 
     # ROI SC (dynamic)
     for acq in get_acqs('dwi'):
@@ -903,7 +1154,7 @@ def qc_group():
             dwi_name=f'SC_{acq}_{tracts}'.replace('_-','')
             print( f'   dwi id: {dwi_name}')
             cnn_files=f'{dir_str}/dwi/{acq}/connectomes/*atlas-schaefer-400_desc-iFOD2-{tracts}-SIFT2_full-connectome.shape.gii'.replace('/-/','/')
-            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc)
+            _static_block += report_roi_similarity(out, cnn_files, dwi_name, 'flare_r', load_sc, simthr=0.5)
 
     # ROI func (dynamic)
     for acq in get_acqs('func'):
