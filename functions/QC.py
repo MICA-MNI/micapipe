@@ -826,8 +826,16 @@ def qc_proc_flair(proc_flair_json=''):
 ## ---------------------------- PROC_DWI MODULE ---------------------------- ##
 def qc_proc_dwi(proc_dwi_json=''):
 
+    if 'acq-' in proc_dwi_json:
+        tag_dwi = proc_dwi_json.split('module-proc_dwi_')[1].split('.json')[0]
+        dwi_dir=f'dwi/{tag_dwi}'
+        tag_dwi=f'_{tag_dwi}'
+    else:
+        tag_dwi=''
+        dwi_dir='dwi'
+
     _static_block = qc_header()
-    _static_block +=  report_module_header_template(module='proc_dwi')
+    _static_block +=  report_module_header_template(module=f'proc_dwi{tag_dwi}')
 
     # QC summary
     _static_block += report_qc_summary_template(proc_dwi_json)
@@ -835,12 +843,6 @@ def qc_proc_dwi(proc_dwi_json=''):
     if not check_json_complete(proc_dwi_json):
         return _static_block
 
-    if 'acq-' in dwi_json:
-        tag_dwi = dwi_json.split('module-proc_dwi_')[1].split('.json')[0]
-        dwi_dir=f'dwi/{tag_dwi}'
-    else:
-        tag_dwi=''
-        dwi_dir='dwi'
     preproc_dwi_json = os.path.realpath(f'{subj_dir}/{dwi_dir}/{sbids}_desc-preproc_dwi.json')
     with open( preproc_dwi_json ) as f:
         preproc_dwi_json = json.load(f)
@@ -853,10 +855,11 @@ def qc_proc_dwi(proc_dwi_json=''):
 
     dwipeScan = preproc_dwi_json["DWIpe"]["fileName"].split()
     for i, s in enumerate(dwipeScan):
+
         acq = s.split("acq-")[1].split("_")[0]
-        outPath = tmpDir + '/' + s.split(f'{dwi_dir}/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
+        outPath = tmpDir + '/' + s.split('dwi/')[1].split('.nii.gz')[0] + '_mean.nii.gz'
         outName = "DWI pe %s (mean)"%(acq)
-        figPath = "%s/dwipe_scan%s%s.png"%(tmpDir,i+1,tag_dwi)
+        figPath = "%s/dwipe_scan%s.png"%(tmpDir,i+1)
         _static_block += nifti_check(outName=outName, outPath=outPath, figPath=figPath)
 
     dwirpeScan = preproc_dwi_json["DWIrpe"]["fileName"].split()
@@ -894,11 +897,11 @@ def qc_proc_dwi(proc_dwi_json=''):
     figPath = "%s/%s_space-dwi_desc-b0.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="DWI b0 pre-processed", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
+    outPath = "%s/%s_space-dwi_desc-preproc_dwi_mean%s.nii.gz"%(tmpDir,sbids,tag_dwi)
     figPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="DWI pre-processed", outPath=outPath, figPath=figPath)
 
-    outPath = "%s/%s_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"%(tmpDir,sbids)
+    outPath = "%s/%s_space-dwi_model-CSD_map-FOD_desc-wmNorm%s.nii.gz"%(tmpDir,sbids,tag_dwi)
     figPath = "%s/%s_space-dwi_model-CSD_map-FOD_desc-wmNorm.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="White matter fibre orientation (FOD)", outPath=outPath, figPath=figPath)
 
@@ -913,11 +916,11 @@ def qc_proc_dwi(proc_dwi_json=''):
     outPath = f"{subj_dir}/{dwi_dir}/{sbids}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
     if not os.path.isfile(outPath):
         outPath = f"{subj_dir}/{dwi_dir}/{sbids}_space-dwi_desc-T1w_nativepro_Affine.nii.gz"
-    refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean.nii.gz"%(tmpDir,sbids)
+    refPath = "%s/%s_space-dwi_desc-preproc_dwi_mean%s.nii.gz"%(tmpDir,sbids,tag_dwi)
     figPath = "%s/t1w_dwi_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Registration: T1w in DWI space", outPath=outPath, refPath=refPath, figPath=figPath)
 
-    outPath = "%s/%s_space-dwi_desc-5tt.nii.gz"%(tmpDir,sbids)
+    outPath = "%s/%s_space-dwi_desc-5tt%s.nii.gz"%(tmpDir,sbids,tag_dwi)
     figPath = "%s/%s_space-dwi_desc-5tt.png"%(tmpDir,sbids)
     _static_block += nifti_check(outName="5 tissue segmentation (5TT) in DWI space", outPath=outPath, figPath=figPath)
 
@@ -949,9 +952,9 @@ def qc_proc_dwi(proc_dwi_json=''):
          ).format(measure=measure)
 
         for surface in ['midthickness', 'white']:
-            measure_c69_32k_lh = "%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s_%s.func.gii"%(subj_dir,sbids,surface,measure)
-            measure_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s.func.gii"%(subj_dir,sbids,surface,measure)
-            measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s.png"%(tmpDir,sbids,surface,measure)
+            measure_c69_32k_lh = "%s/maps/%s_hemi-L_surf-fsLR-32k_label-%s_%s%s.func.gii"%(subj_dir,sbids,surface,measure,tag_dwi)
+            measure_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s%s.func.gii"%(subj_dir,sbids,surface,measure,tag_dwi)
+            measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s%s.png"%(tmpDir,sbids,surface,measure,tag_dwi)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
             measure_crange=(np.quantile(f, 0.01), np.quantile(f, 0.98))
             display = Display(visible=0, size=(900, 250))
@@ -1093,18 +1096,19 @@ def qc_proc_func(proc_func_json=''):
     )
     tSNR_file = "%s/func/desc-%s/volumetric/%s_space-func_desc-se_tSNR.shape.gii"%(subj_dir,tag,sbids)
     tSNR = nb.load(tSNR_file).darrays[0].data
+    tSNR = np.squeeze(tSNR)
 
     snr_fig = tmpDir + "/" + sbids + "_surf-native_tSNR.png"
     display = Display(visible=0, size=(900, 250))
     display.start()
-    plot_hemispheres(inf_lh, inf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), cmap='rocket', color_range=(np.quantile(deg, 0.001), np.quantile(deg, 0.95)), transparent_bg=False, screenshot = True, offscreen=True, filename = snr_fig)
+    plot_hemispheres(surf_lh, surf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), cmap='magma', color_range=(np.quantile(tSNR, 0.05), np.quantile(tSNR, 0.95)), transparent_bg=False, screenshot = True, offscreen=True, filename = snr_fig)
     display.stop()
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{snr_fig}"> </center>'
-    ).format(deg_fig=deg_fig)
+    ).format(snr_fig=snr_fig)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -1245,12 +1249,19 @@ def qc_proc_func(proc_func_json=''):
 
 ## ------------------------------- SC MODULE ------------------------------ ##
 def qc_sc(sc_json=''):
-
-    streamlines = sc_json.split('%s_module-SC-'%(sbids))[1].split('.json')[0]
+    if 'acq-' in sc_json:
+        tag_dwi = 'acq-'+sc_json.split('acq-')[1].split('.json')[0]
+        dwi_dir=f'dwi/{tag_dwi}'
+        tag_dwi=f'_{tag_dwi}'
+        streamlines = sc_json.split('module-SC-')[1].split('.json')[0].split(tag_dwi)[0]
+    else:
+        tag_dwi=''
+        dwi_dir='dwi'
+        streamlines = sc_json.split(f'{sbids}_module-SC-')[1].split('.json')[0]
 
     # QC header
     _static_block = qc_header()
-    _static_block +=  report_module_header_template(module="Structural connectomes (%s streamlines)"%(streamlines))
+    _static_block +=  report_module_header_template(module=f"Structural connectomes ({streamlines} streamlines{tag_dwi})")
 
     # QC summary
     _static_block += report_qc_summary_template(sc_json)
@@ -1258,7 +1269,7 @@ def qc_sc(sc_json=''):
     if not check_json_complete(sc_json):
         return _static_block
 
-    tdi_json = os.path.realpath("%s/dwi/%s_space-dwi_desc-iFOD2-%s_tractography.json"%(subj_dir,sbids,streamlines))
+    tdi_json = os.path.realpath(f"{subj_dir}/{dwi_dir}/{sbids}_space-dwi_desc-iFOD2-{streamlines}_tractography.json")
     with open( tdi_json ) as f:
         tdi_json = json.load(f)
 
@@ -1293,7 +1304,7 @@ def qc_sc(sc_json=''):
 
     _static_block += tractography_table
 
-    outPath = "%s/%s_space-dwi_desc-iFOD2-%s_tdi_mean.nii.gz"%(tmpDir,sbids,streamlines)
+    outPath = "%s/%s_space-dwi_desc-iFOD2-%s_tdi_mean%s.nii.gz"%(tmpDir,sbids,streamlines,tag_dwi)
     figPath = "%s/tdi_%s.png"%(tmpDir,streamlines)
     _static_block += nifti_check(outName="Track density imaging (%s tracks)"%(streamlines), outPath=outPath, figPath=figPath)
 
@@ -1305,7 +1316,7 @@ def qc_sc(sc_json=''):
     connectomes = ['full-connectome', 'full-edgeLengths'] if tractography["weighted_SC"] == "FALSE" else ['full-connectome', 'full-edgeLengths', 'full-weighted_connectome']
 
     for connectomeType in connectomes:
-        c_file = "%s/dwi/connectomes/%s_surf-fsLR-5k_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(subj_dir,sbids,streamlines,connectomeType)
+        c_file = f"{subj_dir}/{dwi_dir}/connectomes/{sbids}_surf-fsLR-5k_desc-iFOD2-{streamlines}-SIFT2_{connectomeType}.shape.gii"
         c = nb.load(c_file).darrays[0].data
         c = np.log(np.triu(c,1)+c.T)
         c[np.isneginf(c)] = 0
@@ -1316,7 +1327,7 @@ def qc_sc(sc_json=''):
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(c69_5k_I_lh, c69_5k_I_rh, array_name=deg, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.25), np.quantile(deg,0.9)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
+                         nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.25), np.quantile(deg,0.99)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
         display.stop()
         vertex_wise = (
             '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
@@ -1337,7 +1348,7 @@ def qc_sc(sc_json=''):
             Ndim = max(np.unique(annot_lh_fs5[0]))
 
             c_fig = tmpDir + "/" + sbids + "space-dwi_atlas-" + annot + "_desc-iFOD2-" + streamlines + "SIFT2_" + connectomeType + ".png"
-            c_file = "%s/dwi/connectomes/%s_space-dwi_atlas-%s_desc-iFOD2-%s-SIFT2_%s.shape.gii"%(subj_dir,sbids,annot,streamlines,connectomeType)
+            c_file = f"{subj_dir}/{dwi_dir}/connectomes/{sbids}_space-dwi_atlas-{annot}_desc-iFOD2-{streamlines}-SIFT2_{connectomeType}.shape.gii"
             c = nb.load(c_file).darrays[0].data
             c = np.log(np.triu(c,1)+c.T)
             c[np.isneginf(c)] = 0
