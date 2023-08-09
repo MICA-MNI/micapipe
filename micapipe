@@ -184,12 +184,12 @@ echo -e "
     https://github.com/MICA-MNI/micapipe
 
 \033[38;5;141mDEPENDENCIES:\033[0m
-    > AFNI        20.3.03 (https://afni.nimh.nih.gov/download)
-    > ANTs        2.3.4   (https://github.com/ANTsX/ANTs)
-    > FSL         6.0.3     (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
-    > Freesurfer  7.4.0     (https://surfer.nmr.mgh.harvard.edu/)
+    > AFNI        23.1.09 (https://afni.nimh.nih.gov/download)
+    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
+    > FSL         6.0.2   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+    > Freesurfer  7.3.2   (https://surfer.nmr.mgh.harvard.edu/)
     > MRtrix3     3.0.1   (https://www.mrtrix.org)
-    > workbench   1.4.2
+    > workbench   1.4.2s
     > python      3.9.15
     > R           3.6.3
     > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
