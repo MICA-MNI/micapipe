@@ -4,3 +4,4 @@ functions/__pycache__/
 micapipe_*.sif
 docs/build/*
 docs/build_
+micapipe_v0.*
