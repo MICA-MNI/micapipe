@@ -130,7 +130,7 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     Note "PROC" "$PROC"
     if [[ "$recon" == "fastsurfer" ]]; then
         Do_cmd mkdir -p "${dir_surf}/${idBIDS}"
-        if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then
+        if [[ ${PROC} == "container_micapipe-v0.2.2" ]]; then
           Info "FastSurfer: running fastsurfer_cpu environment"
           source activate fastsurfer_cpu
           Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
