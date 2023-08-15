@@ -1094,7 +1094,7 @@ def qc_proc_func(proc_func_json=''):
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>Signal to Noise Ratio (tSNR)</b> </p>'
     )
-    tSNR_file = "%s/func/desc-%s/volumetric/%s_space-func_desc-se_tSNR.shape.gii"%(subj_dir,tag,sbids)
+    tSNR_file = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_tSNR.shape.gii"%(subj_dir,tag,sbids,acquisition)
     tSNR = nb.load(tSNR_file).darrays[0].data
     tSNR = np.squeeze(tSNR)
 
