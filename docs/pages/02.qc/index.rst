@@ -103,15 +103,15 @@ There are two ways to run the *individual quality control* module, one is integr
           - Microstructural profiles (image intensities at each cortical depth) plotted on native surface
 
         .. figure:: qc_subj.png
-  
+
 Group level QC
 --------------------------------------------------------
 
 The group level quality control generates a report with all completed and processed modules by subjects. The report consists of a color coded table with rows as subjects and columns as the pipeline modules.
 
 - Blue: Completed
-- Orange: Either incomplete or error
-- Dark gray: not processed
+- Red: Either incomplete or error
+- White: not processed
 
 .. figure:: qc_group.png
    :scale: 60 %
@@ -127,7 +127,7 @@ The group level quality control generates a report with all completed and proces
 
         **Optional arguments:**
 
-        There are no optional arguments for this command. 
+        There are no optional arguments for this command.
 
     .. tab:: Output
 
