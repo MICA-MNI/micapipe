@@ -7,17 +7,21 @@ What's new?
 
 v0.2.2 'Northern Flicker'
 -------------------------------------
+
 **General**
+
 - FIX issue with multiple acquisitions when `-proc_dwi` was used with `-dwi_acq`. Including the following modules `SC`, `QC` and `QC_subj`.
 - FIX instance when multi echo processing has no spike regression file now calculates the nuisance regression correctly.
 - FIX an issue with the dimensions of the tSNR file in `proc_func`.
 
 **QC group**
+
 - Set higher thresholds for GD and SC in the similarity subjects matrices for better outlier detection.
 - NEW vertex-wise and ROI variance per feature.
 - NEW histograms of features and variances per ROI and vertex-wise.
 
 **QC_subj**
+
 - NEW a surface plot of the tSNR to the `proc_func` module in `QC_subj`.
 
 

@@ -15,6 +15,9 @@ Intracortical equivolumetric surfaces are generated using scripts from the `surf
 -MPC
 --------------------------------------------------------
 
+.. figure:: proc_mpc.png
+   :align: center
+
 .. admonition:: Prerequisites 🖐🏼
 
     You need to run ``-proc_structural``, ``-proc_freesurfer`` and ``-post_structural`` before this stage
@@ -56,7 +59,7 @@ Intracortical equivolumetric surfaces are generated using scripts from the `surf
             * - **Optional argument**
               - **Description**
             * - ``-microstructural_img`` ``<path>``
-              - Specifies an input image on which to sample intensities for the MPC analysis. You must specify this flag if your dataset does not include a qT1 image, or if your microstructurally-sensitive imaging contrast is not stored in the *rawdata* branch of the BIDS directory (for example, T1-weighted divided by T2-weighted derivative file). 
+              - Specifies an input image on which to sample intensities for the MPC analysis. You must specify this flag if your dataset does not include a qT1 image, or if your microstructurally-sensitive imaging contrast is not stored in the *rawdata* branch of the BIDS directory (for example, T1-weighted divided by T2-weighted derivative file).
             * - ``-microstructural_lta`` ``<path>``
               - This option lets the user specify their own registration file to map the input image to native freesurfer space. The registration file must be in ``.lta`` format. If omitted, the registration will be performed in the script using `bbregister <https://surfer.nmr.mgh.harvard.edu/fswiki/bbregister/>`_.
             * - ``-microstructural_reg`` ``<path>``
