@@ -18,7 +18,7 @@
   :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-**Welcome to micapipe's documentation! v0.2.0**
+**Welcome to micapipe's documentation! v0.2.2**
 ========================================================
 
 .. image:: https://img.shields.io/github/v/tag/MICA-MNI/micapipe
