@@ -774,18 +774,29 @@ else
     Info "Subject ${id} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
 fi
 
-# ONLY for tSNR (will get deleted after):
-if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then
+
+# Caculate tSNR
+if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.nii.gz" ]]; then
+    Do_cmd fslmaths "$func_nii" -Tmean "${tmp}/${idBIDS}${func_lab}_mean"
+    Do_cmd fslmaths "$func_nii" -Tstd "${tmp}/${idBIDS}${func_lab}_std"
+    D0_cmd fslmaths  "${tmp}/${idBIDS}${func_lab}_mean.nii.gz" \
+        -div "${tmp}/${idBIDS}${func_lab}_std.nii.gz" \
+        "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.nii.gz"
+    Info "Subject ${id} volumetric tSNR calculated"; ((Nsteps++)); ((N++))
+else
+    Info "Subject ${id} was already tSNR calculated (volumetric)";  ((Nsteps++)); ((N++))
+fi
+if [[ ! -f "${func_volum}/${idBIDS}_hemi-R_space-func_desc-se_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
-            "$func_nii" \
+            "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.nii.gz" \
             "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
-            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative_NoHP.func.gii \
+            "${func_volum}/${idBIDS}_hemi-${HEMICAP}_space-func_desc-se_tSNR.shape.gii" \
             -trilinear
-        Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
+        Info "Subject ${id} hemi-${HEMICAP} tSNR mapped to fsnative"; ((Nsteps++)); ((N++))
     done
 else
-    Info "Subject ${id} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+    Info "Subject ${id} tSNR was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
 
 #------------------------------------------------------------------------------#
