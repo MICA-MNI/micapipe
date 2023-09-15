@@ -330,7 +330,7 @@ del ts
 # ------------------------------------------
 print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
-print('Calculating tSNR and framewise displacement')
+print('Calculating framewise displacement')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 # mean framewise displacement + save plot
 fd = np.loadtxt(x_fd)
@@ -345,21 +345,6 @@ ax.spines['right'].set_visible(False)
 plt.savefig(funcDir+'/volumetric/' + subject + func_lab + '_framewiseDisplacement.png', dpi=300)
 del fd
 
-# ------------------------------------------
-# tSNR
-lh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-L_surf-fsnative_NoHP.func.gii'))
-lh_nat_noHP_data = funcgii_load(nib.load(lh_nat_noHP))
-rh_nat_noHP = " ".join(glob.glob(funcDir+'/surf/'+'*hemi-R_surf-fsnative_NoHP.func.gii'))
-rh_nat_noHP_data = funcgii_load(nib.load(rh_nat_noHP))
-lhM = np.mean(lh_nat_noHP_data, axis = 0)
-lhSD = np.std(lh_nat_noHP_data, axis = 0)
-lh_tSNR = np.divide(lhM, lhSD)
-rhM = np.mean(rh_nat_noHP_data, axis = 0)
-rhSD = np.std(rh_nat_noHP_data, axis = 0)
-rh_tSNR = np.divide(rhM, rhSD)
-tSNR = np.append(lh_tSNR, rh_tSNR)
-tSNR = np.expand_dims(tSNR, axis=1)
-save_gii(tSNR, funcDir+'/volumetric/'+subject+func_lab+'_tSNR.shape.gii')
 print('')
 print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+')
 print('func regression and FC ran successfully')
