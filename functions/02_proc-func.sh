@@ -786,12 +786,12 @@ if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.nii.gz" ]]; then
 else
     Info "Subject ${id} was already tSNR calculated (volumetric)";  ((Nsteps++)); ((N++))
 fi
-if [[ ! -f "${func_volum}/${idBIDS}_hemi-R_space-func_desc-se_tSNR.shape.gii" ]]; then
+if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_space-func_desc-se_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
             "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.nii.gz" \
             "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
-            "${func_volum}/${idBIDS}_hemi-${HEMICAP}_space-func_desc-se_tSNR.shape.gii" \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}_space-func_desc-se_tSNR.shape.gii" \
             -trilinear
         Info "Subject ${id} hemi-${HEMICAP} tSNR mapped to fsnative"; ((Nsteps++)); ((N++))
     done
