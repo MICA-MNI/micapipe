@@ -259,7 +259,7 @@ This first structural post-processing module registers native FreeSurfer-space c
             - aparc-a2009s
             - aparc
             - economo
-            - glasser
+            - glasser-360
             - schaefer-1000
             - schaefer-100
             - schaefer-200
