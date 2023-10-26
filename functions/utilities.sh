@@ -996,6 +996,7 @@ function json_dwipreproc() {
     \"B0 threshold\": \"${b0thr}\",
     \"Bvalue scaling\": \"${bvalscale}\",
     \"regSynth\": \"${synth_reg}\",
+    \"dwi_upsample\": \"${dwi_upsample}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",
