@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.2.2 'Northern flicker'"
+export Version="v0.2.3 'Northern flicker'"
 export MRTRIX_QUIET=TRUE
 bids_variables() {
   # This functions assignes variables names acording to:

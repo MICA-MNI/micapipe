@@ -13,7 +13,7 @@
 #
 # ONLY for scripting and debugging:
 # TEST=ON
-Version="(v0.2.2 'Northern flicker')"
+Version="(v0.2.3 'Northern flicker')"
 version() {
   echo -e "\nMICAPIPE March 2023 ${Version}\n"
 }
@@ -123,7 +123,7 @@ fi
 source "${MICAPIPE}/functions/utilities.sh"
 
 # Force micapipe conda env if container == TRUE
-if [[ ${PROC} == "container_micapipe-v0.2.2" ]]; then source activate micapipe; fi
+if [[ ${PROC} == "container_micapipe-v0.2.3" ]]; then source activate micapipe; fi
 
 # Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
 if [[ -z $threads ]]; then export threads=6; fi
