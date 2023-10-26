@@ -130,7 +130,6 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     Note "PROC" "$PROC"
     if [[ "$recon" == "fastsurfer" ]]; then
         Do_cmd mkdir -p "${dir_surf}/${idBIDS}"
-        if [[ ${PROC} == "container_micapipe-v0.2.0" ]]; then
           Info "FastSurfer: running fastsurfer_cpu environment"
           source activate fastsurfer_cpu
           Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
@@ -142,31 +141,8 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
           source activate micapipe
           sudo chmod aug+wr -R "${dir_surf}/${idBIDS}"
           Do_cmd cp "${dir_surf}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
-        else
-          t1="${SUBJECTS_DIR}/nii/${idBIDS}"_T1w.nii.gz
-          Do_cmd cp "${t1_2proc}" "${t1}"
-          cp "${fs_licence}" "${SUBJECTS_DIR}"/license.txt
-          Info "FastSurfer: running the singularity image"
-          singularity exec --nv -B "${SUBJECTS_DIR}/nii":/data \
-                                -B "${SUBJECTS_DIR}":/output \
-                                -B "${tmp}/nii":/anat \
-                                 "${fastsurfer_img}" \
-                                 /fastsurfer/run_fastsurfer.sh \
-                                --fs_license /output/license.txt \
-                                --t1 /anat/"${idBIDS}"_T1w.nii.gz \
-                                --sid "${idBIDS}" --sd /output --no_fs_T1 \
-                                --parallel --threads "${threads}"
-          rm -rfv "${SUBJECTS_DIR}/nii"
-          chmod aug+wr -R "${SUBJECTS_DIR}/${idBIDS}"
-          #  mri/T1.mgz is replaced by mri/norm.mgz with fastsurfer
-          cp "${SUBJECTS_DIR}/${idBIDS}/mri/norm.mgz" "${SUBJECTS_DIR}/${idBIDS}/mri/T1.mgz"
-          # Copy the freesurfer log to our MICA-log Directory
-          Do_cmd cp "${SUBJECTS_DIR}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
-          # Copy results from TMP to deviratives/SUBJECTS_DIR directory
-          Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
-        fi
     else
-        Info "Running Freesurfer 7.4.0 comform volume to minimum"
+        Info "Running Freesurfer 7.3.2 comform volume to minimum"
 
         # FIX FOV greater than 256
         t1nii="${t1_2proc}"
