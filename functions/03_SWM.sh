@@ -10,7 +10,7 @@
 #
 # Atlas an templates are avaliable from:
 #
-# https://github.com/MICA-MNI/micapipe/tree/master/parcellations
+# https:/github.com/MICA-MNI/micapipe/tree/master/parcellations
 #
 #   ARGUMENTS order:
 #   $1 : BIDS directory
@@ -47,44 +47,84 @@ recon=$(grep SurfRecon "${post_struct_json}" | awk -F '"' '{print $4}')
 set_surface_directory "${recon}"
 
 #------------------------------------------------------------------------------#
-Title "Subcortical White Matter Mapping (SWM)"
+Title "Superficial White Matter Mapping (SWM)"
+
+#	Timer
+aloita=$(date +%s)
+Nsteps=0
+N=0
 
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
 
 # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_post-morpho_${idBIDS}"
+tmp="${tmpDir}/${RANDOM}_micapipe_swm_${idBIDS}"
 Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
 trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
-# Data location
-dataDir="${dir_subjsurf}/surf"
+# create a json QC file
+module_json="${dir_QC}/${idBIDS}_module-SWM.json"
 
-#------------------------------------------------------------------------------#
-# Lapplacian mapping and surface generation
-
+# Create the working directory
 mkdir -p "${tmp}/"
 
+#------------------------------------------------------------------------------#
+# Laplacian surface generation v
+Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
+if [[ "$Nwm" -lt 6 ]]; then ((N++))
+    # Import the surface segmentation to NIFTI
+    T1fs_seg="${tmp}/aparc+aseg.nii.gz"
+    Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${T1fs_seg}"
 
-# Apply transformation from surface space to nativepro space
-Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${tmp}/aparc+aseg.nii.gz"
+    # Move the segmentation to T1_nativepro space
+    mat_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_"
+    T1_fsnative_affine="${mat_fsnative_affine}0GenericAffine.mat"
+    T1nativepro_seg="${tmp}/aparc+aseg_space-nativepro.nii.gz"
+    Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}"-r "${T1nativepro}" -t ${T1_fsnative_affine} -o "${T1nativepro_seg}" -n GenericLabel -v -u int
 
-mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_
-T1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
-Do_cmd antsApplyTransforms -d 3 -i "${tmp}/aparc+aseg.nii.gz" -r "$T1nativepro" -n MultiLabel -t "$T1_fsnative_affine" -o "${tmp}/aparc+aseg_space-nativepro.nii.gz" -u int
+    # Generate the laplacian field
+    WM_laplace=${tmp}/wm-laplace.nii.gz
+    Do_cmd python "$MICAPIPE"/functions/laplace_solver.py ${T1nativepro_seg} ${WM_laplace}
 
-# Solve a Laplace field
-Do_cmd python "$MICAPIPE"/functions/laplace_solver.py "${tmp}/aparc+aseg_space-nativepro.nii.gz" "${tmp}/wm-laplace.nii.gz"
-# Shift a given surface along the Laplace field
-mkdir -p "${dir_conte69}/wm-equipotentials"
-for depths in 0.05 0.1 0.2 0.3; do
-    Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-L_surfdepth-${depths}" $depths
-    Do_cmd python "$MICAPIPE"/functions/laplace_surf_interp.py "${dir_conte69}/${idBIDS}_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii" "${tmp}/wm-laplace.nii.gz" "${tmp}/""${dir_conte69}/wm-equipotentials/{idBIDS}_hemi-R_surfdepth-${depths}" $depths
+    # Create the surfaces at 01 02 and 03 deeps
+    for HEMI in L R; do
+      # Prepare the white matter surface
+      cp "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-white.surf.gii ${tmp}/wm.surf.gii"
+      # Run SWM
+      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm"
+    done
+    Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
+    if [[ "$Nwm" -eq 6 ]]; then ((Nsteps++)); fi
+else
+    Info "Subject ${idBIDS} has SWM surfaces"; ((Nsteps++)); ((N++))
+fi
+
+#------------------------------------------------------------------------------#
+# Mapping files
+maps=(${dir_maps}/*nii*)
+for map in ${maps[*]}; do
+  map_id=$(echo ${map/.nii.gz/} | awk -F 'map-' '{print $2}')
+  # Map to surface: swm01 swm02 smw03
+      for HEMI in L R; do
+          for label in swm01 swm02 swm03; do
+              Info "Mapping SWM-${label} to fsLR-32k, fsLR-5k and fsaverage5"
+              surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+              # MAPPING metric to surfaces
+              map_to-surfaces "${map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${map_id}.func.gii" "${HEMI}" "${label}_${map_id}" "${dir_maps}"
+          done
+      done
 done
 
-exit
 #------------------------------------------------------------------------------#
-# End if module has been processed
+# QC notification of completition
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=$(echo print "$eri"/60 | perl)
+
+# Notification of completition
+micapipe_completition_status "SWM"
+micapipe_procStatus "${id}" "${SES/ses-/}" "SWM" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "SWM" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"

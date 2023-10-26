@@ -6,7 +6,8 @@
 import nibabel as nib
 import numpy as np
 import skfmm
-from scipy.ndimage import binary_dilation, convolve
+from scipy.ndimage import binary_dilation
+from astropy.convolution import convolve as nan_convolve
 import sys
 import os
 import glob
@@ -18,11 +19,11 @@ out_laplace = sys.argv[2]
 # parameters
 convergence_threshold = 1e-4
 max_iters = 10000
-#fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80]
+#fg_labels = [2, 4, 11, 12, 26, 17, 31, 10, 5, 28, 13, 30, 41, 43, 50, 51, 58, 53, 63, 49, 44, 60, 52, 62, 77, 255, 254, 253, 252, 251, 72, 80, 54, 18]
 fg_labels = [41, 2]
-#src_labels = np.hstack(([54, 18], np.arange(1000,2999)))
+#src_labels = np.hstack(([54, 18], np.arange(1000,2999))) # includes amygdala
 src_labels = np.arange(1000,2999)
-# sink_labels = [4, 43, 31, 63]#, 5, 44]
+#sink_labels = [4, 43, 31, 63, 5, 44]
 
 lbl_nib = nib.load(in_seg)
 lbl = lbl_nib.get_fdata()
@@ -33,8 +34,8 @@ fg = np.isin(lbl,fg_labels)
 fg = binary_dilation(fg) # dilate to make sure we always "catch" neighbouring surfaces in our gradient
 source = np.isin(lbl,src_labels)
 source[fg] = 0
-#sink = np.isin(lbl,sink_labels)
 sink = 1-fg-source
+#sink = np.isin(lbl,sink_labels)
 
 # initialize solution with fast marching
 # fast march forward
@@ -65,7 +66,7 @@ init_coords = init_coords / np.max(init_coords)
 init_coords[fg == 0] = 0
 
 # set up filter (27NN)
-hl = np.ones([3, 3, 3])
+hl = np.ones([7, 7, 7])
 hl = hl / np.sum(hl)
 
 # initialize coords
@@ -94,7 +95,7 @@ for i in range(max_iters):
         break
     coords = upd_coords
 
-
+coords[source==1] = -0.0001
 # save file
 print('saving')
 coords_nib = nib.Nifti1Image(coords, lbl_nib.affine, lbl_nib.header)
