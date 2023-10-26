@@ -1052,33 +1052,33 @@ function json_dwipreproc() {
 #     Warn messages
 #     Title messages
 Error() {
-echo -e "\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
--------------------------------------------------------------\n"
+echo -e "\033[38;5;9m\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
+-------------------------------------------------------------\033[0m\n"
 }
 Note(){
 # I replaced color \033[38;5;197m to \033[38;5;122m
-if [[ ${quiet} != TRUE ]]; then echo -e "\t\t$1\t$2"; fi
+if [[ ${quiet} != TRUE ]]; then echo -e "\t\t$1\t\033[38;5;122m$2\033[0m"; fi
 }
 Info() {
 Col="38;5;75m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "\n[ INFO ]..... $1 "; fi
+if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col\n[ INFO ]..... $1 \033[0m"; fi
 }
 Warning() {
 Col="38;5;184m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "\n[ WARNING ]..... $1 "; fi
+if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col\n[ WARNING ]..... $1 \033[0m"; fi
 }
 Warn() {
 Col="38;5;184m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "
+if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col
 -------------------------------------------------------------\n
 [ WARNING ]..... $1
-\n-------------------------------------------------------------"; fi
+\n-------------------------------------------------------------\033[0m"; fi
 }
 Title() {
-if [[ ${quiet} != TRUE ]]; then echo -e "\n
+if [[ ${quiet} != TRUE ]]; then echo -e "\n\033[38;5;141m
 -------------------------------------------------------------
 \t$1
--------------------------------------------------------------"; fi
+-------------------------------------------------------------\033[0m"; fi
 }
 
 #---------------- FUNCTION: PRINT COLOR COMMAND ----------------#
@@ -1106,7 +1106,7 @@ while [ ${l_index} -le $# ]; do
     l_sep=" "
     l_index=$[${l_index}+1]
    done
-if [[ ${quiet} != TRUE ]]; then echo -e "\n${str}:\nCOMMAND -->  ${l_command}"; fi
+if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118m\n${str}:\nCOMMAND -->  \033[38;5;122m${l_command}  \033[0m"; fi
 if [ -z "$TEST" ]; then $l_command; fi
 }
 
