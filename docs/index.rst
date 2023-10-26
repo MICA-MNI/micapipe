@@ -18,7 +18,7 @@
   :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-**Welcome to micapipe's documentation! v0.2.0**
+**Welcome to micapipe's documentation! v0.2.2**
 ========================================================
 
 .. image:: https://img.shields.io/github/v/tag/MICA-MNI/micapipe
@@ -65,7 +65,7 @@
 
 Breaking news ️‍📰
 --------------------------------------------------------
-`micapipe version 0.2.0` is finally here!
+`micapipe version 0.2.2` Northern Flicker is finally here!
 Optimized to process 3T and 7T datasets!
 
 
@@ -91,7 +91,7 @@ To encourage reproducibility and robustness of investigations using micapipe, we
 
 Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_, `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_ and `HCP <https://www.humanconnectome.org>`.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_, `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_ and `HCP <https://www.humanconnectome.org>`_.
 
 .. raw:: html
 
@@ -189,5 +189,3 @@ Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) an
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
 - **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
 - **Boris Bernhardt**, *MICA Lab - Montreal Neurological Institute*
-
-
