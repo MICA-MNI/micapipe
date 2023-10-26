@@ -27,7 +27,8 @@ input_im=$8
 mpc_reg=$9
 mpc_str=${10}
 synth_reg=${11}
-PROC=${12}
+reg_nonlinear=${12}
+PROC=${13}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
