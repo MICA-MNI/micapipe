@@ -5,13 +5,39 @@
 What's new?
 ================================================
 
+v0.2.2 'Northern Flicker'
+-------------------------------------
+
+**General**
+
+- FIX issue with multiple acquisitions when `-proc_dwi` was used with `-dwi_acq`. Including the following modules `SC`, `QC` and `QC_subj`.
+- FIX instance when multi echo processing has no spike regression file now calculates the nuisance regression correctly.
+- FIX an issue with the dimensions of the tSNR file in `proc_func`.
+
+**QC group**
+
+- Set higher thresholds for GD and SC in the similarity subjects matrices for better outlier detection.
+- NEW vertex-wise and ROI variance per feature.
+- NEW histograms of features and variances per ROI and vertex-wise.
+
+**QC_subj**
+
+- NEW a surface plot of the tSNR to the `proc_func` module in `QC_subj`.
+
+
+v0.2.1
+-------------------------------------
+- We fixed the usage of `-QC` and `-QC_subj` for those datasets with single session.
+- Update a conditional in `proc_surf` that search for the `ribbon.mgz`
+- Add a missing variable in `-SC` when using `-autotrack`
+
 v0.2.0
 -------------------------------------
 👥   Compatible with multiple acquisitions (func, dwi, MPC). multiple quantitative maps, DWI acquisitions and func acquisitions including task
 
 🧠   Improved registrations between modalities. We improved the registration between multiple acquisitions to optimize the performance.
 
-🌐   Surface mapping from native space in all modules. 
+🌐   Surface mapping from native space in all modules.
 
 🔬   Optimized for high resolution processing (tested on 0.5-1mm3, e.g 7T)
 
@@ -23,11 +49,11 @@ v0.2.0
 
 🔍   New QC subject and group level more informative with a lot of new features and pdf (new json files for QC)
 
-👾   New algorithms  (brain mask, surface reconstructions - fastsurfer) 
+👾   New algorithms  (brain mask, surface reconstructions - fastsurfer)
 
 🛥️   Docker container
 
-🐛   A lot of bugs fixed 
+🐛   A lot of bugs fixed
 
 
 v0.1.5
@@ -38,7 +64,7 @@ v0.1.5
 -  Removed unused flags
 -  Update the documentation (partially)
 -  UPDATE jsons to increase `pyBIDS` compatibility
--  FIX bug on MPC output directory 
+-  FIX bug on MPC output directory
 
 **`proc_func` and `FC`**
 -  Rename flags on `proc_func`  `-regress_WM_CSF` to `-NSR`
@@ -55,7 +81,7 @@ v0.1.4
 -------------------------------------
 -  Update FSL from 6.0.0 to 6.0.3
 -  `mica-pipe` command goes to `micapipe`
--  To print help should specify it with the flag `micapipe -h` or `micapipe -help` 
+-  To print help should specify it with the flag `micapipe -h` or `micapipe -help`
 -  `post_structural` will always run schefer-400 by default if is not included in the `-atlas` list
 -  `proc_rsfmri` is deprecated and replaced by `proc_func`
 -  `proc_func` handles more than one functional acquisition (e.g. tasks), as well as multi echo data (tedana https://github.com/ME-ICA/tedana).

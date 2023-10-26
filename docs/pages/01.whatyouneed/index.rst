@@ -82,7 +82,7 @@ Processing modules for :ref:`T1-weighted structural imaging<structproc>` consist
     - Basic volumetric processing on T1-weighted data.
   * - ``-proc_surf``
     - Run freesurfer's recon-all pipeline on T1-weighted data.
-  * - ``-post-structural``
+  * - ``-post_structural``
     - Further structural processing relying on qualtiy-controlled cortical surface segmentations.
   * - ``-GD``
     - Generate geodesic distance matrices from participant's native midsurface mesh.
@@ -153,7 +153,7 @@ Flags for :ref:`quality control<qc>`:
   * - ``-QC_subj``
     - Creates an individual report of the different modules already processed with the different outputs by module.
   * - ``-QC``
-    - Creates a group-level table of the subjects already processed.
+    - Creates a group-level pdf of the subjects already processed, with a QC for each main output of the pipeline ROI and surface based.
 
 
 More options
@@ -191,4 +191,3 @@ You can specify additional options when running micapipe:
 .. admonition:: Clean up 🧹
 
 	If you have to erase the outputs of a specific module, you don't have to do this task manually. Check `micapipe_cleanup <../05.micapipe_cleanup/index.html>`_ for details!
-

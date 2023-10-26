@@ -25,7 +25,7 @@ This module performs all pre-processing of a subject's task or resting-state fun
 
     .. tab:: Processing steps
 
-            - Remove first five TRs (optional, only if flag ``-dropTR`` is specified) 
+            - Remove first five TRs (optional, only if flag ``-dropTR`` is specified)
             - Reorient input to LPI
             - Perform motion correction within fMRI run and provided fieldmaps by registering each volume to the scan's own average
             - Calculate motion outliers
@@ -43,7 +43,7 @@ This module performs all pre-processing of a subject's task or resting-state fun
             - Use previously computed registrations to align cerebellar and subcortical parcellations to fMRI space
             - Concatenate cerebellar, subcortical, and parcellated cortical timeseries
             - Regress motion spikes from cerebellar, subcortical, and cortical timeseries in linear model. If specified using optional flags, regression of tissue-specific signals and six motion confounds (``-NSR``) and global signal (``-GSR``) will also be performed. Following this step, timeseries are saved in two formats: (1) cerebellar regions, subcortical regions, and vertexwise cortical timeseries (conte69), and (2) cerebellar regions, subcortical regions, and parcellated cortical regions.
-            - Cross-correlate functional signals across all parcellated regions and output correlation matrix. If flag ``-noFC`` is specified, this step will be skipped.  
+            - Cross-correlate functional signals across all parcellated regions and output correlation matrix. If flag ``-noFC`` is specified, this step will be skipped.
 
 
     .. tab:: Usage
@@ -62,7 +62,7 @@ This module performs all pre-processing of a subject's task or resting-state fun
 
         ``-proc_func`` has several optional arguments:
 
-        .. list-table:: 
+        .. list-table::
             :widths: 100 1000
             :header-rows: 1
             :class: tight-table
@@ -83,7 +83,7 @@ This module performs all pre-processing of a subject's task or resting-state fun
               - Specify path to config file that should be used for distortion correction using topup. Default is *${FSLDIR}/etc/flirtsch/b02b0_1.cnf*.
             * - ``-smoothWithWB``
               - Specify this option to use workbench tools for surface-based smoothing (more memory intensive). By default, smoothing is performed with freesurfer tools: *mri_surf2surf*.
-            * - ``-NSR`` 
+            * - ``-NSR``
               - Specify this option to perform nuisance signal regression, which includes six motion parameters, white matter signal, and CSF signal. By default, this option is set to FALSE (no nuisance signal regression).
             * - ``-GSR``
               - Specify this option to perform global signal regression of timeseries. By default, no global regression is performed.
@@ -91,14 +91,14 @@ This module performs all pre-processing of a subject's task or resting-state fun
               - Specify this option to skip ICA-FIX processing. By default, FIX will run with the default training file.
             * - ``-icafixTraining`` ``<path>``
               - Path to specified ICA-FIX training file for nuisance signal regression (file.RData). Default is *${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData*.
-            * - ``-sesAnat`` ``<str>`` 
-              - If longitudinal data is provided, this flag allows to register the current *functional* session to the desired *anatomical* session 
-            * - ``-regAffine`` 
+            * - ``-sesAnat`` ``<str>``
+              - If longitudinal data is provided, this flag allows to register the current *functional* session to the desired *anatomical* session
+            * - ``-regAffine``
               - Specify this option to perform an affine registration ONLY from functional to T1w. By default, functional processing in micapipe performs a non linear registration using ANTs-SyN. We recommend this option for functional acquisitions with low resolution and/or low SNR.
-            * - ``-dropTR`` 
+            * - ``-dropTR``
               - Specify this option to drop the first five TRs. By default, this option is set to FALSE (all TRs will be processed)
-            * - ``-noFC`` 
-              - Specify this option to skip the computation of functional connectomes (for example when processing task fMRI data). By default, this option is set to FALSE (functional connectomes are output by default). 
+            * - ``-noFC``
+              - Specify this option to skip the computation of functional connectomes (for example when processing task fMRI data). By default, this option is set to FALSE (functional connectomes are output by default).
 
 
         .. admonition:: Distortion correction ✅
@@ -156,19 +156,19 @@ This module performs all pre-processing of a subject's task or resting-state fun
 
         .. parsed-literal::
 
-            - <outputDirectory>/micapipe/func/<mainScanStr>
-            - <outputDirectory>/micapipe/func/<mainScanStr>/surfaces
-            - <outputDirectory>/micapipe/func/<mainScanStr>/volumetric
-            - <outputDirectory>/micapipe/xfms
+            - <outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>
+            - <outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/surf
+            - <outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/volumetric
+            - <outputDirectory>/micapipe_v0.2.0/xfm
 
         Files generated by **-proc_func**:
 
         .. parsed-literal::
             - All volumetric processing outputs are stored in
-                *<outputDirectory>/micapipe/func/<mainScanStr>/volumetric*
+                *<outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/volumetric*
 
                 - functional MRI processing json card:
-                    *<sub>_space-func_desc-se_clean.json*
+                    *<sub>_space-func_desc-se_preproc.json*
 
                 - Motion confounds processing (<tag> = reversePhaseScan, mainPhaseScan):
                     *<sub>_space-func_desc-se_<tag>.1D*
@@ -178,26 +178,20 @@ This module performs all pre-processing of a subject's task or resting-state fun
                     *<sub>_space-func_desc-se_spikeRegressors_FD.1D*
 
                 - Motion and distortion corrected image:
-                    *<sub>_space-func_desc-se.nii.gz*
+                    *<sub>_space-func_desc-se_preproc.nii.gz*
 
-                - Mean motion and distortion corrected image:
-                    *<sub>_space-func_desc-se_mean.nii.gz*
-
-                - Skull-stipped mean motion and distortion corrected image:
+                - Skull-stripped mean motion and distortion corrected image:
                     *<sub>_space-func_desc-se_brain.nii.gz*
 
-                - High-pass filtered, motion and distortion corrected image:
-                    *<sub>_space-func_desc-se_HP.nii.gz*
-
                 - Nuisance-signal regressed timeseries (i.e. output of ICA-FIX) and corresponding json card:
-                    *<sub>_space-func_desc-se_clean.nii.gz*
-                    *<sub>_space-func_desc-se_clean.json*
+                    *<sub>_space-func_desc-se_preproc.nii.gz*
+                    *<sub>_space-func_desc-se_preproc.json*
 
                 - Tissue-specific mean signal (<tissue> = CSF, GM, or WM):
                     *<sub>_space-func_desc-se_pve_<tissue>.txt*
 
                 - Global mean signal:
-                    *<sub>_space-func_desc-se_pve_global.txt*
+                    *<sub>_space-func_desc-se_global.txt*
 
                 - Motion outliers and metric values used for motion parameter regression:
                     *<sub>_space-func_desc-se_metric_REFMSE.1D*
@@ -219,60 +213,34 @@ This module performs all pre-processing of a subject's task or resting-state fun
                     *<sub>_space-func_desc-se_cerebellum_roi_stats.txt*
 
 
-            - All surface-based metrucs including vertexwise cortical timeseries (<hemi> = rh, lh) are stored in 
-            *<outputDirectory>/micapipe/func/<mainScanStr>/surfaces*:
+            - All surface-based metrics including vertexwise cortical timeseries (<hemi> = L, R) are stored in
+            *<outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/surf*:
 
-                - Motion and distortion corrected timeseries mapped to native cortical surface:
-                    *<sub>_func_space-fsnative_<hemi>_NoHP.mgh*
+                - Native midthickness surface on func space:
+                *<sub>_hemi-?_space-func_surf-fsnative_label-midthickness.surf.gii*
 
-                - Fully pre-processed timeseries mapped to native cortical surface:
-                    *<sub>_func_space-fsnative_<hemi>.mgh*
-                    *<sub>_func_space-fsnative_<hemi>_10mm.mgh*
+                - Motion and distortion corrected timeseries mapped to native surface, fsaverage5, fsLR-32k and fsLR-5k:
+                    *<sub>_hemi-?_surf-fsnative.func.gii*
+                    *<sub>_hemi-?_surf-fsaverage5.func.gii*
+                    *<sub>_hemi-?_surf-fsLR-32k.func.gii*
+                    *<sub>_hemi-?_surf-fsLR-5k.func.gii*
 
-                - Timeseries mapped to fsaverage5 template:
-                    *<sub>_func_space-fsaverage5_<hemi>.mgh*
-                    *<sub>_func_space-fsaverage5_<hemi>_10mm.mgh*
+                - Vertexwise timeseries on fsLR-32k surface, following regression of specified nuisance variables:
+                    *<sub>_surf-fsLR-32k_desc-timeseries_clean.shape.gii*
 
-                - Timeseries mapped to conte69 template:
-                    *<sub>_func_space-conte69-32k_<hemi>.mgh*
-                    *<sub>_func_space-conte69-32k_<hemi>_10mm.mgh*
+              - Temporal signal-to-noise ratio computed on native cortical surface from motion and distortion correction timeseries:
+                  *<sub>_surf-fsnative_hemi-?_tSNR.shape.gii*
 
-                - Vertexwise and smoothed timeseries on conte69 template, following regression of specified nuisance variables:
-                    *<sub>_func_space-conte69-32k_desc-timeseries_clean.txt*
+              - Functional connectome matrices (r-values) generated from parcellated timeseries sampled in subcortex, cerebellum, and cortical surface
+                 <parc> = up to 18 parcellations
+                    *<sub>_atlas-<parc>_desc-FC.shape.gii*
 
-            - Temporal signal-to-noise ratio computed on native cortical surface from motion and distortion correction timeseries:
-                *<sub>_space-func_desc-se_tSNR.txt*
+            - Registration files to functional imaging space are found in *<outputDirectory>/micapipe_v0.2.0/<sub>/xfm*
 
-            - Functional connectome matrices (r-values) generated from smoothed, parcellated timeseries sampled in subcortex, cerebellum, and cortical surface
-               <parc> = up to 18 parcellations
+                - Affine registration between T1w nativepro and functional space e.g func_acq="me_task-epiencode_bold":
+                    *<sub>_from-<func_acq>_to-nativepro_mode-image_desc-affine_0GenericAffine.mat*
 
-                - Conte69 cortical surface:
-                    *<sub>_func_space-conte69-32k_atlas-<parc>_desc-FC.txt*
-
-                - Native cortical surface:
-                    *<sub>_func_space-fsnative_atlas-<parc>_desc-FC.txt*
-
-                - Contatenated timeseries sampled in subcortex, cerebellum, and parcellated native cortical surface models:
-                    *<sub>_func_space-fsnative_atlas-<parc>_desc-timeseries.txt*
-
-            - Registration files to functional imaging space are found in *<outputDirectory>/micapipe/<sub>/xfms*
-
-                - Boundary based registration from functional space to native freesurfer space:
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr_outbbreg_FIX.nii.gz*
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr.dat*
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr.dat.log*
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr.dat.mincost*
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr.dat.param*
-                    *<sub>_from-<mainScanStr>_to-fsnative_bbr.dat.sum*
-
-                - Affine registration between T1w nativepro and functional space:
-                    *<sub>_from-<mainScanStr>_to-nativepro_mode-image_desc-affine_0GenericAffine.mat*
-                    *<sub>_from-<mainScanStr>_to-nativepro_mode-image_desc-affine_InverseWarped.nii.gz*
-                    *<sub>_from-<mainScanStr>_to-nativepro_mode-image_desc-affine_Warped.nii.gz*
-
-                - Non-linear registrations between T1w in dwi space to wmNorm in dwi space:
-                    *<sub>_from-nativepro_to-<mainScanStr>_mode-image_desc-SyN_0GenericAffine.mat*
+                - Non-linear registrations between T1w in func space to mean func in func space:
+                    *<sub>_from-nativepro_to-<func_acq>_mode-image_desc-SyN_0GenericAffine.mat*
                     *<sub>_from-nativepro_to-<mainScanStr>_mode-image_desc-SyN_1InverseWarp.nii.gz*
                     *<sub>_from-nativepro_to-<mainScanStr>_mode-image_desc-SyN_1Warp.nii.gz*
-                    *<sub>_from-nativepro_to-<mainScanStr>_mode-image_desc-SyN_InverseWarped.nii.gz*
-                    *<sub>_from-nativepro_to-<mainScanStr>_mode-image_desc-SyN_Warped.nii.gz*
