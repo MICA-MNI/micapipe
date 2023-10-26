@@ -365,7 +365,7 @@ WORKDIR /home/mica
 
 ENV MICAPIPE="/opt/micapipe"
 
-ENV PROC="container_micapipe-v0.2.2"
+ENV PROC="container_micapipe-v0.2.3"
 
 ENV FIXPATH=/opt/fix1.068
 

@@ -3,7 +3,7 @@
 # MICA BIDS structural processing
 #
 version() {
-  echo -e "\nMICAPIPE March 2023 (Version v0.2.2 'Northern flicker')\n"
+  echo -e "\nMICAPIPE October 2023 (Version v0.2.3 'Northern flicker')\n"
 }
 #---------------- FUNCTION: HELP ----------------#
 help() {
@@ -42,8 +42,6 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
-
-
 \t\033[38;5;197m-SWM\033[0m              : Superficial White Matter generation and mapping
 \t\t\t      ( Requires: -post_structural )
 
