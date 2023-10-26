@@ -679,7 +679,7 @@ else
 fi
 
 # Freesurfer fs_licence
-if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; fi
+if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; else fs_licence=$(realpath $fs_licence); fi
 if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
 Note "Freesurfer licence:" ${fs_licence}
 export FS_LICENSE=${fs_licence}
