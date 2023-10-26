@@ -408,8 +408,10 @@ if [[ ! -f "$mat_dwi_affine" ]] || [[ ! -f "$dwi_mask" ]]; then ((N++))
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
 
+      # [fixedImage,movingImage,initializationFeature]
+      centeralign="[${T1nativepro_brain},${dwi_b0},0]"
       # Register DWI-b0 mean corrected to T1nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$dwi_b0" -o "$str_dwi_affine" -t a -n "$threads" -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$dwi_b0" -o "$str_dwi_affine" -t a -n "$threads" -p d -i ${centeralign}
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$dwi_b0" -t ["$mat_dwi_affine",1] -o "$T1nativepro_in_dwi" -v -u int
 
