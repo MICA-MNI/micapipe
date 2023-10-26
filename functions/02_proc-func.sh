@@ -459,7 +459,9 @@ if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
         fslmaths "${scans4tedana[0]}" -Tmean "${tmp_func_mean}"
         voxels=$(mrinfo "${tmp_func_mean}" -spacing); voxels="${voxels// /,}"
         Do_cmd flirt -applyisoxfm "${voxels}" -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${tmp_t1w_brain_res}"
-        Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d
+        # [fixedImage,movingImage,initializationFeature]
+        centeralign="[${tmp_func_mean},${tmp_t1w_brain_res},0]"
+        Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d -i ${centeralign}
         Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_mask" -r "$tmp_func_mean" -t "$tmp_aff_mat" -o "${tmp_func_mask}" -u int
 
         # Run tedana
@@ -505,7 +507,7 @@ else
 fi
 
 # High-pass filter - Remove all frequencies EXCEPT those in the range
-if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then ((N++))
+if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz" ]]; then ((N++))
     Info "High pass filter"
     Do_cmd 3dTproject -input "${func_nii}" -prefix "$fmri_HP" -passband 0.01 666
         if [[ -f "${fmri_HP}" ]] ; then ((Nsteps++)); fi
@@ -582,7 +584,8 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
     Do_cmd fslmaths "${tmp}/func_brain_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/func_brain_synthseg.nii.gz" "${bold_synth}"
 
     # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1_synth" -m "$bold_synth" -o "$str_func_affine" -t a -n "$threads" -p d
+    centeralign="[${t1_synth},${bold_synth},0]"
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1_synth" -m "$bold_synth" -o "$str_func_affine" -t a -n "$threads" -p d -i ${centeralign}
     Do_cmd antsApplyTransforms -d 3 -i "$t1_synth" -r "$bold_synth" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
 
     if [[ ${regAffine}  == "FALSE" ]]; then
@@ -600,7 +603,7 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
 else
     Info "Subject ${id} has a func volume and transformation matrix in T1nativepro space"; ((Nsteps++)); ((N++))
 fi
-proc_func_transformations "${dir_warp}/${idBIDS}_transformations-proc_func.json" ${transformsInv// /:} ${transform// /:}
+proc_func_transformations "${dir_warp}/${idBIDS}_transformations-proc_func-${tagMRI}.json" ${transformsInv// /:} ${transform// /:}
 
 #------------------------------------------------------------------------------#
 # run ICA-FIX IF melodic ran succesfully
@@ -667,13 +670,13 @@ if [[ "$noFIX" -eq 0 ]]; then
     else
         Info "Subject ${id} has a clean fMRI processed with FIX"; export statusFIX="YES"
     fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_preproc.json"
 else
     # Skip FIX processing but rename variables anyways for simplicity
     Info "Clean fMRI image has been processed (no FIX)."
     cp -rf "${fmri_HP}" "$func_processed"
     if [[ "$noFIX" -eq 1 ]]; then export statusFIX="NO"; fi
-    json_func "${func_volum}/${idBIDS}${func_lab}_clean.json"
+    json_func "${func_volum}/${idBIDS}${func_lab}_preproc.json"
 fi
 
 #------------------------------------------------------------------------------#
@@ -774,18 +777,29 @@ else
     Info "Subject ${id} was already mapped to all $SURFLIST"; Nsteps=$((Nsteps+6)); N=$((N+6))
 fi
 
-# ONLY for tSNR (will get deleted after):
-if [[ ! -f "${func_volum}/${idBIDS}_space-func_desc-se_tSNR.shape.gii" ]]; then
+
+# Caculate tSNR
+if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz" ]]; then
+    Do_cmd fslmaths "$func_nii" -Tmean "${tmp}/${idBIDS}${func_lab}_mean"
+    Do_cmd fslmaths "$func_nii" -Tstd "${tmp}/${idBIDS}${func_lab}_std"
+    D0_cmd fslmaths  "${tmp}/${idBIDS}${func_lab}_mean.nii.gz" \
+        -div "${tmp}/${idBIDS}${func_lab}_std.nii.gz" \
+        "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz"
+    Info "Subject ${id} volumetric tSNR calculated"; ((Nsteps++)); ((N++))
+else
+    Info "Subject ${id} was already tSNR calculated (volumetric)";  ((Nsteps++)); ((N++))
+fi
+if [[ ! -f "${func_surf}/${idBIDS}_surf-fsnative_hemi-R_tSNR.shape.gii" ]]; then
     for HEMICAP in L R; do
         Do_cmd wb_command -volume-to-surface-mapping \
-            "$func_nii" \
+            "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz" \
             "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
-            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_surf-fsnative_NoHP.func.gii \
+            "${func_surf}/${idBIDS}_surf-fsnative_hemi-${HEMICAP}_tSNR.shape.gii" \
             -trilinear
-        Info "Subject ${id} hemi-${HEMICAP} (noHP) mapped to fsnative, ready for tSNR calculation"; ((Nsteps++)); ((N++))
+        Info "Subject ${id} hemi-${HEMICAP} tSNR mapped to fsnative"; ((Nsteps++)); ((N++))
     done
 else
-    Info "Subject ${id} (noHP) was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
+    Info "Subject ${id} tSNR was already mapped to fsnative"; Nsteps=$((Nsteps+2)); N=$((N+2))
 fi
 
 #------------------------------------------------------------------------------#

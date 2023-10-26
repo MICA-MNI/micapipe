@@ -990,7 +990,7 @@ def qc_proc_func(proc_func_json=''):
     if not check_json_complete(proc_func_json):
         return _static_block
 
-    func_clean_json = glob.glob("%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(subj_dir,tag,sbids))[0]
+    func_clean_json = glob.glob("%s/func/desc-%s/volumetric/%s_space-func_desc*_preproc.json"%(subj_dir,tag,sbids))[0]
     with open( func_clean_json ) as f:
         func_clean_json = json.load(f)
     acquisition = func_clean_json["Acquisition"]
@@ -1035,7 +1035,7 @@ def qc_proc_func(proc_func_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    clean_json = os.path.realpath("%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(subj_dir,tag,sbids,acquisition))
+    clean_json = os.path.realpath("%s/func/desc-%s/volumetric/%s_space-func_desc-%s_preproc.json"%(subj_dir,tag,sbids,acquisition))
     with open( clean_json ) as f:
         clean_json = json.load(f)
 
@@ -1094,8 +1094,9 @@ def qc_proc_func(proc_func_json=''):
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>Signal to Noise Ratio (tSNR)</b> </p>'
     )
-    tSNR_file = "%s/func/desc-%s/volumetric/%s_space-func_desc-se_tSNR.shape.gii"%(subj_dir,tag,sbids)
-    tSNR = nb.load(tSNR_file).darrays[0].data
+    tSNR_L = f"{subj_dir}/func/desc-{tag}/surf/{sbids}_surf-fsnative_hemi-L_tSNR.shape.gii"
+    tSNR_R = f"{subj_dir}/func/desc-{tag}/surf/{sbids}_surf-fsnative_hemi-R_tSNR.shape.gii"
+    tSNR = np.concatenate((nb.load(tSNR_L).darrays[0].data, nb.load(tSNR_R).darrays[0].data), axis=0)
     tSNR = np.squeeze(tSNR)
 
     snr_fig = tmpDir + "/" + sbids + "_surf-native_tSNR.png"
@@ -1155,7 +1156,7 @@ def qc_proc_func(proc_func_json=''):
     for annot in atlas:
         # fc connectomes
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
-        fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(subj_dir,tag,sbids,annot)
+        fc_file = "%s/func/desc-%s/surf/%s_atlas-%s_desc-FC.shape.gii"%(subj_dir,tag,sbids,annot)
 
         # Load shape.gii
         if os.path.isfile(fc_file):
@@ -1199,7 +1200,7 @@ def qc_proc_func(proc_func_json=''):
             '<b> Yeo networks (schaefer-400) </b> </p>'
     )
 
-    fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(subj_dir,tag,sbids)
+    fc_file = "%s/func/desc-%s/surf/%s_atlas-schaefer-400_desc-FC.shape.gii"%(subj_dir,tag,sbids)
     fc_mtx = nb.load(fc_file).darrays[0].data
     fc = fc_mtx[49:, 49:]
     fcz = np.arctanh(fc)
