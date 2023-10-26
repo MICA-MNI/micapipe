@@ -43,6 +43,10 @@ echo -e "
 \t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 
+
+\t\033[38;5;197m-SWM\033[0m              : Superficial White Matter generation and mapping
+\t\t\t      ( Requires: -post_structural )
+
    Other functions:
 \t\033[38;5;197m-cleanup\033[0m          : Use this flag with a module flag to erase its outputs
 \t\t\t      ( Modules with multiple acquisitions require -acqStr (e.g. -proc_func, -MPC)
@@ -94,6 +98,7 @@ echo -e "
 \t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
 \t\t\t            Default is scaling. See more on MRtrix3 documentation
 \t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
+\t   \033[38;5;120m-dwi_upsample\033[0m        : Use this flag to upsample the DWI to 1.25x1.25x1.25 to increase anatomical contrast (e.g. Low resolution DWI datasets).
 
 \t\033[38;5;197m-proc_func\033[0m
 \t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
@@ -144,6 +149,7 @@ echo -e "
 \t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
 \t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
+\t   \033[38;5;120m-reg_nonlinear\033[0m       : Specify this option to perform the NON-Linear registration (e.g. MRI with strong geometric distortions).
 
 \t\033[38;5;197m-proc_asl\033[0m
 \t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
@@ -353,6 +359,10 @@ do
     postMPC=TRUE
     shift
   ;;
+  -reg_nonlinear)
+    reg_nonlinear=TRUE
+    shift
+  ;;
   -microstructural_img)
     input_im=$2
     shift;shift
@@ -445,6 +455,14 @@ do
   -dwi_rpe)
     dwi_rpe="$2"
     shift;shift;
+  ;;
+  -dwi_upsample)
+    dwi_upsample=TRUE
+    shift
+  ;;
+  -SWM)
+    SWM=TRUE
+    shift
   ;;
   -rpe_all)
     rpe_all=TRUE
@@ -567,6 +585,7 @@ else
     mpc_reg=$(realpath $mpc_reg)
 fi
 if [[ ${synth_reg} == "TRUE" ]]; then synth_reg=${synth_reg}; else synth_reg="FALSE"; fi
+if [[ ${reg_nonlinear} == "TRUE" ]]; then reg_nonlinear=${reg_nonlinear}; else reg_nonlinear="FALSE"; fi
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -598,6 +617,7 @@ if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
 if [[ $dwi_acq == "TRUE" ]]; then dwi_str=${dwi_str}; else dwi_str=DEFAULT; fi
 if [ -z ${b0thr} ]; then b0thr=61; else b0thr=${b0thr}; fi
 if [ -z ${bvalscale} ]; then bvalscale=DEFAULT; else bvalscale=no; fi
+if [[ $dwi_upsample == "TRUE" ]]; then dwi_upsample=${dwi_upsample}; else dwi_upsample="FALSE"; fi
 
 # Optional arguments proc_asl
 if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
@@ -806,7 +826,7 @@ fi
 if [ "$procDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale  $synth_reg"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale $synth_reg $dwi_upsample"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -893,7 +913,7 @@ fi
 if [ "$postMPC" = "TRUE" ]; then
     rand=${RANDOM}
     log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
     jobName="q${rand}_mpc"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
@@ -948,6 +968,18 @@ if [ "$postGD" = "TRUE" ]; then
         # LOCAL - Geodesic distance processing
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   Superficial White Matter
+# -----------------------------------------------------------------------------------------------#
+#     Generates superficial white matter surfaces 01,02 and 03
+#     REQUIRES -post-structural
+if [ "$SWM" = "TRUE" ]; then
+    log_file_str=$dir_logs/SWM_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/03_SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    # Command running
+    $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
 fi
 
 # -----------------------------------------------------------------------------------------------#
