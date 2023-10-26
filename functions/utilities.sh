@@ -4,7 +4,7 @@
 #
 # Utilities
 export Version="v0.2.2 'Northern flicker'"
-
+export MRTRIX_QUIET=TRUE
 bids_variables() {
   # This functions assignes variables names acording to:
   #     BIDS directory = $1
@@ -307,7 +307,7 @@ function micapipe_completition_status() {
 
     # Print logs
     if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-    Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+    Title "${1} processing ended in $(printf "%0.3f\n" "$eri") minutes:\n\tlogs:
     \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
     \tStatus          : ${status}
     \tCheck logs      : $(ls "$dir_logs"/${1}_*"${logaqc}.txt")"
@@ -1051,33 +1051,33 @@ function json_dwipreproc() {
 #     Warn messages
 #     Title messages
 Error() {
-echo -e "\033[38;5;9m\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
--------------------------------------------------------------\033[0m\n"
+echo -e "\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
+-------------------------------------------------------------\n"
 }
 Note(){
 # I replaced color \033[38;5;197m to \033[38;5;122m
-if [[ ${quiet} != TRUE ]]; then echo -e "\t\t$1\t\033[38;5;122m$2\033[0m"; fi
+if [[ ${quiet} != TRUE ]]; then echo -e "\t\t$1\t$2"; fi
 }
 Info() {
 Col="38;5;75m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col\n[ INFO ]..... $1 \033[0m"; fi
+if [[ ${quiet} != TRUE ]]; then echo  -e "\n[ INFO ]..... $1 "; fi
 }
 Warning() {
 Col="38;5;184m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col\n[ WARNING ]..... $1 \033[0m"; fi
+if [[ ${quiet} != TRUE ]]; then echo  -e "\n[ WARNING ]..... $1 "; fi
 }
 Warn() {
 Col="38;5;184m" # Color code
-if [[ ${quiet} != TRUE ]]; then echo  -e "\033[$Col
+if [[ ${quiet} != TRUE ]]; then echo  -e "
 -------------------------------------------------------------\n
 [ WARNING ]..... $1
-\n-------------------------------------------------------------\033[0m"; fi
+\n-------------------------------------------------------------"; fi
 }
 Title() {
-if [[ ${quiet} != TRUE ]]; then echo -e "\n\033[38;5;141m
+if [[ ${quiet} != TRUE ]]; then echo -e "\n
 -------------------------------------------------------------
 \t$1
--------------------------------------------------------------\033[0m"; fi
+-------------------------------------------------------------"; fi
 }
 
 #---------------- FUNCTION: PRINT COLOR COMMAND ----------------#
@@ -1105,7 +1105,7 @@ while [ ${l_index} -le $# ]; do
     l_sep=" "
     l_index=$[${l_index}+1]
    done
-if [[ ${quiet} != TRUE ]]; then echo -e "\033[38;5;118m\n${str}:\nCOMMAND -->  \033[38;5;122m${l_command}  \033[0m"; fi
+if [[ ${quiet} != TRUE ]]; then echo -e "\n${str}:\nCOMMAND -->  ${l_command}"; fi
 if [ -z "$TEST" ]; then $l_command; fi
 }
 
@@ -1134,7 +1134,7 @@ function missing_arg() {
                  -sub  : $id
                  -out  : $out
                  -bids : $BIDS
-          \033[0m-h | -help (print help)\033[38;5;9m"
+          -h | -help (print help)"
   exit 1; fi
 }
 
