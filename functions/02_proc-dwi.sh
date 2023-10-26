@@ -31,7 +31,8 @@ dwi_str=${13}
 b0thr=${14}
 bvalscale=${15}
 synth_reg=${16}
-PROC=${17}
+dwi_upsample=${17}
+PROC=${18}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -57,6 +58,7 @@ Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
 Note "synth_reg     :" "${synth_reg}"
+Note "dwi_upsample  :" "${dwi_upsample}"
 Note "Processing    :" "$PROC"
 Note "Saving temporal dir     :" "$nocleanup"
 Note "ANTs and MRtrix will use: " "$threads threads"
@@ -393,6 +395,13 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
       fi
 else
       Info "Subject ${id} has a DWI processed"; ((Nsteps++)); ((N++))
+fi
+#------------------------------------------------------------------------------#
+# DWI upsampling
+if [[ "${dwi_upsample}" == "TRUE" ]]; then
+  dwi_upsampled=
+  Do_cmd mrgrid "$dwi_corr" regrid -vox 1.25 ${dwi_upsampled} -nthreads ${threads}
+  dwi_corr=${dwi_upsampled}
 fi
 
 #------------------------------------------------------------------------------#
