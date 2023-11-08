@@ -236,6 +236,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "aiosignal" \
            "asn1crypto" \
            "async-timeout" \
+           "astropy" \
            "attrs" \
            "bokeh" \
            "cffi" \
@@ -276,6 +277,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "reportlab" \
            "requests" \
            "scikit-learn" \
+           "scikit-fmm" \
            "scipy" \
            "six" \
            "svglib" \
@@ -316,13 +318,13 @@ RUN bash -c 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1
 
 ENV PATH="/opt/FastSurfer:$PATH"
 ENV FASTSURFER_HOME=/opt/FastSurfer
-RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
-  && cd /opt/FastSurfer \
+RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer && cd /opt/FastSurfer && git checkout stable && ls /opt/FastSurfer
+RUN cd /opt/FastSurfer \
   && bash -c 'wget --no-check-certificate -qO /tmp/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh \
   && chmod +x /tmp/miniconda.sh \
   && /tmp/miniconda.sh -b -p /opt/conda \
   && rm /tmp/miniconda.sh \
-  && conda env create -f /opt/FastSurfer/fastsurfer_env_cpu.yml'
+  && conda env create -f ./fastsurfer_env_cpu.yml'
 
 # Install FastSurferCNN module
 ENV PYTHONPATH="${PYTHONPATH}:/opt/FastSurfer"
