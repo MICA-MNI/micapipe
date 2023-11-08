@@ -40,8 +40,11 @@ echo -e "
 \t  \033[38;5;120m-acqStr\033[0m         : Use this option if -SC was used with -dwi_acq
 \t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
 \t  \033[38;5;120m-acqStr\033[0m           -MPC requires the acquisition string to erase its outputs
-\t\t\t     e.g -acqStr T1map
+\t\t\t     e.g -acqStr T1map\
+\t\033[38;5;197m-SWM\033[0m              : DELETES Superficial white matter files
 
+\t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
+\t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
 
 \033[38;5;141mUSAGE:\033[0m
 $(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;120m-ses\033[0m <session> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
@@ -119,12 +122,20 @@ do
     postMPC=TRUE
     shift
   ;;
-  -GD)
-    postGD=TRUE
+  -SWM)
+    SWM=TRUE
     shift
   ;;
-  -Morphology)
-    postMorph=TRUE
+  -fs_licence)
+    fs_licence=$2
+    shift;shift;
+  ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
+  -GD)
+    postGD=TRUE
     shift
   ;;
   -acqStr)
@@ -155,6 +166,12 @@ inputs_realpath
 
 # Number of session (Default is "ses-pre")
 if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
+
+# Freesurfer fs_licence
+if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; else fs_licence=$(realpath $fs_licence); fi
+if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
+Note "Freesurfer licence:" ${fs_licence}
+export FS_LICENSE=${fs_licence}
 
 # Exit if subject is not found
 if [ ! -d "${out}/sub-${id}" ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}"; exit 1; fi
@@ -361,6 +378,19 @@ if [ "$postGD" = "TRUE" ]; then
               "$dir_logs"/GD_*
     grep -v "${id},${SES/ses-/},GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -SWM Superficial White Matter
+if [ "$SWM" = "TRUE" ]; then
+    Warning "Erasing '-SWM' output files and logs"
+    Do_cmd rm -rf \
+              "${dir_maps}/${idBIDS}"_*swm* \
+              "${dir_conte69}/${idBIDS}"_*swm* \
+              "${dir_QC}/${idBIDS}_module-SWM"* \
+              "$dir_logs"/SWM_*
+    grep -v "${id},${SES/ses-/},SWM" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, SWM" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 bids_variables_unset

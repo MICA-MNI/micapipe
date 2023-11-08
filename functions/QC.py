@@ -49,6 +49,7 @@ import numpy as np
 import matplotlib as plt
 import matplotlib.pyplot as pltpy
 import seaborn
+from brainspace.datasets import load_mask
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
@@ -359,6 +360,7 @@ c69_32k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.L.inflated.surf.gii', i
 c69_32k_I_rh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.R.inflated.surf.gii', itype='gii')
 c69_5k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
 c69_5k_I_rh = read_surface(MICAPIPE+'/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
+mask_32k = load_mask(join=True)
 
 ## ------------------------------------------------------------------------- ##
 ##                                                                           ##
@@ -956,7 +958,9 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s%s.func.gii"%(subj_dir,sbids,surface,measure,tag_dwi)
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s%s.png"%(tmpDir,sbids,surface,measure,tag_dwi)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
-            measure_crange=(np.quantile(f, 0.01), np.quantile(f, 0.98))
+            measure_crange=(np.quantile(f[mask_32k], 0.01), np.quantile(f[mask_32k], 0.98))
+            # Replace values in f with NaN where mask_32k is False
+            f[mask_32k == False] = np.nan
             display = Display(visible=0, size=(900, 250))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1666,6 +1670,117 @@ def qc_gd(gd_json=''):
 
     return _static_block
 
+#------------------------------------------------------------------------------#
+# SWM generation and mapping QC
+def qc_swm(swm_json=''):
+    # QC header
+    _static_block = qc_header()
+    _static_block +=  report_module_header_template(module='Superficial White Matter')
+
+     # QC summary
+    _static_block += report_qc_summary_template(swm_json)
+
+    if not check_json_complete(swm_json):
+        print('INCOMPLETE') # return(_static_block)
+
+    # Outputs
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>')
+
+    # SWM surfaces
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>SWM surfaces</b> </p>'
+                '<br />'
+                '<table style="border:1px solid #666;width:100%">'
+                '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>fsnative</b></td></tr>')
+
+    def surf_table_row(Title, png_path):
+        # Add a new row to the table
+        surf_row = (
+        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>"{Title}"</b></td>'
+        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{png_path}"></td></tr>')
+        return(surf_row)
+
+
+    # List all the Right and Left SWM surfaces
+    surf_dir = f"{subj_dir}/surf"
+    swm_L_files = sorted(glob.glob(f"{surf_dir}/{sbids}_hemi-L_surf-fsnative_label-swm*gii"))
+    swm_R_files = sorted(glob.glob(f"{surf_dir}/{sbids}_hemi-R_surf-fsnative_label-swm*gii"))
+
+    # Load each surface and plot them and save png
+    for i,_ in enumerate(swm_L_files):
+        swm_L = swm_L_files[i]
+        swm_R = swm_R_files[i]
+        # Set the label name
+        swm_label = swm_L.replace(".surf.gii","").split('label-')[1]
+        # Load the SWM surface
+        lhSWM, rhSWM = load_surface(swm_L, swm_R, with_normals=True, join=False)
+
+        # Plot the surfaces SWM
+        dsize = (900, 250)
+        display = Display(visible=0, size=dsize)
+        display.start()
+        swm_png=f"{tmpDir}/{sbids}_space-nativepro_surf-fsnative_label-{swm_label}.png"
+        plot_hemispheres(lhSWM, rhSWM, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(-1,1), transparent_bg=False,
+                         screenshot = True, offscreen=True, filename = swm_png)
+        _static_block += surf_table_row(swm_label, swm_png)
+        display.stop()
+
+    _static_block += ('</table>')
+
+    #------------------------------------------------------------------------------#
+    # SWM maps on surfs
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>SWM maps</b> </p>')
+
+    # List all the Right and Left SWM surfaces
+    map_dir = f"{subj_dir}/maps"
+    swm_files = sorted(glob.glob(f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-swm*.func.gii"))
+
+    # Get the unique maps IDs
+    maps_str = list(set([file.split('mm_')[1][:-9] for file in swm_files]))
+
+    # Get the unique surfaces
+    surf_str = sorted(list(set([file.split('label-')[1].split('_')[0] for file in swm_files])))
+
+    for measure in maps_str:
+            swm_surf_table = '<br>'
+            swm_surf_table += (
+                '<table style="border:1px solid #666;width:100%">'
+                     '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>{measure} (fsLR-32k)</b></td></tr>'
+             ).format(measure=measure)
+
+            for i, surface in enumerate(surf_str):
+                measure_c69_32k_lh = f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-{surface}_{measure}.func.gii"
+                measure_c69_32k_rh = f"{map_dir}/{sbids}_hemi-R_surf-fsLR-32k_label-{surface}_{measure}.func.gii"
+                measure_c69_32k_png = f"{tmpDir}/{sbids}_surf-fsLR-32k_label-{surface}_{measure}.png"
+                f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
+
+                if i == 0: measure_crange=(np.quantile(f[mask_32k], 0.01), np.quantile(f[mask_32k], 0.98))
+                display = Display(visible=0, size=(900, 250))
+                display.start()
+                # Replace values in f with NaN where mask_32k is False
+                f[mask_32k == False] = np.nan
+                # Plot the values
+                plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                 nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='mako', transparent_bg=False,
+                                 screenshot = True, offscreen=True, filename = measure_c69_32k_png)
+                display.stop()
+                swm_surf_table += (
+                         '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{surface}</b></td>'
+                         '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{measure_c69_32k_png}"></td></tr>'
+                ).format(surface=surface,
+                    measure_c69_32k_png=measure_c69_32k_png
+                )
+            _static_block += swm_surf_table
+
+            _static_block += '</table>'
+
+    return _static_block
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
@@ -1685,14 +1800,17 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
-   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
+   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD', 'SWM'],
+   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd, qc_swm]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/QC/%s_module-%s*.json"%(subj_dir,sbids,m))
     for j in module_qc_json:
         if check_json_exist(j):
-            static_report = qc_module_function['functions'][i](j)
-            file_pdf=j.replace('.json','_qc-report.pdf')
-            convert_html_to_pdf(static_report, file_pdf)
+            try:
+                static_report = qc_module_function['functions'][i](j)
+                file_pdf=j.replace('.json','_qc-report.pdf')
+                convert_html_to_pdf(static_report, file_pdf)
+            except:
+                print(f"Module QC failed: {j}")

@@ -533,7 +533,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup $SWM)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -546,14 +546,15 @@ Error "A processing flag is missing:
                     -SC
                     -MPC
                     -GD
+                    -SWM
                     -QC_subj
                     -cleanup"
 exit 1; fi
 
 # -----------------------------------------------------------------------------------------------#
 # Call micapipe_cleanup within micapipe
-if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup ${argCP/-cleanup/}; exit; fi
 echo -e "\n\nmicapipe ${argCP}"
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup ${argCP/-cleanup/}; exit; fi
 
 # Optional arguments func
 optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
