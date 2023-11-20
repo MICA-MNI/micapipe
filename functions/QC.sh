@@ -112,7 +112,7 @@ help; exit 1; fi
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
     MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
-    #MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
+    MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh"
 else
   # Source utilities functions from MICAPIPE
