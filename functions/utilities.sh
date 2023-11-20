@@ -116,7 +116,7 @@ set_surface_directory() {
 bids_print.variables() {
   # This functions prints BIDS variables names
   # IF they exist
-  Info "mica-pipe inputs"
+  Info "micapipe inputs"
   Note "id   :" "$id"
   Note "BIDS :" "$BIDS"
   Note "out  :" "$out"
@@ -944,6 +944,8 @@ function json_mpc() {
     \"microstructural_reg\": \"${regImage}\",
     \"registered_img\": \"${qT1_fsnative}\",
     \"regSynth\": \"${synth_reg}\",
+    \"reg_nonlinear\": \"${reg_nonlinear}\",
+    \"registration\": \"${reg}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
@@ -1121,7 +1123,7 @@ function cleanup() {
   if [[ $nocleanup == "FALSE" ]]; then
       rm -Rf "$tmp" 2>/dev/null
   else
-      echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
+      echo -e "micapipe tmp directory was not erased: \n\t\t${tmp}";
   fi
   cd "$here"
   bids_variables_unset
