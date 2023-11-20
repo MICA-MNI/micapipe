@@ -359,7 +359,6 @@ if [ "${postMPC}" = "TRUE" ]; then
         Do_cmd rm -rvf "${dir_mpc}" \
                       ${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
-                      "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
                       "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
                       "${dir_QC}/${idBIDS}_module-MPC-${acqStr}"* \
                       "$dir_logs"/MPC_*"${acqStr}"* \
