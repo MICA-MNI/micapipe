@@ -1699,10 +1699,10 @@ def qc_swm(swm_json=''):
     def surf_table_row(Title, png_path):
         # Add a new row to the table
         surf_row = (
-        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>"{Title}"</b></td>'
-        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{png_path}"></td></tr>')
+        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{Title}</b></td>'
+        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{png_path}"></td></tr>').format(
+        Title=Title, png_path=png_path)
         return(surf_row)
-
 
     # List all the Right and Left SWM surfaces
     surf_dir = f"{subj_dir}/surf"
@@ -1800,17 +1800,19 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD', 'SWM'],
-   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd, qc_swm]
+   'modules':   ['SWM', 'proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+   'functions': [qc_swm, qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/QC/%s_module-%s*.json"%(subj_dir,sbids,m))
     for j in module_qc_json:
+        print('--------------------------------------------------')
+        print(f"Running QC: {m}")
         if check_json_exist(j):
             try:
                 static_report = qc_module_function['functions'][i](j)
                 file_pdf=j.replace('.json','_qc-report.pdf')
                 convert_html_to_pdf(static_report, file_pdf)
             except:
-                print(f"Module QC failed: {j}")
+                print(f"Module QC failed: {m}")
