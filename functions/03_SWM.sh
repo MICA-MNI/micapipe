@@ -1,21 +1,12 @@
 #!/bin/bash
 #
-# Cortical morphology metrics processing:
+# Superficial White Matter generation
 #
 # Generates vertexwise (native, fsa5, and conte69) outputs for:
-#   Cortical Thickness
-#   Mean Curvature
+#   all the qMRI (nii.gz) in /maps
 #
 # This workflow makes use of freesurfer outputs and custom python scripts
 #
-# Atlas an templates are avaliable from:
-#
-# https:/github.com/MICA-MNI/micapipe/tree/master/parcellations
-#
-#   ARGUMENTS order:
-#   $1 : BIDS directory
-#   $2 : participant
-#   $3 : Out Directory
 #
 BIDS=$1
 id=$2
