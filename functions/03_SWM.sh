@@ -63,7 +63,7 @@ module_json="${dir_QC}/${idBIDS}_module-SWM.json"
 mkdir -p "${tmp}/"
 
 #------------------------------------------------------------------------------#
-# Laplacian surface generation v
+# Laplacian surface generation
 Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
 if [[ "$Nwm" -lt 6 ]]; then ((N++))
     # Import the surface segmentation to NIFTI
@@ -76,6 +76,12 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
     T1nativepro_seg="${tmp}/aparc+aseg_space-nativepro.nii.gz"
     Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}" -r "${T1nativepro}" -t ${T1_fsnative_affine} -o "${T1nativepro_seg}" -n GenericLabel -v -u int
 
+    # Get a list with the depths based on the image resolution (from voxel to mm)
+    vox_res=($(mrinfo "${T1nativepro}" -spacing)); vox_res=$(printf "%0.2f\n" ${vox_res[0]})
+    deepths=(1 2 3)
+    for i in "${!deepths[@]}"; do deepths[$i]=$(echo "scale=3; ${deepths[$i]} / $vox_res" | bc); done
+    voxels="${deepths[*]}"; voxels=$(echo ${voxels//${IFS:0:1}/,})
+
     # Generate the laplacian field
     WM_laplace=${tmp}/wm-laplace.nii.gz
     Do_cmd python "$MICAPIPE"/functions/laplace_solver.py ${T1nativepro_seg} ${WM_laplace}
@@ -85,7 +91,7 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
       # Prepare the white matter surface
       Do_cmd cp "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-white.surf.gii ${tmp}/${HEMI}_wm.surf.gii"
       # Run SWM
-      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm"
+      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm" "${voxels}"
     done
     Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
     if [[ "$Nwm" -eq 6 ]]; then ((Nsteps++)); fi
@@ -98,9 +104,10 @@ fi
 maps=(${dir_maps}/*nii*)
 for map in ${maps[*]}; do
   map_id=$(echo ${map/.nii.gz/} | awk -F 'map-' '{print $2}')
-  # Map to surface: swm01 swm02 smw03
+  # Map to surface: swm
       for HEMI in L R; do
-          for label in swm1mm swm2mm swm3mm; do
+          for i in $(ls "${dir_conte69}/${idBIDS}_hemi-L"_surf-fsnative_label-swm*vox.surf.gii); do
+              label=$(echo ${i/.surf.gii/} | awk -F 'label-' '{print $2}')
               Info "Mapping ${map_id} SWM-${label} to fsLR-32k, fsLR-5k and fsaverage5"
               surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}.surf.gii"
               # MAPPING metric to surfaces
