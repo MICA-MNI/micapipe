@@ -137,15 +137,8 @@ synthseg_native() {
   mri_img=$1
   mri_str=$2
   mri_synth="${tmp}/${mri_str}_synthsegGM.nii.gz"
-  mri_synth_orig="${tmp}/${mri_str}_synthsegGM_orig.nii.gz"
-  mri_res="${tmp}/${mri_str}_resampled.nii.gz"
-  str_synth2qMRI="${tmp}/from-sythseg_to_${mri_str}_"
-  mat_synth2qMRI="${str_synth2qMRI}0GenericAffine.mat"
-
-  Do_cmd mri_synthseg --i "${mri_img}" --o "${tmp}/${mri_str}_synthseg.nii.gz" --robust --resample ${mri_res} --threads "$threads" --cpu
+  Do_cmd mri_synthseg --i "${mri_img}" --o "${tmp}/${mri_str}_synthseg.nii.gz" --robust --threads "$threads" --cpu
   Do_cmd fslmaths "${tmp}/${mri_str}_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/${mri_str}_synthseg.nii.gz" "${mri_synth}"
-  Do_cmd antsRegistrationSyN.sh -d 3 -f "${mri_img}" -m "${mri_res}" -o "$str_synth2qMRI" -t a -n "$threads" -p d
-  Do_cmd antsApplyTransforms -d 3 -i "${mri_synth}" -r "${mri_img}" -t "${mat_synth2qMRI}" -o "${mri_synth_orig}" -n GenericLabel -v -u int
 }
 
 # Calculate the restristations
@@ -160,8 +153,8 @@ if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
       Info "Running label based affine registrations"
       synthseg_native "${T1_in_fs}" "T1w"
       synthseg_native "${regImage}" "qT1"
-      img_fixed="${tmp}/T1w_synthsegGM_orig.nii.gz"
-      img_moving="${tmp}/qT1_synthsegGM_orig.nii.gz"
+      img_fixed="${tmp}/T1w_synthsegGM.nii.gz"
+      img_moving="${tmp}/qT1_synthsegGM.nii.gz"
     fi
 
     # Registrations from t1-fsnative to qMRI
