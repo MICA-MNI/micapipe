@@ -78,7 +78,7 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
 
     # Get a list with the depths based on the image resolution (from voxel to mm)
     vox_res=($(mrinfo "${T1nativepro}" -spacing)); vox_res=$(printf "%0.2f\n" ${vox_res[0]})
-    deepths=(1 2 3)
+    deepths=(0.5 1 1.5 2 2.5 3)
     for i in "${!deepths[@]}"; do deepths[$i]=$(echo "scale=3; ${deepths[$i]} / $vox_res" | bc); done
     voxels="${deepths[*]}"; voxels=$(echo ${voxels//${IFS:0:1}/,})
 
@@ -94,7 +94,7 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
       Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm" "${voxels}"
     done
     Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
-    if [[ "$Nwm" -eq 6 ]]; then ((Nsteps++)); fi
+    if [[ "$Nwm" -ge 6 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has SWM surfaces"; ((Nsteps++)); ((N++))
 fi
