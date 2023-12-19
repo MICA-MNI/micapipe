@@ -821,7 +821,7 @@ function json_nativepro_qt1() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"TransformCmd\": {
-        \"BinaryMask_antsApplyTransforms\": \"$2\"
+        \"antsApplyTransforms\": \"$2\"
       },
     \"Transform\": [
         \"${Transform[@]:0:4} \",
