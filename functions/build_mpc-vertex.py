@@ -11,7 +11,9 @@
     dataDir : str, Path to the micapipe output directory
     sub     : str, Subject ID
     ses     : str, Session, is SINGLE if no session exist
-    acq     : str, Acquisition name of the qMRI 
+    acq     : str, Acquisition name of the qMRI
+    mpc_dir : str, name of the output directory ["mpc", "mpc-swm"]
+    num_surf: int, number of surface to processed
 
     Usage
     -----
@@ -33,6 +35,8 @@ dataDir = sys.argv[1]
 sub = sys.argv[2]
 ses_num = sys.argv[3]
 acq = sys.argv[4]
+mpc_dir = sys.argv[5]
+num_surf = sys.argv[6]
 
 def save_gii(data_array, file_name):
     # Initialize gifti: NIFTI_INTENT_SHAPE - 2005, FLOAT32 - 16
@@ -44,22 +48,19 @@ def save_gii(data_array, file_name):
     # Save the new GIFTI file
     nb.save(img=gifti_img, filename=file_name)
 
-# Number of surfaces (Harcoded since the begining)
-num_surf = 14
-
 # Manage single session
-if ses_num=="SINGLE":
-    ses_str="{dataDir}/sub-{sub}".format(dataDir=dataDir, sub=sub)
-    bids_id="sub-{sub}".format(sub=sub)
+if ses=="SINGLE":
+    subject_dir=f"{dataDir}/sub-{sub}"
+    bids_id=f"sub-{sub}"
 else:
-    ses_str="{dataDir}/sub-{sub}/{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
-    bids_id="sub-{sub}_{ses}".format(sub=sub, ses=ses_num)
+    subject_dir=f"{dataDir}/sub-{sub}/{ses}"
+    bids_id=f"sub-{sub}_{ses}"
 
 # setting output directory
 if acq=="DEFAULT":
-    OPATH = "{subject_dir}/mpc/".format(subject_dir=ses_str)
+    OPATH = f"{subject_dir}/{mpc_dir}/"
 else:
-    OPATH = "{subject_dir}/mpc/{acq}/".format(subject_dir=ses_str, acq=acq)
+    OPATH = f"{subject_dir}/{mpc_dir}/{acq}/"
 
 # Load all the surfaces and create a numpy.array
 def get_hemisphere(surface_number, hemi, surf):

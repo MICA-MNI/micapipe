@@ -71,10 +71,10 @@ if len(sys.argv) < 4:
 
 # Manage single session
 if ses=="SINGLE":
-    ses_str=f"{dataDir}/sub-{sub}"
+    subject_dir=f"{dataDir}/sub-{sub}"
     bids_id=f"sub-{sub}"
 else:
-    ses_str=f"{dataDir}/sub-{sub}/{ses}"
+    subject_dir=f"{dataDir}/sub-{sub}/{ses}"
     bids_id=f"sub-{sub}_{ses}"
 
 # setting output directory

@@ -311,8 +311,8 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}" "mpc-swm"
-  ((Nsteps++))
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}" "mpc-swm" "$num_surfs"
+  if [[ -f "${MPC_fsLR5k}" ]]; then ((Nsteps++)); fi
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
 
