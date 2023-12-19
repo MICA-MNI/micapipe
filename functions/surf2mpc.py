@@ -22,11 +22,14 @@
 # ses_num       session designation
 # num_surf		surface solution number (default is 14)
 # parc_name		name of parcellation in annotation file (default is vosdewael 200)
+# dir_fs
+# acq
+# mpc_dir
 
 # EXAMPLE INPUTS FOR MICS
 # dataDir = '/data_/mica3/BIDS_MIC/derivatives/'
 # sub = 'HC012'
-# ses_num = '01'
+# ses = 'ses-01'
 # num_surf = 14
 # parc_name = 'vosdewael-200_mics.annot'
 ####################################################################################################
@@ -41,11 +44,12 @@ from build_mpc import build_mpc
 # Define input arguments
 dataDir = sys.argv[1]
 sub = sys.argv[2]
-ses_num = sys.argv[3]
+ses = sys.argv[3]
 num_surf = sys.argv[4]
 parc_name = sys.argv[5]
 dir_fs = sys.argv[6]
 acq = sys.argv[7]
+mpc_dir = sys.argv[8]
 
 # Function save as gifti
 def save_gii(data_array, file_name):
@@ -66,18 +70,18 @@ if len(sys.argv) < 4:
     num_surf = 14
 
 # Manage single session
-if ses_num=="SINGLE":
-    ses_str="{dataDir}/sub-{sub}".format(dataDir=dataDir, sub=sub)
-    bids_id="sub-{sub}".format(sub=sub)
+if ses=="SINGLE":
+    ses_str=f"{dataDir}/sub-{sub}"
+    bids_id=f"sub-{sub}"
 else:
-    ses_str="{dataDir}/sub-{sub}/{ses}".format(dataDir=dataDir, sub=sub, ses=ses_num)
-    bids_id="sub-{sub}_{ses}".format(sub=sub, ses=ses_num)
+    ses_str=f"{dataDir}/sub-{sub}/{ses}"
+    bids_id=f"sub-{sub}_{ses}"
 
 # setting output directory
 if acq=="DEFAULT":
-    OPATH = "{subject_dir}/mpc/".format(subject_dir=ses_str)
+    OPATH = f"{subject_dir}/{mpc_dir}/"
 else:
-    OPATH = "{subject_dir}/mpc/{acq}/".format(subject_dir=ses_str, acq=acq)
+    OPATH = f"{subject_dir}/{mpc_dir}/{acq}/"
 
 if os.path.exists(OPATH):
     try:

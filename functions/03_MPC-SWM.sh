@@ -218,7 +218,7 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
 
       # find all laplacian surfaces and list by creation time
       for i in ${!deepths[@]} ; do
-          mm=${deepths[$i]}
+          mm="${deepths[$i]}mm"
           # SWM surface for each deepth in NATIVEPRO
           surf_swm="${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm${mm}.surf.gii"
           # SWM surface for each deepth in qMRI space
@@ -302,7 +302,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
-        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
+        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}" "mpc-swm"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
@@ -311,7 +311,7 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}" "mpc-swm"
   ((Nsteps++))
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
