@@ -176,8 +176,11 @@ Do_cmd c3d_affine_tool -itk "${mat_qMRI2fs_xfm}" -o "${wb_affine} -inv"
 
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
+# NUmber of surfaces to generate
 num_surfs=14
+# Check if the directory exists and change the permissions
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
+# Create the MPC-SWM module json file
 json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
 
 MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
