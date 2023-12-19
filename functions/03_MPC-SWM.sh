@@ -184,9 +184,15 @@ json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM_${mpc_str}.json"
 # Laplacian surface generation
 num_surfs=15
 thickness=0.2
+# Define 15 surfaces in 3mm separated by 0.2mm step (3 mm=0.2mm step * 15 surfaces)
+deepths=($(seq "${thickness}" "${thickness}" 3))
+# Replace the blanck space with comma
+printf -v deepths_comma '%s,' "${deepths[@]}"
+deepths_comma=$(echo "${deepths_comma%,}")
 
-Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
-if [[ "$Nwm" -lt 15 ]]; then ((N++))
+# Consider this conditional statement for MPC-SWM integration <<<<<<<<<<<<<<<<<<<<<<<<
+Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_space-nativepro_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
+if [[ "$Nwm" -lt 6 ]]; then ((N++))
     # Import the surface segmentation to NIFTI
     T1fs_seg="${tmp}/aparc+aseg.nii.gz"
     Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${T1fs_seg}"
@@ -199,39 +205,37 @@ if [[ "$Nwm" -lt 15 ]]; then ((N++))
 
     # Generate the laplacian field
     WM_laplace=${tmp}/wm-laplace.nii.gz
+    Info "Generating laplacian field"
     Do_cmd python "$MICAPIPE"/functions/laplace_solver.py ${T1nativepro_seg} ${WM_laplace}
 
-    deepths=($(seq "$thickness" "$thickness" "$((num_surfs * thickness))"))
-
     # Create the surfaces by depths
+    Info "Creating superficial white matter surfaces"
     for HEMI in L R; do
       # Prepare the white matter surface
       Do_cmd cp "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-white.surf.gii ${tmp}/${HEMI}_wm.surf.gii"
       # Run SWM
-      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm" "${deepths}"
+      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths_comma}"
 
       # find all laplacian surfaces and list by creation time
-      x=$(ls -t ${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm*)
-      for n in $(seq 1 1 "$num_surfs") ; do
-          which_surf=$(sed -n "$n"p <<< "$x")
-          surf_gii="${tmp}/${hemi}.${n}by${num_surf}_space-fsnative.surf.gii"
-          surf_tmp="${tmp}/${hemi}.${n}by${num_surf}_no_offset.surf.gii"
-          out_surf="${tmp}/${hemi}.${n}by${num_surf}_space-qMRI.surf.gii"
-          out_feat="${outDir}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-MPC-${n}.func.gii"
-          # Register surface to qMRI space
-          Do_cmd mris_convert "$which_surf" "${surf_gii}"
+      for i in ${!deepths[@]} ; do
+          mm=${deepths[$i]}
+          # SWM surface for each deepth in NATIVEPRO
+          surf_swm="${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm${mm}.surf.gii"
+          # SWM surface for each deepth in qMRI space
+          out_surf="${tmp}/${idBIDS}_hemi-${HEMI}_space-qMRI_surf-fsnative_label-swm${mm}.surf.gii"
+          # SWM map for each deepth in qMRI space
+          out_feat="${outDir}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-MPC-"$((i+1)).func.gii
+
           # Apply transformation to register surface to nativepro
-          Do_cmd wb_command -surface-apply-affine "${surf_tmp}" "${wb_affine}" "${out_surf}"
+          Do_cmd wb_command -surface-apply-affine "${surf_swm}" "${wb_affine}" "${out_surf}"
           # Apply Non-linear Warpfield to register surface to nativepro
           if [[ ${reg_nonlinear}  == "TRUE" ]]; then Do_cmd wb_command -surface-apply-warpfield "${out_surf}" "${SyN_qMRI2fs_Invwarp}" "${out_surf}"; fi
           # Sample intensity and resample to other surfaces
-          map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "MPC-${n}" "${outDir}"
-          # remove tmp surfaces
-          rm "${surf_tmp}" "${which_surf}"
+          map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "swm${mm}" "${outDir}"
        done
     done
-    Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
-    if [[ "$Nwm" -ge 15 ]]; then ((Nsteps++)); fi
+    Nwm=$(ls "${tmp}/${idBIDS}_hemi-"*_space-qMRI_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
+    if [[ "$Nwm" -ge 30 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has SWM surfaces"; ((Nsteps++)); ((N++))
 fi
@@ -273,21 +277,21 @@ fi
 #     Info "Subject ${idBIDS} has ${mpc_str} mapped to surfaces"; ((Nsteps++)); ((N++))
 # fi
 
-# Map to surface: swm depths
-maps=(${dir_maps}/*nii*)
-for map in ${maps[*]}; do
-  map_id=$(echo ${map/.nii.gz/} | awk -F 'map-' '{print $2}')
-  # Map to surface: swm
-      for HEMI in L R; do
-          for i in $(ls "${dir_conte69}/${idBIDS}_hemi-L"_surf-fsnative_label-swm*mm.surf.gii); do
-              label=$(echo ${i/.surf.gii/} | awk -F 'label-' '{print $2}')
-              Info "Mapping ${map_id} SWM-${label} to fsLR-32k, fsLR-5k and fsaverage5"
-              surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}.surf.gii"
-              # MAPPING metric to surfaces
-              map_to-surfaces "${map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${map_id}.func.gii" "${HEMI}" "${label}_${map_id}" "${dir_maps}"
-          done
-      done
-done
+# # Map to surface: swm depths
+# maps=(${dir_maps}/*nii*)
+# for map in ${maps[*]}; do
+#   map_id=$(echo ${map/.nii.gz/} | awk -F 'map-' '{print $2}')
+#   # Map to surface: swm
+#       for HEMI in L R; do
+#           for i in $(ls "${dir_conte69}/${idBIDS}_hemi-L"_surf-fsnative_label-swm*mm.surf.gii); do
+#               label=$(echo ${i/.surf.gii/} | awk -F 'label-' '{print $2}')
+#               Info "Mapping ${map_id} SWM-${label} to fsLR-32k, fsLR-5k and fsaverage5"
+#               surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}.surf.gii"
+#               # MAPPING metric to surfaces
+#               map_to-surfaces "${map}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${map_id}.func.gii" "${HEMI}" "${label}_${map_id}" "${dir_maps}"
+#           done
+#       done
+# done
 
 #------------------------------------------------------------------------------#
 # Create MPC connectomes and Intensity profiles per parcellations
@@ -298,7 +302,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
-        Do_cmd python "$MICAPIPE"/functions/surf2mpc_swm.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
+        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
@@ -307,7 +311,7 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex_swm.py "$out" "$id" "$SES" "${mpc_p}"
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
   ((Nsteps++))
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
