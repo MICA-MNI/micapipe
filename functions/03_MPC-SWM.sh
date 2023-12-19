@@ -58,13 +58,12 @@ if [[ "${mpc_str}" == DEFAULT ]]; then
   mpc_str="qMRI"
   mpc_p="acq-qMRI"
 else
-  #mpc_p="acq-${mpc_str}"
-  mpc_p="swm-${mpc_str}"
+  mpc_p="acq-${mpc_str}"
 fi
 
 # End if module has been processed
-module_json="${dir_QC}/${idBIDS}_module-MPC-${mpc_str}.json"
-micapipe_check_json_status "${module_json}" "MPC"
+module_json="${dir_QC}/${idBIDS}_module-MPC-SWM_${mpc_str}.json"
+micapipe_check_json_status "${module_json}" "MPC-SWM"
 
 # Check microstructural image input flag and set parameters accordingly
 if [[ "$input_im" == "DEFAULT" ]]; then microImage="$bids_T1map"; else microImage="${input_im}"; fi
@@ -75,8 +74,8 @@ if [[ "$mpc_reg" == "DEFAULT" ]]; then regImage="${bids_inv1}"; else regImage="$
 Note "Microstructural image for registration =" "$regImage"
 
 # Exit if microImage or Registration image do not exists
-if [ ! -f "${microImage}" ]; then Error "Image for MPC was not found or the path is wrong!!!"; exit; fi
-if [ ! -f "${regImage}" ]; then Error "Image for MPC registration was not found or the path is wrong!!!"; exit; fi
+if [ ! -f "${microImage}" ]; then Error "Image for MPC-SWM was not found or the path is wrong!!!"; exit; fi
+if [ ! -f "${regImage}" ]; then Error "Image for MPC-SWM registration was not found or the path is wrong!!!"; exit; fi
 
 #------------------------------------------------------------------------------#
 Title "Microstructural Profiles Covariance - SWM\n\t\tmicapipe $Version, $PROC"
@@ -96,7 +95,7 @@ N=0
 
 # Create script specific temp directory
 #tmp="${tmpDir}/${RANDOM}_micapipe_${mpc_str}-MPC_${id}"
-tmp="${tmpDir}/${RANDOM}_micapipe_swm_${idBIDS}"
+tmp="${tmpDir}/${RANDOM}_micapipe_mpc-swm_${idBIDS}"
 Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
@@ -104,11 +103,11 @@ trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
 
 # Freesurface SUBJECTs directory
 export SUBJECTS_DIR="$dir_surf"
-outDir="${subject_dir}/mpc/${mpc_p}"
+outDir="${subject_dir}/mpc-swm/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 
 # json file
-qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.json"
+#qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.json"
 
 #------------------------------------------------------------------------------#
 # Registration between both images
@@ -177,6 +176,11 @@ wb_affine="${tmp}/${idBIDS}_from-fsnative_to_qMRI_wb.mat"
 Do_cmd c3d_affine_tool -itk "${mat_qMRI2fs_xfm}" -o "${wb_affine} -inv"
 
 #------------------------------------------------------------------------------#
+# Check if the directory exists and change the permissions
+[[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
+# Create the MPC-SWM module json file
+json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM_${mpc_str}.json"
+
 # Laplacian surface generation
 num_surfs=15
 thickness=0.2
@@ -205,7 +209,7 @@ if [[ "$Nwm" -lt 15 ]]; then ((N++))
       Do_cmd cp "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-white.surf.gii ${tmp}/${HEMI}_wm.surf.gii"
       # Run SWM
       Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm" "${deepths}"
-      
+
       # find all laplacian surfaces and list by creation time
       x=$(ls -t ${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-swm*)
       for n in $(seq 1 1 "$num_surfs") ; do
@@ -235,41 +239,39 @@ fi
 #------------------------------------------------------------------------------#
 ### qT1 registration to nativepro ###
 # Register nativepro and qt1
-T1_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_0GenericAffine.mat"
-
-qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
-if [[ ! -f "$qmriNP" ]]; then
-  Info "${mpc_str} registration to nativepro"
-    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "${T1_fsnative_affine}" "${transforms}" -o "$qmriNP" -v -u float
-    ((Nsteps++)); ((N++))
-else
-    Info "Subject ${id} ${mpc_str} is registered to nativepro"; ((Nsteps++)); ((N++))
-fi
+# T1_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_0GenericAffine.mat"
+#
+# qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
+# if [[ ! -f "$qmriNP" ]]; then
+#   Info "${mpc_str} registration to nativepro"
+#     Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "${T1_fsnative_affine}" "${transforms}" -o "$qmriNP" -v -u float
+#     ((Nsteps++)); ((N++))
+# else
+#     Info "Subject ${id} ${mpc_str} is registered to nativepro"; ((Nsteps++)); ((N++))
+# fi
 
 # Write json file
-json_nativepro_qt1 "$qmriNP" \
-    "antsApplyTransforms -d 3 -i ${microImage} -r ${T1nativepro_brain} -t ${T1_fsnative_affine} ${transforms} -o ${qmriNP} -v -u float" \
-    "$qt1_json"
+#json_nativepro_qt1 "$qmriNP" \
+#    "antsApplyTransforms -d 3 -i ${microImage} -r ${T1nativepro_brain} -t ${T1_fsnative_affine} ${transforms} -o ${qmriNP} -v -u float" \
+#    "$qt1_json"
 
 #------------------------------------------------------------------------------#
-'''
-# Map to surface: midthickness, white
-Nmorph=$(ls "${dir_maps}/"*"${mpc_str}"*gii 2>/dev/null | wc -l)
-if [[ "$Nmorph" -lt 16 ]]; then ((N++))
-    Info "Mapping ${mpc_str} to fsLR-32k, fsLR-5k and fsaverage5"
-    for HEMI in L R; do
-        for label in midthickness white; do
-            surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
-            # MAPPING metric to surfaces
-            map_to-surfaces "${qmriNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${mpc_str}.func.gii" "${HEMI}" "${label}_${mpc_str}" "${dir_maps}"
-        done
-    done
-    Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
-    if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
-else
-    Info "Subject ${idBIDS} has ${mpc_str} mapped to surfaces"; ((Nsteps++)); ((N++))
-fi
-'''
+# # Map to surface: midthickness, white
+# Nmorph=$(ls "${dir_maps}/"*"${mpc_str}"*gii 2>/dev/null | wc -l)
+# if [[ "$Nmorph" -lt 16 ]]; then ((N++))
+#     Info "Mapping ${mpc_str} to fsLR-32k, fsLR-5k and fsaverage5"
+#     for HEMI in L R; do
+#         for label in midthickness white; do
+#             surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
+#             # MAPPING metric to surfaces
+#             map_to-surfaces "${qmriNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${mpc_str}.func.gii" "${HEMI}" "${label}_${mpc_str}" "${dir_maps}"
+#         done
+#     done
+#     Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
+#     if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
+# else
+#     Info "Subject ${idBIDS} has ${mpc_str} mapped to surfaces"; ((Nsteps++)); ((N++))
+# fi
 
 # Map to surface: swm depths
 maps=(${dir_maps}/*nii*)
@@ -317,7 +319,7 @@ eri=$(echo "$lopuu - $aloita" | bc)
 eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
-micapipe_completition_status "MPC"
-micapipe_procStatus "${id}" "${SES/ses-/}" "MPC-${mpc_str}" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC-${mpc_str}" "${module_json}"
+micapipe_completition_status "MPC-SWM"
+micapipe_procStatus "${id}" "${SES/ses-/}" "MPC-SWM_${mpc_str}" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC-SWM_${mpc_str}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
