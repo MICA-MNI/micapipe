@@ -33,7 +33,7 @@ from build_mpc import build_mpc
 # Define input arguments
 dataDir = sys.argv[1]
 sub = sys.argv[2]
-ses_num = sys.argv[3]
+ses = sys.argv[3]
 acq = sys.argv[4]
 mpc_dir = sys.argv[5]
 num_surf = sys.argv[6]
