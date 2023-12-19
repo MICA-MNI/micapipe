@@ -45,13 +45,9 @@ out_surf_prefix = sys.argv[3]
 def arg2float_list(arg):
     return list(map(float, arg.split(',')))
 if len(sys.argv)>4:
-    depth = arg2float_list(sys.argv[4])
+    depth_mm = arg2float_list(sys.argv[4])
 else:
-    depth = [1,2,3] # default depths
-
-convergence_threshold = 1e-4
-step_size = 0.1 # vox
-max_iters = int(np.max(np.diff(depth))/step_size)*10
+    depth_mm = [1,2,3] # default depths in mm
 
 # load data
 surf = nib.load(in_surf)
@@ -61,12 +57,27 @@ laplace = nib.load(in_laplace)
 lp = laplace.get_fdata()
 print('loaded data and parameters')
 
+# Get image resolution
+xres = np.sqrt(np.sum(laplace.affine[:3, 0]**2))
+yres = np.sqrt(np.sum(laplace.affine[:3, 1]**2))
+zres = np.sqrt(np.sum(laplace.affine[:3, 2]**2))
+
+# Convert depths from mm to voxels
+depth_vox = [d / np.sqrt(xres**2 + yres**2 + zres**2) for d in depth_mm]
+
+# Convert depth values to strings with a specific format
+depth_str = [f'{d:.1f}' for d in depth_mm]  # Use two decimal places
+
+convergence_threshold = 1e-4
+step_size = 0.1 # vox
+max_iters = int(np.max(np.diff(depth_vox))/step_size)*10
+
 # laplace to gradient
 dx,dy,dz = np.gradient(lp)
 
 distance_travelled = np.zeros((len(V)))
 n=0
-for d in depth:
+for d, d_str in zip(depth_vox, depth_str):
     # apply inverse affine to surface to get to matrix space
     print(laplace.affine)
     V[:,:] = V - laplace.affine[:3,3].T
@@ -99,4 +110,4 @@ for d in depth:
         V[:,xyz] = V[:,xyz]*(laplace.affine[xyz,xyz])
     V[:,:] = V + laplace.affine[:3,3].T
 
-    nib.save(surf, out_surf_prefix + str(d) + 'vox.surf.gii')
+    nib.save(surf, out_surf_prefix + d_str + 'mm.surf.gii')
