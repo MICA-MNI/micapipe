@@ -8,7 +8,10 @@
 
     Parameters
     ----------
-    workdir : str, Path to the MPC output directory
+    dataDir : str, Path to the micapipe output directory
+    sub     : str, Subject ID
+    ses     : str, Session, is SINGLE if no session exist
+    acq     : str, Acquisition name of the qMRI 
 
     Usage
     -----
