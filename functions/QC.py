@@ -1742,7 +1742,7 @@ def qc_swm(swm_json=''):
     swm_files = sorted(glob.glob(f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-swm*.func.gii"))
 
     # Get the unique maps IDs
-    maps_str = list(set([file.split('vox_')[1][:-9] for file in swm_files]))
+    maps_str = list(set([file.split('mm_')[1][:-9] for file in swm_files]))
 
     # Get the unique surfaces
     surf_str = sorted(list(set([file.split('label-')[1].split('_')[0] for file in swm_files])))
