@@ -28,7 +28,10 @@ import os
 import glob
 import numpy as np
 import nibabel as nb
-from build_mpc import build_mpc
+import scipy
+
+# Get the MICAPIPE path from the environment
+micapipe = os.environ["MICAPIPE"]
 
 # Define input arguments
 dataDir = sys.argv[1]
@@ -82,13 +85,48 @@ def get_feature_array(surf, Save=True):
     else:
         return(BB)
 
+# Function to build the MPC from an intencity profile
+def build_mpc(data, mask):
+    # Calculate mean across columns, excluding mask and any excluded labels input
+    I_M = np.nanmean(np.float32(np.where(mask, data, np.nan)), axis=1)
+
+    # Get residuals of all columns (controlling for mean)
+    I_resid = np.zeros(data.shape)
+    for c in range(data.shape[1]):
+        y = data[:,c]
+        x = I_M
+        slope, intercept, _, _, _ = scipy.stats.linregress(x,y)
+        y_pred = intercept + slope*x
+        I_resid[:,c] = y - y_pred
+
+    # Calculate correlation coefficient of the intesities with residuals
+    R = np.corrcoef(I_resid, rowvar=False)
+
+    # Log transform
+    MPC = 0.5 * np.log( np.divide(1 + R, 1 - R) )
+    MPC[np.isnan(MPC)] = 0
+    MPC[np.isinf(MPC)] = 0
+
+    # CLEANUP: correct diagonal and round values to reduce file size
+    # Replace all values in diagonal by zeros to account for floating point error
+    for i in range(0,MPC.shape[0]):
+            MPC[i,i] = 0
+
+    # Output MPC, microstructural profiles, and problem nodes
+    return (MPC)
+
+# Load the fsLR-5k mask
+mask_lh = nb.load(micapipe + '/surfaces/fsLR-5k.L.mask.shape.gii').darrays[0].data
+mask_rh = nb.load(micapipe + '/surfaces/fsLR-5k.R.mask.shape.gii').darrays[0].data
+fsLR5k_mask = np.concatenate((mask_lh, mask_rh), axis=0)
+
 # Save the surfaces.array as a func.gii file
 surfaces=['fsnative', 'fsaverage5', 'fsLR-5k', 'fsLR-32k']
 for x in surfaces: get_feature_array(x)
 
 # Create a vertex-wise MPC from fsLR-5k
 surf_array_fsLR5k = get_feature_array('fsLR-5k', Save=False)
-(MPC_fsLR5k, I, problemNodes) = build_mpc(surf_array_fsLR5k)
+MPC_fsLR5k = build_mpc(surf_array_fsLR5k, fsLR5k_mask)
 fileName="{output}{bids_id}_surf-fsLR-5k_desc-MPC.shape.gii".format(output=OPATH, bids_id=bids_id)
 
 # Save it as shape GIFTI

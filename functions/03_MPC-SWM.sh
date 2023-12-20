@@ -190,9 +190,9 @@ deepths=($(seq "${thickness}" "${thickness}" 3))
 printf -v deepths_comma '%s,' "${deepths[@]}"
 deepths_comma=$(echo "${deepths_comma%,}")
 
-# Consider this conditional statement for MPC-SWM integration <<<<<<<<<<<<<<<<<<<<<<<<
-Nwm=$(ls "${dir_conte69}/${idBIDS}_hemi-"*_space-nativepro_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
-if [[ "$Nwm" -lt 6 ]]; then ((N++))
+# Run the SWM generation ig the fsLR-5k MPC does not exist
+MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
+if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
     # Import the surface segmentation to NIFTI
     T1fs_seg="${tmp}/aparc+aseg.nii.gz"
     Do_cmd mri_convert "${dir_subjsurf}/mri/aparc+aseg.mgz" "${T1fs_seg}"
@@ -219,19 +219,21 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
       # find all laplacian surfaces and list by creation time
       for i in ${!deepths[@]} ; do
           mm="${deepths[$i]}mm"
+          label="MPC-"$((i+1))
           # SWM surface for each deepth in NATIVEPRO
           surf_swm="${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm${mm}.surf.gii"
           # SWM surface for each deepth in qMRI space
           out_surf="${tmp}/${idBIDS}_hemi-${HEMI}_space-qMRI_surf-fsnative_label-swm${mm}.surf.gii"
           # SWM map for each deepth in qMRI space
-          out_feat="${outDir}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-MPC-"$((i+1)).func.gii
+          out_feat="${outDir}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}.func.gii"
 
+          Info "Creating ${HEMI} swm ${mm}"
           # Apply transformation to register surface to nativepro
-          Do_cmd wb_command -surface-apply-affine "${surf_swm}" "${wb_affine}" "${out_surf}"
+          wb_command -surface-apply-affine "${surf_swm}" "${wb_affine}" "${out_surf}"
           # Apply Non-linear Warpfield to register surface to nativepro
           if [[ ${reg_nonlinear}  == "TRUE" ]]; then Do_cmd wb_command -surface-apply-warpfield "${out_surf}" "${SyN_qMRI2fs_Invwarp}" "${out_surf}"; fi
-          # Sample intensity and resample to other surfaces
-          map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "swm${mm}" "${outDir}"
+          # Sample intensity and resample to other surfaces fsaverage5, fsLR-32k and fsLR-5k
+          map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "${label}" "${outDir}"
        done
     done
     Nwm=$(ls "${tmp}/${idBIDS}_hemi-"*_space-qMRI_surf-fsnative_label-swm*.surf.gii 2>/dev/null | wc -l)
