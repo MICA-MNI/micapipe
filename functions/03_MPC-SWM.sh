@@ -106,17 +106,11 @@ export SUBJECTS_DIR="$dir_surf"
 outDir="${subject_dir}/mpc-swm/${mpc_p}"
 Note "acqMRI:" "${mpc_str}"
 
-# Check if the directory exists and change the permissions
-[[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
-# Create the MPC-SWM module json file
-json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM_${mpc_str}.json"
-
-# json file
-#qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.json"
-
 #------------------------------------------------------------------------------#
 # Registration between both images
-qT1_nativepro=${proc_struct}/${idBIDS}_space-nativepro_${mpc_str}.nii.gz
+qMRI_warped=${proc_struct}/${idBIDS}_space-nativepro_${mpc_str}.nii.gz
+# This is only for the json metada
+qMRI_reference="${T1nativepro}"
 
 # Affine transformations
 str_qMRI2np_xfm="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_"
@@ -129,11 +123,11 @@ SyN_qMRI2np_Invwarp="${str_qMRI2np_xfm}1InverseWarp.nii.gz"
 # Apply transformations
 if [[ ${reg_nonlinear}  == "TRUE" ]]; then
     # SyN from T1_nativepro to t1-nativepro
-    export reg="s"
+    reg="s"
     transformsInv="-t [${mat_qMRI2np_xfm},1] -t ${SyN_qMRI2np_Invwarp}" # T1nativepro to qMRI
     transforms="-t ${SyN_qMRI2np_warp} -t ${mat_qMRI2np_xfm}"  # qMRI to T1nativepro T1nativepro to qMRI
 else
-    export reg="a"
+    reg="a"
     transformsInv="-t [${mat_qMRI2np_xfm},1]"  # T1nativepro to qMRI
     transforms="-t ${mat_qMRI2np_xfm}"   # qMRI to T1nativepro
 fi
@@ -147,7 +141,7 @@ synthseg_native() {
 }
 
 # Calculate the registrations
-if [[ ! -f "$qT1_nativepro" ]] || [[ ! -f "$mat_qMRI2np_xfm" ]]; then ((N++))
+if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2np_xfm" ]]; then ((N++))
     img_fixed="${T1nativepro}"
     img_moving="${regImage}"
 
@@ -168,8 +162,8 @@ if [[ ! -f "$qT1_nativepro" ]] || [[ ! -f "$mat_qMRI2np_xfm" ]]; then ((N++))
     if [ ! -f "${mat_qMRI2np_xfm}" ]; then Error "Registration between ${mpc_str} and T1nativepro FAILED. Check you inputs!"; cleanup "$tmp" "$nocleanup" "$here"; exit; fi
 
     # Apply transformations: from qMRI to T1-fsnative
-    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro" "${transforms}" -o "$qT1_nativepro" -v -u int
-    if [[ -f ${qT1_nativepro} ]]; then ((Nsteps++)); fi
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro" "${transforms}" -o "$qMRI_warped" -v -u int
+    if [[ -f ${qMRI_warped} ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a ${mpc_str} on Surface space"; ((Nsteps++)); ((N++))
 fi
@@ -180,15 +174,20 @@ Do_cmd c3d_affine_tool -itk "${mat_qMRI2np_xfm}" -o "${wb_affine} -inv"
 
 #------------------------------------------------------------------------------#
 # Laplacian surface generation
-num_surfs=15 #15, 10
+num_surfs=16 #15, 10
 thickness=0.2 #0.2, 0.3
 
-# Define 15 surfaces in 3mm separated by 0.2mm step (3 mm=0.2mm step * 15 surfaces)
-deepths=($(seq "${thickness}" "${thickness}" 3))
+# Check if the directory exists and change the permissions
+[[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
+# Create the MPC-SWM module json file
+json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM_${mpc_str}.json"
+
+# Define 16 surfaces in 3mm separated by 0.2mm step (3 mm=0.2mm step * 15 surfaces)
+deepths=($(seq 0 "${thickness}" 3))
 
 # Replace the blanck space with comma
-for ((i = 0; i <= 15; i += 2)); do sliced1+=("${deepths[i]}"); done
-for ((i = 1; i <= 14; i += 2)); do sliced2+=("${deepths[i]}"); done
+for ((i = 0; i <= 16; i += 2)); do sliced1+=("${deepths[i]}"); done
+for ((i = 1; i <= 15; i += 2)); do sliced2+=("${deepths[i]}"); done
 printf -v deepths1_comma '%s,' "${sliced1[@]}"
 printf -v deepths2_comma '%s,' "${sliced2[@]}"
 deepths1_comma=$(echo "${deepths1_comma%,}")
@@ -221,6 +220,9 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
       # Run SWM
       Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths1_comma}"
       Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths2_comma}"
+
+      # Copy white matter as surface 0.0
+      cp "${tmp}/${HEMI}_wm.surf.gii" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm0.0.surf.gii"
 
       # find all laplacian surfaces and list by creation time
       for i in ${!deepths[@]} ; do
