@@ -66,7 +66,7 @@ zres = np.sqrt(np.sum(laplace.affine[:3, 2]**2))
 depth_vox = [d / np.sqrt(xres**2 + yres**2 + zres**2) for d in depth_mm]
 
 # Convert depth values to strings with a specific format
-depth_str = [f'{d:.1f}' for d in depth_mm]  # Use two decimal places
+depth_str = [f'{d:.1f}' for d in depth_mm]  # Use ONE decimal place
 
 convergence_threshold = 1e-4
 step_size = 0.1 # vox
