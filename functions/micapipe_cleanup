@@ -42,6 +42,8 @@ echo -e "
 \t  \033[38;5;120m-acqStr\033[0m           -MPC requires the acquisition string to erase its outputs
 \t\t\t     e.g -acqStr T1map\
 \t\033[38;5;197m-SWM\033[0m              : DELETES Superficial white matter files
+\t\033[38;5;197m-MPC_SWM\033[0m          : DELETES MPC Superficial white matter files
+\t  \033[38;5;120m-acqStr\033[0m           -MPC-SWM requires the acquisition string to erase its outputs
 
 \t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
 \t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
@@ -124,6 +126,10 @@ do
   ;;
   -SWM)
     SWM=TRUE
+    shift
+  ;;
+  -MPC_SWM)
+    MPC_SWM=TRUE
     shift
   ;;
   -fs_licence)
@@ -357,15 +363,30 @@ if [ "${postMPC}" = "TRUE" ]; then
         Warning "${id},${SES/ses-/},MPC-${acqStr}"
         acqStr=${acqStr/acq-/}
         Do_cmd rm -rvf "${dir_mpc}" \
-                      ${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz \
+                      "${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz" \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
-                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
                       "${dir_QC}/${idBIDS}_module-MPC-${acqStr}"* \
                       "$dir_logs"/MPC_*"${acqStr}"* \
                       "${dir_maps}/"${idBIDS}*${acqStr}*gii \
                       "${dir_maps}/"${idBIDS}_space-nativepro_map-${acqStr}*
         grep -v "${id},${SES/ses-/},MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
         grep -v "${id}, ${SES/ses-/}, MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# CLEAN -MPC-SWM
+if [ "${MPC_SWM}" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then acqStr="qMRI"; else acqStr=${acqStr/acq-/}; fi
+    dir_mpc="${subject_dir}/mpc-swm/acq-${acqStr}"
+    #if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+        Warning "Erasing MPC-SWM output files and logs: ${acqStr}"
+        Warning "${id}, ${SES/ses-/}, MPC-SWM_${acqStr}"
+        Do_cmd rm -rvf "${dir_mpc}" \
+                      "${proc_struct}/${idBIDS}_space-nativepro_${acqStr}.nii.gz" \
+                      "${dir_warp}/${idBIDS}"_from-${acqStr}_to-nativepro_* \
+                      "${dir_QC}/${idBIDS}_module-MPC-SWM_${acqStr}"* \
+                      "$dir_logs"/MPC-SWM_*"${acqStr}"*
+        grep -v "${id},${SES/ses-/},MPC-SWM${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+        grep -v "${id}, ${SES/ses-/}, MPC-SWM${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
