@@ -142,7 +142,6 @@ MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
-print(ses)
 if ses == "" or ses == "SINGLE":
     ses_number = "SINGLE"
     subj_dir = "%s/%s"%(out,sub)
@@ -1467,14 +1466,15 @@ def qc_mpc(mpc_json=''):
     )
 
     if 'MPC-SWM' in mpc_json:
-        outPath = f"{subj_dir}/anat/{sbids}_space-nativepro_T1w.nii.gz"
+        ref_space="nativepro"
         refPath = f"{subj_dir}/anat/{sbids}_space-nativepro_{acquisition}.nii.gz"
     else:
-        outPath = f"{subj_dir}/anat/{sbids}_space-fsnative_T1w.nii.gz"
+        ref_space="fsnative"
         refPath = f"{subj_dir}/anat/{sbids}_space-fsnative_{acquisition}.nii.gz"
+    outPath = f"{subj_dir}/anat/{sbids}_space-{ref_space}_T1w.nii.gz"
 
     figPath = f"{tmpDir}/{acquisition}_fsnative_screenshot.png"
-    _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
+    _static_block += nifti_check(outName=f"Registration: {acquisition} in {ref_space} space", outPath=outPath, refPath=refPath, figPath=figPath)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>MPC connectomes</b> </p>'
@@ -1518,7 +1518,6 @@ def qc_mpc(mpc_json=''):
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
@@ -1635,7 +1634,6 @@ def qc_gd(gd_json=''):
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
@@ -1811,8 +1809,8 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-   'modules':   ['MPC-SWM', 'SWM', 'proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
-   'functions': [qc_mpc, qc_swm, qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
+   'modules':   ['SWM', 'proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+   'functions': [qc_swm, qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
