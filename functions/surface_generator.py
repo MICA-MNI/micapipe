@@ -12,7 +12,7 @@ NIFTI  :    str
 OUTPUT :    str
             path and name to the output surfaces
 DEPTHS :    list [int | float] (OPTIONAL)
-            DEFAULT=[1,2,3] List of depths to sample (in voxels)
+            DEFAULT=[1,2,3] List of depths to sample (in mm)
 
 Returns
 -------
@@ -58,15 +58,16 @@ lp = laplace.get_fdata()
 print('loaded data and parameters')
 
 # Get image resolution
-xres = np.sqrt(np.sum(laplace.affine[:3, 0]**2))
-yres = np.sqrt(np.sum(laplace.affine[:3, 1]**2))
-zres = np.sqrt(np.sum(laplace.affine[:3, 2]**2))
+# print(laplace.affine)
+xres = laplace.affine[0, 0]
+yres = laplace.affine[1, 1]
+zres = laplace.affine[2, 2]
 
 # Convert depths from mm to voxels
-depth_vox = [d / np.sqrt(xres**2 + yres**2 + zres**2) for d in depth_mm]
+depth_vox = [(depth / xres) for depth in depth_mm]
 
 # Convert depth values to strings with a specific format
-depth_str = [f'{d:.1f}' for d in depth_mm]  # Use ONE decimal place
+depth_str = [f'{d:.1f}' for d in depth_mm]  # Use one decimal places
 
 convergence_threshold = 1e-4
 step_size = 0.1 # vox
@@ -75,11 +76,15 @@ max_iters = int(np.max(np.diff(depth_vox))/step_size)*10
 # laplace to gradient
 dx,dy,dz = np.gradient(lp)
 
+# Scale the gradients by the image resolutions to handle anisotropy
+dx = dx / xres
+dy = dy / yres
+dz = dz / zres
+
 distance_travelled = np.zeros((len(V)))
 n=0
 for d, d_str in zip(depth_vox, depth_str):
     # apply inverse affine to surface to get to matrix space
-    print(laplace.affine)
     V[:,:] = V - laplace.affine[:3,3].T
     for xyz in range(3):
         V[:,xyz] = V[:,xyz]*(1/laplace.affine[xyz,xyz])
