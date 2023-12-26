@@ -992,10 +992,12 @@ fi
 #     Generates superficial white matter surfaces based MPC
 #     REQUIRES -post-structural
 if [ "$MPC_SWM" = "TRUE" ]; then
-    log_file_str=$dir_logs/MPC-SWM_$(date +'%Y-%m-%d_%H.%M.%S')
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC-SWM_$(date +'%Y-%m-%d_%H.%M.%S')-${rand}"
     COMMAND="${scriptDir}/03_MPC-SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
     # Command running
     $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
 fi
 
 # -----------------------------------------------------------------------------------------------#
