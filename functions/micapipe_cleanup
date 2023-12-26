@@ -383,10 +383,10 @@ if [ "${MPC_SWM}" = "TRUE" ]; then
         Do_cmd rm -rvf "${dir_mpc}" \
                       "${proc_struct}/${idBIDS}_space-nativepro_${acqStr}.nii.gz" \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-nativepro_* \
-                      "${dir_QC}/${idBIDS}_module-MPC-SWM_${acqStr}"* \
-                      "$dir_logs"/MPC-SWM_*"${acqStr}"*
-        grep -v "${id},${SES/ses-/},MPC-SWM${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-        grep -v "${id}, ${SES/ses-/}, MPC-SWM${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+                      "${dir_QC}/${idBIDS}_module-MPC-SWM-${acqStr}"* \
+                      "$dir_logs"/MPC-SWM-*"${acqStr}"*
+        grep -v "${id},${SES/ses-/},MPC-SWM-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+        grep -v "${id}, ${SES/ses-/}, MPC-SWM-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
