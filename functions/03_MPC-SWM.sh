@@ -62,7 +62,7 @@ else
 fi
 
 # End if module has been processed
-module_json="${dir_QC}/${idBIDS}_module-MPC-SWM_${mpc_str}.json"
+module_json="${dir_QC}/${idBIDS}_module-MPC-SWM-${mpc_str}.json"
 micapipe_check_json_status "${module_json}" "MPC-SWM"
 
 # Check microstructural image input flag and set parameters accordingly
@@ -180,18 +180,14 @@ thickness=0.2 #0.2, 0.3
 # Check if the directory exists and change the permissions
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
 # Create the MPC-SWM module json file
-json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM_${mpc_str}.json"
+json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-SWM-${mpc_str}.json"
 
 # Define 16 surfaces in 3mm separated by 0.2mm step (3 mm=0.2mm step * 15 surfaces)
 deepths=($(seq 0 "${thickness}" 3))
 
 # Replace the blanck space with comma
-for ((i = 0; i <= 16; i += 2)); do sliced1+=("${deepths[i]}"); done
-for ((i = 1; i <= 15; i += 2)); do sliced2+=("${deepths[i]}"); done
-printf -v deepths1_comma '%s,' "${sliced1[@]}"
-printf -v deepths2_comma '%s,' "${sliced2[@]}"
-deepths1_comma=$(echo "${deepths1_comma%,}")
-deepths2_comma=$(echo "${deepths2_comma%,}")
+printf -v deepths_comma '%s,' "${deepths[@]}"
+deepths_comma=$(echo "${deepths_comma%,}")
 
 # Run the SWM generation ig the fsLR-5k MPC does not exist
 MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
@@ -218,11 +214,10 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
       # Prepare the white matter surface
       Do_cmd cp "${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-white.surf.gii ${tmp}/${HEMI}_wm.surf.gii"
       # Run SWM
-      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths1_comma}"
-      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths2_comma}"
+      Do_cmd python "${MICAPIPE}"/functions/surface_generator.py "${tmp}/${HEMI}_wm.surf.gii" "${WM_laplace}" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm" "${deepths_comma}"
 
       # Copy white matter as surface 0.0
-      cp "${tmp}/${HEMI}_wm.surf.gii" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm0.0.surf.gii"
+      cp "${tmp}/${HEMI}_wm.surf.gii" "${tmp}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-swm0.0mm.surf.gii"
 
       # find all laplacian surfaces and list by creation time
       for i in ${!deepths[@]} ; do
@@ -280,6 +275,6 @@ eri=$(echo print "$eri"/60 | perl)
 
 # Notification of completition
 micapipe_completition_status "MPC-SWM"
-micapipe_procStatus "${id}" "${SES/ses-/}" "MPC-SWM_${mpc_str}" "${out}/micapipe_processed_sub.csv"
-Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC-SWM_${mpc_str}" "${module_json}"
+micapipe_procStatus "${id}" "${SES/ses-/}" "MPC-SWM-${mpc_str}" "${out}/micapipe_processed_sub.csv"
+Do_cmd micapipe_procStatus_json "${id}" "${SES/ses-/}" "MPC-SWM-${mpc_str}" "${module_json}"
 cleanup "$tmp" "$nocleanup" "$here"
