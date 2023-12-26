@@ -357,6 +357,10 @@ do
     postMPC=TRUE
     shift
   ;;
+  -MPC_SWM)
+    MPC_SWM=TRUE
+    shift
+  ;;
   -reg_nonlinear)
     reg_nonlinear=TRUE
     shift
@@ -533,7 +537,7 @@ fi
 # argument check out & WARNINGS
 missing_arg
 
-runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup $SWM)
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup $SWM $MPC_SWM)
 if [ "${#runs[@]}" -lt 1 ]; then
 Error "A processing flag is missing:
                     -proc_structural
@@ -547,6 +551,7 @@ Error "A processing flag is missing:
                     -MPC
                     -GD
                     -SWM
+                    -MPC_SWM
                     -QC_subj
                     -cleanup"
 exit 1; fi
@@ -979,6 +984,20 @@ if [ "$SWM" = "TRUE" ]; then
     COMMAND="${scriptDir}/03_SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
     # Command running
     $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#    Microstructural Profile Covariance - Superficial White Matter
+# -----------------------------------------------------------------------------------------------#
+#     Generates superficial white matter surfaces based MPC
+#     REQUIRES -post-structural
+if [ "$MPC_SWM" = "TRUE" ]; then
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC-SWM_$(date +'%Y-%m-%d_%H.%M.%S')-${rand}"
+    COMMAND="${scriptDir}/03_MPC-SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
+    # Command running
+    $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
 fi
 
 # -----------------------------------------------------------------------------------------------#

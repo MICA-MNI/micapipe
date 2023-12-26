@@ -142,7 +142,6 @@ MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
-print(ses)
 if ses == "" or ses == "SINGLE":
     ses_number = "SINGLE"
     subj_dir = "%s/%s"%(out,sub)
@@ -1422,11 +1421,17 @@ def qc_sc(sc_json=''):
 ## ------------------------------- MPC MODULE ------------------------------ ##
 def qc_mpc(mpc_json=''):
 
-    acquisition = mpc_json.split('%s_module-MPC-'%(sbids))[1].split('.json')[0]
+    if 'MPC-SWM' in mpc_json:
+        acq_str = 'MPC-SWM'
+        mpc_dir = 'mpc-swm'
+    else:
+        acq_str = 'MPC'
+        mpc_dir = 'mpc'
+    acquisition = mpc_json.split(f'{sbids}_module-{acq_str}-')[1].split('.json')[0]
 
     # QC header
     _static_block = qc_header()
-    _static_block +=  report_module_header_template(module='Microstructural profile covariance (%s)'%(acquisition))
+    _static_block +=  report_module_header_template(module=f'{acq_str} | Microstructural profile covariance ({acquisition})')
 
     # QC summary
     _static_block += report_qc_summary_template(mpc_json)
@@ -1440,18 +1445,18 @@ def qc_mpc(mpc_json=''):
             '<b>Main inputs:</b> </p>'
     )
 
-    proc_mpc_json = os.path.realpath("%s/mpc/acq-%s/%s_MPC-%s.json"%(subj_dir,acquisition,sbids,acquisition))
+    proc_mpc_json = os.path.realpath(f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_{acq_str}-{acquisition}.json")
     with open( proc_mpc_json ) as f:
         mpc_description = json.load(f)
     microstructural_img = mpc_description["microstructural_img"]
     microstructural_reg = mpc_description["microstructural_reg"]
 
     outPath = microstructural_img
-    figPath = "%s/%s_microstructural_img.png"%(tmpDir,acquisition)
+    figPath = f"{tmpDir}/{acquisition}_microstructural_img.png"
     _static_block += nifti_check(outName="Microstructural image", outPath=outPath, figPath=figPath)
 
     outPath = microstructural_reg
-    figPath = "%s/%s_microstructural_reg.png"%(tmpDir,acquisition)
+    figPath = f"{tmpDir}/{acquisition}_microstructural_reg.png"
     _static_block += nifti_check(outName="Microstructural registration", outPath=outPath, figPath=figPath)
 
     # Outputs
@@ -1460,16 +1465,22 @@ def qc_mpc(mpc_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    outPath = "%s/anat/%s_space-fsnative_T1w.nii.gz"%(subj_dir,sbids)
-    refPath = "%s/anat/%s_space-fsnative_%s.nii.gz"%(subj_dir,sbids,acquisition)
-    figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
-    _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
+    if 'MPC-SWM' in mpc_json:
+        ref_space="nativepro"
+        refPath = f"{subj_dir}/anat/{sbids}_space-nativepro_{acquisition}.nii.gz"
+    else:
+        ref_space="fsnative"
+        refPath = f"{subj_dir}/anat/{sbids}_space-fsnative_{acquisition}.nii.gz"
+    outPath = f"{subj_dir}/anat/{sbids}_space-{ref_space}_T1w.nii.gz"
+
+    figPath = f"{tmpDir}/{acquisition}_fsnative_screenshot.png"
+    _static_block += nifti_check(outName=f"Registration: {acquisition} in {ref_space} space", outPath=outPath, refPath=refPath, figPath=figPath)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids)
+    mpc_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_surf-fsLR-5k_desc-MPC.shape.gii"
     mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
@@ -1502,18 +1513,17 @@ def qc_mpc(mpc_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
+    label_dir = os.path.realpath(f"{subj_dir}/parc/")
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(subj_dir,acquisition,sbids,annot)
+        ip_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_atlas-{annot}_desc-intensity_profiles.shape.gii"
         ip = nb.load(ip_file).darrays[0].data
         pltpy.imshow(ip, cmap="crest", aspect='auto')
         pltpy.savefig(ip_fig)
@@ -1523,7 +1533,7 @@ def qc_mpc(mpc_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids,annot)
+        mpc_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_atlas-{annot}_desc-MPC.shape.gii"
         mpc = nb.load(mpc_file).darrays[0].data
         mpc = np.triu(mpc,1)+mpc.T
         mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
@@ -1624,7 +1634,6 @@ def qc_gd(gd_json=''):
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
@@ -1742,7 +1751,7 @@ def qc_swm(swm_json=''):
     swm_files = sorted(glob.glob(f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-swm*.func.gii"))
 
     # Get the unique maps IDs
-    maps_str = list(set([file.split('vox_')[1][:-9] for file in swm_files]))
+    maps_str = list(set([file.split('mm_')[1][:-9] for file in swm_files]))
 
     # Get the unique surfaces
     surf_str = sorted(list(set([file.split('label-')[1].split('_')[0] for file in swm_files])))

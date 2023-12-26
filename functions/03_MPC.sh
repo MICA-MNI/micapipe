@@ -110,8 +110,10 @@ qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.json"
 
 #------------------------------------------------------------------------------#
 # Registration between both images
-T1_in_fs=${tmp}/orig.nii.gz
-qT1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz
+T1_in_fs="${tmp}/orig.nii.gz"
+qMRI_warped="${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz"
+# This is only for the json metada
+qMRI_reference="${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz"
 
 # Affine transformations
 str_qMRI2fs_xfm="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative"
@@ -124,11 +126,11 @@ SyN_qMRI2fs_Invwarp="${str_qMRI2fs_xfm}1InverseWarp.nii.gz"
 # Apply transformations
 if [[ ${reg_nonlinear}  == "TRUE" ]]; then
     # SyN from T1_nativepro to t1-nativepro
-    export reg="s"
+    reg="s"
     transformsInv="-t [${mat_qMRI2fs_xfm},1] -t ${SyN_qMRI2fs_Invwarp}" # T1_fsnative to qMRI
     transforms="-t ${SyN_qMRI2fs_warp} -t ${mat_qMRI2fs_xfm}"  # qMRI to T1_fsnative T1_fsnative to qMRI
 else
-    export reg="a"
+    reg="a"
     transformsInv="-t [${mat_qMRI2fs_xfm},1]"  # T1_fsnative to qMRI
     transforms="-t ${mat_qMRI2fs_xfm}"   # qMRI to T1_fsnative
 fi
@@ -141,8 +143,8 @@ synthseg_native() {
   Do_cmd fslmaths "${tmp}/${mri_str}_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/${mri_str}_synthseg.nii.gz" "${mri_synth}"
 }
 
-# Calculate the restristations
-if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
+# Calculate the registrations
+if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
     img_fixed="${T1_in_fs}"
     img_moving="${regImage}"
 
@@ -164,8 +166,8 @@ if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
     if [ ! -f "${mat_qMRI2fs_xfm}" ]; then Error "Registration between ${mpc_str} and T1nativepro FAILED. Check you inputs!"; cleanup "$tmp" "$nocleanup" "$here"; exit; fi
 
     # Apply transformations: from qMRI to T1-fsnative
-    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" "${transforms}" -o "$qT1_fsnative" -v -u int
-    if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" "${transforms}" -o "$qMRI_warped" -v -u int
+    if [[ -f ${qMRI_warped} ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a ${mpc_str} on Surface space"; ((Nsteps++)); ((N++))
 fi
@@ -176,8 +178,12 @@ Do_cmd c3d_affine_tool -itk "${mat_qMRI2fs_xfm}" -o "${wb_affine} -inv"
 
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
+# NUmber of surfaces to generate
 num_surfs=14
+
+# Check if the directory exists and change the permissions
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
+# Create the MPC-SWM module json file
 json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
 
 MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
@@ -270,7 +276,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
-        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
+        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}" "mpc"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
@@ -279,8 +285,8 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
-  ((Nsteps++))
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}" "mpc" "$num_surfs"
+  if [[ -f "${MPC_fsLR5k}" ]]; then ((Nsteps++)); fi
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
 

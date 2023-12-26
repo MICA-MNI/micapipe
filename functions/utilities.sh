@@ -821,7 +821,7 @@ function json_nativepro_qt1() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"TransformCmd\": {
-        \"BinaryMask_antsApplyTransforms\": \"$2\"
+        \"antsApplyTransforms\": \"$2\"
       },
     \"Transform\": [
         \"${Transform[@]:0:4} \",
@@ -942,10 +942,12 @@ function json_mpc() {
     \"acquisition\": \"${mpc_str}\",
     \"microstructural_img\": \"${1}\",
     \"microstructural_reg\": \"${regImage}\",
-    \"registered_img\": \"${qT1_fsnative}\",
+    \"reference_mri\": \"${qMRI_reference}\",
+    \"warped_qmri\": \"${qMRI_warped}\",
     \"regSynth\": \"${synth_reg}\",
     \"reg_nonlinear\": \"${reg_nonlinear}\",
     \"registration\": \"${reg}\",
+    \"num_surfs\": \"${num_surfs}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
