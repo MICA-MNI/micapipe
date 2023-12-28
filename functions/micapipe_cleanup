@@ -350,8 +350,8 @@ if [ "$postDWI" = "TRUE" ]; then
                   "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_* \
                   "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC-${tracts}*
-    grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-    grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr_}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr_}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
