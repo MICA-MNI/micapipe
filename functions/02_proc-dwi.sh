@@ -399,9 +399,10 @@ fi
 #------------------------------------------------------------------------------#
 # DWI upsampling
 if [[ "${dwi_upsample}" == "TRUE" ]]; then
-  dwi_upsampled=
-  Do_cmd mrgrid "$dwi_corr" regrid -vox 1.25 ${dwi_upsampled} -nthreads ${threads}
-  dwi_corr=${dwi_upsampled}
+  Info "Upsampling DWI corrected to 1.25mm isometric"
+  dwi_corr_upsampled="${tmp}/${idBIDS}_space-dwi_desc-preproc_dwi_upsampled.mif"
+  Do_cmd mrgrid "$dwi_corr" regrid -vox 1.25 ${dwi_corr_upsampled} -nthreads ${threads}
+  Do_cmd mv ${dwi_corr_upsampled} ${dwi_corr}
 fi
 
 #------------------------------------------------------------------------------#
