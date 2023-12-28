@@ -718,7 +718,7 @@ fi
 
 #------------------------------------------------------------------------------#
 #                                 C O R T E X
-surf_dir="${out}/${subject}/${SES}/surf"
+surf_dir="${subject_dir}/surf"
 # Transform surface to func space
 if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
     # convert affines
