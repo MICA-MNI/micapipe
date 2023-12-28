@@ -17,8 +17,6 @@ Generates a pdf file for QC of the processing
 
     ses       : OPTIONAL flag that indicates the session name (if omitted will manage ase SINGLE session)
 
-    tracts    : OPTIONAL number of streamlines, where 'M' stands for millions (default=40M)
-
     tmpDir    : OPTIONAL specifcation of temporary directory location <path> (Default is /tmp)
 
     quiet     : OPTIONAL do not print comments
@@ -26,7 +24,6 @@ Generates a pdf file for QC of the processing
     nocleanup : OPTIONAL do not delete temporary directory at script completion
 
     version   : OPTIONAL print software version
-
 
     USAGE
     --------
@@ -90,13 +87,6 @@ parser.add_argument('-ses',
                     help='Flag that indicates the session name'
                     )
 
-parser.add_argument('-tracts',
-                    dest='tracts',
-                    type=str,
-                    default='40M',
-                    help='Number of streamlines'
-                    )
-
 parser.add_argument('-tmpDir',
                     dest='tmpDir',
                     type=str,
@@ -134,7 +124,6 @@ sub = args.sub
 out = os.path.realpath(args.out)
 bids = os.path.realpath(args.bids)
 ses = args.ses
-tracts = args.tracts
 tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
