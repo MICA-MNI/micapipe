@@ -82,9 +82,10 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-dir_volum="${out}/${subject}/${SES}/parc"
-T1_seg_subcortex="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
-T1_seg_cerebellum="${out}/${subject}/${SES}/parc/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
+subject_dir
+dir_volum="${subject_dir}/parc"
+T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
+T1_seg_cerebellum="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-cerebellum.nii.gz"
 
 ### CHECK INPUTS: func, phase encoding, structural proc, topup and ICA-FIX files
 Info "Inputs:"
@@ -719,6 +720,7 @@ fi
 #------------------------------------------------------------------------------#
 #                                 C O R T E X
 surf_dir="${subject_dir}/surf"
+
 # Transform surface to func space
 if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
     # convert affines
@@ -782,7 +784,7 @@ fi
 if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz" ]]; then
     Do_cmd fslmaths "$func_nii" -Tmean "${tmp}/${idBIDS}${func_lab}_mean"
     Do_cmd fslmaths "$func_nii" -Tstd "${tmp}/${idBIDS}${func_lab}_std"
-    D0_cmd fslmaths  "${tmp}/${idBIDS}${func_lab}_mean.nii.gz" \
+    Do_cmd fslmaths  "${tmp}/${idBIDS}${func_lab}_mean.nii.gz" \
         -div "${tmp}/${idBIDS}${func_lab}_std.nii.gz" \
         "${func_volum}/${idBIDS}${func_lab}_tSNR.nii.gz"
     Info "Subject ${id} volumetric tSNR calculated"; ((Nsteps++)); ((N++))
