@@ -14,9 +14,6 @@ R -e 'install.packages("/opt/randomForest_4.6-14.tar.gz", repos = NULL, type = "
 R -e 'install.packages("/opt/MASS_7.3-54.tar.gz", repos = NULL, type = "source")'
 R -e 'install.packages("/opt/class_7.3-19.tar.gz", repos = NULL, type = "source")'
 R -e 'install.packages("/opt/kernlab_0.9-32.tar.gz", repos = NULL, type = "source")'
-R -e 'install.packages("/opt/ROCR_1.0-11.tar.gz", repos = NULL, type = "source")'
-R -e 'install.packages("/opt/party_1.3-13.tar.gz", repos = NULL, type = "source")'
-R -e 'install.packages("/opt/e1071_1.7-13.tar.gz", repos = NULL, type = "source")'
 
 R -e "install.packages('versions')"
 R -e "install.packages('Matrix', version = '1.2-18')"
@@ -29,3 +26,8 @@ R -e "install.packages('mvtnorm', version = '1.1-1')"
 R -e "install.packages('coin', version = '1.3-1')"
 R -e "install.packages('pkgconfig', version = '2.0.3')"
 R -e "install.packages('libcoin')"
+
+# Packages for fsl-fix
+R -e "install.packages('ROCR', version = '1.0-11')"
+R -e "install.packages('party', version = '1.3-13')"
+R -e "install.packages('e1071', version = '1.7-4')"
