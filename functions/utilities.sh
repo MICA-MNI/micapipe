@@ -763,10 +763,11 @@ function json_nativepro_flair() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=($(mrinfo "$1" -transform))
-  Info "Creating T1nativepro_flair json file"
+  Info "Creating Flair json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
+    \"flairScanStr\": \"${flairScanStr}\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -774,6 +775,9 @@ function json_nativepro_flair() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"regSynth\": \"${synth_reg}\",
+    \"mode_wm\": \"${mode_wm}\",
+    \"mode_gm\": \"${mode_gm}\",
+    \"mode_brain\": \"${mode_brain}\",
     \"TransformCmd\": {
         \"BinaryMask_antsApplyTransforms\": \"$2\"
       },
@@ -784,7 +788,7 @@ function json_nativepro_flair() {
         \"${Transform[@]:12:8}\"
       ],
     \"inputNIFTI\": {
-      \"Name\": \"$bids_flair\",
+      \"Name\": \"$flairScan\",
       \"qform\": [
         \"${qform[@]:0:4} \",
         \"${qform[@]:4:4} \",
