@@ -277,7 +277,8 @@ if [ "$procFlair" = "TRUE" ]; then
         "${dir_QC}/${idBIDS}"_module-proc_flair.json \
         "${outDir}/${idBIDS}_space-nativepro_map-flair.json" \
         "${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz" \
-        "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii"
+        "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii" \
+        "$dir_logs"/proc_flair*
     grep -v "${id},${SES/ses-/},proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
