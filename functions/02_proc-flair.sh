@@ -52,8 +52,8 @@ if [[ "$flairScanStr" == DEFAULT ]]; then
         flairScan=${bids_flair[0]}
     fi
 else
-    Info "Using full path to FLAIR scan: ${flairScanStr}"
-    flairScan=$(realpath "${flairScanStr}" 2>/dev/null)
+    Info "Using string to set the FLAIR scan: ${flairScanStr}"
+    flairScan=$(realpath "${subject_bids}/anat/${idBIDS}_${flairScanStr}.nii"* 2>/dev/null)
 fi
 if [ ! -f "$flairScan" ]; then Error "T2-flair not found for Subject $idBIDS : ${flairScan}"; exit; fi
 
@@ -67,11 +67,11 @@ micapipe_software
 Info "Module inputs:"
 Note "wb_command threads  : " "${OMP_NUM_THREADS}"
 Note "threads             : " "${threads}"
-Note "Saving temporary dir: " "$nocleanup"
-Note "tmpDir              : " "$tmpDir"
-Note "flairScanStr        : " "$flairScanStr"
+Note "Saving temporary dir: " "${nocleanup}"
+Note "tmpDir              : " "${tmpDir}"
+Note "flairScanStr        : " "${flairScanStr}"
 Note "synth_reg           : " "${synth_reg}"
-Note "Processing          : " "$PROC"
+Note "Processing          : " "${PROC}"
 
 # Timer
 aloita=$(date +%s)
@@ -95,96 +95,157 @@ outDir="${subject_dir}/maps"
 flair_json="${outDir}/${idBIDS}_space-nativepro_map-flair.json"
 
 #------------------------------------------------------------------------------#
-### FLAIR intensity correction ###
+# Functions
+function Image_threshold() {
+  img_in=$1
+  thrlo=$2
+  thrhi=$3
+  img_out=$4
+
+  # Create upper and lower thresholded images
+  rnd_str=${RANDOM}
+  threshlo="${tmp}/${rnd_str}_threshlo.nii.gz"
+  threshhi="${tmp}/${rnd_str}_threshhi.nii.gz"
+
+  ThresholdImage 3 "${img_in}" "${threshlo}" threshlo ${thrlo}
+  ThresholdImage 3 "${img_in}" "${threshhi}" threshhi ${thrhi}
+
+  # Substract the thresholded images to get the unique thresholded img
+  ImageMath 3 "${img_out}" - "${threshlo}" "${threshhi}"
+
+  # Cleanup
+  rm "${threshlo}" "${threshhi}"
+
+}
+
+# The the mode of the GM, WM and whole brain
+function get_mode() {
+  # This functions uses mrhistogram to calculate the mode with awk.
+  # Using 1000 bins gets the same results as python
+  MRI_img=$1
+  MRI_mask=$2
+  bins=$3
+  # Create histogram file
+  hist=${tmp}/hist_masked.txt
+  mrhistogram -bins "${bins}" -mask "${MRI_mask}" -ignorezero -nthreads "${threads}" "${MRI_img}" "${hist}"
+  # get the index with the max frecuency
+  max_val=$(awk -F ',' 'NR==3 { m=$3; p=1; for(i=4;i<=NF;i++) { if ($i>m) { m=$i; p=i-2 } } printf "%d ",p }' "${hist}")
+  # bash array of each intensity bin
+  intensities=($(awk 'NR==2' "${hist}" | tr -s ',' ' '))
+  # get the intensity of the maximun frecuency (aka mode)
+  mode=${intensities[$((max_val-1))]}
+  # remove tmp file
+  rm ${hist}
+  # Print the mode
+  echo ${mode}
+}
+
+#------------------------------------------------------------------------------#
 # preproc FLAIR in nativepro space
-flairNP="${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz"
+flair_nativepro="${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz"
+flair_preproc="${tmp}/${idBIDS}_flair_norm_brain.nii.gz"
+flair_synthseg="${tmp}/${idBIDS}_flair_synthseg.nii.gz"
+flair_resample="${tmp}/${idBIDS}_flair_synthseg_resampled.nii.gz"
 
-# Bias field correction
-flair_N4="${tmp}/${idBIDS}_space-flair_desc-flair_N4.nii.gz"
-if [[ ! -f "$flairNP" ]]; then
-    ((N++))
-    Do_cmd N4BiasFieldCorrection -d 3 -i "$flairScan" -r \
-                                -o "$flair_N4"
-    ((Nsteps++))
-else
-    Info "Subject ${id} T2-FLAIR is N4 bias corrected"; ((Nsteps++)); ((N++))
-fi
+if [[ ! -f "$flair_nativepro" ]]; then ((N++))
+    #------------------------------------------------------------------------------#
+    # 1 | FLAIR segmentation
+    Do_cmd mri_synthseg --i "${flairScan}" --o "${flair_synthseg}" --robust --threads "$threads" --cpu --resample "${flair_resample}"
 
-# Clamp and rescale intensities
-flair_clamp="${tmp}/${idBIDS}_space-flair_desc-flair_N4_clamp.nii.gz"
-flair_rescale="${tmp}/${idBIDS}_space-flair_desc-flair_N4_rescale.nii.gz"
-if [[ ! -f "$flairNP" ]]; then
-    ((N++))
-
-    # Clamp intensities
-    Do_cmd ImageMath 3 "$flair_clamp" TruncateImageIntensity "$flair_N4" 0.01 0.99 75
-
-    # Rescale intensity [0,100]
-    Do_cmd ImageMath 3 "$flair_rescale" RescaleImage "$flair_clamp" 0 100
-
-    ((Nsteps++))
-else
-    Info "Subject ${id} T2-FLAIR is intensity corrected"; ((Nsteps++)); ((N++))
-fi
-
-# Normalize intensities by GM/WM interface, uses 5ttgen
-flair_preproc="${tmp}/${idBIDS}_space-flair_desc-flair_preproc.nii.gz"
-if [[ ! -f "$flairNP" ]]; then ((N++))
-    # Get gm/wm interface mask
-    t1_gmwmi="${tmp}/${idBIDS}_space-nativepro_desc-gmwmi-mask.nii.gz"
-    t1_5tt="${proc_struct}/${idBIDS}_space-nativepro_T1w_5tt.nii.gz"
-    Info "Calculating Gray matter White matter interface mask"
-    Do_cmd 5tt2gmwmi "$t1_5tt" "$t1_gmwmi"
-    # Register nativepro and flair
-    str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-affine_"
-    if [[ "${synth_reg}" == "TRUE" ]]; then
-      Info "Running label based affine registrations"
-      flair_synth="${tmp}/flair_synthsegGM.nii.gz"
-      T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
-      Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
-
-      Do_cmd mri_synthseg --i "$flair_rescale" --o "${tmp}/flair_synthseg.nii.gz" --robust --threads "$threads" --cpu
-      Do_cmd fslmaths "${tmp}/flair_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/flair_synthseg.nii.gz" "${flair_synth}"
-
-      # Affine from func to t1-nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1_synth" -m "$flair_synth" -o "$str_flair_affine" -t a -n "$threads" -p d
-    else
-      Info "Running volume based affine registrations"
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$flair_rescale" -o "$str_flair_affine" -t a -n "$threads" -p d
+    # synthseg_resampled is only generated if the voxel sizes don't match; in this case, you will need to do an affine registration back to FLAIR native space
+    if [ -f "${tmp}/${idBIDS}_flair_synthseg_resampled.nii.gz" ]; then
+        # Affine registration from flair_synthseg_resampled to FLAIR native space
+        flair_resample2orig="${tmp}/${idBIDS}_flair_synthresample_to_orig_"
+        Do_cmd antsRegistrationSyN.sh -d 3 -f "${flairScan}" -m "${flair_resample}" -o "${flair_resample2orig}" -t a -n "$threads" -p d
+        # Apply transformation to flair_synthseg
+        flair_synthseg_orig="${tmp}/${idBIDS}_flair_synthseg_orig.nii.gz"
+        Do_cmd antsApplyTransforms -d 3 -i "${flair_synthseg}" -r "${flairScan}" -t "${flair_resample2orig}"0GenericAffine.mat -o "${flair_synthseg_orig}" -v -u float -n GenericLabel
+        # flair_synthseg in original FLAIR space
+        flair_synthseg="${flair_synthseg_orig}"
     fi
 
-    t1_gmwmi_in_flair="${tmp}/${idBIDS}_space-flair_desc-gmwmi-mask.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -i "$t1_gmwmi" -r "$flair_rescale" -t ["$str_flair_affine"0GenericAffine.mat,1] -o "$t1_gmwmi_in_flair" -v -u float
+    # 1.A | GM gray matter mask (lh=3, rh=42)
+    flair_mask_gm_lh="${tmp}/${idBIDS}_hemi-L_label-gm_flair_mask.nii.gz"
+    flair_mask_gm_rh="${tmp}/${idBIDS}_hemi-R_label-gm_flair_mask.nii.gz"
+    flair_mask_gm="${tmp}/${idBIDS}_label-gm_flair_mask.nii.gz"
+    Image_threshold "${flair_synthseg}" 3 2 "${flair_mask_gm_lh}"
+    Image_threshold "${flair_synthseg}" 42 41 "${flair_mask_gm_rh}"
+    ImageMath 3 "${flair_mask_gm}" + "${flair_mask_gm_lh}" "${flair_mask_gm_rh}"
 
-    # binarize mask
-    t1_gmwmi_in_flair_thr="${tmp}/${idBIDS}_space-flair_desc-gmwmi-thr.nii.gz"
-    Do_cmd fslmaths "$t1_gmwmi_in_flair" -thr 0.5 -bin "$t1_gmwmi_in_flair_thr"
+    # 1.B | WM white matter mask (lh=2, rh=41)
+    flair_mask_wm_lh="${tmp}/${idBIDS}_hemi-L_label-wm_flair_mask.nii.gz"
+    flair_mask_wm_rh="${tmp}/${idBIDS}_hemi-R_label-wm_flair_mask.nii.gz"
+    flair_mask_wm="${tmp}/${idBIDS}_label-wm_flair_mask.nii.gz"
+    Image_threshold "${flair_synthseg}" 2 1 "${flair_mask_wm_lh}"
+    Image_threshold "${flair_synthseg}" 41 40 "${flair_mask_wm_rh}"
+    ImageMath 3 "${flair_mask_wm}" + "${flair_mask_wm_lh}" "${flair_mask_wm_rh}"
 
-    # compute mean flair intensity in non-zero voxels
-    gmwmi_mean=$(fslstats "$flair_rescale" -M -k "$t1_gmwmi_in_flair_thr")
+    #------------------------------------------------------------------------------#
+    # 2 | Bias field correction weighted by white matter
+    flair_N4="${tmp}/${idBIDS}_flairN4.nii.gz"
+    Do_cmd N4BiasFieldCorrection -r -d 3 -w ${flair_mask_wm} -i "${flairScan}" -o "${flair_N4}"
 
-    # Normalize flair
-    Do_cmd fslmaths "$flair_rescale" -div "$gmwmi_mean" "$flair_preproc"
+    #------------------------------------------------------------------------------#
+    # 3 | Brain mask
+    flair_mask="${tmp}/${idBIDS}_label-brain_flairN4_mask.nii.gz"
+    Image_threshold "${flair_synthseg}" 60 1 "${flair_mask}"
+
+
+    #------------------------------------------------------------------------------#
+    # 4 | Get the mode for each tissue
+    mode_gm=$(get_mode "${flair_N4}" "${flair_mask_gm}" 1000)
+    mode_wm=$(get_mode "${flair_N4}" "${flair_mask_wm}" 1000)
+    mode_brain=$(get_mode "${flair_N4}" "${flair_mask}" 1000)
+
+    Note "mode_gm    :" "${mode_gm}"
+    Note "mode_wm    :" "${mode_wm}"
+    Note "mode_brain :" "${mode_brain}"
+
+    #------------------------------------------------------------------------------#
+    # 5 | Normalize intensities by peak of WM (mode).
+    # This normalization will center the peak of the WM mode intensity at ZERO.
+    # Mean mode between GM and WM | BG=(GM_mode+WM_mode)/2.0
+    BG=$(echo "(${mode_gm}+${mode_wm})/2.0" | bc -l)
+    # mode difference | mode_diff = np.abs(BG - WM_mode)
+    mode_diff=$(echo ${BG} - ${mode_wm} | bc); mode_diff=$(echo ${mode_diff#-})
+    # Normalize array | norm_wm = 100.0 * (array - WM_mode)/(mode_diff)
+    flair_norm="${tmp}/${idBIDS}_flair_norm.nii.gz"
+    Do_cmd mrcalc "${flair_N4}" "${mode_wm}" -subtract ${mode_diff} -div 100 -mul "${flair_norm}"
+
+    #------------------------------------------------------------------------------#
+    # 6 | Mask only the brain of the normalized data
+    Do_cmd ImageMath 3 "${flair_preproc}" m "${flair_mask}" "${flair_norm}"
 
     ((Nsteps++))
 else
-    Info "Subject ${id} T2-FLAIR is normalized by GM/WM interface"; ((Nsteps++)); ((N++))
+    Info "Subject ${id} T2-FLAIR has been processed"; ((Nsteps++)); ((N++))
 fi
-
 
 #------------------------------------------------------------------------------#
 ### FLAIR registration to nativepro ###
-if [[ ! -f "$flairNP" ]]; then ((N++))
-    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$str_flair_affine"0GenericAffine.mat -o "$flairNP" -v -u float
+if [[ ! -f "$flair_nativepro" ]]; then ((N++))
+    # Register nativepro and flair
+    str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-affine_"
+    Info "Running label based affine registrations"
+    flair_synth="${tmp}/flair_synthsegGM.nii.gz"
+    T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
+    Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
+    fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
+    fslmaths "${flair_synthseg}" -uthr 42 -thr 42 -bin -mul -39 -add "${flair_synthseg}" "${flair_synth}"
+
+    # Affine from func to t1-nativepro
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1_synth" -m "$flair_synth" -o "$str_flair_affine" -t a -n "$threads" -p d
+
+    # Apply transformations
+    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$str_flair_affine"0GenericAffine.mat -o "$flair_nativepro" -v -u float
     ((Nsteps++))
 else
     Info "Subject ${id} T2-FLAIR is registered to nativepro"; ((Nsteps++)); ((N++))
 fi
 
 # Write json file
-json_nativepro_flair "$flairNP" \
-    "antsApplyTransforms -d 3 -i ${flair_preproc} -r ${T1nativepro_brain} -t ${str_flair_affine}0GenericAffine.mat -o ${flairNP} -v -u float" \
+json_nativepro_flair "$flair_nativepro" \
+    "antsApplyTransforms -d 3 -i ${flair_preproc} -r ${T1nativepro_brain} -t ${str_flair_affine}0GenericAffine.mat -o ${flair_nativepro} -v -u float" \
     "$flair_json"
 
 #------------------------------------------------------------------------------#
@@ -196,7 +257,7 @@ if [[ "$Nmorph" -lt 16 ]]; then ((N++))
         for label in midthickness white; do
             surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_space-nativepro_surf-fsnative_label-${label}.surf.gii"
             # MAPPING metric to surfaces
-            map_to-surfaces "${flairNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_flair.func.gii" "${HEMI}" "${label}_flair" "${dir_maps}"
+            map_to-surfaces "${flair_nativepro}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_flair.func.gii" "${HEMI}" "${label}_flair" "${dir_maps}"
         done
     done
     Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
