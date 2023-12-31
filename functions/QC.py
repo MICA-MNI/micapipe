@@ -793,7 +793,7 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.05), np.quantile(flair, 0.99))
+        crange=(np.quantile(flair, 0.05), np.quantile(flair, 0.95))
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1078,6 +1078,8 @@ def qc_proc_func(proc_func_json=''):
     figPath = "%s/fMRI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
+    _static_block += '<div style="page-break-after: always;"></div>'
+    
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>Framewise displace: fMRI</b> </p>'
@@ -1106,8 +1108,6 @@ def qc_proc_func(proc_func_json=''):
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{snr_fig}"> </center>'
     ).format(snr_fig=snr_fig)
-
-    _static_block += '<div style="page-break-after: always;"></div>'
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
