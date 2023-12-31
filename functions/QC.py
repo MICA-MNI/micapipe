@@ -793,7 +793,7 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
+        crange=(np.quantile(flair, 0.05), np.quantile(flair, 0.99))
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -1078,9 +1078,13 @@ def qc_proc_func(proc_func_json=''):
     figPath = "%s/fMRI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
+    _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+            '<b>Framewise displace: fMRI</b> </p>'
+    )
+
     outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_framewiseDisplacement.png"%(subj_dir,tag,sbids,acquisition)
-    _static_block += report_module_output_template(outName='Framewise displace: fMRI', outPath=outPath, figPath=outPath)
-    _static_block += '<div style="page-break-after: always;"></div>'
+    _static_block += report_module_output_template(outName='', outPath=outPath, figPath=outPath)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -1094,7 +1098,7 @@ def qc_proc_func(proc_func_json=''):
     snr_fig = tmpDir + "/" + sbids + "_surf-native_tSNR.png"
     display = Display(visible=0, size=(900, 250))
     display.start()
-    plot_hemispheres(surf_lh, surf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(inf_lh, inf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='magma', color_range=(np.quantile(tSNR, 0.05), np.quantile(tSNR, 0.95)), transparent_bg=False, screenshot = True, offscreen=True, filename = snr_fig)
     display.stop()
     _static_block += (
@@ -1102,6 +1106,8 @@ def qc_proc_func(proc_func_json=''):
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
             '<center> <img style="width:500px%;margin-top:0px" src="{snr_fig}"> </center>'
     ).format(snr_fig=snr_fig)
+
+    _static_block += '<div style="page-break-after: always;"></div>'
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
@@ -1221,9 +1227,9 @@ def qc_proc_func(proc_func_json=''):
         net = np.sum(fc_pos[idx,:], axis=0)
         net_surf = map_to_labels(net, labels_c69, fill=np.nan, mask=mask_c69)
         net_fig = '%s/%s_atlas-schaefer400_desc-%s.png'%(tmpDir,sbids,n)
-        display = Display(visible=0, size=(900, 750))
+        display = Display(visible=0, size=(900, 250))
         display.start()
-        plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+        plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap='RdGy_r', transparent_bg=False,
                          screenshot = True, offscreen=True, filename = net_fig)
         display.stop()
