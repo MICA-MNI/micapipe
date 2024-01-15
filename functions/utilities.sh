@@ -5,6 +5,7 @@
 # Utilities
 export Version="v0.2.3 'Northern flicker'"
 export MRTRIX_QUIET=TRUE
+export CUDA_VISIBLE_DEVICES=''
 bids_variables() {
   # This functions assignes variables names acording to:
   #     BIDS directory = $1
