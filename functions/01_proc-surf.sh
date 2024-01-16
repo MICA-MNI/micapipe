@@ -64,9 +64,9 @@ Note "Surface software" "${recon}"
 
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir -m 777 "${dir_surf}"; fi
-if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd mkdir -p "${dir_surf}"/fsaverage5/surf; cp  "$FREESURFER_HOME/subjects/fsaverage5/surf/"* "${dir_surf}"/fsaverage5/surf; fi
-if [ ! -d "${dir_surf}/fsLR-32k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-32k/surf; cp "${MICAPIPE}"/surfaces/fsLR-32k*.gii "${dir_surf}"/fsLR-32k/surf; fi
-if [ ! -d "${dir_surf}/fsLR-5k" ]; then Do_cmd mkdir -p "${dir_surf}"/fsLR-5k/surf; cp "${MICAPIPE}"/surfaces/fsLR-5k*.gii "${dir_surf}"/fsLR-5k/surf; fi
+if [ ! -d "${dir_surf}/fsaverage5" ]; then Do_cmd mkdir -m 777 -p "${dir_surf}"/fsaverage5/surf; cp  "$FREESURFER_HOME/subjects/fsaverage5/surf/"* "${dir_surf}"/fsaverage5/surf; fi
+if [ ! -d "${dir_surf}/fsLR-32k" ]; then Do_cmd mkdir -m 777 -p "${dir_surf}"/fsLR-32k/surf; cp "${MICAPIPE}"/surfaces/fsLR-32k*.gii "${dir_surf}"/fsLR-32k/surf; fi
+if [ ! -d "${dir_surf}/fsLR-5k" ]; then Do_cmd mkdir -m 777 -p "${dir_surf}"/fsLR-5k/surf; cp "${MICAPIPE}"/surfaces/fsLR-5k*.gii "${dir_surf}"/fsLR-5k/surf; fi
 
 # End if module has been processed
 module_json="${dir_QC}/${idBIDS}_module-proc_surf-${recon}.json"
@@ -128,7 +128,7 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     # Recontruction method
     Note "PROC" "$PROC"
     if [[ "$recon" == "fastsurfer" ]]; then
-        Do_cmd mkdir -p "${dir_surf}/${idBIDS}"
+        Do_cmd mkdir -m 777 -p "${dir_surf}/${idBIDS}"
           Info "FastSurfer: running fastsurfer_cpu environment"
           source activate fastsurfer_cpu
           Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
