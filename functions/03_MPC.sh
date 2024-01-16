@@ -27,14 +27,15 @@ input_im=$8
 mpc_reg=$9
 mpc_str=${10}
 synth_reg=${11}
-PROC=${12}
+reg_nonlinear=${12}
+PROC=${13}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -85,6 +86,7 @@ Note "Parallel processing : " "${threads} threads"
 Note "tmp dir   : " "${tmpDir}"
 Note "recon     : " "${recon}"
 Note "synth_reg : " ${synth_reg}
+Note "reg_nonlinear : " ${reg_nonlinear}
 
 #	Timer
 aloita=$(date +%s)
@@ -92,7 +94,7 @@ Nsteps=0
 N=0
 
 # Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_post-MPC_${id}"
+tmp="${tmpDir}/${RANDOM}_micapipe_${mpc_str}-MPC_${id}"
 Do_cmd mkdir -p "$tmp"
 
 # TRAP in case the script fails
@@ -107,46 +109,81 @@ Note "acqMRI:" "${mpc_str}"
 qt1_json="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.json"
 
 #------------------------------------------------------------------------------#
-# Affine registration between both images
-T1_in_fs=${tmp}/orig.nii.gz
-qT1_fsnative=${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz
-mat_fsnative_affine=${dir_warp}/${idBIDS}_from-fsnative_to_${mpc_str}_
-qT1_fsnative_affine=${mat_fsnative_affine}0GenericAffine.mat
+# Registration between both images
+T1_in_fs="${tmp}/orig.nii.gz"
+qMRI_warped="${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz"
+# This is only for the json metada
+qMRI_reference="${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz"
 
-if [[ ! -f "$qT1_fsnative" ]] || [[ ! -f "$qT1_fsnative_affine" ]]; then ((N++))
+# Affine transformations
+str_qMRI2fs_xfm="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative"
+mat_qMRI2fs_xfm="${str_qMRI2fs_xfm}0GenericAffine.mat"
+
+# SyN_transformations
+SyN_qMRI2fs_warp="${str_qMRI2fs_xfm}1Warp.nii.gz"
+SyN_qMRI2fs_Invwarp="${str_qMRI2fs_xfm}1InverseWarp.nii.gz"
+
+# Apply transformations
+if [[ ${reg_nonlinear}  == "TRUE" ]]; then
+    # SyN from T1_nativepro to t1-nativepro
+    reg="s"
+    transformsInv="-t [${mat_qMRI2fs_xfm},1] -t ${SyN_qMRI2fs_Invwarp}" # T1_fsnative to qMRI
+    transforms="-t ${SyN_qMRI2fs_warp} -t ${mat_qMRI2fs_xfm}"  # qMRI to T1_fsnative T1_fsnative to qMRI
+else
+    reg="a"
+    transformsInv="-t [${mat_qMRI2fs_xfm},1]"  # T1_fsnative to qMRI
+    transforms="-t ${mat_qMRI2fs_xfm}"   # qMRI to T1_fsnative
+fi
+
+synthseg_native() {
+  mri_img=$1
+  mri_str=$2
+  mri_synth="${tmp}/${mri_str}_synthsegGM.nii.gz"
+  Do_cmd mri_synthseg --i "${mri_img}" --o "${tmp}/${mri_str}_synthseg.nii.gz" --robust --threads "$threads" --cpu
+  Do_cmd fslmaths "${tmp}/${mri_str}_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/${mri_str}_synthseg.nii.gz" "${mri_synth}"
+}
+
+# Calculate the registrations
+if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
+    img_fixed="${T1_in_fs}"
+    img_moving="${regImage}"
+
+    # copy orig.nii.gz from fsurfer to tmp
     Do_cmd mrconvert "$T1surf" "$T1_in_fs"
     # Registration with synthseg
     if [[ "${synth_reg}" == "TRUE" ]]; then
       Info "Running label based affine registrations"
-      qT1_synth="${tmp}/qT1_synthsegGM.nii.gz"
-      T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1_in_fs}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
-      Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
-
-      Do_cmd mri_synthseg --i "$regImage" --o "${tmp}/qT1_synthseg.nii.gz" --robust --threads "$threads" --cpu
-      Do_cmd fslmaths "${tmp}/qT1_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/qT1_synthseg.nii.gz" "${qT1_synth}"
-
-      # Affine from func to t1-nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$qT1_synth" -m "$T1_synth" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
-    else
-      Info "Running volume based affine registrations"
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$regImage" -m "$T1_in_fs" -o "$mat_fsnative_affine" -t a -n "$threads" -p d
+      synthseg_native "${T1_in_fs}" "T1w"
+      synthseg_native "${regImage}" "qT1"
+      img_fixed="${tmp}/T1w_synthsegGM.nii.gz"
+      img_moving="${tmp}/qT1_synthsegGM.nii.gz"
     fi
 
-    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" -t ["${qT1_fsnative_affine}",1] -o "$qT1_fsnative" -v -u int
-    if [[ -f ${qT1_fsnative} ]]; then ((Nsteps++)); fi
+    # Registrations from t1-fsnative to qMRI
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$img_fixed" -m "$img_moving" -o "$str_qMRI2fs_xfm" -t "${reg}" -n "$threads" -p d -i ["${img_fixed}","${img_moving}",0]
+
+    # Check if transformations file exist
+    if [ ! -f "${mat_qMRI2fs_xfm}" ]; then Error "Registration between ${mpc_str} and T1nativepro FAILED. Check you inputs!"; cleanup "$tmp" "$nocleanup" "$here"; exit; fi
+
+    # Apply transformations: from qMRI to T1-fsnative
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1_in_fs" "${transforms}" -o "$qMRI_warped" -v -u int
+    if [[ -f ${qMRI_warped} ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${id} has a ${mpc_str} on Surface space"; ((Nsteps++)); ((N++))
 fi
 
 # Convert the ANTs transformation file for wb_command
 wb_affine="${tmp}/${idBIDS}_from-fsnative_to_qMRI_wb.mat"
-Do_cmd c3d_affine_tool -itk "$qT1_fsnative_affine" -inv -o "${wb_affine}"
+Do_cmd c3d_affine_tool -itk "${mat_qMRI2fs_xfm}" -o "${wb_affine} -inv"
 
 ##------------------------------------------------------------------------------#
 ## Register qT1 intensity to surface
+# NUmber of surfaces to generate
 num_surfs=14
+
+# Check if the directory exists and change the permissions
 [[ ! -d "$outDir" ]] && mkdir -p "$outDir" && chmod -R 770 "$outDir"
+# Create the MPC-SWM module json file
 json_mpc "$microImage" "${outDir}/${idBIDS}_MPC-${mpc_str}.json"
 
 MPC_fsLR5k="${outDir}/${idBIDS}_surf-fsLR-5k_desc-MPC.shape.gii"
@@ -180,6 +217,8 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
             Do_cmd python "$MICAPIPE"/functions/removeFSoffset.py "${surf_gii}" "${surf_tmp}"
             # Apply transformation to register surface to nativepro
             Do_cmd wb_command -surface-apply-affine "${surf_tmp}" "${wb_affine}" "${out_surf}"
+            # Apply Non-linear Warpfield to register surface to nativepro
+            if [[ ${reg_nonlinear}  == "TRUE" ]]; then Do_cmd wb_command -surface-apply-warpfield "${out_surf}" "${SyN_qMRI2fs_Invwarp}" "${out_surf}"; fi
             # Sample intensity and resample to other surfaces
             map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "MPC-${n}" "${outDir}"
             # remove tmp surfaces
@@ -193,23 +232,13 @@ fi
 
 #------------------------------------------------------------------------------#
 ### qT1 registration to nativepro ###
-
 # Register nativepro and qt1
-str_qt1_affine="${dir_warp}/${idBIDS}_from-${mpc_str}_to-nativepro_mode-image_desc-affine_"
+T1_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_0GenericAffine.mat"
+
 qmriNP="${dir_maps}/${idBIDS}_space-nativepro_map-${mpc_str}.nii.gz"
 if [[ ! -f "$qmriNP" ]]; then
   Info "${mpc_str} registration to nativepro"
-    if [[ "${synth_reg}" == "TRUE" ]]; then
-      T1natpro_synth="${tmp}/T1nativepro_synthsegGM.nii.gz"
-      Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1nativepro_synthseg.nii.gz" --robust --threads "$threads" --cpu
-      Do_cmd fslmaths "${tmp}/T1nativepro_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1nativepro_synthseg.nii.gz" "${T1natpro_synth}"
-
-      # Affine from func to t1-nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1natpro_synth" -m "$qT1_synth" -o "$str_qt1_affine" -t a -n "$threads" -p d
-    else
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$regImage" -o "$str_qt1_affine" -t a -n "$threads" -p d
-    fi
-    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "$str_qt1_affine"0GenericAffine.mat -o "$qmriNP" -v -u float
+    Do_cmd antsApplyTransforms -d 3 -i "$microImage" -r "$T1nativepro_brain" -t "${T1_fsnative_affine}" "${transforms}" -o "$qmriNP" -v -u float
     ((Nsteps++)); ((N++))
 else
     Info "Subject ${id} ${mpc_str} is registered to nativepro"; ((Nsteps++)); ((N++))
@@ -217,7 +246,7 @@ fi
 
 # Write json file
 json_nativepro_qt1 "$qmriNP" \
-    "antsApplyTransforms -d 3 -i ${microImage} -r ${T1nativepro_brain} -t ${str_qt1_affine}0GenericAffine.mat -o ${qmriNP} -v -u float" \
+    "antsApplyTransforms -d 3 -i ${microImage} -r ${T1nativepro_brain} -t ${T1_fsnative_affine} ${transforms} -o ${qmriNP} -v -u float" \
     "$qt1_json"
 
 #------------------------------------------------------------------------------#
@@ -247,7 +276,7 @@ for seg in "${parcellations[@]}"; do
     MPC_int="${outDir}/${idBIDS}_atlas-${parc}_desc-intensity_profiles.shape.gii"
     if [[ ! -f "$MPC_int" ]]; then ((N++))
         Info "Running MPC on $parc"
-        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}"
+        Do_cmd python "$MICAPIPE"/functions/surf2mpc.py "$out" "$id" "$SES" "$num_surfs" "$parc_annot" "$dir_subjsurf" "${mpc_p}" "mpc"
         if [[ -f "$MPC_int" ]]; then ((Nsteps++)); fi
     else Info "Subject ${id} has MPC connectome and intensity profile on ${parc}"; ((Nsteps++)); ((N++)); fi
 done
@@ -256,8 +285,8 @@ done
 # Create vertex-wise MPC connectome and directory cleanup
 if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
   Info "Running MPC vertex-wise on fsLR-5k"
-  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}"
-  ((Nsteps++))
+  Do_cmd python "$MICAPIPE"/functions/build_mpc-vertex.py "$out" "$id" "$SES" "${mpc_p}" "mpc" "$num_surfs"
+  if [[ -f "${MPC_fsLR5k}" ]]; then ((Nsteps++)); fi
 else Info "Subject ${id} has MPC vertex-wise on fsLR-5k"; ((Nsteps++)); ((N++)); fi
 rm "${dir_warp}/${idBIDS}"*_Warped.nii.gz
 

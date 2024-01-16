@@ -236,6 +236,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "aiosignal" \
            "asn1crypto" \
            "async-timeout" \
+           "astropy" \
            "attrs" \
            "bokeh" \
            "cffi" \
@@ -276,6 +277,7 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
            "reportlab" \
            "requests" \
            "scikit-learn" \
+           "scikit-fmm" \
            "scipy" \
            "six" \
            "svglib" \
@@ -316,13 +318,13 @@ RUN bash -c 'source activate micapipe && conda install -c mrtrix3 mrtrix3==3.0.1
 
 ENV PATH="/opt/FastSurfer:$PATH"
 ENV FASTSURFER_HOME=/opt/FastSurfer
-RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
-  && cd /opt/FastSurfer \
+RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer && cd /opt/FastSurfer && git checkout stable && ls /opt/FastSurfer
+RUN cd /opt/FastSurfer \
   && bash -c 'wget --no-check-certificate -qO /tmp/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh \
   && chmod +x /tmp/miniconda.sh \
   && /tmp/miniconda.sh -b -p /opt/conda \
   && rm /tmp/miniconda.sh \
-  && conda env create -f /opt/FastSurfer/fastsurfer_env_cpu.yml'
+  && conda env create -f ./fastsurfer_env_cpu.yml'
 
 # Install FastSurferCNN module
 ENV PYTHONPATH="${PYTHONPATH}:/opt/FastSurfer"
@@ -339,8 +341,9 @@ RUN set -uex; \
     apt install -y software-properties-common apt-transport-https; \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
-    apt update; \
-    apt install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
+    apt-get update; \
+    apt-get install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
+    apt-get install -y r-base-dev; \
     rm -rf /var/lib/apt/lists/*;
 
 COPY ./R_config/* /opt/
@@ -365,7 +368,7 @@ WORKDIR /home/mica
 
 ENV MICAPIPE="/opt/micapipe"
 
-ENV PROC="container_micapipe-v0.2.2"
+ENV PROC="container_micapipe-v0.2.3"
 
 ENV FIXPATH=/opt/fix1.068
 

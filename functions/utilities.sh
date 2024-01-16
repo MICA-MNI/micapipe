@@ -3,8 +3,9 @@
 # MICA BIDS structural processing
 #
 # Utilities
-export Version="v0.2.2 'Northern flicker'"
-
+export Version="v0.2.3 'Northern flicker'"
+export MRTRIX_QUIET=TRUE
+export CUDA_VISIBLE_DEVICES=''
 bids_variables() {
   # This functions assignes variables names acording to:
   #     BIDS directory = $1
@@ -116,7 +117,7 @@ set_surface_directory() {
 bids_print.variables() {
   # This functions prints BIDS variables names
   # IF they exist
-  Info "mica-pipe inputs"
+  Info "micapipe inputs"
   Note "id   :" "$id"
   Note "BIDS :" "$BIDS"
   Note "out  :" "$out"
@@ -307,7 +308,7 @@ function micapipe_completition_status() {
 
     # Print logs
     if [ "$Nsteps" -eq "$N" ]; then status="COMPLETED"; else status="INCOMPLETE"; fi
-    Title "${1} processing ended in \033[38;5;220m $(printf "%0.3f\n" "$eri") minutes \033[38;5;141m:\n\tlogs:
+    Title "${1} processing ended in $(printf "%0.3f\n" "$eri") minutes:\n\tlogs:
     \tSteps completed : $(printf "%02d" "$Nsteps")/$(printf "%02d" "$N")
     \tStatus          : ${status}
     \tCheck logs      : $(ls "$dir_logs"/${1}_*"${logaqc}.txt")"
@@ -763,10 +764,11 @@ function json_nativepro_flair() {
   Offset=$(mrinfo "$1" -offset)
   Multiplier=$(mrinfo "$1" -multiplier)
   Transform=($(mrinfo "$1" -transform))
-  Info "Creating T1nativepro_flair json file"
+  Info "Creating Flair json file"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"LastRun\": \"$(date)\",
+    \"flairScanStr\": \"${flairScanStr}\",
     \"fileName\": \"${1}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
@@ -774,6 +776,9 @@ function json_nativepro_flair() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"regSynth\": \"${synth_reg}\",
+    \"mode_wm\": \"${mode_wm}\",
+    \"mode_gm\": \"${mode_gm}\",
+    \"mode_brain\": \"${mode_brain}\",
     \"TransformCmd\": {
         \"BinaryMask_antsApplyTransforms\": \"$2\"
       },
@@ -784,7 +789,7 @@ function json_nativepro_flair() {
         \"${Transform[@]:12:8}\"
       ],
     \"inputNIFTI\": {
-      \"Name\": \"$bids_flair\",
+      \"Name\": \"$flairScan\",
       \"qform\": [
         \"${qform[@]:0:4} \",
         \"${qform[@]:4:4} \",
@@ -821,7 +826,7 @@ function json_nativepro_qt1() {
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
     \"TransformCmd\": {
-        \"BinaryMask_antsApplyTransforms\": \"$2\"
+        \"antsApplyTransforms\": \"$2\"
       },
     \"Transform\": [
         \"${Transform[@]:0:4} \",
@@ -942,8 +947,12 @@ function json_mpc() {
     \"acquisition\": \"${mpc_str}\",
     \"microstructural_img\": \"${1}\",
     \"microstructural_reg\": \"${regImage}\",
-    \"registered_img\": \"${qT1_fsnative}\",
+    \"reference_mri\": \"${qMRI_reference}\",
+    \"warped_qmri\": \"${qMRI_warped}\",
     \"regSynth\": \"${synth_reg}\",
+    \"reg_nonlinear\": \"${reg_nonlinear}\",
+    \"registration\": \"${reg}\",
+    \"num_surfs\": \"${num_surfs}\",
     \"VoxelSize\": \"${res}\",
     \"Dimensions\": \"${Size}\",
     \"Strides\": \"${Strides}\",
@@ -996,6 +1005,7 @@ function json_dwipreproc() {
     \"B0 threshold\": \"${b0thr}\",
     \"Bvalue scaling\": \"${bvalscale}\",
     \"regSynth\": \"${synth_reg}\",
+    \"dwi_upsample\": \"${dwi_upsample}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
         \"NumberOfInputs\": \"${#bids_dwis[*]}\",
@@ -1120,7 +1130,7 @@ function cleanup() {
   if [[ $nocleanup == "FALSE" ]]; then
       rm -Rf "$tmp" 2>/dev/null
   else
-      echo -e "Mica-pipe tmp directory was not erased: \n\t\t${tmp}";
+      echo -e "micapipe tmp directory was not erased: \n\t\t${tmp}";
   fi
   cd "$here"
   bids_variables_unset
@@ -1134,7 +1144,7 @@ function missing_arg() {
                  -sub  : $id
                  -out  : $out
                  -bids : $BIDS
-          \033[0m-h | -help (print help)\033[38;5;9m"
+          -h | -help (print help)"
   exit 1; fi
 }
 

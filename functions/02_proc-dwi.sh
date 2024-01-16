@@ -31,7 +31,8 @@ dwi_str=${13}
 b0thr=${14}
 bvalscale=${15}
 synth_reg=${16}
-PROC=${17}
+dwi_upsample=${17}
+PROC=${18}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -57,6 +58,7 @@ Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
 Note "synth_reg     :" "${synth_reg}"
+Note "dwi_upsample  :" "${dwi_upsample}"
 Note "Processing    :" "$PROC"
 Note "Saving temporal dir     :" "$nocleanup"
 Note "ANTs and MRtrix will use: " "$threads threads"
@@ -394,6 +396,14 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
 else
       Info "Subject ${id} has a DWI processed"; ((Nsteps++)); ((N++))
 fi
+#------------------------------------------------------------------------------#
+# DWI upsampling
+if [[ "${dwi_upsample}" == "TRUE" ]]; then
+  Info "Upsampling DWI corrected to 1.25mm isometric"
+  dwi_corr_upsampled="${tmp}/${idBIDS}_space-dwi_desc-preproc_dwi_upsampled.mif"
+  Do_cmd mrgrid "$dwi_corr" regrid -vox 1.25 ${dwi_corr_upsampled} -nthreads ${threads}
+  Do_cmd mv ${dwi_corr_upsampled} ${dwi_corr}
+fi
 
 #------------------------------------------------------------------------------#
 # Registration of corrected DWI-b0 to T1nativepro
@@ -408,8 +418,10 @@ if [[ ! -f "$mat_dwi_affine" ]] || [[ ! -f "$dwi_mask" ]]; then ((N++))
       # Corrected DWI-b0s mean for registration
       dwiextract -force -nthreads "$threads" "$dwi_corr" - -bzero | mrmath - mean "$dwi_b0" -axis 3 -force
 
+      # [fixedImage,movingImage,initializationFeature]
+      centeralign="[${T1nativepro_brain},${dwi_b0},0]"
       # Register DWI-b0 mean corrected to T1nativepro
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$dwi_b0" -o "$str_dwi_affine" -t a -n "$threads" -p d
+      Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1nativepro_brain" -m "$dwi_b0" -o "$str_dwi_affine" -t a -n "$threads" -p d -i ${centeralign}
       # Apply inverse transformation T1nativepro to DWI-b0 space
       Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro" -r "$dwi_b0" -t ["$mat_dwi_affine",1] -o "$T1nativepro_in_dwi" -v -u int
 

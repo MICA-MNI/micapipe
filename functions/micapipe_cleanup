@@ -40,8 +40,13 @@ echo -e "
 \t  \033[38;5;120m-acqStr\033[0m         : Use this option if -SC was used with -dwi_acq
 \t\033[38;5;197m-MPC\033[0m              : DELETES Microstructural profiles and covariance analysis
 \t  \033[38;5;120m-acqStr\033[0m           -MPC requires the acquisition string to erase its outputs
-\t\t\t     e.g -acqStr T1map
+\t\t\t     e.g -acqStr T1map\
+\t\033[38;5;197m-SWM\033[0m              : DELETES Superficial white matter files
+\t\033[38;5;197m-MPC_SWM\033[0m          : DELETES MPC Superficial white matter files
+\t  \033[38;5;120m-acqStr\033[0m           -MPC-SWM requires the acquisition string to erase its outputs
 
+\t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
+\t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
 
 \033[38;5;141mUSAGE:\033[0m
 $(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;120m-ses\033[0m <session> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>
@@ -119,12 +124,24 @@ do
     postMPC=TRUE
     shift
   ;;
-  -GD)
-    postGD=TRUE
+  -SWM)
+    SWM=TRUE
     shift
   ;;
-  -Morphology)
-    postMorph=TRUE
+  -MPC_SWM)
+    MPC_SWM=TRUE
+    shift
+  ;;
+  -fs_licence)
+    fs_licence=$2
+    shift;shift;
+  ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
+  -GD)
+    postGD=TRUE
     shift
   ;;
   -acqStr)
@@ -155,6 +172,12 @@ inputs_realpath
 
 # Number of session (Default is "ses-pre")
 if [ -z "${SES}" ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
+
+# Freesurfer fs_licence
+if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; else fs_licence=$(realpath $fs_licence); fi
+if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
+Note "Freesurfer licence:" ${fs_licence}
+export FS_LICENSE=${fs_licence}
 
 # Exit if subject is not found
 if [ ! -d "${out}/sub-${id}" ]; then Error "$id was not found on the OUTPUT directory\n\t Check ls ${out}/sub-${id}"; exit 1; fi
@@ -254,7 +277,8 @@ if [ "$procFlair" = "TRUE" ]; then
         "${dir_QC}/${idBIDS}"_module-proc_flair.json \
         "${outDir}/${idBIDS}_space-nativepro_map-flair.json" \
         "${outDir}/${idBIDS}_space-nativepro_map-flair.nii.gz" \
-        "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii"
+        "${dir_maps}/${idBIDS}_hemi-*_flair.func.gii" \
+        "$dir_logs"/proc_flair*
     grep -v "${id},${SES/ses-/},proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, proc_flair" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
@@ -327,8 +351,8 @@ if [ "$postDWI" = "TRUE" ]; then
                   "$proc_dwi"/"$idBIDS"_space-dwi_desc-iFOD2-"$tracts"_* \
                   "${dir_QC}/${idBIDS}_module-SC-${tracts}${acqStr}"* \
                   "$proc_dwi"/"$idBIDS"_space-dwi_"$tracts"* "$dir_logs"/SC-${tracts}*
-    grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
-    grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, SC-${tracts}${acqStr_}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id},${SES/ses-/},SC-${tracts}${acqStr_}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 # ---------------------------------------------------------------------------------------
 # CLEAN -MPC
@@ -340,16 +364,30 @@ if [ "${postMPC}" = "TRUE" ]; then
         Warning "${id},${SES/ses-/},MPC-${acqStr}"
         acqStr=${acqStr/acq-/}
         Do_cmd rm -rvf "${dir_mpc}" \
-                      ${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz \
+                      "${proc_struct}/${idBIDS}_space-fsnative_${acqStr}.nii.gz" \
                       "${dir_warp}/${idBIDS}"_from-${acqStr}_to-fsnative* \
-                      "${dir_warp}/${idBIDS}_from-${acqStr}_to-nativepro_mode-image_desc-affine_"* \
-                      "${subject_dir}/anat/${idBIDS}_space-fsnative_desc-${acqStr}.nii.gz" \
                       "${dir_QC}/${idBIDS}_module-MPC-${acqStr}"* \
                       "$dir_logs"/MPC_*"${acqStr}"* \
                       "${dir_maps}/"${idBIDS}*${acqStr}*gii \
                       "${dir_maps}/"${idBIDS}_space-nativepro_map-${acqStr}*
         grep -v "${id},${SES/ses-/},MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
         grep -v "${id}, ${SES/ses-/}, MPC-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# CLEAN -MPC-SWM
+if [ "${MPC_SWM}" = "TRUE" ]; then
+    if [ -z ${acqStr} ]; then acqStr="qMRI"; else acqStr=${acqStr/acq-/}; fi
+    dir_mpc="${subject_dir}/mpc-swm/acq-${acqStr}"
+    #if [ ! -d "${dir_mpc}" ]; then Warning "MPC acquisition not found (-acqStr), select one from:"; $(ls -d "${subject_dir}/mpc/"*/ | awk -F '/' '{print $(NF-1)}'); exit; fi
+        Warning "Erasing MPC-SWM output files and logs: ${acqStr}"
+        Warning "${id}, ${SES/ses-/}, MPC-SWM_${acqStr}"
+        Do_cmd rm -rvf "${dir_mpc}" \
+                      "${proc_struct}/${idBIDS}_space-nativepro_${acqStr}.nii.gz" \
+                      "${dir_warp}/${idBIDS}"_from-${acqStr}_to-nativepro_* \
+                      "${dir_QC}/${idBIDS}_module-MPC-SWM-${acqStr}"* \
+                      "$dir_logs"/MPC-SWM-*"${acqStr}"*
+        grep -v "${id},${SES/ses-/},MPC-SWM-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+        grep -v "${id}, ${SES/ses-/}, MPC-SWM-${acqStr}" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 # ---------------------------------------------------------------------------------------
@@ -361,6 +399,19 @@ if [ "$postGD" = "TRUE" ]; then
               "$dir_logs"/GD_*
     grep -v "${id},${SES/ses-/},GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
     grep -v "${id}, ${SES/ses-/}, GD" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+fi
+
+# ---------------------------------------------------------------------------------------
+# CLEAN -SWM Superficial White Matter
+if [ "$SWM" = "TRUE" ]; then
+    Warning "Erasing '-SWM' output files and logs"
+    Do_cmd rm -rf \
+              "${dir_maps}/${idBIDS}"_*swm* \
+              "${dir_conte69}/${idBIDS}"_*swm* \
+              "${dir_QC}/${idBIDS}_module-SWM"* \
+              "$dir_logs"/SWM_*
+    grep -v "${id},${SES/ses-/},SWM" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
+    grep -v "${id}, ${SES/ses-/}, SWM" "${out}/micapipe_processed_sub.csv" > ${tmp}/tmpfile && mv ${tmp}/tmpfile "${out}/micapipe_processed_sub.csv"
 fi
 
 bids_variables_unset

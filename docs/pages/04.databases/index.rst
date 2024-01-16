@@ -86,26 +86,23 @@ Reference
 
             micapipe -bids rawdata -out derivatives -sub HC001 -ses 01 \
                       -proc_structural \
-                      -proc_freesurfer \
+                      -proc_surf \
+                        -freesurfer \
                       -post_structural \
                       -proc_dwi \
                       -SC \
-                      -proc_rsfmri \
+                      -proc_func \
                       -GD \
-                      -Morphology \
                       -MPC \
                       -QC_subj
 
         proc_structural
            This section was processed with the default parameters (T1w = ``sub-HC001_ses-01_T1w.nii.gz``).
 
-        proc_freesurfer
+        proc_surf
            This section was processed with the default parameters (T1w = ``sub-HC001_ses-01_T1w.nii.gz``).
 
         post_structural
-           This section was processed with the default parameters.
-
-        Morphology
            This section was processed with the default parameters.
 
         GD
@@ -121,7 +118,7 @@ Reference
         SC
            This section was processed with the default parameters.
 
-        proc_rsfmri
+        proc_func
            This section was processed with the default parameters. Using melodic and FIX for nuisance regression and non linear registration (SyN) to T1w-nativepro space.
 
            Main scan = ``task-rest_acq-AP_bold``
@@ -184,29 +181,26 @@ Reference
 
             micapipe -bids rawdata -out derivatives -sub 00367 -ses 01
                       -proc_structural \
-                      -proc_freesurfer \
-                        -freesurfer_dir ./freesurfer_processed_00367 \
+                      -proc_surf \
+                        -surf_dir ./freesurfer_processed_00367 \
+                        -freesurfer \
                       -post_structural \
                       -proc_dwi \
                       -SC \
-                      -proc_rsfmri \
+                      -proc_func \
                         -mainScanStr task-rest_bold \
-                        -regress_WM_CSF \
+                        -NSR \
                         -noFIX \
                       -GD \
-                      -Morphology \
                       -QC_subj
 
         proc_structural
            This section was processed with the default parameters (T1w = ``sub-00367_ses-01_T1w.nii.gz``).
 
-        proc_freesurfer
-           This section was already processed, therefore we used the flag ``-freesurfer_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-00367_ses-01`` directory
+        proc_surf
+           This section was already processed, therefore we used the flag ``-surf_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-00367_ses-01`` directory
 
         post_structural
-           This section was processed with the default parameters.
-
-        Morphology
            This section was processed with the default parameters.
 
         GD
@@ -222,7 +216,7 @@ Reference
         SC
            This section was processed with the default parameters.
 
-        proc_rsfmri
+        proc_func
            White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
            No reverse phase encoding image was used.
 
@@ -269,17 +263,17 @@ Reference
 
             micapipe -bids rawdata -out derivatives -sub CC110045 -ses pre \
                       -proc_structural \
-                      -proc_freesurfer \
-                        -freesurfer_dir ./freesurfer_processed_CC110045 \
+                      -proc_surf \
+                        -surf_dir ./freesurfer_processed_CC110045 \
+                        -freesurfer \
                       -post_structural \
                       -proc_dwi \
                       -SC \
-                      -proc_rsfmri \
+                      -proc_func \
                         -mainScanStr task-Rest_bold \
-                        -regress_WM_CSF \
+                        -NSR \
                         -noFIX \
                       -GD \
-                      -Morphology \
                       -MPC \
                         -microstructural_img sub-CC110045/ses-pre/mti_MTR.nii \
                       -QC_subj \
@@ -287,13 +281,10 @@ Reference
         proc_structural
            This section was processed with the default parameters (T1w = ``sub-CC110045_T1w.nii.gz``).
 
-        proc_freesurfer
-           This section was already processed, therefore we used the flag ``-freesurfer_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-CC110045_ses-pre`` directory
+        proc_surf
+           This section was already processed, therefore we used the flag ``-surf_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-CC110045_ses-pre`` directory
 
         post_structural
-           This section was processed with the default parameters.
-
-        Morphology
            This section was processed with the default parameters.
 
         GD
@@ -307,7 +298,7 @@ Reference
         SC
            This section was processed with the default parameters.
 
-        proc_rsfmri
+        proc_func
            White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
            No reverse phase encoding image was used.
            Main scan = ``task-Rest_bold``
@@ -359,32 +350,29 @@ Reference
 
             micapipe -bids ds003346 -out derivatives -sub 010 \
                       -proc_structural \
-                      -proc_freesurfer \
-                        -freesurfer_dir ./freesurfer_processed_010 \
+                      -proc_surf \
+                        -surf_dir ./freesurfer_processed_010 \
+                        -freesurfer \
                       -post_structural \
                       -proc_dwi \
                         -dwi_rpe ${subjectDir}/fmap/sub-110_dir-PA_run-01_epi.nii.gz \
                       -SC \
-                      -proc_rsfmri \
+                      -proc_func \
                         -mainScanStr task-Rest_bold \
-                        -fmri_rpe ${subjectDir}/fmap/sub-110_dir-PA_run-02_epi.nii.gz
-                        -regress_WM_CSF \
-                        - GSR \
+                        -func_rpe ${subjectDir}/fmap/sub-110_dir-PA_run-02_epi.nii.gz
+                        -NSR \
+                        -GSR \
                         -noFIX \
                       -GD \
-                      -Morphology \
                       -QC_subj \
 
         proc_structural
            This section was processed with the default parameters (T1w = ``sub-010_T1w.nii.gz``).
 
-        proc_freesurfer
-           This section was already processed, therefore we used the flag ``-freesurfer_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-010`` directory
+        proc_surf
+           This section was already processed, therefore we used the flag ``-surf_dir`` to copy the already processed freesurfer files inside the ``derivatives/freesurfer/sub-010`` directory
 
         post_structural
-           This section was processed with the default parameters.
-
-        Morphology
            This section was processed with the default parameters.
 
         GD
@@ -400,7 +388,7 @@ Reference
         SC
            This section was processed with the default parameters.
 
-        proc_rsfmri
+        proc_func
            White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default). Global signal regression was applied.
 
            Main scan = ``task-rest_bold`` (default)
@@ -475,21 +463,18 @@ Reference
                # Pipeline for the anatomical images struct01
                micapipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses struct01 \
                           -proc_structural -t1wStr run-01_T1w,run-02_T1w \
-                          -proc_freesurfer \
+                          -proc_surf \
+                            -freesurfer \
                           -post_structural \
-                          -proc_rsfmri \
-                            -regAffine -noFIX -regress_WM_CSF \
-                            -mainScanStr task-rest_bold \
                           -GD \
-                          -Morphology \
                           -QC_subj
 
                # Pipeline for the functional images
                for N in {01..10}; do
                micapipe -bids ds000224/ -out derivatives/ -sub MSC01 -ses func${N} \
-                          -proc_rsfmri \
+                          -proc_func \
                           -mainScanStr task-rest_bold \
-                          -regress_WM_CSF \
+                          -NSR \
                           -noFIX \
                           -sesAnat struct01 \
                           -QC_subj \
@@ -498,19 +483,16 @@ Reference
             proc_structural
                Structural processing used the files ``sub-MSC01_ses-struct01_run-01_T1w.nii.gz`` and ``sub-MSC01_ses-struct01_run-01_T2w.nii.gz`` to generate the nativepro file
 
-            proc_freesurfer
+            proc_surf
                Freesurfer used ``sub-MSC01_ses-struct01_run-01_T1w.nii.gz`` and ``sub-MSC01_ses-struct01_run-01_T2w.nii.gz`` to generate the native surfaces.
 
             post_structural
                This section was processed with the default parameters.
 
-            Morphology
-               This section was processed with the default parameters.
-
             GD
                This section was processed with the default parameters.
 
-            proc_rsfmri
+            proc_func
                Each functional session was processed individually and registered to the anatomical session ``struct01``. In this example we use a ``for`` loop to iterate over each session.
                White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Non linear registration (SyN) was used between the rsfMRI and T1-nativepro (default).
                No reverse phase encoding image was used.
@@ -596,20 +578,19 @@ Reference
 
                 micapipe -bids ds001942/ -out . -sub S01 -ses SES01 \
                           -proc_structural -t1wStr run-01_T1w,run-02_T1w \
-                          -proc_freesurfer -hires \
+                          -proc_surf \
                           -post_structural \
                           -proc_dwi \
                             -dwi_main ${dwiDir}/${sub}_dir-AP_run-01_dwi.nii.gz,${dwiDir}/${sub}_dir-AP_run-02_dwi.nii.gz,${dwiDir}/${sub}_dir-AP_run-03_dwi.nii.gz \
                             -dwi_rpe ${dwiDir}/${sub}_dir-PA_run-01_dwi.nii.gz,${dwiDir}/${sub}_dir-PA_run-02_dwi.nii.gz,${dwiDir}/${sub}_dir-PA_run-03_dwi.nii.gz \
                             -rpe_all \
                           -SC \
-                          -proc_rsfmri \
-                            -regAffine -noFIX -regress_WM_CSF \
+                          -proc_func \
+                            -noFIX -NSR \
                             -mainScanStr task-rest_bold \
-                            -fmri_pe  ${subjectDir}/fmap/${sub}_acq-gre_dir-AP_run-01_epi.nii.gz \
-                            -fmri_rpe ${subjectDir}/fmap/${sub}_acq-gre_dir-PA_run-01_epi.nii.gz \
+                            -func_pe  ${subjectDir}/fmap/${sub}_acq-gre_dir-AP_run-01_epi.nii.gz \
+                            -func_rpe ${subjectDir}/fmap/${sub}_acq-gre_dir-PA_run-01_epi.nii.gz \
                           -GD \
-                          -Morphology \
                           -MPC \
                             -microstructural_img ${subjectDir}/anat/${sub}_acq-ShortInv_run-01_T1w.nii.gz \
                             -microstructural_reg ${subjectDir}/anat/${sub}_acq-ShortInv_run-01_T1w.nii.gz \
@@ -618,13 +599,10 @@ Reference
             proc_structural
                Structural processing used the files ``sub-S01_ses-SES01_run-01_T1w.nii.gz`` and ``sub-S01_ses-SES01_run-02_T1w.nii.gz`` to generate the nativepro file
 
-            proc_freesurfer
-               Freesurfer used ``sub-S01_ses-SES01_run-02_T1w.nii.gz`` to generate the native surfaces. We used the ``hires`` option as is recommended for 7T isometric acquisition with high resolution or below, in this case the voxel size is 0.3x0.3x0.3 mm3.
+            proc_surf
+               FastSurfer used ``sub-S01_ses-SES01_run-02_T1w.nii.gz`` to generate the native surfaces.
 
             post_structural
-               This section was processed with the default parameters.
-
-            Morphology
                This section was processed with the default parameters.
 
             GD
@@ -640,7 +618,7 @@ Reference
             SC
                This section was processed with the default parameters.
 
-            proc_rsfmri
+            proc_func
                White matter and CSF signal was regressed from the time-series for nuisance regression, instead of Melodic/FIX. Only affine registration between the rsfMRI and T1-nativepro was performed.
 
                   Main scan = ``task-rest_bold``

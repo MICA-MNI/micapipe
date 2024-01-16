@@ -17,8 +17,6 @@ Generates a pdf file for QC of the processing
 
     ses       : OPTIONAL flag that indicates the session name (if omitted will manage ase SINGLE session)
 
-    tracts    : OPTIONAL number of streamlines, where 'M' stands for millions (default=40M)
-
     tmpDir    : OPTIONAL specifcation of temporary directory location <path> (Default is /tmp)
 
     quiet     : OPTIONAL do not print comments
@@ -26,7 +24,6 @@ Generates a pdf file for QC of the processing
     nocleanup : OPTIONAL do not delete temporary directory at script completion
 
     version   : OPTIONAL print software version
-
 
     USAGE
     --------
@@ -49,6 +46,7 @@ import numpy as np
 import matplotlib as plt
 import matplotlib.pyplot as pltpy
 import seaborn
+from brainspace.datasets import load_mask
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.mesh.mesh_operations import combine_surfaces
@@ -89,13 +87,6 @@ parser.add_argument('-ses',
                     help='Flag that indicates the session name'
                     )
 
-parser.add_argument('-tracts',
-                    dest='tracts',
-                    type=str,
-                    default='40M',
-                    help='Number of streamlines'
-                    )
-
 parser.add_argument('-tmpDir',
                     dest='tmpDir',
                     type=str,
@@ -133,7 +124,6 @@ sub = args.sub
 out = os.path.realpath(args.out)
 bids = os.path.realpath(args.bids)
 ses = args.ses
-tracts = args.tracts
 tmpDir = args.tmpDir
 quiet = args.nocleanup
 version = args.version
@@ -141,7 +131,6 @@ MICAPIPE = args.MICAPIPE
 
 # Optional inputs:
 # Session
-print(ses)
 if ses == "" or ses == "SINGLE":
     ses_number = "SINGLE"
     subj_dir = "%s/%s"%(out,sub)
@@ -359,6 +348,7 @@ c69_32k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.L.inflated.surf.gii', i
 c69_32k_I_rh = read_surface(MICAPIPE+'/surfaces/fsLR-32k.R.inflated.surf.gii', itype='gii')
 c69_5k_I_lh = read_surface(MICAPIPE+'/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
 c69_5k_I_rh = read_surface(MICAPIPE+'/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
+mask_32k = load_mask(join=True)
 
 ## ------------------------------------------------------------------------- ##
 ##                                                                           ##
@@ -803,7 +793,7 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
+        crange=(np.quantile(flair, 0.05), np.quantile(flair, 0.95))
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -956,7 +946,9 @@ def qc_proc_dwi(proc_dwi_json=''):
             measure_c69_32k_rh = "%s/maps/%s_hemi-R_surf-fsLR-32k_label-%s_%s%s.func.gii"%(subj_dir,sbids,surface,measure,tag_dwi)
             measure_c69_32k_png = "%s/%s_surf-fsLR-32k_label-%s_%s%s.png"%(tmpDir,sbids,surface,measure,tag_dwi)
             f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
-            measure_crange=(np.quantile(f, 0.01), np.quantile(f, 0.98))
+            measure_crange=(np.quantile(f[mask_32k], 0.01), np.quantile(f[mask_32k], 0.98))
+            # Replace values in f with NaN where mask_32k is False
+            f[mask_32k == False] = np.nan
             display = Display(visible=0, size=(900, 250))
             display.start()
             plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -990,7 +982,7 @@ def qc_proc_func(proc_func_json=''):
     if not check_json_complete(proc_func_json):
         return _static_block
 
-    func_clean_json = glob.glob("%s/func/desc-%s/volumetric/%s_space-func_desc*_clean.json"%(subj_dir,tag,sbids))[0]
+    func_clean_json = glob.glob("%s/func/desc-%s/volumetric/%s_space-func_desc*_preproc.json"%(subj_dir,tag,sbids))[0]
     with open( func_clean_json ) as f:
         func_clean_json = json.load(f)
     acquisition = func_clean_json["Acquisition"]
@@ -1035,7 +1027,7 @@ def qc_proc_func(proc_func_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    clean_json = os.path.realpath("%s/func/desc-%s/volumetric/%s_space-func_desc-%s_clean.json"%(subj_dir,tag,sbids,acquisition))
+    clean_json = os.path.realpath("%s/func/desc-%s/volumetric/%s_space-func_desc-%s_preproc.json"%(subj_dir,tag,sbids,acquisition))
     with open( clean_json ) as f:
         clean_json = json.load(f)
 
@@ -1086,22 +1078,29 @@ def qc_proc_func(proc_func_json=''):
     figPath = "%s/fMRI_subcortical_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="Subcortical atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
-    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_framewiseDisplacement.png"%(subj_dir,tag,sbids,acquisition)
-    _static_block += report_module_output_template(outName='Framewise displace: fMRI', outPath=outPath, figPath=outPath)
     _static_block += '<div style="page-break-after: always;"></div>'
+
+    _static_block += (
+            '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+            '<b>Framewise displace: fMRI</b> </p>'
+    )
+
+    outPath = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_framewiseDisplacement.png"%(subj_dir,tag,sbids,acquisition)
+    _static_block += report_module_output_template(outName='', outPath=outPath, figPath=outPath)
 
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>Signal to Noise Ratio (tSNR)</b> </p>'
     )
-    tSNR_file = "%s/func/desc-%s/volumetric/%s_space-func_desc-%s_tSNR.shape.gii"%(subj_dir,tag,sbids,acquisition)
-    tSNR = nb.load(tSNR_file).darrays[0].data
+    tSNR_L = f"{subj_dir}/func/desc-{tag}/surf/{sbids}_surf-fsnative_hemi-L_tSNR.shape.gii"
+    tSNR_R = f"{subj_dir}/func/desc-{tag}/surf/{sbids}_surf-fsnative_hemi-R_tSNR.shape.gii"
+    tSNR = np.concatenate((nb.load(tSNR_L).darrays[0].data, nb.load(tSNR_R).darrays[0].data), axis=0)
     tSNR = np.squeeze(tSNR)
 
     snr_fig = tmpDir + "/" + sbids + "_surf-native_tSNR.png"
     display = Display(visible=0, size=(900, 250))
     display.start()
-    plot_hemispheres(surf_lh, surf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(inf_lh, inf_rh, array_name=tSNR, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='magma', color_range=(np.quantile(tSNR, 0.05), np.quantile(tSNR, 0.95)), transparent_bg=False, screenshot = True, offscreen=True, filename = snr_fig)
     display.stop()
     _static_block += (
@@ -1155,7 +1154,7 @@ def qc_proc_func(proc_func_json=''):
     for annot in atlas:
         # fc connectomes
         fc_fig = tmpDir + "/" + sbids + "_surf-fsLR-32k_atlas-" + annot + "_fc.png"
-        fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-%s_desc-FC.shape.gii"%(subj_dir,tag,sbids,annot)
+        fc_file = "%s/func/desc-%s/surf/%s_atlas-%s_desc-FC.shape.gii"%(subj_dir,tag,sbids,annot)
 
         # Load shape.gii
         if os.path.isfile(fc_file):
@@ -1199,7 +1198,7 @@ def qc_proc_func(proc_func_json=''):
             '<b> Yeo networks (schaefer-400) </b> </p>'
     )
 
-    fc_file = "%s/func/desc-%s/surf/%s_surf-fsLR-32k_atlas-schaefer-400_desc-FC.shape.gii"%(subj_dir,tag,sbids)
+    fc_file = "%s/func/desc-%s/surf/%s_atlas-schaefer-400_desc-FC.shape.gii"%(subj_dir,tag,sbids)
     fc_mtx = nb.load(fc_file).darrays[0].data
     fc = fc_mtx[49:, 49:]
     fcz = np.arctanh(fc)
@@ -1228,9 +1227,9 @@ def qc_proc_func(proc_func_json=''):
         net = np.sum(fc_pos[idx,:], axis=0)
         net_surf = map_to_labels(net, labels_c69, fill=np.nan, mask=mask_c69)
         net_fig = '%s/%s_atlas-schaefer400_desc-%s.png'%(tmpDir,sbids,n)
-        display = Display(visible=0, size=(900, 750))
+        display = Display(visible=0, size=(900, 250))
         display.start()
-        plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 750), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+        plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=net_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), cmap='RdGy_r', transparent_bg=False,
                          screenshot = True, offscreen=True, filename = net_fig)
         display.stop()
@@ -1417,11 +1416,17 @@ def qc_sc(sc_json=''):
 ## ------------------------------- MPC MODULE ------------------------------ ##
 def qc_mpc(mpc_json=''):
 
-    acquisition = mpc_json.split('%s_module-MPC-'%(sbids))[1].split('.json')[0]
+    if 'MPC-SWM' in mpc_json:
+        acq_str = 'MPC-SWM'
+        mpc_dir = 'mpc-swm'
+    else:
+        acq_str = 'MPC'
+        mpc_dir = 'mpc'
+    acquisition = mpc_json.split(f'{sbids}_module-{acq_str}-')[1].split('.json')[0]
 
     # QC header
     _static_block = qc_header()
-    _static_block +=  report_module_header_template(module='Microstructural profile covariance (%s)'%(acquisition))
+    _static_block +=  report_module_header_template(module=f'{acq_str} | Microstructural profile covariance ({acquisition})')
 
     # QC summary
     _static_block += report_qc_summary_template(mpc_json)
@@ -1435,18 +1440,18 @@ def qc_mpc(mpc_json=''):
             '<b>Main inputs:</b> </p>'
     )
 
-    proc_mpc_json = os.path.realpath("%s/mpc/acq-%s/%s_MPC-%s.json"%(subj_dir,acquisition,sbids,acquisition))
+    proc_mpc_json = os.path.realpath(f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_{acq_str}-{acquisition}.json")
     with open( proc_mpc_json ) as f:
         mpc_description = json.load(f)
     microstructural_img = mpc_description["microstructural_img"]
     microstructural_reg = mpc_description["microstructural_reg"]
 
     outPath = microstructural_img
-    figPath = "%s/%s_microstructural_img.png"%(tmpDir,acquisition)
+    figPath = f"{tmpDir}/{acquisition}_microstructural_img.png"
     _static_block += nifti_check(outName="Microstructural image", outPath=outPath, figPath=figPath)
 
     outPath = microstructural_reg
-    figPath = "%s/%s_microstructural_reg.png"%(tmpDir,acquisition)
+    figPath = f"{tmpDir}/{acquisition}_microstructural_reg.png"
     _static_block += nifti_check(outName="Microstructural registration", outPath=outPath, figPath=figPath)
 
     # Outputs
@@ -1455,16 +1460,22 @@ def qc_mpc(mpc_json=''):
             '<b>Main outputs</b> </p>'
     )
 
-    outPath = "%s/anat/%s_space-fsnative_T1w.nii.gz"%(subj_dir,sbids)
-    refPath = "%s/anat/%s_space-fsnative_%s.nii.gz"%(subj_dir,sbids,acquisition)
-    figPath = "%s/%s_fsnative_screenshot.png"%(tmpDir,acquisition)
-    _static_block += nifti_check(outName="Registration: %s in %s native space"%(acquisition,recon), outPath=outPath, refPath=refPath, figPath=figPath)
+    if 'MPC-SWM' in mpc_json:
+        ref_space="nativepro"
+        refPath = f"{subj_dir}/anat/{sbids}_space-nativepro_{acquisition}.nii.gz"
+    else:
+        ref_space="fsnative"
+        refPath = f"{subj_dir}/anat/{sbids}_space-fsnative_{acquisition}.nii.gz"
+    outPath = f"{subj_dir}/anat/{sbids}_space-{ref_space}_T1w.nii.gz"
+
+    figPath = f"{tmpDir}/{acquisition}_fsnative_screenshot.png"
+    _static_block += nifti_check(outName=f"Registration: {acquisition} in {ref_space} space", outPath=outPath, refPath=refPath, figPath=figPath)
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>MPC connectomes</b> </p>'
     )
 
-    mpc_file = "%s/mpc/acq-%s/%s_surf-fsLR-5k_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids)
+    mpc_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_surf-fsLR-5k_desc-MPC.shape.gii"
     mpc = nb.load(mpc_file).darrays[0].data
     mpc = np.triu(mpc,1)+mpc.T
     mpc[~np.isfinite(mpc)] = np.finfo(float).eps
@@ -1497,18 +1508,17 @@ def qc_mpc(mpc_json=''):
             '<td style=padding-top:4px;padding-left:3px;text-align:center><b>Degree</b></td></tr>'
     )
 
-    label_dir = os.path.realpath("%s/parc/"%(subj_dir))
+    label_dir = os.path.realpath(f"{subj_dir}/parc/")
     files = os.listdir(label_dir)
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
         # Intensity profiles
         ip_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_intensity_profiles.png"
-        ip_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-intensity_profiles.shape.gii"%(subj_dir,acquisition,sbids,annot)
+        ip_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_atlas-{annot}_desc-intensity_profiles.shape.gii"
         ip = nb.load(ip_file).darrays[0].data
         pltpy.imshow(ip, cmap="crest", aspect='auto')
         pltpy.savefig(ip_fig)
@@ -1518,7 +1528,7 @@ def qc_mpc(mpc_json=''):
         Ndim = max(np.unique(annot_lh_fs5[0]))
 
         mpc_fig = tmpDir + "/" + sbids + "_atlas-" + annot + "_desc-" + acquisition + "_mpc.png"
-        mpc_file = "%s/mpc/acq-%s/%s_atlas-%s_desc-MPC.shape.gii"%(subj_dir,acquisition,sbids,annot)
+        mpc_file = f"{subj_dir}/{mpc_dir}/acq-{acquisition}/{sbids}_atlas-{annot}_desc-MPC.shape.gii"
         mpc = nb.load(mpc_file).darrays[0].data
         mpc = np.triu(mpc,1)+mpc.T
         mpc = np.delete(np.delete(mpc, 0, axis=0), 0, axis=1)
@@ -1619,7 +1629,6 @@ def qc_gd(gd_json=''):
     filtered_files = [file for file in files if "cerebellum" not in file and "subcortical" not in file and "fsLR-5k" not in file]
     atlas = sorted([file.split("atlas-")[1].split(".nii.gz")[0] for file in filtered_files])
     for annot in atlas:
-
         if annot == 'aparc-a2009s':
             continue
 
@@ -1665,6 +1674,117 @@ def qc_gd(gd_json=''):
 
     return _static_block
 
+#------------------------------------------------------------------------------#
+# SWM generation and mapping QC
+def qc_swm(swm_json=''):
+    # QC header
+    _static_block = qc_header()
+    _static_block +=  report_module_header_template(module='Superficial White Matter')
+
+     # QC summary
+    _static_block += report_qc_summary_template(swm_json)
+
+    if not check_json_complete(swm_json):
+        print('INCOMPLETE') # return(_static_block)
+
+    # Outputs
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>Main outputs</b> </p>')
+
+    # SWM surfaces
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>SWM surfaces</b> </p>'
+                '<br />'
+                '<table style="border:1px solid #666;width:100%">'
+                '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>fsnative</b></td></tr>')
+
+    def surf_table_row(Title, png_path):
+        # Add a new row to the table
+        surf_row = (
+        '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{Title}</b></td>'
+        '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{png_path}"></td></tr>').format(
+        Title=Title, png_path=png_path)
+        return(surf_row)
+
+    # List all the Right and Left SWM surfaces
+    surf_dir = f"{subj_dir}/surf"
+    swm_L_files = sorted(glob.glob(f"{surf_dir}/{sbids}_hemi-L_surf-fsnative_label-swm*gii"))
+    swm_R_files = sorted(glob.glob(f"{surf_dir}/{sbids}_hemi-R_surf-fsnative_label-swm*gii"))
+
+    # Load each surface and plot them and save png
+    for i,_ in enumerate(swm_L_files):
+        swm_L = swm_L_files[i]
+        swm_R = swm_R_files[i]
+        # Set the label name
+        swm_label = swm_L.replace(".surf.gii","").split('label-')[1]
+        # Load the SWM surface
+        lhSWM, rhSWM = load_surface(swm_L, swm_R, with_normals=True, join=False)
+
+        # Plot the surfaces SWM
+        dsize = (900, 250)
+        display = Display(visible=0, size=dsize)
+        display.start()
+        swm_png=f"{tmpDir}/{sbids}_space-nativepro_surf-fsnative_label-{swm_label}.png"
+        plot_hemispheres(lhSWM, rhSWM, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(-1,1), transparent_bg=False,
+                         screenshot = True, offscreen=True, filename = swm_png)
+        _static_block += surf_table_row(swm_label, swm_png)
+        display.stop()
+
+    _static_block += ('</table>')
+
+    #------------------------------------------------------------------------------#
+    # SWM maps on surfs
+    _static_block += (
+                '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
+                '<b>SWM maps</b> </p>')
+
+    # List all the Right and Left SWM surfaces
+    map_dir = f"{subj_dir}/maps"
+    swm_files = sorted(glob.glob(f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-swm*.func.gii"))
+
+    # Get the unique maps IDs
+    maps_str = list(set([file.split('mm_')[1][:-9] for file in swm_files]))
+
+    # Get the unique surfaces
+    surf_str = sorted(list(set([file.split('label-')[1].split('_')[0] for file in swm_files])))
+
+    for measure in maps_str:
+            swm_surf_table = '<br>'
+            swm_surf_table += (
+                '<table style="border:1px solid #666;width:100%">'
+                     '<tr><td style=padding-top:4px;padding-left:3px;padding-right:4px;text-align:center colspan="2"><b>{measure} (fsLR-32k)</b></td></tr>'
+             ).format(measure=measure)
+
+            for i, surface in enumerate(surf_str):
+                measure_c69_32k_lh = f"{map_dir}/{sbids}_hemi-L_surf-fsLR-32k_label-{surface}_{measure}.func.gii"
+                measure_c69_32k_rh = f"{map_dir}/{sbids}_hemi-R_surf-fsLR-32k_label-{surface}_{measure}.func.gii"
+                measure_c69_32k_png = f"{tmpDir}/{sbids}_surf-fsLR-32k_label-{surface}_{measure}.png"
+                f = np.concatenate((nb.load(measure_c69_32k_lh).darrays[0].data, nb.load(measure_c69_32k_rh).darrays[0].data), axis=0)
+
+                if i == 0: measure_crange=(np.quantile(f[mask_32k], 0.01), np.quantile(f[mask_32k], 0.98))
+                display = Display(visible=0, size=(900, 250))
+                display.start()
+                # Replace values in f with NaN where mask_32k is False
+                f[mask_32k == False] = np.nan
+                # Plot the values
+                plot_hemispheres(c69_32k_I_lh, c69_32k_I_rh, array_name=f, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                                 nan_color=(0, 0, 0, 1), color_range=measure_crange, cmap='mako', transparent_bg=False,
+                                 screenshot = True, offscreen=True, filename = measure_c69_32k_png)
+                display.stop()
+                swm_surf_table += (
+                         '<tr><td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:4px;text-align:center><b>{surface}</b></td>'
+                         '<td style=padding-top:4px;padding-bottom:4px;padding-left:3px;padding-right:3px;text-align:center><img style="display:block;width:1500px%;margin-top:0px" src="{measure_c69_32k_png}"></td></tr>'
+                ).format(surface=surface,
+                    measure_c69_32k_png=measure_c69_32k_png
+                )
+            _static_block += swm_surf_table
+
+            _static_block += '</table>'
+
+    return _static_block
 
 # Utility function
 def convert_html_to_pdf(source_html, output_filename):
@@ -1684,14 +1804,19 @@ def convert_html_to_pdf(source_html, output_filename):
 
 # Generate PDF report of Micapipe QC
 qc_module_function = {
-   'modules':   ['proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
-   'functions': [qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
+   'modules':   ['SWM', 'proc_structural', 'proc_surf', 'post_structural', 'proc_dwi', 'proc_func', 'proc_flair', 'SC', 'MPC', 'GD'],
+   'functions': [qc_swm, qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/QC/%s_module-%s*.json"%(subj_dir,sbids,m))
     for j in module_qc_json:
+        print('--------------------------------------------------')
+        print(f"Running QC: {m}")
         if check_json_exist(j):
-            static_report = qc_module_function['functions'][i](j)
-            file_pdf=j.replace('.json','_qc-report.pdf')
-            convert_html_to_pdf(static_report, file_pdf)
+            try:
+                static_report = qc_module_function['functions'][i](j)
+                file_pdf=j.replace('.json','_qc-report.pdf')
+                convert_html_to_pdf(static_report, file_pdf)
+            except:
+                print(f"Module QC failed: {m}")
