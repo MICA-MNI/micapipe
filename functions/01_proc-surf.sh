@@ -125,7 +125,6 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     # Define SUBJECTS_DIR for surface processing as a global variable
     export SUBJECTS_DIR="${tmp}" # Will work on a temporal directory
 
-
     # Recontruction method
     Note "PROC" "$PROC"
     if [[ "$recon" == "fastsurfer" ]]; then

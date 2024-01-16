@@ -250,7 +250,7 @@ json_nativepro_flair "$flair_nativepro" \
 
 #------------------------------------------------------------------------------#
 # Map to surface
-Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
+Nmorph=$(ls "${dir_maps}/"*_flair.func.gii 2>/dev/null | wc -l)
 if [[ "$Nmorph" -lt 16 ]]; then ((N++))
     Info "Mapping flair to fsLR-32k, fsLR-5k and fsaverage5"
     for HEMI in L R; do
@@ -260,7 +260,7 @@ if [[ "$Nmorph" -lt 16 ]]; then ((N++))
             map_to-surfaces "${flair_nativepro}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_flair.func.gii" "${HEMI}" "${label}_flair" "${dir_maps}"
         done
     done
-    Nmorph=$(ls "${dir_maps}/"*flair*gii 2>/dev/null | wc -l)
+    Nmorph=$(ls "${dir_maps}/"*_flair.func.gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has flair mapped to surfaces"; ((Nsteps++)); ((N++))

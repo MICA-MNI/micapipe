@@ -1079,7 +1079,7 @@ def qc_proc_func(proc_func_json=''):
     _static_block += nifti_check(outName="Subcortical atlas in fMRI space", outPath=outPath, refPath=refPath, figPath=figPath, roi=True)
 
     _static_block += '<div style="page-break-after: always;"></div>'
-    
+
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:12px;text-align:Left;margin-bottom:0px">'
             '<b>Framewise displace: fMRI</b> </p>'
