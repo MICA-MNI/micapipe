@@ -107,8 +107,8 @@ function Image_threshold() {
   threshlo="${tmp}/${rnd_str}_threshlo.nii.gz"
   threshhi="${tmp}/${rnd_str}_threshhi.nii.gz"
 
-  ThresholdImage 3 "${img_in}" "${threshlo}" threshlo ${thrlo}
-  ThresholdImage 3 "${img_in}" "${threshhi}" threshhi ${thrhi}
+  ThresholdImage 3 "${img_in}" "${threshlo}" threshlo "${thrlo}"
+  ThresholdImage 3 "${img_in}" "${threshhi}" threshhi "${thrhi}"
 
   # Substract the thresholded images to get the unique thresholded img
   ImageMath 3 "${img_out}" - "${threshlo}" "${threshhi}"
@@ -135,9 +135,9 @@ function get_mode() {
   # get the intensity of the maximun frecuency (aka mode)
   mode=${intensities[$((max_val-1))]}
   # remove tmp file
-  rm ${hist}
+  rm "${hist}"
   # Print the mode
-  echo ${mode}
+  echo "${mode}"
 }
 
 #------------------------------------------------------------------------------#
@@ -183,7 +183,7 @@ if [[ ! -f "$flair_nativepro" ]]; then ((N++))
     #------------------------------------------------------------------------------#
     # 2 | Bias field correction weighted by white matter
     flair_N4="${tmp}/${idBIDS}_flairN4.nii.gz"
-    Do_cmd N4BiasFieldCorrection -r -d 3 -w ${flair_mask_wm} -i "${flairScan}" -o "${flair_N4}"
+    Do_cmd N4BiasFieldCorrection -r -d 3 -w "${flair_mask_wm}" -i "${flairScan}" -o "${flair_N4}"
 
     #------------------------------------------------------------------------------#
     # 3 | Brain mask
@@ -207,10 +207,10 @@ if [[ ! -f "$flair_nativepro" ]]; then ((N++))
     # Mean mode between GM and WM | BG=(GM_mode+WM_mode)/2.0
     BG=$(echo "(${mode_gm}+${mode_wm})/2.0" | bc -l)
     # mode difference | mode_diff = np.abs(BG - WM_mode)
-    mode_diff=$(echo ${BG} - ${mode_wm} | bc); mode_diff=$(echo ${mode_diff#-})
+    mode_diff=$(echo "${BG}-${mode_wm}" | bc); mode_diff=$(echo ${mode_diff#-})
     # Normalize array | norm_wm = 100.0 * (array - WM_mode)/(mode_diff)
     flair_norm="${tmp}/${idBIDS}_flair_norm.nii.gz"
-    Do_cmd mrcalc "${flair_N4}" "${mode_wm}" -subtract ${mode_diff} -div 100 -mul "${flair_norm}"
+    Do_cmd mrcalc "${flair_N4}" "${mode_wm}" -subtract "${mode_diff}" -div 100 -mul "${flair_norm}"
 
     #------------------------------------------------------------------------------#
     # 6 | Mask only the brain of the normalized data

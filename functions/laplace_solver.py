@@ -35,8 +35,6 @@ import skfmm
 from scipy.ndimage import binary_dilation
 from astropy.convolution import convolve as nan_convolve
 import sys
-import os
-import glob
 
 
 def _get_bounding_box(mask, padding=1):

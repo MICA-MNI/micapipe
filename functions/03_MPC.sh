@@ -85,8 +85,8 @@ Note "Saving temporal dir : " "${nocleanup}"
 Note "Parallel processing : " "${threads} threads"
 Note "tmp dir   : " "${tmpDir}"
 Note "recon     : " "${recon}"
-Note "synth_reg : " ${synth_reg}
-Note "reg_nonlinear : " ${reg_nonlinear}
+Note "synth_reg : " "${synth_reg}"
+Note "reg_nonlinear : " "${reg_nonlinear}"
 
 #	Timer
 aloita=$(date +%s)
@@ -261,7 +261,7 @@ if [[ "$Nmorph" -lt 16 ]]; then ((N++))
             map_to-surfaces "${qmriNP}" "${surf_fsnative}" "${dir_maps}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}_${mpc_str}.func.gii" "${HEMI}" "${label}_${mpc_str}" "${dir_maps}"
         done
     done
-    Nmorph=$(ls "${dir_maps}/"*${mpc_str}*gii 2>/dev/null | wc -l)
+    Nmorph=$(ls "${dir_maps}/"*"${mpc_str}"*gii 2>/dev/null | wc -l)
     if [[ "$Nmorph" -eq 16 ]]; then ((Nsteps++)); fi
 else
     Info "Subject ${idBIDS} has ${mpc_str} mapped to surfaces"; ((Nsteps++)); ((N++))

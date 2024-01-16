@@ -33,7 +33,6 @@ code from https://github.com/khanlab/hippunfold/blob/master/hippunfold/workflow/
 import copy
 import nibabel as nib
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 import sys
 
 print('starting surface shift')

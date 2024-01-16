@@ -85,8 +85,8 @@ Note "Saving temporal dir : " "${nocleanup}"
 Note "Parallel processing : " "${threads} threads"
 Note "tmp dir   : " "${tmpDir}"
 Note "recon     : " "${recon}"
-Note "synth_reg : " ${synth_reg}
-Note "reg_nonlinear : " ${reg_nonlinear}
+Note "synth_reg : " "${synth_reg}"
+Note "reg_nonlinear : " "${reg_nonlinear}"
 
 #	Timer
 aloita=$(date +%s)
@@ -201,12 +201,12 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
     mat_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_"
     T1_fsnative_affine="${mat_fsnative_affine}0GenericAffine.mat"
     T1nativepro_seg="${tmp}/aparc+aseg_space-nativepro.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}" -r "${T1nativepro}" -t ${T1_fsnative_affine} -o "${T1nativepro_seg}" -n GenericLabel -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}" -r "${T1nativepro}" -t "${T1_fsnative_affine}" -o "${T1nativepro_seg}" -n GenericLabel -v -u int
 
     # Generate the laplacian field
     WM_laplace=${tmp}/wm-laplace.nii.gz
     Info "Generating laplacian field"
-    Do_cmd python "$MICAPIPE"/functions/laplace_solver.py ${T1nativepro_seg} ${WM_laplace}
+    Do_cmd python "${MICAPIPE}/functions/laplace_solver.py" "${T1nativepro_seg}" "${WM_laplace}"
 
     # Create the surfaces by depths
     Info "Creating superficial white matter surfaces"

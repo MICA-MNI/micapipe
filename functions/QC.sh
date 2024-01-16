@@ -25,7 +25,7 @@ echo -e "\033[38;5;9m\n---------------------------------------------------------
 help() {
   echo -e "
   \033[38;5;141mCOMMAND:\033[0m
-  $(basename ${0})
+  $(basename "${0}")
 
   \033[38;5;141mARGUMENTS:\033[0m
   \t\033[38;5;197m-sub\033[0m 	          : Subject identification
@@ -40,7 +40,7 @@ help() {
   \t\033[38;5;197m-version\033[0m 	  : Print software version
 
   \033[38;5;141mUSAGE:\033[0m
-      \033[38;5;141m$(basename ${0})\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
+      \033[38;5;141m$(basename "${0}")\033[0m \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory>\n
 
   McGill University, MNI, MICA-lab, June, 2023
   https://github.com/MICA-MNI/micapipe
@@ -259,9 +259,9 @@ fi
 dwi_acq=($(ls "${subject_dir}/QC/${idBIDS}"_module-proc_dwi*.json))
 for dwi_json in ${dwi_acq[@]}; do
   # Get all the json files per DWI acquisition from the QC directory
-  dwi_mod=$(echo ${dwi_json/.json/} | awk -F 'module-' '{print $2}')
+  dwi_mod=$(echo "${dwi_json/.json/}" | awk -F 'module-' '{print $2}')
   Info "${dwi_mod}"
-  if [ $dwi_mod == "proc_dwi" ]; then
+  if [ "${dwi_mod}" == "proc_dwi" ]; then
     dwi_dir="${proc_dwi}"; dwi_str=""
   else
     dwi_str="${dwi_mod/proc_dwi/}"; dwi_dir="${proc_dwi}/${dwi_str/_/}"

@@ -257,7 +257,7 @@ if [ "$N4wmStatus_check" == "FALSE" ]; then ((N++))
   Info "N4 bias field corretion weighted by white matter"
   pve2=${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_pve_2.nii.gz
   T1_n4="${tmp}/${idBIDS}_space-nativepro_T1w_N4w.nii.gz"
-  Do_cmd N4BiasFieldCorrection -r -d 3 -w ${pve2} -i "$T1nativepro" -o "$T1_n4"
+  Do_cmd N4BiasFieldCorrection -r -d 3 -w "$pve2" -i "$T1nativepro" -o "$T1_n4"
   Do_cmd ImageMath 3 "$T1nativepro" RescaleImage "$T1_n4" 0 100
   export N4wmStatus="TRUE"
   # Update json file for T1native

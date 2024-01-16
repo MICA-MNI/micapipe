@@ -74,11 +74,11 @@ if [[ "$Nwm" -lt 6 ]]; then ((N++))
     mat_fsnative_affine="${dir_warp}/${idBIDS}_from-fsnative_to_nativepro_T1w_"
     T1_fsnative_affine="${mat_fsnative_affine}0GenericAffine.mat"
     T1nativepro_seg="${tmp}/aparc+aseg_space-nativepro.nii.gz"
-    Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}" -r "${T1nativepro}" -t ${T1_fsnative_affine} -o "${T1nativepro_seg}" -n GenericLabel -v -u int
+    Do_cmd antsApplyTransforms -d 3 -i "${T1fs_seg}" -r "${T1nativepro}" -t "${T1_fsnative_affine}" -o "${T1nativepro_seg}" -n GenericLabel -v -u int
 
     # Generate the laplacian field
     WM_laplace=${tmp}/wm-laplace.nii.gz
-    Do_cmd python "$MICAPIPE"/functions/laplace_solver.py ${T1nativepro_seg} ${WM_laplace}
+    Do_cmd python "$MICAPIPE/functions/laplace_solver.py" "${T1nativepro_seg}" "${WM_laplace}"
 
     # Create the surfaces at 01 02 and 03 deeps
     for HEMI in L R; do
@@ -97,11 +97,11 @@ fi
 # Mapping files
 maps=(${dir_maps}/*nii*)
 for map in ${maps[*]}; do
-  map_id=$(echo ${map/.nii.gz/} | awk -F 'map-' '{print $2}')
+  map_id=$(echo "${map/.nii.gz/}" | awk -F 'map-' '{print $2}')
   # Map to surface: swm
       for HEMI in L R; do
           for i in $(ls "${dir_conte69}/${idBIDS}_hemi-L"_surf-fsnative_label-swm*mm.surf.gii); do
-              label=$(echo ${i/.surf.gii/} | awk -F 'label-' '{print $2}')
+              label=$(echo "${i/.surf.gii/}" | awk -F 'label-' '{print $2}')
               Info "Mapping ${map_id} SWM-${label} to fsLR-32k, fsLR-5k and fsaverage5"
               surf_fsnative="${dir_conte69}/${idBIDS}_hemi-${HEMI}_surf-fsnative_label-${label}.surf.gii"
               # MAPPING metric to surfaces
