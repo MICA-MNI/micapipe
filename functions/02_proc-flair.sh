@@ -18,15 +18,14 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 flairScanStr=$8
-synth_reg=$9
-PROC=${10}
+PROC=${9}
 here=$(pwd)
 export OMP_NUM_THREADS="${threads}"
 
 #------------------------------------------------------------------------------#
 # qsub configuration
 if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+    MICAPIPE=/host/yeatman/local_raid/rcruces/git_here/micapipe
     source "${MICAPIPE}/functions/init.sh" "$threads"
 fi
 
@@ -70,7 +69,6 @@ Note "threads             : " "${threads}"
 Note "Saving temporary dir: " "${nocleanup}"
 Note "tmpDir              : " "${tmpDir}"
 Note "flairScanStr        : " "${flairScanStr}"
-Note "synth_reg           : " "${synth_reg}"
 Note "Processing          : " "${PROC}"
 
 # Timer
@@ -137,7 +135,7 @@ function get_mode() {
   # remove tmp file
   rm "${hist}"
   # Print the mode
-  echo "${mode}"
+  echo "${mode}" | awk -F"e" 'BEGIN{OFMT="%10.10f"} {print $1 * (10 ^ $2)}'
 }
 
 #------------------------------------------------------------------------------#
