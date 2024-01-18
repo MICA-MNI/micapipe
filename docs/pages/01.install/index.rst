@@ -16,11 +16,11 @@ In order to run micapipe in a Docker container, Docker must be `installed <https
   :target: https://hub.docker.com/r/micalab/micapipe
   :alt: Docker Image Version (latest by date)
 
-Where ``v0.2.2`` is the latest version of ``micapipe``. We highly recommend to use the latest version because we are constantly integrating request and fixing issues. For older version check our `dockerhub <https://hub.docker.com/r/micalab/micapipe/tags>`_.
+Where ``v0.2.3`` is the latest version of ``micapipe``. We highly recommend to use the latest version because we are constantly integrating request and fixing issues. For older version check our `dockerhub <https://hub.docker.com/r/micalab/micapipe/tags>`_.
 
 .. code-block:: bash
 
-    docker pull micalab/micapipe:v0.2.2
+    docker pull micalab/micapipe:v0.2.3
 
 
 After the command finished (it may take a while depending on your internet connection), you can run micapipe, in the following example only `proc_structural` is being called:
@@ -36,7 +36,7 @@ After the command finished (it may take a while depending on your internet conne
        -v ${out}:/out \
        -v ${tmp}:/tmp \
        -v ${fs_lic}:/opt/licence.txt \
-       micalab/micapipe:v0.2.2 \
+       micalab/micapipe:v0.2.3 \
            -bids /bids -out /out -fs_licence /opt/licence.txt -threads 10 \
            -sub $sub -ses ${ses} \
            -proc_structural
@@ -77,11 +77,11 @@ If the version of Singularity on your HPC is modern enough you can create a ``Si
 
     $ singularity build /my_images/micapipe-<version>.simg docker://micalab/micapipe:<version>
 
-Where ``<version>`` should be replaced with the desired v0.2.2 of micapipe that you want to download. For example, if you want to use ``micapipe v0.2.2``, the command would look as follows.
+Where ``<version>`` should be replaced with the desired v0.2.3 of micapipe that you want to download. For example, if you want to use ``micapipe v0.2.3``, the command would look as follows.
 
 .. code-block:: bash
 
-    $ singularity build /my_images/micapipe-v0.2.2.simg docker://micalab/micapipe:v0.2.2
+    $ singularity build /my_images/micapipe-v0.2.3.simg docker://micalab/micapipe:v0.2.3
 
 
 Preparing a Singularity image (Singularity version < 2.5)
@@ -94,9 +94,9 @@ In this case, start with a machine (e.g., your personal computer) with ``Docker`
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /absolute/path/to/output/folder:/output \
         singularityware/docker2singularity \
-        micalab/micapipe:<v0.2.0>
+        micalab/micapipe:<version>
 
-Where ``<version>`` should be replaced with the desired version of micapipe that you want to download and ``/absolute/path/to/output/folder`` with the absolute path where the created ``Singularity image`` should be stored. Sticking with the example of ``micapipe v0.2.0``, this would look as follows:
+Where ``<version>`` should be replaced with the desired version of micapipe that you want to download and ``/absolute/path/to/output/folder`` with the absolute path where the created ``Singularity image`` should be stored. Sticking with the example of ``micapipe v0.2.3``, this would look as follows:
 
 .. code-block:: bash
 
@@ -104,7 +104,7 @@ Where ``<version>`` should be replaced with the desired version of micapipe that
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /absolute/path/to/output/folder:/output \
         singularityware/docker2singularity \
-        micalab/micapipe:v0.2.0
+        micalab/micapipe:v0.2.3
 
 Beware of the back slashes, expected for Windows systems. The above command would translate to Windows systems as follows:
 
@@ -114,15 +114,15 @@ Beware of the back slashes, expected for Windows systems. The above command woul
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v D:\host\path\where\to\output\singularity\image:/output \
         singularityware/docker2singularity \
-        micalab/micapipe:v0.2.2
+        micalab/micapipe:v0.2.3
 
 You can then transfer the resulting ``Singularity image`` to the HPC, for example, using ``scp``:
 
 .. code-block:: bash
 
-    $ scp micalab_micapipe_v0.2.2.simg <user>@<hcpserver.edu>:/my_images
+    $ scp micalab_micapipe_v0.2.3.simg <user>@<hcpserver.edu>:/my_images
 
-Where ``<v0.2.2>`` should be replaced with the v0.2.2 of micapipe that you used to create the ``Singularity image``, ``<user>`` with your ``user name`` on the HPC and ``<hcpserver.edu>`` with the address of the HPC.
+Where ``<v0.2.3>`` should be replaced with the v0.2.3 of micapipe that you used to create the ``Singularity image``, ``<user>`` with your ``user name`` on the HPC and ``<hcpserver.edu>`` with the address of the HPC.
 
 Running a Singularity Image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

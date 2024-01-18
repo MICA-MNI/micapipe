@@ -141,6 +141,32 @@ Processing module for :ref:`functional MRI data<restingstateproc>`:
     - Resting-state functional processing and generate functional connectomes.
 
 
+Superficial White Matter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Processing module for :ref:`Superficial white matter<supwm>`.
+
+.. list-table::
+  :widths: 10 1000
+  :header-rows: 0
+
+  * - ``-SWM``
+    - Superficial White Matter generation and mapping.
+
+
+Microstructural Superficial White Matter Covariance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Processing module for :ref:`MPC SWM<mpcswm>`:
+
+.. list-table::
+  :widths: 10 1000
+  :header-rows: 0
+
+  * - ``-MPC_SWM``
+    - MPC Superficial White Matter analysis.
+
+
 Integrated Quality Control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

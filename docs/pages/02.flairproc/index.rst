@@ -5,9 +5,7 @@
 Fluid attenuated inversion recovery
 ============================================================
 
-This module performs bias field correction, rescaling, and normalizaiton of T2/FLAIR images. The image is then registered to nativepro, then mapped to fsnative, fs-LR, and fsaverage5 surfaces.
-
-Normalization of intensities by white and gray matter interface uses `5ttgen <https://github.com/MRtrix3/mrtrix3/blob/master/bin/5ttgen>`_, available via GitHub.
+This module performs normalization of the T2/FLAIR images based on the gray and white matter modes. The image is then registered to nativepro, then mapped to fsnative, fsLR-5k, fsLR-32k, and fsaverage5 surfaces.
 
 .. figure:: ./03_sankey_proc_flair.png
    :align: center
@@ -17,18 +15,19 @@ Normalization of intensities by white and gray matter interface uses `5ttgen <ht
 
 .. admonition:: Prerequisites 🖐🏼
 
-    You need to run ``-proc_structural``, ``-proc_freesurfer`` and ``-post_structural`` before this stage
+    You need to run ``-proc_structural``, ``-proc_surf`` and ``-post_structural`` before this stage
 
 .. tabs::
 
     .. tab:: Processing steps
 
-        - Apply N4 bias correction
-        - Intensities are truncated (clamped) to values between 1st and 99th percentiles
-        - Intensities are rescaled to values between 0 and 100
-        - Normalize image intensities by average intensity at WM/GM interface
-        - Affine registration of FLAIR image to T1w nativepro using each scan (default) or label-based affine registration (synthseg)
-        - Map FLAIR image to fsnative surface
+        - GM and WM segmentation of flair
+        - Bias field correction weighted by white matter
+        - Get the mode for each tissue: GM and WM
+        - Normalize intensities by peak of WM (mode). This normalization will center the peak of the WM mode intensity at ZERO.
+        - Brains mask of the normalized flair
+        - Registration of flair to `nativepro`
+        - Map flair midthickness to fsLR-32k, fsLR-5k and fsaverage5
 
     .. tab:: Usage
 
@@ -37,13 +36,8 @@ Normalization of intensities by white and gray matter interface uses `5ttgen <ht
         .. parsed-literal::
             $ micapipe **-bids** <BIDS-directory> **-sub** <subject_id> **-out** <outputDirectory> **-proc_flair** <options>
 
-        **Docker command:**
-
-        .. parsed-literal::
-            $ docker -proc_flair
-
         **Optional arguments:**
-        ``-proc_flair`` has two optional arguments;
+        ``-proc_flair`` has one optional argument;
 
         .. list-table::
             :widths: 75 750
@@ -52,12 +46,8 @@ Normalization of intensities by white and gray matter interface uses `5ttgen <ht
 
             * - **Optional argument**
               - **Description**
-            * - ``-flairScanStr`` ``<path>`` 
+            * - ``-flairScanStr`` ``<path>``
               - String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz]) Default='FLAIR'
-            * - ``-regSynth`` 
-              - Specify this option to perform the registration based on synthseg.
-        
-
 
     .. tab:: Outputs
 
@@ -88,5 +78,3 @@ Normalization of intensities by white and gray matter interface uses `5ttgen <ht
             - Output stored in *<outputDirectory>/micapipe/<sub>/xfm*
 
                 - <sub>_from-flair_to-nativepro_mode-image_desc-affine_0GenericAffine.mat
-
-

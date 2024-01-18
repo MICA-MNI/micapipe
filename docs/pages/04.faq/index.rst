@@ -109,7 +109,7 @@ Q: How do I register a volume from rsfMRI or DWI space to MNI152 and vice-versa?
           -t [xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_0GenericAffine.mat,1] \
           -t xfm/${subjectID}_rsfmri_from-nativepro_rsfmri_to-rsfmri_mode-image_desc-SyN_1InverseWarp.nii.gz \
           -o ${Output} -v -u int
-          
+
 Surface issues
 ================================================
 
@@ -123,7 +123,7 @@ Q: What if my database already has quality checked *Freesurfer* outputs?
 
         # Run micapipe
         mica-pipe -bids rawdata -out derivatives -sub 01 \
-              -proc_freesurfer -freesurfer_dir <path_to_my_subject_freesurfer_dir> \
+              -proc_surf -freesurfer_dir <path_to_my_subject_freesurfer_dir> \
 
 
 Q: How do I modify the smoothing on the surfaces?

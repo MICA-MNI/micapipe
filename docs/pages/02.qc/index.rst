@@ -43,53 +43,13 @@ There are two ways to run the *individual quality control* module, one is integr
             * - ``-tmpDir`` ``<path>``
               - Specify directory for temporary processing outputs.
 
-    .. tab:: micapipe_qc
-
-        .. code-block:: bash
-           :linenos:
-           :emphasize-lines: 2
-
-           micapipe_qc -sub <subject_id> -out <outputDirectory> -bids <BIDS-directory> \
-           -QC_subj
-
-        **Optional arguments:**
-
-        Additional flags can be specified when running the quality control using ``micapipe_qc``
-
-        .. list-table::
-            :widths: 75 750
-            :header-rows: 1
-            :class: tight-table
-
-            * - **Optional argument**
-              - **Description**
-            * - ``-tracts`` ``<num>``
-              - Number of streamlines used when computing the tractograms in ``-SC`` (default is *40M*, where 'M' stands for millions, same as *40,000,000*). If you used a different number of streamlines in your data processing, you should use this flag for the QC and input the same number of streamlines as you previously requested.
-            * - ``-ses`` ``<num>`` or ``<str>``
-              - Specify the session name with this flag (default: processing is performed as a single session).
-            * - ``-tmpDir`` ``<path>``
-              - Specify directory for temporary processing outputs.
-            * - ``-h`` or ``-help``
-              - Print help with list of options
-            * - ``-quiet``
-              - Specify this flag to not print comments while processing
-            * - ``-nocleanup``
-              - When including this flag, the temporary directory will not be deleted at script completion
-            * - ``-version``
-              - Print software version
-
     .. tab:: Output
 
-        Directories created or populated by **-QC_subj**:
+        Files created by **-QC_subj**:
 
-        .. parsed-literal::
+        **Main outputs:** ``<outputDirectory>/micapipe_v0.2.0/<sub>/QC/<sub>_module-<proc_module>_qc-report.pdf``
 
-            - <outputDirectory>/micapipe/<sub>/QC
-            - <outputDirectory>/micapipe/<sub>/QC/QC_png
-
-        **Main output:** ``<outputDirectory>/micapipe/<sub>/QC/<sub>_micapipe_qc.html``
-
-        The subject QC html report contains different tabs, specifically one per module. Under each tab you can find:
+        The subject QC pdf reports contains different tabs, specifically one per module. Under each tab you can find:
           - Main inputs and outputs of each module
           - Main parameters of the processing steps (obtained from the json files)
           - Volume visualization of the main outputs
@@ -102,7 +62,20 @@ There are two ways to run the *individual quality control* module, one is integr
           - Microstructural Intensity profiles and connectomes
           - Microstructural profiles (image intensities at each cortical depth) plotted on native surface
 
-        .. figure:: qc_subj.png
+
+        .. parsed-literal::
+
+            - <sub>_module-GD_qc-report.pdf
+            - <sub>_module-MPC-SWM-T1map_qc-report.pdf
+            - <sub>_module-MPC-T1map_qc-report.pdf
+            - <sub>_module-post_structural_qc-report.pdf
+            - <sub>_module-proc_dwi_qc-report.pdf
+            - <sub>_module-proc_flair_qc-report.pdf
+            - <sub>_module-proc_func-desc-se_task-rest_acq-AP_bold_qc-report.pdf
+            - <sub>_module-proc_structural_qc-report.pdf
+            - <sub>_module-proc_surf-fastsurfer_qc-report.pdf
+            - <sub>_module-SC-<tracts>_qc-report.pdf
+            - <sub>_module-SWM_qc-report.pdf
 
 Group level QC
 --------------------------------------------------------
@@ -133,4 +106,4 @@ The group level quality control generates a report with all completed and proces
 
         The QC table output by ``-QC`` can be found here:
 
-        **Main output:** ``<outputDirectory>/micapipe/micapipe_group-QC.pdf``
+        **Main output:** ``<outputDirectory>/micapipe_v0.2.0/micapipe_group-QC.pdf``

@@ -89,7 +89,7 @@ Once micapipe has been installed (see Installation), one can run the pipeline. F
 
            micapipe -bids HCP_bids -out derivatives -sub 250932 \
                   -proc_structural \
-                  -proc_freesurfer \
+                  -proc_surf \
                   -post_structural \
                   -proc_dwi -dwi_acq dir97 \
         	       -dwi_main sub-250932dwi/sub-250932_acq-dir97_dir-LR_dwi.nii.gz \
@@ -112,7 +112,7 @@ Once micapipe has been installed (see Installation), one can run the pipeline. F
 
            micapipe -bids rawdata -out derivatives -sub HC001 -ses 01 \
                   -proc_structural \
-                  -proc_freesurfer \
+                  -proc_surf \
                   -post_structural \
                   -proc_dwi \
                   -SC -tracts 20M \
@@ -125,14 +125,14 @@ Once micapipe has been installed (see Installation), one can run the pipeline. F
 5. Visualize the QC report
 --------------------------------------------------------
 
-The individual QC tool is a html report with detailed information of each processing step, which can be used for rapid visualization of processing status, core registrations, and data matrices by parcellation scheme and module. The files can be found under each subject’s directory QC and opened with any browser:
+The individual QC tool generate a pdf report with detailed information of each processing module, which can be used for rapid visualization of processing status, core registrations, and data matrices by parcellation scheme and module. The files can be found under each subject’s directory QC and opened with any browser:
 
 .. code-block:: bash
 
-   <outputDirectory>/micapipe/<sub>/QC/<sub>_micapipe_qc.html
+   <outputDirectory>/micapipe_v0.2.0/<sub>/QC/<sub>_module-<module_name>_qc-report.pdf
 
 The group level QC generates a report with all completed and processed modules by subject. The report consists of a color-coded table with rows as subjects and columns as the pipeline modules. The file is located under the micapipe directory as shown below:
 
 .. code-block:: bash
 
-   <outputDirectory>/micapipe/micapipe_progress.html
+   <outputDirectory>/micapipe_v0.2.0/micapipe_group-QC.pdf

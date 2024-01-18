@@ -18,12 +18,20 @@
   :target: https://micapipe.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-**Welcome to micapipe's documentation! v0.2.2**
+**Welcome to micapipe's documentation! v0.2.3**
 ========================================================
 
 .. image:: https://img.shields.io/github/v/tag/MICA-MNI/micapipe
   :target: https://github.com/MICA-MNI/micapipe
   :alt: version
+
+.. image:: https://img.shields.io/docker/v/micalab/micapipe?color=blue&label=docker%20version
+  :target: https://hub.docker.com/r/micalab/micapipe
+  :alt: Docker Image Version (latest by date)
+
+.. image:: https://img.shields.io/docker/pulls/micalab/micapipe
+  :target: https://hub.docker.com/r/micalab/micapipe
+  :alt: Docker Pulls
 
 .. image:: https://img.shields.io/github/license/MICA-MNI/micapipe?color=blue
   :target: https://www.gnu.org/licenses/gpl-3.0
@@ -41,21 +49,13 @@
   :target: https://app.codacy.com/gh/rcruces/micapipe?utm_source=github.com&utm_medium=referral&utm_content=rcruces/micapipe&utm_campaign=Badge_Grade
   :alt: Codacy Badge
 
-.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe?color=brightgreen
-  :target: https://github.com/MICA-MNI/micapipe/stargazers
-  :alt: GitHub stars
-
 .. image:: https://img.shields.io/github/issues/MICA-MNI/micapipe
   :target: https://github.com/MICA-MNI/micapipe/issues
   :alt: GitHub issues
 
-.. image:: https://img.shields.io/docker/pulls/micalab/micapipe
-  :target: https://hub.docker.com/r/micalab/micapipe
-  :alt: Docker Pulls
-
-.. image:: https://img.shields.io/docker/v/micalab/micapipe?color=blue&label=docker%20version
-  :target: https://hub.docker.com/r/micalab/micapipe
-  :alt: Docker Image Version (latest by date)
+.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe?color=brightgreen
+  :target: https://github.com/MICA-MNI/micapipe/stargazers
+  :alt: GitHub stars
 
 *Micapipe* is a processing pipeline providing a robust framework to analyze multimodal MRI data. This pipeline integrates processing streams for *T1-weighted*, *microstructure-sensitive*, *diffusion-weighted*, and *resting-state functional imaging* to facilitate the development of multiscale models of neural organization. For this purpose, we leverage several specialized software packages to bring BIDS-formatted raw MRI data to fully-processed surface-based feature matrices.
 
@@ -65,13 +65,13 @@
 
 Breaking news ️‍📰
 --------------------------------------------------------
-`micapipe version 0.2.2` Northern Flicker is finally here!
+`micapipe version 0.2.3` Northern Flicker is finally here!
 Optimized to process 3T and 7T datasets!
 
 
 About 👁️‍🗨️
 --------------------------------------------------------
-*Micapipe* generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. Most results are mapped to three different surfaces spaces: native, conte69 and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.
+*Micapipe* generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. All results are mapped to three different surfaces spaces: native, conte69 and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.
 
 .. figure:: ./figures/workflow.png
    :alt: alternate text
@@ -120,8 +120,9 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/02.restingstateproc/index
    pages/02.microstructproc/index
    pages/02.flairproc/index
+   pages/02.swm/index
+   pages/02.mpcswm/index
    pages/02.qc/index
-   pages/02.aslproc/index
 
 .. toctree::
    :maxdepth: 1
@@ -179,11 +180,9 @@ Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) an
 - **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
 - **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
 - **Jordan DeKraker**, *MICA Lab - Montreal Neurological Institute*
+- **Yougeun Hwang**, *MICA Lab - Montreal Neurological Institute*
 - **Donna Cabalo**, *MICA Lab - Montreal Neurological Institute*
-- **Judy Chen**, *MICA Lab - Montreal Neurological Institute*
-- **Valeria Kebets**, *MICA Lab - Montreal Neurological Institute*
 - **Nicole Eichert**, *Jesus College, Oxford*
-- **Hans Auer**, *MICA Lab - Montreal Neurological Institute*
 - **Oualid Benkarim**, *MICA Lab - Montreal Neurological Institute*
 - **Yezhou Wang**, *MICA Lab - Montreal Neurological Institute*
 - **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*

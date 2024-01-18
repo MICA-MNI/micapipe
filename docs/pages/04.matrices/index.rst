@@ -67,8 +67,12 @@ The structure of the subject ``HC001`` directories is shown below:
         │   ├── **connectomes          # DWI connectomes**
         │   └── eddy                 # fsl eddy outputs
         ├── **func**
-        │   ├── **surfaces             # rsfMRI surfaces and connectomes**
-        │   └── volumetric           # rsfMRI volumes
+        │   ├── desc-me_task-rest_bold
+        │   │   ├── surf
+        │   │   └── volumetric
+        │   └── desc-me_task-semantic_bold
+        │       ├── surf
+        │       └── volumetric
         ├── logs                     # log files
         ├── **maps**
         ├── **mpc**
