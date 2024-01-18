@@ -116,7 +116,7 @@ qMRI_warped="${proc_struct}/${idBIDS}_space-fsnative_${mpc_str}.nii.gz"
 qMRI_reference="${proc_struct}/${idBIDS}_space-fsnative_T1w.nii.gz"
 
 # Affine transformations
-str_qMRI2fs_xfm="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative"
+str_qMRI2fs_xfm="${dir_warp}/${idBIDS}_from-${mpc_str}_to-fsnative_"
 mat_qMRI2fs_xfm="${str_qMRI2fs_xfm}0GenericAffine.mat"
 
 # SyN_transformations

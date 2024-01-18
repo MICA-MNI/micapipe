@@ -44,6 +44,8 @@ echo -e "
 \t\t\t      ( Requires: -proc_surf and -post_structural )
 \t\033[38;5;197m-SWM\033[0m              : Superficial White Matter generation and mapping
 \t\t\t      ( Requires: -post_structural )
+\t\033[38;5;197m-MPC_SWM\033[0m          : MPC Superficial White Matter analysis
+\t\t\t      ( Requires: -post_structural )
 
    Other functions:
 \t\033[38;5;197m-cleanup\033[0m          : Use this flag with a module flag to erase its outputs
@@ -137,7 +139,7 @@ echo -e "
 \t   \033[38;5;120m-tck\033[0m                 : Provide a pre-calculated whole brain tractography (tck) in DWI space to generate the connectomes.
 
 
-\t\033[38;5;197m-MPC\033[0m
+\t\033[38;5;197m-MPC\033[0m  and \033[38;5;197m-MPC_SWM\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
 \t   \033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
@@ -158,7 +160,6 @@ echo -e "
 \t\033[38;5;197m-proc_flair\033[0m
 \t   \033[38;5;120m-flairScanStr\033[0m        : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
 \t\t\t            Default='FLAIR'
-\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
 
 \t\033[38;5;197m-cleanup\033[0m
 \t   \033[38;5;120m-acqStr\033[0m              : String to manually identify the acquisition to be erase
@@ -887,7 +888,7 @@ fi
 #  T2/FLAIR processing
 if [ "$procFLAIR" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_flair_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr $synth_reg"
+    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr"
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - T2/FLAIR processing"
         Warning "This option only works on the MICA workstations"
