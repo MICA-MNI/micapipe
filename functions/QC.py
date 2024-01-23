@@ -793,7 +793,7 @@ def qc_proc_flair(proc_flair_json=''):
             surf_lh = c69_32k_I_lh
             surf_rh = c69_32k_I_rh
 
-        crange=(np.quantile(flair, 0.05), np.quantile(flair, 0.95))
+        crange=(np.quantile(flair, 0.15), np.quantile(flair, 0.99))
         display = Display(visible=0, size=(900, 250))
         display.start()
         plot_hemispheres(surf_lh, surf_rh, array_name=flair, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',

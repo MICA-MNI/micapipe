@@ -8,14 +8,15 @@
 
 # python notebook
 #
-# Tutorial 1 - Main output matrices 
-# micapipe v0.1.1
+# Tutorial 1 - Main output matrices
+# micapipe v0.2.3
 #
 # Created by RRC on September 2021 (the second year of the pademic)
 
 # Load required packages
 import os
 import numpy as np
+import nibabel as nib
 from nilearn import plotting
 import matplotlib as plt
 
@@ -24,24 +25,22 @@ os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
 
 # This variable will be different for each subject
 subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+subjectDir='micapipe_v0.2.0/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
-# Here we define the atlas 
+# Here we define the atlas
 atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
 
 # ## Structural connectomes
-# 
+#
 # ### Full structural connectome
-
-# In[4]:
 
 
 # Set the path to the the structural cortical connectome
-cnt_sc_cor = subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-connectome.txt'
+cnt_sc_cor = subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
 
 # Load the cortical connectome
-mtx_sc = np.loadtxt(cnt_sc_cor, dtype=np.float, delimiter=' ')
+mtx_sc = nib.load(cnt_sc_cor).darrays[0].data
 
 # Fill the lower triangle of the matrix
 mtx_scSym = np.triu(mtx_sc,1)+mtx_sc.T
@@ -52,14 +51,11 @@ corr_plot = plotting.plot_matrix(np.log(mtx_scSym), figure=(10, 10), labels=None
 
 # ### Full structural connectome edge lengths
 
-# In[5]:
-
-
 # Set the path to the the structural cortical connectome
-cnt_sc_EL = cnt_sc_cor= subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-edgeLengths.txt'
+cnt_sc_EL = cnt_sc_cor= subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-edgeLengths.shape.gii'
 
 # Load the cortical connectome
-mtx_scEL = np.loadtxt(cnt_sc_EL, dtype=np.float, delimiter=' ')
+mtx_scEL = nib.load(cnt_sc_EL).darrays[0].data
 
 # Fill the lower triangle of the matrix
 mtx_scELSym = np.triu(mtx_scEL,1)+mtx_scEL.T
@@ -74,10 +70,12 @@ corr_plot = plotting.plot_matrix(mtx_scELSym, figure=(10, 10), labels=None, cmap
 
 
 # Set the path to the the functional cortical connectome
-cnt_fs = subjectDir + '/func/surfaces/' + subjectID + '_rsfmri_space-fsnative_atlas-' + atlas + '_desc-FC.txt'
+# acquisitions
+func_acq='desc-se_task-rest_acq-AP_bold'
+cnt_fs = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_atlas-' + atlas + '_desc-FC.shape.gii'
 
 # Load the cortical connectome
-mtx_fs = np.loadtxt(cnt_fs, dtype=np.float, delimiter=' ')
+mtx_fs = nib.load(cnt_fs).darrays[0].data
 
 # Fill the lower triangle of the matrix
 mtx_fcSym = np.triu(mtx_fs,1)+mtx_fs.T
@@ -92,13 +90,13 @@ corr_plot = plotting.plot_matrix(mtx_fcSym, figure=(10, 10), labels=None, cmap='
 
 
 # Set the path to the the time series file
-cnt_time = subjectDir + '/func/surfaces/' + subjectID + '_rsfmri_space-fsnative_atlas-' + atlas + '_desc-timeseries.txt'
+cnt_time = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_desc-timeseries_clean.shape.gii'
 
 # Load the time series
-mtx_time = np.loadtxt(cnt_time, dtype=np.float, delimiter=' ')
+mtx_time = nib.load(cnt_time).darrays[0].data
 
 # Plot as a matrix
-corr_plot = plotting.plot_matrix(mtx_time.T, figure=(12, 5), labels=None, cmap='plasma', vmin=-100, vmax=100)
+corr_plot = plotting.plot_matrix(mtx_time, figure=(300, 10), labels=None, cmap='plasma', vmin=-100, vmax=100)
 
 
 # ## MPC connectomes
@@ -107,10 +105,11 @@ corr_plot = plotting.plot_matrix(mtx_time.T, figure=(12, 5), labels=None, cmap='
 
 
 # Set the path to the the MPC cortical connectome
-cnt_mpc = subjectDir + '/anat/surfaces/micro_profiles/' + subjectID + '_space-fsnative_atlas-' + atlas + '_desc-MPC.txt'
+mpc_acq='acq-T1map'
+cnt_mpc = subjectDir + f'/mpc/{mpc_acq}/' + subjectID + '_atlas-' + atlas + '_desc-MPC.shape.gii'
 
 # Load the cortical connectome
-mtx_mpc = np.loadtxt(cnt_mpc, dtype=np.float, delimiter=' ')
+mtx_mpc = nib.load(cnt_mpc).darrays[0].data
 
 # Fill the lower triangle of the matrix
 mtx_mpcSym = np.triu(mtx_mpc,1)+mtx_mpc.T
@@ -124,11 +123,11 @@ corr_plot = plotting.plot_matrix(mtx_mpcSym, figure=(10, 10), labels=None, cmap=
 # In[9]:
 
 
-# Set the path to the the time series file
-cnt_int = subjectDir + '/anat/surfaces/micro_profiles/' + subjectID + '_space-fsnative_atlas-' + atlas + '_desc-intensity_profiles.txt'
+# Set the path to the the Intensity profiles file
+cnt_int = subjectDir + f'/mpc/{mpc_acq}/' + subjectID + '_atlas-' + atlas + '_desc-intensity_profiles.shape.gii'
 
-# Load the time series
-mtx_int = np.loadtxt(cnt_int, dtype=np.float, delimiter=' ')
+# Load the Intensity profiles
+mtx_int = nib.load(cnt_int).darrays[0].data
 
 # Plot as a matrix
 corr_plot = plotting.plot_matrix(mtx_int, figure=(20,10), labels=None, cmap='Greens', colorbar=False)
@@ -140,17 +139,13 @@ corr_plot = plotting.plot_matrix(mtx_int, figure=(20,10), labels=None, cmap='Gre
 
 
 # Set the path to the the geodesic distance connectome
-cnt_gd = subjectDir + '/anat/surfaces/geo_dist/' + subjectID + '_space-fsnative_atlas-' + atlas + '_GD.txt'
+cnt_gd = subjectDir + '/dist/' + subjectID + '_atlas-' + atlas + '_GD.shape.gii'
 
 # Load the cortical connectome
-mtx_gd = np.loadtxt(cnt_gd, dtype=np.float, delimiter=' ')
+mtx_gd = nib.load(cnt_gd).darrays[0].data
 
 # Plot the matrix
 corr_plot = plotting.plot_matrix(mtx_gd, figure=(10, 10), labels=None, cmap='Blues')
 
 
 # In[ ]:
-
-
-
-

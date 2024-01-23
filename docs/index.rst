@@ -53,7 +53,7 @@
   :target: https://github.com/MICA-MNI/micapipe/issues
   :alt: GitHub issues
 
-.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe?color=brightgreen
+.. image:: https://img.shields.io/github/stars/MICA-MNI/micapipe.svg?style=flat&label=⭐%EF%B8%8F%20stars&color=brightgreen
   :target: https://github.com/MICA-MNI/micapipe/stargazers
   :alt: GitHub stars
 

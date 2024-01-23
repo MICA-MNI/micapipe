@@ -5,7 +5,7 @@
 Processing step by step: start to finish with ``micapipe``
 ============================================================
 
-In this section, you will find two examples with the necessary steps of processing a dataset with micapipe.
+In this section, you will find two examples with the necessary steps of processing a dataset with *micapipe*.
 
 1. Download an open access dataset
 --------------------------------------------------------
@@ -89,18 +89,18 @@ Once micapipe has been installed (see Installation), one can run the pipeline. F
 
            micapipe -bids HCP_bids -out derivatives -sub 250932 \
                   -proc_structural \
-                  -proc_surf \
+                  -proc_surf -freesurfer \
                   -post_structural \
                   -proc_dwi -dwi_acq dir97 \
-        	       -dwi_main sub-250932dwi/sub-250932_acq-dir97_dir-LR_dwi.nii.gz \
-                  -dwi_rpe sub-250932/dwi/sub-250932_acq-dir97_dir-RL_sbref.nii.gz  \
+        	       -dwi_main sub-250932/dwi/sub-250932_acq-dir97_dir-LR_dwi.nii.gz \
+                  -dwi_rpe sub-250932/dwi/sub-250932_acq-dir97_dir-RL_sbref.nii.gz \
                   -SC -tracts 20M \
-                  -proc_rsfmri \
+                  -proc_func \
+                  -MPC -regSynth \
                   -mainScanStr task-rest_dir-LR_run-2_bold \
-                  -fmri_rpe sub-250932/func/sub-250932_task-rest_dir-RL_run-1_bold.nii.gz\
-                  -regress_WM_CSF -noFIX -regAffine \
+                  -func_rpe sub-250932/func/sub-250932_task-rest_dir-RL_run-1_bold.nii.gz \
+                  -NSR -noFIX \
                   -GD \
-                  -Morphology \
                   -QC_subj
 
     .. tab:: MICs
@@ -112,20 +112,19 @@ Once micapipe has been installed (see Installation), one can run the pipeline. F
 
            micapipe -bids rawdata -out derivatives -sub HC001 -ses 01 \
                   -proc_structural \
-                  -proc_surf \
+                  -proc_surf -freesurfer \
                   -post_structural \
                   -proc_dwi \
                   -SC -tracts 20M \
-                  -proc_rsfmri \
+                  -proc_func \
                   -GD \
-                  -Morphology \
-                  -MPC \
+                  -MPC -regSynth \
                   -QC_subj
 
 5. Visualize the QC report
 --------------------------------------------------------
 
-The individual QC tool generate a pdf report with detailed information of each processing module, which can be used for rapid visualization of processing status, core registrations, and data matrices by parcellation scheme and module. The files can be found under each subject’s directory QC and opened with any browser:
+The individual QC tool generates a pdf report with detailed information of each processing module, which can be used for rapid visualization of processing status, core registrations, and data matrices by parcellation scheme and module. The files can be found under each subject’s directory QC and opened with any browser:
 
 .. code-block:: bash
 
