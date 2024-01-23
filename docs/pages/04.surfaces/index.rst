@@ -684,19 +684,19 @@ SWM Surfaces
 
     # Under construction
 
-.. figure:: TqMRI_fsnat.png
+.. figure:: qMRI_fsnat.png
     :alt: alternate text
     :align: center
 
-.. figure:: TqMRI_fs5.png
+.. figure:: qMRI_fs5.png
     :alt: alternate text
     :align: center
 
-.. figure:: TqMRI_32k.png
+.. figure:: qMRI_32k.png
     :alt: alternate text
     :align: center
 
-.. figure:: TqMRI_5k.png
+.. figure:: qMRI_5k.png
     :alt: alternate text
     :align: center
 
