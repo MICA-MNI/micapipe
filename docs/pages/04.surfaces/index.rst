@@ -17,20 +17,15 @@ In the following examples, we'll load and visualize single subject surfaces. Sur
 
     sub-HC001/
     └── ses-01
-        ├── anat
-        │   └── surfaces
-        │       ├── **conte69          # conte69 surfaces**
-        │       ├── **micro_profiles   # MPC connectomes and surfaces**
-        │       └── **morphology       # Thickness and curvature surfaces**
-        └── func
-            └── **surfaces             # rsfMRI surfaces and connectomes**
+        ├── **surf                     # fsnative, fsaverage5, fsLR-32k, fsLR-5k surfaces**
+        └── **maps**                   # Thickness, curvature and quantitative maps**
 
 Each native surface parcellation is found inside the subject's freesurfer directory and contains the string ``mics.annot``:
 
 .. parsed-literal::
 
     freesurfer/
-    └── sub-S03_ses-SES01
+    └── sub-HC001_ses-01
         └── label
             ├── lh.schaefer-400_**mics.annot**
             └── rh.schaefer-400_**mics.annot**
@@ -53,26 +48,31 @@ The first step in both languages is to set the environment.
 
     # Set the environment
     import os
+    import glob
     import numpy as np
-    import matplotlib as plt
-    import nibabel as nb
-    from nibabel.freesurfer.mghformat import load
+    import nibabel as nib
+    import seaborn as sns
     from brainspace.plotting import plot_hemispheres
     from brainspace.mesh.mesh_io import read_surface
-    from brainspace.datasets import load_conte69
+    from brainspace.datasets import load_fsLR-32k
 
     # Set the working directory to the 'out' directory
-    os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+    out='/data_/mica3/BIDS_MICs/derivatives' # <<<<<<<<<<<< CHANGE THIS PATH
+    os.chdir(out)
 
     # This variable will be different for each subject
-    subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-    subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+    sub='sub-HC001'
+    ses='ses-01'
+    subjectID=f'{sub}_{ses}'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+    subjectDir=f'micapipe_v0.2.0/{sub}/{ses}' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
     # Set paths and variables
     dir_FS = 'freesurfer/' + subjectID
-    dir_conte = subjectDir + '/anat/surfaces/conte69/'
-    dir_morph = subjectDir + '/anat/surfaces/morphology/'
-    dir_mpc = subjectDir + '/anat/surfaces/micro_profiles/'
+    dir_surf = subjectDir + '/surf/'
+    dir_maps = subjectDir + '/maps/'
+
+    # Path to MICAPIPE
+    micapipe=os.popen("echo $MICAPIPE").read()[:-1]
 
    .. code-tab:: r R
 
@@ -94,9 +94,9 @@ The first step in both languages is to set the environment.
     atlas <- 'schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
     # Set paths and variables
-    dir_conte <- paste0(subjectDir, '/anat/surfaces/conte69/')
-    dir_morph <- paste0(subjectDir, '/anat/surfaces/morphology/')
-    dir_mpc <- paste0(subjectDir, '/anat/surfaces/micro_profiles/')
+    dir_surf <- paste0(subjectDir, '/surf/')
+    dir_maps <- paste0(subjectDir, '/maps/')
+
 
 Load the surfaces
 --------------------------------------------------------
@@ -123,14 +123,26 @@ Load the surfaces
 
     # Load fsaverage5
     fs5_lh = read_surface('freesurfer/fsaverage5/surf/lh.pial', itype='fs')
-    fs5_rh = read_surface('freesurfer//fsaverage5/surf/rh.pial', itype='fs')
+    fs5_rh = read_surface('freesurfer/fsaverage5/surf/rh.pial', itype='fs')
 
     # Load fsaverage5 inflated
     fs5_inf_lh = read_surface('freesurfer/fsaverage5/surf/lh.inflated', itype='fs')
-    fs5_inf_rh = read_surface('freesurfer//fsaverage5/surf/rh.inflated', itype='fs')
+    fs5_inf_rh = read_surface('freesurfer/fsaverage5/surf/rh.inflated', itype='fs')
 
-    # Load conte69
-    c69_lh, c69_rh = load_conte69()
+    # Load fsLR 32k
+    f32k_lh, f32k_rh = load_fsLR-32k()
+
+    # Load fsLR 32k inflated
+    f32k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
+    f32k_inf_rh = read_surface(micapipe + '/surfaces/fsLR-32k.R.inflated.surf.gii', itype='gii')
+
+    # Load Load fsLR 5k
+    f5k_lh = read_surface(micapipe + '/surfaces/fsLR-5k.L.surf.gii', itype='gii')
+    f5k_rh = read_surface(micapipe + '/surfaces/fsLR-5k.R.surf.gii', itype='gii')
+
+    # Load fsLR 5k inflated
+    f5k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
+    f5k_inf_rh = read_surface(micapipe + '/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
 
    .. code-tab:: r R
 
@@ -144,8 +156,7 @@ Load the surfaces
 Morphology
 --------------------------------------------------------
 
-Two surface based morphological features are plotted here: cortical thickness and curvature. Both measurements are generates in three main surfaces, native, fsaverage5 and conte69.
-The curvature and thickness in fsaverage5 and conte69 are smoothed with a 10mm gaussian kernel.
+Two surface based morphological features are plotted here: cortical thickness and curvature. Both measurements are generates in three main surfaces, native, fsaverage5, fsLR-32k and fsLR-5k.
 
 Thickness: Inflated native surface
 ========================================================
@@ -155,10 +166,10 @@ Thickness: Inflated native surface
    .. code-tab:: py
 
     # Load data
-    th_lh = dir_morph + subjectID + '_space-fsnative_desc-lh_thickness.mgh'
-    th_rh = dir_morph + subjectID + '_space-fsnative_desc-rh_thickness.mgh'
-    th_nat = np.hstack(np.concatenate((np.array(load(th_lh).get_fdata()),
-                                       np.array(load(th_rh).get_fdata())), axis=0))
+    th_lh = dir_maps + subjectID + '_hemi-L_surf-fsnative_label-thickness.func.gii'
+    th_rh = dir_maps + subjectID + '_hemi-R_surf-fsnative_label-thickness.func.gii'
+    th_nat = np.hstack(np.concatenate((nib.load(th_lh).darrays[0].data,
+                                       nib.load(th_rh).darrays[0].data), axis=0))
 
     # Plot the surface
     plot_hemispheres(inf_lh, inf_rh, array_name=th_nat, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -167,8 +178,8 @@ Thickness: Inflated native surface
    .. code-tab:: r R
 
     # Set the path to the surface
-    th.lh <- paste0(dir_morph, subjectID, "_space-fsnative_desc-lh_thickness.mgh")
-    th.rh <- paste0(dir_morph, subjectID, "_space-fsnative_desc-rh_thickness.mgh")
+    th.lh <- paste0(dir_maps, subjectID, "_hemi-L_surf-fsnative_label-thickness.func.gii")
+    th.rh <- paste0(dir_maps, subjectID, "_hemi-R_surf-fsnative_label-thickness.func.gii")
 
     # Plot the surface
     th_nat <- vis.data.on.subject('freesurfer/', subjectID, morph_data_lh=th.lh, morph_data_rh=th.rh, surface="inflated", draw_colorbar = TRUE,
@@ -188,10 +199,10 @@ Thickness: Inflated fsaverage5
    .. code-tab:: py
 
     # Load data
-    th_lh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-lh_thickness.mgh'
-    th_rh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-rh_thickness.mgh'
-    th_fs5 = np.hstack(np.concatenate((np.array(load(th_lh_fs5).get_fdata()),
-                                       np.array(load(th_rh_fs5).get_fdata())), axis=0))
+    th_lh_fs5 = dir_maps + subjectID + '_hemi-L_surf-fsaverage5_label-thickness.func.gii'
+    th_rh_fs5 = dir_maps + subjectID + '_hemi-R_surf-fsaverage5_label-thickness.func.gii'
+    th_fs5 = np.hstack(np.concatenate((nib.load(th_lh_fs5).darrays[0].data,
+                                       nib.load(th_rh_fs5).darrays[0].data), axis=0))
 
     # Plot the surface
     plot_hemispheres(fs5_inf_lh, fs5_inf_rh, array_name=th_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -200,8 +211,8 @@ Thickness: Inflated fsaverage5
    .. code-tab:: r R
 
     # Set the path to the surface
-    th.lh.fs5 <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-lh_thickness.mgh")
-    th.rh.fs5 <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-rh_thickness.mgh")
+    th.lh.fs5 <- paste0(dir_maps, subjectID, "_hemi-L_surf-fsaverage5_label-thickness.func.gii")
+    th.rh.fs5 <- paste0(dir_maps, subjectID, "_hemi-R_surf-fsaverage5_label-thickness.func.gii")
 
     # Plot the surface
     th_fs5 <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=th.lh.fs5, morph_data_rh=th.rh.fs5, surface="inflated", draw_colorbar = TRUE,
@@ -213,7 +224,7 @@ Thickness: Inflated fsaverage5
     :align: center
 
 
-Thickness: conte69
+Thickness: fsLR-32k
 ========================================================
 
 .. tabs::
@@ -221,27 +232,59 @@ Thickness: conte69
    .. code-tab:: py
 
     # Load the data
-    th_lh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-lh_thickness.mgh'
-    th_rh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-rh_thickness.mgh'
-    th_c69 = np.hstack(np.concatenate((np.array(load(th_lh_c69).get_fdata()),
-                                       np.array(load(th_rh_c69).get_fdata())), axis=0))
+    th_lh_fsLR32k = dir_maps + subjectID + '_hemi-L_surf-fsLR-32k_label-thickness.func.gii'
+    th_rh_fsLR32k = dir_maps + subjectID + '_hemi-R_surf-fsLR-32k_label-thickness.func.gii'
+    th_fsLR32k = np.hstack(np.concatenate((nib.load(th_lh_fsLR32k).darrays[0].data,
+                                           nib.load(th_rh_fsLR32k).darrays[0].data), axis=0))
 
     # Plot the surface
-    plot_hemispheres(c69_lh, c69_rh, array_name=th_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(f32k_inf_lh, f32k_inf_rh, array_name=th_fsLR32k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
 
    .. code-tab:: r R
 
     # Set the path to the surface
-    th.lh.c69 <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-lh_thickness.mgh')
-    th.rh.c69 <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_thickness.mgh')
+    th.lh.f32k <- paste0(dir_maps, subjectID, '_hemi-L_surf-fsLR-32k_label-thickness.func.gii')
+    th.rh.f32k <- paste0(dir_maps, subjectID, '_hemi-R_surf-fsLR-32k_label-thickness.func.gii')
 
     # Plot the surface
-    th_c69 <- vis.data.on.subject('freesurfer/', 'conte69', morph_data_lh=th.lh.c69, morph_data_rh=th.rh.c69, surface='conte69.gii', draw_colorbar = TRUE,
+    th_f32k <- vis.data.on.subject('freesurfer/', 'fsLR-32k', morph_data_lh=th.lh.f32k, morph_data_rh=th.rh.f32k, surface='fsLR-32k.gii', draw_colorbar = TRUE,
                                   views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
-    plot_surface(th_c69, 'Thickness [mm]')
+    plot_surface(th_f32k, 'Thickness [mm]')
 
-.. figure:: th_c69.png
+.. figure:: th_f32k.png
+    :alt: alternate text
+    :align: center
+
+Thickness: fsLR-5k
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # Load the data
+    th_lh_fsLR5k = dir_maps + subjectID + '_hemi-L_surf-fsLR-5k_label-thickness.func.gii'
+    th_rh_fsLR5k = dir_maps + subjectID + '_hemi-R_surf-fsLR-5k_label-thickness.func.gii'
+    th_fsLR5k = np.hstack(np.concatenate((nib.load(th_lh_fsLR5k).darrays[0].data,
+                                           nib.load(th_rh_fsLR5k).darrays[0].data), axis=0))
+
+    # Plot the surface
+    plot_hemispheres(f5k_inf_lh, f5k_inf_rh, array_name=th_fsLR5k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
+
+   .. code-tab:: r R
+
+    # Set the path to the surface
+    th.lh.f5k <- paste0(dir_maps, subjectID, '_hemi-L_surf-fsLR-5k_label-thickness.func.gii')
+    th.rh.f5k <- paste0(dir_maps, subjectID, '_hemi-R_surf-fsLR-5k_label-thickness.func.gii')
+
+    # Plot the surface
+    th_f5k <- vis.data.on.subject('freesurfer/', 'fsLR-5k', morph_data_lh=th.lh.f5k, morph_data_rh=th.rh.f5k, surface='fsLR-5k.gii', draw_colorbar = TRUE,
+                                  views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
+    plot_surface(th_f5k, 'Thickness [mm]')
+
+.. figure:: th_f5k.png
     :alt: alternate text
     :align: center
 
@@ -254,10 +297,10 @@ Curvature: Native inflated surface
    .. code-tab:: py
 
     # Load the data
-    cv_lh = dir_morph + subjectID + '_space-fsnative_desc-lh_curvature.mgh'
-    cv_rh = dir_morph + subjectID + '_space-fsnative_desc-rh_curvature.mgh'
-    cv = np.hstack(np.concatenate((np.array(load(cv_lh).get_fdata()),
-                                   np.array(load(cv_rh).get_fdata())), axis=0))
+    cv_lh = dir_maps + subjectID + '_hemi-L_surf-fsnative_label-curv.func.gii'
+    cv_rh = dir_maps + subjectID + '_hemi-R_surf-fsnative_label-curv.func.gii'
+    cv = np.hstack(np.concatenate((nib.load(cv_lh).darrays[0].data,
+                                   nib.load(cv_rh).darrays[0].data), axis=0))
 
     # Plot the surface
     plot_hemispheres(inf_lh, inf_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -270,8 +313,8 @@ Curvature: Native inflated surface
 
     ####  Curvature: Native surface
     # Set the path to the surface
-    cv.lh <- paste0(dir_morph, subjectID, "_space-fsnative_desc-lh_curvature.mgh")
-    cv.rh <- paste0(dir_morph, subjectID, "_space-fsnative_desc-rh_curvature.mgh")
+    cv.lh <- paste0(dir_maps, subjectID, "_space-fsnative_desc-lh_curvature.mgh")
+    cv.rh <- paste0(dir_maps, subjectID, "_space-fsnative_desc-rh_curvature.mgh")
 
     # Plot the surface
     cv_nat <- vis.data.on.subject('freesurfer/', subjectID, morph_data_lh=cv.lh, morph_data_rh=cv.rh, surface="inflated", draw_colorbar = TRUE,
@@ -291,10 +334,10 @@ Curvature: fsaverage5
    .. code-tab:: py
 
     # Load the data
-    cv_lh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-lh_curvature.mgh'
-    cv_rh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-rh_curvature.mgh'
-    cv_fs5 = np.hstack(np.concatenate((np.array(load(cv_lh_fs5).get_fdata()),
-                                       np.array(load(cv_rh_fs5).get_fdata())), axis=0))
+    cv_lh_fs5 = dir_maps + subjectID + '_hemi-L_surf-fsaverage5_label-curv.func.gii'
+    cv_rh_fs5 = dir_maps + subjectID + '_hemi-R_surf-fsaverage5_label-curv.func.gii'
+    cv_fs5 = np.hstack(np.concatenate((nib.load(cv_lh_fs5).darrays[0].data,
+                                       nib.load(cv_rh_fs5).darrays[0].data), axis=0))
 
     # Plot the surface
     plot_hemispheres(fs5_inf_lh, fs5_inf_rh, array_name=cv_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -303,8 +346,8 @@ Curvature: fsaverage5
    .. code-tab:: r R
 
     # Set the path to the surface
-    cv.lh.fs5 <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-lh_curvature.mgh")
-    cv.rh.fs5 <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-rh_curvature.mgh")
+    cv.lh.fs5 <- paste0(dir_maps, subjectID, "_space-fsaverage5_desc-lh_curvature.mgh")
+    cv.rh.fs5 <- paste0(dir_maps, subjectID, "_space-fsaverage5_desc-rh_curvature.mgh")
 
     # Plot the surface
     cv_fs5 <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=cv.lh.fs5, morph_data_rh=cv.rh.fs5, surface="inflated", draw_colorbar = TRUE,
@@ -316,7 +359,7 @@ Curvature: fsaverage5
     :align: center
 
 
-Curvature: conte69
+Curvature: fsLR-32k
 ========================================================
 
 .. tabs::
@@ -324,35 +367,30 @@ Curvature: conte69
    .. code-tab:: py
 
     # Load the data
-    cv_lh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-lh_curvature.mgh'
-    cv_rh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-rh_curvature.mgh'
-    cv_c69 = np.hstack(np.concatenate((np.array(load(cv_lh_c69).get_fdata()),
-                                       np.array(load(cv_rh_c69).get_fdata())), axis=0))
-
+    cv_lh_fsLR32k = dir_maps + subjectID + '_hemi-L_surf-fsLR-32k_label-curv.func.gii'
+    cv_rh_fsLR32k = dir_maps + subjectID + '_hemi-R_surf-fsLR-32k_label-curv.func.gii'
+    cv_fsLR32k = np.hstack(np.concatenate((nib.load(cv_lh_fsLR32k).darrays[0].data,
+                                           nib.load(cv_rh_fsLR32k).darrays[0].data), axis=0))
     # Plot the surface
-    plot_hemispheres(c69_lh, c69_rh, array_name=cv_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(f32k_inf_lh, f32k_inf_rh, array_name=cv_fsLR32k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='RdYlGn', transparent_bg=False)
 
    .. code-tab:: r R
 
     # Set the path to the surface
-    cv.lh.c69 <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-lh_curvature.mgh')
-    cv.rh.c69 <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_curvature.mgh')
+    cv.lh.f32k <- paste0(dir_maps, subjectID, '_space-fsLR-32k-32k_desc-lh_curvature.mgh')
+    cv.rh.f32k <- paste0(dir_maps, subjectID, '_space-fsLR-32k-32k_desc-rh_curvature.mgh')
 
     # Plot the surface
-    cv_c69 <- vis.data.on.subject('freesurfer', 'conte69', morph_data_lh=cv.lh.c69, morph_data_rh=cv.rh.c69, surface='conte69.gii', draw_colorbar = TRUE,
+    cv_f32k <- vis.data.on.subject('freesurfer', 'fsLR-32k', morph_data_lh=cv.lh.f32k, morph_data_rh=cv.rh.f32k, surface='fsLR-32k.gii', draw_colorbar = TRUE,
                                   views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-    plot_surface(cv_c69, 'Curvature [1/mm]')
+    plot_surface(cv_f32k, 'Curvature [1/mm]')
 
-.. figure:: cv_c69.png
+.. figure:: cv_f32k.png
     :alt: alternate text
     :align: center
 
-
-Morphology Smoothed
---------------------------------------------------------
-
-Thickness fsaverage5 fwhm=10mm
+Curvature: fsLR-5k
 ========================================================
 
 .. tabs::
@@ -360,153 +398,48 @@ Thickness fsaverage5 fwhm=10mm
    .. code-tab:: py
 
     # Load the data
-    th_lh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-lh_thickness_10mm.mgh'
-    th_rh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-rh_thickness_10mm.mgh'
-    th_fs5_10mm = np.hstack(np.concatenate((np.array(load(th_lh_fs5_10mm).get_fdata()),
-                                        np.array(load(th_rh_fs5_10mm).get_fdata())), axis=0))
-
+    cv_lh_fsLR5k = dir_maps + subjectID + '_hemi-L_surf-fsLR-5k_label-curv.func.gii'
+    cv_rh_fsLR5k = dir_maps + subjectID + '_hemi-R_surf-fsLR-5k_label-curv.func.gii'
+    cv_fsLR5k = np.hstack(np.concatenate((nib.load(cv_lh_fsLR5k).darrays[0].data,
+                                           nib.load(cv_rh_fsLR5k).darrays[0].data), axis=0))
     # Plot the surface
-    plot_hemispheres(fs5_lh, fs5_rh, array_name=th_fs5_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
-
-   .. code-tab:: r R
-
-    # Set the path to the surface
-    th.lh.fs5.10mm <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-lh_thickness_10mm.mgh")
-    th.rh.fs5.10mm <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-rh_thickness_10mm.mgh")
-
-    # Plot the surface
-    th_fs5.10mm <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=th.lh.fs5.10mm, morph_data_rh=th.rh.fs5.10mm, surface="pial", draw_colorbar = TRUE,
-                                  views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
-    plot_surface(th_fs5.10mm, 'Thickness [mm]')
-
-.. figure:: thS10_fs5.png
-    :alt: alternate text
-    :align: center
-
-
-Thickness conte69 fwhm=10mm
-========================================================
-
-.. tabs::
-
-   .. code-tab:: py
-
-    # Load the data
-    th_lh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-lh_thickness_10mm.mgh'
-    th_rh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-rh_thickness_10mm.mgh'
-    th_c69_10mm = np.hstack(np.concatenate((np.array(load(th_lh_c69_10mm).get_fdata()),
-                                        np.array(load(th_rh_c69_10mm).get_fdata())), axis=0))
-
-    # Plot the surface
-    plot_hemispheres(c69_lh, c69_rh, array_name=th_c69_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
-
-   .. code-tab:: r R
-
-    # Set the path to the surface
-    th.lh.c69.10mm <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-lh_thickness_10mm.mgh')
-    th.rh.c69.10mm <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_thickness_10mm.mgh')
-
-    # Plot the surface
-    th_c69.10mm <- vis.data.on.subject('freesurfer/', 'conte69', morph_data_lh=th.lh.c69.10mm, morph_data_rh=th.rh.c69.10mm, surface='conte69.gii', draw_colorbar = TRUE,
-                                       views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
-    plot_surface(th_c69.10mm, 'Thickness [mm]')
-
-.. figure:: thS10_c69.png
-    :alt: alternate text
-    :align: center
-
-
-Curvature fsaverage5 fwhm=10mm
-========================================================
-
-.. tabs::
-
-   .. code-tab:: py
-
-    # Load the data
-    cv_lh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-lh_curvature_10mm.mgh'
-    cv_rh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-rh_curvature_10mm.mgh'
-    cv_fs5_10mm = np.hstack(np.concatenate((np.array(load(cv_lh_fs5_10mm).get_fdata()),
-                                       np.array(load(cv_rh_fs5_10mm).get_fdata())), axis=0))
-
-    # Plot the surface
-    plot_hemispheres(fs5_lh, fs5_rh, array_name=cv_fs5_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(f5k_inf_lh, f5k_inf_rh, array_name=cv_fsLR5k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                              nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='RdYlGn', transparent_bg=False)
 
    .. code-tab:: r R
 
     # Set the path to the surface
-    cv.lh.fs5.10mm <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-lh_curvature_10mm.mgh")
-    cv.rh.fs5.10mm <- paste0(dir_morph, subjectID, "_space-fsaverage5_desc-rh_curvature_10mm.mgh")
+    cv.lh.f5k <- paste0(dir_maps, subjectID, '_space-fsLR-5k-5k_desc-lh_curvature.mgh')
+    cv.rh.f5k <- paste0(dir_maps, subjectID, '_space-fsLR-5k-5k_desc-rh_curvature.mgh')
 
     # Plot the surface
-    cv_fs5.10mm <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=cv.lh.fs5.10mm, morph_data_rh=cv.rh.fs5.10mm, surface="pial", draw_colorbar = TRUE,
+    cv_f5k <- vis.data.on.subject('freesurfer', 'fsLR-5k', morph_data_lh=cv.lh.f5k, morph_data_rh=cv.rh.f5k, surface='fsLR-5k.gii', draw_colorbar = TRUE,
                                   views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-    plot_surface(cv_fs5.10mm, 'Curvature [1/mm]')
+    plot_surface(cv_f5k, 'Curvature [1/mm]')
 
-
-.. figure:: cvS10_fs5.png
+.. figure:: cv_f5k.png
     :alt: alternate text
     :align: center
 
 
-Curvature conte69 fwhm=10mm
-========================================================
-
-.. tabs::
-
-   .. code-tab:: py
-
-    # Load the data
-    cv_lh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-lh_curvature_10mm.mgh'
-    cv_rh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-rh_curvature_10mm.mgh'
-    cv_c69_10mm = np.hstack(np.concatenate((np.array(load(cv_lh_c69_10mm).get_fdata()),
-                                        np.array(load(cv_rh_c69_10mm).get_fdata())), axis=0))
-
-    # Plot the surface
-    plot_hemispheres(c69_lh, c69_rh, array_name=cv_c69_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                             nan_color=(0, 0, 0, 1), color_range=(-0.1, 0.1), cmap='RdYlGn', transparent_bg=False)
-
-   .. code-tab:: r R
-
-    # Set the path to the surface
-    cv.lh.c69.10mm <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-lh_curvature_10mm.mgh')
-    cv.rh.c69.10mm <- paste0(dir_morph, subjectID, '_space-conte69-32k_desc-rh_curvature_10mm.mgh')
-
-    # Plot the surface
-    cv_c69.10mm <- vis.data.on.subject('freesurfer', 'conte69', morph_data_lh=cv.lh.c69.10mm, morph_data_rh=cv.rh.c69.10mm, surface='conte69.gii', draw_colorbar = TRUE,
-                                  views=NULL, rglactions = list('trans_fun'=limit_fun(-0.2, 0.2), 'no_vis'=T),  makecmap_options = list('colFn'=RdYlGn))
-    plot_surface(cv_c69.10mm, 'Curvature [1/mm]')
-
-.. figure:: cvS10_c69.png
-    :alt: alternate text
-    :align: center
-
-
-Conte69
+fsLR-32k
 --------------------------------------------------------
 
-conte69: Pial surface
+fsLR-32k: Pial surface
 ========================================================
 
 .. tabs::
 
    .. code-tab:: py
-
-    # Create a vector of zeros
-    Val = np.repeat(0, c69_pial_lh_c69.n_points + c69_pial_rh_c69.n_points, axis=0)
-    # Surface color
-    grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
 
     # Native conte69 pial surface
-    c69_pial_lh_c69 = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_pial.surf.gii', itype='gii')
-    c69_pial_rh_c69 = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_pial.surf.gii', itype='gii')
+    fsLR32k_pial_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-pial.surf.gii', itype='gii')
+    fsLR32k_pial_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-pial.surf.gii', itype='gii')
 
     # Plot the surface
-    plot_hemispheres(c69_pial_lh_c69, c69_pial_rh_c69, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False)
+    plot_hemispheres(fsLR32k_pial_lh, fsLR32k_pial_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
+
 
    .. code-tab:: r R
 
@@ -514,80 +447,82 @@ conte69: Pial surface
     grays <- colorRampPalette(c('gray65', 'gray65', 'gray65'))
 
     # Set the path to the surface
-    c69.pial.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_pial.surf.gii') )
-    c69.pial.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_pial.surf.gii') )
+    f32k.pial.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-lh_pial.surf.gii') )
+    f32k.pial.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-rh_pial.surf.gii') )
 
     # Plot the surface
-    cml = coloredmesh.from.preloaded.data(c69.pial.lh, morph_data = rep(0, nrow(c69.pial.lh$vertices)), makecmap_options = list('colFn'=grays) )
-    cmr = coloredmesh.from.preloaded.data(c69.pial.rh, morph_data = rep(0, nrow(c69.pial.rh$vertices)), makecmap_options = list('colFn'=grays) )
+    cml = coloredmesh.from.preloaded.data(f32k.pial.lh, morph_data = rep(0, nrow(f32k.pial.lh$vertices)), makecmap_options = list('colFn'=grays) )
+    cmr = coloredmesh.from.preloaded.data(f32k.pial.rh, morph_data = rep(0, nrow(f32k.pial.rh$vertices)), makecmap_options = list('colFn'=grays) )
     brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
                rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
 
-.. figure:: c69_pial.png
+.. figure:: f32k_pial.png
     :alt: alternate text
     :align: center
 
 
-conte69: Middle surface
+fsLR-32k: Middle surface
 ========================================================
 
 .. tabs::
 
    .. code-tab:: py
 
-    # Native conte69 midsurface
-    c69_mid_lh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_midthickness.surf.gii', itype='gii')
-    c69_mid_rh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_midthickness.surf.gii', itype='gii')
+    # Native fsLR-32k midsurface
+    fsLR32k_mid_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-midthickness.surf.gii', itype='gii')
+    fsLR32k_mid_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-midthickness.surf.gii', itype='gii')
 
     # Plot the surface
-    plot_hemispheres(c69_mid_lh, c69_mid_lh, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False)
+    plot_hemispheres(fsLR32k_mid_lh, fsLR32k_mid_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap='Greys', transparent_bg=False)
+
 
    .. code-tab:: r R
 
     # Set the path to the surface
-    c69.mid.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_midthickness.surf.gii') )
-    c69.mid.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_midthickness.surf.gii') )
+    f32k.mid.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-lh_midthickness.surf.gii') )
+    f32k.mid.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-rh_midthickness.surf.gii') )
 
     # Plot the surface
-    cml = coloredmesh.from.preloaded.data(c69.mid.lh, morph_data = rep(0, nrow(c69.mid.lh$vertices)), makecmap_options = list('colFn'=grays) )
-    cmr = coloredmesh.from.preloaded.data(c69.mid.rh, morph_data = rep(0, nrow(c69.mid.rh$vertices)), makecmap_options = list('colFn'=grays) )
+    cml = coloredmesh.from.preloaded.data(f32k.mid.lh, morph_data = rep(0, nrow(f32k.mid.lh$vertices)), makecmap_options = list('colFn'=grays) )
+    cmr = coloredmesh.from.preloaded.data(f32k.mid.rh, morph_data = rep(0, nrow(f32k.mid.rh$vertices)), makecmap_options = list('colFn'=grays) )
     brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
                rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
 
-.. figure:: c69_mid.png
+.. figure:: f32k_mid.png
     :alt: alternate text
     :align: center
 
 
-conte69: White matter surface
+fsLR-32k: White matter surface
 ========================================================
 
 .. tabs::
 
    .. code-tab:: py
 
-    # Native conte69 white matter
-    c69_wm_lh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_white.surf.gii', itype='gii')
-    c69_wm_rh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_white.surf.gii', itype='gii')
+    # Native fsLR-32k white matter
+    fsLR32k_wm_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii', itype='gii')
+    fsLR32k_wm_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii', itype='gii')
 
     # Plot the surface
-    plot_hemispheres(c69_wm_lh, c69_wm_lh, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False)
+    plot_hemispheres(fsLR32k_wm_lh, fsLR32k_wm_lh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
+
 
    .. code-tab:: r R
 
     # Set the path to the surface
-    c69.wm.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-lh_white.surf.gii') )
-    c69.wm.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_space-conte69-32k_desc-rh_white.surf.gii') )
+    f32k.wm.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-lh_white.surf.gii') )
+    f32k.wm.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_space-fsLR-32k-32k_desc-rh_white.surf.gii') )
 
     # Plot the surface
-    cml = coloredmesh.from.preloaded.data(c69.wm.lh, morph_data = rep(0, nrow(c69.wm.lh$vertices)), makecmap_options = list('colFn'=grays) )
-    cmr = coloredmesh.from.preloaded.data(c69.wm.rh, morph_data = rep(0, nrow(c69.wm.rh$vertices)), makecmap_options = list('colFn'=grays) )
+    cml = coloredmesh.from.preloaded.data(f32k.wm.lh, morph_data = rep(0, nrow(f32k.wm.lh$vertices)), makecmap_options = list('colFn'=grays) )
+    cmr = coloredmesh.from.preloaded.data(f32k.wm.rh, morph_data = rep(0, nrow(f32k.wm.rh$vertices)), makecmap_options = list('colFn'=grays) )
     brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
                rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
 
-.. figure:: c69_wm.png
+.. figure:: f32k_wm.png
     :alt: alternate text
     :align: center
 
@@ -599,8 +534,12 @@ Native sphere
 
    .. code-tab:: py
 
+    # Native sphere
+    sph_lh = read_surface(dir_surf+subjectID+'_hemi-L_surf-fsnative_label-sphere.surf.gii', itype='gii')
+    sph_rh = read_surface(dir_surf+subjectID+'_hemi-R_surf-fsnative_label-sphere.surf.gii', itype='gii')
+
     # Plot the surface
-    plot_hemispheres(sph_lh, sph_rh, array_name=CV, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(sph_lh, sph_rh, array_name=cv, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap="gray", transparent_bg=False)
 
    .. code-tab:: r R
@@ -609,8 +548,8 @@ Native sphere
     grays <- colorRampPalette(c('white', 'gray65','black'))
 
     # Set the path to the surface
-    sph.lh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_lh_sphereReg.surf.gii'))
-    sph.rh <- read.fs.surface(filepath = paste0(dir_conte, subjectID,'_rh_sphereReg.surf.gii'))
+    sph.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_lh_sphereReg.surf.gii'))
+    sph.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_rh_sphereReg.surf.gii'))
 
     # Set the color limits
     lf= limit_fun(-0.2, 0.2)
@@ -628,144 +567,136 @@ Native sphere
     :align: center
 
 
-Microstructural profile
+Superficial White Matter (SWM) in fsnative surface
 --------------------------------------------------------
 
-The intracortical intensities are generated across 14 different surface layer from the white mater surface to the pial surface.
-Furthermore they are available in the native surface, in fsaverage5 and conte69. In this example we will only plot the 10th surface.
+The superficial white matter surfaces are generated across 3 different surface layer from the white mater to 1, 2 and 3mm deeps.
+Then each quantitative map from`maps` is resample from fsnative to fsaverage5, fsLR-32k and fsLR-5k. In this example we will only plot the native surfaces.
 
-MPC native surface-10
+SWM Surfaces
 ========================================================
 
 .. tabs::
 
    .. code-tab:: py
 
-    # Create a mask
-    mask = np.hstack( np.where(th_nat < 0.5, 0, 1) )
+    # Function to load and plot each SWM surfaces
+    def plot_swm(mm='1'):
+        # SWM fsnative 1mm
+        swm_lh = read_surface(f'{dir_surf}{subjectID}_hemi-L_surf-fsnative_label-swm{mm}.0mm.surf.gii', itype='gii')
+        swm_rh = read_surface(f'{dir_surf}{subjectID}_hemi-R_surf-fsnative_label-swm{mm}.0mm.surf.gii', itype='gii')
 
-    # Load the MPC
-    mpc_lh = dir_mpc + subjectID + '_space-fsnative_desc-lh_MPC-10.mgh'
-    mpc_rh = dir_mpc + subjectID + '_space-fsnative_desc-rh_MPC-10.mgh'
-    mpc = np.hstack(np.concatenate((np.array(load(mpc_lh).get_fdata()),
-                                    np.array(load(mpc_rh).get_fdata())), axis=0))*mask
+        # Plot the surface
+        fig = plot_hemispheres(swm_lh, swm_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
+        return(fig)
 
-    # Set color range based on MPC distribution
-    Qt = (round(np.quantile(mpc[np.nonzero(mpc)],0.05),0), round(np.quantile(mpc[np.nonzero(mpc)],0.95),0))
+    # SWM 1mm
+    plot_swm(mm='1')
 
-    # Plot MPC on surface
-    plot_hemispheres(pial_lh, pial_rh, array_name=mpc, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
+    # SWM 2mm
+    plot_swm(mm='2')
+
+    # SWM 3mm
+    plot_swm(mm='3')
 
    .. code-tab:: r R
 
-    # Create a mask
-    mask.lh <- ifelse(read.fs.morph(th.lh)<0.5,0,1)
-    mask.rh <- ifelse(read.fs.morph(th.rh)<0.5,0,1)
+    ###  SWM 1,2,3mm
+    for (mm in 1:3) {
+      # Set the path to the surface
+      f32k.swm.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-L_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
+      f32k.swm.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-R_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
 
-    # Set the path to the surface
-    mpc.lh <- paste0(dir_mpc, subjectID, "_space-fsnative_desc-lh_MPC-10.mgh")
-    mpc.rh <- paste0(dir_mpc, subjectID, "_space-fsnative_desc-rh_MPC-10.mgh")
+      # Plot the surface
+      cml = coloredmesh.from.preloaded.data(f32k.swm.lh, morph_data = rep(0, nrow(f32k.swm.lh$vertices)), makecmap_options = list('colFn'=grays) )
+      cmr = coloredmesh.from.preloaded.data(f32k.swm.rh, morph_data = rep(0, nrow(f32k.swm.rh$vertices)), makecmap_options = list('colFn'=grays) )
+      brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
+                 rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
+    }
 
-    # Load the data
-    mpc <- list(lh=read.fs.morph(mpc.lh)*mask.lh,  rh=read.fs.morph(mpc.rh)*mask.rh )
-
-    # Set color range based on MPC distribution
-    Qt <- round(quantile(c(mpc$lh[mpc$lh!=0], mpc$rh[mpc$rh!=0]), probs = c(0.05,0.95)),1)
-
-    # Plot the surface
-    mpc.nat <- vis.data.on.subject('freesurfer/', subjectID, morph_data_lh=mpc$lh, morph_data_rh=mpc$rh, surface="pial", draw_colorbar = TRUE,
-                                   views=NULL, rglactions = list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T),  makecmap_options = list('colFn'=viridis))
-    plot_surface(mpc.nat, 'MPC-10')
-
-.. figure:: mpc_pial.png
+.. figure:: swm1.png
     :alt: alternate text
     :align: center
 
-
-MPC fsaverage5 surface-10
-========================================================
-
-.. tabs::
-
-   .. code-tab:: py
-
-    # Create a mask
-    mask_fs5 = np.hstack( np.where(th_fs5 < 0.5, 0, 1) )
-
-    # Load the MPC
-    mpc_lh_fs5 = dir_mpc + subjectID + '_space-fsaverage5_desc-lh_MPC-10.mgh'
-    mpc_rh_fs5 = dir_mpc + subjectID + '_space-fsaverage5_desc-rh_MPC-10.mgh'
-    mpc_fs5 = np.hstack(np.concatenate((np.array(load(mpc_lh_fs5).get_fdata()),
-                                        np.array(load(mpc_rh_fs5).get_fdata())), axis=0))*mask_fs5
-
-    # Plot MPC on surface
-    plot_hemispheres(fs5_lh, fs5_rh, array_name=mpc_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
-
-   .. code-tab:: r R
-
-    # Load the surface
-    # Create a mask
-    mask.lh.fs5 <- ifelse(read.fs.morph(th.lh.fs5)<0.5,0,1)
-    mask.rh.fs5 <- ifelse(read.fs.morph(th.rh.fs5)<0.5,0,1)
-
-    # Set the path to the surface
-    mpc.lh.fs5 <- paste0(dir_mpc, subjectID, "_space-fsaverage5_desc-lh_MPC-10.mgh")
-    mpc.rh.fs5 <- paste0(dir_mpc, subjectID, "_space-fsaverage5_desc-rh_MPC-10.mgh")
-
-    # Load the data
-    mpc.fs5 <- list(lh=read.fs.morph(mpc.lh.fs5)*mask.lh.fs5,  rh=read.fs.morph(mpc.rh.fs5)*mask.rh.fs5 )
-
-    # Plot the surface
-    mpc.fs5 <- vis.data.on.subject('freesurfer/', 'fsaverage5', morph_data_lh=mpc.fs5$lh, morph_data_rh=mpc.fs5$rh, surface="pial", draw_colorbar = TRUE,
-                                   views=NULL, rglactions = list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T),  makecmap_options = list('colFn'=viridis))
-    plot_surface(mpc.fs5, 'MPC-10')
-
-.. figure:: mpc_fs5.png
+.. figure:: swm2.png
     :alt: alternate text
     :align: center
 
+.. figure:: swm3.png
+    :alt: alternate text
+    :align: center
 
-MPC conte69 surface-10
+`/maps`: fsnative, fsaverage5, fsLR-32k and fsLR-5k
 ========================================================
 
 .. tabs::
 
    .. code-tab:: py
 
-    # Create a mask
-    mask_c69 = np.hstack( np.where(th_c69 < 0.5, 0, 1) )
+    def load_qmri(qmri='', surf='fsLR-32k'):
+        '''
+        This function loads the qMRI intensity maps from midthickness surface
+        '''
+        # List the files
+        files_lh = sorted(glob.glob(f"{dir_maps}/*_hemi-L_surf-{surf}_label-midthickness_{qmri}.func.gii"))
+        files_rh = sorted(glob.glob(f"{dir_maps}/*_hemi-R_surf-{surf}_label-midthickness_{qmri}.func.gii"))
 
-    # Load the MPC
-    mpc_lh_c69 = dir_mpc + subjectID + '_space-conte69-32k_desc-lh_MPC-10.mgh'
-    mpc_rh_c69 = dir_mpc + subjectID + '_space-conte69-32k_desc-rh_MPC-10.mgh'
-    mpc_c69 = np.hstack(np.concatenate((np.array(load(mpc_lh_c69).get_fdata()),
-                                        np.array(load(mpc_rh_c69).get_fdata())), axis=0))*mask_c69
+        # Load map data
+        surf_map=np.concatenate((nib.load(files_lh[0]).darrays[0].data, nib.load(files_rh[0]).darrays[0].data), axis=0)
 
-    # Plot MPC on surface
-    plot_hemispheres(c69_lh, c69_rh, array_name=mpc_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
+        return(surf_map)
+
+    def plot_qmri(qmri='',  surf='fsLR-32k', label='pial', cmap='rocket', rq=(0.15, 0.95)):
+        '''
+        This function plots the qMRI intensity maps on the pial surface
+        '''
+        # Load the data
+        map_surf = load_qmri(qmri, surf)
+        print('Number of vertices: ' + str(map_surf.shape[0]))
+
+        # Load the surfaces
+        surf_lh=read_surface(f'{dir_surf}/{subjectID}_hemi-L_space-nativepro_surf-{surf}_label-{label}.surf.gii', itype='gii')
+        surf_rh=read_surface(f'{dir_surf}/{subjectID}_hemi-R_space-nativepro_surf-{surf}_label-{label}.surf.gii', itype='gii')
+
+        # Color range based in the quantiles
+        crange=(np.quantile(map_surf, rq[0]), np.quantile(map_surf, rq[1]))
+
+        # Plot the group T1map intensitites
+        fig = plot_hemispheres(surf_lh, surf_rh, array_name=map_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), cmap=cmap, color_range=crange, transparent_bg=False, screenshot = False)
+        return(fig)
+
+        # T1map on fsnative
+        plot_qmri('T1map', 'fsnative')
+
+        # T1map on fsaverage5
+        plot_qmri('T1map', 'fsaverage5')
+
+        # T1map on fsLR-32k
+        plot_qmri('T1map', 'fsLR-32k')
+
+        # T1map on fsLR-5k
+        plot_qmri('T1map', 'fsLR-5k')
+
 
    .. code-tab:: r R
 
-    # Create a mask
-    mask.lh.c69 <- ifelse(read.fs.morph(th.lh.c69)<0.5,0,1)
-    mask.rh.c69 <- ifelse(read.fs.morph(th.rh.c69)<0.5,0,1)
+    # Under construction
 
-    # Set the path to the surface
-    mpc.lh.c69 <- paste0(dir_mpc, subjectID, '_space-conte69-32k_desc-lh_MPC-10.mgh')
-    mpc.rh.c69 <- paste0(dir_mpc, subjectID, '_space-conte69-32k_desc-rh_MPC-10.mgh')
+.. figure:: TqMRI_fsnat.png
+    :alt: alternate text
+    :align: center
 
-    # Load the data
-    mpc.c69 <- list(lh=read.fs.morph(mpc.lh.c69)*mask.lh.c69,  rh=read.fs.morph(mpc.rh.c69)*mask.rh.c69 )
+.. figure:: TqMRI_fs5.png
+    :alt: alternate text
+    :align: center
 
-    # Plot the surface
-    mpc.c69 <- vis.data.on.subject('freesurfer/', 'conte69', morph_data_lh=mpc.c69$lh, morph_data_rh=mpc.c69$rh, surface='conte69.gii', draw_colorbar = TRUE,
-                                   views=NULL, rglactions = list('trans_fun'=limit_fun(Qt[1],Qt[2]), 'no_vis'=T),  makecmap_options = list('colFn'=viridis))
-    plot_surface(mpc.c69, 'MPC-10')
+.. figure:: TqMRI_32k.png
+    :alt: alternate text
+    :align: center
 
-.. figure:: mpc_c69.png
+.. figure:: TqMRI_5k.png
     :alt: alternate text
     :align: center
 
@@ -786,11 +717,12 @@ Schaefer-400 labels
     annot = 'schaefer-400'
     annot_lh= dir_FS + '/label/lh.' + annot + '_mics.annot'
     annot_rh= dir_FS + '/label/rh.' + annot + '_mics.annot'
-    label = np.concatenate((nb.freesurfer.read_annot(annot_lh)[0], nb.freesurfer.read_annot(annot_rh)[0]), axis=0)
+    label = np.concatenate((nib.freesurfer.read_annot(annot_lh)[0], nib.freesurfer.read_annot(annot_rh)[0]), axis=0)
 
     # plot labels on surface
-    plot_hemispheres(pial_lh, pial_rh, array_name=label*mask, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(pial_lh, pial_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='nipy_spectral', transparent_bg=False)
+
 
    .. code-tab:: r R
 
@@ -815,11 +747,12 @@ Extra: Economo labels
     annot = 'economo'
     annot_lh= dir_FS + '/label/lh.' + annot + '_mics.annot'
     annot_rh= dir_FS + '/label/rh.' + annot + '_mics.annot'
-    label = np.concatenate((nb.freesurfer.read_annot(annot_lh)[0], nb.freesurfer.read_annot(annot_rh)[0]), axis=0)
+    label = np.concatenate((nib.freesurfer.read_annot(annot_lh)[0], nib.freesurfer.read_annot(annot_rh)[0]), axis=0)
 
     # plot labels on surface
-    plot_hemispheres(pial_lh, pial_rh, array_name=label*mask, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+    plot_hemispheres(pial_lh, pial_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                      nan_color=(0, 0, 0, 1), cmap='nipy_spectral', transparent_bg=False)
+
 
    .. code-tab:: r R
 

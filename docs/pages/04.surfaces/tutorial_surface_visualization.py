@@ -2,46 +2,53 @@
 # coding: utf-8
 
 # # Surface visualization
-# 
+#
 # ## Set the enviroment
 
-# In[2]:
+# In[6]:
 
 
 # python notebook
 #
-# Tutorial 2 - Surface visualization 
-# micapipe v0.1.1
+# Tutorial 2 - Surface visualization
+# micapipe v0.2.3
 #
-# Created by RRC on September 2021 (the second year of the pademic)
+# Created by RRC on September 2021 (the second year of the pandemic)
+# Updated by AN on November 2023 (COVID IS OVER)
+# Updated on January 2024 (A NEW HOPE)
 
 # Set the environment
 import os
+import glob
 import numpy as np
-import matplotlib as plt
-import nibabel as nb
-from nibabel.freesurfer.mghformat import load
+import nibabel as nib
+import seaborn as sns
 from brainspace.plotting import plot_hemispheres
 from brainspace.mesh.mesh_io import read_surface
 from brainspace.datasets import load_conte69
 
 # Set the working directory to the 'out' directory
-#os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+out='/data_/mica3/BIDS_MICs/derivatives' # <<<<<<<<<<<< CHANGE THIS PATH
+os.chdir(out)
 
 # This variable will be different for each subject
-subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+sub='sub-HC001'
+ses='ses-01'
+subjectID=f'{sub}_{ses}'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+subjectDir=f'micapipe_v0.2.0/{sub}/{ses}' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
 # Set paths and variables
 dir_FS = 'freesurfer/' + subjectID
-dir_conte = subjectDir + '/anat/surfaces/conte69/'
-dir_morph = subjectDir + '/anat/surfaces/morphology/'
-dir_mpc = subjectDir + '/anat/surfaces/micro_profiles/'
+dir_surf = subjectDir + '/surf/'
+dir_maps = subjectDir + '/maps/'
+
+# Path to MICAPIPE
+micapipe=os.popen("echo $MICAPIPE").read()[:-1]
 
 
 # ## Load all the surfaces
 
-# In[4]:
+# In[7]:
 
 
 # Load native pial surface
@@ -49,7 +56,7 @@ pial_lh = read_surface(dir_FS+'/surf/lh.pial', itype='fs')
 pial_rh = read_surface(dir_FS+'/surf/rh.pial', itype='fs')
 
 # Load native mid surface
-mid_lh = read_surface(dir_FS+'/surf/lh.midthickness.surf.gii', itype='gii') 
+mid_lh = read_surface(dir_FS+'/surf/lh.midthickness.surf.gii', itype='gii')
 mid_rh = read_surface(dir_FS+'/surf/rh.midthickness.surf.gii', itype='gii')
 
 # Load native white matter surface
@@ -60,79 +67,107 @@ wm_rh = read_surface(dir_FS+'/surf/rh.white', itype='fs')
 inf_lh = read_surface(dir_FS+'/surf/lh.inflated', itype='fs')
 inf_rh = read_surface(dir_FS+'/surf/rh.inflated', itype='fs')
 
-# Load fsaverage5 
+# Load fsaverage5
 fs5_lh = read_surface('freesurfer/fsaverage5/surf/lh.pial', itype='fs')
-fs5_rh = read_surface('freesurfer//fsaverage5/surf/rh.pial', itype='fs')
+fs5_rh = read_surface('freesurfer/fsaverage5/surf/rh.pial', itype='fs')
 
 # Load fsaverage5 inflated
 fs5_inf_lh = read_surface('freesurfer/fsaverage5/surf/lh.inflated', itype='fs')
-fs5_inf_rh = read_surface('freesurfer//fsaverage5/surf/rh.inflated', itype='fs')
+fs5_inf_rh = read_surface('freesurfer/fsaverage5/surf/rh.inflated', itype='fs')
 
-# Load conte69
-c69_lh, c69_rh = load_conte69()
+# Load fsLR 32k
+f32k_lh, f32k_rh = load_conte69()
+
+# Load fsLR 32k inflated
+f32k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
+f32k_inf_rh = read_surface(micapipe + '/surfaces/fsLR-32k.R.inflated.surf.gii', itype='gii')
+
+# Load Load fsLR 5k
+f5k_lh = read_surface(micapipe + '/surfaces/fsLR-5k.L.surf.gii', itype='gii')
+f5k_rh = read_surface(micapipe + '/surfaces/fsLR-5k.R.surf.gii', itype='gii')
+
+# Load fsLR 5k inflated
+f5k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
+f5k_inf_rh = read_surface(micapipe + '/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
 
 
 # # Morphology
 # ## Thickness
 # ### Thickness: Inflated native surface
 
-# In[5]:
+# In[8]:
 
 
 # Load the data
-th_lh = dir_morph + subjectID + '_space-fsnative_desc-lh_thickness.mgh'
-th_rh = dir_morph + subjectID + '_space-fsnative_desc-rh_thickness.mgh'
-th_nat = np.hstack(np.concatenate((np.array(load(th_lh).get_fdata()), 
-                                   np.array(load(th_rh).get_fdata())), axis=0))
+th_lh = dir_maps + subjectID + '_hemi-L_surf-fsnative_label-thickness.func.gii'
+th_rh = dir_maps + subjectID + '_hemi-R_surf-fsnative_label-thickness.func.gii'
+th_nat = np.hstack(np.concatenate((nib.load(th_lh).darrays[0].data,
+                                   nib.load(th_rh).darrays[0].data), axis=0))
 
 # Plot the surface
-plot_hemispheres(inf_lh, inf_rh, array_name=th_nat, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both', 
+plot_hemispheres(inf_lh, inf_rh, array_name=th_nat, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                  nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
 
 
 # ### Thickness: Inflated fsaverage5
 
-# In[6]:
+# In[9]:
 
 
 # Load the data
-th_lh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-lh_thickness.mgh'
-th_rh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-rh_thickness.mgh'
-th_fs5 = np.hstack(np.concatenate((np.array(load(th_lh_fs5).get_fdata()), 
-                                   np.array(load(th_rh_fs5).get_fdata())), axis=0))
+th_lh_fs5 = dir_maps + subjectID + '_hemi-L_surf-fsaverage5_label-thickness.func.gii'
+th_rh_fs5 = dir_maps + subjectID + '_hemi-R_surf-fsaverage5_label-thickness.func.gii'
+th_fs5 = np.hstack(np.concatenate((nib.load(th_lh_fs5).darrays[0].data,
+                                   nib.load(th_rh_fs5).darrays[0].data), axis=0))
 
 # Plot the surface
 plot_hemispheres(fs5_inf_lh, fs5_inf_rh, array_name=th_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
 
 
-# ### Thickness: conte 69
+# ### Thickness: fsLR-32k
 
-# In[7]:
+# In[10]:
 
 
 # Load the data
-th_lh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-lh_thickness.mgh'
-th_rh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-rh_thickness.mgh'
-th_c69 = np.hstack(np.concatenate((np.array(load(th_lh_c69).get_fdata()), 
-                                   np.array(load(th_rh_c69).get_fdata())), axis=0))
+th_lh_fsLR32k = dir_maps + subjectID + '_hemi-L_surf-fsLR-32k_label-thickness.func.gii'
+th_rh_fsLR32k = dir_maps + subjectID + '_hemi-R_surf-fsLR-32k_label-thickness.func.gii'
+th_fsLR32k = np.hstack(np.concatenate((nib.load(th_lh_fsLR32k).darrays[0].data,
+                                       nib.load(th_rh_fsLR32k).darrays[0].data), axis=0))
 
 # Plot the surface
-plot_hemispheres(c69_lh, c69_rh, array_name=th_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+plot_hemispheres(f32k_inf_lh, f32k_inf_rh, array_name=th_fsLR32k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
+
+
+# ### Thickness: fsLR-5k
+
+# In[11]:
+
+
+# Load the data
+th_lh_fsLR5k = dir_maps + subjectID + '_hemi-L_surf-fsLR-5k_label-thickness.func.gii'
+th_rh_fsLR5k = dir_maps + subjectID + '_hemi-R_surf-fsLR-5k_label-thickness.func.gii'
+th_fsLR5k = np.hstack(np.concatenate((nib.load(th_lh_fsLR5k).darrays[0].data,
+                                       nib.load(th_rh_fsLR5k).darrays[0].data), axis=0))
+
+# Plot the surface
+plot_hemispheres(f5k_inf_lh, f5k_inf_rh, array_name=th_fsLR5k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
 
 
 # ## Curvature
 # ### Curvature: Inflated native surface
 
-# In[8]:
+# In[13]:
 
 
 # Load the data
-cv_lh = dir_morph + subjectID + '_space-fsnative_desc-lh_curvature.mgh'
-cv_rh = dir_morph + subjectID + '_space-fsnative_desc-rh_curvature.mgh'
-cv = np.hstack(np.concatenate((np.array(load(cv_lh).get_fdata()), 
-                               np.array(load(cv_rh).get_fdata())), axis=0))
+cv_lh = dir_maps + subjectID + '_hemi-L_surf-fsnative_label-curv.func.gii'
+cv_rh = dir_maps + subjectID + '_hemi-R_surf-fsnative_label-curv.func.gii'
+cv = np.hstack(np.concatenate((nib.load(cv_lh).darrays[0].data,
+                               nib.load(cv_rh).darrays[0].data), axis=0))
 
 # Plot the surface
 plot_hemispheres(inf_lh, inf_rh, array_name=cv, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
@@ -141,256 +176,241 @@ plot_hemispheres(inf_lh, inf_rh, array_name=cv, size=(900, 250), color_bar='bott
 
 # ### Curvature: Inflated fsaverage5
 
-# In[9]:
+# In[15]:
 
 
 # Load the data
-cv_lh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-lh_curvature.mgh'
-cv_rh_fs5 = dir_morph + subjectID + '_space-fsaverage5_desc-rh_curvature.mgh'
-cv_fs5 = np.hstack(np.concatenate((np.array(load(cv_lh_fs5).get_fdata()), 
-                                   np.array(load(cv_rh_fs5).get_fdata())), axis=0))
+cv_lh_fs5 = dir_maps + subjectID + '_hemi-L_surf-fsaverage5_label-curv.func.gii'
+cv_rh_fs5 = dir_maps + subjectID + '_hemi-R_surf-fsaverage5_label-curv.func.gii'
+cv_fs5 = np.hstack(np.concatenate((nib.load(cv_lh_fs5).darrays[0].data,
+                                   nib.load(cv_rh_fs5).darrays[0].data), axis=0))
 
 # Plot the surface
 plot_hemispheres(fs5_inf_lh, fs5_inf_rh, array_name=cv_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='RdYlGn', transparent_bg=False)
 
 
-# ### Curvature: conte 69
+# ### Curvature: fsLR-32k
 
-# In[10]:
+# In[16]:
 
 
 # Load the data
-cv_lh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-lh_curvature.mgh'
-cv_rh_c69 = dir_morph + subjectID + '_space-conte69-32k_desc-rh_curvature.mgh'
-cv_c69 = np.hstack(np.concatenate((np.array(load(cv_lh_c69).get_fdata()), 
-                                   np.array(load(cv_rh_c69).get_fdata())), axis=0))
-
+cv_lh_fsLR32k = dir_maps + subjectID + '_hemi-L_surf-fsLR-32k_label-curv.func.gii'
+cv_rh_fsLR32k = dir_maps + subjectID + '_hemi-R_surf-fsLR-32k_label-curv.func.gii'
+cv_fsLR32k = np.hstack(np.concatenate((nib.load(cv_lh_fsLR32k).darrays[0].data,
+                                       nib.load(cv_rh_fsLR32k).darrays[0].data), axis=0))
 # Plot the surface
-plot_hemispheres(c69_lh, c69_rh, array_name=cv_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+plot_hemispheres(f32k_inf_lh, f32k_inf_rh, array_name=cv_fsLR32k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='RdYlGn', transparent_bg=False)
 
 
-# ## Morphology Smoothed
-# ### Thickness fsaverage5 fwhm=10mm
+# ### Curvature: fsLR-5k
 
-# In[11]:
-
-
-# Load the data
-th_lh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-lh_thickness_10mm.mgh'
-th_rh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-rh_thickness_10mm.mgh'
-th_fs5_10mm = np.hstack(np.concatenate((np.array(load(th_lh_fs5_10mm).get_fdata()), 
-                                    np.array(load(th_rh_fs5_10mm).get_fdata())), axis=0))
-
-# Plot the surface
-plot_hemispheres(fs5_lh, fs5_rh, array_name=th_fs5_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
-
-
-# ### Thickness conte69 fwhm=10mm
-
-# In[12]:
+# In[17]:
 
 
 # Load the data
-th_lh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-lh_thickness_10mm.mgh'
-th_rh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-rh_thickness_10mm.mgh'
-th_c69_10mm = np.hstack(np.concatenate((np.array(load(th_lh_c69_10mm).get_fdata()), 
-                                    np.array(load(th_rh_c69_10mm).get_fdata())), axis=0))
-
+cv_lh_fsLR5k = dir_maps + subjectID + '_hemi-L_surf-fsLR-5k_label-curv.func.gii'
+cv_rh_fsLR5k = dir_maps + subjectID + '_hemi-R_surf-fsLR-5k_label-curv.func.gii'
+cv_fsLR5k = np.hstack(np.concatenate((nib.load(cv_lh_fsLR5k).darrays[0].data,
+                                       nib.load(cv_rh_fsLR5k).darrays[0].data), axis=0))
 # Plot the surface
-plot_hemispheres(c69_lh, c69_rh, array_name=th_c69_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap="inferno", transparent_bg=False)
-
-
-# ### Curvature fsaverage5 fwhm=10mm
-
-# In[13]:
-
-
-# Load the data
-cv_lh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-lh_curvature_10mm.mgh'
-cv_rh_fs5_10mm = dir_morph + subjectID + '_space-fsaverage5_desc-rh_curvature_10mm.mgh'
-cv_fs5_10mm = np.hstack(np.concatenate((np.array(load(cv_lh_fs5_10mm).get_fdata()), 
-                                   np.array(load(cv_rh_fs5_10mm).get_fdata())), axis=0))
-
-# Plot the surface
-plot_hemispheres(fs5_lh, fs5_rh, array_name=cv_fs5_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+plot_hemispheres(f5k_inf_lh, f5k_inf_rh, array_name=cv_fsLR5k, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
                          nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap='RdYlGn', transparent_bg=False)
 
 
-# ### Curvature conte69 fwhm=10mm
+# ## fsLR-32k
+# ### fsLR-32k: Native pial surface
 
-# In[14]:
+# In[18]:
 
-
-# Load the data
-cv_lh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-lh_curvature_10mm.mgh'
-cv_rh_c69_10mm = dir_morph + subjectID + '_space-conte69-32k_desc-rh_curvature_10mm.mgh'
-cv_c69_10mm = np.hstack(np.concatenate((np.array(load(cv_lh_c69_10mm).get_fdata()), 
-                                    np.array(load(cv_rh_c69_10mm).get_fdata())), axis=0))
-
-# Plot the surface
-plot_hemispheres(c69_lh, c69_rh, array_name=cv_c69_10mm, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-                         nan_color=(0, 0, 0, 1), color_range=(-0.1, 0.1), cmap='RdYlGn', transparent_bg=False)
-
-
-# ## Conte69
-# ### Conte 69: Native pial surface
-
-# In[28]:
-
-
-# Create a vector of zeros
-Val = np.repeat(0, th_c69.shape[1], axis=0)
-# Surface color
-grey = plt.colors.ListedColormap(np.full((256, 4), [0.65, 0.65, 0.65, 1]))
 
 # Native conte69 pial surface
-c69_pial_lh_c69 = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_pial.surf.gii', itype='gii') 
-c69_pial_rh_c69 = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_pial.surf.gii', itype='gii') 
+fsLR32k_pial_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-pial.surf.gii', itype='gii')
+fsLR32k_pial_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-pial.surf.gii', itype='gii')
 
 # Plot the surface
-plot_hemispheres(c69_pial_lh_c69, c69_pial_rh_c69, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                 nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False)
+plot_hemispheres(fsLR32k_pial_lh, fsLR32k_pial_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                 nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
 
 
-# ### Conte 69: Native middle surface
+# ### fsLR-32k: Native middle surface
 
-# In[30]:
-
-
-# Native conte69 midsurface
-c69_mid_lh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_midthickness.surf.gii', itype='gii') 
-c69_mid_rh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_midthickness.surf.gii', itype='gii') 
-
-# Plot the surface
-plot_hemispheres(c69_mid_lh, c69_mid_lh, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                 nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap=grey, transparent_bg=False)
+# In[19]:
 
 
-# ### Conte 69: Native white matter surface
-
-# In[31]:
-
-
-# Native conte69 white matter
-c69_wm_lh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-lh_white.surf.gii', itype='gii') 
-c69_wm_rh = read_surface(dir_conte+subjectID+'_space-conte69-32k_desc-rh_white.surf.gii', itype='gii')
+# Native fsLR-32k midsurface
+fsLR32k_mid_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-midthickness.surf.gii', itype='gii')
+fsLR32k_mid_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-midthickness.surf.gii', itype='gii')
 
 # Plot the surface
-plot_hemispheres(c69_wm_lh, c69_wm_lh, array_name=Val, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
-                 nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap=grey, transparent_bg=False)
+plot_hemispheres(fsLR32k_mid_lh, fsLR32k_mid_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                 nan_color=(0, 0, 0, 1), color_range=(-1,1), cmap='Greys', transparent_bg=False)
+
+
+# ### fsLR-32k: Native white matter surface
+
+# In[20]:
+
+
+# Native fsLR-32k white matter
+fsLR32k_wm_lh = read_surface(dir_surf+subjectID+'_hemi-L_space-nativepro_surf-fsLR-32k_label-white.surf.gii', itype='gii')
+fsLR32k_wm_rh = read_surface(dir_surf+subjectID+'_hemi-R_space-nativepro_surf-fsLR-32k_label-white.surf.gii', itype='gii')
+
+# Plot the surface
+plot_hemispheres(fsLR32k_wm_lh, fsLR32k_wm_lh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                 nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
 
 
 # # Native sphere
 
-# In[32]:
+# In[21]:
 
 
 # Native sphere
-sph_lh = read_surface(dir_conte+subjectID+'_lh_sphereReg.surf.gii', itype='gii') 
-sph_rh = read_surface(dir_conte+subjectID+'_rh_sphereReg.surf.gii', itype='gii') 
+sph_lh = read_surface(dir_surf+subjectID+'_hemi-L_surf-fsnative_label-sphere.surf.gii', itype='gii')
+sph_rh = read_surface(dir_surf+subjectID+'_hemi-R_surf-fsnative_label-sphere.surf.gii', itype='gii')
 
 # Plot the surface
 plot_hemispheres(sph_lh, sph_rh, array_name=cv, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                  nan_color=(0, 0, 0, 1), color_range=(-0.2, 0.2), cmap="gray", transparent_bg=False)
 
 
-# # Microstructural profiles
-# ## MPC native surface (10) 
+# # Superficial White Matter (SWM) in fsnative surface
 
-# In[33]:
-
-
-# Create a mask
-mask = np.hstack( np.where(th_nat < 0.5, 0, 1) )
-
-# Load the MPC
-mpc_lh = dir_mpc + subjectID + '_space-fsnative_desc-lh_MPC-10.mgh'
-mpc_rh = dir_mpc + subjectID + '_space-fsnative_desc-rh_MPC-10.mgh'
-mpc = np.hstack(np.concatenate((np.array(load(mpc_lh).get_fdata()), 
-                                np.array(load(mpc_rh).get_fdata())), axis=0))*mask
-
-# Set color range based on MPC distribution
-Qt = (round(np.quantile(mpc[np.nonzero(mpc)],0.05),0), round(np.quantile(mpc[np.nonzero(mpc)],0.95),0))
-
-# Plot MPC on surface
-plot_hemispheres(pial_lh, pial_rh, array_name=mpc, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-            nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
+# In[27]:
 
 
-# ## MPC fsaverage5 surface (10) 
+# Function to load and plot each SWM surfaces
+def plot_swm(mm='1'):
+    # SWM fsnative 1mm
+    swm_lh = read_surface(f'{dir_surf}{subjectID}_hemi-L_surf-fsnative_label-swm{mm}.0mm.surf.gii', itype='gii')
+    swm_rh = read_surface(f'{dir_surf}{subjectID}_hemi-R_surf-fsnative_label-swm{mm}.0mm.surf.gii', itype='gii')
 
-# In[34]:
-
-
-# Create a mask
-mask_fs5 = np.hstack( np.where(th_fs5 < 0.5, 0, 1) )
-
-# Load the MPC
-mpc_lh_fs5 = dir_mpc + subjectID + '_space-fsaverage5_desc-lh_MPC-10.mgh'
-mpc_rh_fs5 = dir_mpc + subjectID + '_space-fsaverage5_desc-rh_MPC-10.mgh'
-mpc_fs5 = np.hstack(np.concatenate((np.array(load(mpc_lh_fs5).get_fdata()), 
-                                    np.array(load(mpc_rh_fs5).get_fdata())), axis=0))*mask_fs5
-
-# Plot MPC on surface
-plot_hemispheres(fs5_lh, fs5_rh, array_name=mpc_fs5, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-            nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
+    # Plot the surface
+    fig = plot_hemispheres(swm_lh, swm_rh, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
+    return(fig)
 
 
-# ## MPC conte69 surface (10)
-
-# In[35]:
+# In[24]:
 
 
-# Create a mask
-mask_c69 = np.hstack( np.where(th_c69 < 0.5, 0, 1) )
+# SWM 1mm
+plot_swm(mm='1')
 
-# Load the MPC
-mpc_lh_c69 = dir_mpc + subjectID + '_space-conte69-32k_desc-lh_MPC-10.mgh'
-mpc_rh_c69 = dir_mpc + subjectID + '_space-conte69-32k_desc-rh_MPC-10.mgh'
-mpc_c69 = np.hstack(np.concatenate((np.array(load(mpc_lh_c69).get_fdata()), np.array(load(mpc_rh_c69).get_fdata())), axis=0))*mask_c69
 
-# Plot MPC on the surface
-plot_hemispheres(c69_lh, c69_rh, array_name=mpc_c69, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
-            nan_color=(0, 0, 0, 1), color_range=Qt, cmap="viridis",transparent_bg=False)
+# In[25]:
+
+
+# SWM 2mm
+plot_swm(mm='2')
+
+
+# In[26]:
+
+
+# SWM 3mm
+plot_swm(mm='3')
+
+
+# # `/maps`: fsnative, fsaverage5, fsLR-32k and fsLR-5k
+
+# In[40]:
+
+
+def load_qmri(qmri='', surf='fsLR-32k'):
+    '''
+    This function loads the qMRI intensity maps from midthickness surface
+    '''
+    # List the files
+    files_lh = sorted(glob.glob(f"{dir_maps}/*_hemi-L_surf-{surf}_label-midthickness_{qmri}.func.gii"))
+    files_rh = sorted(glob.glob(f"{dir_maps}/*_hemi-R_surf-{surf}_label-midthickness_{qmri}.func.gii"))
+
+    # Load map data
+    surf_map=np.concatenate((nib.load(files_lh[0]).darrays[0].data, nib.load(files_rh[0]).darrays[0].data), axis=0)
+
+    return(surf_map)
+
+def plot_qmri(qmri='',  surf='fsLR-32k', label='pial', cmap='rocket', rq=(0.15, 0.95)):
+    '''
+    This function plots the qMRI intensity maps on the pial surface
+    '''
+    # Load the data
+    map_surf = load_qmri(qmri, surf)
+    print('Number of vertices: ' + str(map_surf.shape[0]))
+
+    # Load the surfaces
+    surf_lh=read_surface(f'{dir_surf}/{subjectID}_hemi-L_space-nativepro_surf-{surf}_label-{label}.surf.gii', itype='gii')
+    surf_rh=read_surface(f'{dir_surf}/{subjectID}_hemi-R_space-nativepro_surf-{surf}_label-{label}.surf.gii', itype='gii')
+
+    # Color range based in the quantiles
+    crange=(np.quantile(map_surf, rq[0]), np.quantile(map_surf, rq[1]))
+
+    # Plot the group T1map intensitites
+    fig = plot_hemispheres(surf_lh, surf_rh, array_name=map_surf, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                     nan_color=(0, 0, 0, 1), cmap=cmap, color_range=crange, transparent_bg=False, screenshot = False)
+    return(fig)
+
+
+# In[41]:
+
+
+# T1map on fsnative
+plot_qmri('T1map', 'fsnative')
+
+
+# In[42]:
+
+
+# T1map on fsaverage5
+plot_qmri('T1map', 'fsaverage5')
+
+
+# In[43]:
+
+
+# T1map on fsLR-32k
+plot_qmri('T1map', 'fsLR-32k')
+
+
+# In[44]:
+
+
+# T1map on fsLR-5k
+plot_qmri('T1map', 'fsLR-5k')
 
 
 # # Parcellations
 # ## Schaefer-400 labels
 
-# In[36]:
+# In[46]:
 
 
 # Load annotation file
 annot = 'schaefer-400'
 annot_lh= dir_FS + '/label/lh.' + annot + '_mics.annot'
 annot_rh= dir_FS + '/label/rh.' + annot + '_mics.annot'
-label = np.concatenate((nb.freesurfer.read_annot(annot_lh)[0], nb.freesurfer.read_annot(annot_rh)[0]), axis=0)
+label = np.concatenate((nib.freesurfer.read_annot(annot_lh)[0], nib.freesurfer.read_annot(annot_rh)[0]), axis=0)
 
 # plot labels on surface
-plot_hemispheres(pial_lh, pial_rh, array_name=label*mask, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+plot_hemispheres(pial_lh, pial_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                  nan_color=(0, 0, 0, 1), cmap='nipy_spectral', transparent_bg=False)
 
 
-# In[37]:
+# In[47]:
 
 
 # Load annotation file
 annot = 'economo'
 annot_lh= dir_FS + '/label/lh.' + annot + '_mics.annot'
 annot_rh= dir_FS + '/label/rh.' + annot + '_mics.annot'
-label = np.concatenate((nb.freesurfer.read_annot(annot_lh)[0], nb.freesurfer.read_annot(annot_rh)[0]), axis=0)
+label = np.concatenate((nib.freesurfer.read_annot(annot_lh)[0], nib.freesurfer.read_annot(annot_rh)[0]), axis=0)
 
 # plot labels on surface
-plot_hemispheres(pial_lh, pial_rh, array_name=label*mask, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
+plot_hemispheres(pial_lh, pial_rh, array_name=label, size=(900, 250), zoom=1.25, embed_nb=True, interactive=False, share='both',
                  nan_color=(0, 0, 0, 1), cmap='nipy_spectral', transparent_bg=False)
 
 
 # In[ ]:
-
-
-
-
