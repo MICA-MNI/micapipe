@@ -17,8 +17,8 @@ In the following examples, we'll load and visualize single subject surfaces. Sur
 
     sub-HC001/
     └── ses-01
-        ├── **surf                     # fsnative, fsaverage5, fsLR-32k, fsLR-5k surfaces**
-        └── **maps**                   # Thickness, curvature and quantitative maps**
+        ├── **surf**   # fsnative, fsaverage5, fsLR-32k, fsLR-5k surfaces**
+        └── **maps**   # Thickness, curvature and quantitative maps**
 
 Each native surface parcellation is found inside the subject's freesurfer directory and contains the string ``mics.annot``:
 
@@ -54,7 +54,7 @@ The first step in both languages is to set the environment.
     import seaborn as sns
     from brainspace.plotting import plot_hemispheres
     from brainspace.mesh.mesh_io import read_surface
-    from brainspace.datasets import load_fsLR-32k
+    from brainspace.datasets import load_conte69
 
     # Set the working directory to the 'out' directory
     out='/data_/mica3/BIDS_MICs/derivatives' # <<<<<<<<<<<< CHANGE THIS PATH
@@ -130,7 +130,7 @@ Load the surfaces
     fs5_inf_rh = read_surface('freesurfer/fsaverage5/surf/rh.inflated', itype='fs')
 
     # Load fsLR 32k
-    f32k_lh, f32k_rh = load_fsLR-32k()
+    f32k_lh, f32k_rh = load_conte69()
 
     # Load fsLR 32k inflated
     f32k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
@@ -591,16 +591,7 @@ SWM Surfaces
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
         return(fig)
 
-    # SWM 1mm
-    plot_swm(mm='1')
-
-    # SWM 2mm
-    plot_swm(mm='2')
-
-    # SWM 3mm
-    plot_swm(mm='3')
-
-   .. code-tab:: r R
+    .. code-tab:: r R
 
     ###  SWM 1,2,3mm
     for (mm in 1:3) {
@@ -615,13 +606,44 @@ SWM Surfaces
                  rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
     }
 
+
+SWM 1mm
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # SWM 1mm
+    plot_swm(mm='1')
+
 .. figure:: swm1.png
     :alt: alternate text
     :align: center
 
+SWM 2mm
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # SWM 2mm
+    plot_swm(mm='2')
+
 .. figure:: swm2.png
     :alt: alternate text
     :align: center
+
+SWM 3mm
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # SWM 3mm
+    plot_swm(mm='3')
 
 .. figure:: swm3.png
     :alt: alternate text
@@ -667,34 +689,61 @@ SWM Surfaces
                          nan_color=(0, 0, 0, 1), cmap=cmap, color_range=crange, transparent_bg=False, screenshot = False)
         return(fig)
 
-        # T1map on fsnative
-        plot_qmri('T1map', 'fsnative')
-
-        # T1map on fsaverage5
-        plot_qmri('T1map', 'fsaverage5')
-
-        # T1map on fsLR-32k
-        plot_qmri('T1map', 'fsLR-32k')
-
-        # T1map on fsLR-5k
-        plot_qmri('T1map', 'fsLR-5k')
-
-
    .. code-tab:: r R
 
     # Under construction
+
+T1map on fsnative
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+   # Plot of T1map on fsnative
+   plot_qmri('T1map', 'fsnative')
 
 .. figure:: qMRI_fsnat.png
     :alt: alternate text
     :align: center
 
+T1map on fsaverage5
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+   # Plot of T1map on fsaverage5
+   plot_qmri('T1map', 'fsaverage5')
+
 .. figure:: qMRI_fs5.png
     :alt: alternate text
     :align: center
 
+T1map on fsLR-32k
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+   # Plot of T1map on fsLR-32k
+   plot_qmri('T1map', 'fsLR-32k')
+
 .. figure:: qMRI_32k.png
     :alt: alternate text
     :align: center
+
+T1map on fsLR-5k
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+   # Plot of T1map on fsLR-5k
+   plot_qmri('T1map', 'fsLR-5k')
 
 .. figure:: qMRI_5k.png
     :alt: alternate text

@@ -53,7 +53,7 @@ Six main directories are inside each subject folder: *anat*, *dist*, *dwi*, *fun
 
    - Structural connectome (DWI): ``dwi/connectomes``
 
-   - Functional connectome (rsfMRI): ``func/<acquisition>/surfaces``
+   - Functional connectome (fMRI): ``func/<acquisition>/surf``
 
 The structure of the subject ``HC001`` directories is shown below:
 
@@ -253,7 +253,7 @@ The time-series of that atlas is only stored in the surface fsLR-32k (``surf-fsL
    .. code-tab:: r R
 
     # Set the path to the the functional connectome
-    cnt_fs <- paste0('func/desc-se_task-rest_acq-AP_bold/surf/', subjectID, '_rsfmri_space-fsnative_atlas-', atlas, '_desc-FC.shape.gii')
+    cnt_fs <- paste0('func/desc-se_task-rest_acq-AP_bold/surf/', subjectID, '_surf-fsLR-32k_atlas-', atlas, '_desc-FC.shape.gii')
 
     # Load the cortical connectome
     mtx_fs <- readGifti(cnt_fs)$darrays[[1]]$data
@@ -290,7 +290,7 @@ Resting state time series
    .. code-tab:: r R
 
     # Set the path to the the time series file
-    cnt_time <- paste0('func/desc-se_task-rest_acq-AP_bold/surf/', subjectID, '_rsfmri_space-fsnative_atlas-', atlas, '_desc-timeseries.txt')
+    cnt_time <- paste0('func/desc-se_task-rest_acq-AP_bold/surf/', subjectID, '_surf-fsLR-32k_desc-timeseries_clean.shape.gii')
 
     # Load the time series
     mtx_time <- readGifti(cnt_time)$darrays[[1]]$data
