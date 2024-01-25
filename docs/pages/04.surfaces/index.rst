@@ -591,17 +591,17 @@ SWM Surfaces
                          nan_color=(0, 0, 0, 1), color_range=(1.5, 4), cmap='Greys', transparent_bg=False)
         return(fig)
 
-    .. code-tab:: r R
+   .. code-tab:: r R
 
-    ###  SWM 1,2,3mm
+    # SWM 1,2,3mm
     for (mm in 1:3) {
-      # Set the path to the surface
-      f32k.swm.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-L_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
-      f32k.swm.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-R_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
+    # Set the path to the surface
+    f32k.swm.lh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-L_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
+    f32k.swm.rh <- read.fs.surface(filepath = paste0(dir_surf, subjectID,'_hemi-R_surf-fsnative_label-swm',mm,'.0mm.surf.gii') )
 
-      # Plot the surface
-      cml = coloredmesh.from.preloaded.data(f32k.swm.lh, morph_data = rep(0, nrow(f32k.swm.lh$vertices)), makecmap_options = list('colFn'=grays) )
-      cmr = coloredmesh.from.preloaded.data(f32k.swm.rh, morph_data = rep(0, nrow(f32k.swm.rh$vertices)), makecmap_options = list('colFn'=grays) )
+    # Plot the surface
+    cml = coloredmesh.from.preloaded.data(f32k.swm.lh, morph_data = rep(0, nrow(f32k.swm.lh$vertices)), makecmap_options = list('colFn'=grays) )
+    cmr = coloredmesh.from.preloaded.data(f32k.swm.rh, morph_data = rep(0, nrow(f32k.swm.rh$vertices)), makecmap_options = list('colFn'=grays) )
       brainviews(views = 't4', coloredmeshes=list('lh'=cml, 'rh'=cmr), draw_colorbar = FALSE,
                  rglactions = list('trans_fun'=limit_fun(-1, 1), 'no_vis'=F))
     }
@@ -651,7 +651,23 @@ SWM 3mm
 
 
 `/maps`: fsnative, fsaverage5, fsLR-32k and fsLR-5k
-========================================================
+--------------------------------------------------------
+
+- Each file map with the extension `func.gii` corresponds to the data map from a NIFTI image at a certain deep. 
+- The deep from where it was mapped is in the name after the string `label-`.
+- The hemisphere is either `L` for left or `R` for right.
+- The surface will match the number of points of the surface that corresponds that file map. The options are: `fsnative`, `fsLR-32k`, `fsLR-5k` and `fsaverage5`.
+
+- The maps on the surfaces `fsnative`, `fsLR-32k`, `fsLR-5k`, can be plot on their native surface or on the standard surface (regular or inflated).
+
+> For example the file below corresponds to the left native surface mapped from midthicknes of the T1map nifti image:
+> `sub-001_hemi-L_surf-fsnative_label-midthickness_T1map.func.gii`
+
+> **NOTE: There is no inherent smoothing applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.**
+
+.. figure:: ../02.structuralproc/brain_surfaces.png
+    :alt: alternate text
+    :align: center
 
 .. tabs::
 
@@ -708,7 +724,7 @@ T1map on fsnative
     :alt: alternate text
     :align: center
 
-T1map on fsaverage5
+T1map on fsaverage5 native
 ========================================================
 
 .. tabs::
@@ -722,7 +738,7 @@ T1map on fsaverage5
     :alt: alternate text
     :align: center
 
-T1map on fsLR-32k
+T1map on fsLR-32k native
 ========================================================
 
 .. tabs::
@@ -736,7 +752,7 @@ T1map on fsLR-32k
     :alt: alternate text
     :align: center
 
-T1map on fsLR-5k
+T1map on fsLR-5k native
 ========================================================
 
 .. tabs::
@@ -747,6 +763,69 @@ T1map on fsLR-5k
     plot_qmri('T1map', 'fsLR-5k')
 
 .. figure:: qMRI_5k.png
+    :alt: alternate text
+    :align: center
+
+
+`/maps`: fsaverage5, fsLR-32k and fsLR-5k on standard 
+--------------------------------------------------------
+
+T1map on fsaverage5 stardard
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # Load the T1map data on fsaverage5
+    map_data = load_qmri('T1map', 'fsaverage5')
+
+    # Color range based in the quantiles
+    crange=(np.quantile(map_data, 0.15), np.quantile(map_data, 0.95))
+
+    # Plot data on standard surface
+    plot_hemispheres(fs5_lh, fs5_rh, array_name=map_data, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=crange, cmap="rocket", transparent_bg=False)
+
+.. figure:: qMRI_fs5_std.png
+    :alt: alternate text
+    :align: center
+
+T1map on fsLR-32k stardard
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # Load the T1map data on fsLR-32k
+    map_data = load_qmri('T1map', 'fsLR-32k')
+
+    # Plot data on standard surface
+    plot_hemispheres(f32k_lh, f32k_rh, array_name=map_data, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=crange, cmap="rocket", transparent_bg=False)
+
+
+.. figure:: qMRI_32k_std.png
+    :alt: alternate text
+    :align: center
+
+T1map on fsLR-5k stardard
+========================================================
+
+.. tabs::
+
+   .. code-tab:: py
+
+    # Load the T1map data on fsLR-5k
+    map_data = load_qmri('T1map', 'fsLR-5k')
+
+    # Plot data on standard surface
+    plot_hemispheres(f5k_lh, f5k_rh, array_name=map_data, size=(900, 250), color_bar='bottom', zoom=1.25, embed_nb=True, interactive=False, share='both',
+                             nan_color=(0, 0, 0, 1), color_range=crange, cmap="rocket", transparent_bg=False)
+
+
+.. figure:: qMRI_5k_std.png
     :alt: alternate text
     :align: center
 
