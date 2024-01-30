@@ -191,7 +191,7 @@ Thickness: Inflated native surface
     :align: center
 
 
-Thickness: Inflated ``fsaverage5``
+Thickness: ``fsaverage5``
 ========================================================
 
 .. tabs::
@@ -252,7 +252,7 @@ Thickness: ``fsLR-32k``
                                   views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
     plot_surface(th_f32k, 'Thickness [mm]')
 
-.. figure:: th_f32k.png
+.. figure:: th_inf_f32k.png
     :alt: alternate text
     :align: center
 
@@ -284,7 +284,7 @@ Thickness: ``fsLR-5k``
                                   views=NULL, rglactions = list('trans_fun'=limit_fun(1.5, 4), 'no_vis'=T),  makecmap_options = list('colFn'=inferno))
     plot_surface(th_f5k, 'Thickness [mm]')
 
-.. figure:: th_f5k.png
+.. figure:: th_inf_f5k.png
     :alt: alternate text
     :align: center
 
@@ -422,7 +422,7 @@ Curvature: ``fsLR-5k``
     :align: center
 
 
-``fsLR-32`k`
+``fsLR-32k``
 --------------------------------------------------------
 
 ``fsLR-32k``: Pial surface
@@ -571,7 +571,7 @@ Superficial White Matter (SWM) in ``fsnative`` surface
 --------------------------------------------------------
 
 The superficial white matter surfaces are generated across 3 different surface layer from the white mater to 1, 2 and 3mm deeps.
-Then each quantitative map from``maps`` is resample from ``fsnative`` to ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k``. In this example we will only plot the native surfaces.
+Then each quantitative map from ``/maps`` is resample from ``fsnative`` to ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k``. In this example we will only plot the native surfaces.
 
 SWM Surfaces
 ========================================================
@@ -658,14 +658,16 @@ SWM 3mm
 - The hemisphere is either ``L`` for left or ``R`` for right.
 - The surface will match the number of points of the surface that corresponds that file map. The options are: ``fsnative``, ``fsLR-32k``, ``fsLR-5k`` and ``fsaverage5``.
 
-- The maps on the surfaces ``fsnative``, ``fsLR-32k``, ``fsLR-5k``, can be plot on their native surface or on the standard surface (regular or inflated).
-
-.. warning::
-    There is no inherent smoothing applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.**
 
 .. admonition:: Note ❕
     For example the file below corresponds to the left native surface mapped from midthicknes of the T1map nifti image:
     ``sub-001_hemi-L_surf-fsnative_label-midthickness_T1map.func.gii``
+
+
+- The maps on the surfaces ``fsnative``, ``fsLR-32k``, ``fsLR-5k``, can be plot on their native surface or on the standard surface (regular or inflated).
+
+.. warning::
+    There is **NO inherent smoothing** applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.
 
 .. figure:: ../02.structuralproc/brain_surfaces.png
     :alt: alternate text
