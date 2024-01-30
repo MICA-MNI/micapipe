@@ -191,7 +191,7 @@ Geodesic distance
 
         .. figure:: gd_scatter.png
 
-        **GD gradients on `fsaverage5` surface**
+        **GD gradients on** ``fsaverage5`` **surface**
 
         .. code-block:: python
            :linenos:
@@ -211,7 +211,7 @@ Geodesic distance
 
         .. figure:: gd_fs5.png
 
-        **GD gradients to fsLR-32k surface**
+        **GD gradients to** ``fsLR-32k`` **surface**
 
         .. code-block:: python
            :linenos:
@@ -229,98 +229,98 @@ Geodesic distance
 
         .. figure:: gd_f32k.png
 
-        Structural gradients
-        ============================================================
+Structural gradients
+============================================================
 
-        .. tabs::
+.. tabs::
 
-           .. tab:: Python
+   .. tab:: Python
 
-                **Load and slice the structural matrix**
+        **Load and slice the structural matrix**
 
-                .. code-block:: python
-                   :linenos:
+        .. code-block:: python
+           :linenos:
 
-                    # Set the path to the the structural cortical connectome
-                    sc_file = f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
+            # Set the path to the the structural cortical connectome
+            sc_file = f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
 
-                    # Load the cortical connectome
-                    mtx_sc = nib.load(sc_file).darrays[0].data
+            # Load the cortical connectome
+            mtx_sc = nib.load(sc_file).darrays[0].data
 
-                    # Fill the lower triangle of the matrix
-                    mtx_sc = np.log(np.triu(mtx_sc,1)+mtx_sc.T)
-                    mtx_sc[np.isneginf(mtx_sc)] = 0
+            # Fill the lower triangle of the matrix
+            mtx_sc = np.log(np.triu(mtx_sc,1)+mtx_sc.T)
+            mtx_sc[np.isneginf(mtx_sc)] = 0
 
-                    # Slice the connectome to use only cortical nodes
-                    SC = mtx_sc[49:, 49:]
-                    SC = np.delete(np.delete(SC, 200, axis=0), 200, axis=1)
-
-
-                **Calculate the structural gradients**
-
-                .. code-block:: python
-                   :linenos:
-
-                    # SC Left hemi
-                    gm_SC_L = GradientMaps(n_components=Ngrad, random_state=None, approach='dm', kernel='normalized_angle')
-                    gm_SC_L.fit(SC[0:Ndim, 0:Ndim], sparsity=0.9)
-
-                    # SC Right hemi
-                    gm_SC_R = GradientMaps(n_components=Ngrad, alignment='procrustes', kernel='normalized_angle'); # align right hemi to left hemi
-                    gm_SC_R.fit(SC[Ndim:Ndim*2, Ndim:Ndim*2], sparsity=0.9, reference=gm_SC_L.gradients_)
-
-                **Plot the structural gradients**
-
-                .. code-block:: python
-                   :linenos:
-
-                    # plot the left gradients
-                    g1=gm_SC_L.gradients_[:, 0]
-                    g2=gm_SC_L.gradients_[:, 1]
-                    g3=gm_SC_L.gradients_[:, 2]
-                    # plot the right gradients
-                    g1R=gm_SC_R.aligned_[:, 0]
-                    g2R=gm_SC_R.aligned_[:, 1]
-                    g3R=gm_SC_R.aligned_[:, 2]
-
-                    # Creating figure
-                    fig = plt.subplots(1, 2, figsize = (7, 5))
-                    ax = plt.axes(projection ="3d")
-
-                    # Creating plot
-                    ax.scatter3D(g1, g2, g3, color = 'purple')
-                    ax.scatter3D(g1R, g2R, g3R, color = 'slateblue', marker='v')
-                    plt.title("Structural gradient")
-                    ax.legend(['Left SC', 'Right SC'])
-                    ax.set_xlabel('Grad 1')
-                    ax.set_ylabel('Grad 2')
-                    ax.set_zlabel('Grad 3')
-
-                    # show plot
-                    plt.show()
-
-                .. figure:: sc_scatter.png
-
-                **Structural gradients on `fsLR-32k` surface**
-
-                .. code-block:: python
-                   :linenos:
-
-                    # Left and right gradients concatenated
-                    SC_gradients = np.concatenate((gm_SC_L.gradients_, gm_SC_R.aligned_), axis=0)
-
-                    # Map gradients to original parcels
-                    grad = [None] * Nplot
-                    for i, g in enumerate(SC_gradients.T[0:Nplot,:]):
-                        grad[i] = map_to_labels(g, labels_f32k, fill=np.nan, mask=mask_f32k)
-
-                    # Plot Gradients
-                    plot_hemispheres(f32k_lh, f32k_rh, array_name=grad, size=(1000, 600), cmap='coolwarm',
-                                     embed_nb=True,  label_text={'left':labels}, color_bar='left',
-                                     zoom=1.25, nan_color=(1, 1, 1, 1), color_range = 'sym' )
+            # Slice the connectome to use only cortical nodes
+            SC = mtx_sc[49:, 49:]
+            SC = np.delete(np.delete(SC, 200, axis=0), 200, axis=1)
 
 
-                .. figure:: sc_f32k.png
+        **Calculate the structural gradients**
+
+        .. code-block:: python
+           :linenos:
+
+            # SC Left hemi
+            gm_SC_L = GradientMaps(n_components=Ngrad, random_state=None, approach='dm', kernel='normalized_angle')
+            gm_SC_L.fit(SC[0:Ndim, 0:Ndim], sparsity=0.9)
+
+            # SC Right hemi
+            gm_SC_R = GradientMaps(n_components=Ngrad, alignment='procrustes', kernel='normalized_angle'); # align right hemi to left hemi
+            gm_SC_R.fit(SC[Ndim:Ndim*2, Ndim:Ndim*2], sparsity=0.9, reference=gm_SC_L.gradients_)
+
+        **Plot the structural gradients**
+
+        .. code-block:: python
+           :linenos:
+
+            # plot the left gradients
+            g1=gm_SC_L.gradients_[:, 0]
+            g2=gm_SC_L.gradients_[:, 1]
+            g3=gm_SC_L.gradients_[:, 2]
+            # plot the right gradients
+            g1R=gm_SC_R.aligned_[:, 0]
+            g2R=gm_SC_R.aligned_[:, 1]
+            g3R=gm_SC_R.aligned_[:, 2]
+
+            # Creating figure
+            fig = plt.subplots(1, 2, figsize = (7, 5))
+            ax = plt.axes(projection ="3d")
+
+            # Creating plot
+            ax.scatter3D(g1, g2, g3, color = 'purple')
+            ax.scatter3D(g1R, g2R, g3R, color = 'slateblue', marker='v')
+            plt.title("Structural gradient")
+            ax.legend(['Left SC', 'Right SC'])
+            ax.set_xlabel('Grad 1')
+            ax.set_ylabel('Grad 2')
+            ax.set_zlabel('Grad 3')
+
+            # show plot
+            plt.show()
+
+        .. figure:: sc_scatter.png
+
+        **Structural gradients on** ``fsLR-32k`` **surface**
+
+        .. code-block:: python
+           :linenos:
+
+            # Left and right gradients concatenated
+            SC_gradients = np.concatenate((gm_SC_L.gradients_, gm_SC_R.aligned_), axis=0)
+
+            # Map gradients to original parcels
+            grad = [None] * Nplot
+            for i, g in enumerate(SC_gradients.T[0:Nplot,:]):
+            grad[i] = map_to_labels(g, labels_f32k, fill=np.nan, mask=mask_f32k)
+
+            # Plot Gradients
+            plot_hemispheres(f32k_lh, f32k_rh, array_name=grad, size=(1000, 600), cmap='coolwarm',
+                 embed_nb=True,  label_text={'left':labels}, color_bar='left',
+                 zoom=1.25, nan_color=(1, 1, 1, 1), color_range = 'sym' )
+
+
+        .. figure:: sc_f32k.png
 
 Functional gradients
 ============================================================
@@ -389,7 +389,7 @@ Functional gradients
 
         .. figure:: fc_scatter.png
 
-        **Functional gradients on fsLR-32k surface**
+        **Functional gradients on** ``fsLR-32k`` **surface**
 
         .. code-block:: python
            :linenos:
@@ -490,7 +490,7 @@ MPC gradients
 
         .. figure:: mpc_scatter.png
 
-        **MPC gradients on `fsLR-32k` surface**
+        **MPC gradients on** ``fsLR-32k`` **surface**
 
         .. code-block:: python
            :linenos:
@@ -513,21 +513,23 @@ MPC gradients: ALL subjects mean
 Load all matrices from a dataset processed
 ------------------------------------------------------------
 
-1. Start by generating a list of files using regular expressions for matrices with a consistent structure. Specifically, we'll focus on loading the `T1map MPC` connectome data for `schaefer-400` from the MPC directory.
+1. Start by generating a list of files using regular expressions for matrices with a consistent structure. Specifically, we'll focus on loading the ``T1map MPC`` connectome data for ``schaefer-400`` from the MPC directory.
 
-2. Create an empty three-dimensional array with dimensions `{ROI * ROI * subjects}`.
+2. Create an empty three-dimensional array with dimensions ``{ROI * ROI * subjects}``.
 
 3. Load each matrix iteratively and populate the array with the data.
 
 4. Once the array is populated, perform computations on it. In this case, we'll calculate the group mean connectome.
 
-5. Use the group mean connectome to compute the group mean diffusion map for the `T1map MPC`.
+5. Use the group mean connectome to compute the group mean diffusion map for the ``T1map MPC``.
 
-6. Finally, visualize the results by plotting the first three gradients (eigen vectors) of the group mean diffusion map on a surface `fsLR-32k`.
+6. Finally, visualize the results by plotting the first three gradients (eigen vectors) of the group mean diffusion map on a surface ``fsLR-32k``.
 
 .. tabs::
 
    .. tab:: Python
+
+        **Load all the MPC matrices**
 
         .. code-block:: python
            :linenos:
@@ -588,7 +590,7 @@ Load all matrices from a dataset processed
 
         .. figure:: mpc-all_scatter.png
 
-        **Mean group MPC gradients on `fsLR-32k` surface**
+        **Mean group MPC gradients on** ``fsLR-32k`` **surface**
 
         .. code-block:: python
            :linenos:
@@ -605,8 +607,8 @@ Load all matrices from a dataset processed
 
         .. figure:: mpc-all_f32k.png
 
-Download the code!
-============================================================
+Download the code!: atlas based gradients
+------------------------------------------------------------
 
 :download:`Python Jupyter notebook: 'tutorial_gradients.ipynb' <tutorial_gradients.ipynb>`
 
@@ -617,7 +619,7 @@ fsLR-5k gradients
 ******************
 
 Set the environment
-============================================================
+------------------------------------------------------------
 
 .. tabs::
 
@@ -666,7 +668,7 @@ Set the environment
             mask_rh = nib.load(micapipe + '/surfaces/fsLR-5k.R.mask.shape.gii').darrays[0].data
             mask_5k = np.concatenate((mask_lh, mask_rh), axis=0)
 
-        **Functions to load fsLR-5k connectomes**
+        **Functions to load** ``fsLR-5k`` **connectomes**
 
         .. code-block:: python
            :linenos:
@@ -725,7 +727,7 @@ Set the environment
 
                 return mtx_sc
 
-        **Functions to calculate fsLR-5k diffusion maps**
+        **Functions to calculate** ``fsLR-5k`` **diffusion maps**
 
         .. code-block:: python
            :linenos:
@@ -795,7 +797,7 @@ Set the environment
 
                 return(mtx_gradients, grad)
 
-            def fslr5k_dm(mtx, mask, Ngrad=3, Smooth=False, S=0.9):
+            def fslr5k_dm(mtx, mask, Ngrad=3, S=0.9):
                 """Create the gradients from the MPC matrix
                     S=sparcity, by default is 0.9
                 """
@@ -847,8 +849,8 @@ Set the environment
             # Labels for plotting based on Nplot
             labels=['G'+str(x) for x in list(range(1,Nplot+1))]
 
-Geodesic distance: single subject `fsLR-5k`
-============================================================
+Geodesic distance: single subject ``fsLR-5k``
+------------------------------------------------------------
 
 .. tabs::
 
@@ -873,8 +875,8 @@ Geodesic distance: single subject `fsLR-5k`
 
         .. figure:: gd_f5k.png
 
-Structual connectome: single subject `fsLR-5k`
-============================================================
+Structual connectome: single subject ``fsLR-5k``
+------------------------------------------------------------
 
 .. tabs::
 
@@ -899,8 +901,8 @@ Structual connectome: single subject `fsLR-5k`
 
         .. figure:: sc_f5k.png
 
-Functional connectome: single subject `fsLR-5k`
-============================================================
+Functional connectome: single subject ``fsLR-5k``
+------------------------------------------------------------
 
 .. tabs::
 
@@ -926,8 +928,8 @@ Functional connectome: single subject `fsLR-5k`
 
         .. figure:: fc_f5k.png
 
-MPC T1map: single subject `fsLR-5k`
-============================================================
+MPC T1map: single subject ``fsLR-5k``
+------------------------------------------------------------
 
 .. tabs::
 
@@ -953,12 +955,63 @@ MPC T1map: single subject `fsLR-5k`
 
         .. figure:: mpc_f5k.png
 
-MPC T1map: ALL subjects `fsLR-5k`
-============================================================
+MPC T1map: ALL subjects ``fsLR-5k``
+------------------------------------------------------------
 
-Download the code!
-============================================================
+**Load all matrices from a dataset processed**
 
-:download:`Python Jupyter notebook: 'tutorial_gradients.ipynb' <tutorial_fsLR5k.ipynb>`
+1. Start by generating a list of files using regular expressions for matrices with a consistent structure. Specifically, we'll focus on loading the ``T1map MPC`` connectome data for ``fsLR-5k`` from the MPC directory.
 
-:download:`Python source code: 'tutorial_gradients.py' <tutorial_fsLR5k.py>`
+2. Create an empty three-dimensional array with dimensions ``{ROI * ROI * vertices}``.
+
+3. Load each matrix iteratively and populate the array with the data.
+
+4. Once the array is populated, perform computations on it. In this case, we'll calculate the group mean connectome.
+
+5. Use the group mean connectome to compute the group mean diffusion map for the ``T1map MPC``.
+
+6. Finally, visualize the results by plotting the first three gradients (eigen vectors) of the group mean diffusion map on a surface ``fsLR-5k``.
+
+.. tabs::
+
+   .. tab:: Python
+
+        .. code-block:: python
+           :linenos:
+
+            # MPC T1map acquisition
+            mpc_acq='T1map'
+
+            # List all the matrices from all subjects
+            mpc_file = sorted(glob.glob(f"sub-PX*/ses-01/mpc/acq-{mpc_acq}/*surf-fsLR-5k_desc-MPC.shape.gii"))
+            N = len(mpc_file)
+            print(f"Number of subjects's MPC: {N}")
+
+            # Loads all the MPC fsLR-5k matrices
+            mpc_5k_all=np.empty([N5k, N5k, len(mpc_file)], dtype=float)
+            for i, f in enumerate(mpc_file):
+                mpc_5k_all[:,:,i] = load_mpc(f)
+
+            # Print the shape of the array: {vertices * vertices * subjects}
+            mpc_5k_all.shape
+
+            # Mean group MPC across all subjects (z-axis)
+            mpc_5k_mean = np.mean(mpc_5k_all, axis=2)
+
+            # Calculate the gradients (diffusion map)
+            mpc_dm, grad = fslr5k_dm(mpc_5k_mean, mask_5k, Ngrad=Ngrad, S=0)
+
+            # Plot the gradients
+            plot_hemispheres(f5k_lhi, f5k_rhi, array_name=grad[0:Nplot], cmap='RdBu_r', nan_color=(0, 0, 0, 1),
+              zoom=1.3, size=(900, 750), embed_nb=True, color_range='sym',
+              color_bar='right', label_text={'left': labels})
+
+
+        .. figure:: mpc-all_f5k.png
+
+Download the code!: ``fsLR-5k`` gradients
+------------------------------------------------------------
+
+:download:`Python Jupyter notebook: 'tutorial_fsLR-5k.ipynb' <tutorial_fsLR-5k.ipynb>`
+
+:download:`Python source code: 'tutorial_fsLR-5k.py' <tutorial_fsLR-5k.py>`
