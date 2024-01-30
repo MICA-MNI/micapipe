@@ -533,9 +533,6 @@ MPC gradients
 
         .. figure:: mpc_f32k.png
 
-MPC gradients: ALL subjects mean
-============================================================
-
 Load all matrices from a dataset processed
 ------------------------------------------------------------
 
@@ -550,6 +547,9 @@ Load all matrices from a dataset processed
 5. Use the group mean connectome to compute the group mean diffusion map for the ``T1map MPC``.
 
 6. Finally, visualize the results by plotting the first three gradients (eigen vectors) of the group mean diffusion map on a surface ``fsLR-32k``.
+
+MPC gradients: ALL subjects mean
+============================================================
 
 .. tabs::
 
@@ -646,9 +646,9 @@ Download the code!: atlas based gradients
 
 :download:`Python source code: 'tutorial_gradients.py' <tutorial_gradients.py>`
 
-******************
-fsLR-5k gradients
-******************
+*********************
+``fsLR-5k`` gradients
+*********************
 
 Set the environment
 ------------------------------------------------------------

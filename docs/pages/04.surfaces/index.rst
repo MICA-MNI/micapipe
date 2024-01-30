@@ -658,11 +658,10 @@ SWM 3mm
 - The hemisphere is either ``L`` for left or ``R`` for right.
 - The surface will match the number of points of the surface that corresponds that file map. The options are: ``fsnative``, ``fsLR-32k``, ``fsLR-5k`` and ``fsaverage5``.
 
-
 .. admonition:: Note ❕
+
     For example the file below corresponds to the left native surface mapped from midthicknes of the T1map nifti image:
     ``sub-001_hemi-L_surf-fsnative_label-midthickness_T1map.func.gii``
-
 
 - The maps on the surfaces ``fsnative``, ``fsLR-32k``, ``fsLR-5k``, can be plot on their native surface or on the standard surface (regular or inflated).
 
