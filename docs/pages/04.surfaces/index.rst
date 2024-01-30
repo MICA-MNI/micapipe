@@ -191,7 +191,7 @@ Thickness: Inflated native surface
     :align: center
 
 
-Thickness: Inflated fsaverage5
+Thickness: Inflated ``fsaverage5``
 ========================================================
 
 .. tabs::
@@ -224,7 +224,7 @@ Thickness: Inflated fsaverage5
     :align: center
 
 
-Thickness: fsLR-32k
+Thickness: ``fsLR-32k``
 ========================================================
 
 .. tabs::
@@ -256,7 +256,7 @@ Thickness: fsLR-32k
     :alt: alternate text
     :align: center
 
-Thickness: fsLR-5k
+Thickness: ``fsLR-5k``
 ========================================================
 
 .. tabs::
@@ -326,7 +326,7 @@ Curvature: Native inflated surface
     :align: center
 
 
-Curvature: fsaverage5
+Curvature: ``fsaverage5``
 ========================================================
 
 .. tabs::
@@ -359,7 +359,7 @@ Curvature: fsaverage5
     :align: center
 
 
-Curvature: fsLR-32k
+Curvature: ``fsLR-32k``
 ========================================================
 
 .. tabs::
@@ -390,7 +390,7 @@ Curvature: fsLR-32k
     :alt: alternate text
     :align: center
 
-Curvature: fsLR-5k
+Curvature: ``fsLR-5k``
 ========================================================
 
 .. tabs::
@@ -422,10 +422,10 @@ Curvature: fsLR-5k
     :align: center
 
 
-fsLR-32k
+``fsLR-32`k`
 --------------------------------------------------------
 
-fsLR-32k: Pial surface
+``fsLR-32k``: Pial surface
 ========================================================
 
 .. tabs::
@@ -461,7 +461,7 @@ fsLR-32k: Pial surface
     :align: center
 
 
-fsLR-32k: Middle surface
+``fsLR-32k``: Middle surface
 ========================================================
 
 .. tabs::
@@ -494,7 +494,7 @@ fsLR-32k: Middle surface
     :align: center
 
 
-fsLR-32k: White matter surface
+``fsLR-32k``: White matter surface
 ========================================================
 
 .. tabs::
@@ -567,11 +567,11 @@ Native sphere
     :align: center
 
 
-Superficial White Matter (SWM) in fsnative surface
+Superficial White Matter (SWM) in ``fsnative`` surface
 --------------------------------------------------------
 
 The superficial white matter surfaces are generated across 3 different surface layer from the white mater to 1, 2 and 3mm deeps.
-Then each quantitative map from`maps` is resample from fsnative to fsaverage5, fsLR-32k and fsLR-5k. In this example we will only plot the native surfaces.
+Then each quantitative map from``maps`` is resample from ``fsnative`` to ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k``. In this example we will only plot the native surfaces.
 
 SWM Surfaces
 ========================================================
@@ -650,20 +650,22 @@ SWM 3mm
     :align: center
 
 
-`/maps`: fsnative, fsaverage5, fsLR-32k and fsLR-5k
+``/maps``: ``fsnative``, ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k``
 --------------------------------------------------------
 
-- Each file map with the extension `func.gii` corresponds to the data map from a NIFTI image at a certain deep. 
-- The deep from where it was mapped is in the name after the string `label-`.
-- The hemisphere is either `L` for left or `R` for right.
-- The surface will match the number of points of the surface that corresponds that file map. The options are: `fsnative`, `fsLR-32k`, `fsLR-5k` and `fsaverage5`.
+- Each file map with the extension ``func.gii`` corresponds to the data map from a NIFTI image at a certain deep.
+- The deep from where it was mapped is in the name after the string ``label-``.
+- The hemisphere is either ``L`` for left or ``R`` for right.
+- The surface will match the number of points of the surface that corresponds that file map. The options are: ``fsnative``, ``fsLR-32k``, ``fsLR-5k`` and ``fsaverage5``.
 
-- The maps on the surfaces `fsnative`, `fsLR-32k`, `fsLR-5k`, can be plot on their native surface or on the standard surface (regular or inflated).
+- The maps on the surfaces ``fsnative``, ``fsLR-32k``, ``fsLR-5k``, can be plot on their native surface or on the standard surface (regular or inflated).
 
-> For example the file below corresponds to the left native surface mapped from midthicknes of the T1map nifti image:
-> `sub-001_hemi-L_surf-fsnative_label-midthickness_T1map.func.gii`
+.. warning::
+    There is no inherent smoothing applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.**
 
-> **NOTE: There is no inherent smoothing applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.**
+.. admonition:: Note ❕
+    For example the file below corresponds to the left native surface mapped from midthicknes of the T1map nifti image:
+    ``sub-001_hemi-L_surf-fsnative_label-midthickness_T1map.func.gii``
 
 .. figure:: ../02.structuralproc/brain_surfaces.png
     :alt: alternate text
@@ -710,7 +712,7 @@ SWM 3mm
 
     # Under construction
 
-T1map on fsnative
+T1map on ``fsnative``
 ========================================================
 
 .. tabs::
@@ -724,7 +726,7 @@ T1map on fsnative
     :alt: alternate text
     :align: center
 
-T1map on fsaverage5 native
+T1map on ``fsaverage5`` native
 ========================================================
 
 .. tabs::
@@ -738,7 +740,7 @@ T1map on fsaverage5 native
     :alt: alternate text
     :align: center
 
-T1map on fsLR-32k native
+T1map on ``fsLR-32k`` native
 ========================================================
 
 .. tabs::
@@ -752,7 +754,7 @@ T1map on fsLR-32k native
     :alt: alternate text
     :align: center
 
-T1map on fsLR-5k native
+T1map on ``fsLR-5k`` native
 ========================================================
 
 .. tabs::
@@ -767,10 +769,10 @@ T1map on fsLR-5k native
     :align: center
 
 
-`/maps`: fsaverage5, fsLR-32k and fsLR-5k on standard 
---------------------------------------------------------
+``/maps``: ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k`` on standard
+-------------------------------------------------------------------
 
-T1map on fsaverage5 stardard
+T1map on ``fsaverage5`` stardard
 ========================================================
 
 .. tabs::
@@ -791,7 +793,7 @@ T1map on fsaverage5 stardard
     :alt: alternate text
     :align: center
 
-T1map on fsLR-32k stardard
+T1map on ``fsLR-32k`` stardard
 ========================================================
 
 .. tabs::
@@ -810,7 +812,7 @@ T1map on fsLR-32k stardard
     :alt: alternate text
     :align: center
 
-T1map on fsLR-5k stardard
+T1map on ``fsLR-5k`` stardard
 ========================================================
 
 .. tabs::
