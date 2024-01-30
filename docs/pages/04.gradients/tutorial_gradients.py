@@ -150,25 +150,32 @@ gm_GD_R.fit(GD[Ndim:Ndim*2, Ndim:Ndim*2], sparsity=0.85, reference=gm_GD_L.gradi
 g1=gm_GD_L.gradients_[:, 0]
 g2=gm_GD_L.gradients_[:, 1]
 g3=gm_GD_L.gradients_[:, 2]
+
 # plot the gradients
 g1R=gm_GD_R.aligned_[:, 0]
 g2R=gm_GD_R.aligned_[:, 1]
 g3R=gm_GD_R.aligned_[:, 2]
 
 # Creating figure
-fig = plt.subplots(1, 2, figsize = (7, 5))
-ax = plt.axes(projection ="3d")
- 
+fig = plt.figure(figsize=(7, 5))
+ax = fig.add_subplot(111, projection="3d")
+
 # Creating plot
 ax.scatter3D(g1, g2, g3, color = 'dodgerblue')
 ax.scatter3D(g1R, g2R, g3R, color = 'teal', marker='v')
 plt.title("Structural gradient")
 ax.legend(['Left GD', 'Right GD'])
+
 ax.set_xlabel('Grad 1')
 ax.set_ylabel('Grad 2')
 ax.set_zlabel('Grad 3')
- 
-# show plot
+
+# Remove the outer box lines
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+
+# Show plot
 plt.show()
 
 
@@ -251,25 +258,32 @@ gm_SC_R.fit(SC[Ndim:Ndim*2, Ndim:Ndim*2], sparsity=0.9, reference=gm_SC_L.gradie
 g1=gm_SC_L.gradients_[:, 0]
 g2=gm_SC_L.gradients_[:, 1]
 g3=gm_SC_L.gradients_[:, 2]
+
 # plot the right gradients
 g1R=gm_SC_R.aligned_[:, 0]
 g2R=gm_SC_R.aligned_[:, 1]
 g3R=gm_SC_R.aligned_[:, 2]
 
 # Creating figure
-fig = plt.subplots(1, 2, figsize = (7, 5))
-ax = plt.axes(projection ="3d")
- 
+fig = plt.figure(figsize=(7, 5))
+ax = fig.add_subplot(111, projection="3d")
+
 # Creating plot
 ax.scatter3D(g1, g2, g3, color = 'purple')
 ax.scatter3D(g1R, g2R, g3R, color = 'slateblue', marker='v')
 plt.title("Structural gradient")
 ax.legend(['Left SC', 'Right SC'])
+
 ax.set_xlabel('Grad 1')
 ax.set_ylabel('Grad 2')
 ax.set_zlabel('Grad 3')
- 
-# show plot
+
+# Remove the outer box lines
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+
+# Show plot
 plt.show()
 
 
@@ -335,22 +349,28 @@ gm.fit(FCz, sparsity=0.85)
 
 
 # Plot the gradients
-g1=gm.gradients_[:, 0]
-g2=gm.gradients_[:, 1]
-g3=gm.gradients_[:, 2]
+g1 = gm.gradients_[:, 0]
+g2 = gm.gradients_[:, 1]
+g3 = gm.gradients_[:, 2]
 
 # Creating figure
-fig = plt.subplots(1, 2, figsize = (7, 5))
-ax = plt.axes(projection ="3d")
- 
+fig = plt.figure(figsize=(7, 5))
+ax = fig.add_subplot(111, projection="3d")
+
 # Creating plot
-ax.scatter3D(g1, g2, g3, color = 'red')
+ax.scatter3D(g1, g2, g3, color='red')
 plt.title("Functional gradient")
+
 ax.set_xlabel('Grad 1')
 ax.set_ylabel('Grad 2')
 ax.set_zlabel('Grad 3')
- 
-# show plot
+
+# Remove the outer box lines
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+
+# Show plot
 plt.show()
 
 
@@ -429,22 +449,28 @@ gm.fit(mpc, sparsity=0)
 
 
 # Plot the gradients
-g1=gm.gradients_[:, 0]
-g2=gm.gradients_[:, 1]
-g3=gm.gradients_[:, 2]
+g1 = gm.gradients_[:, 0]
+g2 = gm.gradients_[:, 1]
+g3 = gm.gradients_[:, 2]
 
 # Creating figure
-fig = plt.subplots(1, 2, figsize = (7, 5))
-ax = plt.axes(projection ="3d")
- 
+fig = plt.figure(figsize=(7, 5))
+ax = fig.add_subplot(111, projection="3d")
+
 # Creating plot
 ax.scatter3D(g1, g2, g3, color = 'green')
 plt.title("MPC gradient")
+
 ax.set_xlabel('Grad 1')
 ax.set_ylabel('Grad 2')
 ax.set_zlabel('Grad 3')
- 
-# show plot
+
+# Remove the outer box lines
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+
+# Show plot
 plt.show()
 
 
@@ -525,22 +551,28 @@ gm.fit(mpc_all_mean, sparsity=0)
 
 
 # Plot the gradients
-g1=gm.gradients_[:, 0]
-g2=gm.gradients_[:, 1]
-g3=gm.gradients_[:, 2]
+g1 = gm.gradients_[:, 0]
+g2 = gm.gradients_[:, 1]
+g3 = gm.gradients_[:, 2]
 
 # Creating figure
-fig = plt.subplots(1, 2, figsize = (7, 5))
-ax = plt.axes(projection ="3d")
- 
+fig = plt.figure(figsize=(7, 5))
+ax = fig.add_subplot(111, projection="3d")
+
 # Creating plot
 ax.scatter3D(g1, g2, g3, color = 'green')
 plt.title("MPC gradient")
+
 ax.set_xlabel('Grad 1')
 ax.set_ylabel('Grad 2')
 ax.set_zlabel('Grad 3')
- 
-# show plot
+
+# Remove the outer box lines
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+
+# Show plot
 plt.show()
 
 

@@ -103,22 +103,22 @@ Loading the surfaces
       # mask of the medial wall
       mask_f32k = labels_f32k != 0
 
-      Global variables
-      ============================================================
+Global variables
+============================================================
 
-      .. tabs::
+.. tabs::
 
-         .. code-tab:: py
-           :linenos:
+   .. code-tab:: py
+      :linenos:
 
-            # Number of gradients to calculate
-            Ngrad=10
+      # Number of gradients to calculate
+      Ngrad=10
 
-            # Number of gradients to plot
-            Nplot=3
+      # Number of gradients to plot
+      Nplot=3
 
-            # Labels for plotting based on Nplot
-            labels=['G'+str(x) for x in list(range(1,Nplot+1))]
+      # Labels for plotting based on Nplot
+      labels=['G'+str(x) for x in list(range(1,Nplot+1))]
 
 Gradients from atlas based connectomes: single subject
 ------------------------------------------------------------
@@ -168,25 +168,32 @@ Geodesic distance
             g1=gm_GD_L.gradients_[:, 0]
             g2=gm_GD_L.gradients_[:, 1]
             g3=gm_GD_L.gradients_[:, 2]
+
             # plot the gradients
             g1R=gm_GD_R.aligned_[:, 0]
             g2R=gm_GD_R.aligned_[:, 1]
             g3R=gm_GD_R.aligned_[:, 2]
 
             # Creating figure
-            fig = plt.subplots(1, 2, figsize = (7, 5))
-            ax = plt.axes(projection ="3d")
+            fig = plt.figure(figsize=(7, 5))
+            ax = fig.add_subplot(111, projection="3d")
 
             # Creating plot
             ax.scatter3D(g1, g2, g3, color = 'dodgerblue')
             ax.scatter3D(g1R, g2R, g3R, color = 'teal', marker='v')
             plt.title("Structural gradient")
             ax.legend(['Left GD', 'Right GD'])
+
             ax.set_xlabel('Grad 1')
             ax.set_ylabel('Grad 2')
             ax.set_zlabel('Grad 3')
 
-            # show plot
+            # Remove the outer box lines
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+
+            # Show plot
             plt.show()
 
         .. figure:: gd_scatter.png
@@ -278,25 +285,32 @@ Structural gradients
             g1=gm_SC_L.gradients_[:, 0]
             g2=gm_SC_L.gradients_[:, 1]
             g3=gm_SC_L.gradients_[:, 2]
+
             # plot the right gradients
             g1R=gm_SC_R.aligned_[:, 0]
             g2R=gm_SC_R.aligned_[:, 1]
             g3R=gm_SC_R.aligned_[:, 2]
 
             # Creating figure
-            fig = plt.subplots(1, 2, figsize = (7, 5))
-            ax = plt.axes(projection ="3d")
+            fig = plt.figure(figsize=(7, 5))
+            ax = fig.add_subplot(111, projection="3d")
 
             # Creating plot
             ax.scatter3D(g1, g2, g3, color = 'purple')
             ax.scatter3D(g1R, g2R, g3R, color = 'slateblue', marker='v')
             plt.title("Structural gradient")
             ax.legend(['Left SC', 'Right SC'])
+
             ax.set_xlabel('Grad 1')
             ax.set_ylabel('Grad 2')
             ax.set_zlabel('Grad 3')
 
-            # show plot
+            # Remove the outer box lines
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+
+            # Show plot
             plt.show()
 
         .. figure:: sc_scatter.png
@@ -369,22 +383,28 @@ Functional gradients
            :linenos:
 
             # Plot the gradients
-            g1=gm.gradients_[:, 0]
-            g2=gm.gradients_[:, 1]
-            g3=gm.gradients_[:, 2]
+            g1 = gm.gradients_[:, 0]
+            g2 = gm.gradients_[:, 1]
+            g3 = gm.gradients_[:, 2]
 
             # Creating figure
-            fig = plt.subplots(1, 2, figsize = (7, 5))
-            ax = plt.axes(projection ="3d")
+            fig = plt.figure(figsize=(7, 5))
+            ax = fig.add_subplot(111, projection="3d")
 
             # Creating plot
-            ax.scatter3D(g1, g2, g3, color = 'red')
+            ax.scatter3D(g1, g2, g3, color='red')
             plt.title("Functional gradient")
+
             ax.set_xlabel('Grad 1')
             ax.set_ylabel('Grad 2')
             ax.set_zlabel('Grad 3')
 
-            # show plot
+            # Remove the outer box lines
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+
+            # Show plot
             plt.show()
 
         .. figure:: fc_scatter.png
@@ -470,22 +490,28 @@ MPC gradients
            :linenos:
 
             # Plot the gradients
-            g1=gm.gradients_[:, 0]
-            g2=gm.gradients_[:, 1]
-            g3=gm.gradients_[:, 2]
+            g1 = gm.gradients_[:, 0]
+            g2 = gm.gradients_[:, 1]
+            g3 = gm.gradients_[:, 2]
 
             # Creating figure
-            fig = plt.subplots(1, 2, figsize = (7, 5))
-            ax = plt.axes(projection ="3d")
+            fig = plt.figure(figsize=(7, 5))
+            ax = fig.add_subplot(111, projection="3d")
 
             # Creating plot
             ax.scatter3D(g1, g2, g3, color = 'green')
             plt.title("MPC gradient")
+
             ax.set_xlabel('Grad 1')
             ax.set_ylabel('Grad 2')
             ax.set_zlabel('Grad 3')
 
-            # show plot
+            # Remove the outer box lines
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+
+            # Show plot
             plt.show()
 
         .. figure:: mpc_scatter.png
@@ -570,22 +596,28 @@ Load all matrices from a dataset processed
            :linenos:
 
             # Plot the gradients
-            g1=gm.gradients_[:, 0]
-            g2=gm.gradients_[:, 1]
-            g3=gm.gradients_[:, 2]
+            g1 = gm.gradients_[:, 0]
+            g2 = gm.gradients_[:, 1]
+            g3 = gm.gradients_[:, 2]
 
             # Creating figure
-            fig = plt.subplots(1, 2, figsize = (7, 5))
-            ax = plt.axes(projection ="3d")
+            fig = plt.figure(figsize=(7, 5))
+            ax = fig.add_subplot(111, projection="3d")
 
             # Creating plot
             ax.scatter3D(g1, g2, g3, color = 'green')
             plt.title("MPC gradient")
+
             ax.set_xlabel('Grad 1')
             ax.set_ylabel('Grad 2')
             ax.set_zlabel('Grad 3')
 
-            # show plot
+            # Remove the outer box lines
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+
+            # Show plot
             plt.show()
 
         .. figure:: mpc-all_scatter.png
