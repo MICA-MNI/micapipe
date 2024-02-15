@@ -10,11 +10,11 @@ By parcellating and cross-correlating nodal intensity profiles, this module gene
 
 Superficial white matter surfaces are generated using scripts from the `superficial-white-matter repository <https://github.com/jordandekraker/superficial-white-matter>`_, available via GitHub by Jordan De Kraker.
 
-.. figure:: https://raw.githubusercontent.com/jordandekraker/superficial-white-matter/main/scrnshot.png
-   :align: center
-
 -MPC_SWM
 --------------------------------------------------------
+
+.. figure:: MPC_SWM_methods.png
+   :align: center
 
 .. admonition:: Prerequisites 🖐🏼
 
@@ -52,8 +52,8 @@ Superficial white matter surfaces are generated using scripts from the `superfic
               - Specifies an input quantitative MRI on which to sample intensities for the MPC analysis. By default the pipeline will search this regex `anat/*mp2rage*T1map.nii*` You must specify this flag with the full path to your qMRI (for example, MTR, MTSAT, T2star, T1w/T2w).
             * - ``-microstructural_reg`` ``<path>``
               - Path to scan which will be register to the surface ( e.g INV1, better anatomical contrast ). It MUST be on the same space as the main microstructural image!!.If it is EMPTY will try to find a T1map from here: anat/*mp2rage*T1map.nii*. Set to 'FALSE' to use microstructural_img for registrations.
-            * - ``-mpc_acq`` ``<path>``
-              - Default=qMRI. Provide a string with this this flag to process new quantitative map. ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
+            * - ``-mpc_acq`` ``<qMRI>``
+              - Default=qMRI. Provide a string with this this flag to process new quantitative map. ( this will create a new directory here: mpc-swm/acq-<qMRI> )
             * - ``-regSynth``
               - Specify this option to perform the registration based on synthseg
             * - ``-reg_nonlinear``
@@ -65,7 +65,7 @@ Superficial white matter surfaces are generated using scripts from the `superfic
 
         .. parsed-literal::
 
-            - <outputDirectory>/micapipe_v0.2.0/<sub>/mpc-swm/<mpc_acq>
+            - <outputDirectory>/micapipe_v0.2.0/<sub>/mpc-swm/acq_<qMRI>
             - <outputDirectory>/micapipe_v0.2.0/<sub>/anat
             - <outputDirectory>/micapipe_v0.2.0/<sub>/xfm
 
@@ -73,7 +73,7 @@ Superficial white matter surfaces are generated using scripts from the `superfic
 
         .. parsed-literal::
             - Microstructural image in native Surfer space:
-               *<outputDirectory>/micapipe_v0.2.0/<sub>/anat/<sub>_space-fsnative_<mpc_acq>.nii.gz*
+               *<outputDirectory>/micapipe_v0.2.0/<sub>/anat/<sub>_space-fsnative_<qMRI>.nii.gz*
 
             - Registration outputs from microstructural image to native FreeSurfer space:
                *<outputDirectory>/micapipe_v0.2.0/<sub>/xfm/*
@@ -81,10 +81,10 @@ Superficial white matter surfaces are generated using scripts from the `superfic
                    <sub>_from-T1map_to-nativepro_1Warp.nii.gz (optional)
                    <sub>_from-T1map_to-nativepro_1InverseWarp.nii.gz (optional)
 
-            - Equivolumetric surface sampling ouputs stored in *<outputDirectory>/micapipe_v0.2.0/mpc-swm/<mpc_acq>*:
+            - Equivolumetric surface sampling ouputs stored in *<outputDirectory>/micapipe_v0.2.0/mpc-swm/<qMRI>*:
 
                 - MPC-SWM json card:
-                   *<sub>_MPC-SWM-<mpc_acq>.json*
+                   *<sub>_MPC-SWM-<qMRI>.json*
 
                 - Native intensity profiles and MPC:
                    *<sub>_surf-fsnative_desc-intensity_profiles.shape.gii*

@@ -9,15 +9,18 @@ This module samples superficial white matter intensities from a quantitative MRI
 
 Superficial white matter surfaces are generated using scripts from the `superficial-white-matter repository <https://github.com/jordandekraker/superficial-white-matter>`_, available via GitHub by Jordan De Kraker.
 
-.. figure:: https://raw.githubusercontent.com/jordandekraker/superficial-white-matter/main/scrnshot.png
-   :align: center
-
 -SWM
 --------------------------------------------------------
+
+.. figure:: SWM_methods.png
+   :align: center
 
 .. admonition:: Prerequisites 🖐🏼
 
     You need to run ``-proc_structural``, ``-proc_surf`` and ``-post_structural`` before this stage
+
+.. figure:: swm_all.gif
+   :align: center
 
 .. tabs::
 
