@@ -73,20 +73,21 @@ Loading the surfaces
      :linenos:
 
       # Load fsLR-32k
-      f32k_lh, f32k_rh = load_conte69()
+      f32k_lh = read_surface(f'{micapipe}/surfaces/fsLR-32k.L.surf.gii', itype='gii')
+      f32k_rh = read_surface(f'{micapipe}/surfaces/fsLR-32k.R.surf.gii', itype='gii')
 
       # Load fsaverage5
-      fs5_lh = read_surface('freesurfer/fsaverage5/surf/lh.pial', itype='fs')
-      fs5_rh = read_surface('freesurfer/fsaverage5/surf/rh.pial', itype='fs')
+      fs5_lh = read_surface(f'{micapipe}/surfaces/fsaverage5/surf/lh.pial', itype='fs')
+      fs5_rh = read_surface(f'{micapipe}/surfaces/fsaverage5/surf/rh.pial', itype='fs')
 
       # Load LEFT annotation file in fsaverage5
-      annot_lh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/lh.'+atlas+'_mics.annot')
+      annot_lh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/lh.{atlas}_mics.annot')
 
       # Unique number of labels of a given atlas
       Ndim = max(np.unique(annot_lh_fs5[0]))
 
       # Load RIGHT annotation file in fsaverage5
-      annot_rh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/rh.'+atlas+'_mics.annot')[0]+Ndim
+      annot_rh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/rh.{atlas}_mics.annot')[0]+Ndim
 
       # replace with 0 the medial wall of the right labels
       annot_rh_fs5 = np.where(annot_rh_fs5==Ndim, 0, annot_rh_fs5)
