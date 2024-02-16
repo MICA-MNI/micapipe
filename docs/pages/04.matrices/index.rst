@@ -94,7 +94,7 @@ The first step in both languages is to set the environment:
 
    .. code-tab:: py
 
-    # Set the environment
+    # Load required packages
     import os
     import numpy as np
     import nibabel as nib
@@ -102,14 +102,16 @@ The first step in both languages is to set the environment:
     import matplotlib as plt
 
     # Set the working directory to the 'out' directory
-    os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+    os.chdir("/data_/mica3/BIDS_MICs/derivatives") # <<<<<<<<<<<< CHANGE THIS PATH TO YOUR OUT DIRECTORY
 
     # This variable will be different for each subject
-    subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-    subjectDir='micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+    sub='HC001'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+    ses='01'              # <<<<<<<<<<<< CHANGE THIS SESSION
+    subjectID=f'sub-{sub}_ses-{ses}'
+    subjectDir=f'micapipe_v0.2.0/sub-{sub}/ses-{ses}'
 
     # Here we define the atlas
-    atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
+    atlas='schaefer-400'
 
    .. code-tab:: r R
 
@@ -152,7 +154,7 @@ Full structural connectome
    .. code-tab:: py
 
     # Set the path to the the structural cortical connectome
-    cnt_sc_cor = subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
+    cnt_sc_cor = f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
 
     # Load the cortical connectome
     mtx_sc = nib.load(cnt_sc_cor).darrays[0].data
@@ -162,6 +164,7 @@ Full structural connectome
 
     # Plot the log matrix
     corr_plot = plotting.plot_matrix(np.log(mtx_scSym), figure=(10, 10), labels=None, cmap='Purples', vmin=0, vmax=10)
+
 
    .. code-tab:: r R
 
@@ -192,7 +195,7 @@ Full structural connectome edge lengths
    .. code-tab:: py
 
     # Set the path to the the structural cortical connectome
-    cnt_sc_EL = cnt_sc_cor= subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-edgeLengths.shape.gii'
+    cnt_sc_EL = cnt_sc_cor= f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-edgeLengths.shape.gii'
 
     # Load the cortical connectome
     mtx_scEL = nib.load(cnt_sc_EL).darrays[0].data
@@ -202,6 +205,7 @@ Full structural connectome edge lengths
 
     # Plot the log matrix
     corr_plot = plotting.plot_matrix(mtx_scELSym, figure=(10, 10), labels=None, cmap='Purples', vmin=0, vmax=200)
+
 
    .. code-tab:: r R
 
@@ -241,7 +245,7 @@ The time-series of that atlas is only stored in the surface fsLR-32k (``surf-fsL
     # Set the path to the the functional connectome
     # acquisitions
     func_acq='desc-se_task-rest_acq-AP_bold'
-    cnt_fs = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_atlas-' + atlas + '_desc-FC.shape.gii'
+    cnt_fs = subjectDir + f'/func/{func_acq}/surf/{subjectID}_surf-fsLR-32k_atlas-{atlas}_desc-FC.shape.gii'
 
     # Load the cortical connectome
     mtx_fs = nib.load(cnt_fs).darrays[0].data
@@ -251,6 +255,7 @@ The time-series of that atlas is only stored in the surface fsLR-32k (``surf-fsL
 
     # Plot the matrix
     corr_plot = plotting.plot_matrix(mtx_fcSym, figure=(10, 10), labels=None, cmap='Reds', vmin=0, vmax=1)
+
 
    .. code-tab:: r R
 
@@ -280,7 +285,7 @@ Resting state time series
    .. code-tab:: py
 
     # Set the path to the the time series file
-    cnt_time = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_desc-timeseries_clean.shape.gii'
+    cnt_time = subjectDir + f'/func/{func_acq}/surf/{subjectID}_surf-fsLR-32k_desc-timeseries_clean.shape.gii'
 
     # Load the time series
     mtx_time = nib.load(cnt_time).darrays[0].data
@@ -324,7 +329,7 @@ For each atlas, two files are generated: the microstructural profile covariance 
 
     # Set the path to the the MPC cortical connectome
     mpc_acq='acq-T1map'
-    cnt_mpc = subjectDir + f'/mpc/{mpc_acq}/' + subjectID + '_atlas-' + atlas + '_desc-MPC.shape.gii'
+    ccnt_mpc = subjectDir + f'/mpc/{mpc_acq}/{subjectID}_atlas-{atlas}_desc-MPC.shape.gii'
 
     # Load the cortical connectome
     mtx_mpc = nib.load(cnt_mpc).darrays[0].data

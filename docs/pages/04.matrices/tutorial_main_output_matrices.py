@@ -8,10 +8,8 @@
 
 # python notebook
 #
-# Tutorial 1 - Main output matrices
+# Tutorial 1 - Main output matrices 
 # micapipe v0.2.3
-#
-# Created by RRC on September 2021 (the second year of the pademic)
 
 # Load required packages
 import os
@@ -21,23 +19,27 @@ from nilearn import plotting
 import matplotlib as plt
 
 # Set the working directory to the 'out' directory
-os.chdir("~/out") # <<<<<<<<<<<< CHANGE THIS PATH
+os.chdir("/data_/mica3/BIDS_MICs/derivatives") # <<<<<<<<<<<< CHANGE THIS PATH TO YOUR OUT DIRECTORY
 
 # This variable will be different for each subject
-subjectID='sub-HC001_ses-01'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-subjectDir='micapipe_v0.2.0/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+sub='HC001'           # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+ses='01'              # <<<<<<<<<<<< CHANGE THIS SESSION
+subjectID=f'sub-{sub}_ses-{ses}'           
+subjectDir=f'micapipe_v0.2.0/sub-{sub}/ses-{ses}' 
 
-# Here we define the atlas
-atlas='schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
+# Here we define the atlas 
+atlas='schaefer-400'
 
 
 # ## Structural connectomes
-#
+# 
 # ### Full structural connectome
+
+# In[2]:
 
 
 # Set the path to the the structural cortical connectome
-cnt_sc_cor = subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
+cnt_sc_cor = f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
 
 # Load the cortical connectome
 mtx_sc = nib.load(cnt_sc_cor).darrays[0].data
@@ -51,8 +53,11 @@ corr_plot = plotting.plot_matrix(np.log(mtx_scSym), figure=(10, 10), labels=None
 
 # ### Full structural connectome edge lengths
 
+# In[3]:
+
+
 # Set the path to the the structural cortical connectome
-cnt_sc_EL = cnt_sc_cor= subjectDir + '/dwi/connectomes/' + subjectID + '_space-dwi_atlas-' + atlas + '_desc-iFOD2-40M-SIFT2_full-edgeLengths.shape.gii'
+cnt_sc_EL = cnt_sc_cor= f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-edgeLengths.shape.gii'
 
 # Load the cortical connectome
 mtx_scEL = nib.load(cnt_sc_EL).darrays[0].data
@@ -66,13 +71,13 @@ corr_plot = plotting.plot_matrix(mtx_scELSym, figure=(10, 10), labels=None, cmap
 
 # ## Resting state functional connectome
 
-# In[6]:
+# In[4]:
 
 
-# Set the path to the the functional cortical connectome
+# Set the path to the the functional connectome
 # acquisitions
 func_acq='desc-se_task-rest_acq-AP_bold'
-cnt_fs = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_atlas-' + atlas + '_desc-FC.shape.gii'
+cnt_fs = subjectDir + f'/func/{func_acq}/surf/{subjectID}_surf-fsLR-32k_atlas-{atlas}_desc-FC.shape.gii'
 
 # Load the cortical connectome
 mtx_fs = nib.load(cnt_fs).darrays[0].data
@@ -86,11 +91,11 @@ corr_plot = plotting.plot_matrix(mtx_fcSym, figure=(10, 10), labels=None, cmap='
 
 # ### Time series (ROI x time)
 
-# In[7]:
+# In[5]:
 
 
 # Set the path to the the time series file
-cnt_time = subjectDir + f'/func/{func_acq}/surf/' + subjectID + '_surf-fsLR-32k_desc-timeseries_clean.shape.gii'
+cnt_time = subjectDir + f'/func/{func_acq}/surf/{subjectID}_surf-fsLR-32k_desc-timeseries_clean.shape.gii'
 
 # Load the time series
 mtx_time = nib.load(cnt_time).darrays[0].data
@@ -101,12 +106,12 @@ corr_plot = plotting.plot_matrix(mtx_time, figure=(300, 10), labels=None, cmap='
 
 # ## MPC connectomes
 
-# In[8]:
+# In[6]:
 
 
 # Set the path to the the MPC cortical connectome
 mpc_acq='acq-T1map'
-cnt_mpc = subjectDir + f'/mpc/{mpc_acq}/' + subjectID + '_atlas-' + atlas + '_desc-MPC.shape.gii'
+cnt_mpc = subjectDir + f'/mpc/{mpc_acq}/{subjectID}_atlas-{atlas}_desc-MPC.shape.gii'
 
 # Load the cortical connectome
 mtx_mpc = nib.load(cnt_mpc).darrays[0].data
@@ -120,11 +125,11 @@ corr_plot = plotting.plot_matrix(mtx_mpcSym, figure=(10, 10), labels=None, cmap=
 
 # ### Intensity profiles (Profile x ROI)
 
-# In[9]:
+# In[7]:
 
 
 # Set the path to the the Intensity profiles file
-cnt_int = subjectDir + f'/mpc/{mpc_acq}/' + subjectID + '_atlas-' + atlas + '_desc-intensity_profiles.shape.gii'
+cnt_int = subjectDir + f'/mpc/{mpc_acq}/{subjectID}_atlas-{atlas}_desc-intensity_profiles.shape.gii'
 
 # Load the Intensity profiles
 mtx_int = nib.load(cnt_int).darrays[0].data
@@ -135,11 +140,11 @@ corr_plot = plotting.plot_matrix(mtx_int, figure=(20,10), labels=None, cmap='Gre
 
 # ## Geodesic distance connectomes
 
-# In[10]:
+# In[8]:
 
 
 # Set the path to the the geodesic distance connectome
-cnt_gd = subjectDir + '/dist/' + subjectID + '_atlas-' + atlas + '_GD.shape.gii'
+cnt_gd = f'{subjectDir}/dist/{subjectID}_atlas-{atlas}_GD.shape.gii'
 
 # Load the cortical connectome
 mtx_gd = nib.load(cnt_gd).darrays[0].data
@@ -149,3 +154,7 @@ corr_plot = plotting.plot_matrix(mtx_gd, figure=(10, 10), labels=None, cmap='Blu
 
 
 # In[ ]:
+
+
+
+
