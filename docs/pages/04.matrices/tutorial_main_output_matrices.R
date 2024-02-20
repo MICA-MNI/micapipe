@@ -1,6 +1,6 @@
 # R script
 #
-# Tutorial 0 - Main output matrices 
+# Tutorial 0 - Main output matrices
 # micapipe v0.1.1
 # R version 3.6.3
 #
@@ -14,14 +14,16 @@ require('viridis')           # version 0.5.1
 setwd("~/tmp/micaConn/micapipe_tutorials") # <<<<<<<<<<<< CHANGE THIS PATH
 
 # This variable will be different for each subject
-subjectID <- 'sub-HC001_ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-subjectDir <- 'micapipe/sub-HC001/ses-01' # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+sub <- 'HC001'
+ses <- '01'
+subjectID <- paste0('sub-',sub,'_ses-',ses) # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
+subjectDir <- paste0('micapipe/sub-',sub,'/ses-',ses) # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
-# Here we define the atlas 
+# Here we define the atlas
 atlas <- 'schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
 
-# ------------------------------------------------------------------------ # 
+# ------------------------------------------------------------------------ #
 #### Structural connectomes ####
 
 ### Full structural connectome
@@ -52,7 +54,7 @@ mtx_scEL[lower.tri(mtx_scEL)] <- t(mtx_scEL)[lower.tri(mtx_scEL)]
 image(log(mtx_scEL), axes=FALSE, main=paste0("SC ", atlas), col=brewer.pal(9, "Purples"))
 
 
-# ------------------------------------------------------------------------ # 
+# ------------------------------------------------------------------------ #
 #### Functional connectomes ####
 
 # Set the path to the the functional cortical connectome
@@ -77,7 +79,7 @@ mtx_time <- as.matrix(read.csv(cnt_time, sep=" ", header=FALSE))
 # Plot as a matrix
 image(mtx_time, axes=FALSE, main=paste0("Time series ", atlas), col=plasma(64))
 
-# ------------------------------------------------------------------------ # 
+# ------------------------------------------------------------------------ #
 #### MPC connectomes ####
 
 # Set the path to the the MPC cortical connectome
@@ -103,7 +105,7 @@ mtx_int <- as.matrix(read.csv(cnt_int, sep=" ", header=FALSE))
 # Plot as a matrix
 image(mtx_int, axes=FALSE, main=paste0("Intensity profiles ", atlas), col=brewer.pal(9, "Greens"))
 
-# ------------------------------------------------------------------------ # 
+# ------------------------------------------------------------------------ #
 #### Geodesic distance connectomes ####
 
 # Set the path to the the geodesic distance connectome
