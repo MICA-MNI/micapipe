@@ -9,15 +9,15 @@
 # Set the environment
 require('RColorBrewer')      # version 1.1-2
 require('viridis')           # version 0.5.1
+require('gifti')             # version 0.8.0
 
-# Set the working directory to the out directory
-setwd("~/tmp/micaConn/micapipe_tutorials") # <<<<<<<<<<<< CHANGE THIS PATH
+# Set the working directory to out directory
 
 # This variable will be different for each subject
 sub <- 'HC001'
 ses <- '01'
 subjectID <- paste0('sub-',sub,'_ses-',ses) # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
-subjectDir <- paste0('micapipe/sub-',sub,'/ses-',ses) # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
+subjectDir <- paste0('micapipe_v0.2.0/sub-',sub,'/ses-',ses) # <<<<<<<<<<<< CHANGE THIS SUBJECT's DIRECTORY
 
 # Here we define the atlas
 atlas <- 'schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
@@ -28,10 +28,10 @@ atlas <- 'schaefer-400' # <<<<<<<<<<<< CHANGE THIS ATLAS
 
 ### Full structural connectome
 # Set the path to the the structural cortical connectome
-cnt_sc_cor <- paste0(subjectDir, '/dwi/connectomes/', subjectID, '_space-dwi_atlas-', atlas, '_desc-iFOD2-40M-SIFT2_full-connectome.txt')
+cnt_sc_cor <- paste0(subjectDir, '/dwi/connectomes/', subjectID, '_space-dwi_atlas-', atlas, '_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii')
 
 # Load the cortical connectome
-mtx_sc <- as.matrix(read.csv(cnt_sc_cor, sep=" ", header=FALSE))
+mtx_sc <- readgii(cnt_sc_cor)$data$shape
 
 # Fill the lower triangle of the matrix
 mtx_sc[lower.tri(mtx_sc)] <- t(mtx_sc)[lower.tri(mtx_sc)]
@@ -58,10 +58,11 @@ image(log(mtx_scEL), axes=FALSE, main=paste0("SC ", atlas), col=brewer.pal(9, "P
 #### Functional connectomes ####
 
 # Set the path to the the functional cortical connectome
-cnt_fs <- paste0(subjectDir, '/func/surfaces/', subjectID, '_rsfmri_space-fsnative_atlas-', atlas, '_desc-FC.txt')
+acq_func <- 'desc-se_task-rest_acq-AP_bold'
+cnt_fs <- paste0(subjectDir, '/func/', acq_func, '/surf/', 'sub-',sub,'_ses-',ses, '_surf-fsLR-32k_atlas-', atlas, '_desc-FC.shape.gii')
 
 # Load the cortical connectome
-mtx_fs <- as.matrix(read.csv(cnt_fs, sep=" ", header=FALSE))
+mtx_fs <- readgii(cnt_fs)$data$shape
 
 # Fill the lower triangle of the matrix
 mtx_fs[lower.tri(mtx_fs)] <- t(mtx_fs)[lower.tri(mtx_fs)]
@@ -71,10 +72,10 @@ image(mtx_fs, axes=FALSE, main=paste0("FC ", atlas), col=brewer.pal(9, "Reds"))
 
 ### Time series
 # Set the path to the the time series file
-cnt_time <- paste0(subjectDir, '/func/surfaces/', subjectID, '_rsfmri_space-fsnative_atlas-', atlas, '_desc-timeseries.txt')
+cnt_time <- paste0(subjectDir, '/func/', acq_func, '/surf/', 'sub-',sub,'_ses-',ses, '_surf-fsLR-32k_desc-timeseries_clean.shape.gii')
 
 # Load the time series
-mtx_time <- as.matrix(read.csv(cnt_time, sep=" ", header=FALSE))
+mtx_time <- readgii(cnt_time)$data$shape
 
 # Plot as a matrix
 image(mtx_time, axes=FALSE, main=paste0("Time series ", atlas), col=plasma(64))
@@ -83,10 +84,10 @@ image(mtx_time, axes=FALSE, main=paste0("Time series ", atlas), col=plasma(64))
 #### MPC connectomes ####
 
 # Set the path to the the MPC cortical connectome
-cnt_mpc <- paste0(subjectDir, '/anat/surfaces/micro_profiles/', subjectID, '_space-fsnative_atlas-', atlas, '_desc-MPC.txt')
+cnt_mpc <- paste0(subjectDir, '/mpc/acq-T1map/', subjectID,'_atlas-', atlas, '_desc-MPC.shape.gii')
 
 # Load the cortical connectome
-mtx_mpc <- as.matrix(read.csv(cnt_mpc, sep=" ", header=FALSE))
+mtx_mpc <- readgii(cnt_mpc)$data$shape
 
 # Fill the lower triangle of the matrix
 mtx_mpc[lower.tri(mtx_mpc)] <- t(mtx_mpc)[lower.tri(mtx_mpc)]
@@ -94,25 +95,24 @@ mtx_mpc[lower.tri(mtx_mpc)] <- t(mtx_mpc)[lower.tri(mtx_mpc)]
 # Plot the matrix
 image(mtx_mpc, axes=FALSE, main=paste0("MPC ", atlas), col=brewer.pal(9, "Greens"))
 
-
 ### Intensity profiles (Profile x ROI)
 # Set the path to the the time series file
-cnt_int <- paste0(subjectDir, '/anat/surfaces/micro_profiles/', subjectID, '_space-fsnative_atlas-', atlas, '_desc-intensity_profiles.txt')
+cnt_int <- paste0(subjectDir, '/mpc/acq-T1map/', subjectID,'_atlas-', atlas, '_desc-intensity_profiles.shape.gii')
 
 # Load the time series
-mtx_int <- as.matrix(read.csv(cnt_int, sep=" ", header=FALSE))
+mtx_int <- readgii(cnt_int)$data$shape
 
 # Plot as a matrix
-image(mtx_int, axes=FALSE, main=paste0("Intensity profiles ", atlas), col=brewer.pal(9, "Greens"))
+image(t(mtx_int), axes=FALSE, main=paste0("Intensity profiles ", atlas), col=brewer.pal(9, "Greens"))
 
 # ------------------------------------------------------------------------ #
 #### Geodesic distance connectomes ####
 
 # Set the path to the the geodesic distance connectome
-cnt_gd <- paste0(subjectDir, '/anat/surfaces/geo_dist/', subjectID, '_space-fsnative_atlas-', atlas, '_GD.txt')
+cnt_gd <- paste0(subjectDir, '/dist/', subjectID, '_atlas-', atlas, '_GD.shape.gii')
 
 # Load the cortical connectome
-mtx_gd <- as.matrix(read.csv(cnt_gd, sep=" ", header=FALSE))
+mtx_gd <- readgii(cnt_gd)$data$shape
 
 # Plot the matrix
-image(mtx_gd, axes=FALSE, main=paste0("GD ", atlas), col=brewer.pal(9, "Blues"))
+image(t(mtx_gd), axes=FALSE, main=paste0("GD ", atlas), col=brewer.pal(9, "Blues"))
