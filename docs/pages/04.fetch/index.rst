@@ -1,5 +1,9 @@
-Connectome equivalence across multiple atlas
-============================================
+.. _multiatlas:
+
+.. title:: Multi-altas
+
+Multi atlas on surface
+======================
 
 Set the environment
 ~~~~~~~~~~~~~~~~~~~
@@ -18,23 +22,23 @@ Set the environment
     from brainspace.utils.parcellation import map_to_labels
     import matplotlib.pyplot as plt
     import cmocean
-    
+
     # Add cmocean maps to cmaps variable
     cmaps = cmocean.cm.cmap_d
-    
+
     # Set the working directory to the 'out' directory
     out='/data_/mica3/BIDS_MICs/derivatives'
     os.chdir(out)     # <<<<<<<<<<<< CHANGE THIS PATH
-    
+
     # This variable will be different for each subject
     sub='HC001' # <<<<<<<<<<<< CHANGE THIS SUBJECT's ID
     ses='01'    # <<<<<<<<<<<< CHANGE THIS SUBJECT's SESSION
-    subjectID=f'sub-{sub}_ses-{ses}'           
-    subjectDir=f'micapipe_v0.2.0/sub-{sub}/ses-{ses}' 
-    
+    subjectID=f'sub-{sub}_ses-{ses}'
+    subjectDir=f'micapipe_v0.2.0/sub-{sub}/ses-{ses}'
+
     # Path to MICAPIPE from global enviroment
     micapipe=os.popen("echo $MICAPIPE").read()[:-1] # <<<<<<<<<<<< CHANGE THIS PATH
-    
+
     # All parcelations list
     parc = ['aparc-a2009s', 'aparc', 'economo', 'glasser-360',
              'schaefer-100','schaefer-200','schaefer-300','schaefer-400',
@@ -67,11 +71,11 @@ Load the standard inflated surfaces
     # Load fsLR-5k inflated
     f5k_lh = read_surface(f'{micapipe}/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
     f5k_rh = read_surface(f'{micapipe}/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
-    
+
     # Load fsLR-32k inflated
     f32k_lh = read_surface(f'{micapipe}/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
     f32k_rh = read_surface(f'{micapipe}/surfaces/fsLR-32k.R.inflated.surf.gii', itype='gii')
-    
+
     # Load fsaverage5 inflated
     fs5_lh = read_surface(f'{micapipe}/surfaces/fsaverage5/surf/lh.inflated', itype='fs')
     fs5_rh = read_surface(f'{micapipe}/surfaces/fsaverage5/surf/rh.inflated', itype='fs')
@@ -131,37 +135,37 @@ Parcellated matrices
         '''
         Script that loads the labels of an specific parcellation and generates a midwall mask
         '''
-        
+
         # Load LEFT annotation file in fsaverage5
         annot_lh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/lh.{atlas}_mics.annot')
-    
+
         # Unique number of labels of a given atlas
         Ndim = max(np.unique(annot_lh_fs5[0]))
-        
+
         if surf == 'fsaverage5':
-    
+
             # Load RIGHT annotation file in fsaverage5
             annot_rh_fs5= nib.freesurfer.read_annot(f'{micapipe}/parcellations/rh.{atlas}_mics.annot')[0]+Ndim
-    
+
             # replace with 0 the medial wall of the right labels
-            annot_rh_fs5 = np.where(annot_rh_fs5==Ndim, 0, annot_rh_fs5) 
-    
+            annot_rh_fs5 = np.where(annot_rh_fs5==Ndim, 0, annot_rh_fs5)
+
             # fsaverage5 labels
             labels = np.concatenate((annot_lh_fs5[0], annot_rh_fs5), axis=0)
-        
+
         else:
             # Read label for fsLR-32k
             labels = np.loadtxt(open(f'{micapipe}/parcellations/{atlas}_conte69.csv'), dtype=int)
-    
+
         # mask of the medial wall
         mask = labels != 0
-        
+
         # Midwall labels of aparc-a2009s are lh=42 and rh=117
         if atlas == 'aparc-a2009s' and surf == 'fsaverage5':
             mask[(labels == 117) | (labels == 42)] = 0
-        
+
         #print(f'{atlas}; midwall = {Ndim}, length = {str(labels.shape)}')
-        
+
         return(labels, mask, Ndim)
 
 
@@ -170,15 +174,15 @@ Parcellated matrices
     # Empty list of surface plots
     surf_fs5 = [None] * len(parc)
     surf_32k = [None] * len(parc)
-    
+
     # Iterate over each parcellation to create a list of surface plots
     for i, g in enumerate(parc):
-        
+
         # Load fsaverage5 labels
         labels_fs5, mask_fs5, _ = load_annot(g, surf='fsaverage5')
         # Load fsLR-32k labels
         labels_32k, mask_32k, _ = load_annot(g, surf='fsLR-32k')
-    
+
         # Map labels to surface fsaverage5
         surf_fs5[i] = map_to_labels(np.unique(labels_fs5.astype(float)), labels_fs5,  fill=np.nan, mask=mask_fs5)
         # Map labels to surface fsLR-32k
@@ -427,70 +431,70 @@ Load a connectome from different parcellations
 
     def load_mpc(File, Ndim):
         """Loads and process a MPC"""
-    
+
         # load the matrix
         mtx_mpc = nib.load(File).darrays[0].data
-    
+
         # Mirror the matrix
         MPC = np.triu(mtx_mpc,1)+mtx_mpc.T
-    
+
         # Remove the medial wall
         MPC = np.delete(np.delete(MPC, 0, axis=0), 0, axis=1)
         MPC = np.delete(np.delete(MPC, Ndim, axis=0), Ndim, axis=1)
-        
+
         return(MPC)
-    
+
     def load_fc(File, Ndim, parc=''):
         """Loads and process a functional connectome"""
-    
+
         # load the matrix
         mtx_fs = nib.load(File).darrays[0].data
-    
+
         # slice the matrix remove subcortical nodes and cerebellum
         FC = mtx_fs[49:, 49:]
-        
+
         # Fisher transform
         FCz = np.arctanh(FC)
-    
+
         # replace inf with 0
         FCz[~np.isfinite(FCz)] = 0
-    
+
         # Mirror the matrix
         FCz = np.triu(FCz,1)+FCz.T
         return(FCz)
-    
+
     def load_gd(File, Ndim):
         """Loads and process a GD"""
-    
+
         # load the matrix
         mtx_gd = nib.load(File).darrays[0].data
-    
+
         # Remove the Mediall Wall
         mtx_gd = np.delete(np.delete(mtx_gd, 0, axis=0), 0, axis=1)
         GD = np.delete(np.delete(mtx_gd, Ndim, axis=0), Ndim, axis=1)
-    
+
         return(GD)
-    
+
     def load_sc(File, Ndim, log_transform=True):
         """Loads and process a structura connectome"""
-    
+
         # load the matrix
         mtx_sc = nib.load(File).darrays[0].data
-    
+
         # Mirror the matrix
         if log_transform != True:
             mtx_sc = np.triu(mtx_sc,1)+mtx_sc.T
         else:
             mtx_sc = np.log(np.triu(mtx_sc,1)+mtx_sc.T)
         mtx_sc[np.isneginf(mtx_sc)] = 0
-    
+
         # slice the matrix remove subcortical nodes and cerebellum
         SC = mtx_sc[49:, 49:]
         SC = np.delete(np.delete(SC, Ndim, axis=0), Ndim, axis=1)
-    
+
         # replace 0 values with almost 0
         SC[SC==0] = np.finfo(float).eps
-        
+
         return(SC)
 
 .. code:: ipython3
@@ -498,27 +502,27 @@ Load a connectome from different parcellations
     # Empty list of surface plots
     roi_fs5 = [None] * len(parc)
     roi_32k = [None] * len(parc)
-    
+
     for i, atlas in enumerate(parc):
-        
+
         # Load fsaverage5 labels
         labels_fs5, mask_fs5, Ndim = load_annot(atlas, surf='fsaverage5')
         # Load fsLR-32k labels
         labels_32k, mask_32k, _ = load_annot(atlas, surf='fsLR-32k')
-        
+
         acq_func='se_task-rest_acq-AP_bold'
         acq_mpc='T1map'
         #file = f'{subjectDir}/dist/{subjectID}_atlas-{atlas}_GD.shape.gii'
         #file = f'{subjectDir}/dwi/connectomes/{subjectID}_space-dwi_atlas-{atlas}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii'
         file = f'{subjectDir}/func/desc-{acq_func}/surf/{subjectID}_surf-fsLR-32k_atlas-{atlas}_desc-FC.shape.gii'
         #file = f'{subjectDir}/mpc/acq-{acq_mpc}/{subjectID}_atlas-{atlas}_desc-MPC.shape.gii'
-    
+
         # Load the cortical connectome
         mtx = load_fc(file, Ndim)
-        
+
         # Column sum
         mtx_s = np.sum(mtx, axis=0)
-    
+
         # Map labels to surface fsaverage5
         roi_fs5[i] = map_to_labels(mtx_s, labels_fs5,  fill=np.nan, mask=mask_fs5)
         # Map labels to surface fsLR-32k
@@ -661,35 +665,35 @@ Functional based parcellations
     def load_data(File, data_type):
         """
         Loads and processes a connectome data.
-    
+
         Parameters:
             File (str): Path to the file.
             data_type (str): Type of the data. It can be 'GD', 'SC', 'FC', or 'MPC'.
-    
+
         Returns:
             numpy.ndarray: Processed connectome data.
         """
-        
+
         if data_type not in ['GD', 'SC', 'FC', 'MPC']:
             raise ValueError("Invalid data type. Please specify 'GD', 'SC', 'FC', or 'MPC'.")
-    
+
         # Load the matrix
         data = nib.load(File).darrays[0].data
-        
+
         if data_type != 'GD':
             # Mirror the matrix
             data = np.triu(data, 1) + data.T
-    
+
         if data_type == 'FC':
             # Fisher transform
             data = np.arctanh(data)
-    
+
         # Replace infinite values with epsilon
         data[~np.isfinite(data)] = np.finfo(float).eps
-        
+
         # Replace 0 with epsilon
         data[data == 0] = np.finfo(float).eps
-        
+
         return data
 
 .. code:: ipython3
@@ -697,7 +701,7 @@ Functional based parcellations
     # Load fsLR-5k inflated surface
     f5k_lh = read_surface(f'{micapipe}/surfaces/fsLR-5k.L.inflated.surf.gii', itype='gii')
     f5k_rh = read_surface(f'{micapipe}/surfaces/fsLR-5k.R.inflated.surf.gii', itype='gii')
-    
+
     # fsLR-5k mask
     mask_lh = nib.load(f'{micapipe}/surfaces/fsLR-5k.L.mask.shape.gii').darrays[0].data
     mask_rh = nib.load(f'{micapipe}/surfaces/fsLR-5k.R.mask.shape.gii').darrays[0].data
@@ -711,18 +715,18 @@ Functional based parcellations
     acq_mpc='T1map'
     surf='fsLR-5k'
     mod = ['GD', 'SC', 'FC', 'MPC']
-    
+
     # Path to fsLR-5k matrices: GD, SC, FC and MPC
     f5k_files = [f'{subjectDir}/dist/{subjectID}_surf-{surf}_GD.shape.gii',
                  f'{subjectDir}/dwi/connectomes/{subjectID}_surf-{surf}_desc-iFOD2-40M-SIFT2_full-connectome.shape.gii',
                  f'{subjectDir}/func/desc-{acq_func}/surf/{subjectID}_surf-{surf}_desc-FC.shape.gii',
                  f'{subjectDir}/mpc/acq-{acq_mpc}/{subjectID}_surf-{surf}_desc-MPC.shape.gii']
-    
+
     # Load all the fsLR-5k matrices into a single array: {vertices x vertices x modality}
     f5k_array = np.empty((9684, 9684, 4))
-    
+
     for i, f in enumerate(f5k_files):
-    
+
         # Load the fsLR-32k connectome
         f5k_array[:,:,i] = load_data(f, mod[i])
 
@@ -738,7 +742,7 @@ Functional based parcellations
 
     # Empty list of surface plots
     surf_5k = [None] * len(mod)
-    
+
     for i, c in enumerate(mod):
         # If mod == SC, log the result for visualization
         if c == 'SC':
@@ -746,16 +750,16 @@ Functional based parcellations
             mtx[~np.isfinite(mtx)] = 0
         else:
             mtx = f5k_array[:,:,i]
-        
+
         # column mean
         c_mean = np.mean(mtx, axis=1)
-        
+
         # mask the midwall
         c_mean[mask_5k==0] = np.nan
-        
+
         # Add the new column mean array filled with NaN values in the midwall
         surf_5k[i] = c_mean
-        
+
 
 .. code:: ipython3
 
