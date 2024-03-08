@@ -144,6 +144,7 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/04.matrices/index
    pages/04.surfaces/index
    pages/04.gradients/index
+   ages/04.fetch/index
    pages/04.tckdownsample/index
    pages/04.faq/index
 

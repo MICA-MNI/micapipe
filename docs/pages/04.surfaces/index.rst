@@ -109,10 +109,6 @@ Load the surfaces
     pial_lh = read_surface(dir_FS+'/surf/lh.pial', itype='fs')
     pial_rh = read_surface(dir_FS+'/surf/rh.pial', itype='fs')
 
-    # Load native mid surface
-    mid_lh = read_surface(dir_FS+'/surf/lh.midthickness.surf.gii', itype='gii')
-    mid_rh = read_surface(dir_FS+'/surf/rh.midthickness.surf.gii', itype='gii')
-
     # Load native white matter surface
     wm_lh = read_surface(dir_FS+'/surf/lh.white', itype='fs')
     wm_rh = read_surface(dir_FS+'/surf/rh.white', itype='fs')
@@ -130,7 +126,8 @@ Load the surfaces
     fs5_inf_rh = read_surface('freesurfer/fsaverage5/surf/rh.inflated', itype='fs')
 
     # Load fsLR 32k
-    f32k_lh, f32k_rh = load_conte69()
+    f32k_lh = read_surface(micapipe + '/surfaces/fsLR-32k.L.surf.gii', itype='gii')
+    f32k_rh = read_surface(micapipe + '/surfaces/fsLR-32k.R.surf.gii', itype='gii')
 
     # Load fsLR 32k inflated
     f32k_inf_lh = read_surface(micapipe + '/surfaces/fsLR-32k.L.inflated.surf.gii', itype='gii')
