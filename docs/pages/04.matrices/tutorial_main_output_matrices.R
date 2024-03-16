@@ -1,10 +1,11 @@
 # R script
 #
 # Tutorial 0 - Main output matrices
-# micapipe v0.1.1
-# R version 3.6.3
+# micapipe v0.2.0
+# R version 4.3.1
 #
-# Created by RRC on September 2021 (the second year of the pademic)
+# Created by RRC in September 2021 (the second year of the pandemic)
+# Updated by CJ in March 2024
 
 # Set the environment
 require('RColorBrewer')      # version 1.1-2
