@@ -103,12 +103,14 @@ export OMP_NUM_THREADS="$threads"
 # Where processing will run
 if [[ -z "$PROC" ]]; then export PROC="LOCAL-MICA"; fi
 
+# YIGU MODIFICATION---------
 # Set tmpDir depending on the node
-host=$(echo "$HOSTNAME" | awk -F '.' '{print $1}')
-case $host in
-    fladgate*|yeatman*|oncilla*) export tmpDir="/host/$host/local_raid/temporaryLocalProcessing" ;;
-    cassio*|varro*) export tmpDir="/host/$host/export02/data/temporaryLocalProcessing" ;;
-    *) export tmpDir="/data/mica2/temporaryNetworkProcessing" ;;
-esac
+#host=$(echo "$HOSTNAME" | awk -F '.' '{print $1}')
+#case $host in
+#    fladgate*|yeatman*|oncilla*) export tmpDir="/host/$host/local_raid/temporaryLocalProcessing" ;;
+#    cassio*|varro*) export tmpDir="/host/$host/export02/data/temporaryLocalProcessing" ;;
+#    *) export tmpDir="/data/mica2/temporaryNetworkProcessing" ;;
+#esac
+#-------------
 
 export SGE_ROOT=/opt/sge

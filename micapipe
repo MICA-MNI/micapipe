@@ -522,6 +522,7 @@ do
     esac
 done
 
+
 # Argument check out & WARNINGS
 if [ "$QCgroup" = "TRUE" ]; then
     if [ -z ${out} ]; then
@@ -534,6 +535,7 @@ if [ "$QCgroup" = "TRUE" ]; then
             exit 0
     fi
 fi
+
 
 # argument check out & WARNINGS
 missing_arg
@@ -556,6 +558,7 @@ Error "A processing flag is missing:
                     -QC_subj
                     -cleanup"
 exit 1; fi
+
 
 # -----------------------------------------------------------------------------------------------#
 # Call micapipe_cleanup within micapipe
@@ -608,6 +611,7 @@ else
     for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
     dwi_main=$(IFS=','; echo "${dwis_main[*]}")
 fi
+
 # User provided DWI reverse phase encoded
 if [ -z ${dwi_rpe} ]; then
     dwi_rpe=DEFAULT
@@ -769,6 +773,7 @@ if [ "$procVOL" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 # # #        Surface processing: Freesurfer | FastSurfer
 if [ "$procSurf" = "TRUE" ]; then
@@ -793,6 +798,7 @@ if [ "$procSurf" = "TRUE" ]; then
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #                   POST Structural processing mica-02
@@ -824,6 +830,7 @@ if [ "$postVOL" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 # # #        Diffusion processing
 # -----------------------------------------------------------------------------------------------#
@@ -854,6 +861,7 @@ if [ "$procDWI" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 # # #        Arterial spin labelling processing
 # -----------------------------------------------------------------------------------------------#
@@ -882,6 +890,7 @@ if [ "$procASL" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 # # #        T2/FLAIR processing
 # -----------------------------------------------------------------------------------------------#
@@ -909,6 +918,7 @@ if [ "$procFLAIR" = "TRUE" ]; then
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #                   POST Microstructural profile covariance mica-03
@@ -945,6 +955,7 @@ if [ "$postMPC" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 #                   POST Geodesic distance mica-03
 # -----------------------------------------------------------------------------------------------#
@@ -975,6 +986,7 @@ if [ "$postGD" = "TRUE" ]; then
     fi
 fi
 
+
 # -----------------------------------------------------------------------------------------------#
 #                   Superficial White Matter
 # -----------------------------------------------------------------------------------------------#
@@ -986,6 +998,7 @@ if [ "$SWM" = "TRUE" ]; then
     # Command running
     $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #    Microstructural Profile Covariance - Superficial White Matter
@@ -1000,6 +1013,7 @@ if [ "$MPC_SWM" = "TRUE" ]; then
     $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 #       SC: Structural Connectome processing (tractography)
@@ -1030,6 +1044,7 @@ if [ "$postDWI" = "TRUE" ]; then
         $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     fi
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 # # #        functional MRI
@@ -1063,6 +1078,7 @@ if [ "$procFunc" = "TRUE" ]; then
         "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
     fi
 fi
+
 
 # -----------------------------------------------------------------------------------------------#
 # # #        Individual QC

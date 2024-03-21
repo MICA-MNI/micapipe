@@ -49,10 +49,10 @@ here=$(pwd)
 
 #------------------------------------------------------------------------------#
 # qsub configuration
-if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
-    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
-    source "${MICAPIPE}/functions/init.sh" "$threads"
-fi
+#if [ "$PROC" = "qsub-MICA" ] || [ "$PROC" = "qsub-all.q" ] || [ "$PROC" = "LOCAL-MICA" ]; then
+#    MICAPIPE=/data_/mica1/01_programs/micapipe-v0.2.0
+#    source "${MICAPIPE}/functions/init.sh" "$threads"
+#fi
 
 # source utilities
 source "$MICAPIPE"/functions/utilities.sh
@@ -83,7 +83,7 @@ else
   BIDSanat="${idBIDS}"
   dir_anat="${proc_struct}"
 fi
-subject_dir
+
 
 dir_volum="${subject_dir}/parc"
 T1_seg_subcortex="${dir_volum}/${BIDSanat}_space-nativepro_T1w_atlas-subcortical.nii.gz"
@@ -456,16 +456,12 @@ if [[ ! -f "${func_volum}/${idBIDS}${func_lab}_preproc".nii.gz ]]; then
         tmp_t1w_brain_res="${tmp}/nativepro_brain_rescaled.nii.gz"
         tmp_affineStr="${tmp}/from-nativepro_to-mainScan01_"
         tmp_aff_mat="${tmp_affineStr}0GenericAffine.mat"
+        tmp_func_strip="${tmp}/mainScan01_mean_stripped.nii.gz"
         tmp_func_mask="${tmp}/mainScan01_mean_mask.nii.gz"
 
-        # Create a loose mask for tedana
+        # Create a tight mask for tedana
         fslmaths "${scans4tedana[0]}" -Tmean "${tmp_func_mean}"
-        voxels=$(mrinfo "${tmp_func_mean}" -spacing); voxels="${voxels// /,}"
-        Do_cmd flirt -applyisoxfm "${voxels}" -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${tmp_t1w_brain_res}"
-        # [fixedImage,movingImage,initializationFeature]
-        centeralign="[${tmp_func_mean},${tmp_t1w_brain_res},0]"
-        Do_cmd antsRegistrationSyNQuick.sh -d 3 -m "$tmp_t1w_brain_res" -f "$tmp_func_mean" -o "$tmp_affineStr" -t a -n "$threads" -p d -i ${centeralign}
-        Do_cmd antsApplyTransforms -d 3 -i "$T1nativepro_mask" -r "$tmp_func_mean" -t "$tmp_aff_mat" -o "${tmp_func_mask}" -u int
+        Do_cmd mri_synthstrip -i "${tmp_func_mean}" -o "${tmp_func_strip}" -m "${tmp_func_mask}"
 
         # Run tedana
         tedana -d $(printf "%s " "${scans4tedana[@]}") -e $(printf "%s " "${EchoTime[@]}") --out-dir "${tedana_dir}" --mask "${tmp_func_mask}"        
@@ -519,6 +515,8 @@ if [[ ${acq} == "se" ]]; then
     else
         Info "Subject ${id} has Highpass filter"; ((Nsteps++)); ((N++))
     fi
+else
+    fmri_HP=${func_nii} # no need to filter post tedana
 fi
 
 #------------------------------------------------------------------------------#
