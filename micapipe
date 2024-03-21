@@ -1,0 +1,1102 @@
+#!/bin/bash
+#
+# MICA BIDS structural processing
+#
+version() {
+  echo -e "\nMICAPIPE January 2024 (Version v0.2.3 'Northern flicker')\n"
+}
+#---------------- FUNCTION: HELP ----------------#
+help() {
+echo -e "
+\033[38;5;141mCOMMAND:\033[0m
+   $(basename $0)
+
+
+\033[38;5;141mARGUMENTS:\033[0m
+\t\033[38;5;197m-sub\033[0m 	          : Subject identification
+\t\033[38;5;197m-out\033[0m 	          : Output directory for the processed files <derivatives>.
+\t\033[38;5;197m-bids\033[0m 	          : Path to BIDS directory
+\t\033[38;5;120m-ses\033[0m 	          : OPTIONAL flag that indicates the session name (if omitted will manage as SINGLE session)
+
+   Flags for basic stages of processing:
+\t\033[38;5;197m-proc_structural\033[0m  : Volumetric processing
+\t\033[38;5;197m-proc_surf\033[0m        : Cortical surface reconstruction processing
+\t\t\t      ( Requires: -proc_structural )
+
+   Flags for second stages of structural processing:
+\t\033[38;5;197m-post_structural\033[0m  : Post structural volumetric processing
+\t\t\t      ( Requires: -proc_structural and -proc_surf )
+\t\033[38;5;197m-proc_dwi\033[0m         : DWI-Diffusion weighted images processing with MRtrix3
+\t\t\t      ( Requires: -proc_structural )
+\t\033[38;5;197m-proc_asl\033[0m         : ASL-Arterial spin labelling processing
+\t\t\t      ( Requires: -proc_structural )
+\t\033[38;5;197m-proc_flair\033[0m       : T2/FLAIR processing
+\t\t\t      ( Requires: -proc_structural )
+
+   Flags for third stage, the  connectome generation:
+\t\033[38;5;197m-proc_func\033[0m        : Funtional MRI processing and functional connectome generation
+\t\t\t      ( Requires: -proc_structural, -proc_surf and -post_structural )
+\t\033[38;5;197m-SC\033[0m               : Structural connectome generation
+\t\t\t      ( Requires: -proc_dwi, -post_structural)
+\t\033[38;5;197m-MPC\033[0m              : Microstructural profiles and covariance analysis
+\t\t\t      ( Requires: -proc_surf and -post_structural )
+\t\033[38;5;197m-GD\033[0m               : Geodesic distance analysis
+\t\t\t      ( Requires: -proc_surf and -post_structural )
+\t\033[38;5;197m-SWM\033[0m              : Superficial White Matter generation and mapping
+\t\t\t      ( Requires: -post_structural )
+\t\033[38;5;197m-MPC_SWM\033[0m          : MPC Superficial White Matter analysis
+\t\t\t      ( Requires: -post_structural )
+
+   Other functions:
+\t\033[38;5;197m-cleanup\033[0m          : Use this flag with a module flag to erase its outputs
+\t\t\t      ( Modules with multiple acquisitions require -acqStr (e.g. -proc_func, -MPC)
+\t\033[38;5;197m-QC\033[0m               : Creates a group level quality control report
+\t\033[38;5;197m-QC_subj\033[0m          : Creates a Subject quality control report
+
+\033[38;5;141mOPTIONAL ARGUMENTS FOR SUBMODULES:\033[0m
+\t\033[38;5;197m-proc_structural\033[0m
+\t   \033[38;5;120m-T1wStr\033[0m              : String to manually identify the main scan(s) for structural processing. separated by a comma, no blank spaces.
+\t\t\t            Default string is 'T1w.nii'. Multiple inputs example = '-T1wStr run-01_T1w,run-02_T1w'
+\t   \033[38;5;120m-uni\033[0m                 : Special workflow to use the UNI-T1map image as the structural reference (eg. 7T UNI-T1map).
+\t\t\t            Default = no processing of UNI-T1maps
+\t   \033[38;5;120m-mf\033[0m                  : Multiplying factor for the mp2rage denoising. Greater value removes more noise (eg. UNI-T1map use with -uni).
+\t\t\t            Default = 3 (7T), recomended value of 45 for 3T MP2RAGE
+
+\t\033[38;5;197m-proc_surf\033[0m
+\t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link for compatibility
+\t\t\t            Prove full path to the subject's directory: e.g. <path_to>/freesurfer/sub-001_ses-01
+\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
+\t\t\t            Default surface reconstruction uses 'FastSurfer'
+\t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
+\t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
+\t   \033[38;5;120m-T1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
+\t\t\t            By default micapipe uses t1nativepro to generate the surfaces.
+
+
+\t\033[38;5;197m-post_structural\033[0m
+\t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
+\t\t\t            Default is the 18 parcellations provided in the pipeline
+\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
+\t\t\t            Default surface reconstruction uses 'FastSurfer'
+
+\t\033[38;5;197m-proc_dwi\033[0m
+\t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
+\t\t\t            Default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii*
+\t   \033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
+\t\t\t            Default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii*
+\t\t\t            Set to 'FALSE' if no DWI with reverse fase encoding will be provided
+\t   \033[38;5;120m-dwi_processed\033[0m       : DWI processed, if file is provided the pre-processing of the DWIs will be skipped.
+\t\t\t            MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded
+\t   \033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
+\t\t\t            This option requires that both encoding contains the same number of volumes
+\t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
+\t\t\t            Default is non linear registration SyN
+\t   \033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
+\t\t\t            This will create a new directory here: dwi/acq-<dwi_acq>
+\t   \033[38;5;120m-b0thr\033[0m               : Specifies the b-value threshold for determining those image volumes that correspond to b=0.
+\t\t\t            Default = 61 . This value will vary from DWI acquisition and from scanner to scanner (3T or 7T)
+\t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
+\t\t\t            Default is scaling. See more on MRtrix3 documentation
+\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
+\t   \033[38;5;120m-dwi_upsample\033[0m        : Use this flag to upsample the DWI to 1.25x1.25x1.25 to increase anatomical contrast (e.g. Low resolution DWI datasets).
+
+\t\033[38;5;197m-proc_func\033[0m
+\t   \033[38;5;120m-mainScanStr\033[0m         : String to manually identify the main scan for func processing (eg. func/sub-001_<mainScanStr>.nii.gz)
+\t\t\t            Default='task-rest_acq-AP_bold'
+\t\t\t            Multiple strings separate by comma and no blank space for multiecho acquisitions ( e.g. 'echo1,echo2,echo3' )
+\t   \033[38;5;120m-func_pe\033[0m             : Full path to the main phase encoding scan for func processing
+\t\t\t            Default='task-rest_acq-APse_bold'
+\t   \033[38;5;120m-func_rpe\033[0m            : Full path to the reverse phase encoding scan for func processing (If the path is wrong TOPUP won't run!)
+\t\t\t            Default='task-rest_acq-PAse_bold'
+\t   \033[38;5;120m-mainScanRun\033[0m         : If multiple resting-state scans exist in the BIDS rawdata,
+\t\t\t            you must specify which scan to process ( e.g. '1' )
+\t   \033[38;5;120m-phaseReversalRun\033[0m    : If multiple phase encoding files exist in the BIDS rawdata (main phase),
+\t\t\t            you must specify which one to process ( e.g. '1' )
+\t   \033[38;5;120m-topupConfig\033[0m         : Path to specified config file for topup
+\t\t\t            ( distortion correction; eg. file.cnf )
+\t   \033[38;5;120m-NSR\033[0m                 : Specify this option to perform white matter and CSF signal regression of timeseries
+\t\t\t            ( default = no white matter and CSF signal regression )
+\t   \033[38;5;120m-GSR\033[0m                 : Specify this option to perform global, white matter and CSF signal regression of timeseries
+\t\t\t            ( default = no global, white matter and CSF signal regression )
+\t   \033[38;5;120m-noFIX\033[0m               : Specify this option to skip ICA-FIX processing.
+\t\t\t            ( default = FIX is run with specified training file )
+\t   \033[38;5;120m-icafixTraining\033[0m      : Path to specified ICA-FIX training file for nuisance signal regression ( file.RData )
+\t\t\t            ( default = \$MICAPIPE/functions/MICAMTL_training_15HC_15PX.RData )
+\t   \033[38;5;120m-sesAnat\033[0m             : If longitudinal data is provided this flag allows to register the func session to the selected anatomical session
+\t\t\t            ( default processing is independent )
+\t   \033[38;5;120m-dropTR\033[0m              : Specify this option to drop the first five TRs.
+\t\t\t            ( default is FALSE  )
+\t   \033[38;5;120m-noFC\033[0m                : Specify this option to skip the Functional Connectome generation (e.g. func-task).
+\t\t\t            ( default is FALSE  )
+
+\t\033[38;5;197m-SC\033[0m
+\t   \033[38;5;120m-tracts <numeric>\033[0m    : Number of streamlines, where 'M' stands for millions (default=40M)
+\t   \033[38;5;120m-keep_tck\033[0m            : If provided, the tractogram will be copied to '<output>/micapipe/<subject>/dwi'
+\t   \033[38;5;120m-autoTract\033[0m           : Automatic tractogram segmentation (This is an optional procedure)
+\t   \033[38;5;120m-filter\033[0m              : Algorithm for tractogram filtering ( default = 'SIFT2' ['COMMIT2', 'both'])
+\t   \033[38;5;120m-dwi_acq\033[0m             : Provide the acquisition name from DWI which will be use to generate the SC, if it is different from default.
+\t   \033[38;5;120m-weighted_SC\033[0m         : Weight the SC by a quantitative map in DWI space (e.g. FA, ADC, qT1 or MT). None by default.
+\t   \033[38;5;120m-tck\033[0m                 : Provide a pre-calculated whole brain tractography (tck) in DWI space to generate the connectomes.
+
+
+\t\033[38;5;197m-MPC\033[0m  and \033[38;5;197m-MPC_SWM\033[0m
+\t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
+\t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
+\t   \033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
+\t\t\t            It MUST be on the same space as the main microstructural image!!
+\t\t\t            If it is EMPTY will try to find a T1map from here: anat/*mp2rage*T1map.nii*
+\t\t\t            Set to 'FALSE' to use microstructural_img for registrations
+\t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
+\t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
+\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
+\t   \033[38;5;120m-reg_nonlinear\033[0m       : Specify this option to perform the NON-Linear registration (e.g. MRI with strong geometric distortions).
+
+\t\033[38;5;197m-proc_asl\033[0m
+\t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
+\t\t\t            Default='asl'
+\t   \033[38;5;120m-m0ScanStr\033[0m           : String to manually identify the M0 calibration scan for processing (eg. perf/sub-001_<m0ScanStr>.nii[.gz])
+\t\t\t            Default='m0scan'
+
+\t\033[38;5;197m-proc_flair\033[0m
+\t   \033[38;5;120m-flairScanStr\033[0m        : String to manually identify the T2/FLAIR scan for processing (eg. anat/sub-001_<flairScanStr>.nii[.gz])
+\t\t\t            Default='FLAIR'
+
+\t\033[38;5;197m-cleanup\033[0m
+\t   \033[38;5;120m-acqStr\033[0m              : String to manually identify the acquisition to be erase
+
+
+\033[38;5;141mOPTIONS:\033[0m
+\t\033[38;5;197m-h|-help\033[0m          : Print help
+\t\033[38;5;197m-v|-version\033[0m 	  : Print software version
+\t\033[38;5;197m-force\033[0m 	          : WARNING this will overwrite the subject directory
+\t\033[38;5;197m-quiet\033[0m 	          : Do not print comments
+\t\033[38;5;197m-nocleanup\033[0m 	  : Do not delete temporal directory at script completion
+\t\033[38;5;197m-threads\033[0m          : Number of threads (Default is 6)
+\t\033[38;5;197m-tmpDir\033[0m           : Specify location of temporary directory <path> (Default is /tmp)
+\t\033[38;5;197m-mica\033[0m 	          : Only for MICA local processing
+\t\033[38;5;197m-qsub\033[0m 	          : Only for MICA network processing (SGE mica.q)
+\t\033[38;5;197m-qall\033[0m 	          : Only for MICA network processing (SGE all.q)
+
+
+\033[38;5;141mUSAGE:\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_structural\033[0m \033[38;5;197m-proc_surf\033[0m
+    \033[38;5;141m$(basename $0)\033[0m  \033[38;5;197m-sub\033[0m <subject_id> \033[38;5;197m-out\033[0m <outputDirectory> \033[38;5;197m-bids\033[0m <BIDS-directory> \033[38;5;197m-proc_dwi\033[0m
+
+\033[38;5;141mDOCUMENTATION:\033[0m
+    https://micapipe.readthedocs.io
+
+\033[38;5;141mREPOSITORY:\033[0m
+    https://github.com/MICA-MNI/micapipe
+
+\033[38;5;141mDEPENDENCIES:\033[0m
+    > AFNI        23.1.09 (https://afni.nimh.nih.gov/download)
+    > ANTs        2.3.3   (https://github.com/ANTsX/ANTs)
+    > FSL         6.0.2   (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+    > Freesurfer  7.3.2   (https://surfer.nmr.mgh.harvard.edu/)
+    > MRtrix3     3.0.1   (https://www.mrtrix.org)
+    > workbench   1.4.2s
+    > python      3.9.15
+    > R           3.6.3
+    > FIX         1.06    (FMRIB's ICA-based Xnoiseifier)
+
+
+McGill University, MNI, MICA-lab
+https://github.com/MICA-MNI/micapipe
+http://mica-mni.github.io/
+"
+}
+
+# Source utilities functions from MICAPIPE
+MICAPIPE=$(dirname $(realpath "$0"))
+source "${MICAPIPE}/functions/utilities.sh"
+
+# -----------------------------------------------------------------------------------------------#
+#			ARGUMENTS
+# Create VARIABLES
+argCP="$@"
+for arg in "$@"
+do
+  case "$arg" in
+  -h|-help)
+    help
+    exit 1
+  ;;
+  -v|-version)
+    version
+    exit 1
+  ;;
+  -sub)
+    id=$2
+    shift;shift
+  ;;
+  -out)
+    out=$2
+    shift;shift
+  ;;
+  -bids)
+    BIDS=$2
+    shift;shift
+  ;;
+  -ses)
+    SES=$2
+    shift;shift
+  ;;
+  -proc_structural)
+    procVOL=TRUE
+    shift
+  ;;
+  -proc_surf)
+    procSurf=TRUE
+    shift
+  ;;
+  -proc_dwi)
+    procDWI=TRUE
+    shift
+  ;;
+  -dwi_processed)
+    dwi_processed="$2"
+    shift;shift;
+    ;;
+  -dwi_acq)
+    dwi_acq=TRUE
+    dwi_str=$2
+    shift;shift
+    ;;
+  -b0thr)
+    b0thr=${2}
+    shift;shift;
+  ;;
+  -no_bvalue_scaling)
+    bvalscale=no
+    shift
+  ;;
+  -proc_func)
+    procFunc=TRUE
+    shift
+  ;;
+  -topupConfig)
+    configFileInput=TRUE
+    configFile=$2
+    shift;shift
+  ;;
+  -icafixTraining)
+    icaFileInput=TRUE
+    trainingFile=$2
+    shift;shift
+  ;;
+  -mainScanRun)
+    specMainScan=TRUE
+    thisMainScan=$2
+    shift;shift
+  ;;
+  -mainScanStr)
+    mainScanStr=$2
+    shift;shift
+  ;;
+  -func_pe)
+    func_pe=$2
+    shift;shift
+  ;;
+  -func_rpe)
+    func_rpe=$2
+    shift;shift
+  ;;
+  -sesAnat)
+    sesAnat=$2
+    shift;shift
+  ;;
+  -phaseReversalRun)
+    specPhase=TRUE
+    thisPhase=$2
+    shift;shift
+  ;;
+  -NSR)
+    NSR=TRUE
+    shift
+  ;;
+  -GSR)
+    GSReg=TRUE
+    shift
+  ;;
+  -regAffine)
+    regAffine=TRUE
+    shift
+  ;;
+  -noFIX)
+    skipFIX=TRUE
+    shift
+  ;;
+  -dropTR)
+    dropTR=TRUE
+    shift
+  ;;
+  -noFC)
+    noFC=TRUE
+    shift
+  ;;
+  -proc_flair)
+    procFLAIR=TRUE
+    shift
+  ;;
+  -flairScanStr)
+    flairScanStr="$2"
+    shift;shift;
+  ;;
+  -post_structural)
+    postVOL=TRUE
+    shift
+  ;;
+  -SC)
+    postDWI=TRUE
+    shift
+  ;;
+  -GD)
+    postGD=TRUE
+    shift
+  ;;
+  -MPC)
+    postMPC=TRUE
+    shift
+  ;;
+  -MPC_SWM)
+    MPC_SWM=TRUE
+    shift
+  ;;
+  -reg_nonlinear)
+    reg_nonlinear=TRUE
+    shift
+  ;;
+  -microstructural_img)
+    input_im=$2
+    shift;shift
+  ;;
+  -microstructural_reg)
+    mpc_reg=$2
+    shift;shift
+  ;;
+  -mpc_acq)
+    mpc_acq=TRUE
+    mpc_str=$2
+    shift;shift
+  ;;
+  -regSynth)
+    synth_reg=TRUE
+    shift
+  ;;
+  -QC)
+    QCgroup=TRUE
+    shift
+  ;;
+  -QC_subj)
+    qcsubj=TRUE
+    shift
+  ;;
+  -mica)
+    mica=TRUE
+    shift
+  ;;
+  -tracts)
+    tracts=$2
+    shift;shift
+  ;;
+  -keep_tck)
+    keep_tck=TRUE
+    shift
+  ;;
+  -autoTract)
+    autoTract=TRUE
+    shift
+  ;;
+  -weighted_SC)
+    weighted_SC=$2
+    shift;shift
+  ;;
+  -tck)
+    tck_file=$2
+    shift;shift
+  ;;
+  -tmpDir)
+    tmpDir=$2
+    shift;shift;
+  ;;
+  -T1wStr)
+    T1wStr="$2"
+    shift;shift;
+  ;;
+  -atlas)
+    atlas="$2"
+    shift;shift;
+  ;;
+  -surf_dir)
+    surfdir=$2
+    shift;shift;
+  ;;
+  -freesurfer)
+    FreeSurfer=TRUE
+    shift
+  ;;
+  -fs_licence)
+    fs_licence=$2
+    shift;shift;
+  ;;
+  -T1)
+    t1="$2"
+    shift;shift;
+  ;;
+  -uni)
+    UNI=TRUE
+    shift
+  ;;
+  -mf)
+    MF="$2"
+    shift;shift;
+  ;;
+  -dwi_main)
+    dwi_main="$2"
+    shift;shift;
+  ;;
+  -dwi_rpe)
+    dwi_rpe="$2"
+    shift;shift;
+  ;;
+  -dwi_upsample)
+    dwi_upsample=TRUE
+    shift
+  ;;
+  -SWM)
+    SWM=TRUE
+    shift
+  ;;
+  -rpe_all)
+    rpe_all=TRUE
+    shift
+  ;;
+  -qsub)
+    micaq=TRUE
+    shift
+  ;;
+  -qall)
+    qall=TRUE
+    shift
+  ;;
+  -nocleanup)
+    nocleanup=TRUE
+    shift
+  ;;
+  -cleanup)
+    cleanup=TRUE
+    shift
+  ;;
+  -acqStr)
+    acqStr=$2
+    shift;shift
+  ;;
+  -threads)
+    threads=$2
+    shift;shift
+  ;;
+  -force)
+    force=TRUE
+    shift
+  ;;
+  -quiet)
+    quiet=TRUE
+    shift
+  ;;
+  -proc_asl)
+    procASL=TRUE
+    shift
+  ;;
+  -aslScanStr)
+    aslScanStr=$2
+    shift;shift
+  ;;
+  -m0ScanStr)
+    m0ScanStr=$2
+    shift;shift
+  ;;
+  -*)
+    Error "Unknown option ${1}"
+    exit 1
+  ;;
+    esac
+done
+
+# Argument check out & WARNINGS
+if [ "$QCgroup" = "TRUE" ]; then
+    if [ -z ${out} ]; then
+            Error "For Quality Control -out is mandatory!!!
+                   -out  : $out"
+            exit 1;
+    else
+            out=$(realpath $out)
+            Do_cmd python ${MICAPIPE}/functions/QC_group.py -out ${out}
+            exit 0
+    fi
+fi
+
+# argument check out & WARNINGS
+missing_arg
+
+runs=($procVOL $procSurf $postVOL $procDWI $procASL $procFLAIR $procFunc $procTask $postDWI $postGD $postMorph $postMPC $qtest $qcsubj $cleanup $SWM $MPC_SWM)
+if [ "${#runs[@]}" -lt 1 ]; then
+Error "A processing flag is missing:
+                    -proc_structural
+                    -proc_surfs
+                    -post_structural
+                    -proc_dwi
+                    -proc_asl
+                    -proc_flair
+                    -proc_func
+                    -SC
+                    -MPC
+                    -GD
+                    -SWM
+                    -MPC_SWM
+                    -QC_subj
+                    -cleanup"
+exit 1; fi
+
+# -----------------------------------------------------------------------------------------------#
+# Call micapipe_cleanup within micapipe
+echo -e "\n\nmicapipe ${argCP}"
+if [[ $cleanup == "TRUE" ]]; then "${MICAPIPE}"/functions/micapipe_cleanup ${argCP/-cleanup/}; exit; fi
+
+# Optional arguments func
+optarg_func=($configFile $trainingFile $thisMainScan $thisPhase)
+if [[ $configFileInput == "TRUE" ]]; then optarg_func[0]=$configFile; else optarg_func[0]=DEFAULT; fi
+if [[ $icaFileInput == "TRUE" ]]; then optarg_func[1]=$trainingFile; else optarg_func[1]=DEFAULT; fi
+if [[ $specMainScan == "TRUE" ]]; then optarg_func[2]=$thisMainScan; else optarg_func[2]=DEFAULT; fi
+if [[ $specPhase == "TRUE" ]]; then optarg_func[3]=$thisPhase; else optarg_func[3]=DEFAULT; fi
+if [[ $NSR == "TRUE" ]]; then performNSR=1; else performNSR=0; fi
+if [[ $GSReg == "TRUE" ]]; then performGSR=1; else performGSR=0; fi
+if [[ $skipFIX == "TRUE" ]]; then noFIX=1; else noFIX=0; fi
+if [[ $dropTR == "TRUE" ]]; then dropTR=TRUE; else dropTR=FALSE; fi
+if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
+if [ -z "$func_pe" ]; then func_pe=DEFAULT; else func_pe=$(realpath $func_pe); fi
+if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe); fi
+if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
+if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
+if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
+
+# Optional arguments mpc
+if [[ ${mpc_acq} == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
+if [ -z ${input_im} ]; then input_im=DEFAULT; else input_im=$(realpath $input_im); fi
+if [ -z ${mpc_reg} ]; then
+    mpc_reg=DEFAULT
+elif [ ${mpc_reg} == "FALSE" ]; then
+    mpc_reg=$(realpath $input_im)
+else
+    mpc_reg=$(realpath $mpc_reg)
+fi
+if [[ ${synth_reg} == "TRUE" ]]; then synth_reg=${synth_reg}; else synth_reg="FALSE"; fi
+if [[ ${reg_nonlinear} == "TRUE" ]]; then reg_nonlinear=${reg_nonlinear}; else reg_nonlinear="FALSE"; fi
+
+# Optional arguments SC
+if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
+if [ -z ${autoTract} ]; then autoTract=FALSE; else autoTract=TRUE; fi
+if [ -z ${keep_tck} ]; then keep_tck=FALSE; else keep_tck=TRUE; fi
+if [ -z ${weighted_SC} ]; then weighted_SC=FALSE; else weighted_SC=$(realpath ${weighted_SC}); fi
+if [ -z ${tck_file} ]; then tck_file=FALSE; else tck_file=$(realpath ${tck_file}); fi
+
+# Optional arguments proc_dwi
+# User provided DWI main phase
+if [ -z ${dwi_main} ]; then
+    dwi_main=DEFAULT
+else
+    IFS=',' read -ra dwis_main <<< $dwi_main
+    for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
+    dwi_main=$(IFS=','; echo "${dwis_main[*]}")
+fi
+# User provided DWI reverse phase encoded
+if [ -z ${dwi_rpe} ]; then
+    dwi_rpe=DEFAULT
+elif [ ${dwi_rpe} == "FALSE" ]; then
+    dwi_rpe=${dwi_rpe}
+else
+    IFS=',' read -ra dwis_rpe <<< $dwi_rpe
+    for i in "${!dwis_rpe[@]}"; do dwis_rpe[i]=$(realpath ${dwis_rpe[$i]}); done # Full path
+    dwi_rpe=$(IFS=','; echo "${dwis_rpe[*]}")
+fi
+if [ -z ${rpe_all} ]; then rpe_all="FALSE"; else rpe_all="TRUE"; fi
+if [[ $dwi_acq == "TRUE" ]]; then dwi_str=${dwi_str}; else dwi_str=DEFAULT; fi
+if [ -z ${b0thr} ]; then b0thr=61; else b0thr=${b0thr}; fi
+if [ -z ${bvalscale} ]; then bvalscale=DEFAULT; else bvalscale=no; fi
+if [[ $dwi_upsample == "TRUE" ]]; then dwi_upsample=${dwi_upsample}; else dwi_upsample="FALSE"; fi
+
+# Optional arguments proc_asl
+if [ -z "${aslScanStr}" ]; then aslScanStr=DEFAULT; fi
+if [ -z "${m0ScanStr}" ]; then m0ScanStr=DEFAULT; fi
+
+# Optional arguments proc_flair (DEFAULT is *FLAIR.nii*)
+if [ -z "${flairScanStr}" ]; then flairScanStr=DEFAULT; fi
+
+# Get the real path of the Inputs
+inputs_realpath
+
+# Number of session (Default is "ses-pre")
+if [ -z ${SES} ]; then SES="SINGLE"; else SES="ses-${SES/ses-/}"; fi
+
+# Assigns variables names
+bids_variables "$BIDS" "$id" "$out" "$SES"
+
+# Check BIDS Directory
+if [ ! -d "${subject_bids}" ]; then Error "$id was not found on the BIDS directory\n\t Check ls ${subject_bids}"; exit 1; fi
+
+# Erase temporal files by default
+if [ -z ${nocleanup} ]; then nocleanup=FALSE; fi
+
+# No print Do_cmd
+if [ "$quiet" = "TRUE" ]; then export quiet=TRUE; fi
+
+# Temporal directory
+if [ -z ${tmpDir} ]; then export tmpDir=/tmp; else tmpDir=$(realpath $tmpDir); fi
+
+# Surface directory (if already exists)
+if [ -z ${surfdir} ]; then surfdir="FALSE"; else  surfdir=$(realpath $surfdir); fi
+if [ -z ${FreeSurfer} ]; then FreeSurfer="FALSE"; else  FreeSurfer="TRUE"; fi
+if [ -z ${t1} ]; then t1=DEFAULT; else t1=$(realpath $t1); fi
+
+# Altas selection (DEFAULT is the 18 of micapipe)
+if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
+
+# T1w image to process (DEFAULT is *T1w.nii*)
+if [ -z ${T1wStr} ]; then T1wStr=DEFAULT; else T1wStr="$T1wStr"; fi
+if [ -z ${UNI} ]; then UNI="FALSE"; else UNI="TRUE"; fi
+if [ -z ${MF} ]; then MF=3; else MF="${MF}"; fi
+
+# Processed DWI
+if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(realpath $dwi_processed); fi
+
+# -----------------------------------------------------------------------------------------------#
+Title "MICA pipeline - (Version $Version) \n\t\tSubject: $id Session: $SES"
+
+# -----------------------------------------------------------------------------------------------#
+# Launch the init file for local processing at MICA lab
+if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
+    source "${MICAPIPE}/functions/init.sh" "$threads"
+else
+
+    # -----------------------------------------------------------------------------------------------#
+    #   CHECK PACKAGES DEPENDENCIES
+    # Dicom to nifti X converter
+    if [[ -z $(which dcm2niix) ]]; then Error "Check your dcm2niix installation"; exit 1; fi
+    # tree display
+    if [[ -z $(which tree) ]]; then Warn "tree function was not found"; fi
+    #  MRtrix3
+    if [[ -z $(which mrinfo) ]]; then Error "MRtrix3 was not found"; exit 1; fi
+    # freesurfer
+    if [[ -z $(which recon-all) ]]; then Error "FreeSurfer was not found"; exit 1; fi
+    # FSL
+    if [[ -z $(which flirt) ]]; then Error "FSL was not found"; exit 1; fi
+    # AFNI
+    if [[ -z $(which 3dresample) ]]; then Error "AFNI was not found"; exit 1; fi
+    # ANTSx
+    if [[ -z $(which antsRegistration) ]]; then Error "ANTs was not found"; exit 1; fi
+    # workbench
+    if [[ -z $(which wb_command) ]]; then Error "WorkBench was not found"; exit 1; fi
+    # fix
+    if [[ -z $(which fix) ]]; then Warning "fix was not found, ICA-FIX will be skipped"; fi
+    # R
+    if [[ -z $(which R) ]]; then Warning "R was not found"; fi
+    # c3d
+    if [[ -z $(which c3d_affine_tool) ]]; then Warning "c3d was not found"; fi
+fi
+
+# Freesurfer fs_licence
+if [ -z ${fs_licence} ]; then Error "Freesurfer licence was not found: Use -fs_licence"; exit 1; else fs_licence=$(realpath $fs_licence); fi
+if [ ! -f ${fs_licence} ]; then Error "Freesurfer licence file was not found: \n\t\t Check ls ${fs_licence}"; exit 1; fi
+Note "Freesurfer licence:" ${fs_licence}
+export FS_LICENSE=${fs_licence}
+# Processing
+if [[ -z $PROC ]]; then export PROC="LOCAL"; fi
+
+# Number of THREADS used by ANTs and workbench, default is 6 if not defined by -threads
+if [[ -z $threads ]]; then export threads=6; fi
+
+# Directories check
+if [[ ${force} == TRUE ]]; then
+  Warning "$id processing directory will be overwritten"
+  rm -rf $out/${subject};
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#			  Timer & Beginning
+aloita=$(date +%s)
+
+# micapipe working Directory
+if [ ! -d "${out}" ]; then Do_cmd mkdir -m 777 -p "$out"; fi
+
+# Create tmp dir
+if [ ! -d ${tmpDir} ]; then Do_cmd mkdir -m 777 -p $tmpDir; fi
+
+# -----------------------------------------------------------------------------------------------#
+#   subject_dir
+# Creates subject directory if it doesn't exist
+if [ ! -d "${subject_dir}" ]; then
+    Info "Subject ${idBIDS} directory doesn't exist, creating..."
+    Do_cmd mkdir -m 770 -p "${subject_dir}"/{logs,xfm,dwi,func,anat,QC,parc,surf,maps}
+fi
+
+# Pipeline description json
+micapipe_json
+if [ ! -f "${out}/dataset_description.json" ]; then micapipe_json; fi
+if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Module, Status, Progress, User, Workstation, Date, Processing.time, Processing, Version" > "${out}/micapipe_processed_sub.csv"; fi
+
+# -----------------------------------------------------------------------------------------------#
+#                      Structural processing: Volumetric
+# -----------------------------------------------------------------------------------------------#
+if [ "$procVOL" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/01_proc-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $UNI $MF"
+    # mica.q - Structural processing: Volumetric
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Structural processing: Volumetric"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+    # all.q - Structural processing: Volumetric
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Structural processing: Volumetric"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_volumetric -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+    else
+        # LOCAL Structural processing: Volumetric
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Surface processing: Freesurfer | FastSurfer
+if [ "$procSurf" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FreeSurfer $fs_licence $t1"
+    # mica.q - Surface processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Surface processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_surf -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+             # all.q - Surface processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Surface processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_surf -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+    else
+        #  LOCAL - Surface processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Structural processing mica-02
+# -----------------------------------------------------------------------------------------------#
+# # #         POST Structural processing
+#     REQUIRES -proc_structural and -proc_surf
+if [ "$postVOL" = "TRUE" ]; then
+    log_file_str=$dir_logs/post_structural_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_post-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $atlas $FreeSurfer"
+    # mica.q - POST Structural processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - POST Structural processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - POST Structural processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - POST Structural processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_pstStruc -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - post_structural processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Diffusion processing
+# -----------------------------------------------------------------------------------------------#
+#  Diffusion processing
+if [ "$procDWI" = "TRUE" ]; then
+    if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
+    log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale $synth_reg $dwi_upsample"
+    # mica.q - Diffusion processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Diffusion processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - Diffusion processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Diffusion processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_dwi -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      #  LOCAL - Diffusion processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Arterial spin labelling processing
+# -----------------------------------------------------------------------------------------------#
+#  Arterial spin labelling processing
+if [ "$procASL" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_asl_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_proc-asl.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $aslScanStr $m0ScanStr"
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Arterial spin labelling processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_asl -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - POST Structural processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Arterial spin labelling processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_asl -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - post_structural processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        T2/FLAIR processing
+# -----------------------------------------------------------------------------------------------#
+#  T2/FLAIR processing
+if [ "$procFLAIR" = "TRUE" ]; then
+    log_file_str=$dir_logs/proc_flair_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/02_proc-flair.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $flairScanStr"
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - T2/FLAIR processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_flair -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - flair processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - T2/FLAIR processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_flair -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+      # LOCAL - flair processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Microstructural profile covariance mica-03
+# -----------------------------------------------------------------------------------------------#
+#     Generates microstructural profiles and covariance matrices
+#     REQUIRES -proc_structural and -proc_surf
+if [ "$postMPC" = "TRUE" ]; then
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
+    jobName="q${rand}_mpc"
+    # mica.q - Microstructural profile covariance
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Microstructural profile covariance"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+    # all.q - Microstructural profile covariance
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Microstructural profile covariance"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N "${jobName}" -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+    else
+        # LOCAL - Microstructural-Structural processing
+        $COMMAND $PROC 2>&1 | tee -a  ${log_file_str}.txt
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   POST Geodesic distance mica-03
+# -----------------------------------------------------------------------------------------------#
+#     Generates geodesic distance matrices calculated along cortical surface mesh
+#     REQUIRES -post-structural and -proc_surf
+if [ "$postGD" = "TRUE" ]; then
+    log_file_str=$dir_logs/GD_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/03_GD.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    # mica.q - Geodesic distance
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - Geodesic distance"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+              $COMMAND $PROC
+    # all.q - Geodesic distance
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - Geodesic distance"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N q${id}_gd -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+        # LOCAL - Geodesic distance processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#                   Superficial White Matter
+# -----------------------------------------------------------------------------------------------#
+#     Generates superficial white matter surfaces 01,02 and 03
+#     REQUIRES -post-structural
+if [ "$SWM" = "TRUE" ]; then
+    log_file_str=$dir_logs/SWM_$(date +'%Y-%m-%d_%H.%M.%S')
+    COMMAND="${scriptDir}/03_SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir"
+    # Command running
+    $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#    Microstructural Profile Covariance - Superficial White Matter
+# -----------------------------------------------------------------------------------------------#
+#     Generates superficial white matter surfaces based MPC
+#     REQUIRES -post-structural
+if [ "$MPC_SWM" = "TRUE" ]; then
+    rand=${RANDOM}
+    log_file_str="$dir_logs/MPC-SWM_$(date +'%Y-%m-%d_%H.%M.%S')-${rand}"
+    COMMAND="${scriptDir}/03_MPC-SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
+    # Command running
+    $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#       SC: Structural Connectome processing (tractography)
+# -----------------------------------------------------------------------------------------------#
+#   REQUIRES -proc_dwi
+if [ "$postDWI" = "TRUE" ]; then
+    if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
+    log_file_str=$dir_logs/SC-${tracts}_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
+    COMMAND="${scriptDir}/03_SC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $tracts $autoTract $keep_tck $dwi_str $weighted_SC $tck_file"
+    # mica.q - post-DWI processing (tractography)
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - POST DWI processing (tractography)"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        qsub -q mica.q -pe smp $threads -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    # all.q - post-DWI processing (tractography)
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - POST DWI processing (tractography)"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        qsub -q all.q -pe all.pe $threads -l h_vmem=1.5G -N q${id}_SC -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+    else
+        # LOCAL - post-DWI processing (tractography)
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        functional MRI
+# -----------------------------------------------------------------------------------------------#
+if [ "$procFunc" = "TRUE" ]; then
+    rand=${RANDOM}
+    log_file_str=$dir_logs/proc_func_$(date +'%d-%m-%Y')"-${rand}"
+    COMMAND="${scriptDir}/02_proc-func.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${optarg_func[0]} ${optarg_func[1]} ${optarg_func[2]} ${optarg_func[3]} ${mainScanStr} ${func_pe} ${func_rpe} ${performNSR} ${performGSR} ${noFIX} ${sesAnat} ${dropTR} ${noFC}"
+    jobName="q${rand}_fun"
+    # mica.q - Resting state fMRI processing
+    if [[ $micaq == "TRUE" ]]; then
+        Info "MICA qsub - fMRI processing"
+        Warning "This option only works on the MICA workstations"
+        export PROC="qsub-MICA"
+        # Info "Setting a warper to run on mica.q"
+        Do_cmd qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+        qsub -q mica.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
+    # all.q - Resting state fMRI processing
+    elif [[ $qall == "TRUE" ]]; then
+        Info "all.q qsub - fMRI processing"
+        Warning "This option only works on the McGill BIC network"
+        export PROC="qsub-all.q"
+        # Info "Setting a warper to run on all.q"
+        Do_cmd qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
+             $COMMAND $PROC
+        qsub -q all.q -hold_jid "${jobName}" -N "${jobName/q/r}" "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
+    else
+        # LOCAL - Resting state fMRI processing
+        $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+        "${scriptDir}"/rename_log.sh "${log_file_str}" "tagMRI" "${rand}"
+    fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+# # #        Individual QC
+# -----------------------------------------------------------------------------------------------#
+if [ "$qcsubj" = "TRUE" ]; then
+  rand=${RANDOM}
+  log_file_str=$dir_logs/qc_subj_$(date +'%d-%m-%Y')"-${rand}"
+  COMMAND="${scriptDir}/QC.sh -sub $id -ses "${SES}" -out ${out/\/micapipe_v0.2.0/} -bids $BIDS -tmpDir $tmpDir -threads $threads -PROC"
+  jobName="q${rand}_qc"
+  # mica.q - Subject QC
+  if [[ $micaq == "TRUE" ]]; then
+      Info "MICA qsub - QC Subject processing"
+      # Info "Setting a warper to run on mica.q"
+      Do_cmd qsub -q mica.q -pe smp $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt $COMMAND $PROC
+  # all.q - Subject QC
+  elif [[ $qall == "TRUE" ]]; then
+      Info "all.q qsub - QC Subject processing"
+      # Info "Setting a warper to run on all.q"
+      Do_cmd qsub -q all.q -pe all.pe $threads -l h_vmem=6G -N ${jobName} -e ${log_file_str}.e -o ${log_file_str}.txt \
+           $COMMAND $PROC
+  else
+      # LOCAL - Subject QC
+      $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+  fi
+fi
+
+# -----------------------------------------------------------------------------------------------#
+#			 Total Running Time
+lopuu=$(date +%s)
+eri=$(echo "$lopuu - $aloita" | bc)
+eri=$(echo print $eri/60 | perl)
+
+# Cleanup if processing was local
+if [ $PROC == "LOCAL" ] || [ "$mica" = "TRUE" ]; then
+    cleanup "$tmpDir/*_micapipe*-${id}*" "$nocleanup" "$here"
+fi
+Title "GLOBAL micapipe running time with $PROC processing:\033[38;5;220m $(printf "%0.3f\n" ${eri}) minutes \033[38;5;141m"
