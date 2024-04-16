@@ -215,9 +215,13 @@ for n in $(ls *bval); do Dir=0
   for j in ${n/bval/}*; do mv -v "$j" dwi/${j/NUM/$Dir}; done
 done
 
-# QC, count the number of Niftis (json) per subject
+# QC, print information about dicoms 2 bids transformation
 N=$(ls -R */*json | wc -l)
-echo "sub-${Subj} $N $SUBJ_DIR" >> "$BIDS_DIR"/participants.tsv
+csv_file="$BIDS_DIR"/participants_mic2bids.csv
+# CHeck if file exist
+if [ ! -f "$csv_file" ]; then echo "participant_id, session_id, creation_date_ddmmyyyy, user, workstation, Total.Files, dicoms" > "$csv_file"; fi
+# Add information about subject data
+echo "${Subj}, ${SES/ses-/}, $(date +%d-%m-%Y), $(whoami), $(uname -n), ${N}, ${SUBJ_DIR}" >> "$csv_file"
 
 # Go back to initial directory
 Do_cmd cd "$here"
