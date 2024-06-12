@@ -1,0 +1,49 @@
+name: Publish doc to GitHub Pages
+
+on: push
+
+# Cancels running instances when a pull request is updated by a commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  SPHINX_VERSION: 4.5.0
+
+jobs:
+  doc:
+    name: Publish doc to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Sphinx
+        run: |
+          #If additional sphinx dependencies are required they can be added here relatively easily. 
+          #e.g. if I wanted to have the copybutton for example, I would add: pip install sphinx-copybutton
+          pip install sphinx==${{ env.SPHINX_VERSION }}
+          pip install -r doc/requirements.txt
+
+      - name: Build HTML
+        run: |
+          cd doc
+          make html
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-doc
+          path: doc/build/html/
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.7
+        if: github.ref == 'refs/heads/master'
+        with:
+          branch: gh-pages
+          folder: doc/build/html
