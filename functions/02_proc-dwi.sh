@@ -23,16 +23,17 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 dwi_main=$8
-dwi_rpe=$9
-dwi_processed=${10}
-rpe_all=${11}
-regAffine=${12}
-dwi_str=${13}
-b0thr=${14}
-bvalscale=${15}
-synth_reg=${16}
-dwi_upsample=${17}
-PROC=${18}
+dwi_phase=$9
+dwi_rpe=${10}
+dwi_processed=${11}
+rpe_all=${12}
+regAffine=${13}
+dwi_str=${14}
+b0thr=${15}
+bvalscale=${16}
+synth_reg=${17}
+dwi_upsample=${18}
+PROC=${19}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -51,6 +52,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 Info "Inputs of proc_dwi"
 Note "tmpDir        :" "$tmpDir"
 Note "dwi_main      :" "$dwi_main"
+Note "dwi_phase     :" "$dwi_phase"
 Note "dwi_rpe       :" "$dwi_rpe"
 Note "rpe_all       :" "$rpe_all"
 Note "dwi_acq       :" "$dwi_str"
@@ -79,6 +81,11 @@ fi
 if [[ "$dwi_main" != "DEFAULT" ]]; then
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
     bids_dwis=("${bids_dwis[@]}")
+fi
+# Manage manual inputs: DWI phase image(s)
+if [[ "$dwi_phase" != "DEFAULT" ]]; then
+    IFS=',' read -ra dwi_phase <<< "$dwi_phase"
+    dwi_phase=("${dwi_phase[@]}")
 fi
 # Manage manual inputs: DWI reverse phase encoding
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then
