@@ -173,10 +173,34 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then ((N++))
     Info "DWI denoise and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
+    i=0
           for dwi in "${bids_dwis[@]}"; do
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
-                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                # if phase images are present then use nordic denoising
+                if [[ -f "${dwi_phase}" ]]; then
+                  Info "Phase image found, running NORDIC denoising!"
+                  echo ${dwi_phase[i]}
+                  # Denoise
+                  nordic_matlab_dir='/local_raid/data/pbautin/NORDIC_Raw/'  # Directory containing NIFTI_NORDIC.m
+
+                  # Run MATLAB command with the specified arguments
+                  matlab -nodisplay -nojvm -nosplash -nodesktop -r " \
+                  try; \
+                  addpath('${nordic_matlab_dir}'); \
+                  ARG.temporal_phase=3; \
+                  ARG.phase_filter_width=3; \
+                  ARG.DIROUT = '${tmp}/'; \
+                  NIFTI_NORDIC('${dwi}', '${dwi_phase[i]}', '${dwi_nom}_nordic', ARG); \
+                  end; \
+                  quit;"
+                  #>> ${ARG_DIROUT}/log_NORDIC_$(date '+%Y-%m-%d').txt
+                  Do_cmd mrconvert "${tmp}/${dwi_nom}_nordic.nii" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                else
+                  Info "No phase image found, cannot run NORDIC denoising!"
+                  Do_cmd mrconvert "${dwi}" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                fi
+                i=$[$i +1]
                 Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
