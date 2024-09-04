@@ -196,6 +196,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                   quit;"
                   #>> ${ARG_DIROUT}/log_NORDIC_$(date '+%Y-%m-%d').txt
                   Do_cmd mrconvert "${tmp}/${dwi_nom}_nordic.nii" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                  nordic_run=True
                 else
                   Info "No phase image found, cannot run NORDIC denoising!"
                   Do_cmd mrconvert "${dwi}" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
@@ -234,12 +235,18 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           fi
 
           # Denoise DWI and calculate residuals
-          Info "DWI MP-PCA denoising and Gibbs ringing correction"
-          dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
-          Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
-          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
-          Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
-          mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
+          Info "DWI MP-PCA denoising (if NORDIC not applied) and Gibbs ringing correction"
+          if [ nordic_run == True ]; then
+            Do_cmd mrdegibbs "$dwi_cat" "$dwi_dns" -nthreads "$threads"
+            mrcalc "$dwi_cat" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis
+          else
+            dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
+            Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
+            mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
+            Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
+            mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
+          fi
+
           ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++)); ((N++))
