@@ -180,14 +180,10 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 # if phase images are present then use nordic denoising
                 if [[ -f "${dwi_phase}" ]]; then
                   Info "Phase image found, running NORDIC denoising!"
-                  echo ${dwi_phase[i]}
-                  # Denoise
-                  nordic_matlab_dir='/local_raid/data/pbautin/NORDIC_Raw/'  # Directory containing NIFTI_NORDIC.m
-
                   # Run MATLAB command with the specified arguments
                   matlab -nodisplay -nojvm -nosplash -nodesktop -r " \
                   try; \
-                  addpath('${nordic_matlab_dir}'); \
+                  addpath('${NORDIC_Raw}/'); \
                   ARG.temporal_phase=3; \
                   ARG.phase_filter_width=3; \
                   ARG.DIROUT = '${tmp}/'; \
@@ -196,7 +192,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                   quit;"
                   #>> ${ARG_DIROUT}/log_NORDIC_$(date '+%Y-%m-%d').txt
                   Do_cmd mrconvert "${tmp}/${dwi_nom}_nordic.nii" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
-                  nordic_run=True
+                  nordic_run=true
                 else
                   Info "No phase image found, cannot run NORDIC denoising!"
                   Do_cmd mrconvert "${dwi}" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
@@ -236,7 +232,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
 
           # Denoise DWI and calculate residuals
           Info "DWI MP-PCA denoising (if NORDIC not applied) and Gibbs ringing correction"
-          if [ nordic_run == True ]; then
+          if [[ ${nordic_run} = true ]] ; then
             Do_cmd mrdegibbs "$dwi_cat" "$dwi_dns" -nthreads "$threads"
             mrcalc "$dwi_cat" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis
           else
@@ -246,7 +242,6 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
             Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
             mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
           fi
-
           ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++)); ((N++))
