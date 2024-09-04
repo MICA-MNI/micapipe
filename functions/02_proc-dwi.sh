@@ -84,8 +84,11 @@ if [[ "$dwi_main" != "DEFAULT" ]]; then
 fi
 # Manage manual inputs: DWI phase image(s)
 if [[ "$dwi_phase" != "DEFAULT" ]]; then
-    IFS=',' read -ra dwi_phase <<< "$dwi_phase"
-    dwi_phase=("${dwi_phase[@]}")
+    IFS=',' read -ra bids_phase_dwis <<< "$dwi_phase"
+    bids_phase_dwis=("${bids_phase_dwis[@]}")
+    for i in "${bids_phase_dwis[@]}"; do
+      if [[ ! -f ${i} ]]; then Error "Provided dwi_phase image's path is wrong of file doesn't exist!!, check:\n\tls $dwi_phase"; exit; fi
+    done
 fi
 # Manage manual inputs: DWI reverse phase encoding
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then
@@ -178,7 +181,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
                 # if phase images are present then use nordic denoising
-                if [[ -f "${dwi_phase}" ]]; then
+                if [[ -f "${bids_phase_dwis[i]}" && ("${#bids_phase_dwis[@]}" -eq "${#bids_dwis[@]}") ]]; then
                   Info "Phase image found, running NORDIC denoising!"
                   # Run MATLAB command with the specified arguments
                   matlab -nodisplay -nojvm -nosplash -nodesktop -r " \
@@ -187,14 +190,14 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                   ARG.temporal_phase=3; \
                   ARG.phase_filter_width=3; \
                   ARG.DIROUT = '${tmp}/'; \
-                  NIFTI_NORDIC('${dwi}', '${dwi_phase[i]}', '${dwi_nom}_nordic', ARG); \
+                  NIFTI_NORDIC('${dwi}', '${bids_phase_dwis[i]}', '${dwi_nom}_nordic', ARG); \
                   end; \
                   quit;"
                   #>> ${ARG_DIROUT}/log_NORDIC_$(date '+%Y-%m-%d').txt
                   Do_cmd mrconvert "${tmp}/${dwi_nom}_nordic.nii" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
                   nordic_run=true
                 else
-                  Info "No phase image found, cannot run NORDIC denoising!"
+                  Info "Phase image not found or incomplete, cannot run NORDIC denoising! Verify or add flag -dwi_phase to use phase"
                   Do_cmd mrconvert "${dwi}" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
                 fi
                 i=$[$i +1]
