@@ -358,6 +358,10 @@ RUN set -uex; \
     rm itksnap.tar.gz
 ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 
+# Install NORDIC denoising
+RUN git clone https://github.com/SteenMoeller/NORDIC_Raw.git /opt/NORDIC_Raw && cd /opt/NORDIC_Raw && git checkout v1.1
+ENV NORDIC_Raw="/opt/NORDIC_Raw"
+
 COPY . /opt/micapipe/
 
 RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'

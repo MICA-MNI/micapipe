@@ -23,16 +23,17 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 dwi_main=$8
-dwi_rpe=$9
-dwi_processed=${10}
-rpe_all=${11}
-regAffine=${12}
-dwi_str=${13}
-b0thr=${14}
-bvalscale=${15}
-synth_reg=${16}
-dwi_upsample=${17}
-PROC=${18}
+dwi_phase=$9
+dwi_rpe=${10}
+dwi_processed=${11}
+rpe_all=${12}
+regAffine=${13}
+dwi_str=${14}
+b0thr=${15}
+bvalscale=${16}
+synth_reg=${17}
+dwi_upsample=${18}
+PROC=${19}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -51,6 +52,7 @@ bids_variables "$BIDS" "$id" "$out" "$SES"
 Info "Inputs of proc_dwi"
 Note "tmpDir        :" "$tmpDir"
 Note "dwi_main      :" "$dwi_main"
+Note "dwi_phase     :" "$dwi_phase"
 Note "dwi_rpe       :" "$dwi_rpe"
 Note "rpe_all       :" "$rpe_all"
 Note "dwi_acq       :" "$dwi_str"
@@ -79,6 +81,14 @@ fi
 if [[ "$dwi_main" != "DEFAULT" ]]; then
     IFS=',' read -ra bids_dwis <<< "$dwi_main"
     bids_dwis=("${bids_dwis[@]}")
+fi
+# Manage manual inputs: DWI phase image(s)
+if [[ "$dwi_phase" != "DEFAULT" ]]; then
+    IFS=',' read -ra bids_phase_dwis <<< "$dwi_phase"
+    bids_phase_dwis=("${bids_phase_dwis[@]}")
+    for i in "${bids_phase_dwis[@]}"; do
+      if [[ ! -f ${i} ]]; then Error "Provided dwi_phase image's path is wrong of file doesn't exist!!, check:\n\tls $dwi_phase"; exit; fi
+    done
 fi
 # Manage manual inputs: DWI reverse phase encoding
 if [[ "$dwi_rpe" != "DEFAULT" ]]; then
@@ -166,10 +176,31 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then ((N++))
     Info "DWI denoise and concatenation"
     # Concatenate shells -if only one shell then just convert to mif and rename.
+    i=0
           for dwi in "${bids_dwis[@]}"; do
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
-                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                # if phase images are present then use nordic denoising
+                if [[ -f "${bids_phase_dwis[i]}" && ("${#bids_phase_dwis[@]}" -eq "${#bids_dwis[@]}") ]]; then
+                  Info "Phase image found, running NORDIC denoising!"
+                  # Run MATLAB command with the specified arguments
+                  matlab -nodisplay -nojvm -nosplash -nodesktop -r " \
+                  try; \
+                  addpath('${NORDIC_Raw}/'); \
+                  ARG.temporal_phase=3; \
+                  ARG.phase_filter_width=3; \
+                  ARG.DIROUT = '${tmp}/'; \
+                  NIFTI_NORDIC('${dwi}', '${bids_phase_dwis[i]}', '${dwi_nom}_nordic', ARG); \
+                  end; \
+                  quit;"
+                  #>> ${ARG_DIROUT}/log_NORDIC_$(date '+%Y-%m-%d').txt
+                  Do_cmd mrconvert "${tmp}/${dwi_nom}_nordic.nii" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                  nordic_run=true
+                else
+                  Info "Phase image not found or incomplete, cannot run NORDIC denoising! Verify or add flag -dwi_phase to use phase"
+                  Do_cmd mrconvert "${dwi}" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                fi
+                i=$[$i +1]
                 Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
                 Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
@@ -203,12 +234,17 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
           fi
 
           # Denoise DWI and calculate residuals
-          Info "DWI MP-PCA denoising and Gibbs ringing correction"
-          dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
-          Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
-          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
-          Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
-          mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
+          Info "DWI MP-PCA denoising (if NORDIC not applied) and Gibbs ringing correction"
+          if [[ ${nordic_run} = true ]] ; then
+            Do_cmd mrdegibbs "$dwi_cat" "$dwi_dns" -nthreads "$threads"
+            mrcalc "$dwi_cat" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis
+          else
+            dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
+            Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
+            mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
+            Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
+            mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
+          fi
           ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++)); ((N++))
