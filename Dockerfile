@@ -374,6 +374,6 @@ ENV FIXPATH=/opt/fix1.068
 
 ENV PATH="/opt/fix1.068/:${PATH}"
 
-ENV PATH="/opt/micapipe/:/opt/micapipe/functions:${PATH}"
+ENV PATH="/opt/micapipe/:/opt/micapipe/functions:/opt/miniconda-22.11.1/envs/micapipe/bin/:${PATH}"
 
 ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/micapipe"]
