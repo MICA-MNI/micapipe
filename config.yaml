@@ -1,0 +1,16 @@
+bids_dir: "/path/to/BIDS"
+output_dir: "/path/to/derivatives"
+subjects:
+  - "sub-001"
+  - "sub-002"
+sessions:
+  - "ses-01"
+threads: 6
+software:
+  freesurfer_license: "/path/to/license.txt"
+parameters:
+  proc_structural:
+    T1wStr: "T1w.nii"
+    UNI: false
+    MF: 3
+  # Add other module parameters here
