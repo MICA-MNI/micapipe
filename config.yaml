@@ -1,5 +1,5 @@
-bids_dir: "/path/to/BIDS"
-output_dir: "/path/to/derivatives"
+bids_dir: "test_data/raw_data"
+output_dir: "test_data/processed_data"
 subjects:
   - "sub-001"
   - "sub-002"
