@@ -1,7 +1,7 @@
 # configfile: "config.yaml"
 
 # include: "rules/structural.smk"
-
+#
 # rule all:
 #     input:
 #         expand("{output_dir}/sub-{subject}/ses-{session}/anat/processed_volumetric.nii.gz",
