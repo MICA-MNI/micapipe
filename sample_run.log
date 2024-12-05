@@ -1,0 +1,146 @@
+
+
+micapipe -sub sub-mri3T -out /home/bic/eyang/processed_data -bids /data_/mica3/BIDS_CI/rawdata -proc_structural -T1wStr run-2_T1w -mf 45 -fs_licence /data/mica1/01_programs/freesurfer-7.3.2/license.txt
+
+[38;5;141m
+-------------------------------------------------------------
+	MICA pipeline - (Version v0.2.3 'Northern flicker') 
+		Subject: mri3T Session: SINGLE
+-------------------------------------------------------------[0m
+[38;5;184m
+[ WARNING ]..... fix was not found, ICA-FIX will be skipped [0m
+[38;5;184m
+[ WARNING ]..... R was not found [0m
+		Freesurfer licence:	[38;5;122m/data/mica1/01_programs/freesurfer-7.3.2/license.txt[0m
+
+[38;5;141m
+-------------------------------------------------------------
+	Structural processing
+		micapipe v0.2.3 'Northern flicker', LOCAL
+-------------------------------------------------------------[0m
+[38;5;75m
+[ INFO ]..... MICA pipe - Software versions [0m
+		MRtrix3.....	[38;5;122m3.0.1-26-g0f28beae[0m
+		            	[38;5;122m/data_/mica1/01_programs/mrtrix3-3.0.1/bin/mrinfo[0m
+		FSL.........	[38;5;122m6.0[0m
+		            	[38;5;122m/data_/mica1/01_programs/fsl-6-0-3[0m
+		ANFI........	[38;5;122m Dec  7 2020 (Version AFNI_20.3.03 'Vespasian')[0m
+		            	[38;5;122m/data/mica1/01_programs/afni-20.2.06/3dresample[0m
+		ANTS........	[38;5;122m 2.3.4.dev187-gb37e8[0m
+		            	[38;5;122m/data/mica1/01_programs/ants-2.3.4/bin[0m
+/data/mica1/01_programs/workbench-1.4.2/bin_linux64/../exe_linux64/wb_command: error while loading shared libraries: libGLU.so.1: cannot open shared object file: No such file or directory
+		WorkBench...	[38;5;122m[0m
+		            	[38;5;122m/data/mica1/01_programs/workbench-1.4.2/bin_linux64/wb_command[0m
+		FreeSurfer..	[38;5;122mfreesurfer-linux-ubuntu18_x86_64-7.3.2-20220804-6354275[0m
+		            	[38;5;122m/data/mica1/01_programs/freesurfer-7.3.2[0m
+		fix.........	[38;5;122m[0m
+		            	[38;5;122m[0m
+		python......	[38;5;122m3.9.7[0m
+		            	[38;5;122m/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/bin/python[0m
+/home/bic/eyang/micapipe/functions/utilities.sh: line 287: R: command not found
+		R...........	[38;5;122m[0m
+		            	[38;5;122m[0m
+		conda.......	[38;5;122mconda 4.10.3[0m
+		            	[38;5;122m/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/bin/conda[0m
+[38;5;75m
+[ INFO ]..... micapipe inputs [0m
+		id   :	[38;5;122mmri3T[0m
+		BIDS :	[38;5;122m/data_/mica3/BIDS_CI/rawdata[0m
+		out  :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0[0m
+		ses  :	[38;5;122mSINGLE[0m
+[38;5;75m
+[ INFO ]..... BIDS naming [0m
+		subject_bids :	[38;5;122m/data_/mica3/BIDS_CI/rawdata/sub-mri3T[0m
+		bids_T1ws    :	[38;5;122mN-1, e.g. [0m
+		bids_dwis    :	[38;5;122mN-0, e.g. [0m
+		subject      :	[38;5;122msub-mri3T[0m
+		subject_dir  :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T[0m
+		proc_struct  :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/anat[0m
+		dir_warp     :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/xfm[0m
+		logs         :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/logs[0m
+[38;5;75m
+[ INFO ]..... Processing directories [0m
+		subject_dir     :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T[0m
+		proc_struct     :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/anat[0m
+		dir_conte69     :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/surf[0m
+		dir_volum       :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/parc[0m
+		dir_warp        :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/xfm[0m
+		dir_logs        :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/logs[0m
+		dir_QC          :	[38;5;122m/home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/QC[0m
+		dir_subjsurf  :	[38;5;122m[0m
+[38;5;75m
+[ INFO ]..... Utilities directories [0m
+		scriptDir         :	[38;5;122m/home/bic/eyang/micapipe/functions[0m
+		util_MNIvolumes   :	[38;5;122m/home/bic/eyang/micapipe/MNI152Volumes[0m
+		util_lut          :	[38;5;122m/home/bic/eyang/micapipe/parcellations/lut[0m
+		util_parcelations :	[38;5;122m/home/bic/eyang/micapipe/parcellations[0m
+		util_surface      :	[38;5;122m/home/bic/eyang/micapipe/surfaces[0m
+		util_mics         :	[38;5;122m/home/bic/eyang/micapipe/MICs60_T1-atlas[0m
+[38;5;75m
+[ INFO ]..... Main structural image(s) for processing [0m
+		T1w string(s):	[38;5;122mrun-2_T1w, N=1[0m
+		mp2rage-UNI	[38;5;122mFALSE[0m
+[38;5;75m
+[ INFO ]..... ANTs will use 6 threads [0m
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:38 EST 2024:
+COMMAND -->  [38;5;122m mkdir -p /tmp/17018_micapipe_proc_struc-vol_mri3T /home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/anat/first  [0m
+		Saving temporal dir:	[38;5;122mFALSE[0m
+				tmp:	[38;5;122m/tmp/17018_micapipe_proc_struc-vol_mri3T[0m
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:38 EST 2024:
+COMMAND -->  [38;5;122m 3dresample -orient LPI -prefix /tmp/17018_micapipe_proc_struc-vol_mri3T/ -inset   [0m
+option usage: -input INPUT_DSET
+usage: 3dresample [options] -prefix OUT_DSET -input IN_DSET
+usage: 3dresample -help
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:38 EST 2024:
+COMMAND -->  [38;5;122m fslreorient2std /tmp/17018_micapipe_proc_struc-vol_mri3T/ /tmp/17018_micapipe_proc_struc-vol_mri3T/  [0m
+ERROR: Could not find image /tmp/17018_micapipe_proc_struc-vol_mri3T/
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:38 EST 2024:
+COMMAND -->  [38;5;122m fslchfiletype NIFTI_GZ /tmp/17018_micapipe_proc_struc-vol_mri3T/  [0m
+Image Exception : #63 :: No image files match: /tmp/17018_micapipe_proc_struc-vol_mri3T/
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  No image files match: /tmp/17018_micapipe_proc_struc-vol_mri3T/
+/data_/mica1/01_programs/fsl-6-0-3/bin/fslchfiletype: line 90: 15454 Aborted                 $FSLDIR/bin/fslchfiletype_exe $1 $oldfile $newfile
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:39 EST 2024:
+COMMAND -->  [38;5;122m cp -v /tmp/17018_micapipe_proc_struc-vol_mri3T/* /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_reo.nii.gz  [0m
+cp: cannot stat '/tmp/17018_micapipe_proc_struc-vol_mri3T/*': No such file or directory
+mv: cannot stat '/tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_reo.nii.gz': No such file or directory
+[38;5;75m
+[ INFO ]..... T1w_nativepro biasfield correction and intensity rescaling [0m
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:39 EST 2024:
+COMMAND -->  [38;5;122m N4BiasFieldCorrection -d 3 -i /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_n4.nii.gz -r -o /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_n4.nii.gz -v  [0m
+
+Running N4 for 3-dimensional images.
+
+ file /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_n4.nii.gz does not exist . 
+Mask not read.  Using the entire image as the mask.
+
+/home/bic/eyang/micapipe/functions/utilities.sh: line 1094: 15488 Segmentation fault      $l_command
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:39 EST 2024:
+COMMAND -->  [38;5;122m ImageMath 3 /home/bic/eyang/processed_data/micapipe_v0.2.0/sub-mri3T/anat/sub-mri3T_space-nativepro_T1w.nii.gz RescaleImage /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_n4.nii.gz 0 100  [0m
+ file /tmp/17018_micapipe_proc_struc-vol_mri3T/sub-mri3T_space-nativepro_T1w_n4.nii.gz does not exist . 
+terminate called after throwing an instance of 'itk::ExceptionObject'
+  what():  /home/ivan/newants/build/ITKv5/Modules/Core/Common/src/itkProcessObject.cxx:1340:
+itk::ERROR: RescaleIntensityImageFilter(0x55b2e109df80): Input Primary is required but not set.
+/home/bic/eyang/micapipe/functions/utilities.sh: line 1094: 15496 Aborted                 $l_command
+[38;5;9m
+-------------------------------------------------------------
+
+[ ERROR ]..... sub-mri3T_space-nativepro_T1w was not generated
+
+-------------------------------------------------------------[0m
+
+[38;5;118m
+eyang @ login1 Thu Dec  5 14:16:40 EST 2024:
+COMMAND -->  [38;5;122m exit  [0m
+
+[38;5;141m
+-------------------------------------------------------------
+	GLOBAL micapipe running time with LOCAL processing:[38;5;220m 0.133 minutes [38;5;141m
+-------------------------------------------------------------[0m
