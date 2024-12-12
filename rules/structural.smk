@@ -14,6 +14,7 @@ rule proc_structural:
     threads: config.get("threads", 4),
     shell:
         """
+        echo "Running structural processing with subject={wildcards.subject} session={wildcards.session}, full_subject={params.subject_full}, full_session={params.session_full}"
         bash {script_dir}/01_proc-structural.sh \
             {bids_dir} {params.subject_full} {output_dir} {params.session_full} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
