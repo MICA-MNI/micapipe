@@ -13,7 +13,7 @@ rule proc_structural:
     shell:
         """
         bash {script_dir}/01_proc-structural.sh \
-            {bids_dir} sub-{subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
         """
 
