@@ -9,11 +9,13 @@ rule proc_structural:
         T1wStr=config["parameters"]["proc_structural"].get("T1wStr", "T1w.nii"),
         UNI=config["parameters"]["proc_structural"].get("UNI", "FALSE"),
         MF=config["parameters"]["proc_structural"].get("MF", 3),
+        subject_full="sub-" + wildcards.subject,
+        session_full="ses-" + wildcards.session,
     threads: config.get("threads", 4),
     shell:
         """
         bash {script_dir}/01_proc-structural.sh \
-            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {params.subject_full} {output_dir} {params.session_full} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
         """
 
