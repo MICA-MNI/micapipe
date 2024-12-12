@@ -29,8 +29,6 @@ bids_variables() {
   export util_surface=${MICAPIPE}/surfaces # utilities/resample_fsaverage
   export util_mics=${MICAPIPE}/MICs60_T1-atlas
   
-  #TODO:
-  echo "BIDS form current id is ${id}"
   export subject=sub-${id}
 
   # Handle Single Session
