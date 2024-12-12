@@ -1,7 +1,7 @@
 # Rule for structural processing
 rule proc_structural:
     input:
-        t1w=lambda wildcards: f"{bids_dir}/sub-{wildcards.subject}/ses-{wildcards.session}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{config['parameters']['proc_structural']['T1wStr']}.nii.gz",
+        t1w=lambda wildcards: f"{bids_dir}/{wildcards.subject}/ses-{wildcards.session}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{config['parameters']['proc_structural']['T1wStr']}.nii.gz",
     output:
         processed_volumetric=f"{output_dir}/sub-{{subject}}/ses-{{session}}/anat/processed_volumetric.nii.gz",
     params:
@@ -13,7 +13,7 @@ rule proc_structural:
     shell:
         """
         bash {script_dir}/01_proc-structural.sh \
-            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
         """
 
@@ -31,7 +31,7 @@ rule proc_surf:
     shell:
         """
         bash {script_dir}/01_proc-surf.sh \
-            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
             --threads {threads} --surf_dir {params.surf_dir} --freesurfer {params.freesurfer} --fs_licence {params.fs_licence}
         """
 
@@ -49,7 +49,7 @@ rule post_structural:
     shell:
         """
         bash {script_dir}/02_post-structural.sh \
-            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
             --threads {threads} --atlas {params.atlas} --freesurfer {params.freesurfer}
         """
 
@@ -63,6 +63,6 @@ rule proc_geodesic_distance:
     shell:
         """
         bash {script_dir}/03_GD.sh \
-            {bids_dir} sub-{wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
             --threads {threads}
         """
