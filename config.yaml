@@ -11,7 +11,7 @@ software:
   freesurfer_license: "/path/to/license.txt"
 parameters:
   proc_structural:
-    T1wStr: "T1w.nii"
+    T1wStr: "T1w"
     UNI: "FALSE"
     MF: 3
   proc_surf:
