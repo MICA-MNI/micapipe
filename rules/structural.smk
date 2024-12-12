@@ -9,8 +9,8 @@ rule proc_structural:
         T1wStr=config["parameters"]["proc_structural"].get("T1wStr", "T1w.nii"),
         UNI=config["parameters"]["proc_structural"].get("UNI", "FALSE"),
         MF=config["parameters"]["proc_structural"].get("MF", 3),
-        subject_full="sub-" + subject,
-        session_full="ses-" + session,
+        subject_full=lambda wildcards: f"sub-{wildcards.subject}",
+        session_full=lambda wildcards: f"ses-{wildcards.session}",
     threads: config.get("threads", 4),
     shell:
         """
