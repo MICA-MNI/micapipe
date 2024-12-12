@@ -1,7 +1,7 @@
 # Rule for structural processing
 rule proc_structural:
     input:
-        t1w=lambda wildcards: f"{bids_dir}/sub-{wildcards.subject}/ses-{wildcards.session}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_T1w.nii",
+        t1w=lambda wildcards: f"{bids_dir}/sub-{wildcards.subject}/ses-{wildcards.session}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.T1wStr}.nii",
     output:
         processed_volumetric=f"{output_dir}/sub-{{subject}}/ses-{{session}}/anat/processed_volumetric.nii.gz",
     params:
