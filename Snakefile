@@ -20,7 +20,7 @@
 #                output_dir=config["output_dir"],
 #                subject=config["subjects"],
 #                session=config["sessions"]),
-configfile: "config.yaml"
+configfile: "sample_run.yaml"
 
 # Define common directories for the workflow
 script_dir = config["script_dir"]
