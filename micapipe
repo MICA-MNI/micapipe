@@ -748,6 +748,7 @@ if [ ! -f "${out}/micapipe_processed_sub.csv" ]; then echo "Subject, Session, Mo
 # -----------------------------------------------------------------------------------------------#
 if [ "$procVOL" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_structural_$(date +'%Y-%m-%d_%H.%M.%S')
+    echo "printtt ${MICAPIPE} $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $UNI $MF"
     COMMAND="${scriptDir}/01_proc-structural.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $T1wStr $UNI $MF"
     # mica.q - Structural processing: Volumetric
     if [[ $micaq == "TRUE" ]]; then

@@ -10,12 +10,13 @@ rule proc_structural:
         UNI=config["parameters"]["proc_structural"].get("UNI", "FALSE"),
         MF=config["parameters"]["proc_structural"].get("MF", 3),
         subject_short=lambda wildcards: f"{wildcards.subject}",
-        session_short=lambda wildcards: f"{wildcards.session}",
+        session_short=lambda wildcards: f"ses-{wildcards.session}",
     threads: config.get("threads", 4),
     shell:
         """
         echo "Running structural processing with subject={wildcards.subject} session={wildcards.session}, full_subject={params.subject_short}, full_session={params.session_short}"
-        bash {script_dir}/01_proc-structural.sh \
+source {script_dir}/init.sh        
+bash {script_dir}/01_proc-structural.sh \
             {bids_dir} {params.subject_short} {output_dir} {params.session_short} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
         """
