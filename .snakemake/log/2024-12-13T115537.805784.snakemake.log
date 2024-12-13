@@ -1,0 +1,37 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job                count
+---------------  -------
+proc_structural        1
+total                  1
+
+Select jobs to execute...
+
+[Fri Dec 13 11:55:38 2024]
+rule proc_structural:
+    input: /data_/mica3/BIDS_CI/rawdata/sub-mri3T/ses-01/anat/sub-mri3T_ses-01_run-2_T1w.nii.gz
+    output: /home/bic/eyang/processed_data2/sub-mri3T/ses-01/anat/processed_volumetric.nii.gz
+    jobid: 0
+    reason: Missing output files: /home/bic/eyang/processed_data2/sub-mri3T/ses-01/anat/processed_volumetric.nii.gz
+    wildcards: subject=mri3T, session=01
+    resources: tmpdir=/tmp
+
+[Fri Dec 13 11:55:38 2024]
+Error in rule proc_structural:
+    jobid: 0
+    input: /data_/mica3/BIDS_CI/rawdata/sub-mri3T/ses-01/anat/sub-mri3T_ses-01_run-2_T1w.nii.gz
+    output: /home/bic/eyang/processed_data2/sub-mri3T/ses-01/anat/processed_volumetric.nii.gz
+    shell:
+        
+        echo "Running structural processing with subject=mri3T session=01, full_subject=mri3T, full_session=ses-01"
+source ./functions/init.sh        
+bash ./functions/01_proc-structural.sh             /data_/mica3/BIDS_CI/rawdata mri3T /home/bic/eyang/processed_data2 ses-01             --threads 1 --tmpDir tmp --T1wStr run-2_T1w --uni FALSE --mf 45
+        
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2024-12-13T115537.805784.snakemake.log
