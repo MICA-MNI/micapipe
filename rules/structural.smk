@@ -9,14 +9,13 @@ rule proc_structural:
         T1wStr=config["parameters"]["proc_structural"].get("T1wStr", "T1w.nii"),
         UNI=config["parameters"]["proc_structural"].get("UNI", "FALSE"),
         MF=config["parameters"]["proc_structural"].get("MF", 3),
-        subject_short=lambda wildcards: f"{wildcards.subject}",
-        session_short=lambda wildcards: f"{wildcards.session}",
+        subject_short=lambda wildcards: wildcards.subject,
+        session_short=lambda wildcards: wildcards.session,
     threads: config.get("threads", 4),
     shell:
         """
-        echo "Running structural processing with subject={wildcards.subject} session={wildcards.session}, full_subject={params.subject_short}, full_session={params.session_short}"
         bash {script_dir}/01_proc-structural.sh \
-            {bids_dir} {params.subject_short} {output_dir} {params.session_short} \
+            {bids_dir} {params.subject_short} {output_dir} -ses {params.session_short} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
         """
 
@@ -30,11 +29,13 @@ rule proc_surf:
         surf_dir="surf",
         freesurfer=config["parameters"]["proc_surf"].get("freesurfer", "FALSE"),
         fs_licence=config["parameters"]["proc_surf"].get("fs_licence", "path/to/fs_licence.txt"),
+        sub=lambda wildcards: wildcards.subject,
+        ses=lambda wildcards: wildcards.session,
     threads: config.get("threads", 4),
     shell:
         """
         bash {script_dir}/01_proc-surf.sh \
-            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {params.sub} {output_dir} {params.ses} \
             --threads {threads} --surf_dir {params.surf_dir} --freesurfer {params.freesurfer} --fs_licence {params.fs_licence}
         """
 
@@ -48,11 +49,13 @@ rule post_structural:
     params:
         atlas=config["parameters"]["post_structural"].get("atlas", "default"),
         freesurfer=config["parameters"]["post_structural"].get("freesurfer", "FALSE"),
+        sub=lambda wildcards: wildcards.subject,
+        ses=lambda wildcards: wildcards.session,
     threads: config.get("threads", 4),
     shell:
         """
         bash {script_dir}/02_post-structural.sh \
-            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {params.sub} {output_dir} {params.ses} \
             --threads {threads} --atlas {params.atlas} --freesurfer {params.freesurfer}
         """
 
@@ -62,10 +65,13 @@ rule proc_geodesic_distance:
         post_structural_output=f"{output_dir}/sub-{{subject}}/ses-{{session}}/anat/post_structural.nii.gz",
     output:
         geodesic_distance=f"{output_dir}/sub-{{subject}}/ses-{{session}}/maps/geodesic_distance.nii.gz",
+    params:
+        sub=lambda wildcards: wildcards.subject,
+        ses=lambda wildcards: wildcards.session,
     threads: config.get("threads", 4),
     shell:
         """
         bash {script_dir}/03_GD.sh \
-            {bids_dir} {wildcards.subject} {output_dir} ses-{wildcards.session} \
+            {bids_dir} {params.sub} {output_dir} {params.ses} \
             --threads {threads}
         """

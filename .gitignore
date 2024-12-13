@@ -5,3 +5,4 @@ micapipe_*.sif
 docs/build/*
 docs/build_
 micapipe_v0.*
+.snakemake/
