@@ -15,9 +15,6 @@ rule proc_structural:
     shell:
         """
         echo "Running structural processing with subject={wildcards.subject} session={wildcards.session}, full_subject={params.subject_short}, full_session={params.session_short}"
-source {script_dir}/init.sh        
-bash {script_dir}/01_proc-structural.sh \
-            {bids_dir} {params.subject_short} {output_dir} {params.session_short} \
         bash {script_dir}/01_proc-structural.sh \
             {bids_dir} {params.subject_short} {output_dir} -ses {params.session_short} \
             --threads {threads} --tmpDir {params.tmpDir} --T1wStr {params.T1wStr} --uni {params.UNI} --mf {params.MF}
