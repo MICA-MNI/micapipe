@@ -1,3 +1,0 @@
-Building DAG of jobs...
-MissingRuleException:
-No rule to produce /home/bic/eyang/processed_data/sub-mri3T/ses-01/anat/processed_volumetric.nii.gz (if you use input functions make sure that they don't raise unexpected exceptions).

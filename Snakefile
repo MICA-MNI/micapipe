@@ -1,3 +1,8 @@
+# ---- snakebids boilerplate
+
+import snakebids
+from snakebids import bids, set_bids_spec
+
 # configfile: "sample_run.yaml"
 configfile: "config.yaml"
 
