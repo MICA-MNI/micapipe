@@ -25,3 +25,96 @@ parameters:
     dwi_rpe: "DEFAULT"
     b0thr: 61
     # Add more DWI parameters here if needed (e.g., no_bvalue_scaling, etc.)
+
+
+
+# config.yaml for Snakemake workflow
+
+# General Metadata
+version: "v0.2.3" # MICAPIPE January 2024 (Version 'Northern flicker')
+
+# Required Parameters
+subject: null  # Subject identification (-sub)
+output_dir: null  # Output directory for the processed files (-out)
+bids_dir: null  # Path to BIDS directory (-bids)
+session: null  # Session name (optional, default: SINGLE session) (-ses)
+
+# Processing Flags
+process_flags:
+  proc_structural: false  # Volumetric processing
+  proc_surf: false  # Cortical surface reconstruction (requires proc_structural)
+  post_structural: false  # Post-structural volumetric processing (requires proc_structural, proc_surf)
+  proc_dwi: false  # DWI processing with MRtrix3 (requires proc_structural)
+  proc_asl: false  # ASL processing (requires proc_structural)
+  proc_flair: false  # T2/FLAIR processing (requires proc_structural)
+  proc_func: false  # Functional MRI processing and connectome generation (requires proc_structural, proc_surf, post_structural)
+  structural_connectome: false  # Structural connectome generation (requires proc_dwi, post_structural)
+  mpc: false  # Microstructural profiles and covariance analysis (requires proc_surf, post_structural)
+  gd: false  # Geodesic distance analysis (requires proc_surf, post_structural)
+  swm: false  # Superficial White Matter generation (requires post_structural)
+  mpc_swm: false  # MPC Superficial White Matter analysis (requires post_structural)
+
+# Other Functions
+cleanup: false  # Cleanup flag for module outputs
+qc: false  # Group-level quality control report generation
+qc_subject: false  # Subject-level quality control report generation
+
+# Module-Specific Arguments
+module_args:
+  proc_structural:
+    T1wStr: "T1w.nii"  # Manual scan identification string
+    uni: false  # Use UNI-T1map
+    mf: 3  # Multiplying factor for mp2rage denoising
+
+  proc_surf:
+    surf_dir: null  # Path to freesurfer/FastSurfer subject directory
+    freesurfer: false  # Use Freesurfer 7 for cortical surface reconstruction
+    fs_licence: null  # Path to Freesurfer licence
+    T1: null  # Overwrite T1 input
+
+  post_structural:
+    atlas: null  # Select specific parcellations
+    freesurfer: false  # Use Freesurfer for processing
+
+  proc_dwi:
+    dwi_main: null  # Path to DWI with directions and b0
+    dwi_rpe: null  # DWI b0 image(s) with reverse phase encoding
+    dwi_processed: null  # Processed DWI file
+    rpe_all: false  # All DWI directions & b-values acquired twice
+    regAffine: false  # Perform Affine registration only
+    dwi_acq: null  # New DWI acquisition string
+    b0thr: 61  # B-value threshold for b=0
+    no_bvalue_scaling: false  # Disable b-value scaling
+    regSynth: false  # Registration based on synthseg
+    dwi_upsample: false  # Upsample DWI to higher resolution
+
+  proc_func:
+    mainScanStr: "task-rest_acq-AP_bold"  # Main scan string for func processing
+    func_pe: null  # Main phase encoding scan path
+    func_rpe: null  # Reverse phase encoding scan path
+    mainScanRun: null  # Specify which resting-state scan to process
+    phaseReversalRun: null  # Specify phase encoding file
+    topupConfig: null  # Path to topup config file
+    NSR: false  # White matter and CSF signal regression
+    GSR: false  # Global, white matter, and CSF signal regression
+    noFIX: false  # Skip ICA-FIX processing
+    icafixTraining: null  # Path to ICA-FIX training file
+    sesAnat: null  # Register func session to anatomical session
+    dropTR: false  # Drop the first five TRs
+    noFC: false  # Skip Functional Connectome generation
+
+  structural_connectome:
+    tracts: 40  # Number of streamlines (default=40M)
+    keep_tck: false  # Retain tractogram
+    autoTract: false  # Automatic tractogram segmentation
+    filter: "SIFT2"  # Tractogram filtering algorithm
+    dwi_acq: null  # DWI acquisition for SC generation
+    weighted_SC: null  # Weight SC by a quantitative map
+    tck: null  # Pre-calculated whole brain tractography
+
+  mpc:
+    microstructural_img: null  # Path to scan for MPC
+    microstructural_reg: null  # Path to scan for registration
+    mpc_acq: null  # Acquisition string for new MPC
+
+# Optional Arguments (Further module-specific configurations can follow)
