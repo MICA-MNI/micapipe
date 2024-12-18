@@ -1,30 +1,7 @@
 
-
-threads: 6
-software:
-  freesurfer_license: "/path/to/license.txt"
-parameters:
-  proc_structural:
-    T1wStr: "T1w"
-    UNI: "FALSE"
-    MF: 3
-  proc_surf:
-    freesurfer: "FALSE"
-    fs_licence: "C:/path/to/fs_licence.txt"
-  post_structural:
-    atlas: "default"
-    freesurfer: "FALSE"
-  proc_dwi:
-    dwi_main: "DEFAULT"
-    dwi_rpe: "DEFAULT"
-    b0thr: 61
-    # Add more DWI parameters here if needed (e.g., no_bvalue_scaling, etc.)
-
 pybids_inputs:
     filters:
-      extension: '.nii.gz'
       # invalid_filters: 'allow'
-      # space: false
     wildcards:
       - subject
       - session
@@ -33,211 +10,205 @@ pybids_inputs:
 
 
 parse_args:
-# config.yaml for Snakemake workflow
 
-# General Metadata
-version:
-  default: "v0.2.3"
-  help: "MICAPIPE January 2024 (Version 'Northern flicker')"
+  # Required Parameters
+  --subject:
+    default:
+      - "001"
+      - "002"
+    help: "Subject identification (-sub)"
+  --output_dir:
+    default: "test_data/processed_data"
+    help: "Output directory for the processed files (-out)"
+  --bids_dir:
+    default: "test_data/raw_data"
+    help: "Path to BIDS directory (-bids)"
+  --session:
+    default: "01"
+    help: "Session name (optional, default: SINGLE session) (-ses)"
 
-# Required Parameters
-subject:
-  default:
-    - "001"
-    - "002"
-  help: "Subject identification (-sub)"
-output_dir:
-  default: "test_data/processed_data"
-  help: "Output directory for the processed files (-out)"
-bids_dir:
-  default: "test_data/raw_data"
-  help: "Path to BIDS directory (-bids)"
-session:
-  default: "01"
-  help: "Session name (optional, default: SINGLE session) (-ses)"
+  # Processing Flags
+  process_flags:
+    proc_structural:
+      default: false
+      help: "Volumetric processing"
+    proc_surf:
+      default: false
+      help: "Cortical surface reconstruction (requires proc_structural)"
+    post_structural:
+      default: false
+      help: "Post-structural volumetric processing (requires proc_structural, proc_surf)"
+    proc_dwi:
+      default: false
+      help: "DWI processing with MRtrix3 (requires proc_structural)"
+    proc_asl:
+      default: false
+      help: "ASL processing (requires proc_structural)"
+    proc_flair:
+      default: false
+      help: "T2/FLAIR processing (requires proc_structural)"
+    proc_func:
+      default: false
+      help: "Functional MRI processing and connectome generation (requires proc_structural, proc_surf, post_structural)"
+    structural_connectome:
+      default: false
+      help: "Structural connectome generation (requires proc_dwi, post_structural)"
+    mpc:
+      default: false
+      help: "Microstructural profiles and covariance analysis (requires proc_surf, post_structural)"
+    gd:
+      default: false
+      help: "Geodesic distance analysis (requires proc_surf, post_structural)"
+    swm:
+      default: false
+      help: "Superficial White Matter generation (requires post_structural)"
+    mpc_swm:
+      default: false
+      help: "MPC Superficial White Matter analysis (requires post_structural)"
 
-# Processing Flags
-process_flags:
-  proc_structural:
+  # Other Functions
+  cleanup:
     default: false
-    help: "Volumetric processing"
-  proc_surf:
+    help: "Cleanup flag for module outputs"
+  qc:
     default: false
-    help: "Cortical surface reconstruction (requires proc_structural)"
-  post_structural:
+    help: "Group-level quality control report generation"
+  qc_subject:
     default: false
-    help: "Post-structural volumetric processing (requires proc_structural, proc_surf)"
-  proc_dwi:
-    default: false
-    help: "DWI processing with MRtrix3 (requires proc_structural)"
-  proc_asl:
-    default: false
-    help: "ASL processing (requires proc_structural)"
-  proc_flair:
-    default: false
-    help: "T2/FLAIR processing (requires proc_structural)"
-  proc_func:
-    default: false
-    help: "Functional MRI processing and connectome generation (requires proc_structural, proc_surf, post_structural)"
-  structural_connectome:
-    default: false
-    help: "Structural connectome generation (requires proc_dwi, post_structural)"
-  mpc:
-    default: false
-    help: "Microstructural profiles and covariance analysis (requires proc_surf, post_structural)"
-  gd:
-    default: false
-    help: "Geodesic distance analysis (requires proc_surf, post_structural)"
-  swm:
-    default: false
-    help: "Superficial White Matter generation (requires post_structural)"
-  mpc_swm:
-    default: false
-    help: "MPC Superficial White Matter analysis (requires post_structural)"
+    help: "Subject-level quality control report generation"
 
-# Other Functions
-cleanup:
-  default: false
-  help: "Cleanup flag for module outputs"
-qc:
-  default: false
-  help: "Group-level quality control report generation"
-qc_subject:
-  default: false
-  help: "Subject-level quality control report generation"
-
-# Module-Specific Arguments
-module_args:
-  proc_structural:
-    T1wStr:
-      default: "T1w.nii"
-      help: "Manual scan identification string"
-    uni:
-      default: false
-      help: "Use UNI-T1map"
-    mf:
-      default: 3
-      help: "Multiplying factor for mp2rage denoising"
-  proc_surf:
-    surf_dir:
-      default: false
-      help: "Path to freesurfer/FastSurfer subject directory"
-    freesurfer:
-      default: false
-      help: "Use Freesurfer 7 for cortical surface reconstruction"
-    fs_licence:
-      default: "Path to freesurfer/FastSurfer subject directory"
-      help: "Path to Freesurfer licence"
-    T1:
-      default: false
-      help: "Overwrite T1 input"
-  post_structural:
-    atlas:
-      default: false
-      help: "Select specific parcellations"
-    freesurfer:
-      default: false
-      help: "Use Freesurfer for processing"
-  proc_dwi:
-    dwi_main:
-      default: false
-      help: "Path to DWI with directions and b0"
-    dwi_rpe:
-      default: false
-      help: "DWI b0 image(s) with reverse phase encoding"
-    dwi_processed:
-      default: false
-      help: "Processed DWI file"
-    rpe_all:
-      default: false
-      help: "All DWI directions & b-values acquired twice"
-    regAffine:
-      default: false
-      help: "Perform Affine registration only"
-    dwi_acq:
-      default: false
-      help: "New DWI acquisition string"
-    b0thr:
-      default: 61
-      help: "B-value threshold for b=0"
-    no_bvalue_scaling:
-      default: false
-      help: "Disable b-value scaling"
-    regSynth:
-      default: false
-      help: "Registration based on synthseg"
-    dwi_upsample:
-      default: false
-      help: "Upsample DWI to higher resolution"
-  proc_func:
-    mainScanStr:
-      default: "task-rest_acq-AP_bold"
-      help: "Main scan string for func processing"
-    func_pe:
-      default: false
-      help: "Main phase encoding scan path"
-    func_rpe:
-      default: false
-      help: "Reverse phase encoding scan path"
-    mainScanRun:
-      default: false
-      help: "Specify which resting-state scan to process"
-    phaseReversalRun:
-      default: false
-      help: "Specify phase encoding file"
-    topupConfig:
-      default: false
-      help: "Path to topup config file"
-    NSR:
-      default: false
-      help: "White matter and CSF signal regression"
-    GSR:
-      default: false
-      help: "Global, white matter, and CSF signal regression"
-    noFIX:
-      default: false
-      help: "Skip ICA-FIX processing"
-    icafixTraining:
-      default: false
-      help: "Path to ICA-FIX training file"
-    sesAnat:
-      default: false
-      help: "Register func session to anatomical session"
-    dropTR:
-      default: false
-      help: "Drop the first five TRs"
-    noFC:
-      default: false
-      help: "Skip Functional Connectome generation"
-  structural_connectome:
-    tracts:
-      default: 40
-      help: "Number of streamlines (default=40M)"
-    keep_tck:
-      default: false
-      help: "Retain tractogram"
-    autoTract:
-      default: false
-      help: "Automatic tractogram segmentation"
-    filter:
-      default: "SIFT2"
-      help: "Tractogram filtering algorithm"
-    dwi_acq:
-      default: false
-      help: "DWI acquisition for SC generation"
-    weighted_SC:
-      default: false
-      help: "Weight SC by a quantitative map"
-    tck:
-      default: false
-      help: "Pre-calculated whole brain tractography"
-  mpc:
-    microstructural_img:
-      default: false
-      help: "Path to scan for MPC"
-    microstructural_reg:
-      default: false
-      help: "Path to scan for registration"
-    mpc_acq:
-      default: false
-      help: "Acquisition string for new MPC"
+  # Module-Specific Arguments
+  module_args:
+    proc_structural:
+      T1wStr:
+        default: "T1w.nii"
+        help: "Manual scan identification string"
+      uni:
+        default: false
+        help: "Use UNI-T1map"
+      mf:
+        default: 3
+        help: "Multiplying factor for mp2rage denoising"
+    proc_surf:
+      surf_dir:
+        default: false
+        help: "Path to freesurfer/FastSurfer subject directory"
+      freesurfer:
+        default: false
+        help: "Use Freesurfer 7 for cortical surface reconstruction"
+      fs_licence:
+        default: "Path to freesurfer/FastSurfer subject directory"
+        help: "Path to Freesurfer licence"
+      T1:
+        default: false
+        help: "Overwrite T1 input"
+    post_structural:
+      atlas:
+        default: false
+        help: "Select specific parcellations"
+      freesurfer:
+        default: false
+        help: "Use Freesurfer for processing"
+    proc_dwi:
+      dwi_main:
+        default: false
+        help: "Path to DWI with directions and b0"
+      dwi_rpe:
+        default: false
+        help: "DWI b0 image(s) with reverse phase encoding"
+      dwi_processed:
+        default: false
+        help: "Processed DWI file"
+      rpe_all:
+        default: false
+        help: "All DWI directions & b-values acquired twice"
+      regAffine:
+        default: false
+        help: "Perform Affine registration only"
+      dwi_acq:
+        default: false
+        help: "New DWI acquisition string"
+      b0thr:
+        default: 61
+        help: "B-value threshold for b=0"
+      no_bvalue_scaling:
+        default: false
+        help: "Disable b-value scaling"
+      regSynth:
+        default: false
+        help: "Registration based on synthseg"
+      dwi_upsample:
+        default: false
+        help: "Upsample DWI to higher resolution"
+    proc_func:
+      mainScanStr:
+        default: "task-rest_acq-AP_bold"
+        help: "Main scan string for func processing"
+      func_pe:
+        default: false
+        help: "Main phase encoding scan path"
+      func_rpe:
+        default: false
+        help: "Reverse phase encoding scan path"
+      mainScanRun:
+        default: false
+        help: "Specify which resting-state scan to process"
+      phaseReversalRun:
+        default: false
+        help: "Specify phase encoding file"
+      topupConfig:
+        default: false
+        help: "Path to topup config file"
+      NSR:
+        default: false
+        help: "White matter and CSF signal regression"
+      GSR:
+        default: false
+        help: "Global, white matter, and CSF signal regression"
+      noFIX:
+        default: false
+        help: "Skip ICA-FIX processing"
+      icafixTraining:
+        default: false
+        help: "Path to ICA-FIX training file"
+      sesAnat:
+        default: false
+        help: "Register func session to anatomical session"
+      dropTR:
+        default: false
+        help: "Drop the first five TRs"
+      noFC:
+        default: false
+        help: "Skip Functional Connectome generation"
+    structural_connectome:
+      tracts:
+        default: 40
+        help: "Number of streamlines (default=40M)"
+      keep_tck:
+        default: false
+        help: "Retain tractogram"
+      autoTract:
+        default: false
+        help: "Automatic tractogram segmentation"
+      filter:
+        default: "SIFT2"
+        help: "Tractogram filtering algorithm"
+      dwi_acq:
+        default: false
+        help: "DWI acquisition for SC generation"
+      weighted_SC:
+        default: false
+        help: "Weight SC by a quantitative map"
+      tck:
+        default: false
+        help: "Pre-calculated whole brain tractography"
+    mpc:
+      microstructural_img:
+        default: false
+        help: "Path to scan for MPC"
+      microstructural_reg:
+        default: false
+        help: "Path to scan for registration"
+      mpc_acq:
+        default: false
+        help: "Acquisition string for new MPC"
