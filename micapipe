@@ -82,6 +82,8 @@ echo -e "
 \t\033[38;5;197m-proc_dwi\033[0m
 \t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
 \t\t\t            Default = <bids>/<subject>/dwi/*_dir-AP_dwi.nii*
+\t   \033[38;5;120m-dwi_phase\033[0m           : Full path to DWI phase part with N number of directions. If used, it will overwrite the defaults.
+\t\t\t            Default = <bids>/<subject>/dwi/*_dir-AP_part-phase_dwi.nii*
 \t   \033[38;5;120m-dwi_rpe\033[0m             : DWI b0 image(s) with phase reversal encoding. If used, it will overwrite the defaults.
 \t\t\t            Default = <bids>/<subject>/dwi/<sub>_dir-PA_dwi.nii*
 \t\t\t            Set to 'FALSE' if no DWI with reverse fase encoding will be provided
@@ -455,6 +457,10 @@ do
     dwi_main="$2"
     shift;shift;
   ;;
+  -dwi_phase)
+    dwi_phase="$2"
+    shift;shift;
+  ;;
   -dwi_rpe)
     dwi_rpe="$2"
     shift;shift;
@@ -607,6 +613,14 @@ else
     IFS=',' read -ra dwis_main <<< $dwi_main
     for i in "${!dwis_main[@]}"; do dwis_main[i]=$(realpath ${dwis_main[$i]}); done # Full path
     dwi_main=$(IFS=','; echo "${dwis_main[*]}")
+fi
+# User provided DWI phase image(s)
+if [ -z ${dwi_phase} ]; then
+    dwi_phase=DEFAULT
+else
+    IFS=',' read -ra dwis_phase <<< $dwi_phase
+    for i in "${!dwis_phase[@]}"; do dwis_phase[i]=$(realpath ${dwis_phase[$i]}); done # Full path
+    dwi_phase=$(IFS=','; echo "${dwis_phase[*]}")
 fi
 # User provided DWI reverse phase encoded
 if [ -z ${dwi_rpe} ]; then
@@ -831,7 +845,7 @@ fi
 if [ "$procDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale $synth_reg $dwi_upsample"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_phase $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale $synth_reg $dwi_upsample"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"

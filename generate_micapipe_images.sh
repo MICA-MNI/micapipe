@@ -68,6 +68,8 @@ generate() {
     --run-bash "wget https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download -O itksnap.tar.gz &&
                 tar -xfv itksnap.tar.gz -C /opt/" \
     --env PATH="/opt/itksnap/bin/:${PATH}" \
+    --run-bash "git clone https://github.com/SteenMoeller/NORDIC_Raw.git /opt/NORDIC_Raw && cd /opt/NORDIC_Raw && git checkout v1.1" \
+    --env NORDIC_Raw="/opt/NORDIC_Raw"
     --run-bash "wget https://www.dropbox.com/s/47lu1nojrderls1/install_R_env.sh?dl=0 -O /opt/install_R_env.sh &&
                 bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL" \
     --copy . /opt/micapipe \

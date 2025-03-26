@@ -96,6 +96,7 @@ export idBIDS="${subject}${ses}"
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
   bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
+  bids_phase_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*part-phase_dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*T1map.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*T1map.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*T1map.nii* 2>/dev/null)
@@ -184,13 +185,17 @@ bids_print.variables-post() {
 bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
   Info "Variables for DWI processing"
-  Note "proc_dwi dir    :" "$proc_dwi"
-  Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
-  Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
-
-  Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
-  Note "T1 5tt          :" "$(find "$T15ttgen" 2>/dev/null)"
-  Note "MNI152_mask     :" "$MNI152_mask"
+  Note "proc_dwi dir        :" "$proc_dwi"
+  for i in "${!bids_dwis[@]}"; do
+    file.exist "bids_dwis $[$i+1]/${#bids_dwis[@]}       :" ${bids_dwis[i]}
+  done
+  for i in "${!bids_dwis[@]}"; do
+    file.exist "bids_phase_dwis $[$i+1]/${#bids_dwis[@]} :" ${bids_phase_dwis[i]}
+  done
+  Note "dwi_reverse         :" "N-${#dwi_reverse[@]}, $dwi_reverse"
+  Note "T1 nativepro        :" "$(find "$T1nativepro" 2>/dev/null)"
+  Note "T1 5tt              :" "$(find "$T15ttgen" 2>/dev/null)"
+  Note "MNI152_mask         :" "$MNI152_mask"
 }
 
 bids_print.variables-func() {
@@ -261,6 +266,7 @@ bids_variables_unset() {
   unset icafixTraining
   unset bids_T1ws
   unset bids_dwis
+  unset bids_phase_dwis
   unset bids_T1map
   unset bids_inv1
   unset dwi_reverse
