@@ -707,7 +707,7 @@ SWM 3mm
 
 
 ``/maps``: ``fsnative``, ``fsaverage5``, ``fsLR-32k`` and ``fsLR-5k``
---------------------------------------------------------
+-----------------------------------------------------------------------
 
 - Each file map with the extension ``func.gii`` corresponds to the data map from a NIFTI image at a certain deep.
 - The deep from where it was mapped is in the name after the string ``label-``.
@@ -724,9 +724,6 @@ SWM 3mm
 .. warning::
     There is **NO inherent smoothing** applied to the map. If the user desires smoothing, they should customize it according to their preferences and requirements.
 
-.. figure:: ../02.structuralproc/brain_surfaces.png
-    :alt: alternate text
-    :align: center
 
 .. tabs::
 

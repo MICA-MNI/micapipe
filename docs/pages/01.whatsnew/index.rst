@@ -64,7 +64,7 @@ v0.2.1, Jun 26, 2023
 
 
 v0.2.0 'Northern Flicker', Jun 16, 2023
--------------------------------------
+---------------------------------------
 
 - 👥 Compatible with multiple acquisitions (func, dwi, MPC). multiple quantitative maps, DWI acquisitions and func acquisitions including task
 - 🧠 Improved registrations between modalities. We improved the registration between multiple acquisitions to optimize the performance.

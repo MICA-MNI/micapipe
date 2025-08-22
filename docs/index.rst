@@ -71,7 +71,7 @@ Optimized to process 3T and 7T datasets!
 
 About 👁️‍🗨️
 --------------------------------------------------------
-*Micapipe* generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. All results are mapped to three different surfaces spaces: native, conte69 and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.
+*Micapipe* generates systematic descriptions of cortico-cortical microstructural similarity, functional connectivity, structural connectivity, and spatial proximity. We hope that this open tool will be of use to researchers studying human brain structure and function across different spatial scales. The connectomes can be generated across 18 different cortical parcellations (100-1000 parcels), in addition to subcortical and cerebellar parcellations. All results are mapped to three different surfaces spaces: native, fsLR-32k, fsLR-5k and fsaverage5, and all outputs are hierarchically ordered with BIDS conformed naming.
 
 .. figure:: ./figures/workflow.png
    :alt: alternate text
@@ -91,7 +91,7 @@ To encourage reproducibility and robustness of investigations using micapipe, we
 
 Datasets 🕵️‍♀️
 --------------------------------------------------------
-Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_, `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_ and `HCP <https://www.humanconnectome.org>`_.
+Micapipe has been tested on several locally acquired datasets, as well as openly available repositories such as `Precision Neuroimaging and Connectomics (PNI 7T) <https://doi.org/10.1038/s41597-025-04863-7>`_, `Microstructure-Informed Connectomis (MICA-MICs) <https://doi.org/10.1101/2021.08.04.454795>`_ `Cambridge Centre for Ageing and Neuroscience (Cam-CAN) <https://www.cam-can.org/index.php?content=dataset>`_, `EpiC-UNAM <https://github.com/rcruces/2020_cognition_connectomics_TLE>`_, `Midnight Scan Club  <https://openneuro.org/datasets/ds000224/versions/1.0.3>`_, `Auditory localization with 7T fMRI <https://openneuro.org/datasets/ds001942/versions/1.2.0>`_, `SUDMEX_CONN  <https://openneuro.org/datasets/ds003346/versions/1.1.1>`_ and `HCP <https://www.humanconnectome.org>`_.
 
 .. raw:: html
 
@@ -144,7 +144,7 @@ Should you have any problems, questions, or suggestions about micapipe, please p
    pages/04.matrices/index
    pages/04.surfaces/index
    pages/04.gradients/index
-   ages/04.fetch/index
+   pages/04.fetch/index
    pages/04.tckdownsample/index
    pages/04.faq/index
 
@@ -178,14 +178,17 @@ Micapipe is developed by members of the MICA-lab (https://mica-mni.github.io) an
 
 - **Raúl Rodríguez-Cruces**, *MICA Lab - Montreal Neurological Institute*
 - **Alex Ngo**, *MICA Lab - Montreal Neurological Institute*
-- **Jessica Royer**, *MICA Lab - Montreal Neurological Institute*
-- **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
 - **Jordan DeKraker**, *MICA Lab - Montreal Neurological Institute*
+- **Ian Goodall-Halliwell**, *MICA Lab - Montreal Neurological Institute*
+- **Enning Yang**, *MICA Lab - Montreal Neurological Institute*
 - **Yougeun Hwang**, *MICA Lab - Montreal Neurological Institute*
 - **Donna Cabalo**, *MICA Lab - Montreal Neurological Institute*
-- **Nicole Eichert**, *Jesus College, Oxford*
-- **Oualid Benkarim**, *MICA Lab - Montreal Neurological Institute*
 - **Yezhou Wang**, *MICA Lab - Montreal Neurological Institute*
-- **Sara Larivière**, *MICA Lab - Montreal Neurological Institute*
-- **Casey Paquola**, *MICA Lab - Montreal Neurological Institute*
+- **Luis Concha**, *Instituto de Neurobiologia - UNAM*
+- **Nicole Eichert**, *Jesus College, Oxford*
+- **Oualid Benkarim**, *Vector Analytics*
+- **Jessica Royer**, *Cognitive Neurogenetics Lab, Max Planck Institute for Human Cognitive and Brain Sciences, Germany*
+- **Peer Herholz**, *NeuroDataScience, ORIGAMI lab - Montreal Neurological Institute*
+- **Sara Larivière**, *Sherbrooke Laboratory for Integrative Connectomics*
+- **Casey Paquola**, *Forschungszentrum Jülich*
 - **Boris Bernhardt**, *MICA Lab - Montreal Neurological Institute*

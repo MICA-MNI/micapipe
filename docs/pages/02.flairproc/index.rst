@@ -25,7 +25,7 @@ This module performs normalization of the T2/FLAIR images based on the gray and 
         - Bias field correction weighted by white matter
         - Get the mode for each tissue: GM and WM
         - Normalize intensities by peak of WM (mode). This normalization will center the peak of the WM mode intensity at ZERO.
-        - Brains mask of the normalized flair
+        - Brain mask of the normalized flair
         - Registration of flair to `nativepro`
         - Map flair midthickness to fsLR-32k, fsLR-5k and fsaverage5
 
