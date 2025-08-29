@@ -21,30 +21,70 @@ This module performs all pre-processing of a subject's task or resting-state fun
    :scale: 70 %
    :align: center
 
+.. important::
+      
+    There is **NO inherent smoothing** applied to the fMRI data. If the user desires smoothing, they should customize it according to their preferences and requirements.
+
+.. warning::
+
+   **Nuisance Regression**
+   Only the functional connectomes and time series containing the
+   string ``clean`` include these confound regressors.  
+   All other time series mapped to the surface **do not have nuisance regression applied**.
+
 .. tabs::
 
     .. tab:: Processing steps
 
-            - Remove first five TRs (optional, only if flag ``-dropTR`` is specified)
-            - Reorient input to LPI
-            - Perform motion correction within fMRI run and provided fieldmaps by registering each volume to the scan's own average
-            - Calculate motion outliers
-            - Apply distortion correction to motion-corrected images
-            - Calculate binary mask from motion and distortion corrected volume
-            - High-pass filtering of functional timeseries to remove frequencies below 0.01Hz
-            - Run Multivariate Exploratory Linear Optimized Decomposition into Independent Components (MELODIC) on filtered timeseries
-            - Compute linear and non-linear registrations between fMRI and T1-nativepro space, as well as boundary-based registration between fMRI and native Freesurfer space
-            - Run FMRIB's ICA-based Xnoiseifier (ICA-FIX) using specified training file. Note that if ICA-FIX is not found on the user's system, or if MELODIC failed, ICA-FIX will be skipped and further processing will be performed using high-pass filtered timeseries
-            - Extract global and tissue-specific signal (cerebrospinal fluid, white matter, and gray matter) from processed timeseries
-            - Calculate and save motion confounds matrix from processed timeseries
-            - Register processed timeseries to the native cortical surface. Minimially pre-processed (i.e. motion and distortion corrected) timeseries are also registered to the native cortical surface to compute statistics such as temporal signal-to-noise
-            - Surface-based registration of native surface timeseries to surface templates (fsaverage5, conte69)
-            - Native surface, fsaverage5, and conte69-mapped timeseries are each smoothed with a 10mm Gaussian kernel
-            - Use previously computed registrations to align cerebellar and subcortical parcellations to fMRI space
-            - Concatenate cerebellar, subcortical, and parcellated cortical timeseries
-            - Regress motion spikes from cerebellar, subcortical, and cortical timeseries in linear model. If specified using optional flags, regression of tissue-specific signals and six motion confounds (``-NSR``) and global signal (``-GSR``) will also be performed. Following this step, timeseries are saved in two formats: (1) cerebellar regions, subcortical regions, and vertexwise cortical timeseries (conte69), and (2) cerebellar regions, subcortical regions, and parcellated cortical regions.
-            - Cross-correlate functional signals across all parcellated regions and output correlation matrix. If flag ``-noFC`` is specified, this step will be skipped.
+            1. **Drop initial volumes**: Remove the first five TRs (optional, only if ``-dropTR`` flag is specified).
 
+            2. **Reorient images**:  Reorient input fMRI data to LPI orientation.
+
+
+            3. **Motion correction**: Register each fMRI volume to the scan’s own mean image and apply correction using within-run motion estimates and provided fieldmaps.
+
+            4. **Motion outliers**: Detect framewise motion outliers (spikes), and save outlier regressors for later nuisance regression.
+
+            5. **Distortion correction**: Apply distortion correction to motion-corrected images.
+
+            6. **Masking**: Compute a binary brain mask from motion- and distortion-corrected volume.
+
+            7. **Multi-echo denoising (if applicable)**: If data are multi-echo, run **TEDANA** for echo combination and denoising.
+
+            8. **Temporal filtering**: High-pass filter functional timeseries to remove frequencies below 0.01 Hz.
+
+            9. **Independent component analysis (optional)**: Run **MELODIC** (ICA) on filtered timeseries.
+
+            10. **Nonlinear registration**: Compute nonlinear transforms between fMRI space and T1-nativepro space.
+
+            11. **ICA-based denoising (optional)**: Run **ICA-FIX** with specified training file. If ICA-FIX is not found, or MELODIC failed, skip ICA-FIX and continue using the high-pass filtered timeseries.
+
+            12. **Transform timeseries to functional space**: Apply transformations to resample minimally preprocessed timeseries (``T1nativepro_2mm``) into functional space.
+
+            13. **Extract global and tissue-specific signals**: Compute mean timeseries from **CSF**, **gray matter**, and **white matter** probability maps. Compute **global signal** from the brain mask. Save each as text files.
+
+            14. **Compute motion confounds**: Detect additional motion spikes (framewise reference metrics). Save spike regressors.
+
+            15. **Map to native surface (fsnative)**: Register subject’s cortical surface to functional space. Map functional timeseries from volume to **fsnative surface** (L/R hemispheres).
+
+            16. **Resample to standard surfaces**: Resample fsnative timeseries to ``fsLR-5k``, ``fsLR-32k``, and ``fsaverage5``.
+
+            17. **Temporal SNR (tSNR)**: Compute volumetric tSNR (mean ÷ std). Project tSNR to fsnative surface (per hemisphere).
+
+            18. **Subcortical timeseries**: Transform subcortical segmentation to functional space. Extract mean timeseries for each subcortical structure.
+
+            19. **Cerebellar timeseries**: Transform cerebellar segmentation to functional space. Extract mean timeseries for each cerebellar structure (excluding very small nuclei). Compute ROI statistics.
+
+            20. **Concatenate timeseries**: Align and concatenate **cerebellar**, **subcortical**, and **cortical** parcellated timeseries.
+
+            21. **Nuisance regression**: Always regress motion spikes.
+                  - Optional flags:
+                  - ``-NSR`` → regress tissue-specific signals and six motion parameters.
+                  - ``-GSR`` → regress global signal.
+
+            22. **Save outputs**: Save cleaned timeseries in two formats **Vertexwise cortical timeseries** (``fsLR-32k``) + cerebellar + subcortical and **Parcellated cortical timeseries** + cerebellar + subcortical.
+
+            23. **Functional connectivity**: Cross-correlate parcellated timeseries across all regions. Save the resulting **correlation matrix**. If ``-noFC`` flag is set, skip this step.
 
     .. tab:: Usage
 
@@ -76,8 +116,6 @@ This module performs all pre-processing of a subject's task or resting-state fun
               - If multiple phase encoding runs exist in the BIDS directory (only main phase is checked), you must specify which file to process using this flag (e.g. '1').
             * - ``-topupConfig`` ``<path>``
               - Specify path to config file that should be used for distortion correction using topup. Default is *${FSLDIR}/etc/flirtsch/b02b0_1.cnf*.
-            * - ``-smoothWithWB``
-              - Specify this option to use workbench tools for surface-based smoothing (more memory intensive). By default, smoothing is performed with freesurfer tools: *mri_surf2surf*.
             * - ``-NSR``
               - Specify this option to perform nuisance signal regression, which includes six motion parameters, white matter signal, and CSF signal. By default, this option is set to FALSE (no nuisance signal regression).
             * - ``-GSR``
@@ -88,8 +126,6 @@ This module performs all pre-processing of a subject's task or resting-state fun
               - Path to specified ICA-FIX training file for nuisance signal regression (file.RData). Default is *${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData*.
             * - ``-sesAnat`` ``<str>``
               - If longitudinal data is provided, this flag allows to register the current *functional* session to the desired *anatomical* session
-            * - ``-regAffine``
-              - Specify this option to perform an affine registration ONLY from functional to T1w. By default, functional processing in micapipe performs a non linear registration using ANTs-SyN. We recommend this option for functional acquisitions with low resolution and/or low SNR.
             * - ``-dropTR``
               - Specify this option to drop the first five TRs. By default, this option is set to FALSE (all TRs will be processed)
             * - ``-noFC``
@@ -223,32 +259,32 @@ This module performs all pre-processing of a subject's task or resting-state fun
 
 
         - All surface-based metrics including vertexwise cortical timeseries (<hemi> = L, R) are stored in
-            ``<outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/surf`
+            `<outputDirectory>/micapipe_v0.2.0/func/<mainScanStr>/surf`
 
             .. parsed-literal::
 
-            - Functional connectome matrices (r-values) generated from parcellated timeseries sampled in subcortex, cerebellum, and cortical surface
-                 <parc> = up to 18 parcellations
+              - Functional connectome matrices (r-values) generated from parcellated timeseries sampled in subcortex, cerebellum, and cortical surface
+                  <parc> = up to 18 parcellations
                   *<sub>_atlas-<parc>_desc-FC.shape.gii*
 
-            - Native midthickness surface on func space:
-                *<sub>_hemi-?_space-func_surf-fsnative_label-midthickness.surf.gii*
+              - Native midthickness surface on func space:
+                  *<sub>_hemi-?_space-func_surf-fsnative_label-midthickness.surf.gii*
 
-            - Motion and distortion corrected timeseries mapped to native surface, fsaverage5, fsLR-32k and fsLR-5k:
+              - Motion and distortion corrected timeseries mapped to native surface, fsaverage5, fsLR-32k and fsLR-5k:
                   *<sub>_hemi-?_surf-fsaverage5.func.gii*
                   *<sub>_hemi-?_surf-fsLR-32k.func.gii*
                   *<sub>_hemi-?_surf-fsLR-5k.func.gii*
                   *<sub>_hemi-?_surf-fsnative.func.gii*
 
-            - Vertexwise timeseries on fsLR-32k surface, following regression of specified nuisance variables:
+              - Vertexwise timeseries on fsLR-32k surface, following regression of specified nuisance variables:
                   *<sub>_surf-fsLR-32k_desc-timeseries_clean.shape.gii*
 
-            - Temporal signal-to-noise ratio computed on native cortical surface from motion and distortion correction timeseries:
+              - Temporal signal-to-noise ratio computed on native cortical surface from motion and distortion correction timeseries:
                   *<sub>_surf-fsnative_hemi-?_tSNR.shape.gii*
 
 
 
-        - Registration files to functional imaging space are found in ``<outputDirectory>/micapipe_v0.2.0/<sub>/xfm`
+        - Registration files to functional imaging space are found in `<outputDirectory>/micapipe_v0.2.0/<sub>/xfm`
 
             .. parsed-literal::
 

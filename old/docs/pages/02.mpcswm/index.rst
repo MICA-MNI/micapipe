@@ -2,7 +2,7 @@
 
 .. title:: MPC-SWM
 
-Microstructural Superficial White Matter Covariance
+Microstructural Superficial White Matter Covariance (SWMcov)
 ============================================================
 
 This module samples superficial white matter intensities from a quantitative MRI in native qMRI space. This is achieved by constructing a series of equivolumetric surfaces between the gray matter boundary and 3 mm below it following a laplacian field.

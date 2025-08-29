@@ -21,6 +21,7 @@ As in previous examples, we will use the subject ``HC001``, session ``01`` from 
 In this tutorial we will only plot the first 3 components of the diffusion map embedding (aka gradients).
 
 .. admonition:: diffusion map embedding
+    
     For further references check:
     - Coifman & Lafon. Diffusion maps. Applied and computational harmonic analysis. 2006 Jul 1;21(1):5-30. https://doi.org/10.1016/j.acha.2006.04.006
     - Vos de Wael, Benkarim, et al. BrainSpace: a toolbox for the analysis of macroscale gradients in neuroimaging and connectomics datasets. Commun Biol 3, 103 (2020). https://doi.org/10.1038/s42003-020-0794-7
@@ -651,7 +652,7 @@ Download the code!: atlas based gradients
 ``fsLR-5k`` gradients
 *********************
 
-Set the environment
+Environment
 ------------------------------------------------------------
 
 .. tabs::

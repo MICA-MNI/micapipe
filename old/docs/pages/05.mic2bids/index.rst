@@ -5,10 +5,35 @@
 From DICOMS to BIDS: ``mic2bids``
 ================================================
 
-This section describes how to organize a database from sorted *DICOMs* files to `BIDS format <https://bids.neuroimaging.io>`_. As the naming and sorting of DICOMs can be quite unique to each imaging protocol,
- MRI sequence names and outputs must be adapted to be compatible with each dataset.
+This section describes how to organize a database from sorted *DICOM* files to 
+`BIDS format <https://bids.neuroimaging.io>`_. As the naming and sorting of DICOMs 
+can be quite unique to each imaging protocol, MRI sequence names and outputs 
+must be adapted to be compatible with each dataset.
 
-First, you will have to look at the organization of the sorted DICOM directory. This directory should contain subdirectories in which the DICOM images are sorted according to each sequence completed by the participant. You must identify the sequences in the protocol that you want to transform to NIfTI: These sequences will then populate the BIDS directory.
+Currently, there are many tools that can help convert from DICOM to BIDS. 
+Some of them can be found here: 
+`BIDS converters <https://bids.neuroimaging.io/tools/converters.html>`_.
+
+.. warning::
+
+   **BIDS versions:**  
+   The MICs dataset was validated with BIDS version 1.5.1.  
+   Currently, BIDS is at version |bids-badge|.  
+   Note: some names, especially for *MP2RAGE*, have changed in the BIDS standard.
+
+   .. |bids-badge| image:: https://img.shields.io/github/v/tag/bids-standard/bids-validator
+      :alt: BIDS validator version
+      :target: https://github.com/bids-standard/bids-validator
+
+
+MICs dataset
+^^^^^^^^^^^^
+
+First, you will have to look at the organization of the sorted DICOM directory. 
+This directory should contain subdirectories in which the DICOM images are sorted 
+according to each sequence completed by the participant. You must identify the 
+sequences in the protocol that you want to transform to NIfTI. 
+These sequences will then populate the BIDS directory.
 
 Let's suppose that your sorted DICOM directory looks like the following:
 
