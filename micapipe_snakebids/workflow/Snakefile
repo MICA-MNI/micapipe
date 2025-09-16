@@ -50,26 +50,28 @@ inputs = generate_inputs(
     snakenull=config.get("snakenull"),
 )
 
-# print("T1w:", inputs['t1w'])
-# print("FUNC:", inputs['func'])
-# print("DWI:", inputs['dwi'])
-
-
-include: 'common.smk'
-include: 'rules/structural.smk'
-include: 'rules/dwi.smk'
-include: 'rules/func.smk'
-include: 'rules/mpc.smk'
-include: 'rules/flair.smk'
-include: 'rules/swm.smk'
-include: 'rules/mpc_swm.smk'
-include: 'rules/qc.smk'
-
 modules = config.get("module", [])
 if not isinstance(modules, list):
     modules = [modules]
 print("MODULES:", modules)
 
+include: 'common.smk'
+if "structural" in modules:
+    include: 'rules/structural.smk'
+if "dwi" in modules:
+    include: 'rules/dwi.smk'
+if "func" in modules:
+    include: 'rules/func.smk'
+if "mpc" in modules:
+    include: 'rules/mpc.smk'
+if "flair" in modules:
+    include: 'rules/flair.smk'
+if "swm" in modules:
+    include: 'rules/swm.smk'
+if "mpc_swm" in modules:
+    include: 'rules/mpc_swm.smk'
+if "qc" in modules:
+    include: 'rules/qc.smk'
 
 def get_final_outputs(inputs, output_dir, modules):
     input_list = []
