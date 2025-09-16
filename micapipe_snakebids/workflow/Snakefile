@@ -92,7 +92,7 @@ def get_final_outputs(inputs, output_dir, modules):
         input_list += get_mpc_swm_outputs(inputs, output_dir)
     if "qc" in modules:
         input_list += get_qc_outputs(inputs, output_dir)
-    print("INPUT LIST:", input_list)
+    print("OUTPUT LIST:", input_list)
     return input_list
 
 print("GD output path:", get_geodesic_distance_outputs(inputs, output_dir))
