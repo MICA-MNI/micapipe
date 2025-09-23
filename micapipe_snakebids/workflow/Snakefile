@@ -1,4 +1,6 @@
 from snakebids import bids, generate_inputs, get_wildcard_constraints
+from snakebids.plugins.snakenull import generate_inputs_with_snakenull
+
 
 configfile: 'config/snakebids.yml'
 
@@ -38,7 +40,7 @@ else:
     fs_licence_args = config["parameters"]["fs_license"]
 
 
-inputs = generate_inputs(
+inputs = generate_inputs_with_snakenull(
     bids_dir=config["bids_dir"],
     pybids_inputs=config["pybids_inputs"],
     pybidsdb_dir=config.get("pybidsdb_dir"),
