@@ -20,7 +20,7 @@ targets_by_analysis_level:
 snakenull:
   enabled: true       # default: legacy behavior
   label: snakenull     # placeholder value for missing entities
-  scope: all           # "all" or a list, e.g., ["session", "acquisition"]
+  scope: all           # "all" or a list, e.g., ["session", "acq"]
 
 pybids_inputs:
   t1w:
@@ -31,7 +31,7 @@ pybids_inputs:
     wildcards: 
       - subject
       - session
-      - acquisition
+      - acq
       - run
       - part
 
@@ -44,7 +44,7 @@ pybids_inputs:
       - subject
       - session
       - task
-      - acquisition
+      - acq
       - run
       - echo
       - part
@@ -58,7 +58,7 @@ pybids_inputs:
       - subject
       - session
       - run
-      - acquisition
+      - acq
       - direction
       - part
 
