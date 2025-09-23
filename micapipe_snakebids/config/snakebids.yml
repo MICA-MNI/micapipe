@@ -20,7 +20,7 @@ targets_by_analysis_level:
 snakenull:
   enabled: true       # default: legacy behavior
   label: snakenull     # placeholder value for missing entities
-  scope: all           # "all" or a list, e.g., ["session", "acq"]
+  scope: all           # "all" or a list, e.g., ["session", "acquisition"]
 
 pybids_inputs:
   t1w:
@@ -31,7 +31,7 @@ pybids_inputs:
     wildcards: 
       - subject
       - session
-      - acq
+      - acquisition
       - run
       - part
 
@@ -44,7 +44,7 @@ pybids_inputs:
       - subject
       - session
       - task
-      - acq
+      - acquisition
       - run
       - echo
       - part
@@ -58,7 +58,7 @@ pybids_inputs:
       - subject
       - session
       - run
-      - acq
+      - acquisition
       - direction
       - part
 
@@ -124,7 +124,7 @@ parameters:
     dwi_processed: "FALSE"
     rpe_all: "FALSE"
     regAffine: "FALSE"
-    dwi_acq: "FALSE" 
+    dwi_acquisition: "FALSE" 
     b0thr: 61
     # the following are just flags
     no_bvalue_scaling: "FALSE"
@@ -135,7 +135,7 @@ parameters:
     tracts: "40M"
     keep_tck: "FALSE"
     autoTract: "FALSE"
-    dwi_acq: "FALSE"
+    dwi_acquisition: "FALSE"
     weighted_SC: "FALSE"
     tck: "FALSE" #tricky
   
@@ -165,7 +165,7 @@ parameters:
     # Optional parameters
     microstructural_img: "FALSE"
     microstructural_reg: "FALSE"
-    mpc_acq: "FALSE"
+    mpc_acquisition: "FALSE"
 
     # Boolean flags
     regSynth: "FALSE"
@@ -178,7 +178,7 @@ parameters:
     # Optional parameters
     microstructural_img: "FALSE"
     microstructural_reg: "FALSE"
-    mpc_acq: "FALSE"
+    mpc_acquisition: "FALSE"
 
     # Boolean flags
     regSynth: "FALSE"
