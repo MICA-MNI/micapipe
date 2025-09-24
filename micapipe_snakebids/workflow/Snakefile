@@ -1,4 +1,6 @@
 from snakebids import bids, generate_inputs, get_wildcard_constraints
+from snakebids.plugins.snakenull import generate_inputs_with_snakenull
+
 
 configfile: 'config/snakebids.yml'
 
@@ -38,7 +40,7 @@ else:
     fs_licence_args = config["parameters"]["fs_license"]
 
 
-inputs = generate_inputs(
+inputs = generate_inputs_with_snakenull(
     bids_dir=config["bids_dir"],
     pybids_inputs=config["pybids_inputs"],
     pybidsdb_dir=config.get("pybidsdb_dir"),
@@ -46,29 +48,32 @@ inputs = generate_inputs(
     derivatives=config.get("derivatives", None),
     participant_label=config.get("participant_label", None),
     exclude_participant_label=config.get("exclude_participant_label", None),
-    validate=not config.get("plugins.validator.skip", False)
+    validate=not config.get("plugins.validator.skip", False),
+    snakenull=config.get("snakenull"),
 )
-
-# print("FUNC:", inputs['func'])
-# print("DWI:", inputs['dwi'])
-
-del inputs['t1w'].wildcards['run']
-
-include: 'common.smk'
-include: 'rules/structural.smk'
-include: 'rules/dwi.smk'
-include: 'rules/func.smk'
-include: 'rules/mpc.smk'
-include: 'rules/flair.smk'
-include: 'rules/swm.smk'
-include: 'rules/mpc_swm.smk'
-include: 'rules/qc.smk'
 
 modules = config.get("module", [])
 if not isinstance(modules, list):
     modules = [modules]
 print("MODULES:", modules)
 
+include: 'common.smk'
+if "structural" in modules:
+    include: 'rules/structural.smk'
+if "dwi" in modules:
+    include: 'rules/dwi.smk'
+if "func" in modules:
+    include: 'rules/func.smk'
+if "mpc" in modules:
+    include: 'rules/mpc.smk'
+if "flair" in modules:
+    include: 'rules/flair.smk'
+if "swm" in modules:
+    include: 'rules/swm.smk'
+if "mpc_swm" in modules:
+    include: 'rules/mpc_swm.smk'
+if "qc" in modules:
+    include: 'rules/qc.smk'
 
 def get_final_outputs(inputs, output_dir, modules):
     input_list = []
@@ -89,7 +94,7 @@ def get_final_outputs(inputs, output_dir, modules):
         input_list += get_mpc_swm_outputs(inputs, output_dir)
     if "qc" in modules:
         input_list += get_qc_outputs(inputs, output_dir)
-    print("INPUT LIST:", input_list)
+    print("OUTPUT LIST:", input_list)
     return input_list
 
 print("GD output path:", get_geodesic_distance_outputs(inputs, output_dir))

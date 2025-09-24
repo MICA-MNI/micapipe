@@ -7,6 +7,7 @@ targets_by_analysis_level:
   participant:
     - "all" # if '', then the first rule is run
 
+
 # Configure components:
 # Each entry creates a new component that can be retreived within the workflow
 # via `generate_inputs`.
@@ -14,16 +15,25 @@ targets_by_analysis_level:
 # single value or list of values to select.
 # Wildcards are used to mark variable parts of paths. Each wildcard is an
 # entity, such as `subject` or `session`, that may vary across component paths.
+
+# NEW: `snakenull` is a new feature that allows you to specify
+snakenull:
+  enabled: true       # default: legacy behavior
+  label: snakenull     # placeholder value for missing entities
+  scope: all           # "all" or a list, e.g., ["session", "acq"]
+
 pybids_inputs:
   t1w:
     filters:
+      datatype: anat
       suffix: T1w
-      extension: nii.gz
-
-    wildcards:
+      extension: .nii.gz
+    wildcards: 
       - subject
       - session
+      - acq
       - run
+      - part
 
   func:
     filters:
@@ -34,7 +44,10 @@ pybids_inputs:
       - subject
       - session
       - task
-      - acquisition
+      - acq
+      - run
+      - echo
+      - part
 
   dwi:
     filters:
@@ -44,17 +57,10 @@ pybids_inputs:
     wildcards:
       - subject
       - session
-      - acquisition
-      - dir
-  # bold:
-  #   filters:
-  #     suffix: bold
-  #     extension: nii.gz
-  #   wildcards:
-  #     - subject
-  #     - run
-  #     - session
-  #     - acquisition
+      - run
+      - acq
+      - direction
+      - part
 
 # configuration for the command-line parameters to make available
 # passed on the argparse add_argument()
@@ -118,7 +124,7 @@ parameters:
     dwi_processed: "FALSE"
     rpe_all: "FALSE"
     regAffine: "FALSE"
-    dwi_acq: "FALSE" 
+    dwi_acquisition: "FALSE" 
     b0thr: 61
     # the following are just flags
     no_bvalue_scaling: "FALSE"
@@ -129,7 +135,7 @@ parameters:
     tracts: "40M"
     keep_tck: "FALSE"
     autoTract: "FALSE"
-    dwi_acq: "FALSE"
+    dwi_acquisition: "FALSE"
     weighted_SC: "FALSE"
     tck: "FALSE" #tricky
   
@@ -159,7 +165,7 @@ parameters:
     # Optional parameters
     microstructural_img: "FALSE"
     microstructural_reg: "FALSE"
-    mpc_acq: "FALSE"
+    mpc_acquisition: "FALSE"
 
     # Boolean flags
     regSynth: "FALSE"
@@ -172,7 +178,7 @@ parameters:
     # Optional parameters
     microstructural_img: "FALSE"
     microstructural_reg: "FALSE"
-    mpc_acq: "FALSE"
+    mpc_acquisition: "FALSE"
 
     # Boolean flags
     regSynth: "FALSE"

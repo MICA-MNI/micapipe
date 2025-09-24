@@ -6,3 +6,7 @@ docs/build/*
 docs/build_
 micapipe_v0.*
 .snakemake/
+.vscode/
+UNKNOWN.egg-info/
+micapipe_snakebids/test/
+micapipe_snakebids/__pycache__
