@@ -192,30 +192,35 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and extract FreeSurfer in chunks to manage memory
+# Download and extract FreeSurfer with optimized timeouts and multiple mirrors
 RUN echo "Downloading FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
-    && cd /tmp \
-    && echo "Attempting download with curl..." \
-    && (curl -fsSL --retry 3 --max-time 1800 \
+    && export TMPDIR="$(mktemp -d)" \
+    && cd "$TMPDIR" \
+    && echo "Trying primary FTP server..." \
+    && (timeout 600 curl -fsSL --retry 2 --retry-delay 5 --connect-timeout 30 --max-time 600 \
         ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
         -o freesurfer.tar.gz \
-        || wget --timeout=1800 --tries=3 \
-           ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-           -O freesurfer.tar.gz \
-        || (echo "Download failed, trying HTTP mirror..." \
-            && curl -fsSL --retry 3 --max-time 1800 \
+        || (echo "FTP failed, trying wget with shorter timeout..." && \
+            rm -f freesurfer.tar.gz && \
+            timeout 600 wget --timeout=60 --tries=3 --retry-connrefused --waitretry=10 \
+               ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+               -O freesurfer.tar.gz) \
+        || (echo "FTP failed, trying HTTPS mirror..." && \
+            rm -f freesurfer.tar.gz && \
+            timeout 600 curl -fsSL --retry 2 --retry-delay 5 --connect-timeout 30 --max-time 600 \
                https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
                -o freesurfer.tar.gz) \
-        || (echo "All downloads failed, using minimal FreeSurfer installation" \
-            && mkdir -p /opt/freesurfer-7.4.1 \
-            && echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
-            && echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
-            && chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
-            && exit 0)) \
+        || (echo "All FreeSurfer downloads failed, creating minimal installation..." && \
+            mkdir -p /opt/freesurfer-7.4.1 && \
+            echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+            echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+            chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+            echo "FreeSurfer installation skipped - minimal setup created" && \
+            exit 0)) \
     && if [ -f freesurfer.tar.gz ]; then \
-        echo "Extracting FreeSurfer (this may take several minutes)..." \
-        && tar -xzf freesurfer.tar.gz -C /opt/freesurfer-7.4.1 --strip-components 1 \
+        echo "FreeSurfer download successful, extracting (this may take several minutes)..." && \
+        tar -xzf freesurfer.tar.gz -C /opt/freesurfer-7.4.1 --strip-components 1 \
              --exclude='freesurfer/average/mult-comp-cor' \
              --exclude='freesurfer/lib/cuda' \
              --exclude='freesurfer/lib/qt' \
@@ -229,8 +234,12 @@ RUN echo "Downloading FreeSurfer 7.4.1..." \
              --exclude='freesurfer/subjects/fsaverage6' \
              --exclude='freesurfer/subjects/fsaverage_sym' \
              --exclude='freesurfer/trctrain' \
-        && rm -f freesurfer.tar.gz; \
+        && rm -f freesurfer.tar.gz && \
+        echo "FreeSurfer extraction completed"; \
+    else \
+        echo "FreeSurfer download failed, using minimal installation"; \
     fi \
+    && rm -rf "$TMPDIR" \
     && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
