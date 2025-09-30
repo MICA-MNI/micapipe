@@ -1,265 +1,231 @@
 #!/bin/bash
 
-# MICApipe Singularity Container Build Script
-# Builds Singularity .sif file with Docker as intermediate step
+# MICApipe Container Builder
+# Builds Docker image and converts to Singularity .sif format
+# No sudo privileges required
 
-set -e  # Exit on any error
+echo "🐳 MICApipe Container Builder"
+echo "============================"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Check if we're in the right directory
+if [ ! -f "Dockerfile" ]; then
+    echo "❌ Dockerfile not found. Please run this from the micapipe directory."
+    exit 1
+fi
 
-print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-
-# Configuration
-SIF_VERSION="v1-beta"
-BUILD_DATE=$(date +%Y%m%d_%H%M%S)
-DOCKER_TAG="micapipe:intermediate-${BUILD_DATE}"
-DEFAULT_SIF_PATH="/data_/mica1/01_programs/singularity"
-SIF_NAME="micapipe_${SIF_VERSION}.sif"
-
-# Parse command line options
+# Parse command line arguments
 ENABLE_CUDA=false
+SINGULARITY_PATH="/data_/mica1/01_programs/singularity"
+FALLBACK_PATH="$HOME"
 NO_CACHE=false
-SIF_DIR=""
 
-print_info "🚀 MICApipe Singularity Container Build"
-print_info "Docker container is intermediate step - final output is .sif file"
-echo
-
-# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --cuda)
             ENABLE_CUDA=true
-            SIF_NAME="micapipe_${SIF_VERSION}_cuda.sif"
+            echo "🎯 CUDA support enabled"
             shift
             ;;
         --no-cache)
             NO_CACHE=true
+            echo "🔄 Building without cache"
             shift
             ;;
-        --output|-o)
-            SIF_DIR="$2"
+        --singularity-path)
+            SINGULARITY_PATH="$2"
             shift 2
             ;;
-        --help)
-            echo "Usage: $0 [OPTIONS]"
-            echo "Options:"
-            echo "  --cuda          Enable CUDA support (default: CPU-only)"
-            echo "  --no-cache      Build without Docker cache"
-            echo "  --output DIR    Custom output directory for .sif file"
-            echo "  --help          Show this help"
-            echo ""
-            echo "Environment Variables:"
-            echo "  MICAPIPE_SIF_PATH   Custom path for .sif file (default: /data_/mica1/01_programs/singularity)"
-            echo ""
-            echo "Output:"
-            echo "  Creates: \${OUTPUT_DIR}/micapipe_${SIF_VERSION}.sif"
-            echo "  Docker intermediate container is automatically removed"
+        --help|-h)
+            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH]"
+            echo "  --cuda                Enable CUDA support"
+            echo "  --no-cache            Build without Docker cache"
+            echo "  --singularity-path    Custom path for .sif output (default: /data_/mica1/01_programs/singularity)"
             exit 0
             ;;
         *)
-            print_error "Unknown option: $1"
+            echo "❌ Unknown option: $1"
             echo "Use --help for usage information"
             exit 1
             ;;
     esac
 done
 
-# Determine output directory
-if [ -n "$SIF_DIR" ]; then
-    OUTPUT_DIR="$SIF_DIR"
-elif [ -n "$MICAPIPE_SIF_PATH" ]; then
-    OUTPUT_DIR="$MICAPIPE_SIF_PATH"
-else
-    # Try default server paths, fallback to user directory
-    if [ -d "/data_/mica1/01_programs/singularity" ] && [ -w "/data_/mica1/01_programs/singularity" ]; then
-        OUTPUT_DIR="/data_/mica1/01_programs/singularity"
-    elif [ -d "$DEFAULT_SIF_PATH" ] && [ -w "$DEFAULT_SIF_PATH" ]; then
-        OUTPUT_DIR="$DEFAULT_SIF_PATH"
-    else
-        OUTPUT_DIR="$HOME/containers"
-        print_warning "Using fallback directory: $OUTPUT_DIR"
-    fi
-fi
+echo ""
+echo "🔍 System Checks..."
 
-SIF_PATH="$OUTPUT_DIR/$SIF_NAME"
-
-print_info "Configuration:"
-print_info "  CUDA support: $([ "$ENABLE_CUDA" = true ] && echo "ENABLED" || echo "DISABLED")"
-print_info "  Docker cache: $([ "$NO_CACHE" = true ] && echo "DISABLED" || echo "ENABLED")"
-print_info "  Output file: $SIF_PATH"
-echo
-
-# Step 1: Check prerequisites
-print_info "📋 Step 1: Checking prerequisites..."
-
-# Check if we're in the right directory
-if [ ! -f "Dockerfile" ]; then
-    print_error "Dockerfile not found. Please run this script from the micapipe project directory."
+# Check Docker access (no sudo required)
+if ! docker ps >/dev/null 2>&1; then
+    echo "❌ Cannot access Docker daemon. Solutions:"
+    echo "1. Ask admin to add you to docker group: sudo usermod -aG docker $USER"
+    echo "2. Use Docker Desktop if available"
+    echo "3. Contact system administrator"
     exit 1
 fi
-
-# Check Docker
-if ! command -v docker &> /dev/null; then
-    print_error "Docker is not installed or not in PATH"
-    exit 1
-fi
-
-if ! docker info &> /dev/null; then
-    print_error "Docker daemon is not running"
-    exit 1
-fi
+echo "✅ Docker access confirmed"
 
 # Check Singularity
-if ! command -v singularity &> /dev/null; then
-    print_error "Singularity is not installed or not in PATH"
-    print_error "Install Singularity: https://docs.sylabs.io/guides/latest/user-guide/"
+if ! command -v singularity >/dev/null 2>&1; then
+    echo "❌ Singularity not found. Please install Singularity to create .sif files"
     exit 1
 fi
+echo "✅ Singularity available"
 
-print_success "Docker and Singularity are available"
+# Check resources
+TOTAL_MEM=$(free -g 2>/dev/null | grep "Mem:" | awk '{print $2}' || echo "unknown")
+AVAILABLE_MEM=$(free -g 2>/dev/null | grep "Mem:" | awk '{print $7}' || echo "unknown")
+DISK_SPACE=$(df -h . | tail -1 | awk '{print $4}')
 
-# Step 2: Setup output directory
-print_info "📁 Step 2: Setting up output directory..."
+echo "   Memory: ${AVAILABLE_MEM}GB available / ${TOTAL_MEM}GB total"
+echo "   Disk Space: $DISK_SPACE available"
 
-# Create output directory
-if ! mkdir -p "$OUTPUT_DIR" 2>/dev/null; then
-    print_error "Cannot create output directory: $OUTPUT_DIR"
-    print_error "Try: $0 --output ~/my_containers"
-    exit 1
+if [[ "$AVAILABLE_MEM" != "unknown" && "$AVAILABLE_MEM" -lt 8 ]]; then
+    echo "⚠️  Warning: Less than 8GB available memory - large downloads may fail"
 fi
 
-# Test write permissions
-if ! touch "$OUTPUT_DIR/.test" 2>/dev/null; then
-    print_error "No write permission for output directory: $OUTPUT_DIR"
-    exit 1
+# Determine output path
+if [[ -d "$SINGULARITY_PATH" && -w "$SINGULARITY_PATH" ]]; then
+    OUTPUT_PATH="$SINGULARITY_PATH"
+    echo "✅ Using Singularity path: $OUTPUT_PATH"
+elif [[ -w "$FALLBACK_PATH" ]]; then
+    OUTPUT_PATH="$FALLBACK_PATH"
+    echo "⚠️  Fallback to home directory: $OUTPUT_PATH"
 else
-    rm -f "$OUTPUT_DIR/.test"
+    echo "❌ No writable path found for .sif output"
+    exit 1
 fi
 
-print_success "Output directory ready: $OUTPUT_DIR"
+echo ""
+echo "🧹 Cleanup..."
 
-# Step 3: Check disk space
-print_info "💾 Step 3: Checking disk space..."
+# Clean Docker environment (user-level only)
+docker container prune -f >/dev/null 2>&1
+docker image prune -f >/dev/null 2>&1
+docker builder prune -f >/dev/null 2>&1
 
-AVAILABLE_SPACE=$(df "$OUTPUT_DIR" | awk 'NR==2 {print $4}')
-SPACE_GB=$((AVAILABLE_SPACE / 1024 / 1024))
+# Remove any existing micapipe images
+docker images | grep micapipe | awk '{print $3}' | xargs -r docker rmi -f >/dev/null 2>&1
 
-print_info "Available space: ${SPACE_GB}GB"
+echo "✅ Docker cleanup completed"
 
-if [ $SPACE_GB -lt 15 ]; then
-    print_warning "Low disk space (${SPACE_GB}GB). Recommend at least 15GB for container build."
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Try using a different directory: $0 --output /path/with/more/space"
-        exit 1
-    fi
-fi
+echo ""
+echo "⚙️  Build Configuration..."
 
-# Step 4: Set Docker environment
-print_info "🔧 Step 4: Setting up Docker environment..."
-
-# Disable Docker Content Trust to avoid certificate issues
+# Set environment
 export DOCKER_CONTENT_TRUST=0
-export DOCKER_BUILDKIT=1
-
-# Set longer timeouts for network operations
-export DOCKER_BUILDKIT_TIMEOUT=7200  # 2 hours
 export BUILDKIT_PROGRESS=plain
 
-print_success "Docker environment configured"
+# Create log directory
+mkdir -p build_logs
+LOG_FILE="build_logs/container_build_$(date +%Y%m%d_%H%M%S).log"
 
-# Step 5: Build Docker container (intermediate)
-print_info "🏗️  Step 5: Building Docker container (intermediate)..."
+echo "   CUDA enabled: $ENABLE_CUDA"
+echo "   No cache: $NO_CACHE"
+echo "   Output path: $OUTPUT_PATH"
+echo "   Log file: $LOG_FILE"
 
-# Prepare build arguments
-BUILD_ARGS=""
-if [ "$ENABLE_CUDA" = true ]; then
-    BUILD_ARGS="--build-arg ENABLE_CUDA=true"
-    print_info "Building with CUDA support enabled"
+# Test network
+if curl -I --max-time 10 https://fsl.fmrib.ox.ac.uk >/dev/null 2>&1; then
+    echo "✅ Network connectivity OK"
 else
-    BUILD_ARGS="--build-arg ENABLE_CUDA=false"
-    print_info "Building CPU-only version"
+    echo "⚠️  Network issues detected"
 fi
 
-if [ "$NO_CACHE" = true ]; then
-    BUILD_ARGS="$BUILD_ARGS --no-cache"
-    print_info "Building without cache"
+echo ""
+echo "🚀 Building Docker Image..."
+
+# Build command
+DOCKER_CMD="docker build --progress=plain --network=host --build-arg ENABLE_CUDA=$ENABLE_CUDA"
+
+if [[ "$NO_CACHE" == "true" ]]; then
+    DOCKER_CMD="$DOCKER_CMD --no-cache"
 fi
 
-print_info "Docker build starting... (this may take 30-60 minutes)"
-print_info "Building intermediate container: $DOCKER_TAG"
+DOCKER_CMD="$DOCKER_CMD -t micapipe:v1-beta ."
 
-# Run Docker build
-if docker build $BUILD_ARGS --progress=plain --network=host -t "$DOCKER_TAG" . 2>&1 | tee docker_build.log; then
-    print_success "Docker container built successfully"
+echo "   Command: $DOCKER_CMD"
+echo ""
+
+# Execute build
+eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
+BUILD_EXIT_CODE=${PIPESTATUS[0]}
+
+if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
+    echo ""
+    echo "✅ Docker build successful!"
+    
+    # Test container
+    echo ""
+    echo "🧪 Testing container..."
+    if docker run --rm micapipe:v1-beta echo "Container test successful" >/dev/null 2>&1; then
+        echo "✅ Container test passed"
+        
+        # Convert to Singularity
+        echo ""
+        echo "🔄 Converting to Singularity..."
+        
+        SIF_FILE="$OUTPUT_PATH/micapipe_v1-beta.sif"
+        
+        # Remove existing .sif if present
+        [[ -f "$SIF_FILE" ]] && rm -f "$SIF_FILE"
+        
+        if singularity build "$SIF_FILE" docker-daemon://micapipe:v1-beta; then
+            echo "✅ Singularity image created: $SIF_FILE"
+            
+            # Get file size
+            SIF_SIZE=$(du -h "$SIF_FILE" | cut -f1)
+            echo "📊 Container size: $SIF_SIZE"
+            
+            # Cleanup Docker image to save space
+            docker rmi micapipe:v1-beta >/dev/null 2>&1
+            echo "🧹 Docker image cleaned up"
+            
+            echo ""
+            echo "🎯 Build Complete!"
+            echo "📁 Singularity image: $SIF_FILE"
+            echo ""
+            echo "🚀 Next Steps:"
+            echo "1. Test the container:"
+            echo "   singularity exec $SIF_FILE micapipe --help"
+            echo ""
+            echo "2. Run with your data:"
+            echo "   singularity exec --bind /path/to/data:/data $SIF_FILE micapipe [options]"
+            echo ""
+            echo "3. Copy to other systems:"
+            echo "   scp $SIF_FILE user@server:/path/to/destination/"
+            
+        else
+            echo "❌ Singularity conversion failed"
+            echo "Docker image available: micapipe:v1-beta"
+            exit 1
+        fi
+        
+    else
+        echo "❌ Container test failed"
+        exit 1
+    fi
+    
 else
-    print_error "Docker build failed. Check docker_build.log for details"
-    print_info "💡 If FSL download failed, try:"
-    print_info "   - Running during off-peak hours"
-    print_info "   - Using: ./test_fsl_download.sh to diagnose network issues"
-    print_info "   - Building with cache (remove --no-cache option)"
-    exit 1
+    echo ""
+    echo "❌ Docker build failed (exit code: $BUILD_EXIT_CODE)"
+    
+    if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
+        echo ""
+        echo "🔧 Memory constraint detected:"
+        echo "1. Close other applications"
+        echo "2. Ask admin about increasing swap space"
+        echo "3. Build during off-peak hours"
+        
+    elif [[ $BUILD_EXIT_CODE -eq 125 ]]; then
+        echo ""
+        echo "🔧 Docker command error:"
+        echo "1. Check Docker permissions"
+        echo "2. Try: docker build -t micapipe:v1-beta ."
+    fi
+    
+    echo ""
+    echo "📋 Check build log: $LOG_FILE"
+    exit $BUILD_EXIT_CODE
 fi
 
-# Step 6: Convert to Singularity
-print_info "🔄 Step 6: Converting Docker to Singularity..."
-
-print_info "Creating Singularity container: $SIF_PATH"
-print_info "This may take 10-20 minutes..."
-
-# Convert Docker to Singularity
-if singularity build "$SIF_PATH" docker-daemon://${DOCKER_TAG} 2>&1 | tee singularity_build.log; then
-    print_success "Singularity container created successfully"
-else
-    print_error "Singularity build failed. Check singularity_build.log for details"
-    exit 1
-fi
-
-# Step 7: Test Singularity container
-print_info "🧪 Step 7: Testing Singularity container..."
-
-if singularity exec "$SIF_PATH" echo "Container test successful" > /dev/null 2>&1; then
-    print_success "Singularity container test passed"
-else
-    print_warning "Singularity container test failed (container may still work)"
-fi
-
-# Step 8: Cleanup Docker container
-print_info "🧹 Step 8: Cleaning up intermediate Docker container..."
-
-if docker rmi "$DOCKER_TAG" > /dev/null 2>&1; then
-    print_success "Intermediate Docker container removed"
-else
-    print_warning "Could not remove intermediate Docker container: $DOCKER_TAG"
-    print_info "You can manually remove it with: docker rmi $DOCKER_TAG"
-fi
-
-# Step 9: Final summary
-echo
-print_success "🎉 Build completed successfully!"
-echo
-print_info "📊 Summary:"
-print_info "  Singularity file: $SIF_PATH"
-print_info "  File size: $(du -sh "$SIF_PATH" | cut -f1)"
-print_info "  CUDA support: $([ "$ENABLE_CUDA" = true ] && echo "Enabled" || echo "Disabled")"
-echo
-print_info "🚀 Usage:"
-print_info "  Interactive: singularity shell $SIF_PATH"
-print_info "  Execute: singularity exec $SIF_PATH [command]"
-print_info "  With data: singularity exec --bind /data:/data $SIF_PATH [command]"
-echo
-print_info "📝 Build logs saved:"
-print_info "  Docker build: ./docker_build.log"
-print_info "  Singularity build: ./singularity_build.log"
-echo
-print_success "Ready for use! 🎯"
+echo ""
+echo "📁 Build log saved: $LOG_FILE"
