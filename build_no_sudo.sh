@@ -218,6 +218,10 @@ print_info "Step 4: Setting up environment..."
 export SINGULARITY_TMPDIR="$TMP_DIR"
 print_info "Set SINGULARITY_TMPDIR=$SINGULARITY_TMPDIR"
 
+# Disable Docker Content Trust to avoid certificate issues
+export DOCKER_CONTENT_TRUST=0
+print_info "Set DOCKER_CONTENT_TRUST=0 (disabled for build compatibility)"
+
 # Step 5: Build Docker image
 print_info "Step 5: Building Docker image..."
 

@@ -101,9 +101,10 @@ echo "   ./build_server.sh --no-cache"
 echo
 
 # Set environment variable persistently
-echo "📝 Setting SINGULARITY_TMPDIR environment variable..."
+echo "📝 Setting environment variables..."
 echo "export SINGULARITY_TMPDIR=$TMP_DIR" >> ~/.bashrc
-echo "✅ Added to ~/.bashrc"
+echo "export DOCKER_CONTENT_TRUST=0" >> ~/.bashrc
+echo "✅ Added SINGULARITY_TMPDIR and DOCKER_CONTENT_TRUST to ~/.bashrc"
 
 echo
 echo "🎯 Ready to build! Make sure to source your bashrc or start a new session:"

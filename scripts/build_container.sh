@@ -129,6 +129,10 @@ if ! docker info &> /dev/null; then
     exit 1
 fi
 
+# Set Docker Content Trust to avoid certificate issues
+export DOCKER_CONTENT_TRUST=0
+print_info "Set DOCKER_CONTENT_TRUST=0 for build compatibility"
+
 # Check if Singularity is available (if requested)
 if [ "$BUILD_SINGULARITY" = true ]; then
     if ! command -v singularity &> /dev/null; then
