@@ -172,6 +172,10 @@ print_info "🔧 Step 4: Setting up Docker environment..."
 export DOCKER_CONTENT_TRUST=0
 export DOCKER_BUILDKIT=1
 
+# Set longer timeouts for network operations
+export DOCKER_BUILDKIT_TIMEOUT=7200  # 2 hours
+export BUILDKIT_PROGRESS=plain
+
 print_success "Docker environment configured"
 
 # Step 5: Build Docker container (intermediate)
@@ -196,10 +200,14 @@ print_info "Docker build starting... (this may take 30-60 minutes)"
 print_info "Building intermediate container: $DOCKER_TAG"
 
 # Run Docker build
-if docker build $BUILD_ARGS -t "$DOCKER_TAG" . 2>&1 | tee docker_build.log; then
+if docker build $BUILD_ARGS --progress=plain --network=host -t "$DOCKER_TAG" . 2>&1 | tee docker_build.log; then
     print_success "Docker container built successfully"
 else
     print_error "Docker build failed. Check docker_build.log for details"
+    print_info "💡 If FSL download failed, try:"
+    print_info "   - Running during off-peak hours"
+    print_info "   - Using: ./test_fsl_download.sh to diagnose network issues"
+    print_info "   - Building with cache (remove --no-cache option)"
     exit 1
 fi
 

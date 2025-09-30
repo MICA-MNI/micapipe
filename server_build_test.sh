@@ -76,6 +76,7 @@ setup_environment() {
     
     # Set Docker buildkit for better build output
     export DOCKER_BUILDKIT=1
+    export DOCKER_BUILDKIT_TIMEOUT=7200  # 2 hours for large downloads
     log "   DOCKER_BUILDKIT=1"
     
     # Set timezone to avoid interactive prompts
@@ -168,6 +169,7 @@ run_main_build() {
     log "   Starting Docker build with options: $CUDA_ARG"
     docker build \
         --progress=plain \
+        --network=host \
         --no-cache \
         $CUDA_ARG \
         -t "${CONTAINER_NAME}:${BUILD_TAG}" \
@@ -182,6 +184,7 @@ run_main_build() {
         log "❌ Main build failed"
         log "   Exit code: $BUILD_EXIT_CODE"
         log "   Check $LOG_DIR/main_build.log for details"
+        log "💡 If FSL download failed, try running: ./test_fsl_download.sh"
         return 1
     fi
 }
