@@ -115,8 +115,8 @@ RUN apt-get update -qq \
 
 RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2'
 
-ENV FREESURFER_HOME="/opt/freesurfer-7.3.2" \
-    PATH="/opt/freesurfer-7.3.2/bin:$PATH"
+ENV FREESURFER_HOME="/opt/freesurfer-7.4.1" \
+    PATH="/opt/freesurfer-7.4.1/bin:$PATH"
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc \
@@ -128,9 +128,9 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer-7.3.2 \
-    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer-linux-ubuntu18_amd64-7.3.2.tar.gz \
-    | tar -xz -C /opt/freesurfer-7.3.2 --strip-components 1 \
+    && mkdir -p /opt/freesurfer-7.4.1 \
+    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+    | tar -xz -C /opt/freesurfer-7.4.1 --strip-components 1 \
          --exclude='freesurfer/average/mult-comp-cor' \
          --exclude='freesurfer/lib/cuda' \
          --exclude='freesurfer/lib/qt' \
@@ -144,7 +144,7 @@ RUN apt-get update -qq \
          --exclude='freesurfer/subjects/fsaverage6' \
          --exclude='freesurfer/subjects/fsaverage_sym' \
          --exclude='freesurfer/trctrain' \
-    && sed -i '$isource "/opt/freesurfer-7.3.2/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
+    && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
     MATLABCMD="/opt/matlabmcr-2017b/v93/toolbox/matlab"
@@ -443,18 +443,87 @@ RUN mamba run -n micapipe pip install --no-cache-dir \
     && sync \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
 
+# Install LAMAReg for cross-modality registration with antspy dependencies
+RUN mamba run -n micapipe pip install --no-cache-dir \
+           antspy \
+           ants \
+           antspyx \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           git+https://github.com/lamarodrigues/LAMAReg.git
+
+# Install SWM (Superficial White Matter) for surface-based analysis
+ENV SWM_HOME="/opt/SWM"
+ENV PATH="/opt/SWM:$PATH"
+
+RUN git clone https://github.com/MICA-MNI/SWM.git /opt/SWM \
+    && chmod +x /opt/SWM/SWM \
+    && chmod -R a+rx /opt/SWM
+
 # Install MRtrix3 and ENIGMA
-RUN mamba install -y -n micapipe -c mrtrix3 mrtrix3==3.0.1 \
+RUN mamba install -y -n micapipe -c mrtrix3 mrtrix3==3.0.7 \
     && mamba run -n micapipe pip install git+https://github.com/MICA-MNI/ENIGMA.git
+
+# Fix MRtrix3 environment path issues
+ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
+
+# Install DESIGNER pipeline for diffusion MRI preprocessing
+ENV DESIGNER_HOME="/opt/DESIGNER"
+ENV PATH="/opt/DESIGNER:$PATH"
+
+RUN git clone https://github.com/DESIGNER-v2/DESIGNER.git /opt/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER.py
+
+# Create DESIGNER environment with required dependencies
+RUN mamba create -y -n designer python=3.9 \
+    && mamba install -y -n designer -c conda-forge \
+           numpy \
+           scipy \
+           matplotlib \
+           nibabel \
+           dipy \
+           tqdm \
+           joblib \
+    && mamba run -n designer pip install --no-cache-dir \
+           cvxpy \
+           multiprocessing-logging
+
+# Add DESIGNER activation to startup script
+RUN sed -i '$isource activate designer' $ND_ENTRYPOINT
+
+# Install Synb0-DISCO and SynBOLD-DisCo for DWI and fMRI when reverse phase encoding is not present
+ENV SYNB0_HOME="/opt/Synb0-DISCO"
+ENV SYNBOLD_HOME="/opt/SynBOLD-DisCo"
+ENV PATH="/opt/Synb0-DISCO:/opt/SynBOLD-DisCo:$PATH"
+
+# Clone Synb0-DISCO
+RUN git clone https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
+    && chmod +x /opt/Synb0-DISCO/src/inference.py
+
+# Clone SynBOLD-DisCo
+RUN git clone https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
+    && chmod +x /opt/SynBOLD-DisCo/src/inference.py
+
+# Install dependencies for Synb0 and SynBOLD in micapipe environment
+RUN mamba run -n micapipe pip install --no-cache-dir \
+           torch \
+           torchvision \
+           torchaudio \
+           --index-url https://download.pytorch.org/whl/cpu \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           tensorflow \
+           keras \
+           onnx \
+           onnxruntime
 
 
 ENV PATH="/opt/FastSurfer:$PATH"
 ENV FASTSURFER_HOME=/opt/FastSurfer
 
-# Clone FastSurfer (the 'stable' branch is fine)
+# Clone FastSurfer version 2.4.2 and freeze the version
 RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
     && cd /opt/FastSurfer \
-    && git checkout stable
+    && git checkout v2.4.2
 
 # Generate the CPU-specific conda environment file using the correct input YAML file (lowercase)
 RUN /opt/miniconda-22.11.1/bin/conda run -n base \
@@ -515,7 +584,7 @@ RUN chmod -R a+rx /opt/micapipe
 
 RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix1.068/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
 
-RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.3.2/subjects'
+RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.4.1/subjects'
 
 WORKDIR /home/mica
 
