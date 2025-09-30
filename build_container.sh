@@ -110,6 +110,18 @@ echo "✅ Docker cleanup completed"
 echo ""
 echo "⚙️  Build Configuration..."
 
+# Check system memory
+echo "💾 Checking system memory..."
+if command -v free >/dev/null 2>&1; then
+    AVAILABLE_MEM=$(free -m | awk 'NR==2{printf "%.0f", $7/1024}')
+    echo "   Available: ${AVAILABLE_MEM}GB"
+elif command -v vm_stat >/dev/null 2>&1; then
+    # macOS
+    FREE_PAGES=$(vm_stat | grep "Pages free" | awk '{print $3}' | sed 's/\.//')
+    AVAILABLE_MEM=$((FREE_PAGES * 4096 / 1024 / 1024 / 1024))
+    echo "   Available: ${AVAILABLE_MEM}GB (approximate)"
+fi
+
 # Set environment
 export DOCKER_CONTENT_TRUST=0
 export BUILDKIT_PROGRESS=plain
@@ -133,8 +145,16 @@ fi
 echo ""
 echo "🚀 Building Docker Image..."
 
-# Build command
-DOCKER_CMD="docker build --progress=plain --network=host --build-arg ENABLE_CUDA=$ENABLE_CUDA"
+# Build command with memory optimizations
+DOCKER_CMD="docker build --progress=plain --network=host"
+
+# Add memory limit if sufficient RAM available
+if [[ -n "$AVAILABLE_MEM" ]] && [[ "$AVAILABLE_MEM" -ge 8 ]]; then
+    DOCKER_CMD="$DOCKER_CMD --memory=8g"
+    echo "   Memory limit: 8GB"
+fi
+
+DOCKER_CMD="$DOCKER_CMD --build-arg ENABLE_CUDA=$ENABLE_CUDA"
 
 if [[ "$NO_CACHE" == "true" ]]; then
     DOCKER_CMD="$DOCKER_CMD --no-cache"
@@ -148,6 +168,26 @@ echo ""
 # Execute build
 eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
 BUILD_EXIT_CODE=${PIPESTATUS[0]}
+
+if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
+    echo ""
+    echo "❌ Docker build failed (exit code: 137)"
+    echo ""
+    echo "🔧 Memory constraint detected:"
+    echo "1. Close other applications to free RAM"
+    echo "2. Increase Docker Desktop memory limit to 8GB+"
+    echo "3. Build during off-peak hours"
+    echo "4. Try building with explicit memory limit:"
+    echo "   docker build --memory=8g -t micapipe:v1-beta ."
+    echo ""
+    echo "📋 Check build log: $LOG_FILE"
+    exit 137
+elif [[ $BUILD_EXIT_CODE -ne 0 ]]; then
+    echo ""
+    echo "❌ Docker build failed (exit code: $BUILD_EXIT_CODE)"
+    echo "📋 Check build log: $LOG_FILE"
+    exit $BUILD_EXIT_CODE
+fi
 
 if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
     echo ""

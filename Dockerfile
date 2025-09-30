@@ -128,23 +128,34 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
     && mkdir -p /opt/fsl-6.0.2 \
+    && export TMPDIR="$(mktemp -d)" \
     && ( \
-        # Try primary FSL download URL with increased timeout and retries
-        curl -fsSL --retry 10 --retry-delay 5 --connect-timeout 30 --max-time 1800 \
+        # Try primary FSL download URL - download to temp file first to reduce memory usage
+        echo "Downloading FSL to temporary file..." && \
+        curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
+             -o "$TMPDIR/fsl.tar.gz" \
              https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
-        | tar -xz -C /opt/fsl-6.0.2 --strip-components 1 \
+        && echo "Extracting FSL (this may take several minutes)..." \
+        && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
+        && rm -f "$TMPDIR/fsl.tar.gz" \
         || \
         # Try alternative download with wget if curl fails
         ( echo "Curl failed, trying wget..." && \
-          wget --retry-connrefused --waitretry=5 --read-timeout=30 --timeout=30 --tries=10 \
-               -O- https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
-          | tar -xz -C /opt/fsl-6.0.2 --strip-components 1 ) \
+          rm -f "$TMPDIR/fsl.tar.gz" && \
+          wget --retry-connrefused --waitretry=10 --read-timeout=60 --timeout=60 --tries=5 \
+               -O "$TMPDIR/fsl.tar.gz" \
+               https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
+          && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
+          && rm -f "$TMPDIR/fsl.tar.gz" ) \
         || \
         # Try mirror URL if both fail
-        ( echo "Primary URL failed, trying mirror..." && \
-          curl -fsSL --retry 10 --retry-delay 5 --connect-timeout 30 --max-time 1800 \
+        ( echo "Primary URLs failed, trying NITRC mirror..." && \
+          rm -f "$TMPDIR/fsl.tar.gz" && \
+          curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
+               -o "$TMPDIR/fsl.tar.gz" \
                https://www.nitrc.org/frs/download.php/11344/fsl-6.0.2-centos6_64.tar.gz \
-          | tar -xz -C /opt/fsl-6.0.2 --strip-components 1 ) \
+          && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
+          && rm -f "$TMPDIR/fsl.tar.gz" ) \
         || \
         # Final fallback - create minimal FSL structure and continue
         ( echo "All FSL downloads failed, creating minimal structure..." && \
@@ -153,6 +164,7 @@ RUN apt-get update -qq \
           echo "export FSLDIR=/opt/fsl-6.0.2" >> /opt/fsl-6.0.2/etc/fslconf/fsl.sh && \
           echo "FSL installation failed - container will continue without FSL" ) \
     ) \
+    && rm -rf "$TMPDIR" \
     && sed -i '$iecho Some packages in this Docker container are non-free' $ND_ENTRYPOINT \
     && sed -i '$iecho If you are considering commercial use of this container, please consult the relevant license:' $ND_ENTRYPOINT \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
