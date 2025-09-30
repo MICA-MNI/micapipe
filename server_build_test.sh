@@ -15,7 +15,7 @@ CONTAINER_NAME="micapipe"
 BUILD_TAG="latest"
 TEST_TAG="test"
 SIF_VERSION="v1-beta"
-SIF_LOCATION="/opt/micapipe"  # Default location, can be overridden
+SIF_LOCATION="/data_/mica1/01_programs/singularity"  # Default server location, can be overridden
 LOG_DIR="./build_logs"
 BACKUP_DIR="./backups"
 

@@ -21,7 +21,7 @@ print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 SIF_VERSION="v1-beta"
 BUILD_DATE=$(date +%Y%m%d_%H%M%S)
 DOCKER_TAG="micapipe:intermediate-${BUILD_DATE}"
-DEFAULT_SIF_PATH="/opt/micapipe"
+DEFAULT_SIF_PATH="/data_/mica1/01_programs/singularity"
 SIF_NAME="micapipe_${SIF_VERSION}.sif"
 
 # Parse command line options
@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --help          Show this help"
             echo ""
             echo "Environment Variables:"
-            echo "  MICAPIPE_SIF_PATH   Custom path for .sif file (default: /opt/micapipe)"
+            echo "  MICAPIPE_SIF_PATH   Custom path for .sif file (default: /data_/mica1/01_programs/singularity)"
             echo ""
             echo "Output:"
             echo "  Creates: \${OUTPUT_DIR}/micapipe_${SIF_VERSION}.sif"
@@ -80,10 +80,10 @@ elif [ -n "$MICAPIPE_SIF_PATH" ]; then
     OUTPUT_DIR="$MICAPIPE_SIF_PATH"
 else
     # Try default server paths, fallback to user directory
-    if [ -d "$DEFAULT_SIF_PATH" ] && [ -w "$DEFAULT_SIF_PATH" ]; then
-        OUTPUT_DIR="$DEFAULT_SIF_PATH"
-    elif [ -d "/data_/mica1/01_programs/singularity" ] && [ -w "/data_/mica1/01_programs/singularity" ]; then
+    if [ -d "/data_/mica1/01_programs/singularity" ] && [ -w "/data_/mica1/01_programs/singularity" ]; then
         OUTPUT_DIR="/data_/mica1/01_programs/singularity"
+    elif [ -d "$DEFAULT_SIF_PATH" ] && [ -w "$DEFAULT_SIF_PATH" ]; then
+        OUTPUT_DIR="$DEFAULT_SIF_PATH"
     else
         OUTPUT_DIR="$HOME/containers"
         print_warning "Using fallback directory: $OUTPUT_DIR"

@@ -7,7 +7,7 @@
 ./server_build_test.sh
 ```
 - Complete build, test, and Singularity conversion
-- Creates: `micapipe:latest` (Docker) + `/opt/micapipe/micapipe_v1-beta.sif` (Singularity)
+- Creates: `micapipe:latest` (Docker) + `/data_/mica1/01_programs/singularity/micapipe_v1-beta.sif` (Singularity)
 - Comprehensive logging and validation
 
 ### Simple Singularity Build (Faster)
@@ -15,12 +15,12 @@
 ./build_container.sh
 ```
 - Direct Singularity .sif build (Docker as intermediate step)
-- Creates: `/opt/micapipe/micapipe_v1-beta.sif` (Singularity only)
+- Creates: `/data_/mica1/01_programs/singularity/micapipe_v1-beta.sif` (Singularity only)
 - Automatically removes intermediate Docker container
 
 ## Output Files
 
-**Primary Output:** `/opt/micapipe/micapipe_v1-beta.sif`
+**Primary Output:** `/data_/mica1/01_programs/singularity/micapipe_v1-beta.sif`
 - Singularity container with all updated neuroimaging tools
 - MRtrix 3.0.7, FreeSurfer 7.4.1, FastSurfer v2.4.2, etc.
 - Custom location: `MICAPIPE_SIF_PATH=/custom/path ./build_container.sh`

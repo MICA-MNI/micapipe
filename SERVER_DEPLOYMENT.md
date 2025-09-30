@@ -97,7 +97,7 @@ docker build --build-arg ENABLE_CUDA=true -t micapipe:latest .
 docker build --build-arg ENABLE_CUDA=false -t micapipe:latest .
 
 # Then manually convert to Singularity
-singularity build /opt/micapipe/micapipe_v1-beta.sif docker-daemon://micapipe:latest
+singularity build /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif docker-daemon://micapipe:latest
 ```
 
 ## Troubleshooting Common Server Issues
@@ -185,7 +185,7 @@ The server build script automatically creates a Singularity container:
 
 ### Automatic Conversion (Default)
 ```bash
-# The script automatically creates: /opt/micapipe/micapipe_v1-beta.sif
+# The script automatically creates: /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif
 ./server_build_test.sh
 ```
 
@@ -200,19 +200,19 @@ MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
 ### Manual Conversion (if needed)
 ```bash
 # Only if automatic conversion failed
-singularity build /opt/micapipe/micapipe_v1-beta.sif docker-daemon://micapipe:latest
+singularity build /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif docker-daemon://micapipe:latest
 ```
 
 ### Using the Singularity Container
 ```bash
 # Interactive session
-singularity shell /opt/micapipe/micapipe_v1-beta.sif
+singularity shell /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif
 
 # Run command
-singularity exec /opt/micapipe/micapipe_v1-beta.sif [command]
+singularity exec /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif [command]
 
 # With data binding
-singularity exec --bind /data:/data /opt/micapipe/micapipe_v1-beta.sif [command]
+singularity exec --bind /data:/data /data_/mica1/01_programs/singularity/micapipe_v1-beta.sif [command]
 ```
 
 ## Support
