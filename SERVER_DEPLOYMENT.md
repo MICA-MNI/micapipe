@@ -15,11 +15,8 @@ git checkout docker-container-updates
 # For complete build, test, and Singularity conversion (recommended)
 ./server_build_test.sh
 
-# For FSL-only testing (to check the fix)
-./server_build_test.sh fsl-only
-
-# For build without testing (faster)
-./server_build_test.sh no-test
+# For simple build without extensive testing
+./build_container.sh
 
 # For help and options
 ./server_build_test.sh help
@@ -35,15 +32,35 @@ export MICAPIPE_SIF_PATH="/your/custom/path"
 MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
 ```
 
+## Build Script Options
+
+### **server_build_test.sh** (Comprehensive - Recommended)
+- Complete build pipeline with testing and validation
+- Automatic Singularity conversion
+- Comprehensive logging and reporting
+- Multiple execution modes
+
+### **build_container.sh** (Simple - Quick Build)
+- Basic Docker container build
+- No sudo requirements (automatically detects user directories)
+- CUDA auto-detection
+- Minimal logging
+
 ### 3. Alternative Build Options
 
-#### Option A: Standard Build (Recommended)
+#### Option A: Comprehensive Build (Recommended)
 ```bash
-# Uses the server build script with all fixes
-./build_no_sudo.sh
+# Complete build, test, and Singularity conversion
+./server_build_test.sh
 ```
 
-#### Option B: Direct Docker Build
+#### Option B: Simple Build (Faster)
+```bash
+# Quick Docker build only
+./build_container.sh
+```
+
+#### Option C: Direct Docker Build
 ```bash
 # Set environment to avoid certificate issues
 export DOCKER_CONTENT_TRUST=0
@@ -55,13 +72,10 @@ docker build --build-arg ENABLE_CUDA=true -t micapipe:latest .
 docker build --build-arg ENABLE_CUDA=false -t micapipe:latest .
 ```
 
-#### Option C: If FSL Issues Persist
+#### Option D: If FSL Issues Persist
 ```bash
 # Use the comprehensive FSL fix
 ./fix_fsl_build.sh
-
-# Or build without FSL Python
-docker build -f Dockerfile.no-fsl-python -t micapipe:no-fsl .
 ```
 
 ## Troubleshooting Common Server Issues
@@ -72,8 +86,8 @@ export DOCKER_CONTENT_TRUST=0
 ```
 
 ### Issue 2: No Sudo Rights
-- Use `./build_no_sudo.sh` instead of regular build scripts
-- The script will automatically detect writable directories
+- All build scripts automatically detect writable directories
+- No manual configuration needed for non-sudo environments
 
 ### Issue 3: FSL Python Installation Failure
 - The Dockerfile has been updated with fallback handling
