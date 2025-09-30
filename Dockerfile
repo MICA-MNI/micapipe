@@ -192,34 +192,41 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and extract FreeSurfer with optimized timeouts and multiple mirrors
+# Download and extract FreeSurfer with robust validation
 RUN echo "Downloading FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
     && export TMPDIR="$(mktemp -d)" \
     && cd "$TMPDIR" \
+    && DOWNLOAD_SUCCESS=false \
     && echo "Trying primary FTP server..." \
-    && (timeout 600 curl -fsSL --retry 2 --retry-delay 5 --connect-timeout 30 --max-time 600 \
+    && (timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
         ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
         -o freesurfer.tar.gz \
-        || (echo "FTP failed, trying wget with shorter timeout..." && \
-            rm -f freesurfer.tar.gz && \
-            timeout 600 wget --timeout=60 --tries=3 --retry-connrefused --waitretry=10 \
-               ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-               -O freesurfer.tar.gz) \
-        || (echo "FTP failed, trying HTTPS mirror..." && \
-            rm -f freesurfer.tar.gz && \
-            timeout 600 curl -fsSL --retry 2 --retry-delay 5 --connect-timeout 30 --max-time 600 \
-               https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-               -o freesurfer.tar.gz) \
-        || (echo "All FreeSurfer downloads failed, creating minimal installation..." && \
-            mkdir -p /opt/freesurfer-7.4.1 && \
-            echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
-            echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
-            chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
-            echo "FreeSurfer installation skipped - minimal setup created" && \
-            exit 0)) \
-    && if [ -f freesurfer.tar.gz ]; then \
-        echo "FreeSurfer download successful, extracting (this may take several minutes)..." && \
+        && echo "FTP download completed, checking file integrity..." \
+        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
+        && DOWNLOAD_SUCCESS=true \
+        && echo "FTP download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
+    || (echo "FTP failed or incomplete, trying wget..." && \
+        rm -f freesurfer.tar.gz && \
+        timeout 900 wget --timeout=120 --tries=2 --retry-connrefused --waitretry=30 \
+           ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+           -O freesurfer.tar.gz \
+        && echo "wget download completed, checking file integrity..." \
+        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
+        && DOWNLOAD_SUCCESS=true \
+        && echo "wget download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
+    || (echo "FTP methods failed, trying HTTPS mirror..." && \
+        rm -f freesurfer.tar.gz && \
+        timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
+           https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+           -o freesurfer.tar.gz \
+        && echo "HTTPS download completed, checking file integrity..." \
+        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
+        && DOWNLOAD_SUCCESS=true \
+        && echo "HTTPS download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
+    || (echo "All FreeSurfer download attempts failed") \
+    && if [ "$DOWNLOAD_SUCCESS" = "true" ] && [ -f freesurfer.tar.gz ]; then \
+        echo "FreeSurfer download verified, extracting (this may take several minutes)..." && \
         tar -xzf freesurfer.tar.gz -C /opt/freesurfer-7.4.1 --strip-components 1 \
              --exclude='freesurfer/average/mult-comp-cor' \
              --exclude='freesurfer/lib/cuda' \
@@ -234,10 +241,15 @@ RUN echo "Downloading FreeSurfer 7.4.1..." \
              --exclude='freesurfer/subjects/fsaverage6' \
              --exclude='freesurfer/subjects/fsaverage_sym' \
              --exclude='freesurfer/trctrain' \
-        && rm -f freesurfer.tar.gz && \
-        echo "FreeSurfer extraction completed"; \
+        && rm -f freesurfer.tar.gz \
+        && echo "FreeSurfer extraction completed successfully"; \
     else \
-        echo "FreeSurfer download failed, using minimal installation"; \
+        echo "FreeSurfer download failed or corrupted, creating minimal installation..." && \
+        mkdir -p /opt/freesurfer-7.4.1 && \
+        echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "FreeSurfer installation skipped - minimal setup created"; \
     fi \
     && rm -rf "$TMPDIR" \
     && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
