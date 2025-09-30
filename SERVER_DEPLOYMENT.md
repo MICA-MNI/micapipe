@@ -40,11 +40,24 @@ MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
 - Comprehensive logging and reporting
 - Multiple execution modes
 
-### **build_container.sh** (Simple - Quick Build)
-- Basic Docker container build
+### **build_container.sh** (Simple - Quick Singularity Build)
+- Direct Singularity .sif file creation
+- Docker container as intermediate step (automatically removed)
 - No sudo requirements (automatically detects user directories)
 - CUDA auto-detection
 - Minimal logging
+
+### Alternative Direct Commands
+```bash
+# Build Singularity with CUDA support
+./build_container.sh --cuda
+
+# Build to custom location
+./build_container.sh --output /data/containers
+
+# Build without cache (slower but fresh build)
+./build_container.sh --no-cache
+```
 
 ### 3. Alternative Build Options
 
@@ -54,9 +67,9 @@ MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
 ./server_build_test.sh
 ```
 
-#### Option B: Simple Build (Faster)
+#### Option B: Simple Singularity Build (Faster)
 ```bash
-# Quick Docker build only
+# Direct .sif creation with automatic cleanup
 ./build_container.sh
 ```
 
@@ -72,10 +85,19 @@ docker build --build-arg ENABLE_CUDA=true -t micapipe:latest .
 docker build --build-arg ENABLE_CUDA=false -t micapipe:latest .
 ```
 
-#### Option D: If FSL Issues Persist
+#### Option D: Direct Docker Build (Advanced)
 ```bash
-# Use the comprehensive FSL fix
-./fix_fsl_build.sh
+# Set environment to avoid certificate issues
+export DOCKER_CONTENT_TRUST=0
+
+# Build with CUDA support (if available)
+docker build --build-arg ENABLE_CUDA=true -t micapipe:latest .
+
+# Or build CPU-only version
+docker build --build-arg ENABLE_CUDA=false -t micapipe:latest .
+
+# Then manually convert to Singularity
+singularity build /opt/micapipe/micapipe_v1-beta.sif docker-daemon://micapipe:latest
 ```
 
 ## Troubleshooting Common Server Issues
@@ -89,9 +111,10 @@ export DOCKER_CONTENT_TRUST=0
 - All build scripts automatically detect writable directories
 - No manual configuration needed for non-sudo environments
 
-### Issue 3: FSL Python Installation Failure
-- The Dockerfile has been updated with fallback handling
-- If issues persist, use: `./fix_fsl_build.sh`
+### Issue 3: Build Process Concerns
+- Use `./build_container.sh` for direct Singularity creation
+- Intermediate Docker containers are automatically cleaned up
+- Focus on .sif file as primary output format
 
 ### Issue 4: Limited Disk Space
 ```bash

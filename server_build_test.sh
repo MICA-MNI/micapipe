@@ -378,7 +378,7 @@ main() {
         fi
     else
         log "❌ FSL test failed, check FSL installation section"
-        log "🔧 Consider running the FSL fix script: ./fix_fsl_build.sh"
+        log "🔧 Consider reviewing the Dockerfile FSL section for issues"
     fi
     
     # Generate final report
