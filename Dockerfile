@@ -13,6 +13,28 @@ FROM ubuntu:bionic-20201119
 USER root
 
 ARG DEBIAN_FRONTEND="noninteractive"
+# CUDA build argument - defaults to false to preserve current behavior
+ARG ENABLE_CUDA=false
+
+# Add NVIDIA repository and CUDA toolkit if CUDA is enabled
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "Setting up CUDA support..."; \
+        apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               gnupg2 \
+               software-properties-common \
+        && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
+        && add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
+        && apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               cuda-runtime-11-8 \
+               cuda-libraries-11-8 \
+               libcudnn8 \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*; \
+    else \
+        echo "CUDA support disabled - building CPU-only container"; \
+    fi
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
@@ -505,16 +527,32 @@ RUN git clone https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
     && chmod +x /opt/SynBOLD-DisCo/src/inference.py
 
 # Install dependencies for Synb0 and SynBOLD in micapipe environment
-RUN mamba run -n micapipe pip install --no-cache-dir \
-           torch \
-           torchvision \
-           torchaudio \
-           --index-url https://download.pytorch.org/whl/cpu \
-    && mamba run -n micapipe pip install --no-cache-dir \
-           tensorflow \
-           keras \
-           onnx \
-           onnxruntime
+# Conditionally install CUDA or CPU versions based on ENABLE_CUDA build arg
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "Installing CUDA-enabled PyTorch and TensorFlow..."; \
+        mamba run -n micapipe pip install --no-cache-dir \
+               torch \
+               torchvision \
+               torchaudio \
+               --index-url https://download.pytorch.org/whl/cu118 \
+        && mamba run -n micapipe pip install --no-cache-dir \
+               tensorflow[and-cuda] \
+               keras \
+               onnx \
+               onnxruntime-gpu; \
+    else \
+        echo "Installing CPU-only PyTorch and TensorFlow..."; \
+        mamba run -n micapipe pip install --no-cache-dir \
+               torch \
+               torchvision \
+               torchaudio \
+               --index-url https://download.pytorch.org/whl/cpu \
+        && mamba run -n micapipe pip install --no-cache-dir \
+               tensorflow \
+               keras \
+               onnx \
+               onnxruntime; \
+    fi
 
 
 ENV PATH="/opt/FastSurfer:$PATH"
@@ -525,17 +563,36 @@ RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
     && cd /opt/FastSurfer \
     && git checkout v2.4.2
 
-# Generate the CPU-specific conda environment file using the correct input YAML file (lowercase)
-RUN /opt/miniconda-22.11.1/bin/conda run -n base \
-    python /opt/FastSurfer/Docker/install_env.py \
-    -m cpu \
-    -i /opt/FastSurfer/env/fastsurfer.yml \
-    -o /opt/FastSurfer/fastsurfer_cpu.yml
+# Generate the conda environment file for FastSurfer (CPU or GPU based on ENABLE_CUDA)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "Generating GPU-enabled FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m gpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        echo "Generating CPU-only FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m cpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
 
-    # Patch the generated environment file to use torchio==0.20.5 instead of torchio==0.20.4
-RUN sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml
+# Patch the generated environment file to use torchio==0.20.5 instead of torchio==0.20.4
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
 
-RUN /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml
+# Create the FastSurfer conda environment
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
 
 
 

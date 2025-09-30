@@ -49,6 +49,7 @@ OPTIONS:
     -s, --singularity            Also build Singularity image
     -d, --singularity-dir DIR    Directory for Singularity build (default: $DEFAULT_SINGULARITY_DIR)
     -n, --no-cache              Build without using Docker cache
+    -c, --cuda                  Enable CUDA support in the container (default: disabled)
     -h, --help                  Show this help message
 
 EXAMPLES:
@@ -64,6 +65,12 @@ EXAMPLES:
     # Build without cache (clean build)
     $0 --no-cache
 
+    # Enable CUDA support
+    $0 --cuda --tag micapipe:v0.2.4-cuda
+
+    # Build CUDA-enabled container with Singularity
+    $0 --cuda --singularity --tag micapipe:v0.2.4-cuda
+
 EOF
 }
 
@@ -72,6 +79,7 @@ DOCKER_TAG="$DEFAULT_TAG"
 BUILD_SINGULARITY=false
 SINGULARITY_DIR="$DEFAULT_SINGULARITY_DIR"
 NO_CACHE=false
+ENABLE_CUDA=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -89,6 +97,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -n|--no-cache)
             NO_CACHE=true
+            shift
+            ;;
+        -c|--cuda)
+            ENABLE_CUDA=true
             shift
             ;;
         -h|--help)
@@ -132,6 +144,27 @@ if [ "$BUILD_SINGULARITY" = true ]; then
     fi
 fi
 
+# Check NVIDIA/CUDA availability (if requested)
+if [ "$ENABLE_CUDA" = true ]; then
+    print_info "Checking CUDA prerequisites..."
+    
+    # Check if nvidia-smi is available (indicates NVIDIA drivers)
+    if command -v nvidia-smi &> /dev/null; then
+        print_info "NVIDIA drivers detected: $(nvidia-smi --query-gpu=name --format=csv,noheader,nounits | head -1)"
+    else
+        print_warning "nvidia-smi not found. CUDA container may not work on this host."
+        print_warning "Ensure NVIDIA drivers are installed if you plan to run CUDA containers."
+    fi
+    
+    # Check if nvidia-docker or Docker with GPU support is available
+    if docker info 2>/dev/null | grep -i nvidia >/dev/null; then
+        print_info "Docker NVIDIA runtime detected"
+    else
+        print_warning "Docker NVIDIA runtime not detected. You may need to install nvidia-docker2."
+        print_warning "CUDA containers may not work without proper GPU runtime."
+    fi
+fi
+
 # Check if we're in the right directory
 if [ ! -f "$PROJECT_ROOT/Dockerfile" ]; then
     print_error "Dockerfile not found. Please run this script from the micapipe project directory."
@@ -149,6 +182,15 @@ DOCKER_BUILD_CMD="docker build"
 if [ "$NO_CACHE" = true ]; then
     DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --no-cache"
     print_info "Building without cache (clean build)"
+fi
+
+# Add CUDA build argument
+if [ "$ENABLE_CUDA" = true ]; then
+    DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --build-arg ENABLE_CUDA=true"
+    print_info "Building with CUDA support enabled"
+else
+    DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --build-arg ENABLE_CUDA=false"
+    print_info "Building with CPU-only support"
 fi
 
 DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD -t $DOCKER_TAG ."
@@ -207,6 +249,7 @@ print_success "Build completed successfully!"
 echo ""
 print_info "Summary:"
 echo "  Docker image: $DOCKER_TAG"
+echo "  CUDA support: $([ "$ENABLE_CUDA" = true ] && echo "Enabled" || echo "Disabled")"
 if [ "$BUILD_SINGULARITY" = true ]; then
     echo "  Singularity file: $SINGULARITY_FILE"
 fi
@@ -219,12 +262,22 @@ docker images "$DOCKER_TAG" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}
 # Provide usage examples
 echo ""
 print_info "Usage examples:"
-echo "  # Run Docker container interactively:"
-echo "  docker run -it --rm $DOCKER_TAG"
+if [ "$ENABLE_CUDA" = true ]; then
+    echo "  # Run Docker container with GPU support:"
+    echo "  docker run --gpus all -it --rm $DOCKER_TAG"
+else
+    echo "  # Run Docker container interactively:"
+    echo "  docker run -it --rm $DOCKER_TAG"
+fi
 echo ""
 if [ "$BUILD_SINGULARITY" = true ]; then
-    echo "  # Run Singularity container:"
-    echo "  singularity exec $SINGULARITY_FILE micapipe --help"
+    if [ "$ENABLE_CUDA" = true ]; then
+        echo "  # Run Singularity container with GPU support:"
+        echo "  singularity exec --nv $SINGULARITY_FILE micapipe --help"
+    else
+        echo "  # Run Singularity container:"
+        echo "  singularity exec $SINGULARITY_FILE micapipe --help"
+    fi
     echo ""
 fi
 
