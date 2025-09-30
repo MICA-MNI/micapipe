@@ -13,21 +13,44 @@ TMP_DIR="/host/cassio/export03/data/enning/tmp"
 
 echo "Setting up directories..."
 
-# Create directories with proper permissions
-sudo mkdir -p "$SIF_DIR" 2>/dev/null || true
-sudo mkdir -p "$TMP_DIR" 2>/dev/null || true
+# Check if directories exist and are accessible
+echo "Checking directory accessibility..."
 
-# Set ownership
-sudo chown $USER:$USER "$SIF_DIR"
-sudo chown $USER:$USER "$TMP_DIR"
+# Check SIF directory
+if [ -d "$SIF_DIR" ]; then
+    if [ -w "$SIF_DIR" ]; then
+        echo "✅ SIF directory exists and is writable: $SIF_DIR"
+    else
+        echo "❌ SIF directory exists but is not writable: $SIF_DIR"
+        echo "   Please ask your admin to run: chmod 755 $SIF_DIR && chown $USER:$USER $SIF_DIR"
+        SIF_ACCESS=false
+    fi
+else
+    echo "❌ SIF directory does not exist: $SIF_DIR"
+    echo "   Please ask your admin to run: mkdir -p $SIF_DIR && chown $USER:$USER $SIF_DIR"
+    SIF_ACCESS=false
+fi
 
-# Set permissions
-chmod 755 "$SIF_DIR"
-chmod 755 "$TMP_DIR"
-
-echo "✅ Directories created:"
-echo "   SIF: $SIF_DIR"
-echo "   TMP: $TMP_DIR"
+# Check TMP directory
+if [ -d "$TMP_DIR" ]; then
+    if [ -w "$TMP_DIR" ]; then
+        echo "✅ TMP directory exists and is writable: $TMP_DIR"
+    else
+        echo "❌ TMP directory exists but is not writable: $TMP_DIR"
+        echo "   Please ask your admin to run: chmod 755 $TMP_DIR && chown $USER:$USER $TMP_DIR"
+        TMP_ACCESS=false
+    fi
+else
+    # Try to create it without sudo
+    if mkdir -p "$TMP_DIR" 2>/dev/null; then
+        echo "✅ Created TMP directory: $TMP_DIR"
+        chmod 755 "$TMP_DIR" 2>/dev/null || true
+    else
+        echo "❌ Cannot create TMP directory: $TMP_DIR"
+        echo "   Please ask your admin to run: mkdir -p $TMP_DIR && chown $USER:$USER $TMP_DIR"
+        TMP_ACCESS=false
+    fi
+fi
 echo
 
 # Check space

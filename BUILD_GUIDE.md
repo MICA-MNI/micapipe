@@ -35,53 +35,46 @@ sudo chown $USER:$USER /host/cassio/export03/data/enning/tmp
 
 ## Build Commands
 
-### Option 1: CPU-Only Container (Default)
+### Option 1: Using Server Paths (requires admin setup)
 
-Build a CPU-only container for maximum compatibility:
+If your admin has already set up the directories with proper permissions:
 
 ```bash
-# Navigate to the micapipe project
-cd /path/to/micapipe
+# CPU-only build
+./build_server.sh
 
-# Build CPU-only container with custom paths
-./scripts/build_container.sh \
-  --tag micapipe:v0.2.4-cpu \
-  --singularity \
-  --singularity-dir /data_/mica1/01_programs/singularity
-
-# Set temporary directory for Singularity
-export SINGULARITY_TMPDIR=/host/cassio/export03/data/enning/tmp
+# CUDA-enabled build  
+./build_server.sh --cuda
 ```
 
-### Option 2: CUDA-Enabled Container (If you have GPU)
+### Option 2: No Sudo Required (user directories)
 
-Build a CUDA-enabled container for GPU acceleration:
+If you don't have sudo rights or the server directories aren't accessible:
 
 ```bash
-# Build CUDA-enabled container
-./scripts/build_container.sh \
-  --cuda \
-  --tag micapipe:v0.2.4-cuda \
-  --singularity \
-  --singularity-dir /data_/mica1/01_programs/singularity
+# CPU-only build using user directories
+./build_no_sudo.sh
 
-# Set temporary directory for Singularity
-export SINGULARITY_TMPDIR=/host/cassio/export03/data/enning/tmp
+# CUDA-enabled build using user directories
+./build_no_sudo.sh --cuda
+
+# Custom directories
+./build_no_sudo.sh --sif-dir ~/my_containers --tmp-dir ~/my_tmp
 ```
 
-### Option 3: Clean Build (No Cache)
+### Option 3: Generic Build Script
 
-If you want to ensure a completely fresh build:
+Use the original generic script with custom paths:
 
 ```bash
-# Clean build without Docker cache
-./scripts/build_container.sh \
-  --no-cache \
-  --tag micapipe:v0.2.4-fresh \
-  --singularity \
-  --singularity-dir /data_/mica1/01_programs/singularity
+# Set your temporary directory
+export SINGULARITY_TMPDIR=~/tmp
 
-export SINGULARITY_TMPDIR=/host/cassio/export03/data/enning/tmp
+# Build with custom singularity directory
+./scripts/build_container.sh \
+  --tag micapipe:v0.2.4 \
+  --singularity \
+  --singularity-dir ~/containers
 ```
 
 ## Step-by-Step Build Process
@@ -104,14 +97,21 @@ git checkout docker-container-updates
 git pull origin docker-container-updates
 ```
 
-### 3. Run the Build
+### 3. Choose Your Build Method
 
+**If directories are accessible (admin setup):**
 ```bash
-# Example: Build CPU-only container
-./scripts/build_container.sh \
-  --tag micapipe:v0.2.4-$(date +%Y%m%d) \
-  --singularity \
-  --singularity-dir /data_/mica1/01_programs/singularity
+./build_server.sh
+```
+
+**If no sudo rights (user directories):**
+```bash
+./build_no_sudo.sh
+```
+
+**Custom paths:**
+```bash
+./build_no_sudo.sh --sif-dir ~/containers --tmp-dir ~/tmp
 ```
 
 ### 4. Monitor Build Progress
@@ -121,6 +121,33 @@ The script will show:
 - Docker build progress
 - Singularity conversion progress
 - Final file locations and sizes
+
+## No Sudo Rights Solution
+
+If you don't have sudo access on the server, use the `build_no_sudo.sh` script which:
+
+### Features:
+- **Automatically detects** if preferred directories are accessible
+- **Falls back** to user-writable directories (`~/containers`, `~/tmp/singularity`)
+- **Allows custom paths** via command line options
+- **No admin privileges** required
+
+### Usage:
+```bash
+# Basic build (auto-detects best directories)
+./build_no_sudo.sh
+
+# With custom directories
+./build_no_sudo.sh --sif-dir ~/my_containers --tmp-dir ~/my_tmp
+
+# CUDA enabled with custom paths
+./build_no_sudo.sh --cuda --sif-dir /scratch/$USER/containers
+```
+
+### Directory Hierarchy:
+1. **Preferred**: `/data_/mica1/01_programs/singularity` (if accessible)
+2. **Fallback**: `~/containers` (always works)
+3. **Custom**: Any path you specify
 
 ## Expected Output Locations
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Micapipe Container Build Script for Your Server Configuration
-# This script is customized for your specific paths and requirements
+# Micapipe Container Build Script - No Sudo Version
+# This script builds micapipe containers using only user-writable directories
 
 set -e  # Exit on any error
 
@@ -17,9 +17,9 @@ print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Your server configuration
-SIF_DIR="/data_/mica1/01_programs/singularity"
-TMP_DIR="/host/cassio/export03/data/enning/tmp"
+# User-writable fallback paths
+HOME_CONTAINERS="$HOME/containers"
+HOME_TMP="$HOME/tmp/singularity"
 BUILD_DATE=$(date +%Y%m%d_%H%M%S)
 DEFAULT_TAG="micapipe:v0.2.4-${BUILD_DATE}"
 
@@ -27,10 +27,11 @@ DEFAULT_TAG="micapipe:v0.2.4-${BUILD_DATE}"
 ENABLE_CUDA=false
 NO_CACHE=false
 TAG="$DEFAULT_TAG"
+SIF_DIR=""
+TMP_DIR=""
 
-print_info "Micapipe Container Build for Server"
-print_info "SIF Directory: $SIF_DIR"
-print_info "Temp Directory: $TMP_DIR"
+print_info "Micapipe Container Build - No Sudo Required"
+print_info "Using user-writable directories as fallback"
 echo
 
 # Parse arguments
@@ -49,13 +50,25 @@ while [[ $# -gt 0 ]]; do
             TAG="$2"
             shift 2
             ;;
+        --sif-dir)
+            SIF_DIR="$2"
+            shift 2
+            ;;
+        --tmp-dir)
+            TMP_DIR="$2"
+            shift 2
+            ;;
         --help)
             echo "Usage: $0 [OPTIONS]"
             echo "Options:"
-            echo "  --cuda      Enable CUDA support"
-            echo "  --no-cache  Build without cache"
-            echo "  --tag TAG   Custom Docker tag"
-            echo "  --help      Show this help"
+            echo "  --cuda          Enable CUDA support"
+            echo "  --no-cache      Build without cache"
+            echo "  --tag TAG       Custom Docker tag"
+            echo "  --sif-dir DIR   Custom SIF output directory"
+            echo "  --tmp-dir DIR   Custom temporary directory"
+            echo "  --help          Show this help"
+            echo
+            echo "This script uses user-writable directories when admin directories are not accessible."
             exit 0
             ;;
         *)
@@ -64,6 +77,37 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Determine directories to use
+echo "🔍 Determining best directories to use..."
+
+# Try preferred server paths first, fallback to user directories
+PREFERRED_SIF="/data_/mica1/01_programs/singularity"
+PREFERRED_TMP="/host/cassio/export03/data/enning/tmp"
+
+# Set SIF directory
+if [ -n "$SIF_DIR" ]; then
+    # User specified custom directory
+    print_info "Using custom SIF directory: $SIF_DIR"
+elif [ -d "$PREFERRED_SIF" ] && [ -w "$PREFERRED_SIF" ]; then
+    SIF_DIR="$PREFERRED_SIF"
+    print_success "Using preferred SIF directory: $SIF_DIR"
+else
+    SIF_DIR="$HOME_CONTAINERS"
+    print_warning "Preferred SIF directory not accessible, using: $SIF_DIR"
+fi
+
+# Set TMP directory
+if [ -n "$TMP_DIR" ]; then
+    # User specified custom directory
+    print_info "Using custom TMP directory: $TMP_DIR"
+elif [ -d "$PREFERRED_TMP" ] && [ -w "$PREFERRED_TMP" ]; then
+    TMP_DIR="$PREFERRED_TMP"
+    print_success "Using preferred TMP directory: $TMP_DIR"
+else
+    TMP_DIR="$HOME_TMP"
+    print_warning "Preferred TMP directory not accessible, using: $TMP_DIR"
+fi
 
 print_info "Building with tag: $TAG"
 if [ "$ENABLE_CUDA" = true ]; then
@@ -104,38 +148,37 @@ print_success "Docker and Singularity are available"
 # Step 2: Setup directories
 print_info "Step 2: Setting up directories..."
 
-# Create directories if they don't exist
-mkdir -p "$SIF_DIR" 2>/dev/null || {
+# Create directories
+if ! mkdir -p "$SIF_DIR" 2>/dev/null; then
     print_error "Cannot create SIF directory: $SIF_DIR"
-    print_error "Please ask your admin to create it: mkdir -p $SIF_DIR && chown $USER:$USER $SIF_DIR"
-    print_error "Or use an alternative path you have write access to with: --singularity-dir /path/to/writable/dir"
-    exit 1
-}
-
-mkdir -p "$TMP_DIR" 2>/dev/null || {
-    print_error "Cannot create temp directory: $TMP_DIR"
-    print_error "Please ask your admin to create it: mkdir -p $TMP_DIR && chown $USER:$USER $TMP_DIR"
-    print_error "Or set SINGULARITY_TMPDIR to a writable location: export SINGULARITY_TMPDIR=/tmp"
-    exit 1
-}
-
-# Check write permissions
-if [ ! -w "$SIF_DIR" ]; then
-    print_error "No write permission for SIF directory: $SIF_DIR"
-    print_error "Please ask your admin to fix permissions: chown $USER:$USER $SIF_DIR"
-    print_error "Or use the generic build script with a writable path:"
-    print_error "  ./scripts/build_container.sh --singularity --singularity-dir ~/containers"
+    print_error "Try: $0 --sif-dir ~/my_containers"
     exit 1
 fi
 
-if [ ! -w "$TMP_DIR" ]; then
-    print_error "No write permission for temp directory: $TMP_DIR"
-    print_error "Please ask your admin to fix permissions: chown $USER:$USER $TMP_DIR"
-    print_error "Or use a writable temp directory: export SINGULARITY_TMPDIR=~/tmp"
+if ! mkdir -p "$TMP_DIR" 2>/dev/null; then
+    print_error "Cannot create TMP directory: $TMP_DIR"
+    print_error "Try: $0 --tmp-dir ~/my_tmp"
     exit 1
+fi
+
+# Test write permissions
+if ! touch "$SIF_DIR/.test" 2>/dev/null; then
+    print_error "No write permission for SIF directory: $SIF_DIR"
+    exit 1
+else
+    rm -f "$SIF_DIR/.test"
+fi
+
+if ! touch "$TMP_DIR/.test" 2>/dev/null; then
+    print_error "No write permission for TMP directory: $TMP_DIR"
+    exit 1
+else
+    rm -f "$TMP_DIR/.test"
 fi
 
 print_success "Directories are ready"
+print_info "SIF output: $SIF_DIR"
+print_info "Temp files: $TMP_DIR"
 
 # Step 3: Check disk space
 print_info "Step 3: Checking disk space..."
@@ -151,10 +194,22 @@ print_info "Available space - SIF dir: ${SIF_GB}GB, Temp dir: ${TMP_GB}GB"
 
 if [ $SIF_GB -lt 15 ]; then
     print_warning "Low space in SIF directory (${SIF_GB}GB). Recommend at least 15GB."
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Try using a different directory: $0 --sif-dir /path/with/more/space"
+        exit 1
+    fi
 fi
 
 if [ $TMP_GB -lt 10 ]; then
     print_warning "Low space in temp directory (${TMP_GB}GB). Recommend at least 10GB."
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Try using a different directory: $0 --tmp-dir /path/with/more/space"
+        exit 1
+    fi
 fi
 
 # Step 4: Set environment variables
@@ -224,14 +279,14 @@ else
     print_warning "Container test failed - but build completed"
 fi
 
-# Step 8: Cleanup and summary
-print_info "Step 8: Cleanup and summary..."
+# Step 8: Final summary
+print_info "Step 8: Final summary..."
 
 # Show file size
 SIF_SIZE=$(du -h "$SIF_PATH" | cut -f1)
 print_info "Singularity image size: $SIF_SIZE"
 
-# Optional: Remove Docker image to save space
+# Cleanup option
 read -p "Remove Docker image to save space? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -260,13 +315,9 @@ if [ "$ENABLE_CUDA" = true ]; then
     echo
 fi
 
-print_info "Container includes:"
-echo "  ✓ MRtrix 3.0.7"
-echo "  ✓ FreeSurfer 7.4.1" 
-echo "  ✓ FastSurfer 2.4.2"
-echo "  ✓ DESIGNER pipeline"
-echo "  ✓ Synb0-DISCO & SynBOLD-DisCo"
-echo "  ✓ LAMAReg with antspy"
-echo "  ✓ SWM for superficial white matter"
+print_info "Directory locations used:"
+echo "  SIF files: $SIF_DIR"
+echo "  Temp files: $TMP_DIR"
+echo
 
-print_success "All done!"
+print_success "All done! No sudo was required."
