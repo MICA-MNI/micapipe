@@ -198,17 +198,18 @@ if [ -f "${subject_dir}/QC/${idBIDS}"_module-proc_structural.json ]; then
   # T1w nativepro 5 tissue segmentation (5tt)
   Do_cmd mrconvert "$T15ttgen" -coord 3 0 -axes 0,1,2  "${tmpDir}/nativepro_T1w_brain_5tt.nii.gz" -force
 
-  # Registration: T1wnatipro to MNI152 (2mm and 0.8mm)
+  # Registration: T1wnatipro to MNI152 (2mm and 1mm NLIN SYM 09a)
   xfm_proc_struc_json=${dir_warp}/${idBIDS}_transformations-proc_structural.json
-  for mm in 2 0.8; do
-      T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}_T1w_brain.nii.gz
-
+  for mm in 2 1; do
       if [[ ${mm} == 2 ]] ; then
+        T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_${mm}mm_T1w_brain.nii.gz
         transformation=$(grep transformation "$xfm_proc_struc_json" | awk -F '"' 'NR==3{print $4}')
+        MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
       else
+        T1w_in_MNI=${tmpDir}/${idBIDS}_space-MNI152_1mm_nlinSym_T1w_brain.nii.gz
         transformation=$(grep transformation "$xfm_proc_struc_json" | awk -F '"' 'NR==1{print $4}')
+        MNI152_brain="${util_MNIvolumes}/mni_icbm152_t1_tal_nlin_sym_09a_brain.nii.gz"
       fi
-      MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
       Do_cmd antsApplyTransforms -d 3 -v -u int -o "${T1w_in_MNI}" \
               -i "${T1nativepro_brain}" \
               -r "${MNI152_brain}" \

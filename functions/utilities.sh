@@ -553,9 +553,9 @@ function proc_struct_transformations() {
     \"Module\": \"proc_structural\",
     \"LastRun\": \"$(date)\",
     \"T1nativepro\": \"${1}\",
-    \"MNI152_0p8mm\": \"${2}\",
+    \"MNI152_1mm_nlinSym\": \"${2}\",
     \"MNI152_2mm\": \"${3}\",
-    \"from-t1nativepro_to-MNI152_0p8mm\": [
+    \"from-t1nativepro_to-MNI152_1mm_nlinSym\": [
       {
         \"Command\": \"antsApplyTransforms\",
         \"input\": \"$1\",
@@ -580,7 +580,7 @@ function proc_struct_transformations() {
         \"Command\": \"antsApplyTransforms\",
         \"input\": \"${1}\",
         \"reference\": \"${3}\",
-        \"transformations\": \"-t ${T1_MNI152_Warp/0.8mm/2mm} -t ${T1_MNI152_affine/0.8mm/2mm}\",
+        \"transformations\": \"-t ${T1_MNI152_Warp/1mm_nlinSym/2mm} -t ${T1_MNI152_affine/1mm_nlinSym/2mm}\",
         \"output\": \"-o from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN.nii.gz\",
         \"options\": \"-d 3 -v -u int\"
       }
@@ -590,7 +590,7 @@ function proc_struct_transformations() {
         \"Command\": \"antsApplyTransforms\",
         \"input\": \"${3}\",
         \"reference\": \"${1}\",
-        \"transformations\": \"-t [${T1_MNI152_affine/0.8mm/2mm},1] -t ${T1_MNI152_InvWarp/0.8mm/2mm}\",
+        \"transformations\": \"-t [${T1_MNI152_affine/1mm_nlinSym/2mm},1] -t ${T1_MNI152_InvWarp/1mm_nlinSym/2mm}\",
         \"output\": \"-o from-MNI152_2mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
         \"options\": \"-d 3 -v -u int\"
       }
