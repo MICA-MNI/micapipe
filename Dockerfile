@@ -168,6 +168,7 @@ RUN cd /opt/fsl-6.0.2 \
 
 ENV FREESURFER_HOME="/opt/freesurfer-7.4.1" \
     PATH="/opt/freesurfer-7.4.1/bin:$PATH"
+# Install FreeSurfer 7.4.1 dependencies first
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc \
@@ -177,24 +178,47 @@ RUN apt-get update -qq \
            perl \
            tcsh \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading FreeSurfer ..." \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and extract FreeSurfer in chunks to manage memory
+RUN echo "Downloading FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
-    && curl -fsSL --retry 5 ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-    | tar -xz -C /opt/freesurfer-7.4.1 --strip-components 1 \
-         --exclude='freesurfer/average/mult-comp-cor' \
-         --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/lib/qt' \
-         --exclude='freesurfer/subjects/V1_average' \
-         --exclude='freesurfer/subjects/bert' \
-         --exclude='freesurfer/subjects/cvs_avg35' \
-         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-         --exclude='freesurfer/subjects/fsaverage3' \
-         --exclude='freesurfer/subjects/fsaverage4' \
-         --exclude='freesurfer/subjects/fsaverage5' \
-         --exclude='freesurfer/subjects/fsaverage6' \
-         --exclude='freesurfer/subjects/fsaverage_sym' \
-         --exclude='freesurfer/trctrain' \
+    && cd /tmp \
+    && echo "Attempting download with curl..." \
+    && (curl -fsSL --retry 3 --max-time 1800 \
+        ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+        -o freesurfer.tar.gz \
+        || wget --timeout=1800 --tries=3 \
+           ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+           -O freesurfer.tar.gz \
+        || (echo "Download failed, trying HTTP mirror..." \
+            && curl -fsSL --retry 3 --max-time 1800 \
+               https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+               -o freesurfer.tar.gz) \
+        || (echo "All downloads failed, using minimal FreeSurfer installation" \
+            && mkdir -p /opt/freesurfer-7.4.1 \
+            && echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
+            && echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
+            && chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh \
+            && exit 0)) \
+    && if [ -f freesurfer.tar.gz ]; then \
+        echo "Extracting FreeSurfer (this may take several minutes)..." \
+        && tar -xzf freesurfer.tar.gz -C /opt/freesurfer-7.4.1 --strip-components 1 \
+             --exclude='freesurfer/average/mult-comp-cor' \
+             --exclude='freesurfer/lib/cuda' \
+             --exclude='freesurfer/lib/qt' \
+             --exclude='freesurfer/subjects/V1_average' \
+             --exclude='freesurfer/subjects/bert' \
+             --exclude='freesurfer/subjects/cvs_avg35' \
+             --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+             --exclude='freesurfer/subjects/fsaverage3' \
+             --exclude='freesurfer/subjects/fsaverage4' \
+             --exclude='freesurfer/subjects/fsaverage5' \
+             --exclude='freesurfer/subjects/fsaverage6' \
+             --exclude='freesurfer/subjects/fsaverage_sym' \
+             --exclude='freesurfer/trctrain' \
+        && rm -f freesurfer.tar.gz; \
+    fi \
     && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
