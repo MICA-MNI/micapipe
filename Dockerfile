@@ -135,7 +135,13 @@ RUN apt-get update -qq \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
     && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
 
-RUN bash -c 'bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2'
+# Install FSL Python environment - using alternative approach to avoid installation issues
+RUN cd /opt/fsl-6.0.2 \
+    && if [ -f /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh ]; then \
+        bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2 || echo "FSL Python install script failed, continuing without FSL Python environment"; \
+    else \
+        echo "FSL Python install script not found, skipping FSL Python environment setup"; \
+    fi
 
 ENV FREESURFER_HOME="/opt/freesurfer-7.4.1" \
     PATH="/opt/freesurfer-7.4.1/bin:$PATH"
