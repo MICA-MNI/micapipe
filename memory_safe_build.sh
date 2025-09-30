@@ -78,14 +78,7 @@ echo "⚙️  Configuring Memory-Safe Build Environment..."
 export DOCKER_CONTENT_TRUST=0
 export BUILDKIT_PROGRESS=plain
 
-# Configure Docker daemon limits if possible
-if command -v docker-compose &> /dev/null; then
-    echo "   Docker Compose available - using resource limits"
-    USE_COMPOSE="true"
-else
-    echo "   Using direct Docker build with memory flags"
-    USE_COMPOSE="false"
-fi
+echo "   Using direct Docker build with memory optimization"
 
 # Determine optimal build strategy
 if [[ "$MEMORY_SAFE" == "true" ]]; then
@@ -116,16 +109,38 @@ LOG_FILE="build_logs/memory_safe_build_$(date +%Y%m%d_%H%M%S).log"
 # Start the build with memory constraints
 echo "🔄 Building Docker image (this may take 1-2 hours)..."
 
-docker build \
-    --progress=plain \
-    --memory="$MEMORY_LIMIT" \
-    --memory-swap="$MEMORY_SWAP" \
-    --shm-size="$SHM_SIZE" \
-    --cpus="$BUILD_PARALLEL" \
-    --network=host \
-    --build-arg ENABLE_CUDA=false \
-    -t micapipe:v1-beta \
-    . 2>&1 | tee "$LOG_FILE"
+# Check Docker version and available flags
+DOCKER_VERSION=$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "unknown")
+echo "   Docker version: $DOCKER_VERSION"
+
+# Build command with compatible flags only
+DOCKER_BUILD_CMD="docker build --progress=plain"
+
+# Add memory limits if supported (Docker 20.10+)
+if docker build --help 2>/dev/null | grep -q "\-\-memory"; then
+    DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --memory=$MEMORY_LIMIT --memory-swap=$MEMORY_SWAP"
+    echo "   Using memory limits: $MEMORY_LIMIT / $MEMORY_SWAP"
+else
+    echo "   Memory limits not supported in this Docker version"
+fi
+
+# Add shared memory if supported
+if docker build --help 2>/dev/null | grep -q "\-\-shm-size"; then
+    DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --shm-size=$SHM_SIZE"
+    echo "   Using shared memory: $SHM_SIZE"
+fi
+
+# Skip --cpus flag as it's not widely supported in older Docker versions
+echo "   Note: CPU limits skipped for compatibility"
+
+# Add network and build args
+DOCKER_BUILD_CMD="$DOCKER_BUILD_CMD --network=host --build-arg ENABLE_CUDA=false -t micapipe:v1-beta ."
+
+echo "   Command: $DOCKER_BUILD_CMD"
+echo ""
+
+# Execute the build
+eval "$DOCKER_BUILD_CMD" 2>&1 | tee "$LOG_FILE"
 
 BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
