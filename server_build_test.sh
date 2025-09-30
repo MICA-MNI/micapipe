@@ -14,8 +14,15 @@ echo ""
 CONTAINER_NAME="micapipe"
 BUILD_TAG="latest"
 TEST_TAG="test"
+SIF_VERSION="v1-beta"
+SIF_LOCATION="/opt/micapipe"  # Default location, can be overridden
 LOG_DIR="./build_logs"
 BACKUP_DIR="./backups"
+
+# Check for custom SIF location from environment or command line
+if [ ! -z "$MICAPIPE_SIF_PATH" ]; then
+    SIF_LOCATION="$MICAPIPE_SIF_PATH"
+fi
 
 # Create necessary directories
 mkdir -p "$LOG_DIR" "$BACKUP_DIR"
@@ -210,6 +217,63 @@ test_container() {
     log "✅ Container testing completed"
 }
 
+# Function to convert Docker to Singularity
+convert_to_singularity() {
+    log "🔄 Converting Docker container to Singularity..."
+    
+    # Check if Singularity is available
+    if ! command -v singularity &> /dev/null; then
+        log "⚠️  Singularity not found. Skipping .sif conversion."
+        log "   Install Singularity to enable .sif creation"
+        return 1
+    fi
+    
+    # Create SIF location directory if it doesn't exist
+    if [ ! -d "$SIF_LOCATION" ]; then
+        log "📁 Creating SIF directory: $SIF_LOCATION"
+        mkdir -p "$SIF_LOCATION" 2>/dev/null || {
+            log "⚠️  Cannot create $SIF_LOCATION, using current directory"
+            SIF_LOCATION="."
+        }
+    fi
+    
+    # Check if location is writable
+    if [ ! -w "$SIF_LOCATION" ]; then
+        log "⚠️  $SIF_LOCATION not writable, using current directory"
+        SIF_LOCATION="."
+    fi
+    
+    SIF_FILE="$SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif"
+    
+    log "   Converting to: $SIF_FILE"
+    log "   This may take several minutes..."
+    
+    # Convert Docker to Singularity
+    singularity build "$SIF_FILE" docker-daemon://${CONTAINER_NAME}:${BUILD_TAG} 2>&1 | tee "$LOG_DIR/singularity_build.log"
+    
+    if [ $? -eq 0 ]; then
+        log "✅ Singularity conversion successful!"
+        log "   SIF file created: $SIF_FILE"
+        log "   Size: $(du -sh "$SIF_FILE" | cut -f1)"
+        
+        # Test the SIF file
+        log "🧪 Testing Singularity container..."
+        singularity exec "$SIF_FILE" echo "Singularity container test successful" 2>&1 | tee -a "$LOG_DIR/singularity_test.log"
+        
+        if [ $? -eq 0 ]; then
+            log "✅ Singularity container test passed"
+        else
+            log "⚠️  Singularity container test failed"
+        fi
+        
+        return 0
+    else
+        log "❌ Singularity conversion failed"
+        log "   Check $LOG_DIR/singularity_build.log for details"
+        return 1
+    fi
+}
+
 # Function to generate summary report
 generate_report() {
     log "📊 Generating build report..."
@@ -248,11 +312,30 @@ echo '- FSL: '$(cat /opt/fsl-6.0.2/etc/fslversion 2>/dev/null || echo 'N/A')
 Log Files Generated:
 $(ls -la "$LOG_DIR"/*.log 2>/dev/null | awk '{print "- " $9 " (" $5 " bytes)"}' || echo "- No log files found")
 
+Singularity Container:
+$(if [ -f "$SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif" ]; then
+    echo "✅ Singularity container created: $SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif"
+    echo "   Size: $(du -sh "$SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif" | cut -f1)"
+    echo "   Usage: singularity exec $SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif [command]"
+else
+    echo "❌ Singularity container not created"
+    if ! command -v singularity &> /dev/null; then
+        echo "   Reason: Singularity not installed"
+    else
+        echo "   Reason: Build or conversion failed"
+    fi
+fi)
+
 Next Steps:
 $(if docker images | grep -q "${CONTAINER_NAME}.*${BUILD_TAG}"; then
     echo "✅ Container built successfully and ready for use"
-    echo "   - Run container: docker run -it ${CONTAINER_NAME}:${BUILD_TAG}"
-    echo "   - Convert to Singularity: singularity build micapipe.sif docker-daemon://${CONTAINER_NAME}:${BUILD_TAG}"
+    echo "   - Run Docker container: docker run -it ${CONTAINER_NAME}:${BUILD_TAG}"
+    if [ -f "$SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif" ]; then
+        echo "   - Run Singularity container: singularity exec $SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif [command]"
+        echo "   - Interactive Singularity: singularity shell $SIF_LOCATION/${CONTAINER_NAME}_${SIF_VERSION}.sif"
+    else
+        echo "   - Manual Singularity conversion: singularity build ${CONTAINER_NAME}_${SIF_VERSION}.sif docker-daemon://${CONTAINER_NAME}:${BUILD_TAG}"
+    fi
 else
     echo "❌ Container build failed - check log files for troubleshooting"
     echo "   - Review main build log: $LOG_DIR/main_build.log"
@@ -286,8 +369,12 @@ main() {
         if run_main_build; then
             log "🎯 Main build successful, running tests..."
             test_container
+            
+            # Convert to Singularity
+            log "🔄 Converting to Singularity format..."
+            convert_to_singularity
         else
-            log "❌ Main build failed, skipping tests"
+            log "❌ Main build failed, skipping tests and Singularity conversion"
         fi
     else
         log "❌ FSL test failed, check FSL installation section"
@@ -312,12 +399,46 @@ case "${1:-}" in
         setup_environment
         backup_existing
         run_main_build
+        convert_to_singularity
         generate_report
         ;;
     "test-only")
         check_system
         setup_environment
         test_container
+        ;;
+    "singularity-only")
+        check_system
+        setup_environment
+        convert_to_singularity
+        ;;
+    "help"|"-h"|"--help")
+        echo "MICApipe Server Build & Test Script"
+        echo "=================================="
+        echo ""
+        echo "Usage: $0 [OPTION]"
+        echo ""
+        echo "Options:"
+        echo "  (no option)     Complete build, test, and Singularity conversion"
+        echo "  fsl-only        Test only the FSL installation section"
+        echo "  no-test         Build and convert to Singularity without testing"
+        echo "  test-only       Test existing container without building"
+        echo "  singularity-only Convert existing Docker container to Singularity"
+        echo "  help            Show this help message"
+        echo ""
+        echo "Environment Variables:"
+        echo "  MICAPIPE_SIF_PATH   Custom path for .sif file (default: /opt/micapipe)"
+        echo ""
+        echo "Output:"
+        echo "  Docker container:   micapipe:latest"
+        echo "  Singularity file:   \${MICAPIPE_SIF_PATH}/micapipe_${SIF_VERSION}.sif"
+        echo "  Build logs:         ./build_logs/"
+        echo ""
+        echo "Examples:"
+        echo "  $0                                  # Complete build and conversion"
+        echo "  MICAPIPE_SIF_PATH=/data/containers $0  # Custom SIF location"
+        echo "  $0 fsl-only                        # Test FSL section only"
+        echo ""
         ;;
     *)
         main

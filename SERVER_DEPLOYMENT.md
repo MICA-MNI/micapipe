@@ -12,7 +12,7 @@ git checkout docker-container-updates
 
 ### 2. Run Server Build Script
 ```bash
-# For complete build and test
+# For complete build, test, and Singularity conversion (recommended)
 ./server_build_test.sh
 
 # For FSL-only testing (to check the fix)
@@ -20,6 +20,19 @@ git checkout docker-container-updates
 
 # For build without testing (faster)
 ./server_build_test.sh no-test
+
+# For help and options
+./server_build_test.sh help
+```
+
+### 3. Set Custom Singularity Location (Optional)
+```bash
+# Set custom location for .sif file
+export MICAPIPE_SIF_PATH="/your/custom/path"
+./server_build_test.sh
+
+# Or inline
+MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
 ```
 
 ### 3. Alternative Build Options
@@ -131,10 +144,38 @@ The container includes these updated versions:
 
 ## Converting to Singularity
 
-After successful Docker build:
+The server build script automatically creates a Singularity container:
+
+### Automatic Conversion (Default)
 ```bash
-# Convert to Singularity container
-singularity build micapipe.sif docker-daemon://micapipe:latest
+# The script automatically creates: /opt/micapipe/micapipe_v1-beta.sif
+./server_build_test.sh
+```
+
+### Custom Location
+```bash
+# Specify custom location for .sif file
+MICAPIPE_SIF_PATH="/data/containers" ./server_build_test.sh
+
+# Creates: /data/containers/micapipe_v1-beta.sif
+```
+
+### Manual Conversion (if needed)
+```bash
+# Only if automatic conversion failed
+singularity build /opt/micapipe/micapipe_v1-beta.sif docker-daemon://micapipe:latest
+```
+
+### Using the Singularity Container
+```bash
+# Interactive session
+singularity shell /opt/micapipe/micapipe_v1-beta.sif
+
+# Run command
+singularity exec /opt/micapipe/micapipe_v1-beta.sif [command]
+
+# With data binding
+singularity exec --bind /data:/data /opt/micapipe/micapipe_v1-beta.sif [command]
 ```
 
 ## Support
