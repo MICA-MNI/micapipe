@@ -415,10 +415,10 @@ def qc_proc_structural(proc_structural_json=''):
     figPath = "%s/nativepro_T1w_brain_5tt_screenshot.png"%(tmpDir)
     _static_block += nifti_check(outName="T1w nativepro 5 tissue segmentation (5TT)", outPath=outPath, refPath=T1w_nativepro, figPath=figPath)
 
-    outPath = "%s/%s_space-MNI152_0.8_T1w_brain.nii.gz"%(tmpDir,sbids)
-    MNI152_0_8mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_0.8mm_brain_mask.nii.gz"
-    figPath = "%s/nativepro_T1w_brain_mni152_08_screenshot.png"%(tmpDir)
-    _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 0.8mm", outPath=MNI152_0_8mm, refPath=outPath, figPath=figPath)
+    outPath = "%s/%s_space-MNI152_1mm_nlinSym_T1w_brain.nii.gz"%(tmpDir,sbids)
+    MNI152_1mm_nlinSym = MICAPIPE + "/MNI152Volumes/mni_icbm152_t1_tal_nlin_sym_09a_mask.nii.gz"
+    figPath = "%s/nativepro_T1w_brain_mni152_1mm_nlinSym_screenshot.png"%(tmpDir)
+    _static_block += nifti_check(outName="Registration: T1w nativepro in MNI152 1mm NLIN SYM 09a", outPath=MNI152_1mm_nlinSym, refPath=outPath, figPath=figPath)
 
     outPath = "%s/%s_space-MNI152_2_T1w_brain.nii.gz"%(tmpDir,sbids)
     MNI152_2mm = MICAPIPE + "/MNI152Volumes/MNI152_T1_2mm_brain_mask.nii.gz"
