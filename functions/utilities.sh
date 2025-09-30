@@ -72,12 +72,12 @@ export idBIDS="${subject}${ses}"
       export T1fast_seg=$subject_dir/parc/${idBIDS}_space-nativepro_T1w_atlas-subcortical.nii.gz
   fi
 
-  # Registration from MNI152 to Native pro
+  # Registration from MNI152 to Native pro - Updated for MNI NLIN SYM 09a
   export T1str_nat=${idBIDS}_space-nativepro_T1w
-  export mat_MNI152_SyN=${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_    # transformation strings nativepro to MNI152_0.8mm
-  export T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_0.8mm
+  export mat_MNI152_SyN=${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_1mm_nlinSym_mode-image_desc-SyN_    # transformation strings nativepro to MNI152_1mm_nlinSym
+  export T1_MNI152_InvWarp=${mat_MNI152_SyN}1InverseWarp.nii.gz                      # Inversewarp - nativepro to MNI152_1mm_nlinSym
   export T1_MNI152_affine=${mat_MNI152_SyN}0GenericAffine.mat
-  export MNI152_mask=${util_MNIvolumes}/MNI152_T1_0.8mm_brain_mask.nii.gz
+  export MNI152_mask=${util_MNIvolumes}/mni_icbm152_t1_tal_nlin_sym_09a_mask.nii.gz
 
   # BIDS Files: resting state
   bids_mainScan=($(ls "${subject_bids}/func/${subject}${ses}"_task-rest_acq-AP_*bold.nii* 2>/dev/null))       # main func scan
@@ -561,17 +561,17 @@ function proc_struct_transformations() {
         \"input\": \"$1\",
         \"reference\": \"$2\",
         \"transformations\": \"-t ${T1_MNI152_Warp} -t ${T1_MNI152_affine}\",
-        \"output\": \"-o from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN.nii.gz\",
+        \"output\": \"-o from-nativepro_brain_to-MNI152_1mm_nlinSym_mode-image_desc-SyN.nii.gz\",
         \"options\": \"-d 3 -v -u int\"
       }
     ],
-    \"from-MNI152_0p8mm_to-t1nativepro\": [
+    \"from-MNI152_1mm_nlinSym_to-t1nativepro\": [
       {
         \"Command\": \"antsApplyTransforms\",
         \"input\": \"$2\",
         \"reference\": \"$1\",
         \"transformations\": \"-t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp}\",
-        \"output\": \"-o from-MNI152_0.8mm_to-nativepro_mode-image_desc-SyN.nii.gz\",
+        \"output\": \"-o from-MNI152_1mm_nlinSym_to-nativepro_mode-image_desc-SyN.nii.gz\",
         \"options\": \"-d 3 -v -u int\"
       }
     ],
@@ -748,7 +748,7 @@ function json_nativepro_mask() {
     \"BinaryMask\": [
       {
         \"BinaryMask_original\": \"$2\",
-        \"BinaryMask_from\": \"MNI152_0.8mm\",
+        \"BinaryMask_from\": \"MNI152_1mm_nlinSym\",
         \"BinaryMask_antsApplyTransforms\": \"$4\"
       }
     ]

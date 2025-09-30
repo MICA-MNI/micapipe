@@ -179,38 +179,52 @@ else
     Info "Subject ${id} has a T1w_nativepro and T1w_nativepro_brain"; ((Nsteps++)); ((N++))
 fi
 
-# Loop over all requested templates.
-# mmTemplates is a fixed value=(0.8 2) of the MNI152 atlas resolution
-for mm in 2 0.8; do
-  # Only runs if the output doesn't exist
-  if [ ! -f "${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_${mm}mm_mode-image_desc-SyN_1Warp.nii.gz" ]; then
-      ((N++))
-      Info "Registration of T1w nativepro to MNI152 ${mm}mm"
-      # ---------------------------------------------------------
-      # MNI152 brain templates
-      MNI152_brain="${util_MNIvolumes}/MNI152_T1_${mm}mm_brain.nii.gz"
-      # T1 to MNI152 transformation matrix and warp field names
-      str_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_${mm}mm_mode-image_desc-SyN_"
-      # ANTs - 3 steps registration: rigid, affine and SyN
-      Do_cmd antsRegistrationSyN.sh -d 3 -f "$MNI152_brain" -m "$T1nativepro_brain" -o "$str_MNI152_SyN" -t s -n "$threads"
-      ((Nsteps++))
-  else
-      Info "Subject $id has nativepro_T1w on MNI152 space"; ((Nsteps++)); ((N++))
-  fi
-done
+# Registration to MNI NLIN SYM 09a 1mm template for LAMAReg compatibility
+# Only runs if the output doesn't exist
+if [ ! -f "${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_1mm_nlinSym_mode-image_desc-SyN_1Warp.nii.gz" ]; then
+    ((N++))
+    Info "Registration of T1w nativepro to MNI NLIN SYM 09a 1mm (mni_icbm152_t1_tal_nlin_sym_09a)"
+    # ---------------------------------------------------------
+    # MNI NLIN SYM 09a brain template
+    MNI152_brain="${util_MNIvolumes}/mni_icbm152_t1_tal_nlin_sym_09a_brain.nii.gz"
+    # T1 to MNI152 transformation matrix and warp field names
+    str_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_1mm_nlinSym_mode-image_desc-SyN_"
+    # ANTs - 3 steps registration: rigid, affine and SyN
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$MNI152_brain" -m "$T1nativepro_brain" -o "$str_MNI152_SyN" -t s -n "$threads"
+    ((Nsteps++))
+else
+    Info "Subject $id has nativepro_T1w on MNI152 NLIN SYM 09a space"; ((Nsteps++)); ((N++))
+fi
 
-# Variables
-mat_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_0.8mm_mode-image_desc-SyN_"    # transformation strings nativepro to MNI152_0.8mm
-T1_MNI152_InvWarp="${mat_MNI152_SyN}1InverseWarp.nii.gz"                      # Inversewarp - nativepro to MNI152_0.8mm
-T1_MNI152_Warp="${mat_MNI152_SyN}1Warp.nii.gz"                      # Inversewarp - nativepro to MNI152_0.8mm
-T1_MNI152_affine="${mat_MNI152_SyN}0GenericAffine.mat"                        # Affine matrix - nativepro to MNI152_0.8mm
-MNI152_2mm="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
-MNI152_08mm="${util_MNIvolumes}/MNI152_T1_0.8mm_brain.nii.gz"
+# Legacy registration to MNI152 2mm for backward compatibility (if needed)
+# Only runs if the output doesn't exist
+if [ ! -f "${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_1Warp.nii.gz" ]; then
+    ((N++))
+    Info "Registration of T1w nativepro to MNI152 2mm (legacy)"
+    # ---------------------------------------------------------
+    # MNI152 brain templates
+    MNI152_brain_2mm="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"
+    # T1 to MNI152 transformation matrix and warp field names
+    str_MNI152_SyN_2mm="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_2mm_mode-image_desc-SyN_"
+    # ANTs - 3 steps registration: rigid, affine and SyN
+    Do_cmd antsRegistrationSyN.sh -d 3 -f "$MNI152_brain_2mm" -m "$T1nativepro_brain" -o "$str_MNI152_SyN_2mm" -t s -n "$threads"
+    ((Nsteps++))
+else
+    Info "Subject $id has nativepro_T1w on MNI152 2mm space"; ((Nsteps++)); ((N++))
+fi
+
+# Variables - Updated to use MNI NLIN SYM 09a 1mm atlas for LAMAReg compatibility
+mat_MNI152_SyN="${dir_warp}/${idBIDS}_from-nativepro_brain_to-MNI152_1mm_nlinSym_mode-image_desc-SyN_"    # transformation strings nativepro to MNI152_1mm_nlinSym
+T1_MNI152_InvWarp="${mat_MNI152_SyN}1InverseWarp.nii.gz"                      # Inversewarp - nativepro to MNI152_1mm_nlinSym
+T1_MNI152_Warp="${mat_MNI152_SyN}1Warp.nii.gz"                      # Warp - nativepro to MNI152_1mm_nlinSym
+T1_MNI152_affine="${mat_MNI152_SyN}0GenericAffine.mat"                        # Affine matrix - nativepro to MNI152_1mm_nlinSym
+MNI152_2mm="${util_MNIvolumes}/MNI152_T1_2mm_brain.nii.gz"                   # Legacy 2mm template for backward compatibility
+MNI152_1mm_nlinSym="${util_MNIvolumes}/mni_icbm152_t1_tal_nlin_sym_09a_brain.nii.gz"  # New primary template
 MNI151_to_T1nativepro="-t [${T1_MNI152_affine},1] -t ${T1_MNI152_InvWarp}"
 T1nativepro_to_MNI152="-t ${T1_MNI152_Warp} -t ${T1_MNI152_affine}"
 
-# Save transformations in json file
-proc_struct_transformations "$T1nativepro_brain" "${MNI152_08mm}" "${MNI152_2mm}" "${dir_warp}/${idBIDS}_transformations-proc_structural.json" '${T1nativepro_to_MNI152}' '${MNI151_to_T1nativepro}'
+# Save transformations in json file - Updated for MNI NLIN SYM 09a
+proc_struct_transformations "$T1nativepro_brain" "${MNI152_1mm_nlinSym}" "${MNI152_2mm}" "${dir_warp}/${idBIDS}_transformations-proc_structural.json" '${T1nativepro_to_MNI152}' '${MNI151_to_T1nativepro}'
 
 # Update the T1native mask and T1native_brain
 T1nativepro_maskjson="${proc_struct}/${idBIDS}_space-nativepro_T1w_brain_mask.json"
@@ -267,7 +281,7 @@ else
 fi
 
 #------------------------------------------------------------------------------#
-# Cerebellar parcellation from MNI152_0.8mm to T1-Nativepro
+# Cerebellar parcellation from MNI152_0.8mm to T1-Nativepro (using legacy atlas until cerebellum available for MNI NLIN SYM 09a)
 Info "Cerebellum parcellation to T1-nativepro Volume"
 atlas_cerebellum="${util_MNIvolumes}/MNI152_T1_0.8mm_cerebellum.nii.gz"       # cerebellar lobules atlas
 T1_seg_cerebellum="${dir_volum}/${T1str_atlas}-cerebellum.nii.gz"             # Cerebellar output
