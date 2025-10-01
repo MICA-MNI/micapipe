@@ -19,6 +19,8 @@ ARG ENABLE_CUDA=false
 ARG MICAPIPE_CACHE_DIR=""
 # Downloads directory for pre-downloaded dependencies
 ARG DOWNLOADS_DIR=""
+# Custom temporary directory for build operations
+ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
@@ -87,16 +89,17 @@ RUN apt-get update -qq \
            zlib1g-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && git clone https://github.com/rordenlab/dcm2niix /tmp/dcm2niix \
-    && cd /tmp/dcm2niix \
+    && mkdir -p ${CUSTOM_TMPDIR}/dcm2niix \
+    && git clone https://github.com/rordenlab/dcm2niix ${CUSTOM_TMPDIR}/dcm2niix \
+    && cd ${CUSTOM_TMPDIR}/dcm2niix \
     && git fetch --tags \
     && git checkout v1.0.20190902 \
-    && mkdir /tmp/dcm2niix/build \
-    && cd /tmp/dcm2niix/build \
+    && mkdir ${CUSTOM_TMPDIR}/dcm2niix/build \
+    && cd ${CUSTOM_TMPDIR}/dcm2niix/build \
     && cmake  -DCMAKE_INSTALL_PREFIX:PATH=/opt/dcm2niix-v1.0.20190902 .. \
     && make \
     && make install \
-    && rm -rf /tmp/dcm2niix
+    && rm -rf ${CUSTOM_TMPDIR}/dcm2niix
 
 ENV FSLDIR="/opt/fsl-6.0.2" \
     PATH="/opt/fsl-6.0.2/bin:$PATH" \
@@ -132,7 +135,9 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Installing FSL 6.0.2..." \
     && mkdir -p /opt/fsl-6.0.2 \
-    && export TMPDIR="$(mktemp -d)" \
+    && mkdir -p ${CUSTOM_TMPDIR} \
+    && export TMPDIR="${CUSTOM_TMPDIR}/fsl_install_$$" \
+    && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
     && export FSL_CACHE="$CACHE_DIR/fsl-6.0.2-centos6_64.tar.gz" \
@@ -198,7 +203,9 @@ RUN apt-get update -qq \
 # Download and extract FreeSurfer with local cache support
 RUN echo "Installing FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
-    && export TMPDIR="$(mktemp -d)" \
+    && mkdir -p ${CUSTOM_TMPDIR} \
+    && export TMPDIR="${CUSTOM_TMPDIR}/freesurfer_install_$$" \
+    && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
     && export FREESURFER_CACHE="$CACHE_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" \
@@ -269,7 +276,9 @@ RUN echo "Installing FreeSurfer 7.4.1..." \
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
     MATLABCMD="/opt/matlabmcr-2017b/v93/toolbox/matlab"
-RUN export TMPDIR="$(mktemp -d)" \
+RUN mkdir -p ${CUSTOM_TMPDIR} \
+    && export TMPDIR="${CUSTOM_TMPDIR}/mcr_install_$$" \
+    && mkdir -p "$TMPDIR" \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc \
@@ -284,8 +293,7 @@ RUN export TMPDIR="$(mktemp -d)" \
     && curl -fsSL --retry 5 -o "$TMPDIR/mcr.zip" https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip \
     && unzip -q "$TMPDIR/mcr.zip" -d "$TMPDIR/mcrtmp" \
     && "$TMPDIR/mcrtmp/install" -destinationFolder /opt/matlabmcr-2017b -mode silent -agreeToLicense yes \
-    && rm -rf "$TMPDIR" \
-    && unset TMPDIR
+    && rm -rf "$TMPDIR"
 
 ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
@@ -305,12 +313,13 @@ RUN apt-get update -qq \
            xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://launchpadlibrarian.net/160108232/libxp6_1.0.2-1ubuntu1_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
+    && mkdir -p ${CUSTOM_TMPDIR} \
+    && curl -sSL --retry 5 -o ${CUSTOM_TMPDIR}/toinstall.deb http://launchpadlibrarian.net/160108232/libxp6_1.0.2-1ubuntu1_amd64.deb \
+    && dpkg -i ${CUSTOM_TMPDIR}/toinstall.deb \
+    && rm ${CUSTOM_TMPDIR}/toinstall.deb \
+    && curl -sSL --retry 5 -o ${CUSTOM_TMPDIR}/toinstall.deb http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
+    && dpkg -i ${CUSTOM_TMPDIR}/toinstall.deb \
+    && rm ${CUSTOM_TMPDIR}/toinstall.deb \
     && apt-get install -f \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -467,7 +476,8 @@ ENV CONDA_DIR="/opt/miniconda-22.11.1" \
 # Install Miniconda & Mamba and create environment
 RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
-    && conda_installer="/tmp/miniconda.sh" \
+    && mkdir -p ${CUSTOM_TMPDIR} \
+    && conda_installer="${CUSTOM_TMPDIR}/miniconda.sh" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh \
     && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
     && rm -f "$conda_installer" \

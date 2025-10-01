@@ -70,6 +70,9 @@ Options:
 
 # Use both cache and downloads (cache takes priority)
 ./build_container.sh --cache-dir /cache --downloads-dir ./downloads
+
+# Use custom temporary directory for build operations
+./build_container.sh --custom-tmpdir /path/to/custom/temp --downloads-dir ./downloads
 ```
 
 ## Benefits of Pre-Downloading

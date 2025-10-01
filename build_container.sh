@@ -18,6 +18,7 @@ ENABLE_CUDA=false
 SINGULARITY_PATH="/data_/mica1/01_programs/singularity"
 CACHE_DIR="/data_/mica1/01_programs/micapipe_cache"
 DOWNLOADS_DIR=""
+CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 FALLBACK_PATH="$HOME"
 NO_CACHE=false
 
@@ -45,13 +46,18 @@ while [[ $# -gt 0 ]]; do
             DOWNLOADS_DIR="$2"
             shift 2
             ;;
+        --custom-tmpdir)
+            CUSTOM_TMPDIR="$2"
+            shift 2
+            ;;
         --help|-h)
-            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH] [--cache-dir PATH] [--downloads-dir PATH]"
+            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH] [--cache-dir PATH] [--downloads-dir PATH] [--custom-tmpdir PATH]"
             echo "  --cuda                Enable CUDA support"
             echo "  --no-cache            Build without Docker cache"
             echo "  --singularity-path    Custom path for .sif output (default: /data_/mica1/01_programs/singularity)"
             echo "  --cache-dir           Path to dependency cache (default: /data_/mica1/01_programs/micapipe_cache)"
             echo "  --downloads-dir       Path to pre-downloaded dependencies (use after running download_dependencies.sh)"
+            echo "  --custom-tmpdir       Custom temporary directory for build operations (default: /host/cassio/export03/data/enning)"
             exit 0
             ;;
         *)
@@ -177,6 +183,7 @@ LOG_FILE="build_logs/container_build_$(date +%Y%m%d_%H%M%S).log"
 echo "   CUDA enabled: $ENABLE_CUDA"
 echo "   No cache: $NO_CACHE"
 echo "   Output path: $OUTPUT_PATH"
+echo "   Custom tmpdir: $CUSTOM_TMPDIR"
 echo "   Log file: $LOG_FILE"
 
 # Test network
@@ -199,6 +206,9 @@ if [[ -n "$AVAILABLE_MEM" ]] && [[ "$AVAILABLE_MEM" -ge 8 ]]; then
 fi
 
 DOCKER_CMD="$DOCKER_CMD --build-arg ENABLE_CUDA=$ENABLE_CUDA"
+
+# Add custom tmpdir build argument
+DOCKER_CMD="$DOCKER_CMD --build-arg CUSTOM_TMPDIR=$CUSTOM_TMPDIR"
 
 # Add cache mount if available
 if [[ -n "$DOCKER_CACHE_ARGS" ]]; then
