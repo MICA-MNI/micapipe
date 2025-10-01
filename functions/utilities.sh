@@ -95,7 +95,8 @@ export idBIDS="${subject}${ses}"
 
   # BIDS Files
   bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
-  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_*dwi.nii* 2>/dev/null))
+  bids_dwis=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_dwi.nii* 2>/dev/null))
+  bids_dwis_phase=($(ls "${subject_bids}/dwi/${subject}${ses}"*_dir-AP_part-phase_dwi.nii* 2>/dev/null))
   bids_T1map=$(ls "$subject_bids"/anat/*mp2rage*T1map.nii* 2>/dev/null)
   bids_inv1=$(ls "$subject_bids"/anat/*inv1*T1map.nii* 2>/dev/null)
   bids_inv2=$(ls "$subject_bids"/anat/*inv2*T1map.nii* 2>/dev/null)
@@ -185,7 +186,12 @@ bids_print.variables-dwi() {
   # This functions prints BIDS variables names and files if found
   Info "Variables for DWI processing"
   Note "proc_dwi dir    :" "$proc_dwi"
-  Note "bids_dwis       :" "N-${#bids_dwis[@]}, $bids_dwis"
+  for i in "${!bids_dwis[@]}"; do
+    file.exist "bids_dwis $[$i+1]/${#bids_dwis[@]}       :" ${bids_dwis[i]}
+  done
+  for i in "${!bids_dwis_phase[@]}"; do
+    file.exist "bids_dwis_phase $[$i+1]/${#bids_dwis[@]} :" ${bids_dwis_phase[i]}
+  done
   Note "dwi_reverse     :" "N-${#dwi_reverse[@]}, $dwi_reverse"
 
   Note "T1 nativepro    :" "$(find "$T1nativepro" 2>/dev/null)"
@@ -261,6 +267,7 @@ bids_variables_unset() {
   unset icafixTraining
   unset bids_T1ws
   unset bids_dwis
+  unset bids_dwis_phase
   unset bids_T1map
   unset bids_inv1
   unset dwi_reverse
