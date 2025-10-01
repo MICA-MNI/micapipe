@@ -233,31 +233,41 @@ if [[ "$VERIFY_ONLY" == "false" ]]; then
 fi
 
 # Process FSL
+FSL_SUCCESS=true
 if [[ "$DOWNLOAD_FSL" == "true" ]]; then
-    process_dependency "FSL 6.0.2" "$FSL_URL" "$FSL_FILENAME" "$FSL_MIN_SIZE"
+    process_dependency "FSL 6.0.2" "$FSL_URL" "$FSL_FILENAME" "$FSL_MIN_SIZE" || FSL_SUCCESS=false
 fi
 
 # Process FreeSurfer
+FREESURFER_SUCCESS=true
 if [[ "$DOWNLOAD_FREESURFER" == "true" ]]; then
-    process_dependency "FreeSurfer 7.4.1" "$FREESURFER_URL" "$FREESURFER_FILENAME" "$FREESURFER_MIN_SIZE"
+    process_dependency "FreeSurfer 7.4.1" "$FREESURFER_URL" "$FREESURFER_FILENAME" "$FREESURFER_MIN_SIZE" || FREESURFER_SUCCESS=false
 fi
 
 # Summary
 echo "📋 Download Summary"
 echo "=================="
+echo "📁 Directory: $DOWNLOAD_DIR"
 if [[ -d "$DOWNLOAD_DIR" ]]; then
-    echo "📁 Directory: $DOWNLOAD_DIR"
-    echo "📊 Total size: $(du -sh "$DOWNLOAD_DIR" 2>/dev/null | cut -f1 || echo "Unknown")"
-    echo ""
-    echo "Files:"
-    if [[ "$DOWNLOAD_FSL" == "true" && -f "$DOWNLOAD_DIR/$FSL_FILENAME" ]]; then
-        verify_file "$DOWNLOAD_DIR/$FSL_FILENAME" "$FSL_MIN_SIZE"
-    fi
-    if [[ "$DOWNLOAD_FREESURFER" == "true" && -f "$DOWNLOAD_DIR/$FREESURFER_FILENAME" ]]; then
-        verify_file "$DOWNLOAD_DIR/$FREESURFER_FILENAME" "$FREESURFER_MIN_SIZE"
-    fi
+    echo "📊 Total size: $(du -sh "$DOWNLOAD_DIR" 2>/dev/null | cut -f1 || echo "0B")"
 else
-    echo "❌ Download directory not found"
+    echo "📊 Total size: Directory does not exist"
+fi
+echo ""
+echo "Files:"
+if [[ "$DOWNLOAD_FSL" == "true" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$FSL_FILENAME" ]]; then
+        verify_file "$DOWNLOAD_DIR/$FSL_FILENAME" "$FSL_MIN_SIZE" || true
+    else
+        echo "❌ $FSL_FILENAME: Not downloaded"
+    fi
+fi
+if [[ "$DOWNLOAD_FREESURFER" == "true" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$FREESURFER_FILENAME" ]]; then
+        verify_file "$DOWNLOAD_DIR/$FREESURFER_FILENAME" "$FREESURFER_MIN_SIZE" || true
+    else
+        echo "❌ $FREESURFER_FILENAME: Not downloaded"
+    fi
 fi
 
 echo ""
@@ -266,3 +276,10 @@ echo "   1. Use these files in your Dockerfile by copying them to the container"
 echo "   2. Or mount the directory during docker build:"
 echo "      docker build --build-arg DOWNLOADS_DIR=/path/to/downloads ."
 echo "   3. Update your build_container.sh to use: --downloads-dir $DOWNLOAD_DIR"
+
+# Exit with error if verification mode and any files failed
+if [[ "$VERIFY_ONLY" == "true" ]]; then
+    if [[ "$DOWNLOAD_FSL" == "true" && "$FSL_SUCCESS" == "false" ]] || [[ "$DOWNLOAD_FREESURFER" == "true" && "$FREESURFER_SUCCESS" == "false" ]]; then
+        exit 1
+    fi
+fi
