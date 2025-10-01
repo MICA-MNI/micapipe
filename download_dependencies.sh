@@ -8,7 +8,7 @@
 set -e
 
 # Default configuration
-DOWNLOAD_DIR="./downloads"
+DOWNLOAD_DIR="/host/cassio/export03/data/enning/downloads"
 FSL_URL="https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz"
 FREESURFER_URL="ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
 FSL_FILENAME="fsl-6.0.2-centos6_64.tar.gz"
@@ -53,7 +53,7 @@ while [[ $# -gt 0 ]]; do
             echo "Downloads FSL and FreeSurfer dependencies for MICApipe container builds"
             echo ""
             echo "Options:"
-            echo "  --download-dir DIR    Directory to download files (default: ./downloads)"
+            echo "  --download-dir DIR    Directory to download files (default: /host/cassio/export03/data/enning/downloads)"
             echo "  --fsl-only           Download only FSL"
             echo "  --freesurfer-only    Download only FreeSurfer"
             echo "  --force              Force re-download even if files exist"
@@ -61,8 +61,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help message"
             echo ""
             echo "Examples:"
-            echo "  $0                                    # Download both FSL and FreeSurfer"
-            echo "  $0 --download-dir /data/micapipe     # Use custom directory"
+            echo "  $0                                    # Download both FSL and FreeSurfer to server location"
+            echo "  $0 --download-dir ./downloads         # Use local directory instead"
             echo "  $0 --fsl-only                        # Download only FSL"
             echo "  $0 --verify                          # Check existing downloads"
             echo "  $0 --force                           # Re-download all files"
@@ -78,6 +78,15 @@ done
 
 echo "🔽 MICApipe Dependencies Downloader"
 echo "===================================="
+
+# Check if default server directory is accessible, fallback to local if not
+if [[ "$DOWNLOAD_DIR" == "/host/cassio/export03/data/enning/downloads" ]]; then
+    if [[ ! -d "/host/cassio/export03/data/enning" ]] || [[ ! -w "/host/cassio/export03/data/enning" ]]; then
+        echo "⚠️  Server directory not accessible, using local fallback"
+        DOWNLOAD_DIR="./downloads"
+    fi
+fi
+
 echo "📁 Download directory: $DOWNLOAD_DIR"
 echo ""
 

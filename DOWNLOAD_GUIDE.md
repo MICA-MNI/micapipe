@@ -1,4 +1,16 @@
-# MICApipe Dependencies Pre-Download Guide
+# MICApipe Dependencies Pre-### Download Script Options
+
+```bash
+./download_dependencies.sh [OPTIONS]
+
+Options:
+  --download-dir DIR    Directory to download files (default: /host/cassio/export03/data/enning/downloads)
+  --fsl-only           Download only FSL
+  --freesurfer-only    Download only FreeSurfer
+  --force              Force re-download even if files exist
+  --verify             Only verify existing files, don't download
+  --help, -h           Show this help message
+```e
 
 This guide explains how to use the separate download script to pre-download FSL and FreeSurfer before building the Docker container.
 
@@ -7,21 +19,21 @@ This guide explains how to use the separate download script to pre-download FSL 
 ### 1. Download Dependencies First
 
 ```bash
-# Download both FSL and FreeSurfer to ./downloads directory
+# Download both FSL and FreeSurfer to server location
 ./download_dependencies.sh
 
-# Or specify custom directory
-./download_dependencies.sh --download-dir /path/to/your/downloads
+# Or specify local directory for testing
+./download_dependencies.sh --download-dir ./downloads
 ```
 
 ### 2. Build Container Using Pre-Downloaded Files
 
 ```bash
-# Build using the downloaded files
-./build_container.sh --downloads-dir ./downloads
+# Build using the server-downloaded files (default location)
+./build_container.sh --downloads-dir /host/cassio/export03/data/enning/downloads
 
-# Or with custom path
-./build_container.sh --downloads-dir /path/to/your/downloads
+# Or build using local downloads
+./build_container.sh --downloads-dir ./downloads
 ```
 
 ## Detailed Usage
@@ -43,6 +55,9 @@ Options:
 ### Examples
 
 ```bash
+# Download both FSL and FreeSurfer to server location (default)
+./download_dependencies.sh
+
 # Download only FSL (faster, ~600MB)
 ./download_dependencies.sh --fsl-only
 
@@ -55,7 +70,10 @@ Options:
 # Verify existing downloads
 ./download_dependencies.sh --verify
 
-# Use server cache directory
+# Use local directory instead of server location
+./download_dependencies.sh --download-dir ./downloads
+
+# Use custom server directory
 ./download_dependencies.sh --download-dir /data_/mica1/01_programs/micapipe_downloads
 ```
 

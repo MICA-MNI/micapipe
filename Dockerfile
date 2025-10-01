@@ -89,7 +89,9 @@ RUN apt-get update -qq \
            zlib1g-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p ${CUSTOM_TMPDIR}/dcm2niix \
+    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR}/dcm2niix || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp" && mkdir -p /tmp/dcm2niix) \
+    && echo "Using temporary directory: ${CUSTOM_TMPDIR}/dcm2niix" \
     && git clone https://github.com/rordenlab/dcm2niix ${CUSTOM_TMPDIR}/dcm2niix \
     && cd ${CUSTOM_TMPDIR}/dcm2niix \
     && git fetch --tags \
@@ -135,8 +137,10 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Installing FSL 6.0.2..." \
     && mkdir -p /opt/fsl-6.0.2 \
-    && mkdir -p ${CUSTOM_TMPDIR} \
+    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
     && export TMPDIR="${CUSTOM_TMPDIR}/fsl_install_$$" \
+    && echo "Using temporary directory: $TMPDIR" \
     && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
@@ -203,8 +207,10 @@ RUN apt-get update -qq \
 # Download and extract FreeSurfer with local cache support
 RUN echo "Installing FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
-    && mkdir -p ${CUSTOM_TMPDIR} \
+    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
     && export TMPDIR="${CUSTOM_TMPDIR}/freesurfer_install_$$" \
+    && echo "Using temporary directory: $TMPDIR" \
     && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
@@ -276,8 +282,10 @@ RUN echo "Installing FreeSurfer 7.4.1..." \
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
     MATLABCMD="/opt/matlabmcr-2017b/v93/toolbox/matlab"
-RUN mkdir -p ${CUSTOM_TMPDIR} \
+RUN echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
     && export TMPDIR="${CUSTOM_TMPDIR}/mcr_install_$$" \
+    && echo "Using temporary directory: $TMPDIR" \
     && mkdir -p "$TMPDIR" \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -313,7 +321,9 @@ RUN apt-get update -qq \
            xvfb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p ${CUSTOM_TMPDIR} \
+    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
+    && echo "Using temporary directory: ${CUSTOM_TMPDIR}" \
     && curl -sSL --retry 5 -o ${CUSTOM_TMPDIR}/toinstall.deb http://launchpadlibrarian.net/160108232/libxp6_1.0.2-1ubuntu1_amd64.deb \
     && dpkg -i ${CUSTOM_TMPDIR}/toinstall.deb \
     && rm ${CUSTOM_TMPDIR}/toinstall.deb \
@@ -476,8 +486,10 @@ ENV CONDA_DIR="/opt/miniconda-22.11.1" \
 # Install Miniconda & Mamba and create environment
 RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
-    && mkdir -p ${CUSTOM_TMPDIR} \
+    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
+    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
     && conda_installer="${CUSTOM_TMPDIR}/miniconda.sh" \
+    && echo "Using temporary file: $conda_installer" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh \
     && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
     && rm -f "$conda_installer" \
