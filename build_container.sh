@@ -16,6 +16,8 @@ fi
 # Parse command line arguments
 ENABLE_CUDA=false
 SINGULARITY_PATH="/data_/mica1/01_programs/singularity"
+CACHE_DIR="/data_/mica1/01_programs/micapipe_cache"
+DOWNLOADS_DIR=""
 FALLBACK_PATH="$HOME"
 NO_CACHE=false
 
@@ -35,11 +37,21 @@ while [[ $# -gt 0 ]]; do
             SINGULARITY_PATH="$2"
             shift 2
             ;;
+        --cache-dir)
+            CACHE_DIR="$2"
+            shift 2
+            ;;
+        --downloads-dir)
+            DOWNLOADS_DIR="$2"
+            shift 2
+            ;;
         --help|-h)
-            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH]"
+            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH] [--cache-dir PATH] [--downloads-dir PATH]"
             echo "  --cuda                Enable CUDA support"
             echo "  --no-cache            Build without Docker cache"
             echo "  --singularity-path    Custom path for .sif output (default: /data_/mica1/01_programs/singularity)"
+            echo "  --cache-dir           Path to dependency cache (default: /data_/mica1/01_programs/micapipe_cache)"
+            echo "  --downloads-dir       Path to pre-downloaded dependencies (use after running download_dependencies.sh)"
             exit 0
             ;;
         *)
@@ -126,6 +138,38 @@ fi
 export DOCKER_CONTENT_TRUST=0
 export BUILDKIT_PROGRESS=plain
 
+# Ensure cache directory exists if specified and accessible
+if [[ "$NO_CACHE" == "false" ]]; then
+    if [[ -d "$CACHE_DIR" && -w "$CACHE_DIR" ]]; then
+        echo "📦 Using cache directory: $CACHE_DIR"
+        DOCKER_CACHE_ARGS="-v $CACHE_DIR:/cache"
+        # Ensure cache script is available
+        if [[ -f "./cache_dependencies.sh" ]]; then
+            echo "🔧 Running cache setup..."
+            chmod +x ./cache_dependencies.sh
+            ./cache_dependencies.sh
+        fi
+    else
+        echo "⚠️  Cache directory not accessible: $CACHE_DIR"
+        echo "📂 Building without cache mount"
+        DOCKER_CACHE_ARGS=""
+    fi
+else
+    DOCKER_CACHE_ARGS=""
+fi
+
+# Ensure downloads directory exists if specified and accessible
+DOCKER_DOWNLOADS_ARGS=""
+if [[ -n "$DOWNLOADS_DIR" ]]; then
+    if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
+        echo "📦 Using downloads directory: $DOWNLOADS_DIR"
+        DOCKER_DOWNLOADS_ARGS="-v $DOWNLOADS_DIR:/downloads"
+    else
+        echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
+        echo "📂 Building without downloads mount"
+    fi
+fi
+
 # Create log directory
 mkdir -p build_logs
 LOG_FILE="build_logs/container_build_$(date +%Y%m%d_%H%M%S).log"
@@ -155,6 +199,22 @@ if [[ -n "$AVAILABLE_MEM" ]] && [[ "$AVAILABLE_MEM" -ge 8 ]]; then
 fi
 
 DOCKER_CMD="$DOCKER_CMD --build-arg ENABLE_CUDA=$ENABLE_CUDA"
+
+# Add cache mount if available
+if [[ -n "$DOCKER_CACHE_ARGS" ]]; then
+    DOCKER_CMD="$DOCKER_CMD $DOCKER_CACHE_ARGS --build-arg MICAPIPE_CACHE_DIR=/cache"
+    echo "   Cache: Enabled"
+else
+    echo "   Cache: Disabled"
+fi
+
+# Add downloads mount if available
+if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
+    DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS --build-arg DOWNLOADS_DIR=/downloads"
+    echo "   Pre-downloads: Enabled"
+else
+    echo "   Pre-downloads: Disabled"
+fi
 
 if [[ "$NO_CACHE" == "true" ]]; then
     DOCKER_CMD="$DOCKER_CMD --no-cache"

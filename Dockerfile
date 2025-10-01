@@ -15,6 +15,10 @@ USER root
 ARG DEBIAN_FRONTEND="noninteractive"
 # CUDA build argument - defaults to false to preserve current behavior
 ARG ENABLE_CUDA=false
+# Cache directory for large dependencies
+ARG MICAPIPE_CACHE_DIR=""
+# Downloads directory for pre-downloaded dependencies
+ARG DOWNLOADS_DIR=""
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
@@ -126,44 +130,43 @@ RUN apt-get update -qq \
            wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading FSL ..." \
+    && echo "Installing FSL 6.0.2..." \
     && mkdir -p /opt/fsl-6.0.2 \
     && export TMPDIR="$(mktemp -d)" \
-    && ( \
-        # Try primary FSL download URL - download to temp file first to reduce memory usage
-        echo "Downloading FSL to temporary file..." && \
-        curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
-             -o "$TMPDIR/fsl.tar.gz" \
+    && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
+    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
+    && export FSL_CACHE="$CACHE_DIR/fsl-6.0.2-centos6_64.tar.gz" \
+    && export FSL_DOWNLOAD="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" \
+    && if [ -f "$FSL_CACHE" ] && [ $(stat -c%s "$FSL_CACHE") -gt 500000000 ]; then \
+        echo "📦 Using cached FSL from $FSL_CACHE ($(du -h "$FSL_CACHE" | cut -f1))"; \
+        cp "$FSL_CACHE" "$TMPDIR/fsl.tar.gz"; \
+    elif [ -f "$FSL_DOWNLOAD" ] && [ $(stat -c%s "$FSL_DOWNLOAD") -gt 500000000 ]; then \
+        echo "📦 Using pre-downloaded FSL from $FSL_DOWNLOAD ($(du -h "$FSL_DOWNLOAD" | cut -f1))"; \
+        cp "$FSL_DOWNLOAD" "$TMPDIR/fsl.tar.gz"; \
+    else \
+        echo "⬇️  Downloading FSL (no cached/pre-downloaded file available)..."; \
+        cd "$TMPDIR" && \
+        (curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
+             -o fsl.tar.gz \
              https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
-        && echo "Extracting FSL (this may take several minutes)..." \
-        && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
-        && rm -f "$TMPDIR/fsl.tar.gz" \
-        || \
-        # Try alternative download with wget if curl fails
-        ( echo "Curl failed, trying wget..." && \
-          rm -f "$TMPDIR/fsl.tar.gz" && \
-          wget --retry-connrefused --waitretry=10 --read-timeout=60 --timeout=60 --tries=5 \
-               -O "$TMPDIR/fsl.tar.gz" \
+        || wget --retry-connrefused --waitretry=10 --read-timeout=60 --timeout=60 --tries=5 \
+               -O fsl.tar.gz \
                https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
-          && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
-          && rm -f "$TMPDIR/fsl.tar.gz" ) \
-        || \
-        # Try mirror URL if both fail
-        ( echo "Primary URLs failed, trying NITRC mirror..." && \
-          rm -f "$TMPDIR/fsl.tar.gz" && \
-          curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
-               -o "$TMPDIR/fsl.tar.gz" \
+        || curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
+               -o fsl.tar.gz \
                https://www.nitrc.org/frs/download.php/11344/fsl-6.0.2-centos6_64.tar.gz \
-          && tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1 \
-          && rm -f "$TMPDIR/fsl.tar.gz" ) \
-        || \
-        # Final fallback - create minimal FSL structure and continue
-        ( echo "All FSL downloads failed, creating minimal structure..." && \
-          mkdir -p /opt/fsl-6.0.2/bin /opt/fsl-6.0.2/etc/fslconf && \
-          echo "#!/bin/bash" > /opt/fsl-6.0.2/etc/fslconf/fsl.sh && \
-          echo "export FSLDIR=/opt/fsl-6.0.2" >> /opt/fsl-6.0.2/etc/fslconf/fsl.sh && \
-          echo "FSL installation failed - container will continue without FSL" ) \
-    ) \
+        || (echo "All FSL downloads failed, creating minimal structure..." && \
+            mkdir -p /opt/fsl-6.0.2/bin /opt/fsl-6.0.2/etc/fslconf && \
+            echo "#!/bin/bash" > /opt/fsl-6.0.2/etc/fslconf/fsl.sh && \
+            echo "export FSLDIR=/opt/fsl-6.0.2" >> /opt/fsl-6.0.2/etc/fslconf/fsl.sh && \
+            echo "FSL installation failed - container will continue without FSL" && \
+            exit 0)); \
+    fi \
+    && if [ -f "$TMPDIR/fsl.tar.gz" ]; then \
+        echo "📂 Extracting FSL..."; \
+        tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1; \
+        echo "✅ FSL installation completed"; \
+    fi \
     && rm -rf "$TMPDIR" \
     && sed -i '$iecho Some packages in this Docker container are non-free' $ND_ENTRYPOINT \
     && sed -i '$iecho If you are considering commercial use of this container, please consult the relevant license:' $ND_ENTRYPOINT \
@@ -192,42 +195,53 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and extract FreeSurfer with robust validation
-RUN echo "Downloading FreeSurfer 7.4.1..." \
+# Download and extract FreeSurfer with local cache support
+RUN echo "Installing FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
     && export TMPDIR="$(mktemp -d)" \
-    && cd "$TMPDIR" \
+    && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
+    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
+    && export FREESURFER_CACHE="$CACHE_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" \
+    && export FREESURFER_DOWNLOAD="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" \
     && DOWNLOAD_SUCCESS=false \
-    && echo "Trying primary FTP server..." \
-    && (timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
-        ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-        -o freesurfer.tar.gz \
-        && echo "FTP download completed, checking file integrity..." \
-        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
-        && DOWNLOAD_SUCCESS=true \
-        && echo "FTP download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
-    || (echo "FTP failed or incomplete, trying wget..." && \
-        rm -f freesurfer.tar.gz && \
-        timeout 900 wget --timeout=120 --tries=2 --retry-connrefused --waitretry=30 \
-           ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-           -O freesurfer.tar.gz \
-        && echo "wget download completed, checking file integrity..." \
-        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
-        && DOWNLOAD_SUCCESS=true \
-        && echo "wget download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
-    || (echo "FTP methods failed, trying HTTPS mirror..." && \
-        rm -f freesurfer.tar.gz && \
-        timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
-           https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
-           -o freesurfer.tar.gz \
-        && echo "HTTPS download completed, checking file integrity..." \
-        && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 1000000000 ] \
-        && DOWNLOAD_SUCCESS=true \
-        && echo "HTTPS download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
-    || (echo "All FreeSurfer download attempts failed") \
-    && if [ "$DOWNLOAD_SUCCESS" = "true" ] && [ -f freesurfer.tar.gz ]; then \
-        echo "FreeSurfer download verified, extracting (this may take several minutes)..." && \
-        tar -xzf freesurfer.tar.gz -C /opt/freesurfer-7.4.1 --strip-components 1 \
+    && if [ -f "$FREESURFER_CACHE" ] && [ $(stat -c%s "$FREESURFER_CACHE") -gt 2000000000 ]; then \
+        echo "📦 Using cached FreeSurfer from $FREESURFER_CACHE ($(du -h "$FREESURFER_CACHE" | cut -f1))"; \
+        cp "$FREESURFER_CACHE" "$TMPDIR/freesurfer.tar.gz" && DOWNLOAD_SUCCESS=true; \
+    elif [ -f "$FREESURFER_DOWNLOAD" ] && [ $(stat -c%s "$FREESURFER_DOWNLOAD") -gt 2000000000 ]; then \
+        echo "📦 Using pre-downloaded FreeSurfer from $FREESURFER_DOWNLOAD ($(du -h "$FREESURFER_DOWNLOAD" | cut -f1))"; \
+        cp "$FREESURFER_DOWNLOAD" "$TMPDIR/freesurfer.tar.gz" && DOWNLOAD_SUCCESS=true; \
+    else \
+        echo "⬇️  Downloading FreeSurfer (no cached/pre-downloaded file available)..."; \
+        cd "$TMPDIR" && \
+        (timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
+            ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+            -o freesurfer.tar.gz \
+            && echo "FTP download completed, checking file integrity..." \
+            && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 2000000000 ] \
+            && DOWNLOAD_SUCCESS=true \
+            && echo "FTP download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
+        || (echo "FTP failed, trying wget..." && \
+            rm -f freesurfer.tar.gz && \
+            timeout 900 wget --timeout=120 --tries=2 --retry-connrefused --waitretry=30 \
+               ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+               -O freesurfer.tar.gz \
+            && echo "wget download completed, checking file integrity..." \
+            && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 2000000000 ] \
+            && DOWNLOAD_SUCCESS=true \
+            && echo "wget download successful ($(stat -c%s freesurfer.tar.gz) bytes)") \
+        || (echo "FTP methods failed, trying HTTPS mirror..." && \
+            rm -f freesurfer.tar.gz && \
+            timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
+               https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+               -o freesurfer.tar.gz \
+            && echo "HTTPS download completed, checking file integrity..." \
+            && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 2000000000 ] \
+            && DOWNLOAD_SUCCESS=true \
+            && echo "HTTPS download successful ($(stat -c%s freesurfer.tar.gz) bytes)"); \
+    fi \
+    && if [ "$DOWNLOAD_SUCCESS" = "true" ] && [ -f "$TMPDIR/freesurfer.tar.gz" ]; then \
+        echo "📂 FreeSurfer ready, extracting (this may take several minutes)..." && \
+        tar -xzf "$TMPDIR/freesurfer.tar.gz" -C /opt/freesurfer-7.4.1 --strip-components 1 \
              --exclude='freesurfer/average/mult-comp-cor' \
              --exclude='freesurfer/lib/cuda' \
              --exclude='freesurfer/lib/qt' \
@@ -241,10 +255,9 @@ RUN echo "Downloading FreeSurfer 7.4.1..." \
              --exclude='freesurfer/subjects/fsaverage6' \
              --exclude='freesurfer/subjects/fsaverage_sym' \
              --exclude='freesurfer/trctrain' \
-        && rm -f freesurfer.tar.gz \
-        && echo "FreeSurfer extraction completed successfully"; \
+        && echo "✅ FreeSurfer extraction completed successfully"; \
     else \
-        echo "FreeSurfer download failed or corrupted, creating minimal installation..." && \
+        echo "⚠️  FreeSurfer download failed, creating minimal installation..." && \
         mkdir -p /opt/freesurfer-7.4.1 && \
         echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
         echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
