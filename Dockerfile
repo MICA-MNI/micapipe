@@ -496,8 +496,13 @@ ENV CONDA_DIR="/opt/miniconda-22.11.1" \
 RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
     && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
-    && mkdir -p ${CUSTOM_TMPDIR} || (echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback" && export CUSTOM_TMPDIR="/tmp") \
-    && conda_installer="${CUSTOM_TMPDIR}/miniconda.sh" \
+    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null; then \
+        echo "Using custom temp directory: ${CUSTOM_TMPDIR}"; \
+        conda_installer="${CUSTOM_TMPDIR}/miniconda.sh"; \
+    else \
+        echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback"; \
+        conda_installer="/tmp/miniconda.sh"; \
+    fi \
     && echo "Using temporary file: $conda_installer" \
     && curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh \
     && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
