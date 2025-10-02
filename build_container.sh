@@ -171,10 +171,61 @@ else
     DOCKER_CACHE_ARGS=""
 fi
 
-# Skip downloads functionality due to Docker version limitations
-echo "⚠️  Skipping pre-downloads due to Docker version limitations"
-echo "📂 Building with internet downloads (slower but works)"
+# Ensure downloads directory exists if specified and accessible
 DOCKER_DOWNLOADS_ARGS=""
+if [[ -n "$DOWNLOADS_DIR" ]]; then
+    if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
+        echo "📦 Using downloads directory: $DOWNLOADS_DIR"
+        echo "📦 Files available: $(ls -1 "$DOWNLOADS_DIR" | wc -l)"
+        echo "📦 FSL file: $(ls -lh "$DOWNLOADS_DIR"/fsl-*.tar.gz 2>/dev/null || echo "Not found")"
+        echo "📦 FreeSurfer file: $(ls -lh "$DOWNLOADS_DIR"/freesurfer-*.tar.gz 2>/dev/null || echo "Not found")"
+        
+        # Use the custom temp directory for copying files (has space)
+        COPY_TARGET="${CUSTOM_TMPDIR}/docker_build_downloads"
+        echo "🔧 Copying files to custom temp directory: $COPY_TARGET"
+        
+        # Create the copy directory in your custom temp space
+        mkdir -p "$COPY_TARGET"
+        
+        # Copy specific files to the custom temp directory
+        if [[ -f "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" ]]; then
+            echo "   Copying FSL (4GB) to $COPY_TARGET..."
+            cp "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" "$COPY_TARGET/"
+        fi
+        
+        if [[ -f "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+            echo "   Copying FreeSurfer (9GB) to $COPY_TARGET..."
+            cp "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$COPY_TARGET/"
+        fi
+        
+        echo "   Copied files: $(ls -1 "$COPY_TARGET" 2>/dev/null | wc -l)"
+        echo "   Total size: $(du -sh "$COPY_TARGET" | cut -f1)"
+        
+        # Create symbolic links in build context pointing to copied files
+        mkdir -p ./downloads_temp
+        for file in "$COPY_TARGET"/*; do
+            if [[ -f "$file" ]]; then
+                ln -sf "$file" "./downloads_temp/$(basename "$file")"
+            fi
+        done
+        
+        # Remove downloads_temp from .dockerignore temporarily
+        if [[ -f ".dockerignore" ]]; then
+            cp .dockerignore .dockerignore.backup
+            sed -i '/downloads_temp/d' .dockerignore
+        fi
+        
+        DOCKER_DOWNLOADS_ARGS="--build-arg DOWNLOADS_DIR=/downloads_temp"
+        echo "🔧 Using symbolic links to copied files in custom temp space"
+    else
+        echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
+        echo "📂 Building without downloads (will download from internet)"
+        echo "💡 Tip: On the server, first run: ./download_dependencies.sh"
+    fi
+else
+    echo "⚠️  Skipping pre-downloads (no downloads directory specified)"
+    echo "📂 Building with internet downloads"
+fi
 
 # Create log directory
 mkdir -p build_logs
@@ -218,10 +269,10 @@ else
     echo "   Cache: Disabled"
 fi
 
-# Add downloads mount if available
+# Add downloads if available
 if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
     DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS"
-    echo "   Pre-downloads: Enabled (copied to build context)"
+    echo "   Pre-downloads: Enabled (copied to custom temp space)"
 else
     echo "   Pre-downloads: Disabled"
 fi
@@ -238,6 +289,25 @@ echo ""
 # Execute build
 eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
 BUILD_EXIT_CODE=${PIPESTATUS[0]}
+
+# Cleanup temporary files
+if [[ -d "./downloads_temp" ]]; then
+    echo "🧹 Cleaning up build context symbolic links..."
+    rm -rf ./downloads_temp
+    
+    # Restore .dockerignore if we backed it up
+    if [[ -f ".dockerignore.backup" ]]; then
+        mv .dockerignore.backup .dockerignore
+        echo "   Restored .dockerignore"
+    fi
+fi
+
+# Cleanup copied files in custom temp directory (after successful build)
+if [[ $BUILD_EXIT_CODE -eq 0 && -n "$COPY_TARGET" && -d "$COPY_TARGET" ]]; then
+    echo "🧹 Cleaning up copied files in custom temp space..."
+    rm -rf "$COPY_TARGET"
+    echo "   Removed: $COPY_TARGET"
+fi
 
 if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
     echo ""
