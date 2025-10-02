@@ -309,10 +309,16 @@ echo ""
 # Execute build
 if [[ "$BUILD_IN_TEMP_DIR" == "true" ]]; then
     echo "🚀 Building in custom temp directory: $BUILD_DIR"
+    # Create log directory in temp build location
+    mkdir -p "$BUILD_DIR/build_logs"
+    LOG_FILE="$BUILD_DIR/build_logs/container_build_$(date +%Y%m%d_%H%M%S).log"
     cd "$BUILD_DIR"
     eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
     BUILD_EXIT_CODE=${PIPESTATUS[0]}
     cd - > /dev/null
+    # Copy log back to original location
+    mkdir -p build_logs
+    cp "$LOG_FILE" "./build_logs/"
 else
     eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
     BUILD_EXIT_CODE=${PIPESTATUS[0]}
