@@ -8,7 +8,7 @@ set -euo pipefail
 # Configuration
 SERVER_BASE_DIR="/host/cassio/export03/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
-BUILD_DIR="$SERVER_BASE_DIR/micapipe_build"
+BUILD_DIR="$DOWNLOADS_DIR"  # Build directly in downloads directory!
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"
 
 echo "🚚 MICApipe Server Migration"
@@ -65,13 +65,8 @@ else
     exit 1
 fi
 
-# Create build directory if it doesn't exist
-if [[ ! -d "$BUILD_DIR" ]]; then
-    echo "📁 Creating build directory: $BUILD_DIR"
-    mkdir -p "$BUILD_DIR"
-else
-    echo "📁 Build directory exists: $BUILD_DIR"
-fi
+# Create build directory if it doesn't exist (same as downloads)
+echo "📁 Using downloads directory as build directory: $BUILD_DIR"
 
 # Check for existing source and decide if we need to copy
 SOURCE_CHANGED=false
@@ -85,64 +80,48 @@ else
     echo "✅ Source files up to date"
 fi
 
-# Copy source files if needed
-if [[ "$SOURCE_CHANGED" == "true" ]]; then
-    echo "📋 Copying source files to server..."
-    
-    # Use rsync for efficient copying
-    if command -v rsync >/dev/null 2>&1; then
-        rsync -av --delete \
-            --exclude='.git' \
-            --exclude='downloads' \
-            --exclude='__pycache__' \
-            --exclude='*.pyc' \
-            --exclude='.DS_Store' \
-            --exclude='build_logs' \
-            --exclude='test_data' \
-            ./ "$BUILD_DIR/"
-    else
-        # Fallback to cp if rsync not available
-        cp -r . "$BUILD_DIR/"
-        # Clean up unwanted files
-        rm -rf "$BUILD_DIR/.git" "$BUILD_DIR/__pycache__" "$BUILD_DIR"/*.pyc "$BUILD_DIR/.DS_Store" "$BUILD_DIR/build_logs" 2>/dev/null || true
-    fi
-    
-    # Mark sync time
-    touch "$BUILD_DIR/.last_sync"
-    echo "✅ Source files copied successfully"
+# Copy source files to downloads directory (excluding downloads to avoid recursion)
+echo "📋 Copying source files to downloads directory..."
+
+# Use rsync for efficient copying, but exclude downloads directory itself
+if command -v rsync >/dev/null 2>&1; then
+    rsync -av \
+        --exclude='.git' \
+        --exclude='downloads' \
+        --exclude='__pycache__' \
+        --exclude='*.pyc' \
+        --exclude='.DS_Store' \
+        --exclude='build_logs' \
+        --exclude='test_data' \
+        ./ "$BUILD_DIR/"
+else
+    # Fallback to cp if rsync not available
+    find . -maxdepth 1 -type f -exec cp {} "$BUILD_DIR/" \;
+    find . -maxdepth 1 -type d ! -name '.' ! -name 'downloads' ! -name '.git' -exec cp -r {} "$BUILD_DIR/" \;
 fi
 
-# Set up downloads directory in build location
-echo "📦 Setting up downloads in build directory..."
+# Mark sync time
+touch "$BUILD_DIR/.last_sync"
+echo "✅ Source files copied to downloads directory"
 
-# Copy downloads directly into build directory (not symlink to avoid any path issues)
-if [[ ! -d "$BUILD_DIR/downloads" ]] || [[ -n "$(find "$DOWNLOADS_DIR" -newer "$BUILD_DIR/downloads" -type f 2>/dev/null)" ]]; then
-    echo "   📋 Copying downloads to build directory..."
-    # Remove existing downloads if it exists
-    rm -rf "$BUILD_DIR/downloads" 2>/dev/null || true
-    
-    # Copy downloads directory
-    cp -r "$DOWNLOADS_DIR" "$BUILD_DIR/downloads"
-    echo "✅ Downloads copied to build directory"
-    
-    # Verify copy was successful
-    if [[ -f "$BUILD_DIR/downloads/fsl-6.0.2-centos6_64.tar.gz" ]]; then
-        BUILD_FSL_SIZE=$(du -h "$BUILD_DIR/downloads/fsl-6.0.2-centos6_64.tar.gz" | cut -f1)
-        echo "   ✅ FSL in build: $BUILD_FSL_SIZE"
-    else
-        echo "   ❌ FSL copy failed!"
-        exit 1
-    fi
-    
-    if [[ -f "$BUILD_DIR/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
-        BUILD_FS_SIZE=$(du -h "$BUILD_DIR/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
-        echo "   ✅ FreeSurfer in build: $BUILD_FS_SIZE"
-    else
-        echo "   ❌ FreeSurfer copy failed!"
-        exit 1
-    fi
+# Downloads are already here - no need to copy them!
+echo "✅ Downloads already in build directory (same location)"
+
+# Verify downloads are accessible
+if [[ -f "$BUILD_DIR/fsl-6.0.2-centos6_64.tar.gz" ]]; then
+    BUILD_FSL_SIZE=$(du -h "$BUILD_DIR/fsl-6.0.2-centos6_64.tar.gz" | cut -f1)
+    echo "   ✅ FSL ready: $BUILD_FSL_SIZE"
 else
-    echo "✅ Downloads already up to date in build directory"
+    echo "   ❌ FSL not found in build directory!"
+    exit 1
+fi
+
+if [[ -f "$BUILD_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+    BUILD_FS_SIZE=$(du -h "$BUILD_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
+    echo "   ✅ FreeSurfer ready: $BUILD_FS_SIZE"
+else
+    echo "   ❌ FreeSurfer not found in build directory!"
+    exit 1
 fi
 
 # Make scripts executable
@@ -151,7 +130,7 @@ chmod +x "$BUILD_DIR"/*.sh 2>/dev/null || true
 echo ""
 echo "🎯 Migration Complete!"
 echo "======================"
-echo "Build directory: $BUILD_DIR"
+echo "Build/Downloads directory: $BUILD_DIR"
 echo "Downloads backup: $BACKUP_DIR"
 echo ""
 echo "Next steps:"

@@ -17,11 +17,11 @@ if [[ ! -f "./Dockerfile" ]]; then
     exit 1
 fi
 
-# Check if we're in the server build directory
-if [[ "$PWD" != *"/host/cassio/export03/data/enning/micapipe_build"* ]]; then
-    echo "⚠️  Warning: Not in expected server build directory"
+# Check if we're in the downloads directory (which is now the build directory)
+if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+    echo "⚠️  Warning: Not in expected downloads/build directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/micapipe_build"
+    echo "   Expected: /host/cassio/export03/data/enning/downloads"
     echo ""
 fi
 
@@ -40,35 +40,27 @@ fi
 
 echo "✅ Docker access confirmed"
 
-# Check for downloads (should be copied, not symlinked)
-echo "📦 Checking downloads in build directory..."
-if [[ -d "./downloads" ]]; then
-    echo "✅ Downloads directory found"
-    
-    if [[ -f "./downloads/fsl-6.0.2-centos6_64.tar.gz" ]]; then
-        FSL_SIZE=$(du -h "./downloads/fsl-6.0.2-centos6_64.tar.gz" | cut -f1)
-        echo "   ✅ FSL: $FSL_SIZE"
-    else
-        echo "   ❌ FSL not found in ./downloads/"
-        echo "   Please run ./migrate_to_server.sh first"
-        exit 1
-    fi
-    
-    if [[ -f "./downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
-        FS_SIZE=$(du -h "./downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
-        echo "   ✅ FreeSurfer: $FS_SIZE"
-    else
-        echo "   ❌ FreeSurfer not found in ./downloads/"
-        echo "   Please run ./migrate_to_server.sh first"
-        exit 1
-    fi
-    
-    echo "✅ All pre-downloaded files ready for Docker build"
+# Check for downloads (should be in current directory since build dir = downloads dir)
+echo "📦 Checking downloads in current directory..."
+if [[ -f "./fsl-6.0.2-centos6_64.tar.gz" ]]; then
+    FSL_SIZE=$(du -h "./fsl-6.0.2-centos6_64.tar.gz" | cut -f1)
+    echo "   ✅ FSL: $FSL_SIZE"
 else
-    echo "❌ No downloads directory found"
-    echo "   Please run ./migrate_to_server.sh first to set up the build environment"
+    echo "   ❌ FSL not found in current directory"
+    echo "   Please run ./migrate_to_server.sh first"
     exit 1
 fi
+
+if [[ -f "./freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+    FS_SIZE=$(du -h "./freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
+    echo "   ✅ FreeSurfer: $FS_SIZE"
+else
+    echo "   ❌ FreeSurfer not found in current directory"
+    echo "   Please run ./migrate_to_server.sh first"
+    exit 1
+fi
+
+echo "✅ All pre-downloaded files ready for Docker build"
 
 # Create build logs directory
 mkdir -p build_logs
