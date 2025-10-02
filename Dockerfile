@@ -150,6 +150,9 @@ RUN apt-get update -qq \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
     && export FSL_CACHE="$CACHE_DIR/fsl-6.0.2-centos6_64.tar.gz" \
     && export FSL_DOWNLOAD="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" \
+    && echo "DEBUG: Looking for FSL at: $FSL_DOWNLOAD" \
+    && echo "DEBUG: Downloads directory contents:" && ls -la "$DOWNLOADS_DIR" 2>/dev/null || echo "Downloads dir not accessible" \
+    && echo "DEBUG: temp_downloads contents:" && ls -la /temp_downloads/ 2>/dev/null || echo "temp_downloads not found" \
     && if [ -f "$FSL_CACHE" ] && [ $(stat -c%s "$FSL_CACHE") -gt 500000000 ]; then \
         echo "📦 Using cached FSL from $FSL_CACHE ($(du -h "$FSL_CACHE" | cut -f1))"; \
         cp "$FSL_CACHE" "$TMPDIR/fsl.tar.gz"; \
