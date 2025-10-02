@@ -148,7 +148,7 @@ export BUILDKIT_PROGRESS=plain
 if [[ "$NO_CACHE" == "false" ]]; then
     if [[ -d "$CACHE_DIR" && -w "$CACHE_DIR" ]]; then
         echo "📦 Using cache directory: $CACHE_DIR"
-        DOCKER_CACHE_ARGS="-v $CACHE_DIR:/cache"
+        DOCKER_CACHE_ARGS="--mount type=bind,source=$CACHE_DIR,target=/cache"
         # Ensure cache script is available
         if [[ -f "./cache_dependencies.sh" ]]; then
             echo "🔧 Running cache setup..."
@@ -169,7 +169,7 @@ DOCKER_DOWNLOADS_ARGS=""
 if [[ -n "$DOWNLOADS_DIR" ]]; then
     if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
         echo "📦 Using downloads directory: $DOWNLOADS_DIR"
-        DOCKER_DOWNLOADS_ARGS="-v $DOWNLOADS_DIR:/downloads"
+        DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
     else
         echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
         echo "📂 Building without downloads mount"
