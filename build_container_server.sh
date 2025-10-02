@@ -80,6 +80,8 @@ echo ""
 echo "📝 Building container (output logged to $BUILD_LOG)..."
 
 if docker build \
+    --memory=6g \
+    --memory-swap=8g \
     --build-arg CUSTOM_TMPDIR="/host/cassio/export03/data/enning" \
     --tag micapipe:latest \
     . 2>&1 | tee "$BUILD_LOG"; then
