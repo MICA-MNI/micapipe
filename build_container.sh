@@ -171,60 +171,80 @@ else
     DOCKER_CACHE_ARGS=""
 fi
 
-# Ensure downloads directory exists if specified and accessible
-DOCKER_DOWNLOADS_ARGS=""
-if [[ -n "$DOWNLOADS_DIR" ]]; then
-    if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
-        echo "📦 Using downloads directory: $DOWNLOADS_DIR"
-        echo "📦 Files available: $(ls -1 "$DOWNLOADS_DIR" | wc -l)"
-        echo "📦 FSL file: $(ls -lh "$DOWNLOADS_DIR"/fsl-*.tar.gz 2>/dev/null || echo "Not found")"
-        echo "📦 FreeSurfer file: $(ls -lh "$DOWNLOADS_DIR"/freesurfer-*.tar.gz 2>/dev/null || echo "Not found")"
-        
-        # Use the custom temp directory for copying files (has space)
-        COPY_TARGET="${CUSTOM_TMPDIR}/docker_build_downloads"
-        echo "🔧 Copying files to custom temp directory: $COPY_TARGET"
-        
-        # Create the copy directory in your custom temp space
-        mkdir -p "$COPY_TARGET"
-        
-        # Copy specific files to the custom temp directory
-        if [[ -f "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" ]]; then
-            echo "   Copying FSL (4GB) to $COPY_TARGET..."
-            cp "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" "$COPY_TARGET/"
-        fi
-        
-        if [[ -f "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
-            echo "   Copying FreeSurfer (9GB) to $COPY_TARGET..."
-            cp "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$COPY_TARGET/"
-        fi
-        
-        echo "   Copied files: $(ls -1 "$COPY_TARGET" 2>/dev/null | wc -l)"
-        echo "   Total size: $(du -sh "$COPY_TARGET" | cut -f1)"
-        
-        # Create symbolic links in build context pointing to copied files
-        mkdir -p ./downloads_temp
-        for file in "$COPY_TARGET"/*; do
-            if [[ -f "$file" ]]; then
-                ln -sf "$file" "./downloads_temp/$(basename "$file")"
-            fi
-        done
-        
-        # Remove downloads_temp from .dockerignore temporarily
-        if [[ -f ".dockerignore" ]]; then
-            cp .dockerignore .dockerignore.backup
-            sed -i '/downloads_temp/d' .dockerignore
-        fi
-        
-        DOCKER_DOWNLOADS_ARGS="--build-arg DOWNLOADS_DIR=/downloads_temp"
-        echo "🔧 Using symbolic links to copied files in custom temp space"
-    else
-        echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
-        echo "📂 Building without downloads (will download from internet)"
-        echo "💡 Tip: On the server, first run: ./download_dependencies.sh"
+# Check if we should build in custom temp directory with downloads
+BUILD_IN_TEMP_DIR=false
+if [[ -n "$DOWNLOADS_DIR" && "$DOWNLOADS_DIR" == *"$CUSTOM_TMPDIR"* ]]; then
+    BUILD_IN_TEMP_DIR=true
+    echo "📦 Downloads are in custom temp directory: $DOWNLOADS_DIR"
+    echo "🔧 Will copy build environment to same location for efficiency"
+    
+    # Create build directory in the same location as downloads
+    BUILD_DIR="${CUSTOM_TMPDIR}/micapipe_build_$(date +%Y%m%d_%H%M%S)"
+    echo "📁 Build directory: $BUILD_DIR"
+    
+    # Copy entire source tree to build location
+    echo "📋 Copying source code to build directory..."
+    mkdir -p "$BUILD_DIR"
+    rsync -av --exclude='.git' --exclude='build_logs' --exclude='*.sif' \
+          --exclude='temp_downloads' --exclude='downloads_temp' \
+          ./ "$BUILD_DIR/"
+    
+    # Create local downloads directory in build context
+    mkdir -p "$BUILD_DIR/downloads"
+    ln -sf "$DOWNLOADS_DIR"/* "$BUILD_DIR/downloads/" 2>/dev/null || true
+    
+    echo "   Source copied to: $BUILD_DIR"
+    echo "   Downloads linked: $(ls -1 "$BUILD_DIR/downloads/" 2>/dev/null | wc -l) files"
+    
+    DOCKER_DOWNLOADS_ARGS="--build-arg DOWNLOADS_DIR=/downloads"
+    
+elif [[ -n "$DOWNLOADS_DIR" && -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
+    echo "📦 Using downloads directory: $DOWNLOADS_DIR"
+    echo "📦 Files available: $(ls -1 "$DOWNLOADS_DIR" | wc -l)"
+    echo "📦 FSL file: $(ls -lh "$DOWNLOADS_DIR"/fsl-*.tar.gz 2>/dev/null || echo "Not found")"
+    echo "📦 FreeSurfer file: $(ls -lh "$DOWNLOADS_DIR"/freesurfer-*.tar.gz 2>/dev/null || echo "Not found")"
+    
+    # Use the custom temp directory for copying files (has space)
+    COPY_TARGET="${CUSTOM_TMPDIR}/docker_build_downloads"
+    echo "🔧 Copying files to custom temp directory: $COPY_TARGET"
+    
+    # Create the copy directory in your custom temp space
+    mkdir -p "$COPY_TARGET"
+    
+    # Copy specific files to the custom temp directory
+    if [[ -f "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" ]]; then
+        echo "   Copying FSL (4GB) to $COPY_TARGET..."
+        cp "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" "$COPY_TARGET/"
     fi
+    
+    if [[ -f "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+        echo "   Copying FreeSurfer (9GB) to $COPY_TARGET..."
+        cp "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$COPY_TARGET/"
+    fi
+    
+    echo "   Copied files: $(ls -1 "$COPY_TARGET" 2>/dev/null | wc -l)"
+    echo "   Total size: $(du -sh "$COPY_TARGET" | cut -f1)"
+    
+    # Create symbolic links in build context pointing to copied files
+    mkdir -p ./downloads_temp
+    for file in "$COPY_TARGET"/*; do
+        if [[ -f "$file" ]]; then
+            ln -sf "$file" "./downloads_temp/$(basename "$file")"
+        fi
+    done
+    
+    # Remove downloads_temp from .dockerignore temporarily
+    if [[ -f ".dockerignore" ]]; then
+        cp .dockerignore .dockerignore.backup
+        sed -i '/downloads_temp/d' .dockerignore
+    fi
+    
+    DOCKER_DOWNLOADS_ARGS="--build-arg DOWNLOADS_DIR=/downloads_temp"
+    echo "🔧 Using symbolic links to copied files in custom temp space"
 else
-    echo "⚠️  Skipping pre-downloads (no downloads directory specified)"
+    echo "⚠️  No downloads directory specified or not accessible"
     echo "📂 Building with internet downloads"
+    DOCKER_DOWNLOADS_ARGS=""
 fi
 
 # Create log directory
@@ -287,8 +307,16 @@ echo "   Command: $DOCKER_CMD"
 echo ""
 
 # Execute build
-eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
-BUILD_EXIT_CODE=${PIPESTATUS[0]}
+if [[ "$BUILD_IN_TEMP_DIR" == "true" ]]; then
+    echo "🚀 Building in custom temp directory: $BUILD_DIR"
+    cd "$BUILD_DIR"
+    eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
+    BUILD_EXIT_CODE=${PIPESTATUS[0]}
+    cd - > /dev/null
+else
+    eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
+    BUILD_EXIT_CODE=${PIPESTATUS[0]}
+fi
 
 # Cleanup temporary files
 if [[ -d "./downloads_temp" ]]; then
@@ -307,6 +335,17 @@ if [[ $BUILD_EXIT_CODE -eq 0 && -n "$COPY_TARGET" && -d "$COPY_TARGET" ]]; then
     echo "🧹 Cleaning up copied files in custom temp space..."
     rm -rf "$COPY_TARGET"
     echo "   Removed: $COPY_TARGET"
+fi
+
+# Cleanup build directory if we built in temp directory
+if [[ "$BUILD_IN_TEMP_DIR" == "true" && -n "$BUILD_DIR" ]]; then
+    if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
+        echo "🧹 Cleaning up temporary build directory..."
+        rm -rf "$BUILD_DIR"
+        echo "   Removed: $BUILD_DIR"
+    else
+        echo "⚠️  Keeping build directory for debugging: $BUILD_DIR"
+    fi
 fi
 
 if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
