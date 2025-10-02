@@ -54,8 +54,8 @@ if [[ -d "./downloads" ]]; then
         exit 1
     fi
     
-    if [[ -f "./downloads/freesurfer-linux-centos6_x86_64-7.4.1.tar.gz" ]]; then
-        FS_SIZE=$(du -h "./downloads/freesurfer-linux-centos6_x86_64-7.4.1.tar.gz" | cut -f1)
+    if [[ -f "./downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+        FS_SIZE=$(du -h "./downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
         echo "   ✅ FreeSurfer: $FS_SIZE"
     else
         echo "   ❌ FreeSurfer not found in ./downloads/"

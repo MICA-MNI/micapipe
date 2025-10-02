@@ -30,7 +30,7 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
     
     # Check for key files
     FSL_FILE="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz"
-    FS_FILE="$DOWNLOADS_DIR/freesurfer-linux-centos6_x86_64-7.4.1.tar.gz"
+    FS_FILE="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
     
     if [[ -f "$FSL_FILE" ]]; then
         FSL_SIZE=$(du -h "$FSL_FILE" | cut -f1)
@@ -134,8 +134,8 @@ if [[ ! -d "$BUILD_DIR/downloads" ]] || [[ -n "$(find "$DOWNLOADS_DIR" -newer "$
         exit 1
     fi
     
-    if [[ -f "$BUILD_DIR/downloads/freesurfer-linux-centos6_x86_64-7.4.1.tar.gz" ]]; then
-        BUILD_FS_SIZE=$(du -h "$BUILD_DIR/downloads/freesurfer-linux-centos6_x86_64-7.4.1.tar.gz" | cut -f1)
+    if [[ -f "$BUILD_DIR/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
+        BUILD_FS_SIZE=$(du -h "$BUILD_DIR/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1)
         echo "   ✅ FreeSurfer in build: $BUILD_FS_SIZE"
     else
         echo "   ❌ FreeSurfer copy failed!"
