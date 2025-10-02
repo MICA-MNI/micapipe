@@ -148,6 +148,8 @@ export BUILDKIT_PROGRESS=plain
 if [[ "$NO_CACHE" == "false" ]]; then
     if [[ -d "$CACHE_DIR" && -w "$CACHE_DIR" ]]; then
         echo "📦 Using cache directory: $CACHE_DIR"
+        # Enable BuildKit for --mount support
+        export DOCKER_BUILDKIT=1
         DOCKER_CACHE_ARGS="--mount type=bind,source=$CACHE_DIR,target=/cache"
         # Ensure cache script is available
         if [[ -f "./cache_dependencies.sh" ]]; then
@@ -166,9 +168,14 @@ fi
 
 # Ensure downloads directory exists if specified and accessible
 DOCKER_DOWNLOADS_ARGS=""
+COPY_DOWNLOADS=false
 if [[ -n "$DOWNLOADS_DIR" ]]; then
     if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
         echo "📦 Using downloads directory: $DOWNLOADS_DIR"
+        
+        # Enable BuildKit for --mount support (available in Docker 18.09+)
+        export DOCKER_BUILDKIT=1
+        echo "🔧 Using Docker BuildKit for mount support"
         DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
     else
         echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
@@ -221,7 +228,7 @@ fi
 # Add downloads mount if available
 if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
     DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS --build-arg DOWNLOADS_DIR=/downloads"
-    echo "   Pre-downloads: Enabled"
+    echo "   Pre-downloads: Enabled (mounted)"
 else
     echo "   Pre-downloads: Disabled"
 fi
