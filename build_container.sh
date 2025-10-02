@@ -184,22 +184,31 @@ if [[ -n "$DOWNLOADS_DIR" ]]; then
             echo "🔧 Using Docker BuildKit for mount support"
             DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
         else
-            # Fall back to symbolic links (no space used!)
-            echo "🔧 BuildKit not available, creating symbolic links to downloads"
+            # Fall back to hard links (no space used, works with Docker!)
+            echo "🔧 BuildKit not available, creating hard links to downloads"
             COPY_DOWNLOADS=true
             mkdir -p ./temp_downloads
-            if [[ -n "$(ls -A "$DOWNLOADS_DIR" 2>/dev/null)" ]]; then
-                for file in "$DOWNLOADS_DIR"/*; do
-                    if [[ -f "$file" ]]; then
-                        ln -sf "$file" "./temp_downloads/$(basename "$file")"
-                    fi
-                done
-                echo "   Linked $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) files (no space used)"
+            
+            # Create hard links (same inode, no additional space)
+            FSL_FILE="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz"
+            FREESURFER_FILE="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
+            
+            if [[ -f "$FSL_FILE" ]]; then
+                ln "$FSL_FILE" "./temp_downloads/fsl-6.0.2-centos6_64.tar.gz"
+                echo "   Hard-linked FSL (no space used)"
             fi
+            
+            if [[ -f "$FREESURFER_FILE" ]]; then
+                ln "$FREESURFER_FILE" "./temp_downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
+                echo "   Hard-linked FreeSurfer (no space used)"
+            fi
+            
+            echo "   Created $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) hard links"
         fi
     else
         echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
-        echo "📂 Building without downloads mount"
+        echo "📂 Building without downloads (will download from internet)"
+        echo "💡 Tip: On the server, first run: ./download_dependencies.sh"
     fi
 fi
 

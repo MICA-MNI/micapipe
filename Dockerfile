@@ -23,6 +23,7 @@ ARG DOWNLOADS_DIR=""
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
 # Copy temp downloads directory if it exists (fallback when BuildKit is not available)
+# Hard links work with COPY and use no additional space
 COPY temp_downloads* /temp_downloads/
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
