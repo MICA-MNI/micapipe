@@ -18,7 +18,7 @@ ARG ENABLE_CUDA=false
 # Cache directory for large dependencies
 ARG MICAPIPE_CACHE_DIR=""
 # Downloads directory for pre-downloaded dependencies
-ARG DOWNLOADS_DIR=""
+ARG DOWNLOADS_DIR="/downloads"
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
@@ -148,7 +148,7 @@ RUN apt-get update -qq \
     && echo "Using temporary directory: $TMPDIR" \
     && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
-    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
+    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-/downloads}" \
     && export FSL_CACHE="$CACHE_DIR/fsl-6.0.2-centos6_64.tar.gz" \
     && export FSL_DOWNLOAD="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" \
     && echo "DEBUG: DOWNLOADS_DIR variable is: $DOWNLOADS_DIR" \
@@ -222,7 +222,7 @@ RUN echo "Installing FreeSurfer 7.4.1..." \
     && echo "Using temporary directory: $TMPDIR" \
     && mkdir -p "$TMPDIR" \
     && export CACHE_DIR="${MICAPIPE_CACHE_DIR:-}" \
-    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
+    && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-/downloads}" \
     && export FREESURFER_CACHE="$CACHE_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" \
     && export FREESURFER_DOWNLOAD="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" \
     && DOWNLOAD_SUCCESS=false \
