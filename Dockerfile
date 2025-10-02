@@ -22,10 +22,6 @@ ARG DOWNLOADS_DIR=""
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
-# Copy temp downloads directory if it exists (fallback when BuildKit is not available)
-# Hard links work with COPY and use no additional space
-COPY temp_downloads* /temp_downloads/
-
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
         echo "Setting up CUDA support..."; \
@@ -150,9 +146,9 @@ RUN apt-get update -qq \
     && export DOWNLOADS_DIR="${DOWNLOADS_DIR:-}" \
     && export FSL_CACHE="$CACHE_DIR/fsl-6.0.2-centos6_64.tar.gz" \
     && export FSL_DOWNLOAD="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" \
+    && echo "DEBUG: DOWNLOADS_DIR variable is: $DOWNLOADS_DIR" \
     && echo "DEBUG: Looking for FSL at: $FSL_DOWNLOAD" \
-    && echo "DEBUG: Downloads directory contents:" && ls -la "$DOWNLOADS_DIR" 2>/dev/null || echo "Downloads dir not accessible" \
-    && echo "DEBUG: temp_downloads contents:" && ls -la /temp_downloads/ 2>/dev/null || echo "temp_downloads not found" \
+    && echo "DEBUG: File exists test: $(test -f "$FSL_DOWNLOAD" && echo "YES" || echo "NO")" \
     && if [ -f "$FSL_CACHE" ] && [ $(stat -c%s "$FSL_CACHE") -gt 500000000 ]; then \
         echo "📦 Using cached FSL from $FSL_CACHE ($(du -h "$FSL_CACHE" | cut -f1))"; \
         cp "$FSL_CACHE" "$TMPDIR/fsl.tar.gz"; \

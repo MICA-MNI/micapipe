@@ -173,45 +173,17 @@ fi
 
 # Ensure downloads directory exists if specified and accessible
 DOCKER_DOWNLOADS_ARGS=""
-COPY_DOWNLOADS=false
 if [[ -n "$DOWNLOADS_DIR" ]]; then
     if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
         echo "📦 Using downloads directory: $DOWNLOADS_DIR"
+        echo "📦 Files available: $(ls -1 "$DOWNLOADS_DIR" | wc -l)"
+        echo "📦 FSL file: $(ls -lh "$DOWNLOADS_DIR"/fsl-*.tar.gz 2>/dev/null || echo "Not found")"
+        echo "📦 FreeSurfer file: $(ls -lh "$DOWNLOADS_DIR"/freesurfer-*.tar.gz 2>/dev/null || echo "Not found")"
         
-        # Test if BuildKit --mount is supported
+        # Always use bind mount with explicit BuildKit enable
         export DOCKER_BUILDKIT=1
-        if docker build --help 2>/dev/null | grep -q "\-\-mount"; then
-            echo "🔧 Using Docker BuildKit for mount support"
-            DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
-        else
-            # Fall back to hard links (no space used, works with Docker!)
-            echo "🔧 BuildKit not available, creating hard links to downloads"
-            COPY_DOWNLOADS=true
-            mkdir -p ./temp_downloads
-            
-            # Create hard links (same inode, no additional space)
-            FSL_FILE="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz"
-            FREESURFER_FILE="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
-            
-            if [[ -f "$FSL_FILE" ]]; then
-                ln "$FSL_FILE" "./temp_downloads/fsl-6.0.2-centos6_64.tar.gz"
-                echo "   Hard-linked FSL (no space used)"
-            fi
-            
-            if [[ -f "$FREESURFER_FILE" ]]; then
-                ln "$FREESURFER_FILE" "./temp_downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
-                echo "   Hard-linked FreeSurfer (no space used)"
-            fi
-            
-            # Temporarily allow temp_downloads in Docker build context
-            if [[ -f ".dockerignore" ]]; then
-                cp .dockerignore .dockerignore.backup
-                sed -i '/temp_downloads/d' .dockerignore
-                echo "   Temporarily enabled temp_downloads in build context"
-            fi
-            
-            echo "   Created $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) hard links"
-        fi
+        DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
+        echo "🔧 Using bind mount (forced BuildKit): $DOWNLOADS_DIR -> /downloads"
     else
         echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
         echo "📂 Building without downloads (will download from internet)"
@@ -264,10 +236,7 @@ fi
 # Add downloads mount if available
 if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
     DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS --build-arg DOWNLOADS_DIR=/downloads"
-    echo "   Pre-downloads: Enabled (mounted)"
-elif [[ "$COPY_DOWNLOADS" == "true" ]]; then
-    DOCKER_CMD="$DOCKER_CMD --build-arg DOWNLOADS_DIR=/temp_downloads"
-    echo "   Pre-downloads: Enabled (copied)"
+    echo "   Pre-downloads: Enabled (bind mount)"
 else
     echo "   Pre-downloads: Disabled"
 fi
@@ -284,18 +253,6 @@ echo ""
 # Execute build
 eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
 BUILD_EXIT_CODE=${PIPESTATUS[0]}
-
-# Cleanup temporary downloads directory if it was created
-if [[ "$COPY_DOWNLOADS" == "true" && -d "./temp_downloads" ]]; then
-    echo "🧹 Cleaning up temporary downloads (hard links)..."
-    rm -rf ./temp_downloads
-    
-    # Restore .dockerignore if we backed it up
-    if [[ -f ".dockerignore.backup" ]]; then
-        mv .dockerignore.backup .dockerignore
-        echo "   Restored .dockerignore"
-    fi
-fi
 
 if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
     echo ""
