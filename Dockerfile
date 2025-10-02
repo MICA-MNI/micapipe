@@ -516,7 +516,9 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
 
 # Install conda packages via Mamba
 RUN conda config --system --set channel_priority strict \
-    && mamba install -y -q -n micapipe -c conda-forge \
+    && export MAMBA_NO_SPINNER=1 \
+    && export CONDA_ALWAYS_YES=1 \
+    && timeout 1800 mamba install -y -q -n micapipe -c conda-forge \
            aiohttp \
            aiosignal \
            asn1crypto \
