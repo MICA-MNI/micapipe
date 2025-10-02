@@ -22,8 +22,8 @@ ARG DOWNLOADS_DIR=""
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
-# Copy downloaded dependencies if available (optional - won't fail if missing)
-COPY downloads* /downloads/
+# Copy downloaded dependencies if available (copy contents, not directory)
+COPY downloads/ /downloads/
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
@@ -151,6 +151,7 @@ RUN apt-get update -qq \
     && export FSL_DOWNLOAD="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" \
     && echo "DEBUG: DOWNLOADS_DIR variable is: $DOWNLOADS_DIR" \
     && echo "DEBUG: Looking for FSL at: $FSL_DOWNLOAD" \
+    && echo "DEBUG: Contents of /downloads directory:" && ls -la /downloads/ 2>/dev/null || echo "No /downloads directory" \
     && echo "DEBUG: File exists test: $(test -f "$FSL_DOWNLOAD" && echo "YES" || echo "NO")" \
     && if [ -f "$FSL_CACHE" ] && [ $(stat -c%s "$FSL_CACHE") -gt 500000000 ]; then \
         echo "📦 Using cached FSL from $FSL_CACHE ($(du -h "$FSL_CACHE" | cut -f1))"; \
