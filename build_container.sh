@@ -171,25 +171,10 @@ else
     DOCKER_CACHE_ARGS=""
 fi
 
-# Ensure downloads directory exists if specified and accessible
+# Skip downloads functionality due to Docker version limitations
+echo "⚠️  Skipping pre-downloads due to Docker version limitations"
+echo "📂 Building with internet downloads (slower but works)"
 DOCKER_DOWNLOADS_ARGS=""
-if [[ -n "$DOWNLOADS_DIR" ]]; then
-    if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
-        echo "📦 Using downloads directory: $DOWNLOADS_DIR"
-        echo "📦 Files available: $(ls -1 "$DOWNLOADS_DIR" | wc -l)"
-        echo "📦 FSL file: $(ls -lh "$DOWNLOADS_DIR"/fsl-*.tar.gz 2>/dev/null || echo "Not found")"
-        echo "📦 FreeSurfer file: $(ls -lh "$DOWNLOADS_DIR"/freesurfer-*.tar.gz 2>/dev/null || echo "Not found")"
-        
-        # Always use bind mount with explicit BuildKit enable
-        export DOCKER_BUILDKIT=1
-        DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
-        echo "🔧 Using bind mount (forced BuildKit): $DOWNLOADS_DIR -> /downloads"
-    else
-        echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
-        echo "📂 Building without downloads (will download from internet)"
-        echo "💡 Tip: On the server, first run: ./download_dependencies.sh"
-    fi
-fi
 
 # Create log directory
 mkdir -p build_logs
@@ -235,8 +220,8 @@ fi
 
 # Add downloads mount if available
 if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
-    DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS --build-arg DOWNLOADS_DIR=/downloads"
-    echo "   Pre-downloads: Enabled (bind mount)"
+    DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS"
+    echo "   Pre-downloads: Enabled (copied to build context)"
 else
     echo "   Pre-downloads: Disabled"
 fi
