@@ -133,8 +133,21 @@ echo "======================"
 echo "Build/Downloads directory: $BUILD_DIR"
 echo "Downloads backup: $BACKUP_DIR"
 echo ""
-echo "Next steps:"
-echo "1. cd $BUILD_DIR"
-echo "2. ./build_container_server.sh"
+echo "🚀 Starting Docker build..."
 echo ""
-echo "Or run: pushd $BUILD_DIR && ./build_container_server.sh && popd"
+
+# Automatically run the build using pushd/popd
+pushd "$BUILD_DIR"
+./build_container_server.sh
+BUILD_EXIT_CODE=$?
+popd
+
+if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
+    echo ""
+    echo "✅ Container build completed successfully!"
+    echo "🐳 Container: micapipe:latest"
+else
+    echo ""
+    echo "❌ Container build failed (exit code: $BUILD_EXIT_CODE)"
+    echo "📋 Check build logs in: $BUILD_DIR/build_logs/"
+fi
