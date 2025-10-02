@@ -203,6 +203,13 @@ if [[ -n "$DOWNLOADS_DIR" ]]; then
                 echo "   Hard-linked FreeSurfer (no space used)"
             fi
             
+            # Temporarily allow temp_downloads in Docker build context
+            if [[ -f ".dockerignore" ]]; then
+                cp .dockerignore .dockerignore.backup
+                sed -i '/temp_downloads/d' .dockerignore
+                echo "   Temporarily enabled temp_downloads in build context"
+            fi
+            
             echo "   Created $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) hard links"
         fi
     else
@@ -280,8 +287,14 @@ BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
 # Cleanup temporary downloads directory if it was created
 if [[ "$COPY_DOWNLOADS" == "true" && -d "./temp_downloads" ]]; then
-    echo "🧹 Cleaning up temporary downloads (symbolic links)..."
+    echo "🧹 Cleaning up temporary downloads (hard links)..."
     rm -rf ./temp_downloads
+    
+    # Restore .dockerignore if we backed it up
+    if [[ -f ".dockerignore.backup" ]]; then
+        mv .dockerignore.backup .dockerignore
+        echo "   Restored .dockerignore"
+    fi
 fi
 
 if [[ $BUILD_EXIT_CODE -eq 137 ]]; then

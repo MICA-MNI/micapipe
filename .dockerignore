@@ -5,3 +5,18 @@
 .gitignore
 .vscode
 micapipe_v*.sif
+# Large directories not needed in container
+old/
+MICs60_T1-atlas/
+MNI152Volumes/
+parcellations/
+surfaces/
+R_config/
+test_data/
+tests/
+micapipe_snakebids/
+.snakemake/
+build_logs/
+*.log
+# Temporary files
+temp_downloads/
