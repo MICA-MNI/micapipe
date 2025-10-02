@@ -495,12 +495,12 @@ ENV CONDA_DIR="/opt/miniconda-22.11.1" \
 # Install Miniconda & Mamba and create environment
 RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "Downloading Miniconda installer ..." \
-    && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
-    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null; then \
+    && echo "Testing custom temp directory: ${CUSTOM_TMPDIR}" \
+    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null && echo "test" > ${CUSTOM_TMPDIR}/write_test 2>/dev/null && rm -f ${CUSTOM_TMPDIR}/write_test 2>/dev/null; then \
         echo "Using custom temp directory: ${CUSTOM_TMPDIR}"; \
         conda_installer="${CUSTOM_TMPDIR}/miniconda.sh"; \
     else \
-        echo "Failed to create ${CUSTOM_TMPDIR}, using /tmp fallback"; \
+        echo "Custom temp directory not writable, using /tmp fallback"; \
         conda_installer="/tmp/miniconda.sh"; \
     fi \
     && echo "Using temporary file: $conda_installer" \
