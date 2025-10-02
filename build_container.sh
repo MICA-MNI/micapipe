@@ -148,9 +148,14 @@ export BUILDKIT_PROGRESS=plain
 if [[ "$NO_CACHE" == "false" ]]; then
     if [[ -d "$CACHE_DIR" && -w "$CACHE_DIR" ]]; then
         echo "📦 Using cache directory: $CACHE_DIR"
-        # Enable BuildKit for --mount support
+        # Test if BuildKit --mount is supported
         export DOCKER_BUILDKIT=1
-        DOCKER_CACHE_ARGS="--mount type=bind,source=$CACHE_DIR,target=/cache"
+        if docker build --help 2>/dev/null | grep -q "\-\-mount"; then
+            DOCKER_CACHE_ARGS="--mount type=bind,source=$CACHE_DIR,target=/cache"
+        else
+            echo "🔧 BuildKit not available, skipping cache mount"
+            DOCKER_CACHE_ARGS=""
+        fi
         # Ensure cache script is available
         if [[ -f "./cache_dependencies.sh" ]]; then
             echo "🔧 Running cache setup..."
@@ -173,10 +178,21 @@ if [[ -n "$DOWNLOADS_DIR" ]]; then
     if [[ -d "$DOWNLOADS_DIR" && -r "$DOWNLOADS_DIR" ]]; then
         echo "📦 Using downloads directory: $DOWNLOADS_DIR"
         
-        # Enable BuildKit for --mount support (available in Docker 18.09+)
+        # Test if BuildKit --mount is supported
         export DOCKER_BUILDKIT=1
-        echo "🔧 Using Docker BuildKit for mount support"
-        DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
+        if docker build --help 2>/dev/null | grep -q "\-\-mount"; then
+            echo "🔧 Using Docker BuildKit for mount support"
+            DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
+        else
+            # Fall back to copying files into build context
+            echo "🔧 BuildKit not available, copying downloads to build context"
+            COPY_DOWNLOADS=true
+            mkdir -p ./temp_downloads
+            if [[ -n "$(ls -A "$DOWNLOADS_DIR" 2>/dev/null)" ]]; then
+                cp -r "$DOWNLOADS_DIR"/* ./temp_downloads/ 2>/dev/null || true
+                echo "   Copied $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) files"
+            fi
+        fi
     else
         echo "⚠️  Downloads directory not accessible: $DOWNLOADS_DIR"
         echo "📂 Building without downloads mount"
@@ -229,6 +245,9 @@ fi
 if [[ -n "$DOCKER_DOWNLOADS_ARGS" ]]; then
     DOCKER_CMD="$DOCKER_CMD $DOCKER_DOWNLOADS_ARGS --build-arg DOWNLOADS_DIR=/downloads"
     echo "   Pre-downloads: Enabled (mounted)"
+elif [[ "$COPY_DOWNLOADS" == "true" ]]; then
+    DOCKER_CMD="$DOCKER_CMD --build-arg DOWNLOADS_DIR=/temp_downloads"
+    echo "   Pre-downloads: Enabled (copied)"
 else
     echo "   Pre-downloads: Disabled"
 fi
@@ -245,6 +264,12 @@ echo ""
 # Execute build
 eval "$DOCKER_CMD" 2>&1 | tee "$LOG_FILE"
 BUILD_EXIT_CODE=${PIPESTATUS[0]}
+
+# Cleanup temporary downloads directory if it was created
+if [[ "$COPY_DOWNLOADS" == "true" && -d "./temp_downloads" ]]; then
+    echo "🧹 Cleaning up temporary downloads..."
+    rm -rf ./temp_downloads
+fi
 
 if [[ $BUILD_EXIT_CODE -eq 137 ]]; then
     echo ""

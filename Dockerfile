@@ -22,6 +22,9 @@ ARG DOWNLOADS_DIR=""
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
+# Copy temp downloads directory if it exists (fallback when BuildKit is not available)
+COPY temp_downloads* /temp_downloads/
+
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
         echo "Setting up CUDA support..."; \
