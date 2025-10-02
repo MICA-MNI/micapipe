@@ -184,13 +184,17 @@ if [[ -n "$DOWNLOADS_DIR" ]]; then
             echo "🔧 Using Docker BuildKit for mount support"
             DOCKER_DOWNLOADS_ARGS="--mount type=bind,source=$DOWNLOADS_DIR,target=/downloads"
         else
-            # Fall back to copying files into build context
-            echo "🔧 BuildKit not available, copying downloads to build context"
+            # Fall back to symbolic links (no space used!)
+            echo "🔧 BuildKit not available, creating symbolic links to downloads"
             COPY_DOWNLOADS=true
             mkdir -p ./temp_downloads
             if [[ -n "$(ls -A "$DOWNLOADS_DIR" 2>/dev/null)" ]]; then
-                cp -r "$DOWNLOADS_DIR"/* ./temp_downloads/ 2>/dev/null || true
-                echo "   Copied $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) files"
+                for file in "$DOWNLOADS_DIR"/*; do
+                    if [[ -f "$file" ]]; then
+                        ln -sf "$file" "./temp_downloads/$(basename "$file")"
+                    fi
+                done
+                echo "   Linked $(ls -1 ./temp_downloads/ 2>/dev/null | wc -l) files (no space used)"
             fi
         fi
     else
@@ -267,7 +271,7 @@ BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
 # Cleanup temporary downloads directory if it was created
 if [[ "$COPY_DOWNLOADS" == "true" && -d "./temp_downloads" ]]; then
-    echo "🧹 Cleaning up temporary downloads..."
+    echo "🧹 Cleaning up temporary downloads (symbolic links)..."
     rm -rf ./temp_downloads
 fi
 
