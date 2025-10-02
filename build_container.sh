@@ -34,6 +34,11 @@ while [[ $# -gt 0 ]]; do
             echo "🔄 Building without cache"
             shift
             ;;
+        --clean-build)
+            CLEAN_BUILD=true
+            echo "🧹 Will clean build directory first"
+            shift
+            ;;
         --singularity-path)
             SINGULARITY_PATH="$2"
             shift 2
@@ -51,9 +56,10 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "Usage: $0 [--cuda] [--no-cache] [--singularity-path PATH] [--cache-dir PATH] [--downloads-dir PATH] [--custom-tmpdir PATH]"
+            echo "Usage: $0 [--cuda] [--no-cache] [--clean-build] [--singularity-path PATH] [--cache-dir PATH] [--downloads-dir PATH] [--custom-tmpdir PATH]"
             echo "  --cuda                Enable CUDA support"
             echo "  --no-cache            Build without Docker cache"
+            echo "  --clean-build         Clean build directory first (force fresh copy)"
             echo "  --singularity-path    Custom path for .sif output (default: /data_/mica1/01_programs/singularity)"
             echo "  --cache-dir           Path to dependency cache (default: /data_/mica1/01_programs/micapipe_cache)"
             echo "  --downloads-dir       Path to pre-downloaded dependencies (use after running download_dependencies.sh)"
@@ -176,24 +182,51 @@ BUILD_IN_TEMP_DIR=false
 if [[ -n "$DOWNLOADS_DIR" && "$DOWNLOADS_DIR" == *"$CUSTOM_TMPDIR"* ]]; then
     BUILD_IN_TEMP_DIR=true
     echo "📦 Downloads are in custom temp directory: $DOWNLOADS_DIR"
-    echo "🔧 Will copy build environment to same location for efficiency"
+    echo "🔧 Will use/create build environment in same location for efficiency"
     
-    # Create build directory in the same location as downloads
-    BUILD_DIR="${CUSTOM_TMPDIR}/micapipe_build_$(date +%Y%m%d_%H%M%S)"
+    # Use persistent build directory (don't create new one each time)
+    BUILD_DIR="${CUSTOM_TMPDIR}/micapipe_build"
     echo "📁 Build directory: $BUILD_DIR"
     
-    # Copy entire source tree to build location
-    echo "📋 Copying source code to build directory..."
-    mkdir -p "$BUILD_DIR"
-    rsync -av --exclude='.git' --exclude='build_logs' --exclude='*.sif' \
-          --exclude='temp_downloads' --exclude='downloads_temp' \
-          ./ "$BUILD_DIR/"
+    # Clean build directory if requested
+    if [[ "$CLEAN_BUILD" == "true" && -d "$BUILD_DIR" ]]; then
+        echo "🧹 Cleaning existing build directory..."
+        rm -rf "$BUILD_DIR"
+    fi
     
-    # Create local downloads directory in build context
+    # Check if build directory already exists with source code
+    if [[ -d "$BUILD_DIR" && -f "$BUILD_DIR/Dockerfile" ]]; then
+        echo "📋 Reusing existing build directory (no time wasted copying)"
+        echo "   Last modified: $(stat -c %y "$BUILD_DIR/Dockerfile" 2>/dev/null || stat -f %Sm "$BUILD_DIR/Dockerfile")"
+        
+        # Update only if source is newer
+        SOURCE_TIME=$(stat -c %Y . 2>/dev/null || stat -f %m .)
+        BUILD_TIME=$(stat -c %Y "$BUILD_DIR" 2>/dev/null || stat -f %m "$BUILD_DIR")
+        
+        if [[ $SOURCE_TIME -gt $BUILD_TIME ]]; then
+            echo "   Source code updated, syncing changes..."
+            rsync -av --exclude='.git' --exclude='build_logs' --exclude='*.sif' \
+                  --exclude='temp_downloads' --exclude='downloads_temp' \
+                  --exclude='downloads' \
+                  ./ "$BUILD_DIR/"
+        else
+            echo "   Source code unchanged, skipping copy"
+        fi
+    else
+        echo "📋 Creating new build directory..."
+        mkdir -p "$BUILD_DIR"
+        rsync -av --exclude='.git' --exclude='build_logs' --exclude='*.sif' \
+              --exclude='temp_downloads' --exclude='downloads_temp' \
+              --exclude='downloads' \
+              ./ "$BUILD_DIR/"
+        echo "   Source copied to: $BUILD_DIR"
+    fi
+    
+    # Always refresh downloads links (in case files changed)
+    rm -rf "$BUILD_DIR/downloads"
     mkdir -p "$BUILD_DIR/downloads"
     ln -sf "$DOWNLOADS_DIR"/* "$BUILD_DIR/downloads/" 2>/dev/null || true
     
-    echo "   Source copied to: $BUILD_DIR"
     echo "   Downloads linked: $(ls -1 "$BUILD_DIR/downloads/" 2>/dev/null | wc -l) files"
     
     DOCKER_DOWNLOADS_ARGS="--build-arg DOWNLOADS_DIR=/downloads"
@@ -343,14 +376,14 @@ if [[ $BUILD_EXIT_CODE -eq 0 && -n "$COPY_TARGET" && -d "$COPY_TARGET" ]]; then
     echo "   Removed: $COPY_TARGET"
 fi
 
-# Cleanup build directory if we built in temp directory
+# Cleanup build directory if we built in temp directory  
 if [[ "$BUILD_IN_TEMP_DIR" == "true" && -n "$BUILD_DIR" ]]; then
     if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
-        echo "🧹 Cleaning up temporary build directory..."
-        rm -rf "$BUILD_DIR"
-        echo "   Removed: $BUILD_DIR"
+        echo "✅ Build successful - keeping build directory for future use: $BUILD_DIR"
+        echo "💡 Next build will reuse this directory and be much faster"
     else
-        echo "⚠️  Keeping build directory for debugging: $BUILD_DIR"
+        echo "⚠️  Build failed - keeping build directory for debugging: $BUILD_DIR"
+        echo "💡 Fix issues and rerun - will reuse existing directory"
     fi
 fi
 
