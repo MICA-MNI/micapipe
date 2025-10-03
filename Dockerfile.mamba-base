@@ -1,0 +1,353 @@
+FROM ubuntu:bionic-20201119
+
+USER root
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# ============================================================================
+# COMPREHENSIVE MICAPIPE BASE IMAGE
+# Includes: System packages + Conda/Mamba + FSL + FreeSurfer + AFNI + ANTs + R
+# Purpose: All neuroimaging tools except MICApipe code for ultra-fast CI builds
+# ============================================================================
+
+# Install all system packages needed for neuroimaging tools
+RUN echo "Installing comprehensive system packages..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        # Essential packages
+        apt-utils \
+        build-essential \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release \
+        software-properties-common \
+        wget \
+        # Development tools
+        cmake \
+        git \
+        make \
+        pkg-config \
+        unzip \
+        zip \
+        # Graphics and multimedia libraries
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libgomp1 \
+        libglu1-mesa \
+        libgtk-3-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        libxt6 \
+        x11-apps \
+        xvfb \
+        # Scientific computing dependencies  
+        bc \
+        dc \
+        file \
+        libgfortran3 \
+        liblapack3 \
+        libopenblas-base \
+        libquadmath0 \
+        python3 \
+        python3-pip \
+        tcsh \
+        # Additional dependencies
+        bzip2 \
+        locales \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale
+RUN locale-gen en_US.UTF-8
+ENV LANG="en_US.UTF-8" \
+    LC_ALL="en_US.UTF-8" \
+    ND_ENTRYPOINT="/neurodocker/startup.sh"
+
+# Create neurodocker startup script
+RUN mkdir -p /neurodocker \
+    && echo '#!/bin/bash' > /neurodocker/startup.sh \
+    && echo 'set +e' >> /neurodocker/startup.sh \
+    && echo 'if [ -n "$1" ]; then' >> /neurodocker/startup.sh \
+    && echo '    exec "$@"' >> /neurodocker/startup.sh \
+    && echo 'else' >> /neurodocker/startup.sh \
+    && echo '    /bin/bash' >> /neurodocker/startup.sh \
+    && echo 'fi' >> /neurodocker/startup.sh \
+    && chmod +x /neurodocker/startup.sh
+
+# ============================================================================
+# CONDA/MAMBA INSTALLATION AND ENVIRONMENTS
+# ============================================================================
+
+# Install Miniconda with pre-download support
+ENV PATH="/opt/miniconda-latest/bin:$PATH"
+ENV MAMBA_NO_LOCK=1
+ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
+
+# Copy build context for pre-downloaded files
+COPY . /tmp/build_context/
+
+# Create downloads directory and copy pre-downloaded dependencies
+RUN mkdir -p /downloads && \
+    echo "Copying pre-downloaded files if available..." && \
+    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "✅ Copying FSL..."; \
+        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "✅ Copying FreeSurfer..."; \
+        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FreeSurfer not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/linux_openmp_64.tgz" ]; then \
+        echo "✅ Copying AFNI..."; \
+        cp /tmp/build_context/linux_openmp_64.tgz /downloads/; \
+    else \
+        echo "⚠️  AFNI not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/fix.tar.gz" ]; then \
+        echo "✅ Copying FSL FIX..."; \
+        cp /tmp/build_context/fix.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL FIX not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/Miniconda3-latest-Linux-x86_64.sh" ]; then \
+        echo "✅ Copying Miniconda..."; \
+        cp /tmp/build_context/Miniconda3-latest-Linux-x86_64.sh /downloads/; \
+    else \
+        echo "⚠️  Miniconda not found, will download during build"; \
+    fi
+
+# Install Miniconda
+RUN if [ -f "/downloads/Miniconda3-latest-Linux-x86_64.sh" ]; then \
+        echo "✅ Using pre-downloaded Miniconda installer"; \
+        cp /downloads/Miniconda3-latest-Linux-x86_64.sh /tmp/miniconda.sh; \
+    else \
+        echo "📥 Downloading Miniconda installer..."; \
+        wget -q --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -O /tmp/miniconda.sh \
+            https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; \
+    fi \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda-latest \
+    && rm /tmp/miniconda.sh \
+    && . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda config --set auto_update_conda false \
+    && conda config --set show_channel_urls true \
+    && conda config --set solver libmamba \
+    && conda config --set channel_priority strict \
+    && conda install -y -n base -c conda-forge mamba
+
+# Create optimized micapipe environment
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda create -y -n micapipe python=3.9 \
+    && echo "🔧 Installing core scientific packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        numpy scipy pandas matplotlib seaborn plotly \
+        nibabel scikit-learn scikit-image \
+        dipy==1.4.1 fury==0.8.0 \
+        ipython jupyter tqdm joblib \
+        h5py hdf5 pytables \
+    && echo "🔧 Installing antspy and MRtrix3..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+        --override-channels --strict-channel-priority \
+        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        antspy mrtrix3==3.0.7 \
+    && echo "🔧 Installing utilities and networking packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        bzip2 ca-certificates curl git openssh \
+        unzip wget xz zip \
+        cryptography paramiko pycryptodome \
+        requests urllib3 \
+        cmake make \
+        gcc_linux-64 gxx_linux-64
+
+# Create designer environment
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda create -y -n designer python=3.8 \
+    && mamba install -y -n designer -c conda-forge \
+        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        numpy scipy matplotlib nibabel dipy
+
+# Install additional Python packages via pip
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda activate micapipe \
+    && pip install --no-cache-dir \
+        vtk \
+        pyvista \
+        fury==0.8.0 \
+        git+https://github.com/MICA-MNI/LAMAReg.git \
+        git+https://github.com/MICA-MNI/ENIGMA.git
+
+# Clean up conda/mamba caches to reduce image size
+RUN conda clean -ya \
+    && find /opt/miniconda-latest -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# ============================================================================ 
+# NEUROIMAGING TOOLS INSTALLATION
+# ============================================================================
+
+# Install FSL
+ENV FSLDIR="/opt/fsl-6.0.2" \
+    PATH="/opt/fsl-6.0.2/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl-6.0.2/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.2/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL=""
+
+RUN echo "Installing FSL..." \
+    && if [ -f "/downloads/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FSL"; \
+        cp /downloads/fsl-6.0.2-centos6_64.tar.gz /tmp/fsl.tar.gz; \
+    else \
+        echo "📥 Downloading FSL from internet..."; \
+        curl -fL https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz -o /tmp/fsl.tar.gz; \
+    fi \
+    && tar -xf /tmp/fsl.tar.gz -C /opt \
+    && rm /tmp/fsl.tar.gz \
+    && echo "Running FSL Python installer..." \
+    && ${FSLDIR}/etc/fslconf/fslpython_install.sh -f ${FSLDIR}
+
+# Install FreeSurfer
+ENV FREESURFER_HOME="/opt/freesurfer" \
+    SUBJECTS_DIR="/opt/freesurfer/subjects" \
+    FUNCTIONALS_DIR="/opt/freesurfer/sessions" \
+    MNI_DIR="/opt/freesurfer/mni" \
+    LOCAL_DIR="/opt/freesurfer/local" \
+    MINC_BIN_DIR="/opt/freesurfer/mni/bin" \
+    MINC_LIB_DIR="/opt/freesurfer/mni/lib" \
+    MNI_DATAPATH="/opt/freesurfer/mni/data"
+ENV PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
+    MNI_PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
+    PATH="/opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:$PATH"
+
+RUN echo "Installing FreeSurfer..." \
+    && if [ -f "/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FreeSurfer"; \
+        cp /downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /tmp/freesurfer.tar.gz; \
+    else \
+        echo "📥 Downloading FreeSurfer from internet..."; \
+        curl -fL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz -o /tmp/freesurfer.tar.gz; \
+    fi \
+    && tar -xf /tmp/freesurfer.tar.gz -C /opt \
+    && rm /tmp/freesurfer.tar.gz
+
+# Install AFNI
+ENV PATH="/opt/afni:$PATH" \
+    AFNI_PLUGINPATH="/opt/afni"
+
+RUN echo "Installing AFNI..." \
+    && mkdir -p /opt/afni \
+    && if [ -f "/downloads/linux_openmp_64.tgz" ]; then \
+        echo "📦 Using pre-downloaded AFNI"; \
+        cp /downloads/linux_openmp_64.tgz /tmp/afni.tgz; \
+    else \
+        echo "📥 Downloading AFNI from internet..."; \
+        curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz -o /tmp/afni.tgz; \
+    fi \
+    && tar -xf /tmp/afni.tgz -C /opt/afni --strip-components=1 \
+    && rm /tmp/afni.tgz
+
+# Copy ANTs v2.3.4 binaries from kaczmarj/ants:2.3.4
+COPY --from=kaczmarj/ants:2.3.4 /opt/ants /opt/ants-2.3.4
+ENV ANTSPATH="/opt/ants-2.3.4/bin" \
+    PATH="/opt/ants-2.3.4/bin:$PATH"
+
+# Install FSL FIX
+RUN echo "Installing FSL FIX..." \
+    && mkdir -p /opt/fix \
+    && if [ -f "/downloads/fix.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FSL FIX"; \
+        cp /downloads/fix.tar.gz /tmp/fix.tar.gz; \
+    else \
+        echo "📥 Downloading FSL FIX from internet..."; \
+        curl -fL https://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz -o /tmp/fix.tar.gz; \
+    fi \
+    && tar -xf /tmp/fix.tar.gz -C /opt/fix --strip-components=1 \
+    && rm /tmp/fix.tar.gz
+ENV PATH="/opt/fix:$PATH"
+
+# Install FastSurfer
+ENV FASTSURFER_HOME="/opt/FastSurfer"
+RUN echo "Installing FastSurfer..." \
+    && git clone --depth 1 --branch v2.4.2 https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer
+
+# Install additional neuroimaging tools and dependencies
+RUN echo "Installing SWM (Superficial White Matter)..." \
+    && git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
+    && chmod +x /opt/SWM/SWM \
+    && chmod -R a+rx /opt/SWM
+
+ENV SWM_HOME="/opt/SWM"
+ENV PATH="/opt/SWM:$PATH"
+
+RUN echo "Installing DESIGNER pipeline..." \
+    && git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER.py
+
+ENV DESIGNER_HOME="/opt/DESIGNER"
+ENV PATH="/opt/DESIGNER:$PATH"
+
+# Install R and libraries
+RUN set -uex; \
+    LD_LIBRARY_PATH=/lib64/:${PATH}; \
+    apt-get update; \
+    apt-get install -y software-properties-common apt-transport-https; \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
+    apt-get update; \
+    apt-get install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
+    apt-get install -y r-base-dev; \
+    rm -rf /var/lib/apt/lists/*;
+
+# Install c3d
+RUN set -uex; \
+    cd /opt/ && \
+    wget -O itksnap.tar.gz https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download && \
+    tar -xf itksnap.tar.gz -C /opt/ && \
+    rm itksnap.tar.gz
+ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
+
+# ============================================================================
+# FINAL ENVIRONMENT SETUP
+# ============================================================================
+
+# Set up environment activation
+RUN echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> /etc/bash.bashrc \
+    && echo "conda activate micapipe" >> /etc/bash.bashrc \
+    && echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> $ND_ENTRYPOINT \
+    && echo "conda activate micapipe" >> $ND_ENTRYPOINT
+
+# Copy R configuration
+COPY R_config/ /opt/R_config/
+ENV R_LIBS="/opt/R_config"
+
+ENV BASH_ENV="/etc/bash.bashrc"
+
+# Final cleanup to reduce image size
+RUN apt-get autoremove -y \
+    && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && find /opt -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Metadata
+LABEL org.opencontainers.image.title="MICApipe Comprehensive Base"
+LABEL org.opencontainers.image.description="Complete neuroimaging environment with FSL, FreeSurfer, AFNI, ANTs, and optimized Python environments for MICApipe"
+LABEL org.opencontainers.image.version="2.0"
+LABEL org.opencontainers.image.source="https://github.com/MICA-MNI/micapipe"
+LABEL org.opencontainers.image.documentation="https://micapipe.readthedocs.io/"
+
+# Set working directory
+WORKDIR /home/mica
+
+# Default command
+CMD ["/bin/bash"]

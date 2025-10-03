@@ -1,0 +1,89 @@
+# ============================================================================
+# MICAPIPE MINIMAL DOCKERFILE
+# Uses comprehensive base image with all neuroimaging tools pre-installed
+# This Dockerfile only handles: MICApipe code, R packages, and final configuration
+# Perfect for CI where code changes frequently but tools remain stable
+# ============================================================================
+
+# Configurable base image
+ARG BASE_IMAGE=ghcr.io/mica-mni/micapipe-comprehensive-base:latest
+FROM ${BASE_IMAGE}
+
+USER root
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# CUDA build argument - defaults to false to preserve current behavior
+ARG ENABLE_CUDA=false
+
+# Add NVIDIA repository and CUDA toolkit if CUDA is enabled
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "Setting up CUDA support..."; \
+        apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               gnupg2 \
+               software-properties-common \
+        && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
+        && add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
+        && apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               cuda-runtime-11-8 \
+               cuda-libraries-11-8 \
+               libcudnn8 \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*; \
+    else \
+        echo "CUDA support disabled - building CPU-only container"; \
+    fi
+
+# ============================================================================
+# MICAPIPE CODE AND CONFIGURATION
+# ============================================================================
+
+# Copy MICApipe source code
+COPY . /opt/micapipe/
+
+# Make MICApipe executable and set permissions
+RUN chmod +x /opt/micapipe/micapipe \
+    && chmod -R a+rx /opt/micapipe
+
+# ============================================================================
+# R PACKAGES INSTALLATION (Project-specific packages)
+# ============================================================================
+
+# Copy R configuration files
+COPY ./R_config/* /opt/
+
+# Install R packages for MICApipe
+RUN bash -c 'bash /opt/install_R_env.sh && cd /opt/afni && rPkgsInstall -pkgs ALL'
+
+# ============================================================================
+# FINAL CONFIGURATION AND MICAPIPE SETUP
+# ============================================================================
+
+# Move configuration files to their proper locations
+RUN bash -c 'cd /opt/micapipe && mv fix_settings.sh /opt/fix/settings.sh && mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
+
+# Copy FreeSurfer subjects
+RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer/subjects'
+
+# Set up MICApipe environment variables and paths
+ENV MICAPIPE="/opt/micapipe"
+ENV PROC="container_micapipe-v0.2.3"
+ENV FIXPATH="/opt/fix"
+ENV PATH="/opt/fix:/opt/micapipe:/opt/micapipe/functions:${PATH}"
+
+# Set working directory
+WORKDIR /home/mica
+
+# Set up final environment activation
+RUN echo "conda activate micapipe" >> ~/.bashrc
+
+# Entry point
+ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/micapipe"]
+
+# Metadata
+LABEL org.opencontainers.image.title="MICApipe"
+LABEL org.opencontainers.image.description="MICApipe neuroimaging analysis pipeline - optimized for CI/CD"
+LABEL org.opencontainers.image.version="0.2.3"
+LABEL org.opencontainers.image.source="https://github.com/MICA-MNI/micapipe"
+LABEL org.opencontainers.image.documentation="https://micapipe.readthedocs.io/"
