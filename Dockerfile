@@ -514,74 +514,104 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda install -y -n base -c conda-forge mamba \
     && mamba create -y -n micapipe python=3.9
 
-# Install conda packages via Mamba
+# Install conda packages via Mamba - split into chunks for reliability
 RUN conda config --system --set channel_priority strict \
     && export MAMBA_NO_SPINNER=1 \
-    && export CONDA_ALWAYS_YES=1 \
-    && timeout 1800 mamba install -y -q -n micapipe -c conda-forge \
-           aiohttp \
-           aiosignal \
-           asn1crypto \
-           async-timeout \
-           astropy \
-           attrs \
-           bokeh \
-           cffi \
-           charset-normalizer \
-           click \
-           contourpy \
-           cryptography \
-           cycler \
-           fonttools \
-           frozenlist \
-           html5lib \
-           idna \
-           importlib-resources \
-           jinja2 \
-           joblib \
-           kiwisolver \
-           lxml \
-           markupsafe \
-           "matplotlib==3.4.3" \
-           multidict \
-           "nibabel==4.0.2" \
-           nilearn \
+    && export CONDA_ALWAYS_YES=1
+
+# Install core scientific packages first
+RUN mamba install -y -n micapipe -c conda-forge \
            "numpy==1.21.5" \
-           packaging \
+           "scipy" \
            "pandas==1.4.4" \
-           pillow \
-           pycparser \
-           pyhanko-certvalidator \
-           pyparsing \
-           pypdf \
-           pypng \
-           python-bidi \
-           python-dateutil \
-           pytz \
-           pytz-deprecation-shim \
-           pyyaml \
-           qrcode \
-           reportlab \
-           requests \
-           scikit-learn \
-           scikit-fmm \
-           scipy \
-           six \
-           svglib \
-           threadpoolctl \
-           tinycss2 \
-           tornado \
-           typing-extensions \
-           tzlocal \
-           uritools \
-           urllib3 \
-           "vtk==9.2.2" \
-           webencodings \
-           wslink \
-           yarl \
-           zipp \
+           "matplotlib==3.4.3" \
+           "nibabel==4.0.2" \
+           "pillow" \
+           "packaging" \
+    && mamba clean -y --all
+
+# Install ML and data packages
+RUN mamba install -y -n micapipe -c conda-forge \
+           "scikit-learn" \
+           "scikit-fmm" \
+           "joblib" \
+           "nilearn" \
+           "astropy" \
+    && mamba clean -y --all
+
+# Install web and networking packages  
+RUN mamba install -y -n micapipe -c conda-forge \
+           "aiohttp" \
+           "aiosignal" \
+           "async-timeout" \
+           "multidict" \
+           "yarl" \
+           "frozenlist" \
+           "charset-normalizer" \
+           "idna" \
+           "requests" \
+           "urllib3" \
+    && mamba clean -y --all
+
+# Install visualization and GUI packages
+RUN mamba install -y -n micapipe -c conda-forge \
+           "bokeh" \
+           "contourpy" \
+           "cycler" \
+           "fonttools" \
+           "tornado" \
+           "kiwisolver" \
+           "jinja2" \
+           "markupsafe" \
            "pyvirtualdisplay==3.0" \
-    && sync && mamba clean -y --all && sync 
+    && mamba clean -y --all
+
+# Install document and utility packages
+RUN mamba install -y -n micapipe -c conda-forge \
+           "lxml" \
+           "html5lib" \
+           "webencodings" \
+           "reportlab" \
+           "pypdf" \
+           "pypng" \
+           "qrcode" \
+           "svglib" \
+           "tinycss2" \
+    && mamba clean -y --all
+
+# Install remaining utility packages
+RUN mamba install -y -n micapipe -c conda-forge \
+           "attrs" \
+           "click" \
+           "pyyaml" \
+           "python-dateutil" \
+           "pytz" \
+           "pytz-deprecation-shim" \
+           "tzlocal" \
+           "six" \
+           "zipp" \
+           "typing-extensions" \
+           "threadpoolctl" \
+           "importlib-resources" \
+    && mamba clean -y --all
+
+# Install crypto and security packages
+RUN mamba install -y -n micapipe -c conda-forge \
+           "cryptography" \
+           "cffi" \
+           "pycparser" \
+           "asn1crypto" \
+           "pyhanko-certvalidator" \
+           "pyparsing" \
+           "python-bidi" \
+           "uritools" \
+           "wslink" \
+    && mamba clean -y --all
+
+# Install VTK separately as it's large
+RUN mamba install -y -n micapipe -c conda-forge \
+           "vtk==9.2.2" \
+    && mamba clean -y --all 
 
 # Install pip-only packages
 RUN mamba run -n micapipe pip install --no-cache-dir \   
