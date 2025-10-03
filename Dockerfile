@@ -602,16 +602,19 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "Creating micapipe environment with mamba (fast solver)..." \
     && mamba create -y -n micapipe python=3.9
 
-# Install conda packages via Mamba with acceleration optimizations
+# Install conda packages via Mamba with maximum acceleration optimizations
 RUN export MAMBA_NO_SPINNER=1 \
     && export CONDA_ALWAYS_YES=1 \
     && export MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
-    && export MAMBA_REPODATA_THREADS=4 \
-    && export CONDA_FETCH_THREADS=4 \
-    && echo "Mamba environment setup complete with parallel download optimization"
+    && export MAMBA_REPODATA_THREADS=8 \
+    && export CONDA_FETCH_THREADS=8 \
+    && export MAMBA_THREADS_NUM=8 \
+    && export CONDA_SOLVER_IGNORE_TIMESTAMPS=true \
+    && export MAMBA_NO_LOCK=1 \
+    && echo "Mamba environment setup complete with maximum parallel optimization"
 
-# Install core scientific packages first
-RUN echo "Installing core scientific packages with mamba (fast!)..." \
+# Install scientific and core packages in large batches (faster solving)
+RUN echo "Installing core scientific stack with mamba (optimized batch install)..." \
     && mamba install -y -n micapipe -c conda-forge \
            "numpy==1.21.5" \
            "scipy" \
@@ -620,10 +623,6 @@ RUN echo "Installing core scientific packages with mamba (fast!)..." \
            "nibabel==4.0.2" \
            "pillow" \
            "packaging" \
-    && mamba clean -y --all
-
-# Install ML and data packages
-RUN mamba install -y -n micapipe -c conda-forge \
            "scikit-learn" \
            "scikit-fmm" \
            "joblib" \
@@ -631,8 +630,9 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "astropy" \
     && mamba clean -y --all
 
-# Install web and networking packages  
-RUN mamba install -y -n micapipe -c conda-forge \
+# Install web/networking and visualization packages together
+RUN echo "Installing web, networking and visualization packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
            "aiohttp" \
            "aiosignal" \
            "async-timeout" \
@@ -643,11 +643,7 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "idna" \
            "requests" \
            "urllib3" \
-    && mamba clean -y --all
-
-# Install visualization and GUI packages
-RUN mamba install -y -n micapipe -c conda-forge \
-           "bokeh" \
+           "bokeh==2.2.3" \
            "contourpy" \
            "cycler" \
            "fonttools" \
@@ -656,10 +652,6 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "jinja2" \
            "markupsafe" \
            "pyvirtualdisplay==3.0" \
-    && mamba clean -y --all
-
-# Install document and utility packages
-RUN mamba install -y -n micapipe -c conda-forge \
            "lxml" \
            "html5lib" \
            "webencodings" \
@@ -671,8 +663,9 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "tinycss2" \
     && mamba clean -y --all
 
-# Install remaining utility packages
-RUN mamba install -y -n micapipe -c conda-forge \
+# Install utility, crypto and miscellaneous packages in one large batch
+RUN echo "Installing utility, crypto and miscellaneous packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
            "attrs" \
            "click" \
            "pyyaml" \
@@ -685,10 +678,6 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "typing-extensions" \
            "threadpoolctl" \
            "importlib-resources" \
-    && mamba clean -y --all
-
-# Install crypto and security packages
-RUN mamba install -y -n micapipe -c conda-forge \
            "cryptography" \
            "cffi" \
            "pycparser" \
@@ -729,16 +718,20 @@ RUN mamba run -n micapipe pip install --no-cache-dir \
     && sync \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
 
-# Install LAMAReg for cross-modality registration with antspy dependencies
-# Install antspy and antspyx via conda/mamba (not available via pip)
-RUN mamba install -y -n micapipe -c conda-forge \
+# Install LAMAReg dependencies and MRtrix3 in optimized batch
+# Combine antspy with MRtrix3 to reduce solver iterations
+RUN echo "Installing ANTs Python bindings and MRtrix3 together..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
            antspy \
            antspyx \
+           mrtrix3==3.0.7 \
     && mamba clean -y --all
 
-# Install LAMAReg via pip after antspy dependencies are installed
-RUN mamba run -n micapipe pip install --no-cache-dir \
-           git+https://github.com/MICA-MNI/LAMAReg.git
+# Install LAMAReg and ENIGMA via pip
+RUN echo "Installing LAMAReg and ENIGMA from GitHub..." \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           git+https://github.com/MICA-MNI/LAMAReg.git \
+           git+https://github.com/MICA-MNI/ENIGMA.git
 
 # Install SWM (Superficial White Matter) for surface-based analysis
 ENV SWM_HOME="/opt/SWM"
@@ -748,10 +741,7 @@ RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /op
     && chmod +x /opt/SWM/SWM \
     && chmod -R a+rx /opt/SWM
 
-# Install MRtrix3 and ENIGMA
-RUN mamba install -y -n micapipe -c mrtrix3 mrtrix3==3.0.7 \
-    && mamba run -n micapipe pip install git+https://github.com/MICA-MNI/ENIGMA.git
-
+# MRtrix3 and ENIGMA already installed above in optimized batch
 # Fix MRtrix3 environment path issues
 ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
 
