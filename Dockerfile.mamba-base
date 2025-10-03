@@ -127,43 +127,6 @@ ENV PATH="/opt/miniconda-latest/bin:$PATH"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
 
-# Copy build context for pre-downloaded files
-COPY . /tmp/build_context/
-
-# Create downloads directory and copy pre-downloaded dependencies
-RUN mkdir -p /downloads && \
-    echo "Copying pre-downloaded files if available..." && \
-    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
-        echo "✅ Copying FSL..."; \
-        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
-        echo "✅ Copying FreeSurfer..."; \
-        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FreeSurfer not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/linux_openmp_64.tgz" ]; then \
-        echo "✅ Copying AFNI..."; \
-        cp /tmp/build_context/linux_openmp_64.tgz /downloads/; \
-    else \
-        echo "⚠️  AFNI not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/fix.tar.gz" ]; then \
-        echo "✅ Copying FSL FIX..."; \
-        cp /tmp/build_context/fix.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL FIX not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/Miniconda3-latest-Linux-x86_64.sh" ]; then \
-        echo "✅ Copying Miniconda..."; \
-        cp /tmp/build_context/Miniconda3-latest-Linux-x86_64.sh /downloads/; \
-    else \
-        echo "⚠️  Miniconda not found, will download during build"; \
-    fi
-
 # Install Miniconda
 RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
         echo "✅ Using pre-downloaded Miniconda installer"; \
