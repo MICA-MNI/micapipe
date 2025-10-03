@@ -13,20 +13,24 @@ FSL_URL="https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz"
 FREESURFER_URL="ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
 AFNI_URL="https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz"
 FSL_FIX_URL="https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz"
+MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh"
 FSL_FILENAME="fsl-6.0.2-centos6_64.tar.gz"
 FREESURFER_FILENAME="freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
 AFNI_FILENAME="afni-linux_openmp_64.tgz"
 FSL_FIX_FILENAME="fix-1.068.tar.gz"
+MINICONDA_FILENAME="Miniconda3-py39_22.11.1-1-Linux-x86_64.sh"
 FSL_MIN_SIZE=$((500 * 1024 * 1024))      # 500MB
 FREESURFER_MIN_SIZE=$((2 * 1024 * 1024 * 1024))  # 2GB
 AFNI_MIN_SIZE=$((300 * 1024 * 1024))     # 300MB
 FSL_FIX_MIN_SIZE=$((30 * 1024 * 1024))   # 30MB
+MINICONDA_MIN_SIZE=$((50 * 1024 * 1024)) # 50MB
 
 # Options
 DOWNLOAD_FSL=true
 DOWNLOAD_FREESURFER=true
 DOWNLOAD_AFNI=true
 DOWNLOAD_FSL_FIX=true
+DOWNLOAD_MINICONDA=true
 FORCE_DOWNLOAD=false
 VERIFY_ONLY=false
 
@@ -295,6 +299,12 @@ if [[ "$DOWNLOAD_FSL_FIX" == "true" ]]; then
     process_dependency "FSL FIX 1.068" "$FSL_FIX_URL" "$FSL_FIX_FILENAME" "$FSL_FIX_MIN_SIZE" || FSL_FIX_SUCCESS=false
 fi
 
+# Process Miniconda
+MINICONDA_SUCCESS=true
+if [[ "$DOWNLOAD_MINICONDA" == "true" ]]; then
+    process_dependency "Miniconda 22.11.1" "$MINICONDA_URL" "$MINICONDA_FILENAME" "$MINICONDA_MIN_SIZE" || MINICONDA_SUCCESS=false
+fi
+
 # Summary
 echo "📋 Download Summary"
 echo "=================="
@@ -334,6 +344,13 @@ if [[ "$DOWNLOAD_FSL_FIX" == "true" ]]; then
         echo "❌ $FSL_FIX_FILENAME: Not downloaded"
     fi
 fi
+if [[ "$DOWNLOAD_MINICONDA" == "true" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$MINICONDA_FILENAME" ]]; then
+        verify_file "$DOWNLOAD_DIR/$MINICONDA_FILENAME" "$MINICONDA_MIN_SIZE" || true
+    else
+        echo "❌ $MINICONDA_FILENAME: Not downloaded"
+    fi
+fi
 
 echo ""
 echo "💡 Next steps:"
@@ -347,7 +364,8 @@ if [[ "$VERIFY_ONLY" == "true" ]]; then
     if [[ "$DOWNLOAD_FSL" == "true" && "$FSL_SUCCESS" == "false" ]] || \
        [[ "$DOWNLOAD_FREESURFER" == "true" && "$FREESURFER_SUCCESS" == "false" ]] || \
        [[ "$DOWNLOAD_AFNI" == "true" && "$AFNI_SUCCESS" == "false" ]] || \
-       [[ "$DOWNLOAD_FSL_FIX" == "true" && "$FSL_FIX_SUCCESS" == "false" ]]; then
+       [[ "$DOWNLOAD_FSL_FIX" == "true" && "$FSL_FIX_SUCCESS" == "false" ]] || \
+       [[ "$DOWNLOAD_MINICONDA" == "true" && "$MINICONDA_SUCCESS" == "false" ]]; then
         exit 1
     fi
 fi

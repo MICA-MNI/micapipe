@@ -62,6 +62,11 @@ RUN mkdir -p /downloads && \
         cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
     else \
         echo "⚠️  FSL FIX not found, will download during build"; \
+    if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Copying Miniconda..."; \
+        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /downloads/; \
+    else \
+        echo "⚠️  Miniconda not found, will download during build"; \
     fi && \
     rm -rf /tmp/build_context && \
     echo "Download files setup complete"
@@ -563,7 +568,7 @@ ENV CONDA_DIR="/opt/miniconda-22.11.1" \
 
 # Install Miniconda & Mamba and create environment
 RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
-    && echo "Downloading Miniconda installer ..." \
+    && echo "Installing Miniconda ..." \
     && echo "Testing custom temp directory: ${CUSTOM_TMPDIR}" \
     && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null && echo "test" > ${CUSTOM_TMPDIR}/write_test 2>/dev/null && rm -f ${CUSTOM_TMPDIR}/write_test 2>/dev/null; then \
         echo "Using custom temp directory: ${CUSTOM_TMPDIR}"; \
@@ -573,7 +578,13 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
         conda_installer="/tmp/miniconda.sh"; \
     fi \
     && echo "Using temporary file: $conda_installer" \
-    && curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh \
+    && if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Using pre-downloaded Miniconda installer"; \
+        cp /downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
+    else \
+        echo "📥 Downloading Miniconda installer..."; \
+        curl -fsSL --retry 5 -o "$conda_installer" https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
+    fi \
     && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
     && rm -f "$conda_installer" \
     && conda config --system --prepend channels conda-forge \
@@ -583,17 +594,21 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda config --system --set remote_read_timeout_secs 1800 \
     && conda config --system --set remote_connect_timeout_secs 300 \
     && conda config --system --set remote_max_retries 5 \
+    && conda config --system --set pkgs_dirs /opt/miniconda-22.11.1/pkgs \
+    && conda config --system --set envs_dirs /opt/miniconda-22.11.1/envs \
     && sync && conda clean -y --all && sync \
     && echo "Installing mamba (fast package manager)..." \
     && conda install -y -n base -c conda-forge mamba \
     && echo "Creating micapipe environment with mamba (fast solver)..." \
     && mamba create -y -n micapipe python=3.9
 
-# Install conda packages via Mamba - split into chunks for reliability
+# Install conda packages via Mamba with acceleration optimizations
 RUN export MAMBA_NO_SPINNER=1 \
     && export CONDA_ALWAYS_YES=1 \
     && export MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
-    && echo "Mamba environment setup complete"
+    && export MAMBA_REPODATA_THREADS=4 \
+    && export CONDA_FETCH_THREADS=4 \
+    && echo "Mamba environment setup complete with parallel download optimization"
 
 # Install core scientific packages first
 RUN echo "Installing core scientific packages with mamba (fast!)..." \

@@ -33,6 +33,7 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
     FS_FILE="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
     AFNI_FILE="$DOWNLOADS_DIR/afni-linux_openmp_64.tgz"
     FSL_FIX_FILE="$DOWNLOADS_DIR/fix-1.068.tar.gz"
+    MINICONDA_FILE="$DOWNLOADS_DIR/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh"
     
     if [[ -f "$FSL_FILE" ]]; then
         FSL_SIZE=$(du -h "$FSL_FILE" | cut -f1)
@@ -64,6 +65,13 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
         echo "   ✅ FSL FIX found: $FSL_FIX_SIZE"
     else
         echo "   ⚠️  FSL FIX not found: $FSL_FIX_FILE (will download during build)"
+    fi
+    
+    if [[ -f "$MINICONDA_FILE" ]]; then
+        MINICONDA_SIZE=$(du -h "$MINICONDA_FILE" | cut -f1)
+        echo "   ✅ Miniconda found: $MINICONDA_SIZE"
+    else
+        echo "   ⚠️  Miniconda not found: $MINICONDA_FILE (will download during build)"
     fi
     
     # Create backup if it doesn't exist
