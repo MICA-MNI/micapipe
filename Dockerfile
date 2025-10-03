@@ -727,7 +727,7 @@ RUN mamba run -n micapipe pip install --no-cache-dir \
 ENV SWM_HOME="/opt/SWM"
 ENV PATH="/opt/SWM:$PATH"
 
-RUN git clone https://github.com/MICA-MNI/SWM.git /opt/SWM \
+RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
     && chmod +x /opt/SWM/SWM \
     && chmod -R a+rx /opt/SWM
 
@@ -742,7 +742,7 @@ ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
 ENV DESIGNER_HOME="/opt/DESIGNER"
 ENV PATH="/opt/DESIGNER:$PATH"
 
-RUN git clone https://github.com/DESIGNER-v2/DESIGNER.git /opt/DESIGNER \
+RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
     && chmod +x /opt/DESIGNER/DESIGNER \
     && chmod +x /opt/DESIGNER/DESIGNER.py
 
