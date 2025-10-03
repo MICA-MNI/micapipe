@@ -4,10 +4,54 @@ USER root
 ARG DEBIAN_FRONTEND="noninteractive"
 
 # ============================================================================
-# COMPREHENSIVE MICAPIPE BASE IMAGE
+# COMPREHENSIVE MICAPIPE BASE IMAGE (SERVER VERSION)
 # Includes: System packages + Conda/Mamba + FSL + FreeSurfer + AFNI + ANTs + R
 # Purpose: All neuroimaging tools except MICApipe code for ultra-fast CI builds
+# Compatible with server environment: /host/cassio/export03/data/enning
 # ============================================================================
+
+# Build arguments for server environment
+ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
+ARG DOWNLOADS_DIR="/downloads"
+
+# Copy pre-downloaded dependencies from build context (current directory)
+# This expects the build to be run from the directory containing pre-downloaded files
+COPY . /tmp/build_context/
+RUN mkdir -p /downloads && \
+    echo "🔍 Copying pre-downloaded files from server location..." && \
+    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "✅ Copying FSL..."; \
+        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "✅ Copying FreeSurfer..."; \
+        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FreeSurfer not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
+        echo "✅ Copying AFNI..."; \
+        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
+    else \
+        echo "⚠️  AFNI not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
+        echo "✅ Copying FSL FIX..."; \
+        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL FIX not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Copying Miniconda..."; \
+        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /downloads/; \
+    else \
+        echo "⚠️  Miniconda not found, will download during build"; \
+    fi && \
+    echo "📁 Removing build context to save space..." && \
+    rm -rf /tmp/build_context && \
+    echo "✅ Pre-downloaded files setup complete"
 
 # Install all system packages needed for neuroimaging tools
 RUN echo "Installing comprehensive system packages..." && \
@@ -121,13 +165,13 @@ RUN mkdir -p /downloads && \
     fi
 
 # Install Miniconda
-RUN if [ -f "/downloads/Miniconda3-latest-Linux-x86_64.sh" ]; then \
+RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
         echo "✅ Using pre-downloaded Miniconda installer"; \
-        cp /downloads/Miniconda3-latest-Linux-x86_64.sh /tmp/miniconda.sh; \
+        cp /downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /tmp/miniconda.sh; \
     else \
         echo "📥 Downloading Miniconda installer..."; \
         wget -q --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -O /tmp/miniconda.sh \
-            https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; \
+            https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
     fi \
     && bash /tmp/miniconda.sh -b -p /opt/miniconda-latest \
     && rm /tmp/miniconda.sh \
@@ -245,9 +289,9 @@ ENV PATH="/opt/afni:$PATH" \
 
 RUN echo "Installing AFNI..." \
     && mkdir -p /opt/afni \
-    && if [ -f "/downloads/linux_openmp_64.tgz" ]; then \
+    && if [ -f "/downloads/afni-linux_openmp_64.tgz" ]; then \
         echo "📦 Using pre-downloaded AFNI"; \
-        cp /downloads/linux_openmp_64.tgz /tmp/afni.tgz; \
+        cp /downloads/afni-linux_openmp_64.tgz /tmp/afni.tgz; \
     else \
         echo "📥 Downloading AFNI from internet..."; \
         curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz -o /tmp/afni.tgz; \
@@ -263,9 +307,9 @@ ENV ANTSPATH="/opt/ants-2.3.4/bin" \
 # Install FSL FIX
 RUN echo "Installing FSL FIX..." \
     && mkdir -p /opt/fix \
-    && if [ -f "/downloads/fix.tar.gz" ]; then \
+    && if [ -f "/downloads/fix-1.068.tar.gz" ]; then \
         echo "📦 Using pre-downloaded FSL FIX"; \
-        cp /downloads/fix.tar.gz /tmp/fix.tar.gz; \
+        cp /downloads/fix-1.068.tar.gz /tmp/fix.tar.gz; \
     else \
         echo "📥 Downloading FSL FIX from internet..."; \
         curl -fL https://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz -o /tmp/fix.tar.gz; \

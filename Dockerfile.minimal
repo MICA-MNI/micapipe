@@ -1,8 +1,9 @@
 # ============================================================================
-# MICAPIPE MINIMAL DOCKERFILE
+# MICAPIPE MINIMAL DOCKERFILE (SERVER VERSION)
 # Uses comprehensive base image with all neuroimaging tools pre-installed
 # This Dockerfile only handles: MICApipe code, R packages, and final configuration
 # Perfect for CI where code changes frequently but tools remain stable
+# Compatible with server environment: /host/cassio/export03/data/enning
 # ============================================================================
 
 # Configurable base image
@@ -11,6 +12,9 @@ FROM ${BASE_IMAGE}
 
 USER root
 ARG DEBIAN_FRONTEND="noninteractive"
+
+# Server environment arguments
+ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
 # CUDA build argument - defaults to false to preserve current behavior
 ARG ENABLE_CUDA=false
