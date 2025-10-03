@@ -24,8 +24,11 @@ ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
 # Copy downloaded dependencies if available (copy contents, not directory)
 # Copy pre-downloaded files from current directory 
+# Copy pre-downloaded dependencies for efficient builds
 COPY fsl-6.0.2-centos6_64.tar.gz /downloads/fsl-6.0.2-centos6_64.tar.gz
 COPY freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz
+COPY afni-linux_openmp_64.tgz /downloads/afni-linux_openmp_64.tgz
+COPY fix-1.068.tar.gz /downloads/fix-1.068.tar.gz
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
@@ -347,10 +350,15 @@ RUN apt-get update -qq \
          ln -sfv "$gsl2_path" "$(dirname $gsl2_path)/libgsl.so.0"; \
     fi \
     && ldconfig \
-    && echo "Downloading AFNI ..." \
+    && echo "Installing AFNI from pre-downloaded file..." \
     && mkdir -p /opt/afni-latest \
-    && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
-    | tar -xz -C /opt/afni-latest --strip-components 1
+    && if [ -f "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz" ]; then \
+        tar -xz -C /opt/afni-latest --strip-components 1 < "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz"; \
+    else \
+        echo "Pre-downloaded AFNI not found, downloading from internet..."; \
+        curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
+        | tar -xz -C /opt/afni-latest --strip-components 1; \
+    fi
 
 
 # ENV ANTSPATH="/opt/ants-2.3.4" \
@@ -380,7 +388,13 @@ RUN apt-get update && \
 
 
 RUN cd /opt/ && \
-    wget https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz && \
+    if [ -f "$DOWNLOADS_DIR/fix-1.068.tar.gz" ]; then \
+        echo "Installing FSL FIX from pre-downloaded file..."; \
+        cp "$DOWNLOADS_DIR/fix-1.068.tar.gz" fix-1.068.tar.gz; \
+    else \
+        echo "Pre-downloaded FSL FIX not found, downloading from internet..."; \
+        wget https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz; \
+    fi && \
     tar xvfz fix-1.068.tar.gz && \
     mv fix-1.068 fix1.068 && \
     rm fix-1.068.tar.gz

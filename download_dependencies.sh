@@ -11,14 +11,22 @@ set -e
 DOWNLOAD_DIR="/host/cassio/export03/data/enning/downloads"
 FSL_URL="https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz"
 FREESURFER_URL="ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
+AFNI_URL="https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz"
+FSL_FIX_URL="https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz"
 FSL_FILENAME="fsl-6.0.2-centos6_64.tar.gz"
 FREESURFER_FILENAME="freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
+AFNI_FILENAME="afni-linux_openmp_64.tgz"
+FSL_FIX_FILENAME="fix-1.068.tar.gz"
 FSL_MIN_SIZE=$((500 * 1024 * 1024))      # 500MB
 FREESURFER_MIN_SIZE=$((2 * 1024 * 1024 * 1024))  # 2GB
+AFNI_MIN_SIZE=$((300 * 1024 * 1024))     # 300MB
+FSL_FIX_MIN_SIZE=$((30 * 1024 * 1024))   # 30MB
 
 # Options
 DOWNLOAD_FSL=true
 DOWNLOAD_FREESURFER=true
+DOWNLOAD_AFNI=true
+DOWNLOAD_FSL_FIX=true
 FORCE_DOWNLOAD=false
 VERIFY_ONLY=false
 
@@ -32,11 +40,37 @@ while [[ $# -gt 0 ]]; do
         --fsl-only)
             DOWNLOAD_FSL=true
             DOWNLOAD_FREESURFER=false
+            DOWNLOAD_AFNI=false
+            DOWNLOAD_FSL_FIX=false
             shift
             ;;
         --freesurfer-only)
             DOWNLOAD_FSL=false
             DOWNLOAD_FREESURFER=true
+            DOWNLOAD_AFNI=false
+            DOWNLOAD_FSL_FIX=false
+            shift
+            ;;
+        --afni-only)
+            DOWNLOAD_FSL=false
+            DOWNLOAD_FREESURFER=false
+            DOWNLOAD_AFNI=true
+            DOWNLOAD_FSL_FIX=false
+            shift
+            ;;
+        --fix-only)
+            DOWNLOAD_FSL=false
+            DOWNLOAD_FREESURFER=false
+            DOWNLOAD_AFNI=false
+            DOWNLOAD_FSL_FIX=true
+            shift
+            ;;
+        --no-afni)
+            DOWNLOAD_AFNI=false
+            shift
+            ;;
+        --no-fix)
+            DOWNLOAD_FSL_FIX=false
             shift
             ;;
         --force)
@@ -50,20 +84,25 @@ while [[ $# -gt 0 ]]; do
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
-            echo "Downloads FSL and FreeSurfer dependencies for MICApipe container builds"
+            echo "Downloads large dependencies for MICApipe container builds"
             echo ""
             echo "Options:"
             echo "  --download-dir DIR    Directory to download files (default: /host/cassio/export03/data/enning/downloads)"
-            echo "  --fsl-only           Download only FSL"
-            echo "  --freesurfer-only    Download only FreeSurfer"
+            echo "  --fsl-only           Download only FSL (~600MB)"
+            echo "  --freesurfer-only    Download only FreeSurfer (~3GB)"
+            echo "  --afni-only          Download only AFNI (~500MB)"
+            echo "  --fix-only           Download only FSL FIX (~50MB)"
+            echo "  --no-afni            Skip AFNI download"
+            echo "  --no-fix             Skip FSL FIX download"
             echo "  --force              Force re-download even if files exist"
             echo "  --verify             Only verify existing files, don't download"
             echo "  --help, -h           Show this help message"
             echo ""
             echo "Examples:"
-            echo "  $0                                    # Download both FSL and FreeSurfer to server location"
+            echo "  $0                                    # Download all dependencies to server location"
             echo "  $0 --download-dir ./downloads         # Use local directory instead"
             echo "  $0 --fsl-only                        # Download only FSL"
+            echo "  $0 --no-afni --no-fix                # Download only FSL and FreeSurfer"
             echo "  $0 --verify                          # Check existing downloads"
             echo "  $0 --force                           # Re-download all files"
             exit 0
@@ -244,6 +283,18 @@ if [[ "$DOWNLOAD_FREESURFER" == "true" ]]; then
     process_dependency "FreeSurfer 7.4.1" "$FREESURFER_URL" "$FREESURFER_FILENAME" "$FREESURFER_MIN_SIZE" || FREESURFER_SUCCESS=false
 fi
 
+# Process AFNI
+AFNI_SUCCESS=true
+if [[ "$DOWNLOAD_AFNI" == "true" ]]; then
+    process_dependency "AFNI Latest" "$AFNI_URL" "$AFNI_FILENAME" "$AFNI_MIN_SIZE" || AFNI_SUCCESS=false
+fi
+
+# Process FSL FIX
+FSL_FIX_SUCCESS=true
+if [[ "$DOWNLOAD_FSL_FIX" == "true" ]]; then
+    process_dependency "FSL FIX 1.068" "$FSL_FIX_URL" "$FSL_FIX_FILENAME" "$FSL_FIX_MIN_SIZE" || FSL_FIX_SUCCESS=false
+fi
+
 # Summary
 echo "📋 Download Summary"
 echo "=================="
@@ -269,6 +320,20 @@ if [[ "$DOWNLOAD_FREESURFER" == "true" ]]; then
         echo "❌ $FREESURFER_FILENAME: Not downloaded"
     fi
 fi
+if [[ "$DOWNLOAD_AFNI" == "true" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$AFNI_FILENAME" ]]; then
+        verify_file "$DOWNLOAD_DIR/$AFNI_FILENAME" "$AFNI_MIN_SIZE" || true
+    else
+        echo "❌ $AFNI_FILENAME: Not downloaded"
+    fi
+fi
+if [[ "$DOWNLOAD_FSL_FIX" == "true" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$FSL_FIX_FILENAME" ]]; then
+        verify_file "$DOWNLOAD_DIR/$FSL_FIX_FILENAME" "$FSL_FIX_MIN_SIZE" || true
+    else
+        echo "❌ $FSL_FIX_FILENAME: Not downloaded"
+    fi
+fi
 
 echo ""
 echo "💡 Next steps:"
@@ -279,7 +344,10 @@ echo "   3. Update your build_container.sh to use: --downloads-dir $DOWNLOAD_DIR
 
 # Exit with error if verification mode and any files failed
 if [[ "$VERIFY_ONLY" == "true" ]]; then
-    if [[ "$DOWNLOAD_FSL" == "true" && "$FSL_SUCCESS" == "false" ]] || [[ "$DOWNLOAD_FREESURFER" == "true" && "$FREESURFER_SUCCESS" == "false" ]]; then
+    if [[ "$DOWNLOAD_FSL" == "true" && "$FSL_SUCCESS" == "false" ]] || \
+       [[ "$DOWNLOAD_FREESURFER" == "true" && "$FREESURFER_SUCCESS" == "false" ]] || \
+       [[ "$DOWNLOAD_AFNI" == "true" && "$AFNI_SUCCESS" == "false" ]] || \
+       [[ "$DOWNLOAD_FSL_FIX" == "true" && "$FSL_FIX_SUCCESS" == "false" ]]; then
         exit 1
     fi
 fi

@@ -31,6 +31,8 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
     # Check for key files
     FSL_FILE="$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz"
     FS_FILE="$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
+    AFNI_FILE="$DOWNLOADS_DIR/afni-linux_openmp_64.tgz"
+    FSL_FIX_FILE="$DOWNLOADS_DIR/fix-1.068.tar.gz"
     
     if [[ -f "$FSL_FILE" ]]; then
         FSL_SIZE=$(du -h "$FSL_FILE" | cut -f1)
@@ -48,6 +50,20 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
         echo "   ❌ FreeSurfer not found: $FS_FILE"
         echo "   Please run ./download_dependencies.sh first"
         exit 1
+    fi
+    
+    if [[ -f "$AFNI_FILE" ]]; then
+        AFNI_SIZE=$(du -h "$AFNI_FILE" | cut -f1)
+        echo "   ✅ AFNI found: $AFNI_SIZE"
+    else
+        echo "   ⚠️  AFNI not found: $AFNI_FILE (will download during build)"
+    fi
+    
+    if [[ -f "$FSL_FIX_FILE" ]]; then
+        FSL_FIX_SIZE=$(du -h "$FSL_FIX_FILE" | cut -f1)
+        echo "   ✅ FSL FIX found: $FSL_FIX_SIZE"
+    else
+        echo "   ⚠️  FSL FIX not found: $FSL_FIX_FILE (will download during build)"
     fi
     
     # Create backup if it doesn't exist
@@ -122,6 +138,20 @@ if [[ -f "$BUILD_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]]; then
 else
     echo "   ❌ FreeSurfer not found in build directory!"
     exit 1
+fi
+
+if [[ -f "$BUILD_DIR/afni-linux_openmp_64.tgz" ]]; then
+    BUILD_AFNI_SIZE=$(du -h "$BUILD_DIR/afni-linux_openmp_64.tgz" | cut -f1)
+    echo "   ✅ AFNI ready: $BUILD_AFNI_SIZE"
+else
+    echo "   ⚠️  AFNI not found in build directory (will download during build)"
+fi
+
+if [[ -f "$BUILD_DIR/fix-1.068.tar.gz" ]]; then
+    BUILD_FSL_FIX_SIZE=$(du -h "$BUILD_DIR/fix-1.068.tar.gz" | cut -f1)
+    echo "   ✅ FSL FIX ready: $BUILD_FSL_FIX_SIZE"
+else
+    echo "   ⚠️  FSL FIX not found in build directory (will download during build)"
 fi
 
 # Make scripts executable
