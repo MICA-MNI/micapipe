@@ -516,6 +516,9 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
 
 # Install conda packages via Mamba - split into chunks for reliability
 RUN conda config --system --set channel_priority strict \
+    && conda config --system --set remote_read_timeout_secs 1800 \
+    && conda config --system --set remote_connect_timeout_secs 300 \
+    && conda config --system --set remote_max_retries 5 \
     && export MAMBA_NO_SPINNER=1 \
     && export CONDA_ALWAYS_YES=1
 
@@ -608,10 +611,15 @@ RUN mamba install -y -n micapipe -c conda-forge \
            "wslink" \
     && mamba clean -y --all
 
-# Install VTK separately as it's large
-RUN mamba install -y -n micapipe -c conda-forge \
-           "vtk==9.2.2" \
-    && mamba clean -y --all 
+# Install VTK via pip as it's more reliable for large packages
+# Use timeout and retries to handle network issues
+RUN echo "Installing VTK 9.2.2 via pip with extended timeout..." && \
+    mamba run -n micapipe pip install --no-cache-dir --timeout 1800 --retries 3 \
+           "vtk==9.2.2" || \
+    { echo "VTK pip install failed, trying conda with extended timeout..."; \
+      mamba install -y -n micapipe -c conda-forge --solver classic \
+             "vtk==9.2.2" && mamba clean -y --all; } && \
+    echo "VTK installation completed successfully" 
 
 # Install pip-only packages
 RUN mamba run -n micapipe pip install --no-cache-dir \   
