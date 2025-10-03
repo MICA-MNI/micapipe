@@ -21,6 +21,9 @@ FROM ubuntu:bionic-20201119
 USER root
 
 ARG DEBIAN_FRONTEND="noninteractive"
+# Memory optimization for package installations
+ENV APT_LISTCHANGES_FRONTEND=none
+ENV APT_OPTIONS="-o APT::Install-Suggests=false -o APT::Install-Recommends=false"
 # CUDA build argument - defaults to false to preserve current behavior
 ARG ENABLE_CUDA=false
 # Cache directory for large dependencies
@@ -110,24 +113,43 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     fi \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
 
-ENTRYPOINT ["/neurodocker/startup.sh"]
+# Install system packages in chunks to reduce memory pressure and avoid exit code 137
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           gcc g++ \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           gcc g++ lsb-core bsdtar jq libopenblas-dev tree openjdk-8-jdk libstdc++6 \
+           lsb-core bsdtar jq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           libopenblas-dev tree libstdc++6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           openjdk-8-jdk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/dcm2niix-v1.0.20190902/bin:$PATH"
+
+# Install dcm2niix build dependencies in smaller chunks
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
-           cmake \
-           g++ \
-           gcc \
-           git \
-           make \
-           pigz \
-           zlib1g-dev \
+           cmake make git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           g++ gcc pigz zlib1g-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Creating custom temp directory: ${CUSTOM_TMPDIR}" \
