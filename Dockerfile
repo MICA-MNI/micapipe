@@ -579,7 +579,6 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
-    && conda config --system --set solver libmamba \
     && conda config --system --set channel_priority strict \
     && conda config --system --set remote_read_timeout_secs 1800 \
     && conda config --system --set remote_connect_timeout_secs 300 \
@@ -692,7 +691,7 @@ RUN echo "Installing VTK 9.2.2 via pip with extended timeout..." && \
     mamba run -n micapipe pip install --no-cache-dir --timeout 1800 --retries 3 \
            "vtk==9.2.2" || \
     { echo "VTK pip install failed, trying conda with extended timeout..."; \
-      mamba install -y -n micapipe -c conda-forge --solver classic \
+      mamba install -y -n micapipe -c conda-forge \
              "vtk==9.2.2" && mamba clean -y --all; } && \
     echo "VTK installation completed successfully" 
 
