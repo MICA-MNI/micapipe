@@ -23,10 +23,13 @@ echo "Target image: ${MAIN_IMAGE}"
 echo ""
 
 # Check if we're in the right server location
-if [[ "$PWD" != *"/host/cassio/export03/data/enning"* ]]; then
-    echo "⚠️  Warning: Not in expected server directory"
+if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+    echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/[micapipe_directory]"
+    echo "   Expected: /host/cassio/export03/data/enning/downloads"
+    echo ""
+    echo "💡 This script should be run from the downloads directory where"
+    echo "   the source files have been migrated by migrate_comprehensive_base_to_server.sh"
     echo ""
 fi
 

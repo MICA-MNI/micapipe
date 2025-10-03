@@ -12,21 +12,25 @@ echo "====================================================="
 
 # Verify we're in the right location with pre-downloaded files
 echo "🔍 Verifying server environment..."
+echo "📍 Current directory: $PWD"
+echo "📁 Expected server location: /host/cassio/export03/data/enning/downloads"
 
-REQUIRED_FILES=(
-    "fsl-6.0.2-centos6_64.tar.gz"
-    "freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
-    "afni-linux_openmp_64.tgz"
-    "fix-1.068.tar.gz"
-    "Miniconda3-py39_22.11.1-1-Linux-x86_64.sh"
-)
-
-# Check if we're in the expected location
-if [[ "$PWD" != *"/host/cassio/export03/data/enning"* ]]; then
-    echo "⚠️  Warning: Not in expected server directory"
+# Check if we're in the downloads directory (which is the build directory)
+if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+    echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/[build_directory]"
+    echo "   Expected: /host/cassio/export03/data/enning/downloads"
     echo ""
+    echo "💡 This script should be run from the downloads directory where"
+    echo "   both source files and pre-downloaded dependencies are located."
+    echo ""
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Build cancelled"
+        echo "💡 To migrate source to server: ./migrate_comprehensive_base_to_server.sh"
+        exit 1
+    fi
 fi
 
 # Check for required files
