@@ -723,7 +723,7 @@ RUN mamba install -y -n micapipe -c conda-forge \
 
 # Install LAMAReg via pip after antspy dependencies are installed
 RUN mamba run -n micapipe pip install --no-cache-dir \
-           git+https://github.com/lamarodrigues/LAMAReg.git
+           git+https://github.com/MICA-MNI/LAMAReg.git
 
 # Install SWM (Superficial White Matter) for surface-based analysis
 ENV SWM_HOME="/opt/SWM"
