@@ -557,20 +557,26 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
-    && sync && conda clean -y --all && sync \
-    && conda install -y -n base -c conda-forge mamba \
-    && mamba create -y -n micapipe python=3.9
-
-# Install conda packages via Mamba - split into chunks for reliability
-RUN conda config --system --set channel_priority strict \
+    && conda config --system --set solver libmamba \
+    && conda config --system --set channel_priority strict \
     && conda config --system --set remote_read_timeout_secs 1800 \
     && conda config --system --set remote_connect_timeout_secs 300 \
     && conda config --system --set remote_max_retries 5 \
-    && export MAMBA_NO_SPINNER=1 \
-    && export CONDA_ALWAYS_YES=1
+    && sync && conda clean -y --all && sync \
+    && echo "Installing mamba (fast package manager)..." \
+    && conda install -y -n base -c conda-forge mamba \
+    && echo "Creating micapipe environment with mamba (fast solver)..." \
+    && mamba create -y -n micapipe python=3.9
+
+# Install conda packages via Mamba - split into chunks for reliability
+RUN export MAMBA_NO_SPINNER=1 \
+    && export CONDA_ALWAYS_YES=1 \
+    && export MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
+    && echo "Mamba environment setup complete"
 
 # Install core scientific packages first
-RUN mamba install -y -n micapipe -c conda-forge \
+RUN echo "Installing core scientific packages with mamba (fast!)..." \
+    && mamba install -y -n micapipe -c conda-forge \
            "numpy==1.21.5" \
            "scipy" \
            "pandas==1.4.4" \
