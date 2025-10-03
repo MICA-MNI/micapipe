@@ -101,6 +101,16 @@ echo ""
 BUILD_LOG="build_comprehensive_base_$(date +%Y%m%d_%H%M%S).log"
 echo "📝 Build will be logged to: $BUILD_LOG"
 
+# Prepare build context with pre-downloaded files
+echo "📦 Preparing build context with pre-downloaded files..."
+if [[ -f "./prepare_build_context.sh" ]]; then
+    ./prepare_build_context.sh
+else
+    echo "⚠️  prepare_build_context.sh not found - continuing without pre-copied files"
+    echo "   Files will be downloaded during build (slower)"
+fi
+echo ""
+
 # Docker caching configuration
 CACHE_FROM_IMAGES=(
     "${LATEST_BASE_IMAGE}"
