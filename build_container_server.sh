@@ -29,6 +29,54 @@ fi
 export DOCKER_CONTENT_TRUST=0
 export BUILDKIT_PROGRESS=plain
 
+# Docker caching configuration
+CACHE_FROM_IMAGES=(
+    "micapipe:latest"
+    "micapipe:cache"
+    "ubuntu:xenial-20161213"
+    "kaczmarj/ants:2.3.4"
+)
+
+# Build configuration
+USE_CACHE=true
+FORCE_REBUILD=false
+CACHE_TAG="micapipe:cache"
+
+# Parse command line arguments for caching options
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-cache)
+            USE_CACHE=false
+            echo "🚫 Docker caching disabled"
+            shift
+            ;;
+        --force-rebuild)
+            FORCE_REBUILD=true
+            echo "🔄 Force rebuild enabled (ignoring all cache)"
+            shift
+            ;;
+        --cache-tag)
+            CACHE_TAG="$2"
+            echo "🏷️  Using cache tag: $CACHE_TAG"
+            shift 2
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo "Options:"
+            echo "  --no-cache       Disable Docker layer caching"
+            echo "  --force-rebuild  Force complete rebuild (ignore all cache)"
+            echo "  --cache-tag TAG  Use specific cache tag (default: micapipe:cache)"
+            echo "  --help, -h       Show this help"
+            exit 0
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Check Docker access
 if ! docker info >/dev/null 2>&1; then
     echo "❌ Cannot access Docker daemon. Solutions:"
@@ -74,7 +122,43 @@ echo "🚀 Starting Docker Build"
 echo "========================"
 echo "Build context: $PWD"
 echo "Log file: $BUILD_LOG"
+echo "Cache strategy: $(if [[ "$USE_CACHE" == "true" ]]; then echo "Enabled"; else echo "Disabled"; fi)"
+echo "Force rebuild: $(if [[ "$FORCE_REBUILD" == "true" ]]; then echo "Yes"; else echo "No"; fi)"
 echo ""
+
+# Prepare cache arguments
+CACHE_ARGS=()
+if [[ "$FORCE_REBUILD" == "true" ]]; then
+    CACHE_ARGS+=("--no-cache")
+    echo "🔄 Force rebuild: Ignoring all cache layers"
+elif [[ "$USE_CACHE" == "true" ]]; then
+    echo "📦 Preparing cache strategy..."
+    
+    # Check which cache images are available
+    AVAILABLE_CACHE=()
+    for cache_image in "${CACHE_FROM_IMAGES[@]}"; do
+        if docker image inspect "$cache_image" >/dev/null 2>&1; then
+            AVAILABLE_CACHE+=("$cache_image")
+            echo "   ✅ Cache available: $cache_image"
+        else
+            echo "   ⚠️  Cache not found: $cache_image"
+        fi
+    done
+    
+    # Add cache-from arguments for available images
+    for cache_image in "${AVAILABLE_CACHE[@]}"; do
+        CACHE_ARGS+=("--cache-from" "$cache_image")
+    done
+    
+    if [[ ${#AVAILABLE_CACHE[@]} -gt 0 ]]; then
+        echo "   📊 Using ${#AVAILABLE_CACHE[@]} cache source(s)"
+    else
+        echo "   ⚠️  No cache images available - building from scratch"
+    fi
+else
+    CACHE_ARGS+=("--no-cache")
+    echo "🚫 Cache disabled by user"
+fi
 
 # Start Docker build
 echo "📝 Building container (output logged to $BUILD_LOG)..."
@@ -83,14 +167,30 @@ if docker build \
     --memory=12g \
     --memory-swap=16g \
     --build-arg CUSTOM_TMPDIR="/host/cassio/export03/data/enning" \
+    "${CACHE_ARGS[@]}" \
     --tag micapipe:latest \
+    --tag "$CACHE_TAG" \
     . 2>&1 | tee "$BUILD_LOG"; then
     
     echo ""
     echo "✅ Build Successful!"
     echo "=================="
     echo "Container: micapipe:latest"
+    echo "Cache tag: $CACHE_TAG"
     echo "Build log: $BUILD_LOG"
+    echo ""
+    
+    # Save cache image info
+    echo "💾 Caching build for future use..."
+    echo "   Main image: micapipe:latest"
+    echo "   Cache image: $CACHE_TAG"
+    
+    # Show cache statistics
+    if [[ "$USE_CACHE" == "true" ]] && [[ ${#AVAILABLE_CACHE[@]} -gt 0 ]]; then
+        echo "   📊 Cache hits: $(grep -c "Using cache" "$BUILD_LOG" || echo "0")"
+        echo "   📊 Cache misses: $(grep -c "Running in" "$BUILD_LOG" || echo "0")"
+    fi
+    
     echo ""
     echo "To test the container:"
     echo "docker run --rm micapipe:latest micapipe --help"

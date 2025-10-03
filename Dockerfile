@@ -7,6 +7,14 @@
 # pull request on our GitHub repository:
 #
 #     https://github.com/ReproNim/neurodocker
+#
+# ============================================================================
+# DOCKER CACHING STRATEGY:
+# - Layers ordered from least to most frequently changing
+# - System packages (stable) → Pre-downloads → Source code (frequent changes)  
+# - Use build_container_server.sh --cache-from for optimal rebuild performance
+# - Failed builds can be resumed using docker_cache_manager.sh resume
+# ============================================================================
 
 FROM ubuntu:bionic-20201119
 
