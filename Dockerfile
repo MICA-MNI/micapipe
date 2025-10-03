@@ -715,11 +715,14 @@ RUN mamba run -n micapipe pip install --no-cache-dir \
     && sed -i '$isource activate micapipe' $ND_ENTRYPOINT
 
 # Install LAMAReg for cross-modality registration with antspy dependencies
-RUN mamba run -n micapipe pip install --no-cache-dir \
+# Install antspy and antspyx via conda/mamba (not available via pip)
+RUN mamba install -y -n micapipe -c conda-forge \
            antspy \
-           ants \
            antspyx \
-    && mamba run -n micapipe pip install --no-cache-dir \
+    && mamba clean -y --all
+
+# Install LAMAReg via pip after antspy dependencies are installed
+RUN mamba run -n micapipe pip install --no-cache-dir \
            git+https://github.com/lamarodrigues/LAMAReg.git
 
 # Install SWM (Superficial White Matter) for surface-based analysis
