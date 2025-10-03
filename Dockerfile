@@ -24,11 +24,36 @@ ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
 # Copy downloaded dependencies if available (copy contents, not directory)
 # Copy pre-downloaded files from current directory 
-# Copy pre-downloaded dependencies for efficient builds
-COPY fsl-6.0.2-centos6_64.tar.gz /downloads/fsl-6.0.2-centos6_64.tar.gz
-COPY freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz
-COPY afni-linux_openmp_64.tgz /downloads/afni-linux_openmp_64.tgz
-COPY fix-1.068.tar.gz /downloads/fix-1.068.tar.gz
+# Copy pre-downloaded dependencies for efficient builds - handle missing files gracefully
+COPY . /tmp/build_context/
+RUN mkdir -p /downloads && \
+    echo "Copying pre-downloaded files if available..." && \
+    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "✅ Copying FSL..."; \
+        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "✅ Copying FreeSurfer..."; \
+        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FreeSurfer not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
+        echo "✅ Copying AFNI..."; \
+        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
+    else \
+        echo "⚠️  AFNI not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
+        echo "✅ Copying FSL FIX..."; \
+        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL FIX not found, will download during build"; \
+    fi && \
+    rm -rf /tmp/build_context && \
+    echo "Download files setup complete"
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
