@@ -27,6 +27,9 @@
 
 set -euo pipefail
 
+# Disable Docker Content Trust to avoid SSL certificate issues
+export DOCKER_CONTENT_TRUST=0
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
