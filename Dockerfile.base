@@ -427,20 +427,22 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && echo "📦 Creating micapipe environment..." \
     && mamba create -y -n micapipe python=3.9
 
-# Set up mamba optimization
-RUN export MAMBA_NO_SPINNER=1 \
-    && export CONDA_ALWAYS_YES=1 \
-    && export MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
-    && export MAMBA_REPODATA_THREADS=8 \
-    && export CONDA_FETCH_THREADS=8 \
-    && export MAMBA_THREADS_NUM=8
+# Set up mamba optimization - use libmamba solver for speed
+RUN conda config --set solver libmamba \
+    && conda config --set channel_priority flexible
+
+ENV MAMBA_NO_SPINNER=1 \
+    CONDA_ALWAYS_YES=1 \
+    MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
+    CONDA_FETCH_THREADS=8
 
 # ============================================================================
-# MICAPIPE CONDA ENVIRONMENT
+# MICAPIPE CONDA ENVIRONMENT - OPTIMIZED INSTALLATION
 # ============================================================================
 
-# Core scientific stack
-RUN echo "📦 Installing core scientific stack..." \
+# Install ALL packages in ONE command to avoid dependency conflicts
+# This is MUCH faster than multiple mamba install commands
+RUN echo "📦 Installing micapipe conda environment (optimized single-pass)..." \
     && mamba install -y -n micapipe -c conda-forge \
            "numpy==1.21.5" \
            "scipy" \
@@ -454,42 +456,28 @@ RUN echo "📦 Installing core scientific stack..." \
            "joblib" \
            "nilearn" \
            "astropy" \
-    && mamba clean -y --all
+           "aiohttp" \
+           "requests" \
+           "bokeh==2.2.3" \
+           "pyvirtualdisplay==3.0" \
+           "lxml" \
+           "attrs" \
+           "click" \
+           "pyyaml" \
+           "python-dateutil" \
+           "pytz" \
+           "cryptography" \
+    && mamba clean -y --all \
+    && echo "✅ Core environment installed"
 
-# Web, networking and visualization
-RUN echo "📦 Installing web and visualization packages..." \
-    && mamba install -y -n micapipe -c conda-forge \
-           "aiohttp" "aiosignal" "async-timeout" "multidict" "yarl" "frozenlist" \
-           "charset-normalizer" "idna" "requests" "urllib3" \
-           "bokeh==2.2.3" "contourpy" "cycler" "fonttools" "tornado" \
-           "kiwisolver" "jinja2" "markupsafe" "pyvirtualdisplay==3.0" \
-           "lxml" "html5lib" "webencodings" "reportlab" \
-           "pypdf" "pypng" "qrcode" "svglib" "tinycss2" \
-    && mamba clean -y --all
-
-# Utility, crypto and miscellaneous
-RUN echo "📦 Installing utility packages..." \
-    && mamba install -y -n micapipe -c conda-forge \
-           "attrs" "click" "pyyaml" "python-dateutil" "pytz" \
-           "pytz-deprecation-shim" "tzlocal" "six" "zipp" \
-           "typing-extensions" "threadpoolctl" "importlib-resources" \
-           "cryptography" "cffi" "pycparser" "asn1crypto" \
-           "pyhanko-certvalidator" "pyparsing" "python-bidi" \
-           "uritools" "wslink" \
-    && mamba clean -y --all
-
-# VTK
-RUN echo "📦 Installing VTK..." && \
-    mamba run -n micapipe pip install --no-cache-dir --timeout 1800 --retries 3 "vtk==9.2.2" && \
-    echo "✅ VTK installation completed"
-
-# Pip-only packages
-RUN echo "📦 Installing pip-only packages..." \
+# VTK and other pip packages
+RUN echo "📦 Installing VTK and pip-only packages..." \
     && mamba run -n micapipe pip install --no-cache-dir \
+           "vtk==9.2.2" \
            "argparse==1.1" \
            "brainspace==0.1.10" \
            "tedana==0.0.12" \
-           duecredit \
+           "duecredit" \
            "pyhanko==0.17.2" \
            "mapca==0.0.3" \
            "xhtml2pdf==0.2.9" \
@@ -499,19 +487,26 @@ RUN echo "📦 Installing pip-only packages..." \
            "cssselect2==0.7.0" \
            "pygeodesic==0.1.8" \
            "seaborn==0.11.2" \
-    && rm -rf ~/.cache/pip/*
+    && rm -rf ~/.cache/pip/* \
+    && echo "✅ Pip packages installed"
 
 # ============================================================================
 # LAMAREG, ENIGMA, MRTRIX3 (NEW REQUIREMENTS)
 # ============================================================================
 
-# Install LAMAReg dependencies and MRtrix3 3.0.7
-RUN echo "📦 Installing ANTsPy, MRtrix3 3.0.7..." \
-    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
-           antspy \
-           antspyx \
+# Install MRtrix3 3.0.7 first (simplest dependency)
+RUN echo "📦 Installing MRtrix3 3.0.7..." \
+    && mamba install -y -n micapipe -c mrtrix3 -c conda-forge \
            mrtrix3==3.0.7 \
-    && mamba clean -y --all
+    && mamba clean -y --all \
+    && echo "✅ MRtrix3 installed"
+
+# Install ANTsPy separately (complex dependencies)
+RUN echo "📦 Installing ANTsPy..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           antspy \
+    && mamba clean -y --all \
+    && echo "✅ ANTsPy installed"
 
 # Verify MRtrix3 installation and path
 RUN echo "🔍 Verifying MRtrix3 installation..." \
