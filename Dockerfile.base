@@ -1,0 +1,725 @@
+# ============================================================================
+# MICAPIPE BASE IMAGE - STAGE 1 (Heavy, Rarely Changes)
+# ============================================================================
+# This Dockerfile creates a comprehensive base image with ALL neuroimaging tools
+# Build this ONLY when dependencies change (FSL, FreeSurfer, conda packages, etc.)
+# Expected build time: 45-90 minutes (one-time cost)
+# Result: A stable base image that can be reused for fast micapipe code builds
+# ============================================================================
+
+FROM ubuntu:bionic-20201119
+
+USER root
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# Memory optimization for package installations
+ENV APT_LISTCHANGES_FRONTEND=none
+ENV APT_OPTIONS="-o APT::Install-Suggests=false -o APT::Install-Recommends=false"
+
+# CUDA build argument - defaults to false to preserve current behavior
+ARG ENABLE_CUDA=false
+
+# Downloads directory for pre-downloaded dependencies
+ARG DOWNLOADS_DIR="/downloads"
+
+# Custom temporary directory for build operations
+ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
+
+# Copy pre-downloaded dependencies for efficient builds - handle missing files gracefully
+# This expects to be run from /host/cassio/export03/data/enning/downloads where files exist
+COPY . /tmp/build_context/
+RUN mkdir -p /downloads && \
+    echo "📦 Setting up pre-downloaded files..." && \
+    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "✅ Copying FSL..."; \
+        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "✅ Copying FreeSurfer..."; \
+        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FreeSurfer not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
+        echo "✅ Copying AFNI..."; \
+        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
+    else \
+        echo "⚠️  AFNI not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
+        echo "✅ Copying FSL FIX..."; \
+        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL FIX not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Copying Miniconda..."; \
+        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /downloads/; \
+    else \
+        echo "⚠️  Miniconda not found, will download during build"; \
+    fi && \
+    rm -rf /tmp/build_context && \
+    echo "✅ Download files setup complete"
+
+# Add NVIDIA repository and CUDA toolkit if CUDA is enabled
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "🎮 Setting up CUDA support..."; \
+        apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               gnupg2 \
+               software-properties-common \
+        && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub \
+        && add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
+        && apt-get update -qq \
+        && apt-get install -y -q --no-install-recommends \
+               cuda-runtime-11-8 \
+               cuda-libraries-11-8 \
+               libcudnn8 \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*; \
+    else \
+        echo "💻 CUDA support disabled - building CPU-only container"; \
+    fi
+
+# ============================================================================
+# SYSTEM SETUP & BASE PACKAGES
+# ============================================================================
+
+ENV LANG="en_US.UTF-8" \
+    LC_ALL="en_US.UTF-8" \
+    ND_ENTRYPOINT="/neurodocker/startup.sh"
+    
+RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           apt-utils \
+           bzip2 \
+           ca-certificates \
+           curl \
+           locales \
+           unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales \
+    && update-locale LANG="en_US.UTF-8" \
+    && chmod 777 /opt && chmod a+s /opt \
+    && mkdir -p /neurodocker \
+    && if [ ! -f "$ND_ENTRYPOINT" ]; then \
+         echo '#!/usr/bin/env bash' >> "$ND_ENTRYPOINT" \
+    &&   echo 'set -e' >> "$ND_ENTRYPOINT" \
+    &&   echo 'export USER="${USER:=`whoami`}"' >> "$ND_ENTRYPOINT" \
+    &&   echo 'if [ -n "$1" ]; then "$@"; else /usr/bin/env bash; fi' >> "$ND_ENTRYPOINT"; \
+    fi \
+    && chmod -R 777 /neurodocker && chmod a+s /neurodocker
+
+# Install system packages in chunks to reduce memory pressure
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           gcc g++ \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           lsb-core bsdtar jq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           libopenblas-dev tree libstdc++6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           openjdk-8-jdk \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# DCM2NIIX
+# ============================================================================
+
+ENV PATH="/opt/dcm2niix-v1.0.20190902/bin:$PATH"
+
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           cmake make git g++ gcc pigz zlib1g-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p ${CUSTOM_TMPDIR}/dcm2niix || (export CUSTOM_TMPDIR="/tmp" && mkdir -p /tmp/dcm2niix) \
+    && git clone https://github.com/rordenlab/dcm2niix ${CUSTOM_TMPDIR}/dcm2niix \
+    && cd ${CUSTOM_TMPDIR}/dcm2niix \
+    && git fetch --tags \
+    && git checkout v1.0.20190902 \
+    && mkdir ${CUSTOM_TMPDIR}/dcm2niix/build \
+    && cd ${CUSTOM_TMPDIR}/dcm2niix/build \
+    && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/dcm2niix-v1.0.20190902 .. \
+    && make \
+    && make install \
+    && rm -rf ${CUSTOM_TMPDIR}/dcm2niix
+
+# ============================================================================
+# FSL 6.0.2 (FROZEN VERSION)
+# ============================================================================
+
+ENV FSLDIR="/opt/fsl-6.0.2" \
+    PATH="/opt/fsl-6.0.2/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl-6.0.2/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.2/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL="" \
+    FSLGECUDAQ="cuda.q"
+    
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc dc file libfontconfig1 libfreetype6 \
+           libgl1-mesa-dev libgl1-mesa-dri libglu1-mesa-dev \
+           libgomp1 libice6 libxcursor1 libxft2 libxinerama1 \
+           libxrandr2 libxrender1 libxt6 sudo wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "📦 Installing FSL 6.0.2..." \
+    && mkdir -p /opt/fsl-6.0.2 \
+    && mkdir -p ${CUSTOM_TMPDIR} || export CUSTOM_TMPDIR="/tmp" \
+    && export TMPDIR="${CUSTOM_TMPDIR}/fsl_install_$$" \
+    && mkdir -p "$TMPDIR" \
+    && if [ -f "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" ] && [ $(stat -c%s "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz") -gt 500000000 ]; then \
+        echo "✅ Using pre-downloaded FSL from $DOWNLOADS_DIR ($(du -h "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" | cut -f1))"; \
+        cp "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" "$TMPDIR/fsl.tar.gz"; \
+    else \
+        echo "⬇️  Downloading FSL..."; \
+        cd "$TMPDIR" && \
+        (curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
+             -o fsl.tar.gz \
+             https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz \
+        || wget --retry-connrefused --waitretry=10 --read-timeout=60 --timeout=60 --tries=5 \
+               -O fsl.tar.gz \
+               https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz); \
+    fi \
+    && if [ -f "$TMPDIR/fsl.tar.gz" ]; then \
+        echo "📂 Extracting FSL..."; \
+        tar -xzf "$TMPDIR/fsl.tar.gz" -C /opt/fsl-6.0.2 --strip-components 1; \
+        echo "✅ FSL installation completed"; \
+    fi \
+    && rm -rf "$TMPDIR" \
+    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
+
+# Install FSL Python environment
+RUN cd /opt/fsl-6.0.2 \
+    && if [ -f /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh ]; then \
+        bash /opt/fsl-6.0.2/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.2 || \
+        echo "FSL Python install script failed, continuing..."; \
+    fi
+
+# ============================================================================
+# FREESURFER 7.4.1 (FROZEN VERSION)
+# ============================================================================
+
+ENV FREESURFER_HOME="/opt/freesurfer-7.4.1" \
+    PATH="/opt/freesurfer-7.4.1/bin:$PATH"
+    
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc libgomp1 libxmu6 libxt6 perl tcsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN echo "📦 Installing FreeSurfer 7.4.1..." \
+    && mkdir -p /opt/freesurfer-7.4.1 \
+    && mkdir -p ${CUSTOM_TMPDIR} || export CUSTOM_TMPDIR="/tmp" \
+    && export TMPDIR="${CUSTOM_TMPDIR}/freesurfer_install_$$" \
+    && mkdir -p "$TMPDIR" \
+    && DOWNLOAD_SUCCESS=false \
+    && if [ -f "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ] && [ $(stat -c%s "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz") -gt 2000000000 ]; then \
+        echo "✅ Using pre-downloaded FreeSurfer from $DOWNLOADS_DIR ($(du -h "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1))"; \
+        cp "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$TMPDIR/freesurfer.tar.gz" && DOWNLOAD_SUCCESS=true; \
+    else \
+        echo "⬇️  Downloading FreeSurfer..."; \
+        cd "$TMPDIR" && \
+        (timeout 900 curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 --max-time 900 \
+            ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz \
+            -o freesurfer.tar.gz \
+            && [ -f freesurfer.tar.gz ] && [ $(stat -c%s freesurfer.tar.gz) -gt 2000000000 ] \
+            && DOWNLOAD_SUCCESS=true); \
+    fi \
+    && if [ "$DOWNLOAD_SUCCESS" = "true" ] && [ -f "$TMPDIR/freesurfer.tar.gz" ]; then \
+        echo "📂 Extracting FreeSurfer (this may take several minutes)..."; \
+        tar -xzf "$TMPDIR/freesurfer.tar.gz" -C /opt/freesurfer-7.4.1 --strip-components 1 \
+             --exclude='freesurfer/average/mult-comp-cor' \
+             --exclude='freesurfer/lib/cuda' \
+             --exclude='freesurfer/lib/qt' \
+             --exclude='freesurfer/subjects/V1_average' \
+             --exclude='freesurfer/subjects/bert' \
+             --exclude='freesurfer/subjects/cvs_avg35' \
+             --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+             --exclude='freesurfer/subjects/fsaverage3' \
+             --exclude='freesurfer/subjects/fsaverage4' \
+             --exclude='freesurfer/subjects/fsaverage5' \
+             --exclude='freesurfer/subjects/fsaverage6' \
+             --exclude='freesurfer/subjects/fsaverage_sym' \
+             --exclude='freesurfer/trctrain' \
+        && echo "✅ FreeSurfer extraction completed"; \
+    else \
+        echo "⚠️  FreeSurfer download failed, creating minimal installation..."; \
+        mkdir -p /opt/freesurfer-7.4.1 && \
+        echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh; \
+    fi \
+    && rm -rf "$TMPDIR" \
+    && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
+
+# ============================================================================
+# MATLAB COMPILER RUNTIME
+# ============================================================================
+
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2017b/v93/runtime/glnxa64:/opt/matlabmcr-2017b/v93/bin/glnxa64:/opt/matlabmcr-2017b/v93/sys/os/glnxa64:/opt/matlabmcr-2017b/v93/extern/bin/glnxa64" \
+    MATLABCMD="/opt/matlabmcr-2017b/v93/toolbox/matlab"
+    
+RUN mkdir -p ${CUSTOM_TMPDIR} || export CUSTOM_TMPDIR="/tmp" \
+    && export TMPDIR="${CUSTOM_TMPDIR}/mcr_install_$$" \
+    && mkdir -p "$TMPDIR" \
+    && apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           bc libncurses5 libxext6 libxmu6 libxpm-dev libxt6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "📦 Downloading MATLAB Compiler Runtime..." \
+    && curl -fsSL --retry 5 -o "$TMPDIR/mcr.zip" \
+           https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip \
+    && unzip -q "$TMPDIR/mcr.zip" -d "$TMPDIR/mcrtmp" \
+    && "$TMPDIR/mcrtmp/install" -destinationFolder /opt/matlabmcr-2017b -mode silent -agreeToLicense yes \
+    && rm -rf "$TMPDIR"
+
+# ============================================================================
+# AFNI (LATEST)
+# ============================================================================
+
+ENV PATH="/opt/afni-latest:$PATH" \
+    AFNI_PLUGINPATH="/opt/afni-latest"
+    
+RUN apt-get update -qq \
+    && apt-get install -y -q --no-install-recommends \
+           ed gsl-bin libglib2.0-0 libglu1-mesa-dev libglw1-mesa \
+           libgomp1 libjpeg62 libxm4 netpbm tcsh xfonts-base xvfb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p ${CUSTOM_TMPDIR} || export CUSTOM_TMPDIR="/tmp" \
+    && curl -sSL --retry 5 -o ${CUSTOM_TMPDIR}/toinstall.deb \
+           http://launchpadlibrarian.net/160108232/libxp6_1.0.2-1ubuntu1_amd64.deb \
+    && dpkg -i ${CUSTOM_TMPDIR}/toinstall.deb \
+    && rm ${CUSTOM_TMPDIR}/toinstall.deb \
+    && curl -sSL --retry 5 -o ${CUSTOM_TMPDIR}/toinstall.deb \
+           http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
+    && dpkg -i ${CUSTOM_TMPDIR}/toinstall.deb \
+    && rm ${CUSTOM_TMPDIR}/toinstall.deb \
+    && apt-get install -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && gsl2_path="$(find / -name 'libgsl.so.19' || printf '')" \
+    && if [ -n "$gsl2_path" ]; then \
+         ln -sfv "$gsl2_path" "$(dirname $gsl2_path)/libgsl.so.0"; \
+    fi \
+    && ldconfig \
+    && echo "📦 Installing AFNI..." \
+    && mkdir -p /opt/afni-latest \
+    && if [ -f "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz" ]; then \
+        echo "✅ Using pre-downloaded AFNI"; \
+        tar -xz -C /opt/afni-latest --strip-components 1 < "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz"; \
+    else \
+        echo "⬇️  Downloading AFNI..."; \
+        curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
+        | tar -xz -C /opt/afni-latest --strip-components 1; \
+    fi
+
+# ============================================================================
+# ANTS 2.3.4
+# ============================================================================
+
+COPY --from=kaczmarj/ants:2.3.4 /opt/ants /opt/ants-2.3.4
+
+ENV ANTSPATH="/opt/ants-2.3.4/bin" \
+    PATH="/opt/ants-2.3.4/bin:$PATH"
+
+# ============================================================================
+# CONNECTOME WORKBENCH
+# ============================================================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      gnupg2 wget ca-certificates neurodebian-archive-keyring && \
+    wget -O /etc/apt/sources.list.d/neurodebian.sources.list \
+         http://neuro.debian.net/lists/xenial.de-fzj.full && \
+    apt-get update && \
+    apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# FSL FIX
+# ============================================================================
+
+RUN cd /opt/ && \
+    if [ -f "$DOWNLOADS_DIR/fix-1.068.tar.gz" ]; then \
+        echo "✅ Installing FSL FIX from pre-downloaded file"; \
+        cp "$DOWNLOADS_DIR/fix-1.068.tar.gz" fix-1.068.tar.gz; \
+    else \
+        echo "⬇️  Downloading FSL FIX..."; \
+        wget https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz; \
+    fi && \
+    tar xvfz fix-1.068.tar.gz && \
+    mv fix-1.068 fix1.068 && \
+    rm fix-1.068.tar.gz
+
+ENV FIXPATH=/opt/fix1.068
+ENV PATH="/opt/fix1.068/:${PATH}"
+
+# ============================================================================
+# SWITCH TO MICA USER FOR CONDA/MAMBA INSTALLATIONS
+# ============================================================================
+
+RUN test "$(getent passwd mica)" || useradd --no-user-group --create-home --shell /bin/bash mica
+USER mica
+
+# ============================================================================
+# MINICONDA & MAMBA
+# ============================================================================
+
+ENV CONDA_DIR="/opt/miniconda-22.11.1" \
+    PATH="/opt/miniconda-22.11.1/bin:$PATH" \
+    MAMBA_NO_SPINNER=1
+
+RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
+    && echo "📦 Installing Miniconda..." \
+    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null && echo "test" > ${CUSTOM_TMPDIR}/write_test 2>/dev/null && rm -f ${CUSTOM_TMPDIR}/write_test 2>/dev/null; then \
+        conda_installer="${CUSTOM_TMPDIR}/miniconda.sh"; \
+    else \
+        conda_installer="/tmp/miniconda.sh"; \
+    fi \
+    && if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Using pre-downloaded Miniconda"; \
+        cp /downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
+    else \
+        echo "⬇️  Downloading Miniconda..."; \
+        curl -fsSL --retry 5 -o "$conda_installer" \
+             https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
+    fi \
+    && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
+    && rm -f "$conda_installer" \
+    && conda config --system --prepend channels conda-forge \
+    && conda config --system --set auto_update_conda false \
+    && conda config --system --set show_channel_urls true \
+    && conda config --system --set channel_priority strict \
+    && conda config --system --set remote_read_timeout_secs 1800 \
+    && conda config --system --set remote_connect_timeout_secs 300 \
+    && conda config --system --set remote_max_retries 5 \
+    && sync && conda clean -y --all && sync \
+    && echo "📦 Installing mamba..." \
+    && conda install -y -n base -c conda-forge mamba \
+    && echo "📦 Creating micapipe environment..." \
+    && mamba create -y -n micapipe python=3.9
+
+# Set up mamba optimization
+RUN export MAMBA_NO_SPINNER=1 \
+    && export CONDA_ALWAYS_YES=1 \
+    && export MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
+    && export MAMBA_REPODATA_THREADS=8 \
+    && export CONDA_FETCH_THREADS=8 \
+    && export MAMBA_THREADS_NUM=8
+
+# ============================================================================
+# MICAPIPE CONDA ENVIRONMENT
+# ============================================================================
+
+# Core scientific stack
+RUN echo "📦 Installing core scientific stack..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           "numpy==1.21.5" \
+           "scipy" \
+           "pandas==1.4.4" \
+           "matplotlib==3.4.3" \
+           "nibabel==4.0.2" \
+           "pillow" \
+           "packaging" \
+           "scikit-learn" \
+           "scikit-fmm" \
+           "joblib" \
+           "nilearn" \
+           "astropy" \
+    && mamba clean -y --all
+
+# Web, networking and visualization
+RUN echo "📦 Installing web and visualization packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           "aiohttp" "aiosignal" "async-timeout" "multidict" "yarl" "frozenlist" \
+           "charset-normalizer" "idna" "requests" "urllib3" \
+           "bokeh==2.2.3" "contourpy" "cycler" "fonttools" "tornado" \
+           "kiwisolver" "jinja2" "markupsafe" "pyvirtualdisplay==3.0" \
+           "lxml" "html5lib" "webencodings" "reportlab" \
+           "pypdf" "pypng" "qrcode" "svglib" "tinycss2" \
+    && mamba clean -y --all
+
+# Utility, crypto and miscellaneous
+RUN echo "📦 Installing utility packages..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           "attrs" "click" "pyyaml" "python-dateutil" "pytz" \
+           "pytz-deprecation-shim" "tzlocal" "six" "zipp" \
+           "typing-extensions" "threadpoolctl" "importlib-resources" \
+           "cryptography" "cffi" "pycparser" "asn1crypto" \
+           "pyhanko-certvalidator" "pyparsing" "python-bidi" \
+           "uritools" "wslink" \
+    && mamba clean -y --all
+
+# VTK
+RUN echo "📦 Installing VTK..." && \
+    mamba run -n micapipe pip install --no-cache-dir --timeout 1800 --retries 3 "vtk==9.2.2" && \
+    echo "✅ VTK installation completed"
+
+# Pip-only packages
+RUN echo "📦 Installing pip-only packages..." \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           "argparse==1.1" \
+           "brainspace==0.1.10" \
+           "tedana==0.0.12" \
+           duecredit \
+           "pyhanko==0.17.2" \
+           "mapca==0.0.3" \
+           "xhtml2pdf==0.2.9" \
+           "oscrypto==1.3.0" \
+           "tzdata==2022.7" \
+           "arabic-reshaper==3.0.0" \
+           "cssselect2==0.7.0" \
+           "pygeodesic==0.1.8" \
+           "seaborn==0.11.2" \
+    && rm -rf ~/.cache/pip/*
+
+# ============================================================================
+# LAMAREG, ENIGMA, MRTRIX3 (NEW REQUIREMENTS)
+# ============================================================================
+
+# Install LAMAReg dependencies and MRtrix3 3.0.7
+RUN echo "📦 Installing ANTsPy, MRtrix3 3.0.7..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+           antspy \
+           antspyx \
+           mrtrix3==3.0.7 \
+    && mamba clean -y --all
+
+# Verify MRtrix3 installation and path
+RUN echo "🔍 Verifying MRtrix3 installation..." \
+    && mamba run -n micapipe which mrinfo || echo "⚠️ MRtrix3 not in default PATH" \
+    && mamba run -n micapipe mrinfo -version || echo "⚠️ MRtrix3 command test failed"
+
+# Install LAMAReg and ENIGMA from GitHub
+RUN echo "📦 Installing LAMAReg and ENIGMA..." \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           git+https://github.com/MICA-MNI/LAMAReg.git \
+           git+https://github.com/MICA-MNI/ENIGMA.git
+
+# Fix MRtrix3 environment path issues - add micapipe env bin to PATH
+ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
+
+# ============================================================================
+# SWM (SUPERFICIAL WHITE MATTER) (NEW REQUIREMENT)
+# ============================================================================
+
+ENV SWM_HOME="/opt/SWM"
+ENV PATH="/opt/SWM:$PATH"
+
+RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
+    && chmod +x /opt/SWM/SWM \
+    && chmod -R a+rx /opt/SWM
+
+# ============================================================================
+# DESIGNER PIPELINE (NEW REQUIREMENT)
+# ============================================================================
+
+ENV DESIGNER_HOME="/opt/DESIGNER"
+ENV PATH="/opt/DESIGNER:$PATH"
+
+RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER.py
+
+# Create DESIGNER environment with dependencies
+RUN echo "📦 Creating DESIGNER environment..." \
+    && mamba create -y -n designer python=3.9 \
+    && mamba install -y -n designer -c conda-forge \
+           numpy scipy matplotlib nibabel dipy tqdm joblib \
+    && mamba run -n designer pip install --no-cache-dir \
+           cvxpy multiprocessing-logging \
+    && mamba clean -y --all
+
+# Note: DESIGNER environment must be activated separately when using DESIGNER tools
+# Usage: conda activate designer && DESIGNER.py ...
+
+# ============================================================================
+# SYNB0-DISCO & SYNBOLD-DISCO (NEW REQUIREMENT)
+# ============================================================================
+
+ENV SYNB0_HOME="/opt/Synb0-DISCO"
+ENV SYNBOLD_HOME="/opt/SynBOLD-DisCo"
+ENV PATH="/opt/Synb0-DISCO:/opt/SynBOLD-DisCo:$PATH"
+
+# Clone repositories
+RUN git clone https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
+    && chmod +x /opt/Synb0-DISCO/src/inference.py
+
+RUN git clone https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
+    && chmod +x /opt/SynBOLD-DisCo/src/inference.py
+
+# Install PyTorch and TensorFlow (CUDA or CPU based on build arg)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "📦 Installing CUDA-enabled PyTorch and TensorFlow..."; \
+        mamba run -n micapipe pip install --no-cache-dir \
+               torch torchvision torchaudio \
+               --index-url https://download.pytorch.org/whl/cu118 \
+        && mamba run -n micapipe pip install --no-cache-dir \
+               tensorflow[and-cuda] keras onnx onnxruntime-gpu; \
+    else \
+        echo "📦 Installing CPU-only PyTorch and TensorFlow..."; \
+        mamba run -n micapipe pip install --no-cache-dir \
+               torch torchvision torchaudio \
+               --index-url https://download.pytorch.org/whl/cpu \
+        && mamba run -n micapipe pip install --no-cache-dir \
+               tensorflow keras onnx onnxruntime; \
+    fi
+
+# Download Synb0-DISCO pre-trained models
+RUN echo "📦 Downloading Synb0-DISCO models..." \
+    && cd /opt/Synb0-DISCO \
+    && mkdir -p models \
+    && if [ -f "download_models.sh" ]; then \
+        bash download_models.sh; \
+    else \
+        echo "⚠️  Model download script not found - models may need manual download"; \
+    fi
+
+# Download SynBOLD-DisCo pre-trained models
+RUN echo "📦 Downloading SynBOLD-DisCo models..." \
+    && cd /opt/SynBOLD-DisCo \
+    && mkdir -p models \
+    && if [ -f "download_models.sh" ]; then \
+        bash download_models.sh; \
+    else \
+        echo "⚠️  Model download script not found - models may need manual download"; \
+    fi
+
+# ============================================================================
+# FASTSURFER 2.4.2 (NEW REQUIREMENT - FROZEN VERSION)
+# ============================================================================
+
+ENV PATH="/opt/FastSurfer:$PATH"
+ENV FASTSURFER_HOME=/opt/FastSurfer
+
+# Clone FastSurfer v2.4.2 and freeze version
+RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
+    && cd /opt/FastSurfer \
+    && git checkout v2.4.2
+
+# Generate FastSurfer conda environment (CPU or GPU based on build arg)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "📦 Generating GPU-enabled FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m gpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        echo "📦 Generating CPU-only FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m cpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
+
+# Patch torchio version (0.20.4 -> 0.20.5)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
+
+# Create FastSurfer conda environment
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
+
+# Install missing dependencies
+RUN /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer pip install --no-cache-dir requests yacs
+
+# Download FastSurfer model checkpoints
+RUN /bin/bash -c 'PYTHONPATH="/opt/FastSurfer:$PYTHONPATH" \
+     /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer \
+     python /opt/FastSurfer/FastSurferCNN/download_checkpoints.py --all'
+
+# ============================================================================
+# R ENVIRONMENT & PACKAGES
+# ============================================================================
+
+USER root
+
+RUN apt-get update -qq && \
+    apt-get install -y -q --no-install-recommends xvfb && \
+    apt-get clean
+
+# Install R
+RUN set -uex; \
+    LD_LIBRARY_PATH=/lib64/:${PATH}; \
+    apt update; \
+    apt install -y software-properties-common apt-transport-https; \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
+    apt-get update; \
+    apt-get install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
+    apt-get install -y r-base-dev; \
+    rm -rf /var/lib/apt/lists/*;
+
+# Copy R config and install R packages
+COPY ./R_config/* /opt/
+
+RUN bash -c 'bash /opt/install_R_env.sh && cd /opt/afni-latest && rPkgsInstall -pkgs ALL'
+
+# ============================================================================
+# C3D TOOLS
+# ============================================================================
+
+RUN set -uex; \
+    cd /opt/ && \
+    wget -O itksnap.tar.gz https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download && \
+    tar -xf itksnap.tar.gz -C /opt/ && \
+    rm itksnap.tar.gz
+    
+ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
+
+# ============================================================================
+# FINAL SETUP & ACTIVATION
+# ============================================================================
+
+# Set up conda activation in startup script
+RUN echo ". /opt/miniconda-22.11.1/etc/profile.d/conda.sh" >> $ND_ENTRYPOINT \
+    && echo "conda activate micapipe" >> $ND_ENTRYPOINT
+
+# Create home directory
+RUN mkdir -p /home/mica && chown -R mica:users /home/mica
+
+WORKDIR /home/mica
+USER mica
+
+# ============================================================================
+# BASE IMAGE COMPLETE
+# ============================================================================
+# This base image is now ready to be used by Dockerfile.main
+# It contains all heavy dependencies and rarely needs rebuilding
+# ============================================================================
