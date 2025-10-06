@@ -141,9 +141,11 @@ RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
     && . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && conda config --set auto_update_conda false \
     && conda config --set show_channel_urls true \
-    && conda config --set solver libmamba \
     && conda config --set channel_priority strict \
-    && conda install -y -n base -c conda-forge mamba
+    && echo "🔧 Installing mamba..." \
+    && conda install -y -n base -c conda-forge mamba \
+    && echo "🔧 Setting mamba as solver (if supported)..." \
+    && (conda config --set solver libmamba || echo "⚠️ libmamba solver not available, using classic")
 
 # Create optimized micapipe environment
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
