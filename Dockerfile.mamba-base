@@ -142,18 +142,23 @@ RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
     && conda config --set auto_update_conda false \
     && conda config --set show_channel_urls true \
     && conda config --set channel_priority strict \
-    && echo "🔧 Installing mamba..." \
+    && echo "🔧 Installing mamba with optimizations..." \
     && conda install -y -n base -c conda-forge mamba \
     && echo "🔧 Setting mamba as solver (if supported)..." \
-    && (conda config --set solver libmamba || echo "⚠️ libmamba solver not available, using classic")
+    && (conda config --set solver libmamba || echo "⚠️ libmamba solver not available, using classic") \
+    && echo "⚡ Configuring mamba for maximum speed..." \
+    && conda config --set remote_read_timeout_secs 60 \
+    && conda config --set remote_connect_timeout_secs 10 \
+    && conda config --set remote_max_retries 3
 
 # Create optimized micapipe environment
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
-    && conda create -y -n micapipe python=3.9 \
+    && echo "🚀 Using mamba for ultra-fast environment creation..." \
+    && mamba create -y -n micapipe python=3.9 \
     && echo "🔧 Installing core scientific packages..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        --threads 16 --retry-delay 3 --retry-attempts 2 \
         numpy scipy pandas matplotlib seaborn plotly \
         nibabel scikit-learn scikit-image \
         dipy==1.4.1 fury==0.8.0 \
@@ -162,12 +167,12 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing antspy and MRtrix3..." \
     && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
         --override-channels --strict-channel-priority \
-        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        --threads 16 --retry-delay 3 --retry-attempts 2 \
         antspy mrtrix3==3.0.7 \
     && echo "🔧 Installing utilities and networking packages..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        --threads 16 --retry-delay 3 --retry-attempts 2 \
         bzip2 ca-certificates curl git openssh \
         unzip wget xz zip \
         cryptography paramiko pycryptodome \
@@ -177,9 +182,10 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
 
 # Create designer environment
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
-    && conda create -y -n designer python=3.8 \
+    && echo "🚀 Creating designer environment with mamba..." \
+    && mamba create -y -n designer python=3.8 \
     && mamba install -y -n designer -c conda-forge \
-        --threads 8 --retry-delay 5 --retry-attempts 3 \
+        --threads 16 --retry-delay 3 --retry-attempts 2 \
         numpy scipy matplotlib nibabel dipy
 
 # Install additional Python packages via pip
