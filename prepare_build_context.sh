@@ -16,8 +16,20 @@ if [[ ! -f "Dockerfile.mamba-base" ]]; then
     exit 1
 fi
 
-# The files that exist on your server
+# Check if we're already in the downloads directory
+CURRENT_DIR="$(pwd)"
 DOWNLOADS_DIR="/host/cassio/export03/data/enning/downloads"
+
+if [[ "$CURRENT_DIR" == "$DOWNLOADS_DIR" ]]; then
+    echo "✅ Already in downloads directory - files are already in build context!"
+    echo "📁 Current location: $CURRENT_DIR"
+    echo "📋 Available pre-downloaded files:"
+    ls -la *.tar.gz *.tgz *.sh 2>/dev/null | head -10 || echo "No pre-downloaded files visible"
+    echo "✅ Build context ready - no copying needed!"
+    exit 0
+fi
+
+# If not in downloads directory, copy files
 SOURCE_FILES=(
     "freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz"
     "fsl-6.0.2-centos6_64.tar.gz"  
@@ -25,7 +37,7 @@ SOURCE_FILES=(
 )
 
 # Copy files to current directory so Docker build context can find them
-echo "📁 Copying pre-downloaded files to build context..."
+echo "📁 Copying pre-downloaded files from $DOWNLOADS_DIR to build context..."
 
 for file in "${SOURCE_FILES[@]}"; do
     if [[ -f "$DOWNLOADS_DIR/$file" ]]; then
