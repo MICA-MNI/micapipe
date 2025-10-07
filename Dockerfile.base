@@ -26,43 +26,17 @@ ARG DOWNLOADS_DIR="/downloads"
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
-# Copy pre-downloaded dependencies for efficient builds - handle missing files gracefully
-# This expects to be run from /host/cassio/export03/data/enning/downloads where files exist
-COPY . /tmp/build_context/
-RUN mkdir -p /downloads && \
-    echo "📦 Setting up pre-downloaded files..." && \
-    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
-        echo "✅ Copying FSL..."; \
-        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
-        echo "✅ Copying FreeSurfer..."; \
-        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FreeSurfer not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
-        echo "✅ Copying AFNI..."; \
-        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
-    else \
-        echo "⚠️  AFNI not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
-        echo "✅ Copying FSL FIX..."; \
-        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL FIX not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
-        echo "✅ Copying Miniconda..."; \
-        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /downloads/; \
-    else \
-        echo "⚠️  Miniconda not found, will download during build"; \
-    fi && \
-    rm -rf /tmp/build_context && \
-    echo "✅ Download files setup complete"
+# Mount point for pre-downloaded files on the server
+# The build script should be run from /host/cassio/export03/data/enning/downloads
+# where large files (FreeSurfer, FSL, etc.) are stored
+# Those files will be accessed via bind mount, NOT copied into build context
+
+# Create downloads directory - files will be available if directory is mounted
+# or will be downloaded during build if not available
+RUN mkdir -p /downloads \
+    && echo "📦 Downloads directory created at /downloads" \
+    && echo "⚠️  Note: Large pre-downloaded files should be bind-mounted at build time" \
+    && echo "   Example: docker build --mount type=bind,source=/host/...,target=/downloads ..."
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \

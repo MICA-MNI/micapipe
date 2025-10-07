@@ -5,18 +5,58 @@
 .gitignore
 .vscode
 micapipe_v*.sif
+
+# CRITICAL: Exclude large pre-downloaded files (2.7GB+ each)
+# These cause "no space left on device" error in Docker build context
+*.tar.gz
+*.tgz
+*.zip
+freesurfer-*.tar.gz
+fsl-*.tar.gz
+afni-*.tgz
+MCR_*.zip
+Miniconda3-*.sh
+*.RData
+DESIGNER_v2.tar.gz
+synb0_pretrained_model.tar.gz
+synbold_pretrained_model.tar.gz
+
+# Exclude large installer scripts, but KEEP functions/*.sh
+fix_settings.sh
+generate_micapipe_images.sh
+build_*.sh
+migrate_*.sh
+
 # Large directories not needed in container
 old/
-MICs60_T1-atlas/
-MNI152Volumes/
-parcellations/
-surfaces/
-R_config/
 test_data/
 tests/
 micapipe_snakebids/
 .snakemake/
 build_logs/
 *.log
+
 # Temporary files
 temp_downloads/
+conda-lock-output.log
+
+# Documentation that's not needed in build
+*.md
+!README.md
+dag.svg
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IMPORTANT: Include only what's needed for micapipe
+# R_config, parcellations, surfaces, MNI volumes will be included by NOT excluding them below
+# !R_config/
+# !parcellations/
+# !surfaces/
+# !MNI152Volumes/
+# !MICs60_T1-atlas/
+# !fsl_conf/
+# !functions/
+

@@ -13,19 +13,22 @@ set -euo pipefail
 # Configuration
 SERVER_BASE_DIR="/host/cassio/export03/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
-BUILD_DIR="$DOWNLOADS_DIR"  # Build directly in downloads directory (has unlimited space)
+BUILD_DIR="$DOWNLOADS_DIR/micapipe_build"  # Separate build directory (NO large files)
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"
 HOME_MICAPIPE="$PWD"  # Use current directory as source
 
 echo "🚚 MICApipe Two-Stage Build - Server Migration"
 echo "=============================================="
 echo "📍 Server base: $SERVER_BASE_DIR"
-echo "📁 Downloads/Build: $DOWNLOADS_DIR"
+echo "📁 Downloads: $DOWNLOADS_DIR (pre-downloaded files)"
+echo "🔨 Build directory: $BUILD_DIR (Docker build context)"
 echo "🏠 Source code: $HOME_MICAPIPE"
 echo ""
 echo "📦 Two-Stage Strategy:"
 echo "   Stage 1 (Dockerfile.base): Build base with ALL tools (45-90 min, rarely)"
 echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
+echo ""
+echo "🚀 IMPORTANT: Build context in separate directory to avoid copying large files!"
 echo ""
 
 # Verify source micapipe directory exists
@@ -114,6 +117,14 @@ fi
 
 # Check for source file changes
 SOURCE_CHANGED=false
+
+# Create build directory if it doesn't exist
+if [[ ! -d "$BUILD_DIR" ]]; then
+    echo "📁 Creating build directory: $BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
+    SOURCE_CHANGED=true
+fi
+
 if [[ ! -f "$BUILD_DIR/.last_sync_twostage" ]]; then
     SOURCE_CHANGED=true
     echo "🔄 First time two-stage setup - copying all source files"
@@ -127,6 +138,10 @@ fi
 if $SOURCE_CHANGED; then
     echo "📋 Copying two-stage build files to server..."
     
+    # Clean build directory (keep it minimal!)
+    echo "   Cleaning build directory..."
+    rm -rf "$BUILD_DIR"/*
+    
     # Copy two-stage Dockerfiles
     echo "   Copying Dockerfile.base (Stage 1 - comprehensive base)..."
     cp "$HOME_MICAPIPE/Dockerfile.base" "$BUILD_DIR/"
@@ -134,34 +149,50 @@ if $SOURCE_CHANGED; then
     echo "   Copying Dockerfile.main (Stage 2 - fast micapipe)..."
     cp "$HOME_MICAPIPE/Dockerfile.main" "$BUILD_DIR/"
     
+    # Copy .dockerignore (CRITICAL to prevent copying large files!)
+    echo "   Copying .dockerignore..."
+    cp "$HOME_MICAPIPE/.dockerignore" "$BUILD_DIR/"
+    
     # Copy build scripts
     echo "   Copying build scripts..."
     cp "$HOME_MICAPIPE/build_base_image_server.sh" "$BUILD_DIR/"
     cp "$HOME_MICAPIPE/build_main_image_server.sh" "$BUILD_DIR/"
     
+    # Copy ONLY necessary directories for Docker build context
+    echo "   Copying R_config directory..."
+    cp -r "$HOME_MICAPIPE/R_config" "$BUILD_DIR/"
+    
+    # Copy other essential config directories (small files only)
+    echo "   Copying essential config directories..."
+    for dir in parcellations surfaces MNI152Volumes MICs60_T1-atlas fsl_conf functions; do
+        if [[ -d "$HOME_MICAPIPE/$dir" ]]; then
+            cp -r "$HOME_MICAPIPE/$dir" "$BUILD_DIR/"
+        fi
+    done
+    
+    # Copy essential Python/shell scripts (NO large files!)
+    echo "   Copying essential scripts..."
+    find "$HOME_MICAPIPE" -maxdepth 1 -type f \( \
+        -name "*.py" -o \
+        -name "micapipe" -o \
+        -name "*.yaml" -o \
+        -name "*.toml" -o \
+        -name "*.txt" \
+    \) ! -name "*test*" -exec cp {} "$BUILD_DIR/" \; 2>/dev/null || true
+    
     # Copy documentation
     if [[ -f "$HOME_MICAPIPE/DOCKERFILE_COMPREHENSIVE_REVIEW.md" ]]; then
         cp "$HOME_MICAPIPE/DOCKERFILE_COMPREHENSIVE_REVIEW.md" "$BUILD_DIR/"
     fi
-    
-    # Copy other essential files using rsync for efficiency
-    if command -v rsync >/dev/null 2>&1; then
-        echo "   Syncing all source files..."
-        rsync -av \
-            --exclude='.git' \
-            --exclude='downloads' \
-            --exclude='__pycache__' \
-            --exclude='*.pyc' \
-            --exclude='.DS_Store' \
-            --exclude='build_logs' \
-            --exclude='test_data' \
-            "$HOME_MICAPIPE"/ "$BUILD_DIR/"
-    else
-        # Fallback to cp if rsync not available
-        echo "   Copying files (rsync not available)..."
-        find "$HOME_MICAPIPE" -maxdepth 1 -type f \( -name "*.sh" -o -name "Dockerfile*" -o -name "*.md" -o -name "*.py" \) -exec cp {} "$BUILD_DIR/" \;
-        find "$HOME_MICAPIPE" -maxdepth 1 -type d ! -name '.' ! -name 'downloads' ! -name '.git' -exec cp -r {} "$BUILD_DIR/" \;
+    if [[ -f "$HOME_MICAPIPE/readme.md" ]]; then
+        cp "$HOME_MICAPIPE/readme.md" "$BUILD_DIR/"
     fi
+    
+    echo ""
+    echo "   ℹ️  IMPORTANT: Pre-downloaded files NOT copied to build directory"
+    echo "      Large files (FSL, FreeSurfer, etc.) remain in: $DOWNLOADS_DIR"
+    echo "      .dockerignore prevents them from entering Docker build context"
+    echo "      Dockerfile will download these files during build if needed"
     
     # Mark sync time
     touch "$BUILD_DIR/.last_sync_twostage"
