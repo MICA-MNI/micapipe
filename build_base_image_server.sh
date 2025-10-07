@@ -78,6 +78,23 @@ echo "🎮 CUDA support: $ENABLE_CUDA"
 echo "📦 Registry: $REGISTRY"
 echo ""
 
+# CRITICAL: Check we're NOT in home directory
+if [[ "$PWD" == *"$HOME"* ]] || [[ "$PWD" == *"/home/"*"micapipe" ]]; then
+    echo "❌ CRITICAL ERROR: Building from HOME directory!"
+    echo "   Current: $PWD"
+    echo ""
+    echo "⚠️  DO NOT build from ~/micapipe (home directory)!"
+    echo "   This will cause 'no space left on device' errors."
+    echo ""
+    echo "✅ Correct location: /host/cassio/export03/data/enning/downloads"
+    echo ""
+    echo "🔧 Please run:"
+    echo "   cd /host/cassio/export03/data/enning/downloads"
+    echo "   ./build_base_image_server.sh"
+    echo ""
+    exit 1
+fi
+
 # Check we're in the right location
 if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"

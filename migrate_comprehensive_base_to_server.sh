@@ -1,7 +1,21 @@
 #!/bin/bash
-set -euo pipefail
-
-# MICApipe Two-Stage Build Strategy - Server Migration Script
+set -euecho "🚚 MICApipe Two-Stage Build - Server Migration"
+echo "=============================================="
+echo ""
+echo "⚠️  IMPORTANT: This script copies files TO the server"
+echo "   Docker builds will happen ON THE SERVER at: $BUILD_DIR"
+echo "   NOT in your home directory!"
+echo ""
+echo "📍 Server base: $SERVER_BASE_DIR"
+echo "📁 Build directory (ON SERVER): $BUILD_DIR"
+echo "🏠 Source code (LOCAL): $HOME_MICAPIPE"
+echo ""
+echo "📦 Two-Stage Strategy:"
+echo "   Stage 1 (Dockerfile.base): Build base with ALL tools (45-90 min, rarely)"
+echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
+echo ""
+echo "💡 Simple approach: Pre-downloaded files + build files in SAME directory"
+echo ""# MICApipe Two-Stage Build Strategy - Server Migration Script
 # ============================================================
 # This script migrates micapipe code to server for two-stage builds:
 #   STAGE 1: Build comprehensive base image (Dockerfile.base) - rarely
@@ -222,6 +236,9 @@ echo "======================"
 echo "Build directory: $BUILD_DIR"
 echo "Strategy: Two-Stage Build (95% faster CI builds)"
 echo ""
+echo "⚠️  CRITICAL: DO NOT build from ~/micapipe (home directory)!"
+echo "   Builds MUST happen from: $BUILD_DIR"
+echo ""
 echo "📋 Build Workflow:"
 echo ""
 echo "   STAGE 1 (Rarely - when dependencies change):"
@@ -246,11 +263,12 @@ echo "   - Time saved per CI run: ~60 minutes!"
 echo ""
 
 # Ask if user wants to start the base image build immediately
-read -p "🚀 Start Stage 1 base image build now? (y/N): " -n 1 -r
+read -p "🚀 Start Stage 1 base image build now (ON SERVER)? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
-    echo "🏗️  Starting Stage 1: Base image build..."
+    echo "🏗️  Starting Stage 1: Base image build ON SERVER..."
+    echo "📍 Build location: $BUILD_DIR (NOT ~/micapipe)"
     echo "⏱️  Expected time: 45-90 minutes (one-time setup)"
     echo "📋 This will build the base image with all neuroimaging tools:"
     echo "   - FSL 6.0.2, FreeSurfer 7.4.1, AFNI"
@@ -260,7 +278,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     
     # Change to build directory and run base image build
+    echo "📂 Changing to server build directory..."
     pushd "$BUILD_DIR"
+    pwd
+    echo ""
     ./build_base_image_server.sh
     BASE_BUILD_EXIT_CODE=$?
     popd

@@ -1,12 +1,12 @@
 # QUICK START - Fixed Docker Build
 
 ## Problem FIXED ✅
-"no space left on device" error → Build directory separated from large files
+"no space left on device" error → Build happens ON SERVER with more space
 
 ## What Changed
-- Build now runs from: `/host/cassio/export03/data/enning/downloads/micapipe_build/`
-- Large files stay in: `/host/cassio/export03/data/enning/downloads/`
-- Docker build context: <500MB (was 8GB+)
+- ⚠️  **CRITICAL: Builds happen ON SERVER, NOT in home directory!**
+- Build location: `/host/cassio/export03/data/enning/downloads/`
+- Pre-downloaded files + build files in SAME directory (simple!)
 
 ## Run These Commands
 
@@ -17,52 +17,84 @@ git checkout comprehensive-base-image
 git pull origin comprehensive-base-image
 ```
 
-### 2. Migrate to Server (creates new build directory)
+### 2. Free Up Server Space (if needed)
+```bash
+cd ~/micapipe
+# Copy cleanup script to server
+cp cleanup_server_space.sh /host/cassio/export03/data/enning/downloads/
+cd /host/cassio/export03/data/enning/downloads
+./cleanup_server_space.sh
+```
+
+### 3. Migrate to Server (copies files TO server)
 ```bash
 cd ~/micapipe
 ./migrate_comprehensive_base_to_server.sh
 ```
 
-### 3. Build Base Image (from NEW location)
+### 4. Build Base Image (⚠️  FROM SERVER LOCATION!)
 ```bash
-cd /host/cassio/export03/data/enning/downloads/micapipe_build
+cd /host/cassio/export03/data/enning/downloads
 ./build_base_image_server.sh
 ```
 
-⏱️ **Expected time:** 60-120 minutes (downloads files from internet)
+⏱️ **Expected time:** 45-90 minutes
+
+## ⚠️ CRITICAL - Build Location
+
+**✅ CORRECT (on server with space):**
+```bash
+cd /host/cassio/export03/data/enning/downloads
+./build_base_image_server.sh
+```
+
+**❌ WRONG (in home directory - will fail!):**
+```bash
+cd ~/micapipe  # DON'T DO THIS!
+docker build ...  # Will cause "no space left" error
+```
 
 ## ⚠️ Important Notes
 
-1. **Must run from `micapipe_build/` directory** (not `downloads/`)
-2. **Requires internet** (will download FreeSurfer, FSL, AFNI, etc.)
-3. **Pre-downloaded files not used** (Docker can't access parent directory)
-4. **Longer build time** (due to downloads, but NO disk space errors!)
+1. **⚠️  MUST build from server location** (`/host/.../downloads/` NOT `~/micapipe`)
+2. **Uses pre-downloaded files** (FSL, FreeSurfer, AFNI already on server)
+3. **Script will ERROR if you try to build from home directory**
+4. **Run cleanup script if low on space**
 
 ## Commits Applied
 - `0b34b56` - Separate build directory fix
 - `cc0347a` - Documentation  
 - `80010f7` - GPG key import with resilient fallbacks (fixes keyserver errors)
+- `1efe3bb` - Revert to simple approach + cleanup script
+- `LATEST` - Enforce build location checks (prevents home directory builds)
 
 ## What to Expect
 
-✅ **Build context preparation:** <1 minute (not 10+ minutes)  
+✅ **Build runs from server location** (has space + pre-downloaded files)  
+✅ **Uses pre-downloaded files** (FreeSurfer 2.7GB, FSL 2.6GB already there)  
 ✅ **No "no space left on device" errors**  
-✅ **Downloads:** FreeSurfer (2.7GB), FSL (2.6GB), AFNI (800MB), etc.  
-✅ **Build completes successfully** after 60-120 minutes  
+✅ **Build completes successfully** after 45-90 minutes  
+✅ **Script blocks if you try to build from home directory**  
 
 ## If Issues Persist
 
-1. Check you're in correct directory:
+1. Check you're in SERVER directory (NOT home):
    ```bash
-   pwd  # Should be: .../downloads/micapipe_build
+   pwd  # Should be: /host/cassio/export03/data/enning/downloads
    ```
 
-2. Check disk space:
+2. Run cleanup script:
    ```bash
-   df -h /var/lib/docker  # Should have >20GB free
+   cd /host/cassio/export03/data/enning/downloads
+   ./cleanup_server_space.sh
    ```
 
-3. Clean Docker:
+3. Check disk space on server:
+   ```bash
+   df -h /host/cassio/export03/data/enning
+   ```
+
+4. Clean Docker:
    ```bash
    docker system prune -a
    ```
