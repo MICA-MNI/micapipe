@@ -13,6 +13,15 @@ USER root
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
+# CRITICAL: Configure apt to auto-clean packages - MUST BE FIRST
+# This prevents "No space left in /var/cache/apt/archives/" errors
+RUN echo 'APT::Keep-Downloaded-Packages "false";' > /etc/apt/apt.conf.d/00-docker-clean \
+    && echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/00-docker-clean \
+    && echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/00-docker-clean
+
+# Clean any existing cached data
+RUN rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # Memory optimization for package installations
 ENV APT_LISTCHANGES_FRONTEND=none
 ENV APT_OPTIONS="-o APT::Install-Suggests=false -o APT::Install-Recommends=false"

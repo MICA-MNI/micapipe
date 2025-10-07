@@ -1,22 +1,21 @@
 #!/bin/bash
 # ============================================================================
-# DOCKER SPACE CLEANUP SCRIPT
+# DOCKER SPACE CLEANUP SCRIPT (NO SUDO REQUIRED)
 # ============================================================================
 # Run this BEFORE building Docker images to free up space
 # Usage: ./cleanup_docker_space.sh
+#
+# IMPORTANT: This script works WITHOUT sudo access
+# - Cleans Docker resources you own
+# - Skips operations requiring root privileges
+# - Safe to run on shared servers like venice/cassio
 # ============================================================================
 
 set -e
 
-echo "🧹 Docker Space Cleanup Script"
+echo "🧹 Docker Space Cleanup Script (No Sudo Required)"
 echo "========================================"
 echo ""
-
-# Check if running as root or with sudo (needed for some operations)
-if [[ $EUID -ne 0 ]] && ! sudo -n true 2>/dev/null; then
-    echo "⚠️  Some operations may require sudo privileges"
-    echo ""
-fi
 
 # Show initial disk space
 echo "📊 Initial disk usage:"
@@ -76,12 +75,12 @@ echo "   ✅ System pruned"
 echo ""
 
 # Step 8: Clean apt cache on host (if accessible)
-if [ -d "/var/cache/apt/archives" ]; then
+if [ -d "/var/cache/apt/archives" ] && [ -w "/var/cache/apt/archives" ]; then
     echo "🗑️  Step 8: Cleaning host apt cache..."
-    sudo rm -rf /var/cache/apt/archives/* 2>/dev/null || echo "   ⚠️  Need sudo to clean apt cache"
+    rm -rf /var/cache/apt/archives/* 2>/dev/null || echo "   ⚠️  Cannot write to apt cache (no sudo)"
     echo "   ✅ Host apt cache cleaned"
 else
-    echo "   ℹ️  No apt cache found on host"
+    echo "🗑️  Step 8: Skipping apt cache (no write access - requires sudo)"
 fi
 echo ""
 
