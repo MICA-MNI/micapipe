@@ -205,6 +205,11 @@ RUN conda install -y -n base -c conda-forge "mamba" \
 # Copy and install environment.yml
 COPY micapipe_environment.yml /tmp/micapipe_environment.yml
 
+# Verify environment.yml content - SHOW ANTSPY IS IN CONDA NOT PIP
+RUN echo "🔍 Verifying environment.yml has antspy in conda section..." \
+    && grep -A 2 "antspy" /tmp/micapipe_environment.yml \
+    && echo "✅ Environment file verified"
+
 RUN echo "📦 Installing from environment.yml (10-20 min with 32GB RAM)..." \
     && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
     && mamba clean -y --all \
