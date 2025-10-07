@@ -40,7 +40,8 @@ cd /host/cassio/export03/data/enning/downloads/micapipe_build
 
 ## Commits Applied
 - `0b34b56` - Separate build directory fix
-- `cc0347a` - Documentation
+- `cc0347a` - Documentation  
+- `80010f7` - GPG key import with resilient fallbacks (fixes keyserver errors)
 
 ## What to Expect
 
