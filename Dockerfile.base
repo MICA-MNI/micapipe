@@ -173,17 +173,21 @@ RUN apt-get update -qq \
            libgomp1 libice6 libxcursor1 libxft2 libxinerama1 \
            libxrandr2 libxrender1 libxt6 sudo wget \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "📦 Installing FSL 6.0.2..." \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pre-downloaded files from build context
+COPY . /tmp/build_context/
+
+RUN echo "📦 Installing FSL 6.0.2..." \
     && mkdir -p /opt/fsl-6.0.2 \
     && mkdir -p ${CUSTOM_TMPDIR} || export CUSTOM_TMPDIR="/tmp" \
     && export TMPDIR="${CUSTOM_TMPDIR}/fsl_install_$$" \
     && mkdir -p "$TMPDIR" \
-    && if [ -f "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" ] && [ $(stat -c%s "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz") -gt 500000000 ]; then \
-        echo "✅ Using pre-downloaded FSL from $DOWNLOADS_DIR ($(du -h "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" | cut -f1))"; \
-        cp "$DOWNLOADS_DIR/fsl-6.0.2-centos6_64.tar.gz" "$TMPDIR/fsl.tar.gz"; \
+    && if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ] && [ $(stat -c%s "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz") -gt 500000000 ]; then \
+        echo "✅ Using pre-downloaded FSL from build context ($(du -h "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" | cut -f1))"; \
+        cp "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" "$TMPDIR/fsl.tar.gz"; \
     else \
-        echo "⬇️  Downloading FSL..."; \
+        echo "⬇️  Pre-downloaded FSL not found in build context, downloading from internet..."; \
         cd "$TMPDIR" && \
         (curl -fsSL --retry 5 --retry-delay 10 --connect-timeout 60 --max-time 3600 \
              -o fsl.tar.gz \
@@ -226,9 +230,9 @@ RUN echo "📦 Installing FreeSurfer 7.4.1..." \
     && export TMPDIR="${CUSTOM_TMPDIR}/freesurfer_install_$$" \
     && mkdir -p "$TMPDIR" \
     && DOWNLOAD_SUCCESS=false \
-    && if [ -f "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ] && [ $(stat -c%s "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz") -gt 2000000000 ]; then \
-        echo "✅ Using pre-downloaded FreeSurfer from $DOWNLOADS_DIR ($(du -h "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1))"; \
-        cp "$DOWNLOADS_DIR/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$TMPDIR/freesurfer.tar.gz" && DOWNLOAD_SUCCESS=true; \
+    && if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ] && [ $(stat -c%s "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz") -gt 2000000000 ]; then \
+        echo "✅ Using pre-downloaded FreeSurfer from /tmp/build_context ($(du -h "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" | cut -f1))"; \
+        cp "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" "$TMPDIR/freesurfer.tar.gz" && DOWNLOAD_SUCCESS=true; \
     else \
         echo "⬇️  Downloading FreeSurfer..."; \
         cd "$TMPDIR" && \
@@ -319,9 +323,9 @@ RUN apt-get update -qq \
     && ldconfig \
     && echo "📦 Installing AFNI..." \
     && mkdir -p /opt/afni-latest \
-    && if [ -f "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz" ]; then \
+    && if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
         echo "✅ Using pre-downloaded AFNI"; \
-        tar -xz -C /opt/afni-latest --strip-components 1 < "$DOWNLOADS_DIR/afni-linux_openmp_64.tgz"; \
+        tar -xz -C /opt/afni-latest --strip-components 1 < "/tmp/build_context/afni-linux_openmp_64.tgz"; \
     else \
         echo "⬇️  Downloading AFNI..."; \
         curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
@@ -355,9 +359,9 @@ RUN apt-get update && \
 # ============================================================================
 
 RUN cd /opt/ && \
-    if [ -f "$DOWNLOADS_DIR/fix-1.068.tar.gz" ]; then \
+    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
         echo "✅ Installing FSL FIX from pre-downloaded file"; \
-        cp "$DOWNLOADS_DIR/fix-1.068.tar.gz" fix-1.068.tar.gz; \
+        cp "/tmp/build_context/fix-1.068.tar.gz" fix-1.068.tar.gz; \
     else \
         echo "⬇️  Downloading FSL FIX..."; \
         wget https://git.fmrib.ox.ac.uk/fsl/fix/-/archive/1.068/fix-1.068.tar.gz; \
@@ -391,9 +395,9 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     else \
         conda_installer="/tmp/miniconda.sh"; \
     fi \
-    && if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+    && if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
         echo "✅ Using pre-downloaded Miniconda"; \
-        cp /downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
+        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
     else \
         echo "⬇️  Downloading Miniconda..."; \
         curl -fsSL --retry 5 -o "$conda_installer" \
@@ -692,6 +696,9 @@ ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 # Set up conda activation in startup script
 RUN echo ". /opt/miniconda-22.11.1/etc/profile.d/conda.sh" >> $ND_ENTRYPOINT \
     && echo "conda activate micapipe" >> $ND_ENTRYPOINT
+
+# Clean up build context to save space
+RUN rm -rf /tmp/build_context
 
 # Create home directory
 RUN mkdir -p /home/mica && chown -R mica:users /home/mica
