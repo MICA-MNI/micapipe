@@ -473,6 +473,7 @@ RUN echo "📦 Installing micapipe conda environment (optimized single-pass)..."
 # VTK and other pip packages
 RUN echo "📦 Installing VTK and pip-only packages..." \
     && mamba run -n micapipe pip install --no-cache-dir \
+           "antspy" \
            "vtk==9.2.2" \
            "argparse==1.1" \
            "brainspace==0.1.10" \
@@ -500,13 +501,6 @@ RUN echo "📦 Installing MRtrix3 3.0.7..." \
            mrtrix3==3.0.7 \
     && mamba clean -y --all \
     && echo "✅ MRtrix3 installed"
-
-# Install ANTsPy separately (complex dependencies)
-RUN echo "📦 Installing ANTsPy..." \
-    && mamba install -y -n micapipe -c conda-forge \
-           antspy \
-    && mamba clean -y --all \
-    && echo "✅ ANTsPy installed"
 
 # Verify MRtrix3 installation and path
 RUN echo "🔍 Verifying MRtrix3 installation..." \
