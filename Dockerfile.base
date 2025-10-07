@@ -66,11 +66,17 @@ ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
 
-# Fix GPG keys for Ubuntu repositories
+# Fix GPG keys for Ubuntu repositories using multiple fallback methods
 RUN apt-get update -qq || true \
-    && apt-get install -y --allow-unauthenticated ca-certificates gnupg \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32 \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C \
+    && apt-get install -y --allow-unauthenticated ca-certificates gnupg wget \
+    && (apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3B4FE6ACC0B21F32 || \
+        apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 3B4FE6ACC0B21F32 || \
+        wget -qO - https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x3B4FE6ACC0B21F32 | apt-key add - || \
+        echo "Warning: Could not import key 3B4FE6ACC0B21F32, continuing anyway...") \
+    && (apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 871920D1991BC93C || \
+        apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 871920D1991BC93C || \
+        wget -qO - https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x871920D1991BC93C | apt-key add - || \
+        echo "Warning: Could not import key 871920D1991BC93C, continuing anyway...") \
     && rm -rf /var/lib/apt/lists/*
     
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
