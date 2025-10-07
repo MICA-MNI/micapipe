@@ -202,21 +202,32 @@ RUN conda install -y -n base -c conda-forge "mamba" \
     && conda clean -y --all \
     && echo "✅ Mamba installed in base environment"
 
-# Copy and install environment.yml
-COPY micapipe_environment.yml /tmp/micapipe_environment.yml
-
-# Verify environment.yml content - SHOW ANTSPY IS IN CONDA NOT PIP
-RUN echo "🔍 Verifying environment.yml has antspy in conda section..." \
-    && grep -A 2 "antspy" /tmp/micapipe_environment.yml \
-    && echo "✅ Environment file verified"
-
-RUN echo "📦 Installing from environment.yml (10-20 min with 32GB RAM)..." \
-    && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
+# Install conda packages directly (like v1) - single transaction
+RUN echo "📦 Installing conda packages (10-20 min with 32GB RAM)..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+           numpy=1.21.5 scipy pandas=1.4.4 matplotlib=3.4.3 \
+           nibabel=4.0.2 pillow packaging scikit-learn scikit-fmm \
+           joblib nilearn astropy aiohttp requests bokeh=2.2.3 \
+           pyvirtualdisplay=3.0 lxml attrs click pyyaml \
+           python-dateutil pytz cryptography \
+           mrtrix3=3.0.7 antspy antspyx \
     && mamba clean -y --all \
-    && rm /tmp/micapipe_environment.yml \
-    && echo "✅ Environment installed"
+    && echo "✅ Conda packages installed"
 
-# Verify installation including antspy from conda
+# Install pip packages
+RUN echo "📦 Installing pip packages..." \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           vtk==9.2.2 argparse==1.1 brainspace==0.1.10 \
+           tedana==0.0.12 duecredit pyhanko==0.17.2 \
+           mapca==0.0.3 xhtml2pdf==0.2.9 oscrypto==1.3.0 \
+           tzdata==2022.7 arabic-reshaper==3.0.0 \
+           cssselect2==0.7.0 pygeodesic==0.1.8 seaborn==0.11.2 \
+           git+https://github.com/MICA-MNI/LAMAReg.git \
+           git+https://github.com/MICA-MNI/ENIGMA.git \
+    && rm -rf ~/.cache/pip/* \
+    && echo "✅ Pip packages installed"
+
+# Verify installation
 RUN conda run -n micapipe python -c "import numpy, scipy, nibabel, antspy; print('✅ Core packages + ANTsPy verified')" || echo "⚠️ Verification failed"
 
 # Set permissions for conda directories so mica user can use them

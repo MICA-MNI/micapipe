@@ -104,13 +104,8 @@ if [[ -d "$DOWNLOADS_DIR" ]]; then
             echo "     - $file"
         done
         echo ""
-        echo "Build will continue but missing files will be downloaded (slower)."
-        read -p "Continue anyway? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "❌ Migration cancelled"
-            exit 1
-        fi
+        echo "⚠️  Missing files detected - will download during build (slower)"
+        echo "   Continuing automatically..."
     fi
     
     # Create backup if it doesn't exist
@@ -262,17 +257,13 @@ echo "   - Main image build: 3-5 minutes (every code change)"
 echo "   - Time saved per CI run: ~60 minutes!"
 echo ""
 
-# Ask if user wants to start the base image build immediately
-read -p "🚀 Start Stage 1 base image build now (ON SERVER)? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo ""
-    echo "🏗️  Starting Stage 1: Base image build ON SERVER..."
-    echo "📍 Build location: $BUILD_DIR (NOT ~/micapipe)"
-    echo "⏱️  Expected time: 45-90 minutes (one-time setup)"
-    echo "📋 This will build the base image with all neuroimaging tools:"
-    echo "   - FSL 6.0.2, FreeSurfer 7.4.1, AFNI"
-    echo "   - MRtrix3 3.0.7, FastSurfer 2.4.2"
+# Auto-start base image build
+echo "🏗️  Starting Stage 1: Base image build ON SERVER..."
+echo "📍 Build location: $BUILD_DIR (NOT ~/micapipe)"
+echo "⏱️  Expected time: 45-90 minutes (one-time setup)"
+echo "📋 This will build the base image with all neuroimaging tools:"
+echo "   - FSL 6.0.2, FreeSurfer 7.4.1, AFNI"
+echo "   - MRtrix3 3.0.7, FastSurfer 2.4.2"
     echo "   - DESIGNER, LAMAReg, SWM, Synb0/SynBOLD"
     echo "   - Conda/Mamba environments"
     echo ""
@@ -289,22 +280,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     if [[ $BASE_BUILD_EXIT_CODE -eq 0 ]]; then
         echo ""
         echo "✅ Stage 1 complete! Base image built successfully!"
-        echo "🎯 Ready for Stage 2 fast builds!"
-        echo ""
-        echo "🚀 To build Stage 2 main image (3-5 minutes):"
-        echo "   cd $BUILD_DIR && ./build_main_image_server.sh"
-    else
-        echo ""
-        echo "❌ Base image build failed (exit code: $BASE_BUILD_EXIT_CODE)"
-        echo "📋 Check build logs for details"
-        echo "💡 You can retry later with: cd $BUILD_DIR && ./build_comprehensive_base_server.sh"
-    fi
+    echo "🎯 Ready for Stage 2 fast builds!"
+    echo ""
+    echo "🚀 To build Stage 2 main image (3-5 minutes):"
+    echo "   cd $BUILD_DIR && ./build_main_image_server.sh"
 else
     echo ""
-    echo "✅ Migration complete - ready for manual builds"
-    echo ""
-    echo "🔧 When ready to build:"
-    echo "   cd $BUILD_DIR"
-    echo "   ./build_comprehensive_base_server.sh  # One-time base build"
-    echo "   ./build_fast_ci_server.sh            # Fast CI builds"
+    echo "❌ Base image build failed (exit code: $BASE_BUILD_EXIT_CODE)"
+    echo "📋 Check build logs for details"
+    echo "💡 You can retry later with: cd $BUILD_DIR && ./build_base_image_server.sh"
 fi
