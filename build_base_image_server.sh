@@ -100,13 +100,8 @@ if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
     echo "   Expected: /host/cassio/export03/data/enning/downloads"
+    echo "   Continuing anyway (user can Ctrl+C to cancel)..."
     echo ""
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "❌ Build cancelled"
-        exit 1
-    fi
 fi
 
 # Check for Dockerfile.base
@@ -150,13 +145,8 @@ if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
     echo "⚠️  Warning: Some pre-downloaded files are missing"
     echo "   Found: $FILES_FOUND/${#REQUIRED_FILES[@]}"
     echo "   Missing files will be downloaded during build (slower, requires internet)"
+    echo "   Continuing automatically (user can Ctrl+C to cancel)..."
     echo ""
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "❌ Build cancelled"
-        exit 1
-    fi
 else
     echo ""
     echo "✅ All pre-downloaded files found!"
@@ -232,13 +222,8 @@ echo "   ✅ Miniconda/Mamba + Python environments"
 echo "   ✅ R environment with neuroimaging packages"
 echo "   ✅ FSL FIX, Connectome Workbench, c3d"
 echo ""
-
-read -p "Proceed with base image build? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ Build cancelled"
-    exit 0
-fi
+echo "🚀 Starting build automatically (Ctrl+C to cancel)..."
+echo ""
 
 # ============================================================================
 # DOCKER BUILD
@@ -253,7 +238,6 @@ BUILD_ARGS=(
     --file Dockerfile.base
     --build-arg "ENABLE_CUDA=${ENABLE_CUDA}"
     --build-arg "CUSTOM_TMPDIR=/host/cassio/export03/data/enning"
-    --build-arg "DOWNLOADS_DIR=/downloads"
     --tag "${FULL_BASE_IMAGE}"
     --tag "${LATEST_BASE_IMAGE}"
 )

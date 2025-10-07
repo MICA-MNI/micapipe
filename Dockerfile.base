@@ -20,23 +20,11 @@ ENV APT_OPTIONS="-o APT::Install-Suggests=false -o APT::Install-Recommends=false
 # CUDA build argument - defaults to false to preserve current behavior
 ARG ENABLE_CUDA=false
 
-# Downloads directory for pre-downloaded dependencies
-ARG DOWNLOADS_DIR="/downloads"
-
 # Custom temporary directory for build operations
 ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
 
-# Mount point for pre-downloaded files on the server
-# The build script should be run from /host/cassio/export03/data/enning/downloads
-# where large files (FreeSurfer, FSL, etc.) are stored
-# Those files will be accessed via bind mount, NOT copied into build context
-
-# Create downloads directory - files will be available if directory is mounted
-# or will be downloaded during build if not available
-RUN mkdir -p /downloads \
-    && echo "📦 Downloads directory created at /downloads" \
-    && echo "⚠️  Note: Large pre-downloaded files should be bind-mounted at build time" \
-    && echo "   Example: docker build --mount type=bind,source=/host/...,target=/downloads ..."
+# Note: Pre-downloaded files are accessed via COPY . /tmp/build_context/
+# See line ~240 where build context is copied and files are checked at /tmp/build_context/
 
 # Add NVIDIA repository and CUDA toolkit if CUDA is enabled
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
@@ -197,10 +185,11 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda clean -y --all \
     && echo "✅ Conda environment created"
 
-# Install mamba in base (NOT in micapipe env)
-RUN conda install -y -n base -c conda-forge "mamba" \
+# Install mamba with libmamba solver in base (NOT in micapipe env)
+RUN conda install -y -n base -c conda-forge "mamba>=1.4" "conda-libmamba-solver" \
+    && conda config --set solver libmamba \
     && conda clean -y --all \
-    && echo "✅ Mamba installed in base environment"
+    && echo "✅ Mamba + libmamba solver installed in base environment"
 
 # Install conda packages directly (like v1) - single transaction
 RUN echo "📦 Installing conda packages (10-20 min with 32GB RAM)..." \
@@ -210,7 +199,7 @@ RUN echo "📦 Installing conda packages (10-20 min with 32GB RAM)..." \
            joblib nilearn astropy aiohttp requests bokeh=2.2.3 \
            pyvirtualdisplay=3.0 lxml attrs click pyyaml \
            python-dateutil pytz cryptography \
-           mrtrix3=3.0.7 antspy antspyx \
+           mrtrix3=3.0.7 antspyx \
     && mamba clean -y --all \
     && echo "✅ Conda packages installed"
 
@@ -227,8 +216,9 @@ RUN echo "📦 Installing pip packages..." \
     && rm -rf ~/.cache/pip/* \
     && echo "✅ Pip packages installed"
 
-# Verify installation
-RUN conda run -n micapipe python -c "import numpy, scipy, nibabel, antspy; print('✅ Core packages + ANTsPy verified')" || echo "⚠️ Verification failed"
+# Verify installation - FAIL BUILD if verification fails
+RUN echo "🔍 Verifying core packages..." \
+    && conda run -n micapipe python -c "import numpy, scipy, nibabel, ants; print('✅ Core packages + ANTsPy verified')"
 
 # Set permissions for conda directories so mica user can use them
 RUN chmod -R a+rwx /opt/miniconda-22.11.1
