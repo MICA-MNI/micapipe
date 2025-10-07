@@ -13,22 +13,21 @@ set -euo pipefail
 # Configuration
 SERVER_BASE_DIR="/host/cassio/export03/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
-BUILD_DIR="$DOWNLOADS_DIR/micapipe_build"  # Separate build directory (NO large files)
+BUILD_DIR="$DOWNLOADS_DIR"  # Build in same directory as pre-downloaded files (SIMPLER!)
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"
 HOME_MICAPIPE="$PWD"  # Use current directory as source
 
 echo "🚚 MICApipe Two-Stage Build - Server Migration"
 echo "=============================================="
 echo "📍 Server base: $SERVER_BASE_DIR"
-echo "📁 Downloads: $DOWNLOADS_DIR (pre-downloaded files)"
-echo "🔨 Build directory: $BUILD_DIR (Docker build context)"
+echo "📁 Build directory: $BUILD_DIR"
 echo "🏠 Source code: $HOME_MICAPIPE"
 echo ""
 echo "📦 Two-Stage Strategy:"
 echo "   Stage 1 (Dockerfile.base): Build base with ALL tools (45-90 min, rarely)"
 echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
 echo ""
-echo "🚀 IMPORTANT: Build context in separate directory to avoid copying large files!"
+echo "� Simple approach: Pre-downloaded files + build files in SAME directory"
 echo ""
 
 # Verify source micapipe directory exists
@@ -138,10 +137,6 @@ fi
 if $SOURCE_CHANGED; then
     echo "📋 Copying two-stage build files to server..."
     
-    # Clean build directory (keep it minimal!)
-    echo "   Cleaning build directory..."
-    rm -rf "$BUILD_DIR"/*
-    
     # Copy two-stage Dockerfiles
     echo "   Copying Dockerfile.base (Stage 1 - comprehensive base)..."
     cp "$HOME_MICAPIPE/Dockerfile.base" "$BUILD_DIR/"
@@ -149,7 +144,7 @@ if $SOURCE_CHANGED; then
     echo "   Copying Dockerfile.main (Stage 2 - fast micapipe)..."
     cp "$HOME_MICAPIPE/Dockerfile.main" "$BUILD_DIR/"
     
-    # Copy .dockerignore (CRITICAL to prevent copying large files!)
+    # Copy .dockerignore
     echo "   Copying .dockerignore..."
     cp "$HOME_MICAPIPE/.dockerignore" "$BUILD_DIR/"
     
@@ -160,17 +155,17 @@ if $SOURCE_CHANGED; then
     
     # Copy ONLY necessary directories for Docker build context
     echo "   Copying R_config directory..."
-    cp -r "$HOME_MICAPIPE/R_config" "$BUILD_DIR/"
+    cp -r "$HOME_MICAPIPE/R_config" "$BUILD_DIR/" 2>/dev/null || true
     
-    # Copy other essential config directories (small files only)
+    # Copy other essential config directories
     echo "   Copying essential config directories..."
     for dir in parcellations surfaces MNI152Volumes MICs60_T1-atlas fsl_conf functions; do
         if [[ -d "$HOME_MICAPIPE/$dir" ]]; then
-            cp -r "$HOME_MICAPIPE/$dir" "$BUILD_DIR/"
+            cp -r "$HOME_MICAPIPE/$dir" "$BUILD_DIR/" 2>/dev/null || true
         fi
     done
     
-    # Copy essential Python/shell scripts (NO large files!)
+    # Copy essential scripts
     echo "   Copying essential scripts..."
     find "$HOME_MICAPIPE" -maxdepth 1 -type f \( \
         -name "*.py" -o \
@@ -189,10 +184,8 @@ if $SOURCE_CHANGED; then
     fi
     
     echo ""
-    echo "   ℹ️  IMPORTANT: Pre-downloaded files NOT copied to build directory"
-    echo "      Large files (FSL, FreeSurfer, etc.) remain in: $DOWNLOADS_DIR"
-    echo "      .dockerignore prevents them from entering Docker build context"
-    echo "      Dockerfile will download these files during build if needed"
+    echo "   ✅ Pre-downloaded files already in: $BUILD_DIR"
+    echo "   ✅ Build files copied to same directory (SIMPLE!)"
     
     # Mark sync time
     touch "$BUILD_DIR/.last_sync_twostage"

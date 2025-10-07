@@ -79,13 +79,10 @@ echo "📦 Registry: $REGISTRY"
 echo ""
 
 # Check we're in the right location
-if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads/micapipe_build"* ]]; then
-    echo "⚠️  Warning: Not in expected server build directory"
+if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+    echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/downloads/micapipe_build"
-    echo ""
-    echo "   ⚠️  IMPORTANT: Build must run from micapipe_build subdirectory,"
-    echo "      NOT from downloads directory (which contains large files)!"
+    echo "   Expected: /host/cassio/export03/data/enning/downloads"
     echo ""
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo
@@ -105,13 +102,9 @@ fi
 
 echo "✅ Dockerfile.base found"
 
-# Check for pre-downloaded files in PARENT directory (not build directory)
+# Check for pre-downloaded files in SAME directory
 echo ""
-echo "🔍 Checking for pre-downloaded files in parent directory..."
-
-# Pre-downloaded files should be in parent directory (not in micapipe_build)
-DOWNLOADS_DIR="$(dirname "$PWD")"
-echo "   Downloads directory: $DOWNLOADS_DIR"
+echo "🔍 Checking for pre-downloaded files..."
 
 REQUIRED_FILES=(
     "fsl-6.0.2-centos6_64.tar.gz"
@@ -125,13 +118,12 @@ FILES_FOUND=0
 MISSING_FILES=()
 
 for file in "${REQUIRED_FILES[@]}"; do
-    FILEPATH="$DOWNLOADS_DIR/$file"
-    if [[ -f "$FILEPATH" ]]; then
-        FILE_SIZE=$(du -h "$FILEPATH" | cut -f1)
+    if [[ -f "$file" ]]; then
+        FILE_SIZE=$(du -h "$file" | cut -f1)
         echo "   ✅ $file: $FILE_SIZE"
         FILES_FOUND=$((FILES_FOUND + 1))
     else
-        echo "   ❌ $file: NOT FOUND at $FILEPATH"
+        echo "   ❌ $file: NOT FOUND"
         MISSING_FILES+=("$file")
     fi
 done
