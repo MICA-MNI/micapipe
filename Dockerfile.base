@@ -91,6 +91,13 @@ RUN if [ "$ENABLE_CUDA" = "true" ]; then \
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
     ND_ENTRYPOINT="/neurodocker/startup.sh"
+
+# Fix GPG keys for Ubuntu repositories
+RUN apt-get update -qq || true \
+    && apt-get install -y --allow-unauthenticated ca-certificates gnupg \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32 \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C \
+    && rm -rf /var/lib/apt/lists/*
     
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && apt-get update -qq \
