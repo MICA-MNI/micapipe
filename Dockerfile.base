@@ -214,6 +214,9 @@ RUN echo "📦 Installing from environment.yml (10-20 min with 32GB RAM)..." \
 # Verify installation
 RUN conda run -n micapipe python -c "import numpy, scipy, nibabel; print('✅ Core packages verified')" || echo "⚠️ Verification failed"
 
+# Set permissions for conda directories so mica user can use them
+RUN chmod -R a+rwx /opt/miniconda-22.11.1
+
 ENV MAMBA_NO_SPINNER=1 \
     CONDA_ALWAYS_YES=1 \
     MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
