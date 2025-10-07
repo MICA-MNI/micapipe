@@ -416,19 +416,20 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda config --system --prepend channels conda-forge \
     && conda config --system --set auto_update_conda false \
     && conda config --system --set show_channel_urls true \
-    && conda config --system --set channel_priority strict \
+    && conda config --system --set channel_priority flexible \
     && conda config --system --set remote_read_timeout_secs 1800 \
     && conda config --system --set remote_connect_timeout_secs 300 \
     && conda config --system --set remote_max_retries 5 \
     && sync && conda clean -y --all && sync \
-    && echo "📦 Installing mamba..." \
-    && conda install -y -n base -c conda-forge mamba \
+    && echo "📦 Installing mamba with libmamba solver..." \
+    && conda install -y -n base -c conda-forge "mamba>=1.4" "conda-libmamba-solver" \
+    && conda config --set solver libmamba \
     && echo "📦 Creating micapipe environment..." \
-    && mamba create -y -n micapipe python=3.9
+    && mamba create -y -n micapipe python=3.9 \
+    && conda clean -y --all
 
-# Set up mamba optimization - use libmamba solver for speed
-RUN conda config --set solver libmamba \
-    && conda config --set channel_priority flexible
+# Environment variables for mamba
+RUN true
 
 ENV MAMBA_NO_SPINNER=1 \
     CONDA_ALWAYS_YES=1 \
