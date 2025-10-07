@@ -160,6 +160,66 @@ RUN apt-get update -qq \
     && rm -rf ${CUSTOM_TMPDIR}/dcm2niix
 
 # ============================================================================
+# CONDA/MAMBA ENVIRONMENT - MOVED HERE TO FAIL EARLY
+# ============================================================================
+
+ENV CONDA_DIR="/opt/miniconda-22.11.1" \
+    PATH="/opt/miniconda-22.11.1/bin:/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH" \
+    MAMBA_NO_SPINNER=1
+
+RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
+    && echo "📦 Installing Miniconda..." \
+    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null && echo "test" > ${CUSTOM_TMPDIR}/write_test 2>/dev/null && rm -f ${CUSTOM_TMPDIR}/write_test 2>/dev/null; then \
+        conda_installer="${CUSTOM_TMPDIR}/miniconda.sh"; \
+    else \
+        conda_installer="/tmp/miniconda.sh"; \
+    fi \
+    && if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Using pre-downloaded Miniconda"; \
+        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
+    else \
+        echo "⬇️  Downloading Miniconda..."; \
+        curl -fsSL --retry 5 -o "$conda_installer" \
+             https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
+    fi \
+    && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
+    && rm -f "$conda_installer" \
+    && conda config --system --prepend channels conda-forge \
+    && conda config --system --set auto_update_conda false \
+    && conda config --system --set show_channel_urls true \
+    && conda config --system --set channel_priority flexible \
+    && conda config --system --set remote_read_timeout_secs 1800 \
+    && conda config --system --set remote_connect_timeout_secs 300 \
+    && conda config --system --set remote_max_retries 5 \
+    && sync && conda clean -y --all && sync \
+    && echo "📦 Creating micapipe environment with python..." \
+    && conda create -y -n micapipe python=3.9 \
+    && conda clean -y --all \
+    && echo "✅ Conda environment created"
+
+# Install mamba in base (NOT in micapipe env)
+RUN conda install -y -n base -c conda-forge "mamba" \
+    && conda clean -y --all \
+    && echo "✅ Mamba installed in base environment"
+
+# Copy and install environment.yml
+COPY micapipe_environment.yml /tmp/micapipe_environment.yml
+
+RUN echo "📦 Installing from environment.yml (10-20 min with 32GB RAM)..." \
+    && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
+    && mamba clean -y --all \
+    && rm /tmp/micapipe_environment.yml \
+    && echo "✅ Environment installed"
+
+# Verify installation
+RUN conda run -n micapipe python -c "import numpy, scipy, nibabel; print('✅ Core packages verified')" || echo "⚠️ Verification failed"
+
+ENV MAMBA_NO_SPINNER=1 \
+    CONDA_ALWAYS_YES=1 \
+    MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
+    CONDA_FETCH_THREADS=8
+
+# ============================================================================
 # FSL 6.0.2 (FROZEN VERSION)
 # ============================================================================
 
@@ -382,85 +442,14 @@ ENV FIXPATH=/opt/fix1.068
 ENV PATH="/opt/fix1.068/:${PATH}"
 
 # ============================================================================
-# SWITCH TO MICA USER FOR CONDA/MAMBA INSTALLATIONS
+# SWITCH TO MICA USER
 # ============================================================================
 
 RUN test "$(getent passwd mica)" || useradd --no-user-group --create-home --shell /bin/bash mica
 USER mica
 
 # ============================================================================
-# MINICONDA & MAMBA
-# ============================================================================
-
-ENV CONDA_DIR="/opt/miniconda-22.11.1" \
-    PATH="/opt/miniconda-22.11.1/bin:$PATH" \
-    MAMBA_NO_SPINNER=1
-
-RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
-    && echo "📦 Installing Miniconda..." \
-    && if mkdir -p ${CUSTOM_TMPDIR} 2>/dev/null && echo "test" > ${CUSTOM_TMPDIR}/write_test 2>/dev/null && rm -f ${CUSTOM_TMPDIR}/write_test 2>/dev/null; then \
-        conda_installer="${CUSTOM_TMPDIR}/miniconda.sh"; \
-    else \
-        conda_installer="/tmp/miniconda.sh"; \
-    fi \
-    && if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
-        echo "✅ Using pre-downloaded Miniconda"; \
-        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh "$conda_installer"; \
-    else \
-        echo "⬇️  Downloading Miniconda..."; \
-        curl -fsSL --retry 5 -o "$conda_installer" \
-             https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
-    fi \
-    && bash "$conda_installer" -b -p /opt/miniconda-22.11.1 \
-    && rm -f "$conda_installer" \
-    && conda config --system --prepend channels conda-forge \
-    && conda config --system --set auto_update_conda false \
-    && conda config --system --set show_channel_urls true \
-    && conda config --system --set channel_priority flexible \
-    && conda config --system --set remote_read_timeout_secs 1800 \
-    && conda config --system --set remote_connect_timeout_secs 300 \
-    && conda config --system --set remote_max_retries 5 \
-    && sync && conda clean -y --all && sync \
-    && echo "📦 Creating micapipe environment with python..." \
-    && conda create -y -n micapipe python=3.9 \
-    && conda clean -y --all \
-    && echo "✅ Conda environment created"
-
-# Install mamba INSIDE the micapipe environment to avoid OOM during base install
-RUN echo "📦 Installing mamba in micapipe environment..." \
-    && conda install -y -n micapipe -c conda-forge "mamba" \
-    && conda clean -y --all \
-    && echo "✅ Mamba installed in micapipe environment"
-
-ENV MAMBA_NO_SPINNER=1 \
-    CONDA_ALWAYS_YES=1 \
-    MAMBA_ROOT_PREFIX=/opt/miniconda-22.11.1 \
-    CONDA_FETCH_THREADS=8
-
-# ============================================================================
-# MICAPIPE CONDA ENVIRONMENT - USE ENVIRONMENT.YML FILE
-# ============================================================================
-
-# Copy environment file
-COPY micapipe_environment.yml /tmp/micapipe_environment.yml
-
-# Install from environment.yml - use conda since mamba is inside the env
-RUN echo "📦 Installing from environment.yml (may take 10-20 min with 32GB RAM)..." \
-    && . /opt/miniconda-22.11.1/bin/activate micapipe \
-    && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
-    && mamba clean -y --all \
-    && rm /tmp/micapipe_environment.yml \
-    && echo "✅ Environment installed"
-
-# Verify installation
-RUN . /opt/miniconda-22.11.1/bin/activate micapipe \
-    && python -c "import numpy, scipy, nibabel, vtk, antspy; print('✅ Verified')" || echo "⚠️ Check manually"
-
-# Fix MRtrix3 PATH
-ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
-
-# ============================================================================
-# VERIFY MRTRIX3 (installed via environment.yml)
+# VERIFY MRTRIX3 (installed via environment.yml earlier)
 # ============================================================================
 
 RUN echo "� Verifying MRtrix3 from environment.yml..." \
