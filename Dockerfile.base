@@ -211,18 +211,8 @@ RUN echo "📦 Installing from environment.yml (10-20 min with 32GB RAM)..." \
     && rm /tmp/micapipe_environment.yml \
     && echo "✅ Environment installed"
 
-# Install ANTsPy separately (requires compilation, may take 10-15 min)
-RUN echo "📦 Installing ANTsPy (compilation required, ~10 min)..." \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           build-essential cmake git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && conda run -n micapipe pip install --no-cache-dir --no-build-isolation antspy \
-    && echo "✅ ANTsPy installed"
-
-# Verify installation
-RUN conda run -n micapipe python -c "import numpy, scipy, nibabel; print('✅ Core packages verified')" || echo "⚠️ Verification failed"
+# Verify installation including antspy from conda
+RUN conda run -n micapipe python -c "import numpy, scipy, nibabel, antspy; print('✅ Core packages + ANTsPy verified')" || echo "⚠️ Verification failed"
 
 # Set permissions for conda directories so mica user can use them
 RUN chmod -R a+rwx /opt/miniconda-22.11.1
