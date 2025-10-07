@@ -249,11 +249,6 @@ BUILD_ARGS+=(
     --shm-size=8g
 )
 
-# FORCE NO CACHE - cached layers have broken apt config from previous builds
-BUILD_ARGS+=(
-    --no-cache
-)
-
 # Start build
 if docker build "${BUILD_ARGS[@]}" . 2>&1 | tee "$BUILD_LOG"; then
     

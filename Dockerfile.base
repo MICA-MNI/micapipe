@@ -13,9 +13,10 @@ USER root
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# CRITICAL: Configure apt to auto-clean packages - MUST BE FIRST
-# This prevents "No space left in /var/cache/apt/archives/" errors
-RUN echo 'APT::Keep-Downloaded-Packages "false";' > /etc/apt/apt.conf.d/00-docker-clean \
+# CRITICAL: Remove any broken apt configs from base image, then add our clean config
+# Ubuntu base image may have broken docker-clean config that causes "E: Clean of / is not supported"
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'APT::Keep-Downloaded-Packages "false";' > /etc/apt/apt.conf.d/00-docker-clean \
     && echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/00-docker-clean \
     && echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/00-docker-clean
 
@@ -79,9 +80,6 @@ RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99al
        echo "Warning: Could not import keys, continuing..." \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-# Configure apt to not cache packages (saves disk space during downloads)
-RUN echo 'Dir::Cache::Archives ""; Acquire::GzipIndexes "true";' > /etc/apt/apt.conf.d/docker-clean
     
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* \
