@@ -444,15 +444,17 @@ ENV MAMBA_NO_SPINNER=1 \
 # Copy environment file
 COPY micapipe_environment.yml /tmp/micapipe_environment.yml
 
-# Install from environment.yml - single solved transaction
+# Install from environment.yml - use conda since mamba is inside the env
 RUN echo "📦 Installing from environment.yml (may take 10-20 min with 32GB RAM)..." \
+    && . /opt/miniconda-22.11.1/bin/activate micapipe \
     && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
     && mamba clean -y --all \
     && rm /tmp/micapipe_environment.yml \
     && echo "✅ Environment installed"
 
 # Verify installation
-RUN mamba run -n micapipe python -c "import numpy, scipy, nibabel, vtk, antspy; print('✅ Verified')" || echo "⚠️ Check manually"
+RUN . /opt/miniconda-22.11.1/bin/activate micapipe \
+    && python -c "import numpy, scipy, nibabel, vtk, antspy; print('✅ Verified')" || echo "⚠️ Check manually"
 
 # Fix MRtrix3 PATH
 ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
