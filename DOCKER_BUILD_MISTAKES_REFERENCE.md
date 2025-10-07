@@ -266,6 +266,105 @@ ARG DOWNLOADS_DIR="/downloads"  # Defined but never used
 
 ---
 
+## ❌ MISTAKE #9: Using environment.yml Instead of Direct Mamba Install
+**Date:** October 7, 2025  
+**Error:**
+```
+Updating pip packages: antspy, vtk==9.2.2...
+ERROR: Could not find a version that satisfies the requirement antspy
+```
+
+**Root Cause:** `mamba env update --file environment.yml` has a bug/misinterpretation where it tries to install conda packages via pip even when they are correctly placed in the conda section (not pip section) of the YAML file.
+
+**Wrong Approach:**
+```dockerfile
+# WRONG - environment.yml approach causes pip/conda confusion
+COPY micapipe_environment.yml /tmp/micapipe_environment.yml
+RUN mamba env update -n micapipe --file /tmp/micapipe_environment.yml
+```
+
+Even with correct YAML structure:
+```yaml
+# micapipe_environment.yml
+dependencies:
+  - antspy      # ← In conda section, NOT pip
+  - antspyx
+  - pip:
+    - vtk==9.2.2  # ← pip section separate
+```
+
+Mamba still tries: "Updating pip packages: antspy, vtk==9.2.2..." (WRONG!)
+
+**Correct Fix:** Use direct `mamba install` commands like v1 Dockerfile (which works perfectly)
+```dockerfile
+# Install conda packages directly - NO environment.yml
+RUN mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+       numpy=1.21.5 scipy pandas matplotlib \
+       nibabel pillow scikit-learn \
+       mrtrix3=3.0.7 antspy antspyx \
+    && mamba clean -y --all
+
+# Install pip packages separately
+RUN mamba run -n micapipe pip install --no-cache-dir \
+       vtk==9.2.2 brainspace==0.1.10 \
+       git+https://github.com/MICA-MNI/LAMAReg.git \
+    && rm -rf ~/.cache/pip/*
+```
+
+**Why v1 Works:**
+- v1 Dockerfile (lines 715-722) uses direct `mamba install` - NO environment.yml file
+- Each package group installed explicitly with channels specified
+- No ambiguity about conda vs pip packages
+- Proven in production for months/years
+
+**Commits:** 
+- ea3cd92 (attempted environment.yml fix - FAILED)
+- e6f108e (debug verification - confirmed YAML correct but still failed)
+- b60ae7d (switched to v1 direct install method - SHOULD WORK)
+
+**Status:** ✅ FIXED (switched to v1 method)
+
+**Lesson:** 
+- **CRITICAL: When something works in production (v1), use the EXACT same approach**
+- Don't try to "improve" or "modernize" working code with environment.yml
+- `mamba env update` with YAML files is unreliable - has parsing/interpretation bugs
+- Direct `mamba install` commands are explicit, debuggable, and production-proven
+- **Always check v1/production code FIRST before trying new approaches**
+- Time wasted trying to debug environment.yml: ~2 hours (multiple builds + investigations)
+- Time to implement v1 solution: ~5 minutes
+
+---
+
+## ❌ MISTAKE #10: Asking User for Manual Confirmation in Automated Scripts
+**Date:** October 7, 2025  
+**Issue:** Migration script requires manual "y/N" confirmation, breaking automation
+
+**Wrong:**
+```bash
+# WRONG - requires manual intervention
+read -p "Continue anyway? (y/N): " -n 1 -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+fi
+```
+
+**Correct Fix:** Auto-proceed with informative messages
+```bash
+# CORRECT - fully automatic
+echo "⚠️  Missing files detected - will download during build (slower)"
+echo "   Continuing automatically..."
+```
+
+**Commit:** b60ae7d  
+**Status:** ✅ FIXED  
+**Lesson:** 
+- Automation scripts should NEVER require manual input
+- Provide clear warning messages instead
+- User can cancel with Ctrl+C if they disagree
+- Especially critical when user explicitly says "do not ask me to y"
+
+---
+
 ## 🎯 KEY PATTERNS TO REMEMBER
 
 ### 1. External Dependencies (Keyservers, Mirrors, Downloads)
@@ -325,6 +424,33 @@ if [[ "$SCRIPT_DIR" == "$HOME"* ]]; then
 fi
 ```
 
+### 6. Package Installation Method
+**ALWAYS** use direct mamba install (like v1), NOT environment.yml:
+```dockerfile
+# CORRECT - Direct install (v1 method)
+RUN mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+       numpy scipy pandas matplotlib \
+       antspy antspyx mrtrix3=3.0.7 \
+    && mamba clean -y --all
+
+# Then pip packages separately
+RUN mamba run -n micapipe pip install --no-cache-dir package1 package2
+
+# WRONG - environment.yml has bugs
+RUN mamba env update -n micapipe --file environment.yml  # ❌ DON'T USE
+```
+
+### 7. Automation Scripts
+**NEVER** require manual confirmation:
+```bash
+# WRONG
+read -p "Continue? (y/N): "
+
+# CORRECT
+echo "⚠️  Issue detected - continuing automatically..."
+# User can Ctrl+C if needed
+```
+
 ---
 
 ## 📋 VALIDATION CHECKLIST BEFORE EACH BUILD
@@ -337,9 +463,12 @@ Before running build, verify:
 - [ ] All pre-downloaded files referenced via `/tmp/build_context/`
 - [ ] .dockerignore allows .tar.gz, .tgz files
 - [ ] System dependencies installed before pip packages requiring them
+- [ ] **Using direct mamba install like v1 (NOT environment.yml)**
 - [ ] No duplicate conda/pip package installations
 - [ ] All external downloads have multiple fallback methods
 - [ ] Pre-downloaded files exist in current directory before build
+- [ ] Scripts are fully automatic (no manual confirmation prompts)
+- [ ] **Check v1 Dockerfile FIRST before implementing new approaches**
 
 ---
 
@@ -359,21 +488,33 @@ conda config --set channel_priority flexible
 # Add system dependencies:
 apt-get install -y pkg-config libcairo2-dev lib*-dev
 
-# If conda package not found:
-# Try pip instead:
-mamba run -n micapipe pip install package_name
+# If conda package not found or mamba env update fails:
+# Use v1 direct install method instead:
+mamba install -y -n micapipe -c conda-forge package_name
+# Then pip packages:
+mamba run -n micapipe pip install pip_package
+
+# If antspy installation fails:
+# Check v1 Dockerfile lines 715-722 for working method
+# Use: mamba install -y -n micapipe -c conda-forge antspy antspyx
 ```
 
 ---
 
 ## 📊 BUILD SUCCESS METRICS
 
-**Total Mistakes Made:** 8  
-**Total Mistakes Fixed:** 7  
+**Total Mistakes Made:** 10  
+**Total Mistakes Fixed:** 9  
 **Harmless Issues:** 1  
 
-**Time Wasted on Repeated Mistakes:** ~3 hours  
+**Time Wasted on Repeated Mistakes:** ~5 hours (especially environment.yml: 2 hours)  
+**Time Saved by Checking v1 First:** Could have been immediate  
 **Time Saved by This Document:** Hopefully infinite 😊
+
+**Most Critical Lessons:**
+1. **Check production/v1 code FIRST** before trying new approaches
+2. **Never use environment.yml with mamba** - has parsing bugs
+3. **Direct mamba install is explicit and production-proven**
 
 ---
 
