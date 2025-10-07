@@ -69,7 +69,7 @@ RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99al
        apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 3B4FE6ACC0B21F32 871920D1991BC93C || \
        echo "Warning: Could not import keys, continuing..." \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
     
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && apt-get update -qq \
@@ -81,7 +81,7 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            locales \
            unzip \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && dpkg-reconfigure --frontend=noninteractive locales \
     && update-locale LANG="en_US.UTF-8" \
@@ -100,25 +100,25 @@ RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            gcc g++ \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            lsb-core bsdtar jq \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            libopenblas-dev tree libstdc++6 \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            openjdk-8-jdk \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -126,7 +126,7 @@ RUN apt-get update -qq \
            libcairo2-dev \
            libgirepository1.0-dev \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # ============================================================================
 # DCM2NIIX
@@ -254,7 +254,7 @@ RUN apt-get update -qq \
            libgomp1 libice6 libxcursor1 libxft2 libxinerama1 \
            libxrandr2 libxrender1 libxt6 sudo wget \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Copy pre-downloaded files from build context
 COPY . /tmp/build_context/
@@ -303,7 +303,7 @@ RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            bc libgomp1 libxmu6 libxt6 perl tcsh \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN echo "📦 Installing FreeSurfer 7.4.1..." \
     && mkdir -p /opt/freesurfer-7.4.1 \
@@ -433,7 +433,7 @@ RUN apt-get update && \
          http://neuro.debian.net/lists/xenial.de-fzj.full && \
     apt-get update && \
     apt-get install -y connectome-workbench=1.3.2-2~nd16.04+1 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # ============================================================================
 # FSL FIX
