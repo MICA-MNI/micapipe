@@ -70,8 +70,12 @@ RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99al
        echo "Warning: Could not import keys, continuing..." \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# Configure apt to not cache packages (saves disk space during downloads)
+RUN echo 'Dir::Cache::Archives ""; Acquire::GzipIndexes "true";' > /etc/apt/apt.conf.d/docker-clean
     
 RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
+    && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            apt-utils \
