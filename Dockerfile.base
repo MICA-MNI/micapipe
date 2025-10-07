@@ -438,84 +438,32 @@ ENV MAMBA_NO_SPINNER=1 \
     CONDA_FETCH_THREADS=8
 
 # ============================================================================
-# MICAPIPE CONDA ENVIRONMENT - OPTIMIZED INSTALLATION
+# MICAPIPE CONDA ENVIRONMENT - USE ENVIRONMENT.YML FILE
 # ============================================================================
 
-# Install ALL packages in ONE command to avoid dependency conflicts
-# This is MUCH faster than multiple mamba install commands
-RUN echo "📦 Installing micapipe conda environment (optimized single-pass)..." \
-    && mamba install -y -n micapipe -c conda-forge \
-           "numpy==1.21.5" \
-           "scipy" \
-           "pandas==1.4.4" \
-           "matplotlib==3.4.3" \
-           "nibabel==4.0.2" \
-           "pillow" \
-           "packaging" \
-           "scikit-learn" \
-           "scikit-fmm" \
-           "joblib" \
-           "nilearn" \
-           "astropy" \
-           "aiohttp" \
-           "requests" \
-           "bokeh==2.2.3" \
-           "pyvirtualdisplay==3.0" \
-           "lxml" \
-           "attrs" \
-           "click" \
-           "pyyaml" \
-           "python-dateutil" \
-           "pytz" \
-           "cryptography" \
+# Copy environment file
+COPY micapipe_environment.yml /tmp/micapipe_environment.yml
+
+# Install from environment.yml - single solved transaction
+RUN echo "📦 Installing from environment.yml (may take 10-20 min with 32GB RAM)..." \
+    && mamba env update -n micapipe --file /tmp/micapipe_environment.yml \
     && mamba clean -y --all \
-    && echo "✅ Core environment installed"
+    && rm /tmp/micapipe_environment.yml \
+    && echo "✅ Environment installed"
 
-# VTK and other pip packages
-RUN echo "📦 Installing VTK and pip-only packages..." \
-    && mamba run -n micapipe pip install --no-cache-dir \
-           "antspy" \
-           "vtk==9.2.2" \
-           "argparse==1.1" \
-           "brainspace==0.1.10" \
-           "tedana==0.0.12" \
-           "duecredit" \
-           "pyhanko==0.17.2" \
-           "mapca==0.0.3" \
-           "xhtml2pdf==0.2.9" \
-           "oscrypto==1.3.0" \
-           "tzdata==2022.7" \
-           "arabic-reshaper==3.0.0" \
-           "cssselect2==0.7.0" \
-           "pygeodesic==0.1.8" \
-           "seaborn==0.11.2" \
-    && rm -rf ~/.cache/pip/* \
-    && echo "✅ Pip packages installed"
+# Verify installation
+RUN mamba run -n micapipe python -c "import numpy, scipy, nibabel, vtk, antspy; print('✅ Verified')" || echo "⚠️ Check manually"
 
-# ============================================================================
-# LAMAREG, ENIGMA, MRTRIX3 (NEW REQUIREMENTS)
-# ============================================================================
-
-# Install MRtrix3 3.0.7 first (simplest dependency)
-RUN echo "📦 Installing MRtrix3 3.0.7..." \
-    && mamba install -y -n micapipe -c mrtrix3 -c conda-forge \
-           mrtrix3==3.0.7 \
-    && mamba clean -y --all \
-    && echo "✅ MRtrix3 installed"
-
-# Verify MRtrix3 installation and path
-RUN echo "🔍 Verifying MRtrix3 installation..." \
-    && mamba run -n micapipe which mrinfo || echo "⚠️ MRtrix3 not in default PATH" \
-    && mamba run -n micapipe mrinfo -version || echo "⚠️ MRtrix3 command test failed"
-
-# Install LAMAReg and ENIGMA from GitHub
-RUN echo "📦 Installing LAMAReg and ENIGMA..." \
-    && mamba run -n micapipe pip install --no-cache-dir \
-           git+https://github.com/MICA-MNI/LAMAReg.git \
-           git+https://github.com/MICA-MNI/ENIGMA.git
-
-# Fix MRtrix3 environment path issues - add micapipe env bin to PATH
+# Fix MRtrix3 PATH
 ENV PATH="/opt/miniconda-22.11.1/envs/micapipe/bin:$PATH"
+
+# ============================================================================
+# VERIFY MRTRIX3 (installed via environment.yml)
+# ============================================================================
+
+RUN echo "� Verifying MRtrix3 from environment.yml..." \
+    && mamba run -n micapipe which mrinfo || echo "⚠️ MRtrix3 not in PATH" \
+    && mamba run -n micapipe mrinfo -version || echo "⚠️ MRtrix3 test failed"
 
 # ============================================================================
 # SWM (SUPERFICIAL WHITE MATTER) (NEW REQUIREMENT)

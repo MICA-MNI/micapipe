@@ -258,10 +258,11 @@ BUILD_ARGS=(
     --tag "${LATEST_BASE_IMAGE}"
 )
 
-# Memory limits for server builds
+# Memory limits for server builds - AGGRESSIVE ALLOCATION
 BUILD_ARGS+=(
-    --memory=12g
-    --memory-swap=16g
+    --memory=32g
+    --memory-swap=48g
+    --shm-size=8g
 )
 
 # Start build
