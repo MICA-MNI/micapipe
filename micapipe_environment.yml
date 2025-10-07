@@ -38,10 +38,9 @@ dependencies:
   # MRtrix3 (frozen version)
   - mrtrix3=3.0.7
   
-  # Pip packages (including ANTsPy which is easier via pip)
+  # Pip packages (ANTsPy removed - needs separate compilation)
   - pip
   - pip:
-    - antspy
     - vtk==9.2.2
     - argparse==1.1
     - brainspace==0.1.10
