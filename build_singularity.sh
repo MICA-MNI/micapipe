@@ -133,12 +133,46 @@ START_TIME=$(date +%s)
 # ============================================================================
 # Build Singularity SIF (using simple approach from CI test)
 # ============================================================================
-echo "🔧 Building SIF with --force flag..."
-singularity build --force \
-    "${OUTPUT_PATH}" \
-    "docker-daemon://${FULL_DOCKER_IMAGE}"
 
-BUILD_EXIT_CODE=$?
+# Check if output filesystem has nodev - if so, build to /tmp first
+MOUNT_INFO=$(mount | grep "$(df "${SINGULARITY_DIR}" | awk 'NR==2 {print $1}')" || true)
+if echo "$MOUNT_INFO" | grep -q "nodev"; then
+    echo "⚠️  WARNING: Output directory is on a 'nodev' mount"
+    echo "   Building to /tmp first, then moving to final location..."
+    echo ""
+    
+    # Build to /tmp (which doesn't have nodev)
+    TMP_OUTPUT="/tmp/micapipe_build_$$.sif"
+    export SINGULARITY_TMPDIR="/tmp/singularity_tmp_$$"
+    export SINGULARITY_CACHEDIR="/tmp/singularity_cache_$$"
+    mkdir -p "${SINGULARITY_TMPDIR}" "${SINGULARITY_CACHEDIR}"
+    
+    echo "📦 Temporary output: ${TMP_OUTPUT}"
+    echo "📁 Temporary cache:  ${SINGULARITY_CACHEDIR}"
+    echo ""
+    echo "🔧 Building SIF with --force flag..."
+    
+    singularity build --force \
+        "${TMP_OUTPUT}" \
+        "docker-daemon://${FULL_DOCKER_IMAGE}"
+    
+    BUILD_EXIT_CODE=$?
+    
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        echo ""
+        echo "� Moving SIF to final location..."
+        mv "${TMP_OUTPUT}" "${OUTPUT_PATH}"
+        echo "🧹 Cleaning up temporary directories..."
+        rm -rf "${SINGULARITY_TMPDIR}" "${SINGULARITY_CACHEDIR}"
+    fi
+else
+    echo "�🔧 Building SIF with --force flag..."
+    singularity build --force \
+        "${OUTPUT_PATH}" \
+        "docker-daemon://${FULL_DOCKER_IMAGE}"
+    
+    BUILD_EXIT_CODE=$?
+fi
 
 # Record end time
 END_TIME=$(date +%s)
