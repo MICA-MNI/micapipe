@@ -77,17 +77,6 @@ if [ ! -d "${SINGULARITY_DIR}" ]; then
 fi
 echo "✅ Output directory exists: ${SINGULARITY_DIR}"
 
-# Check for nodev mount option (can cause Singularity build issues)
-MOUNT_INFO=$(mount | grep "$(df "${SINGULARITY_DIR}" | awk 'NR==2 {print $1}')" || true)
-if echo "$MOUNT_INFO" | grep -q "nodev"; then
-    echo "⚠️  WARNING: Output directory is on a 'nodev' mount"
-    echo "   Will use --fakeroot and --fix-perms options to work around this"
-    echo ""
-    USE_FAKEROOT=true
-else
-    USE_FAKEROOT=false
-fi
-
 # Check available disk space
 AVAILABLE_SPACE=$(df -BG "${SINGULARITY_DIR}" | awk 'NR==2 {print $4}' | sed 's/G//')
 echo "💾 Available disk space: ${AVAILABLE_SPACE} GB"
@@ -141,18 +130,12 @@ echo ""
 START_TIME=$(date +%s)
 
 # ============================================================================
-# Build Singularity SIF
+# Build Singularity SIF (using simple approach from CI test)
 # ============================================================================
-if [ "${USE_FAKEROOT}" = true ]; then
-    echo "🔧 Building with --fakeroot --fix-perms to handle nodev mount..."
-    singularity build --fakeroot --fix-perms \
-        "${OUTPUT_PATH}" \
-        "docker-daemon://${FULL_DOCKER_IMAGE}"
-else
-    singularity build \
-        "${OUTPUT_PATH}" \
-        "docker-daemon://${FULL_DOCKER_IMAGE}"
-fi
+echo "🔧 Building SIF with --force flag..."
+singularity build --force \
+    "${OUTPUT_PATH}" \
+    "docker-daemon://${FULL_DOCKER_IMAGE}"
 
 BUILD_EXIT_CODE=$?
 
