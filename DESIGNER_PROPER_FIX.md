@@ -1,7 +1,7 @@
 # DESIGNER Installation - Proper Fix Based on Official Documentation
 
 **Date**: October 8, 2025  
-**Commit**: d691d2f  
+**Commits**: d691d2f (PYTHONPATH fix) + 05187db (build dependencies)  
 **Status**: ✅ PROPERLY FIXED
 
 ---
@@ -72,7 +72,7 @@ RUN python -m pip install . --no-deps
 
 ---
 
-## The Proper Fix (Commit d691d2f)
+## The Proper Fix (Commits d691d2f + 05187db)
 
 ### Changes Made
 
@@ -117,6 +117,44 @@ RUN mamba install -y -n micapipe -c conda-forge \
 - `cvxpy` - Required for DESIGNER's optimization algorithms
 - `pandas` - Required for shell table management
 - Both were missing from micapipe environment
+
+#### 4. Added C++ Build Dependencies (Commit 05187db - CRITICAL!)
+```dockerfile
+RUN mamba install -y -n micapipe -c conda-forge \
+           cvxpy pandas \
+           pybind11 \
+           fftw \
+           cmake make gcc_linux-64 gxx_linux-64
+```
+
+**Why this is critical**:
+- DESIGNER has a **C++ extension** (`lib.rpg`) for Gibbs ringing removal
+- Building from source requires:
+  * `pybind11>=2.12.0` - For C++ Python bindings
+  * `fftw` - FFTW library used by rpg extension
+  * `cmake`, `make`, `gcc`, `g++` - Build toolchain
+- Without these, `pip install /opt/DESIGNER` fails with "Building wheel for designer2 (pyproject.toml): finished with status 'error'"
+
+**From DESIGNER's setup.py**:
+```python
+ext_modules = [
+    Extension(
+        "lib.rpg",
+        ["rpg_cpp/unring_rpg_pybind.cpp"],
+        include_dirs=[get_pybind_include(), '/usr/local/include'],
+        library_dirs=['/usr/local/lib'],
+        libraries=["fftw3", "fftw3_threads", "m"],
+        extra_compile_args=["-std=c++11"],
+    ),
+]
+```
+
+**From DESIGNER's pyproject.toml**:
+```toml
+[build-system]
+requires = ["setuptools>=42", "wheel", "pybind11>=2.12.0"]
+build-backend = "setuptools.build_meta"
+```
 
 ---
 
@@ -176,7 +214,7 @@ DESIGNER
 
 ```bash
 cd ~/micapipe
-git pull origin comprehensive-base-image  # Get commit d691d2f
+git pull origin comprehensive-base-image  # Get commits d691d2f + 05187db
 ./migrate_comprehensive_base_to_server.sh
 ```
 
@@ -217,7 +255,7 @@ RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER 
 # Missing: Separate conda environment         # ❌ No environment
 ```
 
-### Current Fix (Dockerfile.base - Commit d691d2f)
+### Current Fix (Dockerfile.base - Commits d691d2f + 05187db)
 ```dockerfile
 ENV DESIGNER_HOME="/opt/DESIGNER"
 ENV PYTHONPATH="/opt/miniconda-22.11.1/envs/micapipe/lib/python3.10/site-packages/mrtrix3:${PYTHONPATH}"
@@ -227,9 +265,11 @@ RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER 
 
 RUN mamba install -y -n micapipe -c conda-forge \
            cvxpy pandas \                      # ✅ Dependencies added
+           pybind11 fftw \                     # ✅ Build dependencies (05187db)
+           cmake make gcc_linux-64 gxx_linux-64 \  # ✅ Build toolchain (05187db)
     && mamba run -n micapipe pip install --no-cache-dir \
            multiprocessing-logging \
-    && mamba run -n micapipe pip install --no-cache-dir /opt/DESIGNER \  # ✅ Properly installed
+    && mamba run -n micapipe pip install --no-cache-dir /opt/DESIGNER \  # ✅ Properly installed with C++ build
     && mamba clean -y --all
 ```
 
@@ -246,18 +286,26 @@ RUN mamba install -y -n micapipe -c conda-forge \
 | PYTHONPATH | ❌ Not set | ✅ Set correctly |
 | cvxpy | ❌ Only in designer env | ✅ In micapipe env |
 | pandas | ❌ Missing | ✅ Added |
+| pybind11 | ❌ Missing (build failure) | ✅ Added (05187db) |
+| fftw | ❌ Missing (build failure) | ✅ Added (05187db) |
+| Build tools (gcc/g++) | ❌ Missing | ✅ Added (05187db) |
 | Entry points | ⚠️ Would fail at runtime | ✅ Work correctly |
 
 ---
 
 ## Status: ✅ READY FOR TESTING
 
-This fix addresses the **root cause** identified in the official DESIGNER documentation. The installation now matches the architecture used in DESIGNER's official Docker image, ensuring proper functionality.
+This fix addresses **all issues** identified in the official DESIGNER documentation and build requirements:
+1. ✅ **Runtime requirements**: MRtrix3 via PYTHONPATH, FSL access, shared environment
+2. ✅ **Build requirements**: pybind11, fftw, gcc/g++ for C++ extension compilation
+
+The installation now matches the architecture used in DESIGNER's official Docker image, with the addition of proper build toolchain for compiling the C++ extensions.
 
 **Next Steps**:
-1. Pull on server (commit d691d2f)
+1. Pull on server (commits d691d2f + 05187db)
 2. Build image
-3. Test DESIGNER commands in micapipe environment
-4. Verify MRtrix3 imports work
+3. C++ extension will compile during pip install
+4. Test DESIGNER commands in micapipe environment
+5. Verify MRtrix3 imports work
 
-**Expected Result**: DESIGNER will work correctly with full access to MRtrix3, FSL, and all required dependencies.
+**Expected Result**: DESIGNER will work correctly with full access to MRtrix3, FSL, and all required dependencies. The `lib.rpg` C++ extension will be properly compiled and available for Gibbs ringing removal.
