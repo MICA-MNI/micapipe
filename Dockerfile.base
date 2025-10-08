@@ -250,6 +250,83 @@ RUN echo "📦 Installing pip packages..." \
     && echo "✅ Pip packages installed"
 
 # ============================================================================
+# FastSurfer - MOVED VERY EARLY TO FAIL FAST
+# ============================================================================
+ENV PATH="/opt/FastSurfer:$PATH"
+ENV FASTSURFER_HOME=/opt/FastSurfer
+
+# Clone FastSurfer v2.4.2 and patch source YAML
+RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
+    && cd /opt/FastSurfer \
+    && git checkout v2.4.2 \
+    && echo "📦 Patching FastSurfer source YAML to use PyTorch 2.5.1..." \
+    && sed -i 's/torch>=2\.0/torch==2.5.1/g' /opt/FastSurfer/env/fastsurfer.yml \
+    && sed -i 's/torchvision>=0\.15/torchvision==0.20.1/g' /opt/FastSurfer/env/fastsurfer.yml \
+    && echo "✅ Source YAML patched:" \
+    && grep -E "torch|torchvision" /opt/FastSurfer/env/fastsurfer.yml
+
+# Generate FastSurfer conda environment (CPU or GPU based on build arg)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "📦 Generating GPU-enabled FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m gpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_gpu.yml; \
+        echo "✅ Generated GPU YAML - checking PyTorch versions:"; \
+        grep -E "torch|torchvision" /opt/FastSurfer/fastsurfer_gpu.yml || echo "No torch in conda section"; \
+        echo "--- Pip dependencies ---"; \
+        grep -A 50 "pip:" /opt/FastSurfer/fastsurfer_gpu.yml | head -60; \
+    else \
+        echo "📦 Generating CPU-only FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda run -n base \
+        python /opt/FastSurfer/Docker/install_env.py \
+        -m cpu \
+        -i /opt/FastSurfer/env/fastsurfer.yml \
+        -o /opt/FastSurfer/fastsurfer_cpu.yml; \
+        echo "✅ Generated CPU YAML - checking PyTorch versions:"; \
+        grep -E "torch|torchvision" /opt/FastSurfer/fastsurfer_cpu.yml || echo "No torch in conda section"; \
+        echo "--- Pip dependencies ---"; \
+        grep -A 50 "pip:" /opt/FastSurfer/fastsurfer_cpu.yml | head -60; \
+    fi
+
+# Patch generated YAML files AGGRESSIVELY (both with and without +cpu suffix)
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "🔧 Applying patches to GPU YAML..."; \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+        sed -i 's/torch==2\.6\.0/torch==2.5.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+        sed -i 's/torchvision==0\.21\.0/torchvision==0.20.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+        echo "✅ Patches applied - Final versions:"; \
+        grep -E "torch|torchvision" /opt/FastSurfer/fastsurfer_gpu.yml | head -20; \
+    else \
+        echo "🔧 Applying patches to CPU YAML (with and without +cpu suffix)..."; \
+        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torch==2\.6\.0+cpu/torch==2.5.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torch==2\.6\.0/torch==2.5.1/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torchvision==0\.21\.0+cpu/torchvision==0.20.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torchvision==0\.21\.0/torchvision==0.20.1/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        echo "✅ Patches applied - Final versions:"; \
+        grep -E "torch|torchvision" /opt/FastSurfer/fastsurfer_cpu.yml | head -20; \
+    fi
+
+# Create FastSurfer conda environment
+RUN if [ "$ENABLE_CUDA" = "true" ]; then \
+        echo "🚀 Creating GPU FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_gpu.yml; \
+    else \
+        echo "🚀 Creating CPU FastSurfer environment..."; \
+        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml; \
+    fi
+
+# Install missing dependencies
+RUN /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer pip install --no-cache-dir requests yacs
+
+# Download FastSurfer model checkpoints
+RUN /bin/bash -c 'PYTHONPATH="/opt/FastSurfer:$PYTHONPATH" \
+     /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer \
+     python /opt/FastSurfer/FastSurferCNN/download_checkpoints.py --all'
+
+# ============================================================================
 # DESIGNER PIPELINE - MOVED EARLY TO FAIL FAST
 # ============================================================================
 # Install DESIGNER for diffusion MRI preprocessing
@@ -608,65 +685,6 @@ RUN echo "📦 Downloading SynBOLD-DisCo models..." \
     else \
         echo "⚠️  Model download script not found - models may need manual download"; \
     fi
-
-# ============================================================================
-# FASTSURFER 2.4.2 (NEW REQUIREMENT - FROZEN VERSION)
-# ============================================================================
-
-ENV PATH="/opt/FastSurfer:$PATH"
-ENV FASTSURFER_HOME=/opt/FastSurfer
-
-# Clone FastSurfer v2.4.2 and freeze version
-RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
-    && cd /opt/FastSurfer \
-    && git checkout v2.4.2 \
-    && echo "📦 Patching FastSurfer source environment to use PyTorch 2.5.1..." \
-    && sed -i 's/torch>=2\.0/torch==2.5.1/g' /opt/FastSurfer/env/fastsurfer.yml \
-    && sed -i 's/torchvision>=0\.15/torchvision==0.20.1/g' /opt/FastSurfer/env/fastsurfer.yml
-
-# Generate FastSurfer conda environment (CPU or GPU based on build arg)
-RUN if [ "$ENABLE_CUDA" = "true" ]; then \
-        echo "📦 Generating GPU-enabled FastSurfer environment..."; \
-        /opt/miniconda-22.11.1/bin/conda run -n base \
-        python /opt/FastSurfer/Docker/install_env.py \
-        -m gpu \
-        -i /opt/FastSurfer/env/fastsurfer.yml \
-        -o /opt/FastSurfer/fastsurfer_gpu.yml; \
-    else \
-        echo "📦 Generating CPU-only FastSurfer environment..."; \
-        /opt/miniconda-22.11.1/bin/conda run -n base \
-        python /opt/FastSurfer/Docker/install_env.py \
-        -m cpu \
-        -i /opt/FastSurfer/env/fastsurfer.yml \
-        -o /opt/FastSurfer/fastsurfer_cpu.yml; \
-    fi
-
-# Patch torchio version (0.20.4 -> 0.20.5) and torch version (2.6.0 -> 2.5.1)
-# Note: PyTorch 2.6.0 doesn't exist yet, FastSurfer's install_env.py incorrectly specifies it
-RUN if [ "$ENABLE_CUDA" = "true" ]; then \
-        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
-        sed -i 's/torch==2\.6\.0/torch==2.5.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
-        sed -i 's/torchvision==0\.21\.0/torchvision==0.20.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
-    else \
-        sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
-        sed -i 's/torch==2\.6\.0\+cpu/torch==2.5.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
-        sed -i 's/torchvision==0\.21\.0\+cpu/torchvision==0.20.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
-    fi
-
-# Create FastSurfer conda environment
-RUN if [ "$ENABLE_CUDA" = "true" ]; then \
-        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_gpu.yml; \
-    else \
-        /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml; \
-    fi
-
-# Install missing dependencies
-RUN /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer pip install --no-cache-dir requests yacs
-
-# Download FastSurfer model checkpoints
-RUN /bin/bash -c 'PYTHONPATH="/opt/FastSurfer:$PYTHONPATH" \
-     /opt/miniconda-22.11.1/bin/mamba run -n fastsurfer \
-     python /opt/FastSurfer/FastSurferCNN/download_checkpoints.py --all'
 
 # ============================================================================
 # R ENVIRONMENT & PACKAGES
