@@ -619,7 +619,10 @@ ENV FASTSURFER_HOME=/opt/FastSurfer
 # Clone FastSurfer v2.4.2 and freeze version
 RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
     && cd /opt/FastSurfer \
-    && git checkout v2.4.2
+    && git checkout v2.4.2 \
+    && echo "📦 Patching FastSurfer source environment to use PyTorch 2.5.1..." \
+    && sed -i 's/torch>=2\.0/torch==2.5.1/g' /opt/FastSurfer/env/fastsurfer.yml \
+    && sed -i 's/torchvision>=0\.15/torchvision==0.20.1/g' /opt/FastSurfer/env/fastsurfer.yml
 
 # Generate FastSurfer conda environment (CPU or GPU based on build arg)
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
