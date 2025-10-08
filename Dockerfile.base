@@ -249,6 +249,26 @@ RUN echo "📦 Installing pip packages..." \
     && rm -rf ~/.cache/pip/* \
     && echo "✅ Pip packages installed"
 
+# ============================================================================
+# DESIGNER PIPELINE - MOVED EARLY TO FAIL FAST
+# ============================================================================
+# Install DESIGNER for diffusion MRI preprocessing
+# Placed early in build to catch errors quickly before expensive operations like FSL/FreeSurfer
+
+ENV DESIGNER_HOME="/opt/DESIGNER"
+
+RUN echo "📦 Installing DESIGNER pipeline..." \
+    && git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
+    && chmod -R a+rx /opt/DESIGNER \
+    && mamba create -y -n designer python=3.9 \
+    && mamba install -y -n designer -c conda-forge \
+           numpy scipy matplotlib nibabel dipy tqdm joblib \
+    && mamba run -n designer pip install --no-cache-dir \
+           cvxpy multiprocessing-logging \
+    && mamba run -n designer pip install --no-cache-dir /opt/DESIGNER \
+    && mamba clean -y --all \
+    && echo "✅ DESIGNER installed as 'designer' and 'tmi' commands in designer conda environment"
+
 # Install LAMAReg and ENIGMA SEPARATELY (avoids pip resolver getting stuck)
 RUN echo "📦 Installing LAMAReg and ENIGMA from GitHub..." \
     && mamba run -n micapipe pip install --no-cache-dir \
@@ -261,8 +281,7 @@ RUN echo "📦 Installing LAMAReg and ENIGMA from GitHub..." \
 RUN echo "🔍 Verifying core packages..." \
     && conda run -n micapipe python -c "import numpy, scipy, nibabel, ants; print('✅ Core packages + ANTsPy verified')"
 
-# Set permissions for conda directories so mica user can use them
-RUN chmod -R a+rwx /opt/miniconda-22.11.1
+# Note: No chmod needed - running as root in container, permissions are fine
 
 ENV MAMBA_NO_SPINNER=1 \
     CONDA_ALWAYS_YES=1 \
@@ -515,29 +534,6 @@ ENV PATH="/opt/SWM:$PATH"
 
 RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
     && chmod -R a+rx /opt/SWM
-
-# ============================================================================
-# DESIGNER PIPELINE (NEW REQUIREMENT)
-# ============================================================================
-
-ENV DESIGNER_HOME="/opt/DESIGNER"
-ENV PATH="/opt/DESIGNER:$PATH"
-
-RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
-    && chmod +x /opt/DESIGNER/DESIGNER \
-    && chmod +x /opt/DESIGNER/DESIGNER.py
-
-# Create DESIGNER environment with dependencies
-RUN echo "📦 Creating DESIGNER environment..." \
-    && mamba create -y -n designer python=3.9 \
-    && mamba install -y -n designer -c conda-forge \
-           numpy scipy matplotlib nibabel dipy tqdm joblib \
-    && mamba run -n designer pip install --no-cache-dir \
-           cvxpy multiprocessing-logging \
-    && mamba clean -y --all
-
-# Note: DESIGNER environment must be activated separately when using DESIGNER tools
-# Usage: conda activate designer && DESIGNER.py ...
 
 # ============================================================================
 # SYNB0-DISCO & SYNBOLD-DISCO (NEW REQUIREMENT)
