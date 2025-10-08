@@ -18,9 +18,30 @@ FastSurfer's `install_env.py` script generates conda environment files with **Py
 
 ---
 
-## The Fix (Commit 6a811a4)
+## The Fix (Commits 6a811a4 + 86ee6be)
 
-Added sed commands to patch the generated YAML files **before** creating the conda environment:
+### Approach 1: Patch Source YAML (Commit 86ee6be - PRIMARY FIX)
+
+Patch the source `fastsurfer.yml` **BEFORE** `install_env.py` runs:
+
+```dockerfile
+RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
+    && cd /opt/FastSurfer \
+    && git checkout v2.4.2 \
+    && sed -i 's/torch>=2\.0/torch==2.5.1/g' /opt/FastSurfer/env/fastsurfer.yml \
+    && sed -i 's/torchvision>=0\.15/torchvision==0.20.1/g' /opt/FastSurfer/env/fastsurfer.yml
+```
+
+**Why this is the correct fix**:
+- `install_env.py` reads `fastsurfer.yml` and generates BOTH:
+  1. Conda environment YAML (with pinned versions)
+  2. Pip requirements file (with pinned versions)
+- By patching the SOURCE, both generated files get the correct version
+- This prevents torch 2.6.0 from appearing in EITHER file
+
+### Approach 2: Patch Generated YAML (Commit 6a811a4 - SAFETY NET)
+
+Keep the sed patches after `install_env.py` as a safety measure:
 
 ```dockerfile
 # Patch versions after install_env.py generates YAML
@@ -33,10 +54,11 @@ RUN if [ "$ENABLE_CUDA" = "true" ]; then \
         sed -i 's/torch==2\.6\.0\+cpu/torch==2.5.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
         sed -i 's/torchvision==0\.21\.0\+cpu/torchvision==0.20.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
     fi
-
-# Now conda env create will succeed
-RUN /opt/miniconda-22.11.1/bin/conda env create -f /opt/FastSurfer/fastsurfer_cpu.yml
 ```
+
+**Why keep this**:
+- Defense in depth - catches any version that slips through
+- The `install_env.py` script behavior might change in future FastSurfer updates
 
 ---
 
@@ -64,16 +86,17 @@ FastSurfer's `install_env.py` likely has a bug or was written in anticipation of
 
 ```bash
 cd ~/micapipe
-git pull origin comprehensive-base-image  # Get commit 6a811a4
+git pull origin comprehensive-base-image  # Get commits 6a811a4 + 86ee6be
 ./migrate_comprehensive_base_to_server.sh
 ```
 
 The build will now:
-1. ✅ Generate FastSurfer CPU environment file
-2. ✅ Patch torch 2.6.0 → 2.5.1
-3. ✅ Patch torchvision 0.21.0 → 0.20.1
-4. ✅ Create conda environment successfully
-5. ✅ Continue with rest of build
+1. ✅ Clone FastSurfer v2.4.2
+2. ✅ **Patch source fastsurfer.yml** (torch 2.6.0 → 2.5.1) ← NEW PRIMARY FIX
+3. ✅ Generate FastSurfer CPU environment file (uses patched source)
+4. ✅ **Patch generated YAML** (safety net for any remaining 2.6.0)
+5. ✅ Create conda environment successfully
+6. ✅ Continue with rest of build
 
 ---
 
@@ -83,7 +106,8 @@ The build will now:
 |--------|-------|-----|
 | d691d2f | DESIGNER runtime | PYTHONPATH + shared environment |
 | 05187db | DESIGNER build | pybind11 + fftw + gcc/g++ |
-| 6a811a4 | FastSurfer torch | Patch 2.6.0 → 2.5.1 |
+| 6a811a4 | FastSurfer torch (partial) | Patch generated YAML |
+| 86ee6be | FastSurfer torch (complete) | Patch source YAML |
 
 **Status**: ✅ All fixes applied - Ready for rebuild
 
