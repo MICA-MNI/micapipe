@@ -142,6 +142,17 @@ echo "⏱️  This will take approximately 10-15 minutes"
 echo "📊 Progress will be shown below..."
 echo ""
 
+# Set Singularity cache to data directory (not home directory)
+export SINGULARITY_CACHEDIR="/host/cassio/export03/data/enning/.singularity_cache"
+export SINGULARITY_TMPDIR="/host/cassio/export03/data/enning/.singularity_tmp"
+
+# Create cache directories if needed
+mkdir -p "${SINGULARITY_CACHEDIR}" "${SINGULARITY_TMPDIR}"
+
+echo "📦 Singularity cache: ${SINGULARITY_CACHEDIR}"
+echo "📁 Singularity temp:  ${SINGULARITY_TMPDIR}"
+echo ""
+
 # Record start time
 START_TIME=$(date +%s)
 
