@@ -219,7 +219,7 @@ RUN echo "📦 Installing core scientific packages (batch 1/4)..." \
 # Batch 2: Web and networking
 RUN echo "📦 Installing web/networking packages (batch 2/4)..." \
     && mamba install -y -n micapipe -c conda-forge \
-           aiohttp requests bokeh \
+           aiohttp requests bokeh=2.4.3 \
     && mamba clean -y --all \
     && echo "✅ Batch 2 complete"
 
