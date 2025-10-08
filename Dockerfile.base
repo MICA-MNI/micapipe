@@ -638,11 +638,16 @@ RUN if [ "$ENABLE_CUDA" = "true" ]; then \
         -o /opt/FastSurfer/fastsurfer_cpu.yml; \
     fi
 
-# Patch torchio version (0.20.4 -> 0.20.5)
+# Patch torchio version (0.20.4 -> 0.20.5) and torch version (2.6.0 -> 2.5.1)
+# Note: PyTorch 2.6.0 doesn't exist yet, FastSurfer's install_env.py incorrectly specifies it
 RUN if [ "$ENABLE_CUDA" = "true" ]; then \
         sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+        sed -i 's/torch==2\.6\.0/torch==2.5.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
+        sed -i 's/torchvision==0\.21\.0/torchvision==0.20.1/g' /opt/FastSurfer/fastsurfer_gpu.yml; \
     else \
         sed -i 's/torchio==0.20.4/torchio==0.20.5/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torch==2\.6\.0\+cpu/torch==2.5.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
+        sed -i 's/torchvision==0\.21\.0\+cpu/torchvision==0.20.1+cpu/g' /opt/FastSurfer/fastsurfer_cpu.yml; \
     fi
 
 # Create FastSurfer conda environment
