@@ -116,8 +116,9 @@ echo "📊 Progress will be shown below..."
 echo ""
 
 # Set Singularity cache to data directory (not home directory)
-export SINGULARITY_CACHEDIR="/host/cassio/export03/data/enning/.singularity_cache"
-export SINGULARITY_TMPDIR="/host/cassio/export03/data/enning/.singularity_tmp"
+# Use same base directory as output to avoid nodev mount issues
+export SINGULARITY_CACHEDIR="${SINGULARITY_DIR}/.singularity_cache"
+export SINGULARITY_TMPDIR="${SINGULARITY_DIR}/.singularity_tmp"
 
 # Create cache directories if needed
 mkdir -p "${SINGULARITY_CACHEDIR}" "${SINGULARITY_TMPDIR}"
