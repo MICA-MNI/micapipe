@@ -195,8 +195,8 @@ RUN export PATH="/opt/miniconda-22.11.1/bin:$PATH" \
     && conda config --system --set remote_connect_timeout_secs 300 \
     && conda config --system --set remote_max_retries 5 \
     && sync && conda clean -y --all && sync \
-    && echo "📦 Creating micapipe environment with python..." \
-    && conda create -y -n micapipe python=3.9 \
+    && echo "📦 Creating micapipe environment with Python 3.10 (required by LAMAReg)..." \
+    && conda create -y -n micapipe python=3.10 \
     && conda clean -y --all \
     && echo "✅ Conda environment created"
 
