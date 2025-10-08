@@ -15,12 +15,12 @@ DOCKER_IMAGE="ghcr.io/mica-mni/micapipe"
 DOCKER_TAG="${1:-latest}"
 FULL_DOCKER_IMAGE="${DOCKER_IMAGE}:${DOCKER_TAG}"
 
-SINGULARITY_DIR="/data_/mica1/01_programs/singularity"
+SINGULARITY_DIR="/host/cassio/export03/data/enning/singularity"
 OUTPUT_NAME="micapipe_v1_beta.sif"
 OUTPUT_PATH="${SINGULARITY_DIR}/${OUTPUT_NAME}"
 
-# Use /tmp for intermediate tar file (will be deleted after)
-TAR_FILE="/tmp/micapipe_docker_$$.tar"
+# Use data directory for intermediate tar file (will be deleted after)
+TAR_FILE="/host/cassio/export03/data/enning/micapipe_docker_$$.tar"
 
 # ============================================================================
 # Header
@@ -54,15 +54,16 @@ IMAGE_SIZE=$(docker image inspect "${FULL_DOCKER_IMAGE}" --format='{{.Size}}' | 
 echo "   Size: ${IMAGE_SIZE}"
 
 # Check /tmp space (need ~110GB for tar file)
-TMP_SPACE=$(df -BG /tmp | awk 'NR==2 {print $4}' | sed 's/G//')
+DATA_DIR="/host/cassio/export03/data/enning"
+TAR_SPACE=$(df -BG "${DATA_DIR}" | awk 'NR==2 {print $4}' | sed 's/G//')
 echo ""
-echo "💾 Available space in /tmp: ${TMP_SPACE} GB"
-if [ "${TMP_SPACE}" -lt 120 ]; then
-    echo "❌ ERROR: Not enough space in /tmp (need 120+ GB for tar export)"
-    echo "   Current: ${TMP_SPACE} GB"
+echo "💾 Available space in ${DATA_DIR}: ${TAR_SPACE} GB"
+if [ "${TAR_SPACE}" -lt 120 ]; then
+    echo "❌ ERROR: Not enough space in data directory (need 120+ GB for tar export)"
+    echo "   Current: ${TAR_SPACE} GB"
     echo ""
     echo "💡 Options:"
-    echo "   1. Clean up /tmp: rm -rf /tmp/singularity_* /tmp/micapipe_*"
+    echo "   1. Clean up old files in ${DATA_DIR}"
     echo "   2. Use a different temp location (edit TAR_FILE variable)"
     exit 1
 fi
@@ -133,8 +134,8 @@ echo "   This will take 10-15 minutes..."
 echo ""
 
 # Set Singularity cache/tmp to avoid nodev issues
-export SINGULARITY_TMPDIR="/tmp/singularity_tmp_$$"
-export SINGULARITY_CACHEDIR="/tmp/singularity_cache_$$"
+export SINGULARITY_TMPDIR="/host/cassio/export03/data/enning/.singularity_tmp"
+export SINGULARITY_CACHEDIR="/host/cassio/export03/data/enning/.singularity_cache"
 mkdir -p "${SINGULARITY_TMPDIR}" "${SINGULARITY_CACHEDIR}"
 
 # Build from tar archive (more reliable than docker-daemon://)
@@ -155,7 +156,6 @@ echo ""
 echo "🧹 Step 3/3: Cleaning up temporary files..."
 
 rm -f "${TAR_FILE}"
-rm -rf "${SINGULARITY_TMPDIR}" "${SINGULARITY_CACHEDIR}"
 
 echo "✅ Cleanup complete"
 
