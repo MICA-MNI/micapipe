@@ -19,8 +19,12 @@ set -e  # Exit on error
 # Configuration
 # ============================================================================
 DOCKER_IMAGE="ghcr.io/mica-mni/micapipe"
-SINGULARITY_DIR="/data_/mica1/01_programs/singularity"
+SINGULARITY_DIR="/host/cassio/export03/data/enning/singularity"
 OUTPUT_NAME="micapipe_v1_beta.sif"
+
+# Alternate production location: /data_/mica1/01_programs/singularity
+# You can override SINGULARITY_DIR by setting it before running:
+#   SINGULARITY_DIR=/data_/mica1/01_programs/singularity ./build_singularity.sh
 
 # Get Docker tag from argument or use 'latest'
 DOCKER_TAG="${1:-latest}"
