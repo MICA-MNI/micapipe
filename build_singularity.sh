@@ -77,6 +77,33 @@ if [ ! -d "${SINGULARITY_DIR}" ]; then
 fi
 echo "✅ Output directory exists: ${SINGULARITY_DIR}"
 
+# Check for nodev mount option (can cause Singularity build issues)
+MOUNT_INFO=$(mount | grep "$(df "${SINGULARITY_DIR}" | awk 'NR==2 {print $1}')" || true)
+if echo "$MOUNT_INFO" | grep -q "nodev"; then
+    echo "⚠️  WARNING: Output directory is on a 'nodev' mount"
+    echo "   This can prevent Singularity from creating SIF files"
+    echo ""
+    
+    # Suggest /tmp alternative
+    if [ "${SINGULARITY_DIR}" != "/tmp" ]; then
+        echo "   Recommended: Build to /tmp first, then move the file"
+        echo ""
+        read -p "   Build to /tmp instead? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            FINAL_OUTPUT="${OUTPUT_PATH}"
+            SINGULARITY_DIR="/tmp"
+            OUTPUT_PATH="/tmp/${OUTPUT_NAME}"
+            echo "   ✅ Changed output to: ${OUTPUT_PATH}"
+            echo "   ✅ Will move to: ${FINAL_OUTPUT} after build"
+            MOVE_AFTER_BUILD=true
+        else
+            echo "   Continuing with original location (may fail)..."
+            MOVE_AFTER_BUILD=false
+        fi
+    fi
+fi
+
 # Check available disk space
 AVAILABLE_SPACE=$(df -BG "${SINGULARITY_DIR}" | awk 'NR==2 {print $4}' | sed 's/G//')
 echo "💾 Available disk space: ${AVAILABLE_SPACE} GB"
@@ -140,6 +167,20 @@ if [ ${BUILD_EXIT_CODE} -eq 0 ]; then
     echo "✅ SINGULARITY BUILD SUCCESSFUL!"
     echo "============================================="
     echo ""
+    
+    # Move file if we built to /tmp due to nodev
+    if [ "${MOVE_AFTER_BUILD}" = true ]; then
+        echo "📦 Moving SIF file to final location..."
+        if mv "${OUTPUT_PATH}" "${FINAL_OUTPUT}"; then
+            echo "✅ Moved to: ${FINAL_OUTPUT}"
+            OUTPUT_PATH="${FINAL_OUTPUT}"
+        else
+            echo "⚠️  Warning: Could not move file"
+            echo "   File is at: ${OUTPUT_PATH}"
+            echo "   Manually move with: mv ${OUTPUT_PATH} ${FINAL_OUTPUT}"
+        fi
+        echo ""
+    fi
     
     # Get SIF file info
     SIF_SIZE=$(du -h "${OUTPUT_PATH}" | cut -f1)
