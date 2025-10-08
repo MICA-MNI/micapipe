@@ -501,10 +501,59 @@ mamba run -n micapipe pip install pip_package
 
 ---
 
+## ❌ MISTAKE #11: chmod on Nonexistent Executable Files
+**Date:** October 8, 2025  
+**Error:**
+```
+chmod: cannot access '/opt/SWM/SWM': No such file or directory
+chmod: cannot access '/opt/DESIGNER/DESIGNER': No such file or directory
+chmod: cannot access '/opt/DESIGNER/DESIGNER.py': No such file or directory
+```
+
+**Root Cause:** Assumed Python repositories contain executable files without verifying repository structure
+
+**Investigation Method:** Used GitHub API to inspect actual repository contents:
+- SWM: Contains Python scripts in `sWM/` subdirectory (`laplace_solver.py`, `surface_generator.py`)
+- DESIGNER: Is a Python package installed via `pip install`, creates console script entry points `designer` and `tmi`
+
+**Wrong Assumption:**
+```dockerfile
+# WRONG - these files don't exist
+RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
+    && chmod +x /opt/SWM/SWM
+
+RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER \
+    && chmod +x /opt/DESIGNER/DESIGNER.py
+```
+
+**Correct Fix:**
+```dockerfile
+# SWM - just clone and set directory permissions
+RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
+    && chmod -R a+rx /opt/SWM
+
+# DESIGNER - install via pip to get entry points
+RUN git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
+    && chmod -R a+rx /opt/DESIGNER \
+    && mamba run -n designer pip install --no-cache-dir /opt/DESIGNER
+# This creates 'designer' and 'tmi' commands (see setup.py entry_points)
+```
+
+**Commits:** bfff3fa (SWM), [current] (DESIGNER)  
+**Status:** ✅ FIXED  
+**Lesson:** 
+- **Always inspect repository structure before assuming file existence**
+- Python packages often use entry points, not direct script execution
+- Check setup.py for `entry_points` to see what commands are created
+- This bug also exists in v1 Dockerfile but may not have been caught
+
+---
+
 ## 📊 BUILD SUCCESS METRICS
 
-**Total Mistakes Made:** 10  
-**Total Mistakes Fixed:** 9  
+**Total Mistakes Made:** 11  
+**Total Mistakes Fixed:** 11  
 **Harmless Issues:** 1  
 
 **Time Wasted on Repeated Mistakes:** ~5 hours (especially environment.yml: 2 hours)  
@@ -515,6 +564,7 @@ mamba run -n micapipe pip install pip_package
 1. **Check production/v1 code FIRST** before trying new approaches
 2. **Never use environment.yml with mamba** - has parsing bugs
 3. **Direct mamba install is explicit and production-proven**
+4. **Verify file existence before chmod** - check repository structure via GitHub API
 
 ---
 
