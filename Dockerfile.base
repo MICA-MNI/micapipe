@@ -206,17 +206,37 @@ RUN conda install -y -n base -c conda-forge "mamba>=1.4" "conda-libmamba-solver"
     && conda clean -y --all \
     && echo "✅ Mamba + libmamba solver installed in base environment"
 
-# Install conda packages directly (like v1) - single transaction
-RUN echo "📦 Installing conda packages (10-20 min with 32GB RAM)..." \
-    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+# Install conda packages in SMALL BATCHES (like v1) - prevents solver from getting stuck
+# Batch 1: Core scientific stack
+RUN echo "📦 Installing core scientific packages (batch 1/4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
            numpy=1.21.5 scipy pandas=1.4.4 matplotlib=3.4.3 \
            nibabel=4.0.2 pillow packaging scikit-learn scikit-fmm \
-           joblib nilearn astropy aiohttp requests bokeh=2.2.3 \
+           joblib nilearn astropy \
+    && mamba clean -y --all \
+    && echo "✅ Batch 1 complete"
+
+# Batch 2: Web and networking
+RUN echo "📦 Installing web/networking packages (batch 2/4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           aiohttp requests bokeh=2.2.3 \
+    && mamba clean -y --all \
+    && echo "✅ Batch 2 complete"
+
+# Batch 3: Utilities and CLI tools
+RUN echo "📦 Installing utility packages (batch 3/4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
            pyvirtualdisplay=3.0 lxml attrs click pyyaml \
            python-dateutil pytz cryptography \
+    && mamba clean -y --all \
+    && echo "✅ Batch 3 complete"
+
+# Batch 4: Heavy packages - MRtrix3 and ANTsPy (install together to share dependencies)
+RUN echo "📦 Installing MRtrix3 and ANTsPy (batch 4/4, ~5-10 min)..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
            mrtrix3=3.0.7 antspyx \
     && mamba clean -y --all \
-    && echo "✅ Conda packages installed"
+    && echo "✅ Batch 4 complete - All conda packages installed"
 
 # Install pip packages (regular packages FIRST, git packages SEPARATE to avoid resolver issues)
 RUN echo "📦 Installing pip packages..." \
