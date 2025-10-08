@@ -273,11 +273,16 @@ RUN echo "📦 Cloning DESIGNER pipeline..." \
 
 # Install DESIGNER into micapipe environment (NOT separate environment)
 # This ensures DESIGNER has access to MRtrix3, FSL, and all dependencies
-RUN echo "📦 Installing DESIGNER dependencies and package..." \
+# CRITICAL: DESIGNER has a C++ extension (lib.rpg) that requires pybind11 and build tools
+RUN echo "📦 Installing DESIGNER build dependencies and runtime packages..." \
     && mamba install -y -n micapipe -c conda-forge \
            cvxpy pandas \
+           pybind11 \
+           fftw \
+           cmake make gcc_linux-64 gxx_linux-64 \
     && mamba run -n micapipe pip install --no-cache-dir \
            multiprocessing-logging \
+    && echo "📦 Building and installing DESIGNER (this compiles C++ extensions)..." \
     && mamba run -n micapipe pip install --no-cache-dir /opt/DESIGNER \
     && mamba clean -y --all \
     && echo "✅ DESIGNER installed as 'designer' and 'tmi' commands in micapipe environment"
