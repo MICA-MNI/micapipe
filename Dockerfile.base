@@ -514,7 +514,6 @@ ENV SWM_HOME="/opt/SWM"
 ENV PATH="/opt/SWM:$PATH"
 
 RUN git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
-    && chmod +x /opt/SWM/SWM \
     && chmod -R a+rx /opt/SWM
 
 # ============================================================================
