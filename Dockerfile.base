@@ -254,20 +254,37 @@ RUN echo "📦 Installing pip packages..." \
 # ============================================================================
 # Install DESIGNER for diffusion MRI preprocessing
 # Placed early in build to catch errors quickly before expensive operations like FSL/FreeSurfer
+#
+# CRITICAL REQUIREMENTS (from https://nyu-diffusionmri.github.io/DESIGNER-v2/docs/designer/installation/):
+# 1. MRtrix3 with PYTHONPATH set to mrtrix3/lib
+# 2. FSL for eddy current correction
+# 3. Python environment with all dependencies
+#
+# Note: DESIGNER is installed as a Python package (designer2) with entry points:
+#   - designer (for preprocessing)
+#   - tmi (for fitting)
 
 ENV DESIGNER_HOME="/opt/DESIGNER"
 
-RUN echo "📦 Installing DESIGNER pipeline..." \
+# Clone DESIGNER source
+RUN echo "📦 Cloning DESIGNER pipeline..." \
     && git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
-    && chmod -R a+rx /opt/DESIGNER \
-    && mamba create -y -n designer python=3.9 \
-    && mamba install -y -n designer -c conda-forge \
-           numpy scipy matplotlib nibabel dipy tqdm joblib \
-    && mamba run -n designer pip install --no-cache-dir \
-           cvxpy multiprocessing-logging \
-    && mamba run -n designer pip install --no-cache-dir /opt/DESIGNER \
+    && chmod -R a+rx /opt/DESIGNER
+
+# Install DESIGNER into micapipe environment (NOT separate environment)
+# This ensures DESIGNER has access to MRtrix3, FSL, and all dependencies
+RUN echo "📦 Installing DESIGNER dependencies and package..." \
+    && mamba install -y -n micapipe -c conda-forge \
+           cvxpy pandas \
+    && mamba run -n micapipe pip install --no-cache-dir \
+           multiprocessing-logging \
+    && mamba run -n micapipe pip install --no-cache-dir /opt/DESIGNER \
     && mamba clean -y --all \
-    && echo "✅ DESIGNER installed as 'designer' and 'tmi' commands in designer conda environment"
+    && echo "✅ DESIGNER installed as 'designer' and 'tmi' commands in micapipe environment"
+
+# Set PYTHONPATH for MRtrix3 Python libraries (required by DESIGNER)
+# Conda's MRtrix3 Python libraries are in the site-packages
+ENV PYTHONPATH="/opt/miniconda-22.11.1/envs/micapipe/lib/python3.10/site-packages/mrtrix3:${PYTHONPATH}"
 
 # Install LAMAReg and ENIGMA SEPARATELY (avoids pip resolver getting stuck)
 RUN echo "📦 Installing LAMAReg and ENIGMA from GitHub..." \
