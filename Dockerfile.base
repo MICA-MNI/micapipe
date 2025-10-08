@@ -262,18 +262,25 @@ RUN git clone https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer \
 
 # Create FastSurfer environment MANUALLY (bypass buggy install_env.py)
 # Based on FastSurfer requirements but with correct PyTorch versions
+# Note: Temporarily use classic solver to avoid libmamba cache issues in Docker
 RUN echo "📦 Creating FastSurfer environment with Python 3.10..." \
-    && conda create -y -n fastsurfer python=3.10 \
+    && sync \
+    && conda clean --all -y \
+    && sync \
+    && CONDA_SOLVER=classic conda create -y -n fastsurfer python=3.10 \
+    && sync \
     && conda clean -y --all
 
 # Install conda packages in fastsurfer environment
 RUN echo "📦 Installing FastSurfer conda dependencies..." \
-    && mamba install -y -n fastsurfer -c conda-forge \
+    && sync \
+    && CONDA_SOLVER=classic mamba install -y -n fastsurfer -c conda-forge \
            numpy scipy pandas matplotlib \
            h5py scikit-image scikit-learn \
            nibabel simpleitk \
            pyyaml pillow \
            tensorboard \
+    && sync \
     && conda clean -y --all
 
 # Install PyTorch 2.5.1 CPU-only (or GPU if CUDA enabled)
