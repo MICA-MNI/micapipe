@@ -262,7 +262,7 @@ RUN echo "🔍 Verifying core packages..." \
     && conda run -n micapipe python -c "import numpy, scipy, nibabel, ants; print('✅ Core packages + ANTsPy verified')"
 
 # Set permissions for conda directories so mica user can use them
-# Note: chmod removed - unnecessary in Docker, was taking 5+ min
+RUN chmod -R a+rwx /opt/miniconda-22.11.1
 
 ENV MAMBA_NO_SPINNER=1 \
     CONDA_ALWAYS_YES=1 \
