@@ -2,25 +2,44 @@ name: CI - Micapipe Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, comprehensive-base-image ]
   pull_request:
 
 jobs:
   run-micapipe:
     runs-on: self-hosted
     timeout-minutes: 1440
+    env:
+      MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-base:latest
+      MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build Micapipe Docker image
-        run: docker build -t micapipe:test .
+      - name: Build Micapipe base image (if needed)
+        run: |
+          # Check if base image exists locally, if not build it
+          if ! docker image inspect "${MICAPIPE_BASE_IMAGE}" &>/dev/null; then
+            echo "Building base image..."
+            docker build -f Dockerfile.base -t "${MICAPIPE_BASE_IMAGE}" .
+          else
+            echo "Base image already exists locally"
+          fi
+
+      - name: Build Micapipe main image
+        run: |
+          docker build \
+            -f Dockerfile.main \
+            --build-arg "BASE_IMAGE=${MICAPIPE_BASE_IMAGE}" \
+            -t "${MICAPIPE_MAIN_IMAGE}" \
+            .
 
       - name: Build Singularity (.sif)
         run: |
           export SINGULARITY_TMPDIR=/export02/local/singularity_tmp
-          singularity build --force /export02/local/singularity_tmp/micapipe_v0.2.3.sif docker-daemon://micapipe:test
+          mkdir -p /export02/local/singularity_tmp
+          singularity build --force /export02/local/singularity_tmp/micapipe_v0.2.3.sif docker-daemon://"${MICAPIPE_MAIN_IMAGE}"
 
       - name: Point test script at new .sif
         run: |
