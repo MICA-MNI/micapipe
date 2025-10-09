@@ -1,0 +1,105 @@
+# ============================================================================
+# MICAPIPE ACTION RUNNER - COMPREHENSIVE BASE COMPATIBLE
+# Based on original action runner but updated for new Docker architecture
+# Leverages pre-built base image for ultra-fast CI builds
+# ============================================================================
+
+# Use an official Ubuntu base image
+FROM ubuntu:20.04
+
+# Avoid interactive prompts and allow runner to run as root (if needed by sample_test.sh)
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUNNER_ALLOW_RUNASROOT=1
+
+# Install necessary packages and build dependencies for Singularity and the Actions runner
+RUN apt-get update && apt-get install -y \
+    curl \
+    sudo \
+    git \
+    tar \
+    ca-certificates \
+    libicu-dev \
+    docker.io \
+    build-essential \
+    libseccomp-dev \
+    pkg-config \
+    squashfs-tools \
+    cryptsetup \
+    wget \
+    libglib2.0-dev \
+    uidmap \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------
+# Install Go (version 1.17.13) required for Singularity build
+# ---------------------------
+ENV GO_VERSION=1.17.13
+RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
+    rm go${GO_VERSION}.linux-amd64.tar.gz
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV SINGULARITY_TMPDIR=/data/mica1/03_projects/enning/BIDS_CI/sing_tmp
+ENV SINGULARITY_CACHEDIR=/data/mica1/03_projects/enning/BIDS_CI/sing_cache
+
+RUN echo "root:100000:65536" >> /etc/subuid && \
+    echo "root:100000:65536" >> /etc/subgid
+
+# ---------------------------
+# Install Singularity from source (version 3.10.2)
+# Note: Although we download version "3.10.2", the installed version may report as "3.10.2-bionic"
+# ---------------------------
+ENV SINGULARITY_VERSION=3.10.2
+RUN wget https://github.com/sylabs/singularity/releases/download/v${SINGULARITY_VERSION}/singularity-ce-${SINGULARITY_VERSION}.tar.gz && \
+    tar -xzf singularity-ce-${SINGULARITY_VERSION}.tar.gz && \
+    cd singularity-ce-${SINGULARITY_VERSION} && \
+    ./mconfig && \
+    make -C builddir && \
+    make -C builddir install && \
+    cd .. && rm -rf singularity-ce-${SINGULARITY_VERSION}*
+
+# ---------------------------
+# Setup GitHub Actions Runner
+# ---------------------------
+WORKDIR /actions-runner
+
+# Download the GitHub Actions runner package
+RUN curl -o actions-runner-linux-x64-2.322.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-x64-2.322.0.tar.gz && \
+    echo "b13b784808359f31bc79b08a191f5f83757852957dd8fe3dbfcc38202ccf5768  actions-runner-linux-x64-2.322.0.tar.gz" | shasum -a 256 -c && \
+    tar xzf actions-runner-linux-x64-2.322.0.tar.gz && \
+    rm actions-runner-linux-x64-2.322.0.tar.gz
+
+# Install .NET Core dependencies used by the runner
+RUN ./bin/installdependencies.sh
+
+# Copy configuration and run scripts; ensure they're executable
+COPY config.sh run.sh ./
+RUN chmod +x config.sh run.sh
+
+# Configure the runner with your provided token and repository URL
+RUN ./config.sh --url https://github.com/MICA-MNI/micapipe --token AH5WYF6RNAB6XD4QCJWY43DI5AFRS --unattended --replace
+
+# ---------------------------
+# Pre-pull Micapipe Base Image (OPTIMIZED APPROACH)
+# This downloads the base image once so CI builds are instant
+# ---------------------------
+RUN echo "📦 Pre-pulling micapipe base image for faster CI builds..." && \
+    docker pull ghcr.io/mica-mni/micapipe-base:latest || \
+    echo "⚠️  Base image not available yet - CI will build it on first run"
+
+# ---------------------------
+# Optional: Bake in the Singularity Image File (if available)
+# This is commented out as it makes the action runner image very large
+# Uncomment if you have a stable .sif file and want maximum speed
+# ---------------------------
+# Create the expected directory for the Singularity image.
+RUN mkdir -p /data_/mica1/01_programs/micapipe-v0.2.0
+# COPY micapipe_v0.2.3.sif /data_/mica1/01_programs/micapipe-v0.2.0/micapipe_v0.2.3.sif
+
+# ---------------------------
+# Declare volumes for other directories to be mounted at runtime.
+# Notice: We purposely do NOT mount over /data_/mica1, so that any baked-in files remain intact.
+# ---------------------------
+VOLUME ["/data/mica3/BIDS_CI/rawdata", "/data_/mica3/BIDS_CI", "/data/mica1/03_projects/enning/BIDS_CI", "/tmp", "/var/run/docker.sock"]
+
+# Set the entrypoint to run the Actions runner
+ENTRYPOINT ["./run.sh"]

@@ -1,0 +1,141 @@
+name: CI - Micapipe Test (Local Images Only)
+
+on:
+  push:
+    branches: [ master, comprehensive-base-image ]
+  pull_request:
+
+jobs:
+  run-micapipe:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      # Use LOCAL image names (no registry)
+      MICAPIPE_BASE_IMAGE: micapipe-base:latest
+      MICAPIPE_MAIN_IMAGE: micapipe:latest
+      # Legacy single-build image name for fallback
+      LEGACY_IMAGE: micapipe:test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker environment 
+        run: |
+          echo "🔍 Checking Docker environment..."
+          docker --version
+          echo "📊 Available disk space:"
+          df -h /var/lib/docker || df -h /
+
+      - name: Check for existing base image
+        id: check-base
+        run: |
+          echo "🔍 Checking for locally built base image..."
+          
+          if docker image inspect "${MICAPIPE_BASE_IMAGE}" &>/dev/null; then
+            echo "✅ Found local base image: ${MICAPIPE_BASE_IMAGE}"
+            echo "base_image=${MICAPIPE_BASE_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            echo "build_type=split" >> $GITHUB_OUTPUT
+          elif docker image inspect "${LEGACY_IMAGE}" &>/dev/null; then
+            echo "✅ Found legacy single-build image: ${LEGACY_IMAGE}"
+            echo "base_image=${LEGACY_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            echo "build_type=legacy" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No base image found - will build new base"
+            echo "base_image=${MICAPIPE_BASE_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+            echo "build_type=split" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build base image (if needed)
+        if: steps.check-base.outputs.build_needed == 'true'
+        run: |
+          echo "🏗️  Building base image locally..."
+          echo "📊 This will take 45-60 minutes (one-time setup)"
+          echo "💡 Future runs will be faster with cached base image"
+          
+          # Check which Dockerfile to use
+          if [ -f "Dockerfile.base" ]; then
+            echo "📦 Using split-stage build (Dockerfile.base)"
+            docker build -f Dockerfile.base -t "${MICAPIPE_BASE_IMAGE}" .
+          else
+            echo "📦 Using single-stage build (Dockerfile)"
+            docker build -t "${LEGACY_IMAGE}" .
+            # Tag it as base image for consistency
+            docker tag "${LEGACY_IMAGE}" "${MICAPIPE_BASE_IMAGE}"
+          fi
+          
+          BASE_SIZE=$(docker images "${MICAPIPE_BASE_IMAGE}" --format "table {{.Size}}" | tail -n1)
+          echo "✅ Base image built: ${BASE_SIZE}"
+
+      - name: Build micapipe main image
+        run: |
+          BASE_IMAGE="${{ steps.check-base.outputs.base_image }}"
+          BUILD_TYPE="${{ steps.check-base.outputs.build_type }}"
+          
+          echo "🏗️  Building main micapipe image using base: ${BASE_IMAGE}"
+          echo "🔧 Build type: ${BUILD_TYPE}"
+          
+          if [ "${BUILD_TYPE}" = "split" ] && [ -f "Dockerfile.main" ]; then
+            echo "📦 Using split-stage build (Dockerfile.main)"
+            docker build \
+              -f Dockerfile.main \
+              --build-arg "BASE_IMAGE=${BASE_IMAGE}" \
+              -t "${MICAPIPE_MAIN_IMAGE}" \
+              .
+          elif [ "${BUILD_TYPE}" = "legacy" ]; then
+            echo "📦 Using legacy image as main image"
+            docker tag "${BASE_IMAGE}" "${MICAPIPE_MAIN_IMAGE}"
+          else
+            echo "📦 Single-stage fallback build"
+            docker build -t "${MICAPIPE_MAIN_IMAGE}" .
+          fi
+          
+          MAIN_SIZE=$(docker images "${MICAPIPE_MAIN_IMAGE}" --format "table {{.Size}}" | tail -n1)
+          echo "✅ Main image ready: ${MAIN_SIZE}"
+
+      - name: Build Singularity (.sif)
+        run: |
+          echo "🔄 Converting Docker image to Singularity..."
+          export SINGULARITY_TMPDIR=/export02/local/singularity_tmp
+          mkdir -p /export02/local/singularity_tmp
+          
+          # Clean up any existing .sif file
+          rm -f /export02/local/singularity_tmp/micapipe_v0.2.3.sif
+          
+          singularity build --force \
+            /export02/local/singularity_tmp/micapipe_v0.2.3.sif \
+            docker-daemon://"${MICAPIPE_MAIN_IMAGE}"
+          
+          SIF_SIZE=$(du -h /export02/local/singularity_tmp/micapipe_v0.2.3.sif | cut -f1)
+          echo "✅ Singularity image built: ${SIF_SIZE}"
+
+      - name: Point test script at new .sif
+        run: |
+          echo "🔧 Updating test script to use new Singularity image..."
+          sed -i "s|^container_img=.*|container_img=/export02/local/singularity_tmp/micapipe_v0.2.3.sif|" tests/sample_test.sh
+          echo "✅ Test script updated"
+
+      - name: Run micapipe test
+        run: |
+          echo "🧪 Running micapipe tests..."
+          chmod +x ./tests/sample_test.sh
+          ./tests/sample_test.sh
+
+      - name: Cleanup Docker images (preserve base)
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker images..."
+          # Remove main image but keep base for future runs
+          docker rmi "${MICAPIPE_MAIN_IMAGE}" || echo "Main image already removed"
+          
+          # Keep base image for future runs (major speed improvement)
+          echo "💾 Keeping base image for future runs: ${MICAPIPE_BASE_IMAGE}"
+          
+          # Clean up dangling images
+          docker image prune -f || echo "No dangling images to remove"
+          
+          echo "📊 Remaining images:"
+          docker images | grep micapipe || echo "No micapipe images remaining"

@@ -1,0 +1,141 @@
+name: CI - Micapipe Test (Action Runner Compatible)
+
+on:
+  push:
+    branches: [ master, comprehensive-base-image ]
+  pull_request:
+
+jobs:
+  run-micapipe:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      # Use action runner's pre-built base image location if it exists
+      # This leverages the baked-in image from the action runner Dockerfile
+      MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-base:latest
+      MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:latest
+      # Fallback to local pre-built base if action runner doesn't have it
+      LOCAL_BASE_IMAGE: micapipe-base:local
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker environment 
+        run: |
+          echo "🔍 Checking Docker environment..."
+          docker --version
+          echo "📊 Available disk space:"
+          df -h /var/lib/docker || df -h /
+
+      - name: Check for pre-built base image (Action Runner Compatible)
+        id: check-base
+        run: |
+          echo "🔍 Checking for existing base image..."
+          
+          # Priority 1: Check if action runner has pre-built base baked in
+          if docker image inspect "${MICAPIPE_BASE_IMAGE}" &>/dev/null; then
+            echo "✅ Found registry base image: ${MICAPIPE_BASE_IMAGE}"
+            echo "base_image=${MICAPIPE_BASE_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            echo "source=registry" >> $GITHUB_OUTPUT
+          elif docker image inspect "${LOCAL_BASE_IMAGE}" &>/dev/null; then
+            echo "✅ Found local base image: ${LOCAL_BASE_IMAGE}"
+            echo "base_image=${LOCAL_BASE_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+            echo "source=local" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No base image found - will build locally"
+            echo "base_image=${LOCAL_BASE_IMAGE}" >> $GITHUB_OUTPUT
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+            echo "source=build" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build base image (if needed)
+        if: steps.check-base.outputs.build_needed == 'true'
+        run: |
+          echo "🏗️  Building base image locally..."
+          echo "📊 This will take 45-60 minutes (one-time setup)"
+          echo "💡 Future runs will be faster with cached base image"
+          
+          # Use Dockerfile.base if it exists, otherwise fall back to single Dockerfile
+          if [ -f "Dockerfile.base" ]; then
+            echo "📦 Using split-stage build (Dockerfile.base)"
+            docker build -f Dockerfile.base -t "${LOCAL_BASE_IMAGE}" .
+          else
+            echo "📦 Using single-stage build (Dockerfile)"
+            docker build -t "${LOCAL_BASE_IMAGE}" .
+          fi
+          
+          BASE_SIZE=$(docker images "${LOCAL_BASE_IMAGE}" --format "table {{.Size}}" | tail -n1)
+          echo "✅ Base image built: ${BASE_SIZE}"
+
+      - name: Build micapipe main image
+        run: |
+          BASE_IMAGE="${{ steps.check-base.outputs.base_image }}"
+          echo "🏗️  Building main micapipe image using base: ${BASE_IMAGE}"
+          
+          # Use Dockerfile.main if it exists (split-stage), otherwise build directly
+          if [ -f "Dockerfile.main" ]; then
+            echo "📦 Using split-stage build (Dockerfile.main)"
+            docker build \
+              -f Dockerfile.main \
+              --build-arg "BASE_IMAGE=${BASE_IMAGE}" \
+              -t "${MICAPIPE_MAIN_IMAGE}" \
+              .
+          else
+            echo "📦 Using single-stage build - tagging existing image"
+            docker tag "${BASE_IMAGE}" "${MICAPIPE_MAIN_IMAGE}"
+          fi
+          
+          MAIN_SIZE=$(docker images "${MICAPIPE_MAIN_IMAGE}" --format "table {{.Size}}" | tail -n1)
+          echo "✅ Main image ready: ${MAIN_SIZE}"
+
+      - name: Build Singularity (.sif)
+        run: |
+          echo "🔄 Converting Docker image to Singularity..."
+          export SINGULARITY_TMPDIR=/export02/local/singularity_tmp
+          mkdir -p /export02/local/singularity_tmp
+          
+          # Clean up any existing .sif file
+          rm -f /export02/local/singularity_tmp/micapipe_v0.2.3.sif
+          
+          singularity build --force \
+            /export02/local/singularity_tmp/micapipe_v0.2.3.sif \
+            docker-daemon://"${MICAPIPE_MAIN_IMAGE}"
+          
+          SIF_SIZE=$(du -h /export02/local/singularity_tmp/micapipe_v0.2.3.sif | cut -f1)
+          echo "✅ Singularity image built: ${SIF_SIZE}"
+
+      - name: Point test script at new .sif
+        run: |
+          echo "🔧 Updating test script to use new Singularity image..."
+          sed -i "s|^container_img=.*|container_img=/export02/local/singularity_tmp/micapipe_v0.2.3.sif|" tests/sample_test.sh
+          echo "✅ Test script updated"
+
+      - name: Run micapipe test
+        run: |
+          echo "🧪 Running micapipe tests..."
+          chmod +x ./tests/sample_test.sh
+          ./tests/sample_test.sh
+
+      - name: Cleanup Docker images (preserve base)
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker images..."
+          # Remove main image but keep base for future runs
+          docker rmi "${MICAPIPE_MAIN_IMAGE}" || echo "Main image already removed"
+          
+          # Only remove local base if we built it (keep registry bases)
+          if [ "${{ steps.check-base.outputs.source }}" = "build" ]; then
+            echo "🗑️  Removing locally built base image"
+            docker rmi "${LOCAL_BASE_IMAGE}" || echo "Local base already removed"
+          else
+            echo "💾 Keeping base image for future runs"
+          fi
+          
+          # Clean up dangling images
+          docker image prune -f || echo "No dangling images to remove"
+          
+          echo "📊 Remaining images:"
+          docker images | grep micapipe || echo "No micapipe images remaining"

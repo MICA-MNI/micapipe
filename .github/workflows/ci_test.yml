@@ -1,9 +1,9 @@
 name: CI - Micapipe Test
 
 on:
-  push:
-    branches: [ master, comprehensive-base-image ]
   pull_request:
+    branches: [ master, comprehensive-base-image ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   run-micapipe:
