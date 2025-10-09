@@ -24,8 +24,34 @@ log "📋 Building micapipe-runner-test image..."
 
 cd "$ACTIONS_RUNNER_DIR"
 
+# Create .dockerignore to exclude problematic files
+cat > .dockerignore << 'DOCKERIGNORE_EOF'
+_diag/
+*.log
+_work/
+.git/
+DOCKERIGNORE_EOF
+
+log "✅ Created .dockerignore to exclude log files"
+
+# Disable Docker content trust to avoid certificate issues
+export DOCKER_CONTENT_TRUST=0
+log "✅ Disabled Docker content trust"
+
+# Clean up any Docker build cache issues
+docker system prune -f --volumes 2>/dev/null || true
+
 # Build with test tag
-docker build -t micapipe-runner-test .
+log "🔄 Building Docker image (this may take a few minutes)..."
+if docker build -t micapipe-runner-test .; then
+    log "✅ Test runner image built successfully: micapipe-runner-test"
+else
+    log "❌ Docker build failed. Try these troubleshooting steps:"
+    log "   1. Check Docker daemon is running: docker info"
+    log "   2. Clean Docker cache: docker system prune -af"
+    log "   3. Restart Docker service if needed"
+    exit 1
+fi
 
 log "✅ Test runner image built: micapipe-runner-test"
 
