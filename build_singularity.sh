@@ -3,7 +3,12 @@
 # Build Singularity SIF from micapipe Docker image
 #
 # This script converts the Docker image to Singularity SIF format
-# and stores it in the MICA singularity programs directory.
+# and stores it in the MICA     if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        echo ""
+        echo "📦 Moving SIF to final location..."
+        mv "${TMP_OUTPUT}" "${OUTPUT_PATH}"
+        echo "✅ Build complete"
+    firity programs directory.
 #
 # Usage:
 #   ./build_singularity.sh [docker_image_tag]
@@ -141,14 +146,15 @@ if echo "$MOUNT_INFO" | grep -q "nodev"; then
     echo "   Building to /tmp first, then moving to final location..."
     echo ""
     
-    # Build to /tmp (which doesn't have nodev)
-    TMP_OUTPUT="/tmp/micapipe_build_$$.sif"
-    export SINGULARITY_TMPDIR="/tmp/singularity_tmp_$$"
-    export SINGULARITY_CACHEDIR="/tmp/singularity_cache_$$"
+    # Build to data directory (not /tmp - insufficient space)
+    DATA_BASE="/host/cassio/export03/data/enning"
+    TMP_OUTPUT="${DATA_BASE}/.tmp_micapipe_build_$$.sif"
+    export SINGULARITY_TMPDIR="${DATA_BASE}/.singularity_tmp"
+    export SINGULARITY_CACHEDIR="${DATA_BASE}/.singularity_cache"
     mkdir -p "${SINGULARITY_TMPDIR}" "${SINGULARITY_CACHEDIR}"
     
     echo "📦 Temporary output: ${TMP_OUTPUT}"
-    echo "📁 Temporary cache:  ${SINGULARITY_CACHEDIR}"
+    echo "📁 Temporary dirs:   ${DATA_BASE}/.singularity_{tmp,cache}"
     echo ""
     echo "🔧 Building SIF with --force flag..."
     
