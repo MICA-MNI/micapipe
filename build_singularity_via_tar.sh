@@ -109,10 +109,15 @@ echo ""
 # ============================================================================
 echo "📦 Step 1/3: Exporting Docker image to tar file..."
 echo "   This will take 5-10 minutes for a 107GB image..."
+echo "   Output: ${TAR_FILE}"
+echo ""
+echo "💡 To monitor progress in another terminal:"
+echo "   watch -n 10 'ls -lh ${TAR_FILE} 2>/dev/null || echo \"Tar export starting...\"'"
 echo ""
 
 START_TIME=$(date +%s)
 
+echo "🔄 Running: docker save ${FULL_DOCKER_IMAGE} -o ${TAR_FILE}"
 docker save "${FULL_DOCKER_IMAGE}" -o "${TAR_FILE}"
 
 EXPORT_TIME=$(date +%s)
