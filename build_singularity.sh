@@ -24,12 +24,12 @@ set -e  # Exit on error
 # Configuration
 # ============================================================================
 DOCKER_IMAGE="ghcr.io/mica-mni/micapipe"
-SINGULARITY_DIR="/data_/mica1/01_programs/singularity"
+SINGULARITY_DIR="/host/cassio/export03/data/enning/singularity"
 OUTPUT_NAME="micapipe_v1_beta.sif"
 
-# Alternate user location: /host/cassio/export03/data/enning/singularity
+# Alternate production location: /data_/mica1/01_programs/singularity
 # You can override SINGULARITY_DIR by setting it before running:
-#   SINGULARITY_DIR=/host/cassio/export03/data/enning/singularity ./build_singularity.sh
+#   SINGULARITY_DIR=/data_/mica1/01_programs/singularity ./build_singularity.sh
 
 # Get Docker tag from argument or use 'latest'
 DOCKER_TAG="${1:-latest}"
@@ -139,14 +139,14 @@ START_TIME=$(date +%s)
 # Build Singularity SIF (using simple approach from CI test)
 # ============================================================================
 
-# Check if output filesystem has nodev - if so, build to /tmp first
+# Check if output filesystem has nodev - if so, build to temp location first
 MOUNT_INFO=$(mount | grep "$(df "${SINGULARITY_DIR}" | awk 'NR==2 {print $1}')" || true)
 if echo "$MOUNT_INFO" | grep -q "nodev"; then
     echo "⚠️  WARNING: Output directory is on a 'nodev' mount"
-    echo "   Building to /tmp first, then moving to final location..."
+    echo "   Building to temporary location first, then moving to final location..."
     echo ""
     
-    # Build to data directory (not /tmp - insufficient space)
+    # Build to data directory temp location
     DATA_BASE="/host/cassio/export03/data/enning"
     TMP_OUTPUT="${DATA_BASE}/.tmp_micapipe_build_$$.sif"
     export SINGULARITY_TMPDIR="${DATA_BASE}/.singularity_tmp"
