@@ -22,6 +22,62 @@ export OMP_NUM_THREADS=$(nproc)
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 
+# Function to check and kill stuck processes
+check_stuck_processes() {
+    log "🔍 Checking for stuck processes..."
+    
+    # Check for singularity processes
+    SING_PROCS=$(ps aux | grep singularity | grep -v grep | wc -l)
+    if [ "$SING_PROCS" -gt 0 ]; then
+        log "🔍 Found $SING_PROCS singularity processes:"
+        ps aux | grep singularity | grep -v grep
+    fi
+    
+    # Check for docker save processes  
+    DOCKER_PROCS=$(ps aux | grep "docker save" | grep -v grep | wc -l)
+    if [ "$DOCKER_PROCS" -gt 0 ]; then
+        log "🔍 Found $DOCKER_PROCS docker save processes:"
+        ps aux | grep "docker save" | grep -v grep
+    fi
+    
+    # Check temp directory usage
+    if [ -d "$SINGULARITY_TMPDIR" ]; then
+        TEMP_USAGE=$(du -sh "$SINGULARITY_TMPDIR" 2>/dev/null | cut -f1 || echo "0")
+        log "💾 Temp directory: $TEMP_USAGE"
+    fi
+    
+    # Check if output file exists and its size
+    if [ -f "$OUTPUT_PATH" ]; then
+        OUTPUT_SIZE=$(du -h "$OUTPUT_PATH" | cut -f1)
+        log "📁 Output file exists: $OUTPUT_SIZE"
+    else
+        log "❌ No output file yet"
+    fi
+}
+
+# Function to kill all related processes
+kill_stuck_build() {
+    log "🛑 Killing stuck build processes..."
+    
+    # Kill singularity processes
+    pkill -f singularity 2>/dev/null || true
+    
+    # Kill docker save processes
+    pkill -f "docker save" 2>/dev/null || true
+    
+    # Clean up temp files
+    if [ -d "$SINGULARITY_TMPDIR" ]; then
+        rm -rf "$SINGULARITY_TMPDIR"/* 2>/dev/null || true
+    fi
+    
+    # Remove partial output
+    if [ -f "$OUTPUT_PATH" ]; then
+        rm -f "$OUTPUT_PATH"
+    fi
+    
+    log "✅ Cleanup complete"
+}
+
 # ============================================================================
 # Pre-flight checks
 # ============================================================================
@@ -60,14 +116,42 @@ fi
 START_TIME=$(date +%s)
 
 # ============================================================================
-# Method 1: Streaming (fastest - no intermediate files)
+# Method 1: Streaming (fastest - no intermediate files) 
 # ============================================================================
 log "⚡ Trying streaming method (fastest)..."
+log "📊 Progress monitoring: watching output file size..."
 
-if docker save "$FULL_DOCKER_IMAGE" | singularity build --force "$OUTPUT_PATH" docker-archive:///dev/stdin 2>/dev/null; then
+# Start progress monitor in background
+monitor_progress() {
+    while true; do
+        if [ -f "$OUTPUT_PATH" ]; then
+            SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
+            log "📈 Current size: $SIZE"
+        else
+            log "⏳ Waiting for output file to appear..."
+        fi
+        sleep 30
+    done
+}
+
+# Start monitoring
+monitor_progress &
+MONITOR_PID=$!
+
+# Run the actual build with verbose output
+log "🔄 Starting docker save | singularity build..."
+if timeout 7200 bash -c "docker save '$FULL_DOCKER_IMAGE' | singularity build --force '$OUTPUT_PATH' docker-archive:///dev/stdin" 2>&1 | while read line; do
+    log "SINGULARITY: $line"
+done; then
+    # Stop monitor
+    kill $MONITOR_PID 2>/dev/null || true
+    wait $MONITOR_PID 2>/dev/null || true
     log "✅ Streaming method succeeded!"
     USED_METHOD="streaming"
 else
+    # Stop monitor  
+    kill $MONITOR_PID 2>/dev/null || true
+    wait $MONITOR_PID 2>/dev/null || true
     log "⚠️  Streaming failed, trying tar method..."
     
     # ============================================================================
@@ -76,15 +160,63 @@ else
     TAR_FILE="${BASE_DIR}/micapipe_docker_$$.tar"
     
     log "📤 Exporting Docker to tar..."
-    docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
+    
+    # Monitor tar creation
+    (while [ ! -f "$TAR_FILE" ] || [ $(stat -f%z "$TAR_FILE" 2>/dev/null || echo 0) -eq 0 ]; do
+        sleep 5
+        log "⏳ Waiting for tar export to start..."
+    done
+    
+    while [ -f "$TAR_FILE" ] && kill -0 $! 2>/dev/null; do
+        SIZE=$(du -h "$TAR_FILE" 2>/dev/null | cut -f1 || echo "0")
+        log "📈 Tar progress: $SIZE"
+        sleep 30
+    done) &
+    
+    TAR_MONITOR_PID=$!
+    
+    # Create tar file
+    docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE" &
+    DOCKER_PID=$!
+    
+    # Wait for docker save to complete
+    wait $DOCKER_PID
+    
+    # Stop tar monitor
+    kill $TAR_MONITOR_PID 2>/dev/null || true
+    wait $TAR_MONITOR_PID 2>/dev/null || true
     
     TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
     log "✅ Export complete: $TAR_SIZE"
     
     log "🔧 Building SIF from tar..."
+    
+    # Monitor SIF creation
+    (while [ ! -f "$OUTPUT_PATH" ] || [ $(stat -f%z "$OUTPUT_PATH" 2>/dev/null || echo 0) -eq 0 ]; do
+        sleep 5
+        log "⏳ Waiting for SIF build to start..."
+    done
+    
+    while [ -f "$OUTPUT_PATH" ] && kill -0 $! 2>/dev/null; do
+        SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
+        log "📈 SIF progress: $SIZE"
+        sleep 30
+    done) &
+    
+    SIF_MONITOR_PID=$!
+    
+    # Build SIF
     singularity build --force \
         "$OUTPUT_PATH" \
-        "docker-archive://$TAR_FILE"
+        "docker-archive://$TAR_FILE" &
+    SINGULARITY_PID=$!
+    
+    # Wait for singularity build to complete
+    wait $SINGULARITY_PID
+    
+    # Stop SIF monitor
+    kill $SIF_MONITOR_PID 2>/dev/null || true
+    wait $SIF_MONITOR_PID 2>/dev/null || true
     
     log "🧹 Cleaning up tar file..."
     rm -f "$TAR_FILE"
