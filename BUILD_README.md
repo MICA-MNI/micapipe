@@ -19,6 +19,15 @@ Simple container building for MICApipe with no sudo privileges required.
 ./build_container.sh --no-cache
 ```
 
+### Convert Docker image to Singularity SIF
+```bash
+# Automatically detects local docker images or pulls from GHCR if docker is absent
+./build_singularity_auto.sh --tag latest
+
+# Explicit remote pull (no local docker required)
+./build_singularity_auto.sh --oci docker://ghcr.io/mica-mni/micapipe:latest
+```
+
 ## Requirements
 
 - **Docker**: Access without sudo (user in docker group)
@@ -36,6 +45,23 @@ Simple container building for MICApipe with no sudo privileges required.
 5. **Singularity Convert**: Creates .sif file from Docker image
 6. **Cleanup**: Removes intermediate Docker image
 
+## Singularity Conversion Options
+
+- **Recommended**: `./build_singularity_auto.sh` &mdash; non-interactive wrapper that works with
+  either `apptainer` or `singularity`, auto-detects whether to use the local
+  Docker daemon, a docker-archive tarball, or pull directly from GHCR. Uses
+  `/host/cassio/export03/data/enning` for cache/temp storage by default.
+- **Legacy compatibility**: `./build_singularity_via_tar.sh` now delegates to the
+  auto builder in docker-archive mode, preserving previous behaviour while
+  benefiting from the new cache handling.
+
+Environment overrides:
+
+- `SINGULARITY_DIR` controls the final `.sif` destination (default:
+  `/host/cassio/export03/data/enning/singularity`).
+- `CACHE_ROOT` selects where large temporary files live (default mirrors
+  `SINGULARITY_DIR`, wrapper sets it to `/host/cassio/export03/data/enning`).
+
 ## Output
 
 - **Default Location**: `/data_/mica1/01_programs/singularity/micapipe_v1-beta.sif`
@@ -43,6 +69,9 @@ Simple container building for MICApipe with no sudo privileges required.
 - **Build Logs**: `build_logs/container_build_YYYYMMDD_HHMMSS.log`
 
 ## Usage
+
+> Use `singularity` or `apptainer` interchangeably in the examples below,
+> depending on which CLI is available on your system.
 
 ### Test Container
 ```bash
