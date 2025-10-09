@@ -9,22 +9,47 @@ jobs:
   run-micapipe:
     runs-on: self-hosted
     timeout-minutes: 1440
+    env:
+      MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-base:latest
+      MICAPIPE_DOCKER_IMAGE: micapipe
+      MICAPIPE_DOCKER_TAG: ci
+      MICAPIPE_SINGULARITY_DIR: /export02/local/singularity_tmp
+      MICAPIPE_CACHE_ROOT: /export02/local/singularity_tmp/cache
+      MICAPIPE_SIF_PATH: /export02/local/singularity_tmp/micapipe_ci.sif
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build Micapipe Docker image
-        run: docker build -t micapipe:test .
+      - name: Prepare Singularity workspace
+        run: |
+          mkdir -p "${MICAPIPE_SINGULARITY_DIR}" "${MICAPIPE_CACHE_ROOT}"
+          ls -ld "${MICAPIPE_SINGULARITY_DIR}" "${MICAPIPE_CACHE_ROOT}"
+
+      - name: Pull base image
+        run: docker pull "${MICAPIPE_BASE_IMAGE}"
+
+      - name: Build Micapipe main Docker image
+        run: |
+          docker build \
+            -f Dockerfile.main \
+            --build-arg "BASE_IMAGE=${MICAPIPE_BASE_IMAGE}" \
+            -t "${MICAPIPE_DOCKER_IMAGE}:${MICAPIPE_DOCKER_TAG}" \
+            .
 
       - name: Build Singularity (.sif)
         run: |
-          export SINGULARITY_TMPDIR=/export02/local/singularity_tmp
-          singularity build --force /export02/local/singularity_tmp/micapipe_v0.2.3.sif docker-daemon://micapipe:test
+          chmod +x ./build_singularity_auto.sh
+          SINGULARITY_DIR="${MICAPIPE_SINGULARITY_DIR}" CACHE_ROOT="${MICAPIPE_CACHE_ROOT}" \
+            ./build_singularity_auto.sh \
+            --image "${MICAPIPE_DOCKER_IMAGE}" \
+            --tag "${MICAPIPE_DOCKER_TAG}" \
+            --output "${MICAPIPE_SIF_PATH}" \
+            --force
 
       - name: Point test script at new .sif
         run: |
-          sed -i "s|^container_img=.*|container_img=/export02/local/singularity_tmp/micapipe_v0.2.3.sif|" tests/sample_test.sh
+          sed -i "s|^container_img=.*|container_img=${MICAPIPE_SIF_PATH}|" tests/sample_test.sh
 
       - name: Run Micapipe Test
         run: |
