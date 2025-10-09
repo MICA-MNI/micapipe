@@ -17,14 +17,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build Micapipe base image (if needed)
+      - name: Prepare base image
         run: |
-          # Check if base image exists locally, if not build it
-          if ! docker image inspect "${MICAPIPE_BASE_IMAGE}" &>/dev/null; then
-            echo "Building base image..."
-            docker build -f Dockerfile.base -t "${MICAPIPE_BASE_IMAGE}" .
+          echo "🔍 Checking for base image: ${MICAPIPE_BASE_IMAGE}"
+          
+          # Check if base image exists locally
+          if docker image inspect "${MICAPIPE_BASE_IMAGE}" &>/dev/null; then
+            echo "✅ Base image found locally"
+            docker images | grep micapipe-base || echo "   (Base image exists but name may differ)"
           else
-            echo "Base image already exists locally"
+            echo "❌ Base image not found - building it..."
+            echo "📊 This will take 45-60 minutes (one-time setup)"
+            
+            # Build base image
+            docker build -f Dockerfile.base -t "${MICAPIPE_BASE_IMAGE}" .
+            
+            BASE_SIZE=$(docker images "${MICAPIPE_BASE_IMAGE}" --format "table {{.Size}}" | tail -n1)
+            echo "✅ Base image built: ${BASE_SIZE}"
+            echo "💡 Future CI runs will be much faster (base image cached)"
           fi
 
       - name: Build Micapipe main image
