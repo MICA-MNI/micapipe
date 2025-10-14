@@ -257,36 +257,96 @@ echo "   - Main image build: 3-5 minutes (every code change)"
 echo "   - Time saved per CI run: ~60 minutes!"
 echo ""
 
-# Auto-start base image build
-echo "🏗️  Starting Stage 1: Base image build ON SERVER..."
-echo "📍 Build location: $BUILD_DIR (NOT ~/micapipe)"
-echo "⏱️  Expected time: 45-90 minutes (one-time setup)"
-echo "📋 This will build the base image with all neuroimaging tools:"
-echo "   - FSL 6.0.2, FreeSurfer 7.4.1, AFNI"
-echo "   - MRtrix3 3.0.7, FastSurfer 2.4.2"
-    echo "   - DESIGNER, LAMAReg, SWM, Synb0/SynBOLD"
-    echo "   - Conda/Mamba environments"
-    echo ""
-    
-    # Change to build directory and run base image build
-    echo "📂 Changing to server build directory..."
-    pushd "$BUILD_DIR"
-    pwd
-    echo ""
-    ./build_base_image_server.sh
-    BASE_BUILD_EXIT_CODE=$?
-    popd
-    
-    if [[ $BASE_BUILD_EXIT_CODE -eq 0 ]]; then
+# Interactive build selection
+echo "🤔 What would you like to build next?"
+echo ""
+echo "Options:"
+echo "   1) Build Base Image Only (45-90 min) - Contains all neuroimaging tools"
+echo "   2) Build Main Image Only (3-5 min) - Uses existing base + adds micapipe code"
+echo "   3) Build Both (Base then Main) - Full rebuild"
+echo "   4) Nothing - Just migrate files"
+echo ""
+echo "💡 Recommendation: If you have recent base image, choose option 2 (Main Only)"
+echo ""
+read -p "Enter your choice (1/2/3/4): " -n 1 -r BUILD_CHOICE
+echo
+echo
+
+case $BUILD_CHOICE in
+    1)
+        echo "🏗️  Building Base Image Only..."
+        echo "📍 Build location: $BUILD_DIR"
+        echo "⏱️  Expected time: 45-90 minutes"
         echo ""
-        echo "✅ Stage 1 complete! Base image built successfully!"
-    echo "🎯 Ready for Stage 2 fast builds!"
-    echo ""
-    echo "🚀 To build Stage 2 main image (3-5 minutes):"
-    echo "   cd $BUILD_DIR && ./build_main_image_server.sh"
-else
-    echo ""
-    echo "❌ Base image build failed (exit code: $BASE_BUILD_EXIT_CODE)"
-    echo "📋 Check build logs for details"
-    echo "💡 You can retry later with: cd $BUILD_DIR && ./build_base_image_server.sh"
-fi
+        pushd "$BUILD_DIR"
+        ./build_comprehensive_base_server.sh
+        BASE_BUILD_EXIT_CODE=$?
+        popd
+        
+        if [[ $BASE_BUILD_EXIT_CODE -eq 0 ]]; then
+            echo "✅ Base image built successfully!"
+            echo "� To build main image later: cd $BUILD_DIR && ./build_main_image_server.sh"
+        else
+            echo "❌ Base image build failed (exit code: $BASE_BUILD_EXIT_CODE)"
+        fi
+        ;;
+    2)
+        echo "⚡ Building Main Image Only (Fast!)..."
+        echo "📍 Build location: $BUILD_DIR"
+        echo "⏱️  Expected time: 3-5 minutes"
+        echo ""
+        pushd "$BUILD_DIR"
+        ./build_main_image_server.sh
+        MAIN_BUILD_EXIT_CODE=$?
+        popd
+        
+        if [[ $MAIN_BUILD_EXIT_CODE -eq 0 ]]; then
+            echo "✅ Main image built successfully!"
+            echo "🎯 micapipe:latest is ready to use!"
+        else
+            echo "❌ Main image build failed (exit code: $MAIN_BUILD_EXIT_CODE)"
+        fi
+        ;;
+    3)
+        echo "🏗️  Building Both Images (Base then Main)..."
+        echo "� Build location: $BUILD_DIR"
+        echo "⏱️  Expected time: 50-95 minutes total"
+        echo ""
+        pushd "$BUILD_DIR"
+        
+        echo "🔧 Step 1: Building base image..."
+        ./build_comprehensive_base_server.sh
+        BASE_BUILD_EXIT_CODE=$?
+        
+        if [[ $BASE_BUILD_EXIT_CODE -eq 0 ]]; then
+            echo "✅ Base image complete! Starting main image..."
+            ./build_main_image_server.sh
+            MAIN_BUILD_EXIT_CODE=$?
+            
+            if [[ $MAIN_BUILD_EXIT_CODE -eq 0 ]]; then
+                echo "✅ Both images built successfully!"
+                echo "🎯 micapipe:latest is ready to use!"
+            else
+                echo "❌ Main image build failed (exit code: $MAIN_BUILD_EXIT_CODE)"
+            fi
+        else
+            echo "❌ Base image build failed (exit code: $BASE_BUILD_EXIT_CODE)"
+            echo "   Skipping main image build"
+        fi
+        popd
+        ;;
+    4)
+        echo "📁 Files migrated only - no builds started"
+        echo ""
+        echo "🚀 To build later:"
+        echo "   Base: cd $BUILD_DIR && ./build_comprehensive_base_server.sh"
+        echo "   Main: cd $BUILD_DIR && ./build_main_image_server.sh"
+        ;;
+    *)
+        echo "❌ Invalid choice. Files migrated only."
+        echo ""
+        echo "🚀 To build later:"
+        echo "   Base: cd $BUILD_DIR && ./build_comprehensive_base_server.sh"
+        echo "   Main: cd $BUILD_DIR && ./build_main_image_server.sh"
+        ;;
+esac
