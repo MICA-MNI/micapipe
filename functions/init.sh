@@ -13,34 +13,49 @@ export OLD_PATH=$PATH
 #------------------------------------------------------------------------------#
 # SOFTWARE CONFIGURATION for MICAPIPE
 #------------------------------------------------------------------------------#
-# User defined PATHS
-# AFNI
-export AFNIDIR="/data/mica1/01_programs/afni-20.2.06"
-# ANTS
-export ANTSPATH="/data/mica1/01_programs/ants-2.3.4/bin"
-# Workbench
-export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
-# ICA-FIX
-export FIXPATH="/data_/mica1/01_programs/fix"
-# FreeSurfer
-export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
-# fastsurfer
-export FASTSURFER_HOME="/data_/mica1/01_programs/fastsurfer"
-export fs_licence="/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
-# FSL 6.0
-export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
-export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
-export FSL_BIN="${FSLDIR}/bin"
-# MRtrix3 3.0.1
-export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
-# ITK utils
-export itk_dir="/data_/mica1/01_programs/c3d-1.0.0-Linux-x86_64/bin"
+# Check if we're running in Docker environment
+if [ -f "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh" ]; then
+    # Docker environment paths
+    echo "🐳 Detected Docker environment - using Docker paths"
+    export AFNIDIR="/opt/afni-23.1.09"
+    export ANTSPATH="/opt/ants-2.3.4/bin"
+    export workbench_path="/opt/workbench-1.4.2/bin"
+    export FIXPATH="/opt/fix"
+    export FREESURFER_HOME="/opt/freesurfer-7.4.1"
+    export FASTSURFER_HOME="/opt/fastsurfer"
+    export fs_licence="/opt/freesurfer-7.4.1/license.txt"
+    export FSLDIR="/opt/fsl-6.0.5.1"
+    export FSL_DIR="/opt/fsl-6.0.5.1"
+    export FSL_BIN="${FSLDIR}/bin"
+    export mrtrixDir="/opt/mrtrix3-3.0.1"
+    export itk_dir="/opt/c3d/bin"
+else
+    # Local MICA cluster paths
+    echo "🏠 Detected local environment - using MICA cluster paths"
+    export AFNIDIR="/data/mica1/01_programs/afni-20.2.06"
+    export ANTSPATH="/data/mica1/01_programs/ants-2.3.4/bin"
+    export workbench_path="/data/mica1/01_programs/workbench-1.4.2/bin_linux64"
+    export FIXPATH="/data_/mica1/01_programs/fix"
+    export FREESURFER_HOME="/data/mica1/01_programs/freesurfer-7.3.2"
+    export FASTSURFER_HOME="/data_/mica1/01_programs/fastsurfer"
+    export fs_licence="/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
+    export FSLDIR="/data_/mica1/01_programs/fsl-6-0-3"
+    export FSL_DIR="/data_/mica1/01_programs/fsl-6-0-3"
+    export FSL_BIN="${FSLDIR}/bin"
+    export mrtrixDir="/data_/mica1/01_programs/mrtrix3-3.0.1"
+    export itk_dir="/data_/mica1/01_programs/c3d-1.0.0-Linux-x86_64/bin"
+fi
 # Python 3.7
 #export PYTHON_3="/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe/bin"
 # Export fs fs_licence
-export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
-# Fastsurfer singularity container
-export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.4.sif
+if [ -f "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh" ]; then
+    # Docker environment - fs_licence already set above
+    export fastsurfer_img="/opt/fastsurfer/fastsurfer.sif"  # Docker path if available
+else
+    # Local environment
+    export fs_licence=/data_/mica1/01_programs/freesurfer-7.3.2/license.txt
+    export fastsurfer_img=/data_/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.0.4.sif
+fi
 unset TMPDIR
 # Fastsurfer conda env
 
@@ -62,27 +77,53 @@ LD_LIBRARY_PATH=$(IFS=':';p=($LD_LIBRARY_PATH);unset IFS;p=(${p[@]%%*conda*});IF
 
 #------------------------------------------------------------------------------#
 # Software configuration
-# FreeSurfer 6.0 configuration
-source "${FREESURFER_HOME}/FreeSurferEnv.sh"
-# FSL 6.0 configuration
-source "${FSLDIR}/etc/fslconf/fsl.sh"
-# PYTHON 3.7 configuration
+# FreeSurfer configuration
+if [ -f "${FREESURFER_HOME}/SetUpFreeSurfer.sh" ]; then
+    source "${FREESURFER_HOME}/SetUpFreeSurfer.sh"
+elif [ -f "${FREESURFER_HOME}/FreeSurferEnv.sh" ]; then
+    source "${FREESURFER_HOME}/FreeSurferEnv.sh"
+else
+    echo "⚠️  Warning: FreeSurfer setup script not found at ${FREESURFER_HOME}"
+fi
+
+# FSL configuration
+if [ -f "${FSLDIR}/etc/fslconf/fsl.sh" ]; then
+    source "${FSLDIR}/etc/fslconf/fsl.sh"
+else
+    echo "⚠️  Warning: FSL setup script not found at ${FSLDIR}/etc/fslconf/fsl.sh"
+fi
+
+# PYTHON configuration
 unset PYTHONPATH
 unset PYTHONHOME
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
-conda3_bin=/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/bin/
-source /data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/etc/profile.d/conda.sh
+
+# Conda configuration - only for local environment
+if [ ! -f "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh" ]; then
+    conda3_bin=/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/bin/
+    if [ -f "/data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/etc/profile.d/conda.sh" ]; then
+        source /data/mica1/01_programs/micapipe-v0.2.0_conda/conda3/etc/profile.d/conda.sh
+    fi
+fi
 
 #------------------------------------------------------------------------------#
 # Set the libraries paths for mrtrx and fsl
 export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib"
 
 #-----------------------------------------------------------------------------------#
-# Export new PATH with al the necessary binaries
+# Export new PATH with all the necessary binaries
 #export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${PYTHON_3}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
-export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${conda3_bin}:${PATH}"
-conda activate /data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe
+if [ -f "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh" ]; then
+    # Docker environment
+    export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
+else
+    # Local environment
+    export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${conda3_bin}:${PATH}"
+    if [ -d "/data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe" ]; then
+        conda activate /data/mica1/01_programs/micapipe-v0.2.0_conda/micapipe
+    fi
+fi
 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
