@@ -6,7 +6,7 @@
 # Bypasses /neurodocker/startup.sh issues by setting up environment manually
 # =============================================================================
 
-SIF_PATH="/host/cassio/export03/data/enning/singularity/micapipe_v1_beta.sif"
+SIF_PATH="/data_/mica1/01_programs/singularity/micapipe_v1_beta.sif"
 
 echo "🧪 Testing MICApipe SIF with FreeSurfer workaround"
 echo "📁 SIF: $SIF_PATH"

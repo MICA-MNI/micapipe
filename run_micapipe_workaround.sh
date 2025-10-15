@@ -19,14 +19,14 @@
 #   ./run_micapipe_workaround.sh [other micapipe args] # Run micapipe commands
 #
 # REQUIREMENTS:
-#   - SIF file at: /host/cassio/export03/data/enning/singularity/micapipe_v1_beta.sif
+#   - SIF file at: /data_/mica1/01_programs/singularity/micapipe_v1_beta.sif
 #   - Singularity installed
 # =============================================================================
 
 set -euo pipefail
 
 # Configuration
-SIF_PATH="/host/cassio/export03/data/enning/singularity/micapipe_v1_beta.sif"
+SIF_PATH="/data_/mica1/01_programs/singularity/micapipe_v1_beta.sif"
 SCRIPT_NAME=$(basename "$0")
 
 # Colors for output

@@ -4,7 +4,7 @@
 
 version=0.2.3
 container=singularity
-container_img=/data_/mica1/01_programs/micapipe-v0.2.0/micapipe_v0.2.3.sif
+container_img=/data_/mica1/01_programs/singularity/micapipe_v1_beta.sif
 
 bids=/data/mica3/BIDS_CI/rawdata
 fs_lic=/data_/mica3/BIDS_CI/license_fc.txt
