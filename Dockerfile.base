@@ -488,12 +488,23 @@ RUN echo "📦 Installing FreeSurfer 7.4.1..." \
         && echo "✅ FreeSurfer extraction completed"; \
     else \
         echo "⚠️  FreeSurfer download failed, creating minimal installation..."; \
-        mkdir -p /opt/freesurfer-7.4.1 && \
-        echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
-        echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
-        chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh; \
+        mkdir -p /opt/freesurfer-7.4.1; \
     fi \
     && rm -rf "$TMPDIR" \
+    && echo "🔧 Setting up FreeSurfer environment script..." \
+    && if [ ! -f "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh" ]; then \
+        echo "Creating FreeSurfer setup script..."; \
+        echo "#!/bin/bash" > /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export FREESURFER_HOME=/opt/freesurfer-7.4.1" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export SUBJECTS_DIR=\$FREESURFER_HOME/subjects" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export FUNCTIONALS_DIR=\$FREESURFER_HOME/sessions" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export FS_LICENSE=\$FREESURFER_HOME/license.txt" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        echo "export PATH=\$FREESURFER_HOME/bin:\$PATH" >> /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh && \
+        chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh; \
+    else \
+        echo "FreeSurfer setup script already exists, ensuring it's executable..."; \
+        chmod +x /opt/freesurfer-7.4.1/SetUpFreeSurfer.sh; \
+    fi \
     && sed -i '$isource "/opt/freesurfer-7.4.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
 
 # ============================================================================
