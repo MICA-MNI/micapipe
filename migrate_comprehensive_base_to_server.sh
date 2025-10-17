@@ -159,7 +159,7 @@ if $SOURCE_CHANGED; then
     
     # Copy build scripts
     echo "   Copying build scripts..."
-    cp "$HOME_MICAPIPE/build_base_image_server.sh" "$BUILD_DIR/"
+    cp "$HOME_MICAPIPE/build_comprehensive_base_server.sh" "$BUILD_DIR/"
     cp "$HOME_MICAPIPE/build_main_image_server.sh" "$BUILD_DIR/"
     
     # Copy ONLY necessary directories for Docker build context
@@ -211,7 +211,7 @@ echo "🔍 Verifying two-stage build setup..."
 STRATEGY_FILES=(
     "Dockerfile.base"
     "Dockerfile.main"
-    "build_base_image_server.sh"
+    "build_comprehensive_base_server.sh"
     "build_main_image_server.sh"
 )
 
@@ -239,7 +239,7 @@ echo ""
 echo "   STAGE 1 (Rarely - when dependencies change):"
 echo "   ------------------------------------------"
 echo "   cd $BUILD_DIR"
-echo "   ./build_base_image_server.sh"
+echo "   ./build_comprehensive_base_server.sh"
 echo "   ⏱️  Time: 45-90 minutes"
 echo "   📦 Result: micapipe-base:latest with ALL tools"
 echo ""
