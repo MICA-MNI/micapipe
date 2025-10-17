@@ -59,9 +59,9 @@ if [ ${#missing_files[@]} -gt 0 ]; then
     fi
 fi
 
-# Verify Dockerfile.mamba-base exists
-if [[ ! -f "./Dockerfile.mamba-base" ]]; then
-    echo "❌ Dockerfile.mamba-base not found in current directory"
+# Verify Dockerfile.base exists
+if [[ ! -f "./Dockerfile.base" ]]; then
+    echo "❌ Dockerfile.base not found in current directory"
     echo "   Please ensure you're in the micapipe source directory"
     echo "   and the comprehensive-base-image branch is checked out"
     exit 1
@@ -133,7 +133,7 @@ done
 
 # Start Docker build with server-specific settings
 if docker build \
-    --file Dockerfile.mamba-base \
+    --file Dockerfile.base \
     --memory=12g \
     --memory-swap=16g \
     --build-arg CUSTOM_TMPDIR="/host/cassio/export03/data/enning" \
