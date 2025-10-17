@@ -158,7 +158,6 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        --threads 16 --retry-delay 3 --retry-attempts 2 \
         numpy scipy pandas matplotlib seaborn plotly \
         nibabel scikit-learn scikit-image \
         dipy==1.4.1 fury==0.8.0 \
@@ -167,12 +166,10 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing antspy and MRtrix3..." \
     && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
         --override-channels --strict-channel-priority \
-        --threads 16 --retry-delay 3 --retry-attempts 2 \
         antspy mrtrix3==3.0.7 \
     && echo "🔧 Installing utilities and networking packages..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        --threads 16 --retry-delay 3 --retry-attempts 2 \
         bzip2 ca-certificates curl git openssh \
         unzip wget xz zip \
         cryptography paramiko pycryptodome \
@@ -185,7 +182,6 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Creating designer environment with mamba..." \
     && mamba create -y -n designer python=3.8 \
     && mamba install -y -n designer -c conda-forge \
-        --threads 16 --retry-delay 3 --retry-attempts 2 \
         numpy scipy matplotlib nibabel dipy
 
 # Install additional Python packages via pip
