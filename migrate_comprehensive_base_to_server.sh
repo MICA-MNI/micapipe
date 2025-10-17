@@ -209,7 +209,7 @@ chmod +x "$BUILD_DIR"/*.sh 2>/dev/null || true
 # Verify critical files are in place
 echo "🔍 Verifying two-stage build setup..."
 STRATEGY_FILES=(
-    "Dockerfile.base"
+    "Dockerfile.mamba-base"
     "Dockerfile.main"
     "build_comprehensive_base_server.sh"
     "build_main_image_server.sh"
