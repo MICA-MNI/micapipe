@@ -11,14 +11,14 @@ echo "📁 Build directory (ON SERVER): $BUILD_DIR"
 echo "🏠 Source code (LOCAL): $HOME_MICAPIPE"
 echo ""
 echo "📦 Two-Stage Strategy:"
-echo "   Stage 1 (Dockerfile.base): Build base with ALL tools (45-90 min, rarely)"
+echo "   Stage 1 (Dockerfile.mamba-base): Build base with ALL tools (45-90 min, rarely)"
 echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
 echo ""
 echo "💡 Simple approach: Pre-downloaded files + build files in SAME directory"
 echo ""# MICApipe Two-Stage Build Strategy - Server Migration Script
 # ============================================================
 # This script migrates micapipe code to server for two-stage builds:
-#   STAGE 1: Build comprehensive base image (Dockerfile.base) - rarely
+#   STAGE 1: Build comprehensive base image (Dockerfile.mamba-base) - rarely
 #   STAGE 2: Build fast main image (Dockerfile.main) - frequently
 # 
 # Copies from: ~/micapipe (local development)
@@ -38,7 +38,7 @@ echo "📁 Build directory: $BUILD_DIR"
 echo "🏠 Source code: $HOME_MICAPIPE"
 echo ""
 echo "📦 Two-Stage Strategy:"
-echo "   Stage 1 (Dockerfile.base): Build base with ALL tools (45-90 min, rarely)"
+echo "   Stage 1 (Dockerfile.mamba-base): Build base with ALL tools (45-90 min, rarely)"
 echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
 echo ""
 echo "� Simple approach: Pre-downloaded files + build files in SAME directory"
@@ -147,8 +147,8 @@ if $SOURCE_CHANGED; then
     echo "📋 Copying two-stage build files to server..."
     
     # Copy two-stage Dockerfiles
-    echo "   Copying Dockerfile.base (Stage 1 - comprehensive base)..."
-    cp "$HOME_MICAPIPE/Dockerfile.base" "$BUILD_DIR/"
+    echo "   Copying Dockerfile.mamba-base (Stage 1 - comprehensive base)..."
+    cp "$HOME_MICAPIPE/Dockerfile.mamba-base" "$BUILD_DIR/"
     
     echo "   Copying Dockerfile.main (Stage 2 - fast micapipe)..."
     cp "$HOME_MICAPIPE/Dockerfile.main" "$BUILD_DIR/"
