@@ -83,7 +83,7 @@ if [[ "$dwi_main" != "DEFAULT" ]]; then
     bids_dwis=("${bids_dwis[@]}")
 fi
 # Manage manual inputs: DWI phase image(s)
-if [[ "$dwi_phase" != "DEFAULT" ]]; then
+if [[ "$dwi_phase" != "DEFAULT" && "$dwi_phase" != "FALSE" ]]; then
     IFS=',' read -ra bids_dwis_phase <<< "$dwi_phase"
     bids_dwis_phase=("${bids_dwis_phase[@]}")
 elif [[ "$dwi_phase" == "FALSE" ]]; then
@@ -174,50 +174,55 @@ b0_refacq=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}'); b0_refacq=
 if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
     if [ ! -f "$dwi_res" ] || [ ! -f "$dwi_dns" ]; then ((N++))
     Info "DWI denoise and concatenation"
-    # Concatenate shells -if only one shell then just convert to mif and rename.
-          for dwi in "${bids_dwis[@]}"; do
+    # Denoise and remove gibbs ringing artifact.
+          for idx in "${!bids_dwis[@]}"; do
+                dwi="${bids_dwis[$idx]}"
                 dwi_nom=$(echo "${dwi##*/}" | awk -F ".nii" '{print $1}')
-                bids_dwi_str=$(echo "$dwi" | awk -F . '{print $1}')
-                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
-                Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
-                Do_cmd mrmath "${tmp}/${dwi_nom}_b0.mif" mean "${tmp}/${dwi_nom}_b0.nii.gz" -axis 3 -nthreads "$threads"
+                bids_dwi_str=$(echo "$dwi" | awk -F "_dwi." '{print $1}')
+                Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}_dwi.json" -fslgrad "${bids_dwi_str}_dwi.bvec" "${bids_dwi_str}_dwi.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
+                # lookup if dwi has phase images
+                if [[ -n "${bids_dwis_phase[$idx]:-}" ]]; then
+                    phase_dwi="${bids_dwis_phase[$idx]}"
+                    phase_nom=$(basename "$phase_dwi" | awk -F ".nii" '{print $1}')
+                    phase_str=$(echo "$phase_dwi" | awk -F "_dwi." '{print $1}')
+                    Do_cmd mrconvert "$phase_dwi" -json_import "${phase_str}_dwi.json" -fslgrad "${phase_str}_dwi.bvec" "${phase_str}_dwi.bval" "${tmp}/${phase_nom}.mif" "${bvalstr}"
+                    Do_cmd designer -denoise -shrinkage frob -algorithm jespersen -phase "${tmp}/${phase_nom}.mif" -degibbs -scratch ${tmp}/designer_proc "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_dn_tmp.mif"
+                    Do_cmd mrconvert "${tmp}/${dwi_nom}_dn_tmp.mif" "${tmp}/${dwi_nom}_dn.mif"  -json_import "${bids_dwi_str}_dwi.json"
+                else
+                    Do_cmd designer -denoise -shrinkage frob -adaptive_patch -rician -degibbs -scratch ${tmp}/designer_proc "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_dn_tmp.mif"
+                    Do_cmd mrconvert "${tmp}/${dwi_nom}_dn_tmp.mif" "${tmp}/${dwi_nom}_dn.mif"  -json_import "${bids_dwi_str}_dwi.json"
+                fi
+                Do_cmd dwiextract "${tmp}/${dwi_nom}_dn.mif" "${tmp}/${dwi_nom}_dn_b0.mif" -bzero
+                Do_cmd mrmath "${tmp}/${dwi_nom}_dn_b0.mif" mean "${tmp}/${dwi_nom}_dn_b0.nii.gz" -axis 3 -nthreads "$threads"
           done
 
-          # Rigid registration between shells
+          # Rigid registration between input images -- if multiple files
           n=$((${#bids_dwis[*]} - 1))
           if [[ ${#bids_dwis[*]} -gt 1 ]]; then
-            b0_ref=${tmp}/$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz
+            b0_ref=${tmp}/$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}')_dn_b0.nii.gz
             for ((i=1; i<=n; i++)); do
                 dwi_nom=$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')
                 bids_dwi_str=$(echo "${bids_dwis[i]}" | awk -F . '{print $1}')
-                b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_b0.nii.gz"
+                b0_nom="${tmp}/$(echo "${bids_dwis[i]##*/}" | awk -F ".nii" '{print $1}')_dn_b0.nii.gz"
                 b0_acq=$(echo "${dwi_nom/${idBIDS}_/}"); b0_acq=$(echo "${b0_acq/_dwi/}")
                 b0mat_str="${tmp}/${idBIDS}_from-${b0_acq}_to-${b0_refacq}${dwi_str_}_mode-image_desc-rigid_"
                 b0mat="${b0mat_str}0GenericAffine.mat"
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
-                mrconvert "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}.nii.gz"
-                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}__Ralign.mif" -force -quiet  "${bvalstr}"
+                mrconvert "${tmp}/${dwi_nom}_dn.mif" "${tmp}/${dwi_nom}_dn.nii.gz"
+                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}_dn.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
+                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_dn__Ralign.mif" -force -quiet  "${bvalstr}"
             done
           fi
 
           Info "Concatenatenating shells"
           dwi_0=$(echo "${bids_dwis[0]##*/}" | awk -F ".nii" '{print $1}')
           if [ "${#bids_dwis[@]}" -eq 1 ]; then
-            cp "${tmp}/${dwi_0}.mif" "$dwi_cat"
+            cp "${tmp}/${dwi_0}_dn.mif" "$dwi_dns"
           else
-            Do_cmd mrcat "${tmp}/${dwi_0}.mif" "${tmp}/*_Ralign.mif" "$dwi_cat" -nthreads "$threads"
+            Do_cmd mrcat "${tmp}/${dwi_0}_dn.mif" "${tmp}/*_dn__Ralign.mif" "$dwi_dns" -nthreads "$threads"
           fi
-
-          # Denoise DWI and calculate residuals
-          Info "DWI MP-PCA denoising and Gibbs ringing correction"
-          dwi_dns_tmp="${tmp}/MP-PCA_dwi.mif"
-          Do_cmd dwidenoise "$dwi_cat" "$dwi_dns_tmp" -nthreads "$threads"
-          mrcalc "$dwi_cat" "$dwi_dns_tmp" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resPCA" -axis 3
-          Do_cmd mrdegibbs "$dwi_dns_tmp" "$dwi_dns" -nthreads "$threads"
-          mrcalc "$dwi_dns_tmp" "$dwi_dns" -subtract - -nthreads "$threads" | mrmath - mean "$dwi_resGibss" -axis 3
           ((Nsteps++))
     else
           Info "Subject ${id} has DWI in mif, denoised and concatenaded"; ((Nsteps++)); ((N++))
@@ -238,7 +243,13 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                 Info "DWI reverse phase encoding processing: $dwi_nom"
                 if [[ -f "${bids_dwi_str}.bvec" ]] && [[ -f "${bids_dwi_str}.bval" ]]; then
                     Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
-                    Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
+                    rpe_dim=$(mrinfo "${tmp}/${dwi_nom}.mif" -ndim)
+                    if [[ "$rpe_dim" -eq 3 ]]; then
+                      Warning "Only on rpe volume was found the script will assumme that the volume is b0!!!!"
+                      Do_cmd cp "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif"
+                    elif [[ "$rpe_dim" -gt 3 ]]; then
+                      Do_cmd dwiextract "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_b0.mif" -bzero
+                    fi
                 else
                     Warning "No bval or bvecs were found the script will assumme that all the volumes are b0s!!!!"
                     Do_cmd mrconvert "$dwi" -json_import "${bids_dwi_str}.json" "${tmp}/${dwi_nom}.mif" "${bvalstr}"
