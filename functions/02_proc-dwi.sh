@@ -187,7 +187,7 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
                     phase_str=$(echo "$phase_dwi" | awk -F "_dwi." '{print $1}')
                     Do_cmd mrconvert "$phase_dwi" -json_import "${phase_str}_dwi.json" -fslgrad "${phase_str}_dwi.bvec" "${phase_str}_dwi.bval" "${tmp}/${phase_nom}.mif" "${bvalstr}"
                     Do_cmd designer -denoise -shrinkage frob -algorithm jespersen -phase "${tmp}/${phase_nom}.mif" -degibbs -scratch ${tmp}/designer_proc "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_dn_tmp.mif"
-                    Do_cmd mrconvert "${tmp}/${dwi_nom}_dn_tmp.mif" "${tmp}/${dwi_nom}_dn.mif"  -json_import "${bids_dwi_str}_dwi.json"
+                    Do_cmd mrconvert "${tmp}/${dwi_nom}_dn_tmp.mif" "${tmp}/${dwi_nom}_dn.mif" -json_import "${bids_dwi_str}_dwi.json"
                 else
                     Do_cmd designer -denoise -shrinkage frob -adaptive_patch -rician -degibbs -scratch ${tmp}/designer_proc "${tmp}/${dwi_nom}.mif" "${tmp}/${dwi_nom}_dn_tmp.mif"
                     Do_cmd mrconvert "${tmp}/${dwi_nom}_dn_tmp.mif" "${tmp}/${dwi_nom}_dn.mif"  -json_import "${bids_dwi_str}_dwi.json"
@@ -210,9 +210,9 @@ if [[ "$dwi_processed" == "FALSE" ]] && [[ ! -f "$dwi_corr" ]]; then
 
                 Info "Registering ${b0_acq} to ${b0_refacq}"
                 Do_cmd antsRegistrationSyN.sh -d 3 -m "$b0_nom" -f "$b0_ref" -o "$b0mat_str" -t r -n "$threads" -p d
-                mrconvert "${tmp}/${dwi_nom}_dn.mif" "${tmp}/${dwi_nom}_dn.nii.gz"
-                Do_cmd antsApplyTransforms -d 3 -e 3 -i "${tmp}/${dwi_nom}_dn.nii.gz" -r "$b0_ref" -t "$b0mat" -o "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -v -u int
-                Do_cmd mrconvert "${tmp}/${dwi_nom}_in-${b0_refacq}.nii.gz" -json_import "${bids_dwi_str}.json" -fslgrad "${bids_dwi_str}.bvec" "${bids_dwi_str}.bval" "${tmp}/${dwi_nom}_dn__Ralign.mif" -force -quiet  "${bvalstr}"
+                Do_cmd ConvertTransformFile 3 "${b0mat}" "${tmp}/ants.txt"
+                Do_cmd transformconvert "${tmp}/ants.txt" itk_import "${tmp}/mrtrix_affine.txt"
+                Do_cmd mrtransform "${tmp}/${dwi_nom}_dn.mif" "${tmp}/${dwi_nom}_dn__Ralign.mif" -linear "${tmp}/mrtrix_affine.txt"
             done
           fi
 
@@ -390,7 +390,7 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       echo -e "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options \" --data_is_shelled --slm=linear --repol\" -nthreads $threads -nocleanup -scratch $tmp -force"
-      dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear --repol" -nthreads "$threads" -nocleanup -scratch "$tmp" -force
+      dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear --repol" -eddyqc_text "${tmp}/eddy_qc" -nthreads "$threads" -nocleanup -scratch "$tmp" -force
       # Step QC
       if [[ ! -f "$dwi_corr" ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else
