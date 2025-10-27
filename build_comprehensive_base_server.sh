@@ -2,7 +2,7 @@
 # ============================================================================
 # COMPREHENSIVE MICAPIPE BASE IMAGE BUILDER (SERVER VERSION)
 # Creates a comprehensive base image with ALL neuroimaging tools using pre-downloaded files
-# Compatible with server environment: /host/cassio/export03/data/enning
+# Compatible with server environment: /export02/data/enning
 # ============================================================================
 
 set -euo pipefail
@@ -13,13 +13,13 @@ echo "====================================================="
 # Verify we're in the right location with pre-downloaded files
 echo "🔍 Verifying server environment..."
 echo "📍 Current directory: $PWD"
-echo "📁 Expected server location: /host/cassio/export03/data/enning/downloads"
+echo "📁 Expected server location: /export02/data/enning/downloads"
 
 # Check if we're in the downloads directory (which is the build directory)
-if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+if [[ "$PWD" != *"/export02/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/downloads"
+    echo "   Expected: /export02/data/enning/downloads"
     echo ""
     echo "💡 This script should be run from the downloads directory where"
     echo "   both source files and pre-downloaded dependencies are located."
@@ -122,7 +122,7 @@ CACHE_FROM_IMAGES=(
 # Build the comprehensive base image with server optimizations
 echo "📦 Building comprehensive base image (this will take significant time)..."
 echo "⏱️  Expected build time: 45-90 minutes (depending on cache and missing files)"
-echo "💾 Using server temporary directory: /host/cassio/export03/data/enning"
+echo "💾 Using server temporary directory: /export02/data/enning"
 echo ""
 
 # Build cache arguments
@@ -137,7 +137,7 @@ if docker build \
     --file Dockerfile.mamba-base \
     --memory=12g \
     --memory-swap=16g \
-    --build-arg CUSTOM_TMPDIR="/host/cassio/export03/data/enning" \
+    --build-arg CUSTOM_TMPDIR="/export02/data/enning" \
     --build-arg DOWNLOADS_DIR="/downloads" \
     "${CACHE_ARGS[@]}" \
     --tag "${FULL_BASE_IMAGE}" \

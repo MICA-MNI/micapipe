@@ -22,10 +22,10 @@ echo ""# MICApipe Two-Stage Build Strategy - Server Migration Script
 #   STAGE 2: Build fast main image (Dockerfile.main) - frequently
 # 
 # Copies from: ~/micapipe (local development)
-# Copies to: /host/cassio/export03/data/enning/downloads (server with space + pre-downloaded files)
+# Copies to: /export02/data/enning/downloads (local fast storage + pre-downloaded files)
 
 # Configuration
-SERVER_BASE_DIR="/host/cassio/export03/data/enning"
+SERVER_BASE_DIR="/export02/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
 BUILD_DIR="$DOWNLOADS_DIR"  # Build in same directory as pre-downloaded files (SIMPLER!)
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"
