@@ -126,8 +126,6 @@ RUN mkdir -p /neurodocker \
 ENV PATH="/opt/miniconda-latest/bin:$PATH"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
-ENV MAMBA_NO_LOW_SPEED_LIMIT=1
-ENV CONDA_SOLVER="libmamba"
 
 # Install Miniconda
 RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
@@ -146,8 +144,6 @@ RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
     && conda config --set channel_priority strict \
     && echo "🔧 Installing mamba with optimizations..." \
     && conda install -y -n base -c conda-forge mamba \
-    && echo "🔧 Setting mamba as solver (if supported)..." \
-    && (conda config --set solver libmamba || echo "⚠️ libmamba solver not available, using classic") \
     && echo "⚡ Configuring mamba for maximum speed..." \
     && conda config --set remote_read_timeout_secs 60 \
     && conda config --set remote_connect_timeout_secs 10 \
