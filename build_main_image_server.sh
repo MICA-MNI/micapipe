@@ -80,7 +80,7 @@ echo ""
 if [[ "$PWD" != *"/export02/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /export02/data/enning/downloads"
+    echo "   echo "   Expected: /export02/data/enning/downloads""
     echo ""
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo
