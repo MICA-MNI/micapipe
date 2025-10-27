@@ -7,11 +7,11 @@ ARG DEBIAN_FRONTEND="noninteractive"
 # COMPREHENSIVE MICAPIPE BASE IMAGE (SERVER VERSION)
 # Includes: System packages + Conda/Mamba + FSL + FreeSurfer + AFNI + ANTs + R
 # Purpose: All neuroimaging tools except MICApipe code for ultra-fast CI builds
-# Compatible with server environment: /host/cassio/export03/data/enning
+# Compatible with server environment: /export02/data/enning
 # ============================================================================
 
 # Build arguments for server environment
-ARG CUSTOM_TMPDIR="/host/cassio/export03/data/enning"
+ARG CUSTOM_TMPDIR="/export02/data/enning"
 ARG DOWNLOADS_DIR="/downloads"
 
 # Copy pre-downloaded dependencies from build context (current directory)
