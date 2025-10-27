@@ -22,12 +22,12 @@ echo ""# MICApipe Two-Stage Build Strategy - Server Migration Script
 #   STAGE 2: Build fast main image (Dockerfile.main) - frequently
 # 
 # Copies from: ~/micapipe (local development)
-# Copies to: /export02/data/enning/downloads (local fast storage + pre-downloaded files)
+# Copies to: /export02/data/enning (local fast storage + pre-downloaded files)
 
 # Configuration
 SERVER_BASE_DIR="/export02/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
-BUILD_DIR="$DOWNLOADS_DIR"  # Build in same directory as pre-downloaded files (SIMPLER!)
+BUILD_DIR="$SERVER_BASE_DIR"  # Build in base directory with pre-downloaded files
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"
 HOME_MICAPIPE="$PWD"  # Use current directory as source
 
@@ -161,6 +161,7 @@ if $SOURCE_CHANGED; then
     echo "   Copying build scripts..."
     cp "$HOME_MICAPIPE/build_comprehensive_base_server.sh" "$BUILD_DIR/"
     cp "$HOME_MICAPIPE/build_main_image_server.sh" "$BUILD_DIR/"
+    cp "$HOME_MICAPIPE/prepare_build_context.sh" "$BUILD_DIR/"
     
     # Copy ONLY necessary directories for Docker build context
     echo "   Copying R_config directory..."
@@ -213,6 +214,7 @@ STRATEGY_FILES=(
     "Dockerfile.main"
     "build_comprehensive_base_server.sh"
     "build_main_image_server.sh"
+    "prepare_build_context.sh"
 )
 
 for file in "${STRATEGY_FILES[@]}"; do
