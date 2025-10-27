@@ -126,6 +126,8 @@ RUN mkdir -p /neurodocker \
 ENV PATH="/opt/miniconda-latest/bin:$PATH"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
+ENV MAMBA_NO_LOW_SPEED_LIMIT=1
+ENV CONDA_SOLVER="libmamba"
 
 # Install Miniconda
 RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
@@ -154,28 +156,70 @@ RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
 # Create optimized micapipe environment
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Using mamba for ultra-fast environment creation..." \
-    && mamba create -y -n micapipe python=3.9 \
-    && echo "🔧 Installing core scientific packages..." \
+    && mamba create -y -n micapipe python=3.9
+
+# Install core scientific packages in smaller chunks to prevent OOM
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        numpy scipy pandas matplotlib seaborn plotly \
-        nibabel scikit-learn scikit-image \
-        dipy==1.4.1 fury==0.8.0 \
-        ipython jupyter tqdm joblib \
-        h5py hdf5 pytables \
-    && echo "🔧 Installing antspy and MRtrix3..." \
+        numpy scipy pandas matplotlib
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 2)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        seaborn plotly nibabel
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 3)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        scikit-learn scikit-image dipy==1.4.1
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        fury==0.8.0 ipython jupyter tqdm joblib h5py hdf5 pytables
+
+# Install antspy and MRtrix3 in separate steps
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing antspy..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        antspy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing MRtrix3..." \
     && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
         --override-channels --strict-channel-priority \
-        antspy mrtrix3==3.0.7 \
-    && echo "🔧 Installing utilities and networking packages..." \
+        mrtrix3==3.0.7
+
+# Install utilities and networking packages in chunks
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        bzip2 ca-certificates curl git openssh \
-        unzip wget xz zip \
-        cryptography paramiko pycryptodome \
-        requests urllib3 \
-        cmake make \
-        gcc_linux-64 gxx_linux-64
+        bzip2 ca-certificates curl git openssh
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 2)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        unzip wget xz zip cryptography
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 3)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        paramiko pycryptodome requests urllib3
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        cmake make gcc_linux-64 gxx_linux-64
 
 # Create designer environment
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \

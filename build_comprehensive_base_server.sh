@@ -133,6 +133,7 @@ done
 
 # Start Docker build with server-specific settings
 if docker build \
+    --no-cache \
     --file Dockerfile.mamba-base \
     --memory=12g \
     --memory-swap=16g \
@@ -177,6 +178,6 @@ else
     echo "   - Docker memory limits"
     echo ""
     echo "💡 To resume build after fixing issues:"
-    echo "   docker build --cache-from ${LATEST_BASE_IMAGE} ..."
+    echo "   docker build --no-cache --cache-from ${LATEST_BASE_IMAGE} ..."
     exit 1
 fi
