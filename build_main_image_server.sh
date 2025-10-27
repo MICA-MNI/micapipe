@@ -10,11 +10,11 @@
 #   - Integrates with pre-installed tools
 #
 # WHEN TO RUN: Every time micapipe code changes (frequently!)
-# WHERE TO RUN: On server at /host/cassio/export03/data/enning/downloads
+# WHERE TO RUN: On server at /export02/data/enning/downloads
 # EXPECTED TIME: 3-5 minutes (95% faster than full build!)
 #
 # USAGE:
-#   cd /host/cassio/export03/data/enning/downloads
+#   cd /export02/data/enning/downloads
 #   ./build_main_image_server.sh [OPTIONS]
 #
 # OPTIONS:
@@ -77,10 +77,10 @@ echo "📦 Registry: $REGISTRY"
 echo ""
 
 # Check we're in the right location
-if [[ "$PWD" != *"/host/cassio/export03/data/enning/downloads"* ]]; then
+if [[ "$PWD" != *"/export02/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   Expected: /host/cassio/export03/data/enning/downloads"
+    echo "   Expected: /export02/data/enning/downloads"
     echo ""
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo
