@@ -182,7 +182,7 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
 # Install antspy and MRtrix3 in separate steps
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing antspy..." \
-    && mamba install -y -n micapipe -c conda-forge \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
         --override-channels --strict-channel-priority \
         antspy
 
