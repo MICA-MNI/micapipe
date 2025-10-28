@@ -53,10 +53,10 @@ RUN mkdir -p /downloads && \
     rm -rf /tmp/build_context && \
     echo "✅ Pre-downloaded files setup complete"
 
-# Install all system packages needed for neuroimaging tools
-RUN echo "Installing comprehensive system packages..." && \
+# Install system packages in smaller chunks to prevent OOM
+# Essential packages
+RUN echo "Installing essential system packages..." && \
     apt-get update && apt-get install -y --no-install-recommends \
-        # Essential packages
         apt-utils \
         build-essential \
         ca-certificates \
@@ -65,14 +65,24 @@ RUN echo "Installing comprehensive system packages..." && \
         lsb-release \
         software-properties-common \
         wget \
-        # Development tools
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Development tools
+RUN echo "Installing development tools..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         git \
         make \
         pkg-config \
         unzip \
         zip \
-        # Graphics and multimedia libraries
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Graphics and multimedia libraries
+RUN echo "Installing graphics libraries..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
         libgl1-mesa-glx \
         libglib2.0-0 \
         libgomp1 \
@@ -84,7 +94,12 @@ RUN echo "Installing comprehensive system packages..." && \
         libxt6 \
         x11-apps \
         xvfb \
-        # Scientific computing dependencies  
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Scientific computing dependencies
+RUN echo "Installing scientific computing packages..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
         bc \
         dc \
         file \
@@ -95,7 +110,12 @@ RUN echo "Installing comprehensive system packages..." && \
         python3 \
         python3-pip \
         tcsh \
-        # Additional dependencies
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Additional dependencies
+RUN echo "Installing additional dependencies..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
         bzip2 \
         locales \
     && apt-get clean \
