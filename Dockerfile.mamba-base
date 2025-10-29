@@ -244,6 +244,18 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && mamba install -y -n designer -c conda-forge \
         numpy scipy matplotlib nibabel dipy
 
+# Install GUI/X11 libraries needed for visualization packages
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing GUI/X11 libraries for visualization..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        xorg-libx11 xorg-libxext xorg-libxrender xorg-libxtst \
+        xorg-libxi xorg-libxrandr xorg-libxfixes xorg-libxcursor \
+        xorg-libxdamage xorg-libxinerama xorg-libxxf86vm \
+        libgl1-mesa-glx libglib2.0-0 libgomp1 libglu1-mesa \
+        libgtk-3-0 libsm6 libxext6 libxrender1 libxt6 \
+        x11-apps xvfb mesa-libgl-devel
+
 # Install additional Python packages via pip
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && conda activate micapipe \
