@@ -2,7 +2,7 @@ name: CI - Micapipe Test
 
 on:
   push:
-    branches: [ master, comprehensive-base-image ]
+    branches: [ master]
   pull_request:
 
 jobs:
