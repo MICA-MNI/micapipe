@@ -222,20 +222,36 @@ fi
 #------------------------------------------------------------------------------#
 ### FLAIR registration to nativepro ###
 if [[ ! -f "$flair_nativepro" ]]; then ((N++))
-    # Register nativepro and flair
-    str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-affine_"
-    Info "Running label based affine registrations"
-    flair_synth="${tmp}/flair_synthsegGM.nii.gz"
-    T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-    Do_cmd mri_synthseg --i "${T1nativepro}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
-    fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
-    fslmaths "${flair_synthseg}" -uthr 42 -thr 42 -bin -mul -39 -add "${flair_synthseg}" "${flair_synth}"
-
-    # Affine from func to t1-nativepro
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$T1_synth" -m "$flair_synth" -o "$str_flair_affine" -t a -n "$threads" -p d
+    # Register nativepro and flair with LAMAReg
+    str_flair_affine="${dir_warp}/${idBIDS}_from-flair_to-nativepro_mode-image_desc-LAMAReg_"
+    Info "Running LAMAReg registration"
+    
+    # LAMAReg registration with robust two-stage approach
+    flair_SyN_output="${str_flair_affine}Warped.nii.gz"
+    flair_fixed_parc="${str_flair_affine}_fixed_parc.nii.gz"
+    flair_moving_parc="${str_flair_affine}_moving_parc.nii.gz"
+    flair_registered_parc="${str_flair_affine}_registered_parc.nii.gz"
+    flair_qc_csv="${str_flair_affine}_dice_scores.csv"
+    flair_affine_mat="${str_flair_affine}0GenericAffine.mat"
+    flair_warpfield="${str_flair_affine}1Warp.nii.gz"
+    flair_inv_warpfield="${str_flair_affine}1InverseWarp.nii.gz"
+    
+    Do_cmd lamareg register \
+      --moving "${flair_preproc}" \
+      --fixed "${T1nativepro}" \
+      --output "$flair_SyN_output" \
+      --moving-parc "$flair_moving_parc" \
+      --fixed-parc "$flair_fixed_parc" \
+      --registered-parc "$flair_registered_parc" \
+      --affine "$flair_affine_mat" \
+      --warpfield "$flair_warpfield" \
+      --inverse-warpfield "$flair_inv_warpfield" \
+      --qc-csv "$flair_qc_csv" \
+      --synthseg-threads "$threads" \
+      --ants-threads "$threads"
 
     # Apply transformations
-    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$str_flair_affine"0GenericAffine.mat -o "$flair_nativepro" -v -u float
+    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$flair_affine_mat" -o "$flair_nativepro" -v -u float
     ((Nsteps++))
 else
     Info "Subject ${id} T2-FLAIR is registered to nativepro"; ((Nsteps++)); ((N++))

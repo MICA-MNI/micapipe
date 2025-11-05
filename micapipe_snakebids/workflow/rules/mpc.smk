@@ -23,28 +23,18 @@ rule proc_mpc:
             config["parameters"]["proc_mpc"]["microstructural_img"],
             "microstructural_img"
         ),
-        microstructural_reg = process_optional_flags(
-            config["parameters"]["proc_mpc"]["microstructural_reg"],
-            "microstructural_reg"
-        ),
         mpc_acq = process_optional_flags(
             config["parameters"]["proc_mpc"]["mpc_acq"],
             "mpc_acq"
         ),
 
         # Boolean flags that only appear if set to TRUE
-        regSynth = process_flags(
-            config["parameters"]["proc_mpc"]["regSynth"], "regSynth"
-        ),
-        reg_nonlinear = process_flags(
-            config["parameters"]["proc_mpc"]["reg_nonlinear"], "reg_nonlinear"
-        ),
     threads: config.get("threads", 4)
     shell:
         """
         {command} -sub sub-{wildcards.subject} -out {output_args} -bids {bids_args} -MPC \
             -threads {threads} -ses {wildcards.session} \
-            {params.microstructural_img} {params.microstructural_reg} \
-            {params.mpc_acq} {params.regSynth} {params.reg_nonlinear}
+            {params.microstructural_img} \
+            {params.mpc_acq}
         """
 

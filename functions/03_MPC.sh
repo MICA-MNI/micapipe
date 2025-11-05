@@ -24,11 +24,8 @@ nocleanup=$5
 threads=$6
 tmpDir=$7
 input_im=$8
-mpc_reg=$9
-mpc_str=${10}
-synth_reg=${11}
-reg_nonlinear=${12}
-PROC=${13}
+mpc_str=$9
+PROC=${12}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
@@ -85,8 +82,6 @@ Note "Saving temporal dir : " "${nocleanup}"
 Note "Parallel processing : " "${threads} threads"
 Note "tmp dir   : " "${tmpDir}"
 Note "recon     : " "${recon}"
-Note "synth_reg : " "${synth_reg}"
-Note "reg_nonlinear : " "${reg_nonlinear}"
 
 #	Timer
 aloita=$(date +%s)
@@ -123,25 +118,17 @@ mat_qMRI2fs_xfm="${str_qMRI2fs_xfm}0GenericAffine.mat"
 SyN_qMRI2fs_warp="${str_qMRI2fs_xfm}1Warp.nii.gz"
 SyN_qMRI2fs_Invwarp="${str_qMRI2fs_xfm}1InverseWarp.nii.gz"
 
-# Apply transformations
-if [[ ${reg_nonlinear}  == "TRUE" ]]; then
-    # SyN from T1_nativepro to t1-nativepro
-    reg="s"
-    transformsInv="-t [${mat_qMRI2fs_xfm},1] -t ${SyN_qMRI2fs_Invwarp}" # T1_fsnative to qMRI
-    transforms="-t ${SyN_qMRI2fs_warp} -t ${mat_qMRI2fs_xfm}"  # qMRI to T1_fsnative T1_fsnative to qMRI
-else
-    reg="a"
-    transformsInv="-t [${mat_qMRI2fs_xfm},1]"  # T1_fsnative to qMRI
-    transforms="-t ${mat_qMRI2fs_xfm}"   # qMRI to T1_fsnative
-fi
+# Apply transformations - always nonlinear with LAMAReg
+reg="s"
+transformsInv="-t [${mat_qMRI2fs_xfm},1] -t ${SyN_qMRI2fs_Invwarp}" # T1_fsnative to qMRI
+transforms="-t ${SyN_qMRI2fs_warp} -t ${mat_qMRI2fs_xfm}"  # qMRI to T1_fsnative
 
-synthseg_native() {
-  mri_img=$1
-  mri_str=$2
-  mri_synth="${tmp}/${mri_str}_synthsegGM.nii.gz"
-  Do_cmd mri_synthseg --i "${mri_img}" --o "${tmp}/${mri_str}_synthseg.nii.gz" --robust --threads "$threads" --cpu
-  Do_cmd fslmaths "${tmp}/${mri_str}_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/${mri_str}_synthseg.nii.gz" "${mri_synth}"
-}
+# LAMAReg registration with robust two-stage approach
+qMRI_SyN_output="${str_qMRI2fs_xfm}Warped.nii.gz"
+qMRI_fixed_parc="${str_qMRI2fs_xfm}_fixed_parc.nii.gz"
+qMRI_moving_parc="${str_qMRI2fs_xfm}_moving_parc.nii.gz"
+qMRI_registered_parc="${str_qMRI2fs_xfm}_registered_parc.nii.gz"
+qMRI_qc_csv="${str_qMRI2fs_xfm}_dice_scores.csv"
 
 # Calculate the registrations
 if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
@@ -150,17 +137,22 @@ if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2fs_xfm" ]]; then ((N++))
 
     # copy orig.nii.gz from fsurfer to tmp
     Do_cmd mrconvert "$T1surf" "$T1_in_fs"
-    # Registration with synthseg
-    if [[ "${synth_reg}" == "TRUE" ]]; then
-      Info "Running label based affine registrations"
-      synthseg_native "${T1_in_fs}" "T1w"
-      synthseg_native "${regImage}" "qT1"
-      img_fixed="${tmp}/T1w_synthsegGM.nii.gz"
-      img_moving="${tmp}/qT1_synthsegGM.nii.gz"
-    fi
-
-    # Registrations from t1-fsnative to qMRI
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$img_fixed" -m "$img_moving" -o "$str_qMRI2fs_xfm" -t "${reg}" -n "$threads" -p d -i ["${img_fixed}","${img_moving}",0]
+    # Registration with LAMAReg
+    Info "Running LAMAReg registration"
+    
+    Do_cmd lamareg register \
+      --moving "${regImage}" \
+      --fixed "${T1_in_fs}" \
+      --output "$qMRI_SyN_output" \
+      --moving-parc "$qMRI_moving_parc" \
+      --fixed-parc "$qMRI_fixed_parc" \
+      --registered-parc "$qMRI_registered_parc" \
+      --affine "${mat_qMRI2fs_xfm}" \
+      --warpfield "${SyN_qMRI2fs_warp}" \
+      --inverse-warpfield "${SyN_qMRI2fs_Invwarp}" \
+      --qc-csv "$qMRI_qc_csv" \
+      --synthseg-threads "$threads" \
+      --ants-threads "$threads"
 
     # Check if transformations file exist
     if [ ! -f "${mat_qMRI2fs_xfm}" ]; then Error "Registration between ${mpc_str} and T1nativepro FAILED. Check you inputs!"; cleanup "$tmp" "$nocleanup" "$here"; exit; fi
@@ -218,7 +210,7 @@ if [[ ! -f "${MPC_fsLR5k}" ]]; then ((N++))
             # Apply transformation to register surface to nativepro
             Do_cmd wb_command -surface-apply-affine "${surf_tmp}" "${wb_affine}" "${out_surf}"
             # Apply Non-linear Warpfield to register surface to nativepro
-            if [[ ${reg_nonlinear}  == "TRUE" ]]; then Do_cmd wb_command -surface-apply-warpfield "${out_surf}" "${SyN_qMRI2fs_Invwarp}" "${out_surf}"; fi
+            Do_cmd wb_command -surface-apply-warpfield "${out_surf}" "${SyN_qMRI2fs_Invwarp}" "${out_surf}"
             # Sample intensity and resample to other surfaces
             map_to-surfaces "${microImage}" "${out_surf}" "${out_feat}" "${HEMI}" "MPC-${n}" "${outDir}"
             # remove tmp surfaces

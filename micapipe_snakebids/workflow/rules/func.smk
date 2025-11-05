@@ -48,7 +48,6 @@ rule proc_func:
         NSR=process_flags(config["parameters"]["proc_func"]["NSR"], "NSR"),
         GSR=process_flags(config["parameters"]["proc_func"]["GSR"], "GSR"),
         noFIX=process_flags(config["parameters"]["proc_func"]["noFIX"], "noFIX"),
-        regAffine=process_flags(config["parameters"]["proc_func"]["regAffine"], "regAffine"),
         dropTR=process_flags(config["parameters"]["proc_func"]["dropTR"], "dropTR"),
         noFC=process_flags(config["parameters"]["proc_func"]["noFC"], "noFC"),
 
@@ -58,6 +57,6 @@ rule proc_func:
         {command} -sub sub-{wildcards.subject} -out {output_args} -bids {bids_args} -proc_func \
             -threads {threads} -ses {wildcards.session} -mainScanStr {params.mainScanStr} -func_pe {params.func_pe} \
             -func_rpe {params.func_rpe} {params.mainScanRun} {params.phaseReversalRun} {params.topupConfig} \
-            {params.icafixTraining} {params.smoothWithWB} {params.NSR} {params.GSR} {params.noFIX} {params.regAffine} \
+            {params.icafixTraining} {params.smoothWithWB} {params.NSR} {params.GSR} {params.noFIX} \
             {params.dropTR} {params.noFC} 
         """

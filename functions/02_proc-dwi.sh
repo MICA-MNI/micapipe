@@ -26,13 +26,11 @@ dwi_main=$8
 dwi_rpe=$9
 dwi_processed=${10}
 rpe_all=${11}
-regAffine=${12}
-dwi_str=${13}
-b0thr=${14}
-bvalscale=${15}
-synth_reg=${16}
-dwi_upsample=${17}
-PROC=${18}
+dwi_str=${12}
+b0thr=${13}
+bvalscale=${14}
+dwi_upsample=${15}
+PROC=${17}
 here=$(pwd)
 
 #------------------------------------------------------------------------------#
@@ -54,10 +52,8 @@ Note "dwi_main      :" "$dwi_main"
 Note "dwi_rpe       :" "$dwi_rpe"
 Note "rpe_all       :" "$rpe_all"
 Note "dwi_acq       :" "$dwi_str"
-Note "Affine only   :" "$regAffine"
 Note "B0 threshold  :" "$b0thr"
 Note "bvalue scaling:" "$bvalscale"
-Note "synth_reg     :" "${synth_reg}"
 Note "dwi_upsample  :" "${dwi_upsample}"
 Note "Processing    :" "$PROC"
 Note "Saving temporal dir     :" "$nocleanup"
@@ -500,35 +496,34 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     T1nativepro_in_dwi_brain="${tmp}/${idBIDS}_space-dwi_desc-T1w_nativepro-brain.nii.gz"
     Do_cmd fslmaths "$T1nativepro_in_dwi" -mul "$dwi_mask" "$T1nativepro_in_dwi_brain"
 
-    if [[ ${regAffine}  == "FALSE" ]]; then
-        Info "Non-linear registration from T1w_dwi-space to DWI"
-        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
-        if [[ "${synth_reg}" == "TRUE" ]]; then
-          Info "Running label based non linear registrations"
-          b0_synth="${tmp}/b0_synthsegGM.nii.gz"
-          T1_synth="${tmp}/T1w_synthsegGM.nii.gz"
-          Do_cmd mri_synthseg --i "${T1nativepro_in_dwi}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads "$threads" --cpu
-          Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
-
-          Do_cmd mri_synthseg --i "$dwi_b0" --o "${tmp}/b0_synthseg.nii.gz" --robust --threads "$threads" --cpu
-          Do_cmd fslmaths "${tmp}/b0_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/b0_synthseg.nii.gz" "${b0_synth}"
-
-          # Affine from func to t1-nativepro
-          Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1_synth" -f "$b0_synth" -o "$dwi_SyN_str" -t s -n "$threads"
-        else
-          Info "Running volume based affine registrations"
-          Do_cmd antsRegistrationSyN.sh -d 3 -m "$T1nativepro_in_dwi_brain" -f "$fod" -o "$dwi_SyN_str" -t s -n "$threads"
-        fi
-        export reg="Affine+SyN"
-        trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
-        trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro
-        if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
-
-    elif [[ ${regAffine}  == "TRUE" ]]; then
-        Info "Only affine registration from T1w_dwi-space to DWI"; ((Nsteps++))
-        T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_Affine.nii.gz"
-        trans_T12dwi="-t [${mat_dwi_affine},1]"
-        trans_dwi2T1="-t ${mat_dwi_affine}"
+    Info "Non-linear registration from T1w_dwi-space to DWI with LAMAReg"
+    T1nativepro_in_dwi_NL="${proc_dwi}/${idBIDS}_space-dwi_desc-T1w_nativepro_SyN.nii.gz"
+    
+    # LAMAReg registration with robust two-stage approach
+    dwi_SyN_output="${dwi_SyN_str}Warped.nii.gz"
+    dwi_fixed_parc="${dwi_SyN_str}_fixed_parc.nii.gz"
+    dwi_moving_parc="${dwi_SyN_str}_moving_parc.nii.gz"
+    dwi_registered_parc="${dwi_SyN_str}_registered_parc.nii.gz"
+    dwi_qc_csv="${dwi_SyN_str}_dice_scores.csv"
+    
+    Do_cmd lamareg register \
+      --moving "${T1nativepro_in_dwi_brain}" \
+      --fixed "${fod}" \
+      --output "$dwi_SyN_output" \
+      --moving-parc "$dwi_moving_parc" \
+      --fixed-parc "$dwi_fixed_parc" \
+      --registered-parc "$dwi_registered_parc" \
+      --affine "${dwi_SyN_affine}" \
+      --warpfield "${dwi_SyN_warp}" \
+      --inverse-warpfield "${dwi_SyN_Invwarp}" \
+      --qc-csv "$dwi_qc_csv" \
+      --synthseg-threads "$threads" \
+      --ants-threads "$threads"
+    
+    export reg="LAMAreg"
+    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
+    trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro
+    if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
     fi
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"
