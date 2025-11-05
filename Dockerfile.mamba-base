@@ -179,33 +179,27 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        numpy scipy pandas matplotlib
+        numpy=1.21.5 scipy pandas=1.4.4 matplotlib=3.4.3
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 2)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        seaborn plotly nibabel
+        seaborn plotly nibabel=4.0.2 pillow packaging
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 3)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        scikit-learn scikit-image dipy==1.4.1
+        scikit-learn scikit-image scikit-fmm nilearn astropy dipy==1.4.1
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 4)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        fury==0.8.0 ipython jupyter tqdm joblib h5py hdf5 pytables
+        ipython jupyter tqdm joblib h5py hdf5 pytables
 
-# Install antspy and MRtrix3 in separate steps
-RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
-    && echo "🔧 Installing antspy..." \
-    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
-        --override-channels --strict-channel-priority \
-        antspy
-
+# Install MRtrix3 separately
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing MRtrix3..." \
     && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
@@ -217,19 +211,19 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        bzip2 ca-certificates curl git openssh
+        bzip2 ca-certificates curl git openssh aiohttp requests
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 2)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        unzip wget xz zip cryptography
+        unzip wget xz zip cryptography attrs click pyyaml python-dateutil pytz
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 3)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        paramiko pycryptodome requests urllib3
+        lxml paramiko pycryptodome urllib3
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 4)..." \
@@ -260,9 +254,13 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && conda activate micapipe \
     && pip install --no-cache-dir \
-        vtk \
+        vtk==9.2.2 \
         pyvista \
         fury==0.8.0 \
+        antspyx \
+        brainspace==0.1.10 \
+        tedana==0.0.12 \
+        duecredit \
         git+https://github.com/MICA-MNI/LAMAReg.git \
         git+https://github.com/MICA-MNI/ENIGMA.git
 

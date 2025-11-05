@@ -38,16 +38,13 @@ dependencies:
   # MRtrix3 (frozen version)
   - mrtrix3=3.0.7
   
-  # ANTsPy from conda (NOT pip - pip version doesn't have wheels)
-  - antspy
-  - antspyx
-  
   # Pip packages
   - pip
   - pip:
     - vtk==9.2.2
     - argparse==1.1
     - brainspace==0.1.10
+    - antspyx  # ANTsPy no longer available in conda-forge, install via pip
     - tedana==0.0.12
     - duecredit
     - pyhanko==0.17.2
