@@ -25,7 +25,7 @@ threads=$6
 tmpDir=$7
 input_im=$8
 mpc_str=$9
-PROC=${12}
+PROC=${10}
 export OMP_NUM_THREADS=$threads
 here=$(pwd)
 
