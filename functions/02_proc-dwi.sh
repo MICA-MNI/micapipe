@@ -505,6 +505,8 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
     dwi_moving_parc="${dwi_SyN_str}_moving_parc.nii.gz"
     dwi_registered_parc="${dwi_SyN_str}_registered_parc.nii.gz"
     dwi_qc_csv="${dwi_SyN_str}_dice_scores.csv"
+    dwi_SyN_warp2="${dwi_SyN_str}2Warp.nii.gz"
+    dwi_SyN_Invwarp2="${dwi_SyN_str}2InverseWarp.nii.gz"
     
     Do_cmd lamareg register \
       --moving "${T1nativepro_in_dwi_brain}" \
@@ -516,13 +518,15 @@ if [[ ! -f "$dwi_SyN_warp" ]] || [[ ! -f "$dwi_5tt" ]]; then N=$((N + 2))
       --affine "${dwi_SyN_affine}" \
       --warpfield "${dwi_SyN_warp}" \
       --inverse-warpfield "${dwi_SyN_Invwarp}" \
+      --secondary-warpfield "${dwi_SyN_warp2}" \
+      --inverse-secondary-warpfield "${dwi_SyN_Invwarp2}" \
       --qc-csv "$dwi_qc_csv" \
       --synthseg-threads "$threads" \
       --ants-threads "$threads"
     
     export reg="LAMAReg"
-    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
-    trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp}"  # DWI to T1nativepro
+    trans_T12dwi="-t ${dwi_SyN_warp2} -t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]" # T1nativepro to DWI
+    trans_dwi2T1="-t ${mat_dwi_affine} -t [${dwi_SyN_affine},1] -t ${dwi_SyN_Invwarp} -t ${dwi_SyN_Invwarp2}"  # DWI to T1nativepro
     if [[ -f "$dwi_SyN_warp" ]]; then ((Nsteps++)); fi
 
     Info "Registering T1w-nativepro and 5TT to DWI-b0 space, and DWI-b0 to T1w-nativepro"

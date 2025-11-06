@@ -556,8 +556,8 @@ SyN_func_warp="${str_func_SyN}1Warp.nii.gz"
 SyN_func_Invwarp="${str_func_SyN}1InverseWarp.nii.gz"
 # Always use nonlinear registration with LAMAReg
 export reg="LAMAreg"
-transformsInv="-t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
-transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp}"  # func to T1nativepro
+transformsInv="-t ${SyN_func_warp2} -t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
+transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp} -t ${SyN_func_Invwarp2}"  # func to T1nativepro
 xfmat="-t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
 
 # Registration to native pro
@@ -575,6 +575,8 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
     func_moving_parc="${str_func_affine}_moving_parc.nii.gz"
     func_registered_parc="${str_func_affine}_registered_parc.nii.gz"
     func_qc_csv="${str_func_affine}_dice_scores.csv"
+    SyN_func_warp2="${str_func_affine}2Warp.nii.gz"
+    SyN_func_Invwarp2="${str_func_affine}2InverseWarp.nii.gz"
     
     Do_cmd lamareg register \
       --moving "${fmri_brain}" \
@@ -586,6 +588,8 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
       --affine "${SyN_func_affine}" \
       --warpfield "${SyN_func_warp}" \
       --inverse-warpfield "${SyN_func_Invwarp}" \
+      --secondary-warpfield "${SyN_func_warp2}" \
+      --inverse-secondary-warpfield "${SyN_func_Invwarp2}" \
       --qc-csv "$func_qc_csv" \
       --synthseg-threads "$threads" \
       --ants-threads "$threads"

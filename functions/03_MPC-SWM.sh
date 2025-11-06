@@ -114,11 +114,13 @@ mat_qMRI2np_xfm="${str_qMRI2np_xfm}0GenericAffine.mat"
 # SyN_transformations
 SyN_qMRI2np_warp="${str_qMRI2np_xfm}1Warp.nii.gz"
 SyN_qMRI2np_Invwarp="${str_qMRI2np_xfm}1InverseWarp.nii.gz"
+SyN_qMRI2np_warp2="${str_qMRI2np_xfm}2Warp.nii.gz"
+SyN_qMRI2np_Invwarp2="${str_qMRI2np_xfm}2InverseWarp.nii.gz"
 
 # Apply transformations - always nonlinear with LAMAReg
 reg="s"
-transformsInv="-t [${mat_qMRI2np_xfm},1] -t ${SyN_qMRI2np_Invwarp}" # T1nativepro to qMRI
-transforms="-t ${SyN_qMRI2np_warp} -t ${mat_qMRI2np_xfm}"  # qMRI to T1nativepro
+transformsInv="-t [${mat_qMRI2np_xfm},1] -t ${SyN_qMRI2np_Invwarp} -t ${SyN_qMRI2np_Invwarp2}" # T1nativepro to qMRI
+transforms="-t ${SyN_qMRI2np_warp2} -t ${SyN_qMRI2np_warp} -t ${mat_qMRI2np_xfm}"  # qMRI to T1nativepro
 
 # LAMAReg registration with robust two-stage approach
 qMRI_SWM_output="${str_qMRI2np_xfm}Warped.nii.gz"
@@ -145,6 +147,8 @@ if [[ ! -f "$qMRI_warped" ]] || [[ ! -f "$mat_qMRI2np_xfm" ]]; then ((N++))
       --affine "${mat_qMRI2np_xfm}" \
       --warpfield "${SyN_qMRI2np_warp}" \
       --inverse-warpfield "${SyN_qMRI2np_Invwarp}" \
+      --secondary-warpfield "${SyN_qMRI2np_warp2}" \
+      --inverse-secondary-warpfield "${SyN_qMRI2np_Invwarp2}" \
       --qc-csv "$qMRI_qc_csv" \
       --synthseg-threads "$threads" \
       --ants-threads "$threads"

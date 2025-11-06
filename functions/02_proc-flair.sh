@@ -235,6 +235,8 @@ if [[ ! -f "$flair_nativepro" ]]; then ((N++))
     flair_affine_mat="${str_flair_affine}0GenericAffine.mat"
     flair_warpfield="${str_flair_affine}1Warp.nii.gz"
     flair_inv_warpfield="${str_flair_affine}1InverseWarp.nii.gz"
+    flair_warpfield2="${str_flair_affine}2Warp.nii.gz"
+    flair_inv_warpfield2="${str_flair_affine}2InverseWarp.nii.gz"
     
     Do_cmd lamareg register \
       --moving "${flair_preproc}" \
@@ -246,12 +248,14 @@ if [[ ! -f "$flair_nativepro" ]]; then ((N++))
       --affine "$flair_affine_mat" \
       --warpfield "$flair_warpfield" \
       --inverse-warpfield "$flair_inv_warpfield" \
+      --secondary-warpfield "$flair_warpfield2" \
+      --inverse-secondary-warpfield "$flair_inv_warpfield2" \
       --qc-csv "$flair_qc_csv" \
       --synthseg-threads "$threads" \
       --ants-threads "$threads"
 
-    # Apply transformations
-    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$flair_affine_mat" -o "$flair_nativepro" -v -u float
+    # Apply transformations with both warpfields
+    Do_cmd antsApplyTransforms -d 3 -i "$flair_preproc" -r "$T1nativepro_brain" -t "$flair_warpfield2" -t "$flair_warpfield" -t "$flair_affine_mat" -o "$flair_nativepro" -v -u float
     ((Nsteps++))
 else
     Info "Subject ${id} T2-FLAIR is registered to nativepro"; ((Nsteps++)); ((N++))
@@ -259,7 +263,7 @@ fi
 
 # Write json file
 json_nativepro_flair "$flair_nativepro" \
-    "antsApplyTransforms -d 3 -i ${flair_preproc} -r ${T1nativepro_brain} -t ${str_flair_affine}0GenericAffine.mat -o ${flair_nativepro} -v -u float" \
+    "antsApplyTransforms -d 3 -i ${flair_preproc} -r ${T1nativepro_brain} -t ${str_flair_affine}2Warp.nii.gz -t ${str_flair_affine}1Warp.nii.gz -t ${str_flair_affine}0GenericAffine.mat -o ${flair_nativepro} -v -u float" \
     "$flair_json"
 
 #------------------------------------------------------------------------------#
