@@ -3,16 +3,7 @@ analysis_levels:
   - participant
 
 # mapping from analysis_level to set of target rules or files
-targets_    # Boolea    sesAnat: "FALSE"             # -sesAnat <str>
-    dropTR: "FALSE"              # -dropTR
-    noFC: "FALSE"               # -noFCags
-    smoothWithWB: "FALSE"        # -smoothWithWB TODO: dont exist in the script
-    NSR: "FALSE"                 # -NSR
-    GSR: "FALSE"                 # -GSR
-    noFIX: "FALSE"               # -noFIX
-    sesAnat: "FALSE"             # -sesAnat <str>
-    dropTR: "FALSE"              # -dropTR
-    noFC: "FALSE"               # -noFCis_level:
+targets_by_analysis_level:
   participant:
     - "all" # if '', then the first rule is run
 
