@@ -47,13 +47,18 @@ fi
 echo ""
 echo "Step 2: Functional MRI Test Data"
 echo "-----------------------------------"
-# Note: This HCP subject has no functional data in derivatives
-echo "  ⚠ No functional data available for this subject"
-echo "  ⚠ Functional test will be skipped"
+# For functional test - need func brain and T1 nativepro
+# HCP data has nested directory structure
+FUNC_BRAIN=$(find ${SOURCE}/func -name "*_space-func_desc-*_brain.nii.gz" 2>/dev/null | head -1)
+if [ -n "$FUNC_BRAIN" ] && [ -f "$FUNC_BRAIN" ]; then
+    echo "  ✓ Found functional MRI brain"
+    cp "$FUNC_BRAIN" "${TEST_DIR}/func/func_brain.nii.gz"
+else
+    echo "  ✗ Missing: Functional MRI brain"
+fi
 
-# Copy T1 nativepro anyway for consistency
 if [ -f "${SOURCE}/anat/${SUB}_space-nativepro_T1w.nii.gz" ]; then
-    echo "  ✓ Found T1 nativepro (copied for reference)"
+    echo "  ✓ Found T1 nativepro"
     cp "${SOURCE}/anat/${SUB}_space-nativepro_T1w.nii.gz" \
        "${TEST_DIR}/func/T1_nativepro.nii.gz"
 else

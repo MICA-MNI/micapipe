@@ -17,7 +17,7 @@ ls -1 ${SOURCE}/dwi/*.nii.gz 2>/dev/null | head -20
 echo ""
 echo "Functional Directory Files:"
 echo "-------------------"
-ls -1 ${SOURCE}/func/*.nii.gz 2>/dev/null | head -20
+find ${SOURCE}/func -name "*.nii.gz" 2>/dev/null | head -20
 
 echo ""
 echo "Anat Directory Files:"
