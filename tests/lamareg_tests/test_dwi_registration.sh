@@ -241,8 +241,16 @@ test_lamareg_registration() {
     log "LAMAReg command syntax validated"
     test_result "LAMAReg command syntax" "PASS" ""
     
-    # If actual test data exists, run the command (commented out for safety)
-    # eval "$lamareg_cmd" 2>&1 | tee -a "$LOG_FILE"
+    # Run the actual LAMAReg command
+    log "Executing LAMAReg registration (this may take 10-15 minutes)..."
+    eval "$lamareg_cmd" 2>&1 | tee -a "$LOG_FILE"
+    
+    if [ $? -eq 0 ]; then
+        test_result "LAMAReg execution" "PASS" ""
+    else
+        test_result "LAMAReg execution" "FAIL" "Registration failed"
+        return 1
+    fi
     
     return 0
 }

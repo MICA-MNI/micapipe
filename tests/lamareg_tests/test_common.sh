@@ -198,6 +198,58 @@ check_required_tools() {
     return 0
 }
 
+# Function to execute LAMAReg registration
+execute_lamareg() {
+    local moving_img="$1"
+    local fixed_img="$2"
+    local output_prefix="$3"
+    
+    log "Executing LAMAReg registration (this may take 10-15 minutes on CPU)..."
+    log "Moving: $(basename $moving_img)"
+    log "Fixed: $(basename $fixed_img)"
+    
+    lamareg register \
+      --moving "$moving_img" \
+      --fixed "$fixed_img" \
+      --output "${WARPED}" \
+      --moving-parc "${MOVING_PARC}" \
+      --fixed-parc "${FIXED_PARC}" \
+      --registered-parc "${REG_PARC}" \
+      --affine "${AFFINE}" \
+      --warpfield "${WARP1}" \
+      --inverse-warpfield "${INVWARP1}" \
+      --secondary-warpfield "${WARP2}" \
+      --inverse-secondary-warpfield "${INVWARP2}" \
+      --qc-csv "${QC_CSV}" \
+      --synthseg-threads 4 \
+      --ants-threads 8 2>&1 | tee -a "$LOG_FILE"
+    
+    local exit_code=${PIPESTATUS[0]}
+    
+    if [ $exit_code -eq 0 ]; then
+        test_result "LAMAReg execution" "PASS" ""
+        return 0
+    else
+        test_result "LAMAReg execution" "FAIL" "Registration failed with exit code $exit_code"
+        return 1
+    fi
+}
+
+# Function to setup output paths for LAMAReg
+setup_output_paths() {
+    local prefix="$1"
+    AFFINE="${prefix}0GenericAffine.mat"
+    WARP1="${prefix}1Warp.nii.gz"
+    INVWARP1="${prefix}1InverseWarp.nii.gz"
+    WARP2="${prefix}2Warp.nii.gz"
+    INVWARP2="${prefix}2InverseWarp.nii.gz"
+    MOVING_PARC="${prefix}_moving_parc.nii.gz"
+    FIXED_PARC="${prefix}_fixed_parc.nii.gz"
+    REG_PARC="${prefix}_registered_parc.nii.gz"
+    QC_CSV="${prefix}_dice_scores.csv"
+    WARPED="${prefix}Warped.nii.gz"
+}
+
 # Function to validate all output files
 validate_outputs() {
     local prefix="$1"

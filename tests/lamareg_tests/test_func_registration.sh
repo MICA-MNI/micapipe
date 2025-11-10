@@ -23,30 +23,13 @@ run_lamareg_test() {
     local fixed_img="$TEST_DATA_DIR/$FIXED_IMG_NAME"
     local output_prefix="$OUTPUT_DIR/$OUTPUT_PREFIX"
     
-    validate_inputs "$moving_img" "$fixed_img"
+    validate_inputs "$moving_img" "$fixed_img" || return 1
     
     # Define output paths
     setup_output_paths "$output_prefix"
     
-    # LAMAReg command
-    log "LAMAReg command for functional MRI registration:"
-    echo "lamareg register \\" | tee -a "$LOG_FILE"
-    echo "  --moving \"$moving_img\" \\" | tee -a "$LOG_FILE"
-    echo "  --fixed \"$fixed_img\" \\" | tee -a "$LOG_FILE"
-    echo "  --output \"$WARPED\" \\" | tee -a "$LOG_FILE"
-    echo "  --moving-parc \"$MOVING_PARC\" \\" | tee -a "$LOG_FILE"
-    echo "  --fixed-parc \"$FIXED_PARC\" \\" | tee -a "$LOG_FILE"
-    echo "  --registered-parc \"$REG_PARC\" \\" | tee -a "$LOG_FILE"
-    echo "  --affine \"$AFFINE\" \\" | tee -a "$LOG_FILE"
-    echo "  --warpfield \"$WARP1\" \\" | tee -a "$LOG_FILE"
-    echo "  --inverse-warpfield \"$INVWARP1\" \\" | tee -a "$LOG_FILE"
-    echo "  --secondary-warpfield \"$WARP2\" \\" | tee -a "$LOG_FILE"
-    echo "  --inverse-secondary-warpfield \"$INVWARP2\" \\" | tee -a "$LOG_FILE"
-    echo "  --qc-csv \"$QC_CSV\" \\" | tee -a "$LOG_FILE"
-    echo "  --synthseg-threads 4 \\" | tee -a "$LOG_FILE"
-    echo "  --ants-threads 8" | tee -a "$LOG_FILE"
-    
-    test_result "LAMAReg command syntax" "PASS" ""
+    # Execute LAMAReg registration
+    execute_lamareg "$moving_img" "$fixed_img" "$output_prefix"
     
     # Test transformation chain
     log "Forward transform: -t warp2 -t warp1 -t affine"

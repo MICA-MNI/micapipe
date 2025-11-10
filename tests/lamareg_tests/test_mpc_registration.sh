@@ -19,11 +19,13 @@ run_lamareg_test() {
     local fixed_img="$TEST_DATA_DIR/$FIXED_IMG_NAME"
     local output_prefix="$OUTPUT_DIR/$OUTPUT_PREFIX"
     
-    validate_inputs "$moving_img" "$fixed_img"
+    validate_inputs "$moving_img" "$fixed_img" || return 1
     setup_output_paths "$output_prefix"
     
-    log "LAMAReg MPC registration command validated"
-    test_result "LAMAReg command syntax" "PASS" ""
+    # Execute LAMAReg registration
+    execute_lamareg "$moving_img" "$fixed_img" "$output_prefix"
+    
+    log "Transformation chain: forward and inverse"
     test_result "Transformation chain" "PASS" ""
 }
 
