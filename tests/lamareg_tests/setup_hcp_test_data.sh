@@ -28,9 +28,9 @@ mkdir -p ${TEST_DIR}/{dwi,func,flair,mpc}
 echo "Step 1: DWI Registration Test Data"
 echo "-----------------------------------"
 # For DWI test - need T1w in DWI space and FOD
-if [ -f "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro-brain.nii.gz" ]; then
-    echo "  ✓ Found T1w in DWI space (brain)"
-    cp "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro-brain.nii.gz" \
+if [ -f "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro_SyN.nii.gz" ]; then
+    echo "  ✓ Found T1w in DWI space"
+    cp "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro_SyN.nii.gz" \
        "${TEST_DIR}/dwi/T1w_in_dwi_brain.nii.gz"
 else
     echo "  ✗ Missing: T1w in DWI space"
@@ -47,17 +47,13 @@ fi
 echo ""
 echo "Step 2: Functional MRI Test Data"
 echo "-----------------------------------"
-# For functional test - need func brain and T1 nativepro
-FUNC_FILE=$(ls ${SOURCE}/func/${SUB}_task-*_space-func_desc-brain_bold.nii.gz 2>/dev/null | head -1)
-if [ -f "$FUNC_FILE" ]; then
-    echo "  ✓ Found functional MRI brain"
-    cp "$FUNC_FILE" "${TEST_DIR}/func/func_brain.nii.gz"
-else
-    echo "  ✗ Missing: Functional MRI brain"
-fi
+# Note: This HCP subject has no functional data in derivatives
+echo "  ⚠ No functional data available for this subject"
+echo "  ⚠ Functional test will be skipped"
 
+# Copy T1 nativepro anyway for consistency
 if [ -f "${SOURCE}/anat/${SUB}_space-nativepro_T1w.nii.gz" ]; then
-    echo "  ✓ Found T1 nativepro"
+    echo "  ✓ Found T1 nativepro (copied for reference)"
     cp "${SOURCE}/anat/${SUB}_space-nativepro_T1w.nii.gz" \
        "${TEST_DIR}/func/T1_nativepro.nii.gz"
 else
@@ -99,12 +95,12 @@ if [ -f "${SOURCE}/anat/${SUB}_space-nativepro_T1w.nii.gz" ]; then
 fi
 
 # FreeSurfer T1 for MPC
-FS_ORIG="${SOURCE}/anat/surfaces/freesurfer/${SUB}/mri/orig.mgz"
-if [ -f "$FS_ORIG" ]; then
-    echo "  ✓ Found FreeSurfer orig.mgz, converting..."
-    mri_convert "$FS_ORIG" "${TEST_DIR}/mpc/T1_fsnative.nii.gz"
+if [ -f "${SOURCE}/anat/${SUB}_space-fsnative_T1w.nii.gz" ]; then
+    echo "  ✓ Found T1 in FreeSurfer native space"
+    cp "${SOURCE}/anat/${SUB}_space-fsnative_T1w.nii.gz" \
+       "${TEST_DIR}/mpc/T1_fsnative.nii.gz"
 else
-    echo "  ✗ Missing: FreeSurfer orig.mgz"
+    echo "  ✗ Missing: T1 in FreeSurfer native space"
 fi
 
 echo ""
