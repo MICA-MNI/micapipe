@@ -630,12 +630,14 @@ function post_struct_transformations() {
 }
 
 function proc_func_transformations() {
-  Mode="SyN"
-  Info "Creating transformations file: func space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: func space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_func\",
     \"LastRun\": \"$(date)\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro brain\": \"${T1nativepro_brain}\",
     \"func brain\": \"${fmri_brain}\",
     \"from-t1nativepro_to-func\": [
@@ -662,13 +664,15 @@ function proc_func_transformations() {
 }
 
 function proc_dwi_transformations() {
-  Mode="SyN"
-  Info "Creating transformations file: DWI space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: DWI space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_dwi\",
     \"LastRun\": \"$(date)\",
     \"transform\": \"${Mode}\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro\": \"${T1nativepro}\",
     \"DWI b0\": \"${dwi_b0}\",
     \"from-t1nativepro_to-dwi\": [
