@@ -83,7 +83,31 @@ test_lamareg_registration() {
     
     # Define test file paths
     local moving_img="$TEST_DATA_DIR/T1w_in_dwi_brain.nii.gz"
-    local fixed_img="$TEST_DATA_DIR/dwi_fod.nii.gz"
+    
+    # IMPORTANT: For DWI registration, we need a 3D reference image
+    # The FOD is 4D (multiple SH coefficients) and will fail with SynthSeg
+    # We should use: b0 image, FA map, or mean_b0
+    # Check for available 3D DWI-derived images
+    local fixed_img=""
+    
+    # Try to find a suitable 3D reference image
+    if [ -f "$TEST_DATA_DIR/dwi_b0.nii.gz" ]; then
+        fixed_img="$TEST_DATA_DIR/dwi_b0.nii.gz"
+        log "Using b0 image as fixed reference"
+    elif [ -f "$TEST_DATA_DIR/dwi_FA.nii.gz" ]; then
+        fixed_img="$TEST_DATA_DIR/dwi_FA.nii.gz"
+        log "Using FA map as fixed reference"
+    elif [ -f "$TEST_DATA_DIR/dwi_mean_b0.nii.gz" ]; then
+        fixed_img="$TEST_DATA_DIR/dwi_mean_b0.nii.gz"
+        log "Using mean b0 as fixed reference"
+    else
+        # Fallback to FOD but warn it will fail
+        fixed_img="$TEST_DATA_DIR/dwi_fod.nii.gz"
+        log "WARNING: Using 4D FOD image - this will fail with SynthSeg!"
+        log "SynthSeg requires 3D anatomical images, not 4D FOD"
+        log "Please provide: dwi_b0.nii.gz, dwi_FA.nii.gz, or dwi_mean_b0.nii.gz"
+    fi
+    
     local output_prefix="$OUTPUT_DIR/dwi_to_T1w_"
     
     # Check input files exist
@@ -99,6 +123,20 @@ test_lamareg_registration() {
         return 1
     fi
     test_result "Input: Fixed image" "PASS" ""
+    
+    # Check if fixed image is 3D or 4D
+    if command -v fslinfo &> /dev/null; then
+        local ndims=$(fslinfo "$fixed_img" 2>/dev/null | grep "^dim4" | awk '{print $2}')
+        if [ -n "$ndims" ] && [ "$ndims" -gt 1 ]; then
+            log "ERROR: Fixed image is 4D with $ndims volumes"
+            log "SynthSeg requires 3D images. Registration will fail."
+            log "Please provide a 3D DWI-derived image (b0, FA, or mean_b0)"
+            test_result "Fixed image dimensionality" "FAIL" "4D image provided, need 3D"
+        else
+            log "Fixed image is 3D - OK for SynthSeg"
+            test_result "Fixed image dimensionality" "PASS" ""
+        fi
+    fi
     
     # Define output paths
     local affine="${output_prefix}0GenericAffine.mat"

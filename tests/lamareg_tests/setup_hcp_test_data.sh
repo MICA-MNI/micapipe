@@ -27,7 +27,8 @@ mkdir -p ${TEST_DIR}/{dwi,func,flair,mpc}
 
 echo "Step 1: DWI Registration Test Data"
 echo "-----------------------------------"
-# For DWI test - need T1w in DWI space and FOD
+# For DWI test - need T1w in DWI space and a 3D DWI reference
+# IMPORTANT: LAMAReg/SynthSeg requires 3D images, not 4D FOD!
 if [ -f "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro_SyN.nii.gz" ]; then
     echo "  ✓ Found T1w in DWI space"
     cp "${SOURCE}/dwi/${SUB}_space-dwi_desc-T1w_nativepro_SyN.nii.gz" \
@@ -36,12 +37,36 @@ else
     echo "  ✗ Missing: T1w in DWI space"
 fi
 
-if [ -f "${SOURCE}/dwi/${SUB}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" ]; then
-    echo "  ✓ Found DWI FOD (white matter normalized)"
-    cp "${SOURCE}/dwi/${SUB}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" \
-       "${TEST_DIR}/dwi/dwi_fod.nii.gz"
+# Try to find a 3D DWI reference image (in priority order)
+# 1. b0 image (best for registration)
+# 2. FA map (good white matter contrast)
+# 3. Extract first volume from FOD (fallback)
+
+if [ -f "${SOURCE}/dwi/${SUB}_space-dwi_desc-b0_dwi.nii.gz" ]; then
+    echo "  ✓ Found b0 image (3D - ideal for LAMAReg)"
+    cp "${SOURCE}/dwi/${SUB}_space-dwi_desc-b0_dwi.nii.gz" \
+       "${TEST_DIR}/dwi/dwi_b0.nii.gz"
+elif [ -f "${SOURCE}/dwi/${SUB}_space-dwi_model-DTI_map-FA.nii.gz" ]; then
+    echo "  ✓ Found FA map (3D - good for LAMAReg)"
+    cp "${SOURCE}/dwi/${SUB}_space-dwi_model-DTI_map-FA.nii.gz" \
+       "${TEST_DIR}/dwi/dwi_FA.nii.gz"
+elif [ -f "${SOURCE}/dwi/${SUB}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" ]; then
+    echo "  ⚠ Found 4D FOD - extracting first volume as 3D reference"
+    echo "    (Note: Using full b0 or FA would be better)"
+    # Extract first volume from 4D FOD to create 3D reference
+    if command -v fslroi &> /dev/null; then
+        fslroi "${SOURCE}/dwi/${SUB}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" \
+               "${TEST_DIR}/dwi/dwi_fod_vol0.nii.gz" 0 1
+        echo "  ✓ Created 3D reference from FOD (first volume)"
+    else
+        echo "  ✗ fslroi not available - cannot extract 3D from 4D FOD"
+        # Copy the 4D FOD anyway but warn it will fail
+        cp "${SOURCE}/dwi/${SUB}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz" \
+           "${TEST_DIR}/dwi/dwi_fod.nii.gz"
+        echo "  ✗ WARNING: Copied 4D FOD - this WILL FAIL with SynthSeg!"
+    fi
 else
-    echo "  ✗ Missing: DWI FOD"
+    echo "  ✗ Missing: No DWI reference image found (b0, FA, or FOD)"
 fi
 
 echo ""
