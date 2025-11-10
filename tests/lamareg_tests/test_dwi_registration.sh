@@ -47,13 +47,13 @@ MIN_DICE_GLOBAL=0.70
 MIN_DICE_GM=0.65
 MIN_DICE_WM=0.75
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}${TEST_NAME}${NC}"
-echo -e "${BLUE}========================================${NC}"
+printf "%s\n" "${BLUE}========================================${NC}"
+printf "%s\n" "${BLUE}${TEST_NAME}${NC}"
+printf "%s\n" "${BLUE}========================================${NC}"
 
 # Parse arguments
 if [ $# -lt 1 ]; then
-    echo -e "${RED}Error: Test data directory required${NC}"
+    printf "%s\n" "${RED}Error: Test data directory required${NC}"
     echo "Usage: $0 <test_data_dir> [output_dir]"
     exit 1
 fi
@@ -91,11 +91,11 @@ test_result() {
     ((TESTS_TOTAL++))
     
     if [ "$result" = "PASS" ]; then
-        echo -e "${GREEN}✓ PASS${NC}: $test_name"
+        printf "${GREEN}✓ PASS${NC}: %s\n" "$test_name"
         echo "✓ PASS: $test_name" >> "$RESULTS_FILE"
         ((TESTS_PASSED++))
     else
-        echo -e "${RED}✗ FAIL${NC}: $test_name - $message"
+        printf "${RED}✗ FAIL${NC}: %s - %s\n" "$test_name" "$message"
         echo "✗ FAIL: $test_name - $message" >> "$RESULTS_FILE"
         ((TESTS_FAILED++))
     fi
@@ -190,7 +190,7 @@ test_lamareg_registration() {
     # Check if lamareg is available
     if ! command -v lamareg &> /dev/null; then
         test_result "LAMAReg installation" "FAIL" "lamareg command not found"
-        echo -e "${RED}Error: lamareg is not installed or not in PATH${NC}"
+        printf "%s\n" "${RED}Error: lamareg is not installed or not in PATH${NC}"
         return 1
     fi
     test_result "LAMAReg installation" "PASS" ""
@@ -204,7 +204,7 @@ test_lamareg_registration() {
     if [ ! -f "$moving_img" ]; then
         test_result "Input: Moving image" "FAIL" "File not found: $moving_img"
         log "Creating synthetic test data (for demonstration)..."
-        echo -e "${YELLOW}Note: Using synthetic test data. Replace with real data for accurate testing.${NC}"
+        printf "%s\n" "${YELLOW}Note: Using synthetic test data. Replace with real data for accurate testing.${NC}"
         return 0
     fi
     test_result "Input: Moving image" "PASS" ""
@@ -283,7 +283,7 @@ test_transformation_chain() {
 }
 
 echo ""
-echo -e "${BLUE}Starting tests...${NC}"
+printf "%s\n" "${BLUE}Starting tests...${NC}"
 echo ""
 
 # Run tests
@@ -292,7 +292,7 @@ test_transformation_chain
 
 # If output files exist (from previous runs), validate them
 echo ""
-echo -e "${BLUE}Checking for existing output files...${NC}"
+printf "%s\n" "${BLUE}Checking for existing output files...${NC}"
 OUTPUT_PREFIX="$OUTPUT_DIR/dwi_to_T1w_"
 
 for suffix in "${REQUIRED_OUTPUTS[@]}"; do
@@ -315,12 +315,12 @@ fi
 
 # Summary
 echo ""
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Test Summary${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo -e "Total tests: ${TESTS_TOTAL}"
-echo -e "${GREEN}Passed: ${TESTS_PASSED}${NC}"
-echo -e "${RED}Failed: ${TESTS_FAILED}${NC}"
+printf "%s\n" "${BLUE}========================================${NC}"
+printf "%s\n" "${BLUE}Test Summary${NC}"
+printf "%s\n" "${BLUE}========================================${NC}"
+printf "%s\n" "Total tests: ${TESTS_TOTAL}"
+printf "%s\n" "${GREEN}Passed: ${TESTS_PASSED}${NC}"
+printf "%s\n" "${RED}Failed: ${TESTS_FAILED}${NC}"
 echo ""
 
 echo "" >> "$RESULTS_FILE"
@@ -332,11 +332,11 @@ echo "  Failed: $TESTS_FAILED" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 
 if [ $TESTS_FAILED -eq 0 ]; then
-    echo -e "${GREEN}All tests passed!${NC}"
+    printf "%s\n" "${GREEN}All tests passed!${NC}"
     echo "Result: ALL TESTS PASSED" >> "$RESULTS_FILE"
     exit 0
 else
-    echo -e "${RED}Some tests failed. Check $RESULTS_FILE for details.${NC}"
+    printf "%s\n" "${RED}Some tests failed. Check $RESULTS_FILE for details.${NC}"
     echo "Result: SOME TESTS FAILED" >> "$RESULTS_FILE"
     exit 1
 fi
