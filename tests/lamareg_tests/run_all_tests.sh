@@ -85,8 +85,14 @@ for i in "${!TESTS[@]}"; do
     # Make script executable
     chmod +x "$SCRIPT_DIR/$test_script"
     
-    # Run test
-    if "$SCRIPT_DIR/$test_script" "$TEST_DATA_DIR" "$test_output_dir" 2>&1 | tee -a "$MASTER_LOG"; then
+    # Run test (disable exit on error temporarily to capture exit code)
+    set +e
+    "$SCRIPT_DIR/$test_script" "$TEST_DATA_DIR" "$test_output_dir" 2>&1 | tee -a "$MASTER_LOG"
+    test_exit_code=$?
+    set -e
+    
+    # Check result
+    if [ $test_exit_code -eq 0 ]; then
         echo -e "${GREEN}✓ PASSED: $test_name${NC}"
         echo "✓ PASSED: $test_name" >> "$SUMMARY_FILE"
         ((PASSED_TESTS++))
