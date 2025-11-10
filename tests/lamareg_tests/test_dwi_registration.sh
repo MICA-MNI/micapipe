@@ -97,6 +97,9 @@ test_lamareg_registration() {
     elif [ -f "$TEST_DATA_DIR/dwi_FA.nii.gz" ]; then
         fixed_img="$TEST_DATA_DIR/dwi_FA.nii.gz"
         log "Using FA map as fixed reference"
+    elif [ -f "$TEST_DATA_DIR/dwi_fod_vol0.nii.gz" ]; then
+        fixed_img="$TEST_DATA_DIR/dwi_fod_vol0.nii.gz"
+        log "Using extracted FOD volume 0 as fixed reference"
     elif [ -f "$TEST_DATA_DIR/dwi_mean_b0.nii.gz" ]; then
         fixed_img="$TEST_DATA_DIR/dwi_mean_b0.nii.gz"
         log "Using mean b0 as fixed reference"
@@ -105,7 +108,7 @@ test_lamareg_registration() {
         fixed_img="$TEST_DATA_DIR/dwi_fod.nii.gz"
         log "WARNING: Using 4D FOD image - this will fail with SynthSeg!"
         log "SynthSeg requires 3D anatomical images, not 4D FOD"
-        log "Please provide: dwi_b0.nii.gz, dwi_FA.nii.gz, or dwi_mean_b0.nii.gz"
+        log "Please provide: dwi_b0.nii.gz, dwi_FA.nii.gz, dwi_fod_vol0.nii.gz, or dwi_mean_b0.nii.gz"
     fi
     
     local output_prefix="$OUTPUT_DIR/dwi_to_T1w_"
