@@ -44,7 +44,7 @@ echo "Output Dir: $OUTPUT_DIR" >> "$SUMMARY_FILE"
 echo "========================================" >> "$SUMMARY_FILE"
 echo "" >> "$SUMMARY_FILE"
 
-# Test scripts
+# Test scripts and their corresponding data subdirectories
 TESTS=(
     "test_dwi_registration.sh"
     "test_func_registration.sh"
@@ -62,10 +62,20 @@ TEST_NAMES=(
     "MPC-SWM Registration"
 )
 
+# Data subdirectories for each test
+TEST_SUBDIRS=(
+    "dwi"
+    "func"
+    "flair"
+    "mpc"
+    "mpc"
+)
+
 # Results tracking
 TOTAL_TESTS=${#TESTS[@]}
 PASSED_TESTS=0
 FAILED_TESTS=0
+SKIPPED_TESTS=0
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -74,7 +84,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for i in "${!TESTS[@]}"; do
     test_script="${TESTS[$i]}"
     test_name="${TEST_NAMES[$i]}"
+    test_subdir="${TEST_SUBDIRS[$i]}"
+    test_data_path="$TEST_DATA_DIR/$test_subdir"
     test_output_dir="$OUTPUT_DIR/$(basename "$test_script" .sh)"
+    
+    # Check if test data directory exists
+    if [ ! -d "$test_data_path" ]; then
+        echo ""
+        echo -e "${YELLOW}========================================${NC}"
+        echo -e "${YELLOW}Skipping: $test_name${NC}"
+        echo -e "${YELLOW}========================================${NC}"
+        echo -e "${YELLOW}Data directory not found: $test_data_path${NC}"
+        echo ""
+        echo "⊘ SKIPPED: $test_name (no data)" >> "$SUMMARY_FILE"
+        ((SKIPPED_TESTS++))
+        continue
+    fi
     
     echo ""
     echo -e "${BLUE}========================================${NC}"
@@ -87,7 +112,7 @@ for i in "${!TESTS[@]}"; do
     
     # Run test (disable exit on error temporarily to capture exit code)
     set +e
-    "$SCRIPT_DIR/$test_script" "$TEST_DATA_DIR" "$test_output_dir" 2>&1 | tee -a "$MASTER_LOG"
+    "$SCRIPT_DIR/$test_script" "$test_data_path" "$test_output_dir" 2>&1 | tee -a "$MASTER_LOG"
     test_exit_code=$?
     set -e
     
@@ -111,6 +136,7 @@ echo -e "${MAGENTA}========================================${NC}"
 echo -e "Total tests: ${TOTAL_TESTS}"
 echo -e "${GREEN}Passed: ${PASSED_TESTS}${NC}"
 echo -e "${RED}Failed: ${FAILED_TESTS}${NC}"
+echo -e "${YELLOW}Skipped: ${SKIPPED_TESTS}${NC}"
 echo ""
 echo -e "Detailed results: ${OUTPUT_DIR}"
 echo -e "Master log: ${MASTER_LOG}"
@@ -124,6 +150,7 @@ echo "Final Summary:" >> "$SUMMARY_FILE"
 echo "  Total tests: $TOTAL_TESTS" >> "$SUMMARY_FILE"
 echo "  Passed: $PASSED_TESTS" >> "$SUMMARY_FILE"
 echo "  Failed: $FAILED_TESTS" >> "$SUMMARY_FILE"
+echo "  Skipped: $SKIPPED_TESTS" >> "$SUMMARY_FILE"
 echo "" >> "$SUMMARY_FILE"
 
 if [ $FAILED_TESTS -eq 0 ]; then
