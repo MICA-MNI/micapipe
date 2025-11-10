@@ -217,38 +217,35 @@ test_lamareg_registration() {
     local warped="${output_prefix}Warped.nii.gz"
     
     # Run LAMAReg registration
-    log "Executing LAMAReg registration..."
-    log "Command: lamareg register --moving $moving_img --fixed $fixed_img ..."
+    log "Executing LAMAReg registration (this may take 10-15 minutes on CPU)..."
+    log "Moving: $(basename $moving_img)"
+    log "Fixed: $(basename $fixed_img)"
     
-    # Note: This is a test framework - actual execution would happen here
-    # For now, we'll check if the command syntax is correct
-    local lamareg_cmd="lamareg register \
-      --moving \"$moving_img\" \
-      --fixed \"$fixed_img\" \
-      --output \"$warped\" \
-      --moving-parc \"$moving_parc\" \
-      --fixed-parc \"$fixed_parc\" \
-      --registered-parc \"$reg_parc\" \
-      --affine \"$affine\" \
-      --warpfield \"$warp1\" \
-      --inverse-warpfield \"$invwarp1\" \
-      --secondary-warpfield \"$warp2\" \
-      --inverse-secondary-warpfield \"$invwarp2\" \
-      --qc-csv \"$qc_csv\" \
+    # Execute LAMAReg directly (not through eval to avoid quoting issues)
+    lamareg register \
+      --moving "$moving_img" \
+      --fixed "$fixed_img" \
+      --output "$warped" \
+      --moving-parc "$moving_parc" \
+      --fixed-parc "$fixed_parc" \
+      --registered-parc "$reg_parc" \
+      --affine "$affine" \
+      --warpfield "$warp1" \
+      --inverse-warpfield "$invwarp1" \
+      --secondary-warpfield "$warp2" \
+      --inverse-secondary-warpfield "$invwarp2" \
+      --qc-csv "$qc_csv" \
       --synthseg-threads 4 \
-      --ants-threads 8"
+      --ants-threads 8 2>&1 | tee -a "$LOG_FILE"
     
-    log "LAMAReg command syntax validated"
-    test_result "LAMAReg command syntax" "PASS" ""
+    local exit_code=${PIPESTATUS[0]}
     
-    # Run the actual LAMAReg command
-    log "Executing LAMAReg registration (this may take 10-15 minutes)..."
-    eval "$lamareg_cmd" 2>&1 | tee -a "$LOG_FILE"
-    
-    if [ $? -eq 0 ]; then
+    if [ $exit_code -eq 0 ]; then
+        log "LAMAReg registration completed successfully"
         test_result "LAMAReg execution" "PASS" ""
     else
-        test_result "LAMAReg execution" "FAIL" "Registration failed"
+        log "LAMAReg registration failed with exit code $exit_code"
+        test_result "LAMAReg execution" "FAIL" "Registration failed (exit code: $exit_code)"
         return 1
     fi
     
