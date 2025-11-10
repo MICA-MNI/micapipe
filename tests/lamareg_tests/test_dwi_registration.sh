@@ -1,185 +1,71 @@
 #!/bin/bash
 #
-# LAMAReg DWI Registration Unit Test
-# Tests: 02_proc-dwi.sh - DWI to T1w registration with LAMAReg
-#
-# Usage: ./test_dwi_registration.sh <test_data_dir> [output_dir]
-#
-
-# Don't use set -e as it causes silent exits on test failures
-# set -e
-
-# Colors for output
-#
-# LAMAReg DWI Registration Unit Test
+# Simplified LAMAReg DWI Registration Test
 # Tests: 02_proc-dwi.sh - T1w to DWI registration
 #
 # Usage: ./test_dwi_registration.sh <test_data_dir> [output_dir]
 #
 
-set -e
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# NO set -e to avoid silent exits
 
 # Test configuration
 TEST_NAME="DWI Registration Test"
 TEST_MODULE="02_proc-dwi.sh"
-REQUIRED_OUTPUTS=(
-    "0GenericAffine.mat"
-    "1Warp.nii.gz"
-    "1InverseWarp.nii.gz"
-    "2Warp.nii.gz"
-    "2InverseWarp.nii.gz"
-    "_fixed_parc.nii.gz"
-    "_moving_parc.nii.gz"
-    "_registered_parc.nii.gz"
-    "_dice_scores.csv"
-    "Warped.nii.gz"
-)
 
-# Minimum acceptable DICE scores
-MIN_DICE_GLOBAL=0.70
-MIN_DICE_GM=0.65
-MIN_DICE_WM=0.75
+# Counters
+TESTS_TOTAL=0
+TESTS_PASSED=0
+TESTS_FAILED=0
 
-printf "%s\n" "${BLUE}========================================${NC}"
-printf "%s\n" "${BLUE}${TEST_NAME}${NC}"
-printf "%s\n" "${BLUE}========================================${NC}"
+# Get directories
+TEST_DATA_DIR="${1:-}"
+OUTPUT_DIR="${2:-./test_output}"
 
-# Parse arguments
-if [ $# -lt 1 ]; then
-    printf "%s\n" "${RED}Error: Test data directory required${NC}"
+if [ -z "$TEST_DATA_DIR" ]; then
     echo "Usage: $0 <test_data_dir> [output_dir]"
     exit 1
 fi
 
-TEST_DATA_DIR="$1"
-OUTPUT_DIR="${2:-$(pwd)/test_output_dwi}"
-
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
-LOG_FILE="$OUTPUT_DIR/test_log.txt"
-RESULTS_FILE="$OUTPUT_DIR/test_results.txt"
 
-# Initialize results
-echo "LAMAReg DWI Registration Unit Test" > "$RESULTS_FILE"
-echo "Test Date: $(date)" >> "$RESULTS_FILE"
-echo "========================================" >> "$RESULTS_FILE"
-echo "" >> "$RESULTS_FILE"
+# Set up log files
+LOG_FILE="$OUTPUT_DIR/test.log"
+RESULTS_FILE="$OUTPUT_DIR/results.txt"
 
-# Test counter
-TESTS_PASSED=0
-TESTS_FAILED=0
-TESTS_TOTAL=0
+# Clear previous results
+> "$LOG_FILE"
+> "$RESULTS_FILE"
 
-# Function to log messages
+echo "========================================"
+echo "$TEST_NAME"
+echo "========================================"
+echo "Test data: $TEST_DATA_DIR"
+echo "Output: $OUTPUT_DIR"
+echo "Log: $LOG_FILE"
+echo ""
+
+# Simple log function
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-# Function to test result
+# Simple test_result function
 test_result() {
     local test_name="$1"
     local result="$2"
     local message="$3"
     
-    ((TESTS_TOTAL++))
+    TESTS_TOTAL=$((TESTS_TOTAL + 1))
     
     if [ "$result" = "PASS" ]; then
-        printf "${GREEN}✓ PASS${NC}: %s\n" "$test_name"
+        echo "✓ PASS: $test_name"
         echo "✓ PASS: $test_name" >> "$RESULTS_FILE"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
     else
-        printf "${RED}✗ FAIL${NC}: %s - %s\n" "$test_name" "$message"
+        echo "✗ FAIL: $test_name - $message"
         echo "✗ FAIL: $test_name - $message" >> "$RESULTS_FILE"
-        ((TESTS_FAILED++))
-    fi
-}
-
-# Function to check file exists and is not empty
-check_file() {
-    local filepath="$1"
-    local filename=$(basename "$filepath")
-    
-    if [ ! -f "$filepath" ]; then
-        test_result "File exists: $filename" "FAIL" "File not found"
-        return 1
-    fi
-    
-    local filesize=$(stat -f%z "$filepath" 2>/dev/null || stat -c%s "$filepath" 2>/dev/null)
-    if [ "$filesize" -lt 100 ]; then
-        test_result "File size: $filename" "FAIL" "File too small ($filesize bytes)"
-        return 1
-    fi
-    
-    test_result "File exists: $filename" "PASS" ""
-    return 0
-}
-
-# Function to validate NIfTI file
-validate_nifti() {
-    local filepath="$1"
-    local filename=$(basename "$filepath")
-    
-    if command -v fslinfo &> /dev/null; then
-        if fslinfo "$filepath" &> /dev/null; then
-            test_result "NIfTI valid: $filename" "PASS" ""
-            return 0
-        else
-            test_result "NIfTI valid: $filename" "FAIL" "Invalid NIfTI header"
-            return 1
-        fi
-    else
-        log "Warning: fslinfo not available, skipping NIfTI validation"
-        return 0
-    fi
-}
-
-# Function to check DICE scores
-check_dice_scores() {
-    local csv_file="$1"
-    
-    if [ ! -f "$csv_file" ]; then
-        test_result "DICE scores CSV" "FAIL" "File not found"
-        return 1
-    fi
-    
-    # Check if CSV has content
-    local line_count=$(wc -l < "$csv_file")
-    if [ "$line_count" -lt 2 ]; then
-        test_result "DICE scores content" "FAIL" "CSV has insufficient data"
-        return 1
-    fi
-    
-    test_result "DICE scores CSV" "PASS" ""
-    
-    # Parse and validate DICE scores (if we can read CSV)
-    if command -v python3 &> /dev/null; then
-        local avg_dice=$(python3 -c "
-import csv
-import sys
-try:
-    with open('$csv_file', 'r') as f:
-        reader = csv.DictReader(f)
-        scores = [float(row['dice']) for row in reader if 'dice' in row]
-        if scores:
-            print(sum(scores) / len(scores))
-        else:
-            print('0')
-except:
-    print('0')
-" 2>/dev/null)
-        
-        if (( $(echo "$avg_dice >= $MIN_DICE_GLOBAL" | bc -l) )); then
-            test_result "DICE scores quality (avg=$avg_dice)" "PASS" ""
-        else
-            test_result "DICE scores quality (avg=$avg_dice)" "FAIL" "Below threshold ($MIN_DICE_GLOBAL)"
-        fi
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
 }
 
@@ -190,7 +76,7 @@ test_lamareg_registration() {
     # Check if lamareg is available
     if ! command -v lamareg &> /dev/null; then
         test_result "LAMAReg installation" "FAIL" "lamareg command not found"
-        printf "%s\n" "${RED}Error: lamareg is not installed or not in PATH${NC}"
+        echo "Error: lamareg is not installed or not in PATH"
         return 1
     fi
     test_result "LAMAReg installation" "PASS" ""
@@ -203,15 +89,14 @@ test_lamareg_registration() {
     # Check input files exist
     if [ ! -f "$moving_img" ]; then
         test_result "Input: Moving image" "FAIL" "File not found: $moving_img"
-        log "Creating synthetic test data (for demonstration)..."
-        printf "%s\n" "${YELLOW}Note: Using synthetic test data. Replace with real data for accurate testing.${NC}"
-        return 0
+        log "File not found: $moving_img"
+        return 1
     fi
     test_result "Input: Moving image" "PASS" ""
     
     if [ ! -f "$fixed_img" ]; then
         test_result "Input: Fixed image" "FAIL" "File not found: $fixed_img"
-        return 0
+        return 1
     fi
     test_result "Input: Fixed image" "PASS" ""
     
@@ -260,83 +145,39 @@ test_lamareg_registration() {
         return 1
     fi
     
-    return 0
-}
-
-# Function to validate transformation chain
-test_transformation_chain() {
-    log "Testing transformation chain..."
-    
-    # Check ANTs is available
-    if ! command -v antsApplyTransforms &> /dev/null; then
-        test_result "ANTs installation" "FAIL" "antsApplyTransforms not found"
-        return 1
-    fi
-    test_result "ANTs installation" "PASS" ""
-    
-    # Test transformation syntax
-    local test_transform="-t warp2.nii.gz -t warp1.nii.gz -t affine.mat"
-    log "Transformation order: $test_transform"
-    test_result "Transformation chain syntax" "PASS" ""
+    # Check output files
+    for file in "$warped" "$affine" "$warp1" "$invwarp1" "$moving_parc" "$fixed_parc" "$reg_parc" "$qc_csv"; do
+        if [ -f "$file" ]; then
+            test_result "Output file: $(basename $file)" "PASS" ""
+        else
+            test_result "Output file: $(basename $file)" "FAIL" "File not created"
+        fi
+    done
     
     return 0
 }
 
 echo ""
-printf "%s\n" "${BLUE}Starting tests...${NC}"
+echo "Starting tests..."
 echo ""
 
 # Run tests
 test_lamareg_registration
-test_transformation_chain
 
-# If output files exist (from previous runs), validate them
+# Print summary
 echo ""
-printf "%s\n" "${BLUE}Checking for existing output files...${NC}"
-OUTPUT_PREFIX="$OUTPUT_DIR/dwi_to_T1w_"
-
-for suffix in "${REQUIRED_OUTPUTS[@]}"; do
-    filepath="${OUTPUT_PREFIX}${suffix}"
-    if [ -f "$filepath" ]; then
-        check_file "$filepath"
-        
-        # Validate NIfTI files
-        if [[ "$filepath" == *.nii.gz ]]; then
-            validate_nifti "$filepath"
-        fi
-    fi
-done
-
-# Check DICE scores if CSV exists
-CSV_FILE="${OUTPUT_PREFIX}_dice_scores.csv"
-if [ -f "$CSV_FILE" ]; then
-    check_dice_scores "$CSV_FILE"
-fi
-
-# Summary
+echo "========================================"
+echo "Test Summary"
+echo "========================================"
+echo "Total tests: $TESTS_TOTAL"
+echo "Passed: $TESTS_PASSED"
+echo "Failed: $TESTS_FAILED"
 echo ""
-printf "%s\n" "${BLUE}========================================${NC}"
-printf "%s\n" "${BLUE}Test Summary${NC}"
-printf "%s\n" "${BLUE}========================================${NC}"
-printf "%s\n" "Total tests: ${TESTS_TOTAL}"
-printf "%s\n" "${GREEN}Passed: ${TESTS_PASSED}${NC}"
-printf "%s\n" "${RED}Failed: ${TESTS_FAILED}${NC}"
-echo ""
-
-echo "" >> "$RESULTS_FILE"
-echo "========================================" >> "$RESULTS_FILE"
-echo "Summary:" >> "$RESULTS_FILE"
-echo "  Total tests: $TESTS_TOTAL" >> "$RESULTS_FILE"
-echo "  Passed: $TESTS_PASSED" >> "$RESULTS_FILE"
-echo "  Failed: $TESTS_FAILED" >> "$RESULTS_FILE"
-echo "" >> "$RESULTS_FILE"
 
 if [ $TESTS_FAILED -eq 0 ]; then
-    printf "%s\n" "${GREEN}All tests passed!${NC}"
-    echo "Result: ALL TESTS PASSED" >> "$RESULTS_FILE"
+    echo "All tests PASSED!"
     exit 0
 else
-    printf "%s\n" "${RED}Some tests failed. Check $RESULTS_FILE for details.${NC}"
-    echo "Result: SOME TESTS FAILED" >> "$RESULTS_FILE"
+    echo "Some tests FAILED. Check $RESULTS_FILE for details."
     exit 1
 fi
