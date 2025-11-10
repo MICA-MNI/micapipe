@@ -1,6 +1,17 @@
 #!/bin/bash
 #
 # LAMAReg DWI Registration Unit Test
+# Tests: 02_proc-dwi.sh - DWI to T1w registration with LAMAReg
+#
+# Usage: ./test_dwi_registration.sh <test_data_dir> [output_dir]
+#
+
+# Don't use set -e as it causes silent exits on test failures
+# set -e
+
+# Colors for output
+#
+# LAMAReg DWI Registration Unit Test
 # Tests: 02_proc-dwi.sh - T1w to DWI registration
 #
 # Usage: ./test_dwi_registration.sh <test_data_dir> [output_dir]
