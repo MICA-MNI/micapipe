@@ -234,6 +234,17 @@ execute_lamareg() {
     log "Moving: $(basename $moving_img)"
     log "Fixed: $(basename $fixed_img)"
     log "Output prefix: $output_prefix"
+    
+    # Use LAMAREG_THREADS environment variable if set, otherwise default to 16
+    local total_threads="${LAMAREG_THREADS:-16}"
+    local synthseg_threads=$((total_threads / 4))
+    local ants_threads=$((total_threads * 3 / 4))
+    
+    # Ensure at least 1 thread per component
+    [ $synthseg_threads -lt 1 ] && synthseg_threads=1
+    [ $ants_threads -lt 1 ] && ants_threads=1
+    
+    log "Using $total_threads threads (SynthSeg: $synthseg_threads, ANTs: $ants_threads)"
     echo ""
     
     local start_time=$(date +%s)
@@ -251,8 +262,8 @@ execute_lamareg() {
       --secondary-warpfield "${WARP2}" \
       --inverse-secondary-warpfield "${INVWARP2}" \
       --qc-csv "${QC_CSV}" \
-      --synthseg-threads 4 \
-      --ants-threads 8 2>&1 | tee -a "$LOG_FILE"
+      --synthseg-threads $synthseg_threads \
+      --ants-threads $ants_threads 2>&1 | tee -a "$LOG_FILE"
     
     local exit_code=${PIPESTATUS[0]}
     local end_time=$(date +%s)

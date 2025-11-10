@@ -153,10 +153,20 @@ test_lamareg_registration() {
     local qc_csv="${output_prefix}_dice_scores.csv"
     local warped="${output_prefix}Warped.nii.gz"
     
+    # Use LAMAREG_THREADS environment variable if set, otherwise default to 16
+    local total_threads="${LAMAREG_THREADS:-16}"
+    local synthseg_threads=$((total_threads / 4))
+    local ants_threads=$((total_threads * 3 / 4))
+    
+    # Ensure at least 1 thread per component
+    [ $synthseg_threads -lt 1 ] && synthseg_threads=1
+    [ $ants_threads -lt 1 ] && ants_threads=1
+    
     # Run LAMAReg registration
     log "Executing LAMAReg registration (this may take 10-15 minutes on CPU)..."
     log "Moving: $(basename $moving_img)"
     log "Fixed: $(basename $fixed_img)"
+    log "Using $total_threads threads (SynthSeg: $synthseg_threads, ANTs: $ants_threads)"
     
     # Execute LAMAReg directly (not through eval to avoid quoting issues)
     lamareg register \
@@ -172,8 +182,8 @@ test_lamareg_registration() {
       --secondary-warpfield "$warp2" \
       --inverse-secondary-warpfield "$invwarp2" \
       --qc-csv "$qc_csv" \
-      --synthseg-threads 4 \
-      --ants-threads 8 2>&1 | tee -a "$LOG_FILE"
+      --synthseg-threads $synthseg_threads \
+      --ants-threads $ants_threads 2>&1 | tee -a "$LOG_FILE"
     
     local exit_code=${PIPESTATUS[0]}
     
