@@ -4,12 +4,7 @@
 # This file should be sourced by individual test scripts
 #
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# NO set -e to avoid silent exits
 
 # Test counter
 TESTS_PASSED=0
@@ -46,16 +41,16 @@ test_result() {
     local result="$2"
     local message="$3"
     
-    ((TESTS_TOTAL++))
+    TESTS_TOTAL=$((TESTS_TOTAL + 1))
     
     if [ "$result" = "PASS" ]; then
-        echo -e "${GREEN}✓ PASS${NC}: $test_name"
+        echo "✓ PASS: $test_name"
         echo "✓ PASS: $test_name" >> "$RESULTS_FILE"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
     else
-        echo -e "${RED}✗ FAIL${NC}: $test_name - $message"
+        echo "✗ FAIL: $test_name - $message"
         echo "✗ FAIL: $test_name - $message" >> "$RESULTS_FILE"
-        ((TESTS_FAILED++))
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
 }
 
@@ -162,31 +157,56 @@ validate_inputs() {
     local moving_img="$1"
     local fixed_img="$2"
     
+    echo ""
+    echo "=========================================="
+    echo "Checking input files..."
+    echo "=========================================="
+    echo "Moving image: $moving_img"
+    echo "Fixed image: $fixed_img"
+    echo ""
+    
     if [ ! -f "$moving_img" ]; then
         test_result "Input: Moving image" "FAIL" "File not found: $moving_img"
-        echo -e "${YELLOW}Note: Place test data in expected location or skip execution test${NC}"
+        echo "ERROR: Moving image file is missing!"
+        echo "SKIPPING LAMAReg execution - cannot proceed without input files"
+        echo ""
         return 1
     fi
     test_result "Input: Moving image" "PASS" ""
     
     if [ ! -f "$fixed_img" ]; then
         test_result "Input: Fixed image" "FAIL" "File not found: $fixed_img"
+        echo "ERROR: Fixed image file is missing!"
+        echo "SKIPPING LAMAReg execution - cannot proceed without input files"
+        echo ""
         return 1
     fi
     test_result "Input: Fixed image" "PASS" ""
     
+    echo "✓ All input files present - proceeding with LAMAReg registration"
+    echo ""
     return 0
 }
 
 # Function to check required tools
 check_required_tools() {
+    echo ""
+    echo "=========================================="
+    echo "Checking required tools..."
+    echo "=========================================="
+    
     # Check LAMAReg
     if ! command -v lamareg &> /dev/null; then
         test_result "LAMAReg installation" "FAIL" "lamareg command not found"
-        echo -e "${RED}Error: lamareg is not installed or not in PATH${NC}"
+        echo "ERROR: lamareg is not installed or not in PATH"
+        echo "Install LAMAReg or add it to your PATH before running tests"
         return 1
     fi
+    
+    # Get LAMAReg version
+    local lamareg_version=$(lamareg --version 2>&1 | head -1 || echo "unknown")
     test_result "LAMAReg installation" "PASS" ""
+    echo "LAMAReg version: $lamareg_version"
     
     # Check ANTs
     if ! command -v antsApplyTransforms &> /dev/null; then
@@ -195,6 +215,8 @@ check_required_tools() {
     fi
     test_result "ANTs installation" "PASS" ""
     
+    echo "✓ All required tools are available"
+    echo ""
     return 0
 }
 
@@ -204,9 +226,17 @@ execute_lamareg() {
     local fixed_img="$2"
     local output_prefix="$3"
     
-    log "Executing LAMAReg registration (this may take 10-15 minutes on CPU)..."
+    echo ""
+    echo "=========================================="
+    echo "EXECUTING LAMAReg REGISTRATION"
+    echo "=========================================="
+    log "Starting LAMAReg registration (this may take 10-15 minutes on CPU)..."
     log "Moving: $(basename $moving_img)"
     log "Fixed: $(basename $fixed_img)"
+    log "Output prefix: $output_prefix"
+    echo ""
+    
+    local start_time=$(date +%s)
     
     lamareg register \
       --moving "$moving_img" \
@@ -225,12 +255,36 @@ execute_lamareg() {
       --ants-threads 8 2>&1 | tee -a "$LOG_FILE"
     
     local exit_code=${PIPESTATUS[0]}
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
     
+    echo ""
+    echo "=========================================="
     if [ $exit_code -eq 0 ]; then
+        log "LAMAReg registration completed successfully in ${duration} seconds"
         test_result "LAMAReg execution" "PASS" ""
+        
+        # Check output files were created
+        local files_created=0
+        local files_missing=0
+        for file in "$WARPED" "$AFFINE" "$WARP1" "$INVWARP1" "$WARP2" "$INVWARP2" "$MOVING_PARC" "$FIXED_PARC" "$REG_PARC" "$QC_CSV"; do
+            if [ -f "$file" ]; then
+                files_created=$((files_created + 1))
+            else
+                files_missing=$((files_missing + 1))
+                log "WARNING: Expected output file not created: $(basename $file)"
+            fi
+        done
+        
+        log "Output files: $files_created created, $files_missing missing"
+        echo "=========================================="
+        echo ""
         return 0
     else
-        test_result "LAMAReg execution" "FAIL" "Registration failed with exit code $exit_code"
+        log "LAMAReg registration FAILED with exit code $exit_code after ${duration} seconds"
+        test_result "LAMAReg execution" "FAIL" "Registration failed (exit code: $exit_code)"
+        echo "=========================================="
+        echo ""
         return 1
     fi
 }
@@ -257,7 +311,7 @@ validate_outputs() {
     setup_output_paths "$prefix"
     
     echo ""
-    echo -e "${BLUE}Validating output files...${NC}"
+    echo "Validating output files..."
     
     for suffix in "${REQUIRED_OUTPUTS[@]}"; do
         filepath="${prefix}${suffix}"
@@ -280,12 +334,12 @@ validate_outputs() {
 # Function to print test summary
 print_summary() {
     echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}Test Summary${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "Total tests: ${TESTS_TOTAL}"
-    echo -e "${GREEN}Passed: ${TESTS_PASSED}${NC}"
-    echo -e "${RED}Failed: ${TESTS_FAILED}${NC}"
+    echo "========================================"
+    echo "Test Summary"
+    echo "========================================"
+    echo "Total tests: ${TESTS_TOTAL}"
+    echo "Passed: ${TESTS_PASSED}"
+    echo "Failed: ${TESTS_FAILED}"
     echo ""
     
     echo "" >> "$RESULTS_FILE"
@@ -297,11 +351,11 @@ print_summary() {
     echo "" >> "$RESULTS_FILE"
     
     if [ $TESTS_FAILED -eq 0 ]; then
-        echo -e "${GREEN}All tests passed!${NC}"
+        echo "All tests passed!"
         echo "Result: ALL TESTS PASSED" >> "$RESULTS_FILE"
         return 0
     else
-        echo -e "${RED}Some tests failed. Check $RESULTS_FILE for details.${NC}"
+        echo "Some tests failed. Check $RESULTS_FILE for details."
         echo "Result: SOME TESTS FAILED" >> "$RESULTS_FILE"
         return 1
     fi
@@ -309,13 +363,13 @@ print_summary() {
 
 # Main test framework
 main() {
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}${TEST_NAME}${NC}"
-    echo -e "${BLUE}========================================${NC}"
+    echo "========================================"
+    echo "$TEST_NAME"
+    echo "========================================"
     
     # Parse arguments
     if [ $# -lt 1 ]; then
-        echo -e "${RED}Error: Test data directory required${NC}"
+        echo "Error: Test data directory required"
         echo "Usage: $0 <test_data_dir> [output_dir]"
         exit 1
     fi
@@ -336,7 +390,7 @@ main() {
     echo "" >> "$RESULTS_FILE"
     
     echo ""
-    echo -e "${BLUE}Starting tests...${NC}"
+    echo "Starting tests..."
     echo ""
     
     # Check required tools
