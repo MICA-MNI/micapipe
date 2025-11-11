@@ -118,13 +118,37 @@ import csv
 import sys
 try:
     with open('$csv_file', 'r') as f:
-        reader = csv.DictReader(f)
-        scores = [float(row['dice']) for row in reader if 'dice' in row]
+        lines = f.readlines()
+        if not lines:
+            print('0')
+            sys.exit()
+        
+        # Check if first line is a header or data
+        first_line = lines[0].strip().lower()
+        has_header = 'region' in first_line or 'dice' in first_line
+        
+        if has_header:
+            # Use DictReader for CSV with headers
+            f.seek(0)
+            reader = csv.DictReader(f)
+            scores = [float(row['dice']) for row in reader if 'dice' in row]
+        else:
+            # Parse CSV without headers - assume format: id,region_name,dice_score
+            scores = []
+            for line in lines:
+                parts = line.strip().split(',')
+                if len(parts) >= 3:
+                    try:
+                        # Last column should be the DICE score
+                        scores.append(float(parts[-1]))
+                    except ValueError:
+                        pass
+        
         if scores:
             print(sum(scores) / len(scores))
         else:
             print('0')
-except:
+except Exception as e:
     print('0')
 " 2>/dev/null)
         
