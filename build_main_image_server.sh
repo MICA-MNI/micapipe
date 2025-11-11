@@ -1,6 +1,15 @@
 #!/bin/bash
 # ============================================================================
-# BU#   ./build_main_image_server.sh
+# MICAPIPE MAIN IMAGE (STAGE 2) - SERVER VERSION
+# ============================================================================
+# This script builds the fast micapipe image using the pre-built base
+# 
+# PURPOSE: Create the final micapipe image by adding code to base
+
+set -euo pipefail
+
+# Disable Docker Content Trust to avoid signing issues
+export DOCKER_CONTENT_TRUST=0#   ./build_main_image_server.sh
 #
 echo ""
 

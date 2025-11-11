@@ -7,6 +7,9 @@
 
 set -euo pipefail
 
+# Disable Docker Content Trust to avoid signing issues
+export DOCKER_CONTENT_TRUST=0
+
 echo "🐳 MICApipe Comprehensive Base Image Builder (Server)"
 echo "====================================================="
 
