@@ -10,6 +10,33 @@ set -euo pipefail
 # Disable Docker Content Trust to avoid signing issues
 export DOCKER_CONTENT_TRUST=0
 
+# Check Docker permissions
+if ! docker info &> /dev/null; then
+    echo "❌ Docker permission error detected!"
+    echo ""
+    echo "🔧 To fix this, choose one option:"
+    echo ""
+    echo "Option 1 (Recommended): Add your user to docker group"
+    echo "  sudo usermod -aG docker $USER"
+    echo "  newgrp docker  # or logout and login again"
+    echo ""
+    echo "Option 2: Run this script with sudo"
+    echo "  sudo ./build_comprehensive_base_server.sh"
+    echo ""
+    echo "Option 3: Use sudo for this run only (will prompt for password)"
+    read -p "Use sudo for this run? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        export DOCKER_CMD="sudo docker"
+        echo "✅ Will use sudo for docker commands"
+    else
+        echo "❌ Exiting. Please fix Docker permissions first."
+        exit 1
+    fi
+else
+    export DOCKER_CMD="docker"
+fi
+
 echo "🐳 MICApipe Comprehensive Base Image Builder (Server)"
 echo "====================================================="
 
@@ -144,7 +171,7 @@ for cache_image in "${CACHE_FROM_IMAGES[@]}"; do
 done
 
 # Start Docker build with server-specific settings
-if docker build \
+if $DOCKER_CMD build \
     --file Dockerfile.mamba-base \
     --memory=12g \
     --memory-swap=16g \
@@ -163,7 +190,7 @@ if docker build \
     echo "Build log: $BUILD_LOG"
     echo ""
     echo "📊 Image size:"
-    docker images "${FULL_BASE_IMAGE}"
+    $DOCKER_CMD images "${FULL_BASE_IMAGE}"
     echo ""
     echo "🏷️  Tagged images:"
     echo "   - ${FULL_BASE_IMAGE} (dated version)"
