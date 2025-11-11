@@ -137,13 +137,6 @@ BUILD_LOG="build_comprehensive_base_${TIMESTAMP}.log"
 echo "📝 Build log: $BUILD_LOG"
 echo ""
 
-# Build the image with optimizations
-docker build \
-    -f Dockerfile.mamba-base \
-    -t ghcr.io/mica-mni/micapipe-comprehensive-base:latest \
-    --build-arg CUSTOM_TMPDIR="/export03/data/enning" \
-echo ""
-
 # Build cache arguments
 CACHE_ARGS=()
 for cache_image in "${CACHE_FROM_IMAGES[@]}"; do
@@ -157,7 +150,7 @@ if docker build \
     --memory-swap=16g \
     --build-arg CUSTOM_TMPDIR="/export03/data/enning" \
     --build-arg DOWNLOADS_DIR="/downloads" \
-    "${CACHE_ARGS[@]}" \
+    ${CACHE_ARGS[@]+"${CACHE_ARGS[@]}"} \
     --tag "${FULL_BASE_IMAGE}" \
     --tag "${LATEST_BASE_IMAGE}" \
     . 2>&1 | tee "$BUILD_LOG"; then
