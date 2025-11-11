@@ -114,41 +114,34 @@ check_dice_scores() {
     # Parse and validate DICE scores
     if command -v python3 &> /dev/null; then
         local avg_dice=$(python3 -c "
-import csv
 import sys
 try:
+    scores = []
     with open('$csv_file', 'r') as f:
-        lines = f.readlines()
-        if not lines:
-            print('0')
-            sys.exit()
-        
-        # Check if first line is a header or data
-        first_line = lines[0].strip().lower()
-        has_header = 'region' in first_line or 'dice' in first_line
-        
-        if has_header:
-            # Use DictReader for CSV with headers
-            f.seek(0)
-            reader = csv.DictReader(f)
-            scores = [float(row['dice']) for row in reader if 'dice' in row]
-        else:
-            # Parse CSV without headers - assume format: id,region_name,dice_score
-            scores = []
-            for line in lines:
-                parts = line.strip().split(',')
-                if len(parts) >= 3:
-                    try:
-                        # Last column should be the DICE score
-                        scores.append(float(parts[-1]))
-                    except ValueError:
-                        pass
-        
-        if scores:
-            print(sum(scores) / len(scores))
-        else:
-            print('0')
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            # Skip header if present
+            if 'region' in line.lower() or 'dice' in line.lower():
+                continue
+            # Parse CSV line - format: id,region_name,dice_score
+            parts = line.split(',')
+            if len(parts) >= 3:
+                try:
+                    # Last column is the DICE score
+                    score = float(parts[-1])
+                    scores.append(score)
+                except ValueError:
+                    pass
+    
+    if scores:
+        avg = sum(scores) / len(scores)
+        print(f'{avg:.4f}')
+    else:
+        print('0')
 except Exception as e:
+    print('0', file=sys.stderr)
     print('0')
 " 2>/dev/null)
         
