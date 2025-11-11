@@ -1,6 +1,14 @@
 #!/bin/bash
 # ============================================================================
-# BUILD MICAPIPE MAIN IMAGE (STAGE 2) - SERVER VERSION
+# BU#   ./build_main_image_server.sh
+#
+echo ""
+
+# Verify we're in the right location
+if [[ "$PWD" != *"/export03/data/enning/downloads"* ]]; then
+    echo "⚠️  WARNING: Not running from expected server location"
+    echo "   Current: $PWD"
+    echo "   Expected: /export03/data/enning/downloads"MAIN IMAGE (STAGE 2) - SERVER VERSION
 # ============================================================================
 # This script builds the fast micapipe image using the pre-built base
 # 
@@ -10,11 +18,28 @@
 #   - Integrates with pre-installed tools
 #
 # WHEN TO RUN: Every time micapipe code changes (frequently!)
-# WHERE TO RUN: On server at /export02/data/enning/downloads
+#!/bin/bash
+# Build script for main micapipe image (adds micapipe code to base image)
+# This script expects to be run on the server
+set -e
+
+echo "=================================="
+echo "MICApipe Main Image Build"
+echo "Server Build Script"
+echo "=================================="
+echo ""
+echo "This script builds the main micapipe image by adding micapipe code"
+echo "to the comprehensive base image."
+echo ""
+# WHERE TO RUN: On server at /export03/data/enning/downloads
+echo "📁 Expected server location: /export03/data/enning/downloads"
+echo ""
+# USAGE:
+#   cd /export03/data/enning/downloads
 # EXPECTED TIME: 3-5 minutes (95% faster than full build!)
 #
 # USAGE:
-#   cd /export02/data/enning/downloads
+#   cd /export03/data/enning/downloads
 #   ./build_main_image_server.sh [OPTIONS]
 #
 # OPTIONS:
@@ -77,10 +102,10 @@ echo "📦 Registry: $REGISTRY"
 echo ""
 
 # Check we're in the right location
-if [[ "$PWD" != *"/export02/data/enning/downloads"* ]]; then
+if [[ "$PWD" != *"/export03/data/enning/downloads"* ]]; then
     echo "⚠️  Warning: Not in expected server downloads directory"
     echo "   Current: $PWD"
-    echo "   echo "   Expected: /export02/data/enning/downloads""
+    echo "   Expected: /export03/data/enning/downloads"
     echo ""
     read -p "Continue anyway? (y/N): " -n 1 -r
     echo

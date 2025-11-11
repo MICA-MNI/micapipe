@@ -15,17 +15,18 @@ echo "   Stage 1 (Dockerfile.mamba-base): Build base with ALL tools (45-90 min, 
 echo "   Stage 2 (Dockerfile.main): Build main with code only (3-5 min, frequently)"
 echo ""
 echo "💡 Simple approach: Pre-downloaded files + build files in SAME directory"
-echo ""# MICApipe Two-Stage Build Strategy - Server Migration Script
+echo ""#!/bin/bash
+set -eu# MICApipe Two-Stage Build Strategy - Server Migration Script
 # ============================================================
 # This script migrates micapipe code to server for two-stage builds:
 #   STAGE 1: Build comprehensive base image (Dockerfile.mamba-base) - rarely
 #   STAGE 2: Build fast main image (Dockerfile.main) - frequently
 # 
 # Copies from: ~/micapipe (local development)
-# Copies to: /export02/data/enning/downloads (local fast storage + pre-downloaded files)
+# Copies to: /export03/data/enning/downloads (local fast storage + pre-downloaded files)
 
 # Configuration
-SERVER_BASE_DIR="/export02/data/enning"
+SERVER_BASE_DIR="/export03/data/enning"
 DOWNLOADS_DIR="$SERVER_BASE_DIR/downloads"
 BUILD_DIR="$DOWNLOADS_DIR"  # Build in downloads directory with pre-downloaded files
 BACKUP_DIR="$SERVER_BASE_DIR/downloads_backup"

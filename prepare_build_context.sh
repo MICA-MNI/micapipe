@@ -11,7 +11,7 @@ echo "📦 Preparing build context with pre-downloaded files"
 echo "=================================================="
 
 # Source and destination directories
-SOURCE_DIR="/export02/data/enning"
+SOURCE_DIR="/export03/data/enning"
 BUILD_DIR="$(pwd)"
 
 echo "📁 Copying pre-downloaded files from ${SOURCE_DIR} to build context..."
