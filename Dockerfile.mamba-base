@@ -43,9 +43,9 @@ RUN mkdir -p /downloads && \
     else \
         echo "⚠️  FSL FIX not found, will download during build"; \
     fi && \
-    if [ -f "/tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+    if [ -f "/tmp/build_context/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh" ]; then \
         echo "✅ Copying Miniconda..."; \
-        cp /tmp/build_context/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /downloads/; \
+        cp /tmp/build_context/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh /downloads/; \
     else \
         echo "⚠️  Miniconda not found, will download during build"; \
     fi && \
@@ -147,14 +147,14 @@ ENV PATH="/opt/miniconda-latest/bin:$PATH"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
 
-# Install Miniconda
-RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
+# Install Miniconda with Python 3.11
+RUN if [ -f "/downloads/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh" ]; then \
         echo "✅ Using pre-downloaded Miniconda installer"; \
-        cp /downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh /tmp/miniconda.sh; \
+        cp /downloads/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh /tmp/miniconda.sh; \
     else \
         echo "📥 Downloading Miniconda installer..."; \
         wget -q --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -O /tmp/miniconda.sh \
-            https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh; \
+            https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh; \
     fi \
     && bash /tmp/miniconda.sh -b -p /opt/miniconda-latest \
     && rm /tmp/miniconda.sh \
@@ -170,9 +170,10 @@ RUN if [ -f "/downloads/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh" ]; then \
     && conda config --set remote_max_retries 3
 
 # Create optimized micapipe environment
+# Python 3.11 required for LAMAReg (>=3.10) and security support until Oct 2027
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Using mamba for ultra-fast environment creation..." \
-    && mamba create -y -n micapipe python=3.9
+    && mamba create -y -n micapipe python=3.11
 
 # Install core scientific packages in smaller chunks to prevent OOM
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
@@ -232,9 +233,10 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
         cmake make gcc_linux-64 gxx_linux-64
 
 # Create designer environment
+# Python 3.11 for consistency with micapipe environment and modern package support
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Creating designer environment with mamba..." \
-    && mamba create -y -n designer python=3.8 \
+    && mamba create -y -n designer python=3.11 \
     && mamba install -y -n designer -c conda-forge \
         numpy scipy matplotlib nibabel dipy
 
@@ -376,6 +378,22 @@ RUN echo "Installing DESIGNER pipeline..." \
 
 ENV DESIGNER_HOME="/opt/DESIGNER"
 ENV PATH="/opt/DESIGNER:$PATH"
+
+# Install synb0-DISCO for DWI without reverse phase encoding
+RUN echo "Installing synb0-DISCO..." \
+    && git clone https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
+    && chmod -R a+rx /opt/Synb0-DISCO
+
+ENV SYNB0_DISCO_HOME="/opt/Synb0-DISCO"
+ENV PATH="/opt/Synb0-DISCO:$PATH"
+
+# Install SynBOLD-DisCo for fMRI without reverse phase encoding
+RUN echo "Installing SynBOLD-DisCo..." \
+    && git clone https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
+    && chmod -R a+rx /opt/SynBOLD-DisCo
+
+ENV SYNBOLD_DISCO_HOME="/opt/SynBOLD-DisCo"
+ENV PATH="/opt/SynBOLD-DisCo:$PATH"
 
 # Install R and libraries
 RUN set -uex; \
