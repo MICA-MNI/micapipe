@@ -176,23 +176,24 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && mamba create -y -n micapipe python=3.11
 
 # Install core scientific packages in smaller chunks to prevent OOM
+# Note: Removed strict version pins to allow Python 3.11 compatibility
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        numpy=1.21.5 scipy pandas=1.4.4 matplotlib=3.4.3
+        numpy scipy pandas matplotlib
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 2)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        seaborn plotly nibabel=4.0.2 pillow packaging
+        seaborn plotly nibabel pillow packaging
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 3)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        scikit-learn scikit-image scikit-fmm nilearn astropy dipy==1.4.1
+        scikit-learn scikit-image scikit-fmm nilearn astropy dipy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 4)..." \
