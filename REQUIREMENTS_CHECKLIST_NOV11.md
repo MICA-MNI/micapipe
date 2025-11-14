@@ -240,8 +240,8 @@ lamareg apply-warpfield --help
 Update your pre-download script to fetch:
 
 ```bash
-# NEW: Miniconda Python 3.11 installer
-wget https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+# NEW: Miniconda Python 3.11 installer (Ubuntu 18.04 compatible)
+wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh
 
 # Existing (no changes needed)
 # FSL 6.0.2
@@ -256,8 +256,9 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.
 - Update Miniconda installer check:
   ```bash
   OLD: Miniconda3-py39_22.11.1-1-Linux-x86_64.sh
-  NEW: Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+  NEW: Miniconda3-py311_23.10.0-1-Linux-x86_64.sh
   ```
+  Note: Version 23.10.0-1 is used for Ubuntu 18.04 compatibility (GLIBC 2.27)
 
 ### prepare_build_context.sh
 - Add new Miniconda installer to copy list

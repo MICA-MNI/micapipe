@@ -43,12 +43,13 @@ https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh
 
 **New Installer:**
 ```dockerfile
-https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh
 ```
 
-**Version Jump**: py39_22.11.1-1 (Nov 2022) → py311_25.9.1-3 (Sep 2025)
-- 3 years newer
-- Latest stable Python 3.11 base
+**Version Jump**: py39_22.11.1-1 (Nov 2022) → py311_23.10.0-1 (Oct 2023)
+- Python 3.11 base
+- Compatible with Ubuntu 18.04 (GLIBC 2.27)
+- Note: Newer versions (24.x, 25.x) require GLIBC ≥2.28
 
 ### 3. New Tools Added
 
@@ -194,9 +195,11 @@ fi
 ### Pre-Download Requirements
 Update your pre-download script to fetch:
 ```bash
-# New Miniconda installer
-wget https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+# New Miniconda installer (compatible with Ubuntu 18.04 GLIBC 2.27)
+wget https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh
 ```
+
+**Important:** Newer Miniconda versions (24.x, 25.x) require GLIBC ≥2.28 and are incompatible with Ubuntu 18.04 (bionic).
 
 ## Migration Notes
 
@@ -222,7 +225,7 @@ If Python 3.11 causes issues:
 
 2. **Revert Miniconda**:
    ```dockerfile
-   Miniconda3-py311_25.9.1-3 → Miniconda3-py310_23.10.0-1
+   Miniconda3-py311_23.10.0-1 → Miniconda3-py310_23.10.0-1
    ```
 
 3. **Keep new tools**: synb0-DISCO and SynBOLD-DisCo are Python-version independent

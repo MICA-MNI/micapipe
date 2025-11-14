@@ -43,9 +43,9 @@ RUN mkdir -p /downloads && \
     else \
         echo "⚠️  FSL FIX not found, will download during build"; \
     fi && \
-    if [ -f "/tmp/build_context/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh" ]; then \
+    if [ -f "/tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
         echo "✅ Copying Miniconda..."; \
-        cp /tmp/build_context/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh /downloads/; \
+        cp /tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /downloads/; \
     else \
         echo "⚠️  Miniconda not found, will download during build"; \
     fi && \
@@ -147,14 +147,14 @@ ENV PATH="/opt/miniconda-latest/bin:$PATH"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
 
-# Install Miniconda with Python 3.11
-RUN if [ -f "/downloads/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh" ]; then \
+# Install Miniconda with Python 3.11 (compatible with Ubuntu 18.04 GLIBC 2.27)
+RUN if [ -f "/downloads/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
         echo "✅ Using pre-downloaded Miniconda installer"; \
-        cp /downloads/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh /tmp/miniconda.sh; \
+        cp /downloads/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /tmp/miniconda.sh; \
     else \
         echo "📥 Downloading Miniconda installer..."; \
         wget -q --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -O /tmp/miniconda.sh \
-            https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh; \
+            https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh; \
     fi \
     && bash /tmp/miniconda.sh -b -p /opt/miniconda-latest \
     && rm /tmp/miniconda.sh \
