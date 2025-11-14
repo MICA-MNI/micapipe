@@ -160,7 +160,13 @@ for cache_image in "${CACHE_FROM_IMAGES[@]}"; do
 done
 
 # Start Docker build with server-specific settings
-# Large tarballs are excluded via .dockerignore and downloaded during build
+# CRITICAL: Set DOCKER_TMPDIR to use server storage, not limited local disk
+export DOCKER_TMPDIR="/export03/data/enning/docker_tmp"
+mkdir -p "$DOCKER_TMPDIR"
+
+echo "🗂️  Docker temp directory: $DOCKER_TMPDIR"
+echo ""
+
 if docker build \
     --file Dockerfile.mamba-base \
     --memory=12g \

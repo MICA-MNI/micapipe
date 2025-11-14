@@ -14,10 +14,44 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ARG CUSTOM_TMPDIR="/export03/data/enning"
 ARG DOWNLOADS_DIR="/downloads"
 
-# Pre-downloaded files should be bind-mounted at runtime, not copied
-# This avoids "no space left on device" errors from Docker's limited storage
-# Files are accessed directly from host /export03/data/enning/downloads/ via mount
-RUN mkdir -p /downloads && echo "🔍 Downloads directory created (will be mounted from host)"
+# Copy pre-downloaded dependencies from build context (current directory)
+# This expects the build to be run from the directory containing pre-downloaded files
+COPY . /tmp/build_context/
+RUN mkdir -p /downloads && \
+    echo "🔍 Copying pre-downloaded files from server location..." && \
+    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "✅ Copying FSL..."; \
+        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "✅ Copying FreeSurfer..."; \
+        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FreeSurfer not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
+        echo "✅ Copying AFNI..."; \
+        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
+    else \
+        echo "⚠️  AFNI not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
+        echo "✅ Copying FSL FIX..."; \
+        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
+    else \
+        echo "⚠️  FSL FIX not found, will download during build"; \
+    fi && \
+    if [ -f "/tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
+        echo "✅ Copying Miniconda..."; \
+        cp /tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /downloads/; \
+    else \
+        echo "⚠️  Miniconda not found, will download during build"; \
+    fi && \
+    echo "📁 Removing build context to save space..." && \
+    rm -rf /tmp/build_context && \
+    echo "✅ Pre-downloaded files setup complete"
 
 # Install system packages in smaller chunks to prevent OOM
 # Essential packages
