@@ -14,44 +14,19 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ARG CUSTOM_TMPDIR="/export03/data/enning"
 ARG DOWNLOADS_DIR="/downloads"
 
-# Copy pre-downloaded dependencies from build context (current directory)
-# Use server storage instead of /tmp to avoid running out of space
-COPY . ${CUSTOM_TMPDIR}/build_context/
-RUN mkdir -p /downloads && \
-    echo "🔍 Copying pre-downloaded files from server location..." && \
-    if [ -f "${CUSTOM_TMPDIR}/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
-        echo "✅ Copying FSL..."; \
-        cp ${CUSTOM_TMPDIR}/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL not found, will download during build"; \
-    fi && \
-    if [ -f "${CUSTOM_TMPDIR}/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
-        echo "✅ Copying FreeSurfer..."; \
-        cp ${CUSTOM_TMPDIR}/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FreeSurfer not found, will download during build"; \
-    fi && \
-    if [ -f "${CUSTOM_TMPDIR}/build_context/afni-linux_openmp_64.tgz" ]; then \
-        echo "✅ Copying AFNI..."; \
-        cp ${CUSTOM_TMPDIR}/build_context/afni-linux_openmp_64.tgz /downloads/; \
-    else \
-        echo "⚠️  AFNI not found, will download during build"; \
-    fi && \
-    if [ -f "${CUSTOM_TMPDIR}/build_context/fix-1.068.tar.gz" ]; then \
-        echo "✅ Copying FSL FIX..."; \
-        cp ${CUSTOM_TMPDIR}/build_context/fix-1.068.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL FIX not found, will download during build"; \
-    fi && \
-    if [ -f "${CUSTOM_TMPDIR}/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
-        echo "✅ Copying Miniconda..."; \
-        cp ${CUSTOM_TMPDIR}/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /downloads/; \
-    else \
-        echo "⚠️  Miniconda not found, will download during build"; \
-    fi && \
-    echo "📁 Removing build context to save space..." && \
-    rm -rf ${CUSTOM_TMPDIR}/build_context && \
-    echo "✅ Pre-downloaded files setup complete"
+# Copy ONLY the large pre-downloaded files directly to /downloads
+# This avoids copying the entire build context which causes "no space left on device"
+# Note: Files must exist in build context or build will fail - use .dockerignore to exclude if missing
+RUN mkdir -p /downloads && echo "🔍 Setting up downloads directory..."
+
+# Copy each large file individually (not the whole context)
+COPY fsl-6.0.2-centos6_64.tar.gz /downloads/ 
+COPY freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/
+COPY afni-linux_openmp_64.tgz /downloads/
+COPY fix-1.068.tar.gz /downloads/
+COPY Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /downloads/
+
+RUN echo "✅ Pre-downloaded files copied successfully" && ls -lh /downloads/
 
 # Install system packages in smaller chunks to prevent OOM
 # Essential packages
