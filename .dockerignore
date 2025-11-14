@@ -7,6 +7,12 @@
 .vscode
 micapipe_v*.sif
 
+# Large pre-downloaded tarballs - DO NOT send to Docker daemon
+# These should be downloaded during build, not copied
+*.tar.gz
+*.tgz
+Miniconda3-*.sh
+
 # Large directories not needed in container
 old/
 test_data/

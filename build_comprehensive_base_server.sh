@@ -160,6 +160,7 @@ for cache_image in "${CACHE_FROM_IMAGES[@]}"; do
 done
 
 # Start Docker build with server-specific settings
+# Large tarballs are excluded via .dockerignore and downloaded during build
 if docker build \
     --file Dockerfile.mamba-base \
     --memory=12g \
