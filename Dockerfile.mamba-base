@@ -385,11 +385,13 @@ ENV SYNBOLD_DISCO_HOME="/opt/SynBOLD-DisCo"
 ENV PATH="/opt/SynBOLD-DisCo:$PATH"
 
 # Install R and libraries
+# Fix: Use curl for GPG key instead of flaky keyserver
 RUN set -uex; \
     LD_LIBRARY_PATH=/lib64/:${PATH}; \
     apt-get update; \
     apt-get install -y software-properties-common apt-transport-https; \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
+    curl -sL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xE298A3A825C0D65DFD57CBB651716619E084DAB9" | apt-key add - || \
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
     apt-get update; \
     apt-get install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
@@ -425,6 +427,7 @@ RUN apt-get autoremove -y \
     && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/* \
+    && rm -rf /downloads/* \
     && find /opt -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # Metadata
@@ -437,5 +440,6 @@ LABEL org.opencontainers.image.documentation="https://micapipe.readthedocs.io/"
 # Set working directory
 WORKDIR /home/mica
 
-# Default command
+# Set entrypoint and default command
+ENTRYPOINT ["/neurodocker/startup.sh"]
 CMD ["/bin/bash"]
