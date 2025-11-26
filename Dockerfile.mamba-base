@@ -124,19 +124,7 @@ RUN echo "Installing additional dependencies..." && \
 # Set up locale
 RUN locale-gen en_US.UTF-8
 ENV LANG="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8" \
-    ND_ENTRYPOINT="/neurodocker/startup.sh"
-
-# Create neurodocker startup script
-RUN mkdir -p /neurodocker \
-    && echo '#!/bin/bash' > /neurodocker/startup.sh \
-    && echo 'set +e' >> /neurodocker/startup.sh \
-    && echo 'if [ -n "$1" ]; then' >> /neurodocker/startup.sh \
-    && echo '    exec "$@"' >> /neurodocker/startup.sh \
-    && echo 'else' >> /neurodocker/startup.sh \
-    && echo '    /bin/bash' >> /neurodocker/startup.sh \
-    && echo 'fi' >> /neurodocker/startup.sh \
-    && chmod +x /neurodocker/startup.sh
+    LC_ALL="en_US.UTF-8"
 
 # ============================================================================
 # CONDA/MAMBA INSTALLATION AND ENVIRONMENTS
@@ -410,16 +398,16 @@ ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 # FINAL ENVIRONMENT SETUP
 # ============================================================================
 
-# Set up environment activation
+# Set up conda environment activation for interactive shells
+# BASH_ENV ensures conda is activated for non-interactive shells too
 RUN echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> /etc/bash.bashrc \
-    && echo "conda activate micapipe" >> /etc/bash.bashrc \
-    && echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> $ND_ENTRYPOINT \
-    && echo "conda activate micapipe" >> $ND_ENTRYPOINT
+    && echo "conda activate micapipe" >> /etc/bash.bashrc
 
 # Copy R configuration
 COPY R_config/ /opt/R_config/
 ENV R_LIBS="/opt/R_config"
 
+# BASH_ENV activates conda for non-interactive scripts
 ENV BASH_ENV="/etc/bash.bashrc"
 
 # Final cleanup to reduce image size
@@ -440,6 +428,6 @@ LABEL org.opencontainers.image.documentation="https://micapipe.readthedocs.io/"
 # Set working directory
 WORKDIR /home/mica
 
-# Set entrypoint and default command
-ENTRYPOINT ["/neurodocker/startup.sh"]
+# Default shell command (no custom entrypoint needed - Docker handles this natively)
+# Using shell form allows BASH_ENV to activate conda automatically
 CMD ["/bin/bash"]
