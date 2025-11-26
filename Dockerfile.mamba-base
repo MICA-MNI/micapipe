@@ -272,6 +272,7 @@ RUN echo "Installing FSL..." \
     fi \
     && tar -xf /tmp/fsl.tar.gz -C /opt \
     && rm /tmp/fsl.tar.gz \
+    && mv /opt/fsl /opt/fsl-6.0.2 \
     && echo "Running FSL Python installer..." \
     && ${FSLDIR}/etc/fslconf/fslpython_install.sh -f ${FSLDIR}
 
