@@ -339,6 +339,17 @@ ENV FASTSURFER_HOME="/opt/FastSurfer"
 RUN echo "Installing FastSurfer..." \
     && git clone --depth 1 --branch v2.4.2 https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer
 
+# Install HippoUnfold (hippocampal unfolding and subfield segmentation)
+# Note: Models are downloaded automatically at runtime (container is lightweight)
+ENV HIPPUNFOLD_HOME="/opt/hippunfold"
+RUN echo "Installing HippoUnfold..." \
+    && git clone --depth 1 --branch v1.5.2 https://github.com/khanlab/hippunfold.git /opt/hippunfold \
+    && chmod -R a+rx /opt/hippunfold \
+    && . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda activate micapipe \
+    && pip install --no-cache-dir /opt/hippunfold
+ENV PATH="/opt/hippunfold:$PATH"
+
 # Install additional neuroimaging tools and dependencies
 RUN echo "Installing SWM (Superficial White Matter)..." \
     && git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
