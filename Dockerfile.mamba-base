@@ -245,7 +245,7 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && conda activate micapipe \
     && pip install --no-cache-dir \
-        vtk==9.2.2 \
+        vtk==9.2.6 \
         pyvista \
         fury==0.8.0 \
         antspyx \
