@@ -242,7 +242,9 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
         tedana==0.0.12 \
         duecredit \
         git+https://github.com/MICA-MNI/LAMAReg.git \
-        git+https://github.com/MICA-MNI/ENIGMA.git
+        git+https://github.com/MICA-MNI/ENIGMA.git \
+        git+https://github.com/jordandekraker/superficial-white-matter.git \
+        git+https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git
 
 # Clean up conda/mamba caches to reduce image size
 RUN conda clean -ya \
@@ -340,21 +342,7 @@ RUN echo "Installing FastSurfer..." \
     && git clone --depth 1 --branch v2.4.2 https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer
 
 # Install additional neuroimaging tools and dependencies
-RUN echo "Installing SWM (Superficial White Matter)..." \
-    && git clone https://github.com/jordandekraker/superficial-white-matter.git /opt/SWM \
-    && chmod +x /opt/SWM/SWM \
-    && chmod -R a+rx /opt/SWM
-
-ENV SWM_HOME="/opt/SWM"
-ENV PATH="/opt/SWM:$PATH"
-
-RUN echo "Installing DESIGNER pipeline..." \
-    && git clone https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git /opt/DESIGNER \
-    && chmod +x /opt/DESIGNER/DESIGNER \
-    && chmod +x /opt/DESIGNER/DESIGNER.py
-
-ENV DESIGNER_HOME="/opt/DESIGNER"
-ENV PATH="/opt/DESIGNER:$PATH"
+# Note: SWM and DESIGNER are installed via pip above
 
 # Install synb0-DISCO for DWI without reverse phase encoding
 RUN echo "Installing synb0-DISCO..." \
