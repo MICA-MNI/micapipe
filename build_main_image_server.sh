@@ -202,17 +202,6 @@ echo "   ✅ Surface data and parcellations"
 echo "   ✅ R configuration"
 echo ""
 
-read -p "Proceed with main image build? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ Build cancelled"
-    exit 0
-fi
-
-# ============================================================================
-# DOCKER BUILD
-# ============================================================================
-
 echo ""
 echo "🏗️  Starting Docker build..."
 echo "============================================="

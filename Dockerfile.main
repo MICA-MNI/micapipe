@@ -47,11 +47,11 @@ RUN chmod +x /opt/micapipe/micapipe \
 
 # Move fix settings and FSL configuration files
 RUN bash -c 'cd /opt/micapipe && \
-    mv fix_settings.sh /opt/fix1.068/settings.sh && \
+    mv fix_settings.sh /opt/fix/settings.sh && \
     mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
 
 # Copy fsaverage5 surface to FreeSurfer
-RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer-7.4.1/subjects'
+RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer/subjects'
 
 # ============================================================================
 # ENVIRONMENT VARIABLES
