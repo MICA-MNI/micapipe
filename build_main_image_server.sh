@@ -1,33 +1,4 @@
 #!/bin/bash
-# ============================================================================
-# MICAPIPE MAIN IMAGE (STAGE 2) - SERVER VERSION
-# ============================================================================
-# This script builds the fast micapipe image using the pre-built base
-# 
-# PURPOSE: Create the final micapipe image by adding code to base
-
-set -euo pipefail
-
-# Disable Docker Content Trust to avoid signing issues
-export DOCKER_CONTENT_TRUST=0#   ./build_main_image_server.sh
-#
-echo ""
-
-# Verify we're in the right location
-if [[ "$PWD" != *"/export03/data/enning/downloads"* ]]; then
-    echo "⚠️  WARNING: Not running from expected server location"
-    echo "   Current: $PWD"
-    echo "   Expected: /export03/data/enning/downloads"MAIN IMAGE (STAGE 2) - SERVER VERSION
-# ============================================================================
-# This script builds the fast micapipe image using the pre-built base
-# 
-# PURPOSE: Create the final micapipe image by adding code to base
-#   - Uses micapipe-base:latest as foundation
-#   - Adds only micapipe source code and configuration
-#   - Integrates with pre-installed tools
-#
-# WHEN TO RUN: Every time micapipe code changes (frequently!)
-#!/bin/bash
 # Build script for main micapipe image (adds micapipe code to base image)
 # This script expects to be run on the server
 set -e
