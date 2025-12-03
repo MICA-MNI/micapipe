@@ -8,7 +8,7 @@
 
 # Use the comprehensive base image we just built
 # Replace with your actual registry/tag once base is pushed
-ARG BASE_IMAGE=ghcr.io/mica-mni/micapipe-base:latest
+ARG BASE_IMAGE=ghcr.io/mica-mni/micapipe-comprehensive-base:latest
 FROM ${BASE_IMAGE}
 
 USER root
@@ -58,9 +58,8 @@ ENV PATH="/opt/micapipe/:/opt/micapipe/functions:${PATH}"
 WORKDIR /home/mica
 
 # Set micapipe as the entrypoint
-# Note: Still using neurodocker/startup.sh for environment setup
-# This can be modernized in future versions if needed
-ENTRYPOINT ["/neurodocker/startup.sh", "/opt/micapipe/micapipe"]
+# Note: Base image handles environment activation via BASH_ENV
+ENTRYPOINT ["/opt/micapipe/micapipe"]
 
 # ============================================================================
 # IMAGE BUILD COMPLETE

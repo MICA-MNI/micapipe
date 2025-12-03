@@ -37,7 +37,7 @@ export DOCKER_CONTENT_TRUST=0
 # CONFIGURATION
 # ============================================================================
 
-BASE_IMAGE="${MICAPIPE_BASE_IMAGE:-ghcr.io/mica-mni/micapipe-base:latest}"
+BASE_IMAGE="${MICAPIPE_BASE_IMAGE:-ghcr.io/mica-mni/micapipe-comprehensive-base:latest}"
 CUSTOM_TAG=""
 REGISTRY="${MICAPIPE_REGISTRY:-ghcr.io/mica-mni}"
 PUSH_TO_REGISTRY="false"
