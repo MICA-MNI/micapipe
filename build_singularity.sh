@@ -10,9 +10,9 @@ DOCKER_IMAGE="ghcr.io/mica-mni/micapipe"
 DOCKER_TAG="${1:-latest}"
 FULL_DOCKER_IMAGE="${DOCKER_IMAGE}:${DOCKER_TAG}"
 
-BASE_DIR="/host/cassio/export03/data/enning"
+BASE_DIR="/export03/data/enning"
 OUTPUT_DIR="${BASE_DIR}/singularity"
-OUTPUT_PATH="${OUTPUT_DIR}/micapipe_v1_beta.sif"
+OUTPUT_PATH="${OUTPUT_DIR}/micapipe_v0.2.3.sif"
 
 # Performance settings for your 128GB server
 export SINGULARITY_CACHEDIR="${BASE_DIR}/.singularity_cache"
