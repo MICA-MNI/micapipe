@@ -24,8 +24,18 @@ LABEL maintainer="MICA Lab <mica.lab@mcgill.ca>" \
 # MICAPIPE CODE & CONFIGURATION
 # ============================================================================
 
-# Copy micapipe source code
-COPY . /opt/micapipe/
+# Copy micapipe source code (selective to avoid large tarballs in build context)
+# This approach works regardless of what files are in the build directory
+COPY micapipe /opt/micapipe/micapipe
+COPY micapipe.py /opt/micapipe/micapipe.py
+COPY functions /opt/micapipe/functions
+COPY parcellations /opt/micapipe/parcellations
+COPY surfaces /opt/micapipe/surfaces
+COPY MNI152Volumes /opt/micapipe/MNI152Volumes
+COPY MICs60_T1-atlas /opt/micapipe/MICs60_T1-atlas
+COPY fsl_conf /opt/micapipe/fsl_conf
+COPY R_config /opt/micapipe/R_config
+COPY fix_settings.sh /opt/micapipe/fix_settings.sh
 
 # Set permissions
 RUN chmod +x /opt/micapipe/micapipe \
