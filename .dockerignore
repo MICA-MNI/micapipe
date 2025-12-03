@@ -30,3 +30,19 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Large installer files (CRITICAL: Do not copy these into the image!)
+*.tar.gz
+*.tgz
+*.zip
+Miniconda*.sh
+fsl*.tar.gz
+freesurfer*.tar.gz
+afni*.tgz
+fix*.tar.gz
+
+# Build scripts
+build_*.sh
+migrate_*.sh
+prepare_build_context.sh
+check_docker_space.sh
+
