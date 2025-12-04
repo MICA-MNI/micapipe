@@ -2,6 +2,7 @@
 #
 # Local-only fast Singularity build - no registry access needed
 # Optimized for local Docker images with 128GB RAM server
+# Uses TAR method to avoid Docker temp space issues
 #
 
 set -e
@@ -14,11 +15,12 @@ BASE_DIR="/export03/data/enning"
 OUTPUT_DIR="${BASE_DIR}/singularity"
 OUTPUT_PATH="${OUTPUT_DIR}/micapipe_v1_beta.sif"
 
-# Performance settings for your 128GB server
+# Use export03 for ALL temp files to avoid /export01 space issues
 export SINGULARITY_CACHEDIR="${BASE_DIR}/.singularity_cache"
 export SINGULARITY_TMPDIR="${BASE_DIR}/.singularity_tmp"
-export SINGULARITY_MEMORY="64G"  # Use half your RAM
-export OMP_NUM_THREADS=$(nproc)
+export TMPDIR="${BASE_DIR}/.tmp"
+export TEMP="${BASE_DIR}/.tmp"
+export TMP="${BASE_DIR}/.tmp"
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 
@@ -97,7 +99,7 @@ LOCAL_SIZE=$(docker image inspect "$FULL_DOCKER_IMAGE" --format='{{.Size}}' | aw
 log "✅ Found local image: $LOCAL_SIZE"
 
 # Create directories
-mkdir -p "$OUTPUT_DIR" "$SINGULARITY_CACHEDIR" "$SINGULARITY_TMPDIR"
+mkdir -p "$OUTPUT_DIR" "$SINGULARITY_CACHEDIR" "$SINGULARITY_TMPDIR" "${BASE_DIR}/.tmp"
 
 # Check space
 AVAILABLE=$(df -BG "$BASE_DIR" | awk 'NR==2 {print $4}' | sed 's/G//')
@@ -116,112 +118,79 @@ fi
 START_TIME=$(date +%s)
 
 # ============================================================================
-# Method 1: Streaming (fastest - no intermediate files) 
+# TAR Method: Most reliable - avoids Docker temp directory issues
+# The streaming method uses Docker's internal temp (/export01/docker/tmp)
+# which is full. TAR method writes directly to our specified path.
 # ============================================================================
-log "⚡ Trying streaming method (fastest)..."
-log "📊 Progress monitoring: watching output file size..."
+TAR_FILE="${BASE_DIR}/.tmp/micapipe_docker_$$.tar"
 
-# Start progress monitor in background
-monitor_progress() {
-    while true; do
+log "📤 Exporting Docker image to tar file..."
+log "📍 Tar location: $TAR_FILE"
+
+# Monitor tar creation in background
+(
+    sleep 10  # Give docker save time to start
+    while [ -f "$TAR_FILE" ]; do
+        SIZE=$(du -h "$TAR_FILE" 2>/dev/null | cut -f1 || echo "0")
+        log "📈 Tar export progress: $SIZE"
+        sleep 30
+    done
+) &
+TAR_MONITOR_PID=$!
+
+# Create tar file - writes directly to export03, bypassing Docker temp
+docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
+DOCKER_EXIT=$?
+
+# Stop tar monitor
+kill $TAR_MONITOR_PID 2>/dev/null || true
+wait $TAR_MONITOR_PID 2>/dev/null || true
+
+if [ $DOCKER_EXIT -ne 0 ]; then
+    log "❌ Docker save failed with exit code $DOCKER_EXIT"
+    rm -f "$TAR_FILE"
+    exit 1
+fi
+
+TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
+log "✅ Docker export complete: $TAR_SIZE"
+
+log "🔧 Building SIF from tar..."
+
+# Monitor SIF creation in background
+(
+    sleep 10  # Give singularity time to start
+    while [ -f "$OUTPUT_PATH" ] || [ ! -f "$OUTPUT_PATH" ]; do
         if [ -f "$OUTPUT_PATH" ]; then
             SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
-            log "📈 Current size: $SIZE"
+            log "📈 SIF build progress: $SIZE"
         else
-            log "⏳ Waiting for output file to appear..."
+            log "⏳ SIF build in progress..."
         fi
         sleep 30
+        # Check if parent process is still running
+        if ! kill -0 $$ 2>/dev/null; then
+            break
+        fi
     done
-}
+) &
+SIF_MONITOR_PID=$!
 
-# Start monitoring
-monitor_progress &
-MONITOR_PID=$!
+# Build SIF from tar
+singularity build --force "$OUTPUT_PATH" "docker-archive://$TAR_FILE"
+SINGULARITY_EXIT=$?
 
-# Run the actual build with verbose output
-log "🔄 Starting docker save | singularity build..."
-if timeout 7200 bash -c "docker save '$FULL_DOCKER_IMAGE' | singularity build --force '$OUTPUT_PATH' docker-archive:///dev/stdin" 2>&1 | while read line; do
-    log "SINGULARITY: $line"
-done; then
-    # Stop monitor
-    kill $MONITOR_PID 2>/dev/null || true
-    wait $MONITOR_PID 2>/dev/null || true
-    log "✅ Streaming method succeeded!"
-    USED_METHOD="streaming"
-else
-    # Stop monitor  
-    kill $MONITOR_PID 2>/dev/null || true
-    wait $MONITOR_PID 2>/dev/null || true
-    log "⚠️  Streaming failed, trying tar method..."
-    
-    # ============================================================================
-    # Method 2: Tar method (more reliable)
-    # ============================================================================
-    TAR_FILE="${BASE_DIR}/micapipe_docker_$$.tar"
-    
-    log "📤 Exporting Docker to tar..."
-    
-    # Monitor tar creation
-    (while [ ! -f "$TAR_FILE" ] || [ $(stat -f%z "$TAR_FILE" 2>/dev/null || echo 0) -eq 0 ]; do
-        sleep 5
-        log "⏳ Waiting for tar export to start..."
-    done
-    
-    while [ -f "$TAR_FILE" ] && kill -0 $! 2>/dev/null; do
-        SIZE=$(du -h "$TAR_FILE" 2>/dev/null | cut -f1 || echo "0")
-        log "📈 Tar progress: $SIZE"
-        sleep 30
-    done) &
-    
-    TAR_MONITOR_PID=$!
-    
-    # Create tar file
-    docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE" &
-    DOCKER_PID=$!
-    
-    # Wait for docker save to complete
-    wait $DOCKER_PID
-    
-    # Stop tar monitor
-    kill $TAR_MONITOR_PID 2>/dev/null || true
-    wait $TAR_MONITOR_PID 2>/dev/null || true
-    
-    TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
-    log "✅ Export complete: $TAR_SIZE"
-    
-    log "🔧 Building SIF from tar..."
-    
-    # Monitor SIF creation
-    (while [ ! -f "$OUTPUT_PATH" ] || [ $(stat -f%z "$OUTPUT_PATH" 2>/dev/null || echo 0) -eq 0 ]; do
-        sleep 5
-        log "⏳ Waiting for SIF build to start..."
-    done
-    
-    while [ -f "$OUTPUT_PATH" ] && kill -0 $! 2>/dev/null; do
-        SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
-        log "📈 SIF progress: $SIZE"
-        sleep 30
-    done) &
-    
-    SIF_MONITOR_PID=$!
-    
-    # Build SIF
-    singularity build --force \
-        "$OUTPUT_PATH" \
-        "docker-archive://$TAR_FILE" &
-    SINGULARITY_PID=$!
-    
-    # Wait for singularity build to complete
-    wait $SINGULARITY_PID
-    
-    # Stop SIF monitor
-    kill $SIF_MONITOR_PID 2>/dev/null || true
-    wait $SIF_MONITOR_PID 2>/dev/null || true
-    
-    log "🧹 Cleaning up tar file..."
-    rm -f "$TAR_FILE"
-    
-    USED_METHOD="tar"
+# Stop SIF monitor
+kill $SIF_MONITOR_PID 2>/dev/null || true
+wait $SIF_MONITOR_PID 2>/dev/null || true
+
+# Clean up tar file
+log "🧹 Cleaning up tar file..."
+rm -f "$TAR_FILE"
+
+if [ $SINGULARITY_EXIT -ne 0 ]; then
+    log "❌ Singularity build failed with exit code $SINGULARITY_EXIT"
+    exit 1
 fi
 
 END_TIME=$(date +%s)
@@ -231,12 +200,11 @@ DURATION_SEC=$((DURATION % 60))
 SIZE=$(du -h "$OUTPUT_PATH" | cut -f1)
 
 log "============================================="
-log "✅ LOCAL BUILD COMPLETE"
+log "✅ BUILD COMPLETE"
 log "============================================="
 log "📦 File: $OUTPUT_PATH"
 log "📊 Size: $SIZE"
 log "⏱️  Time: ${DURATION_MIN}m ${DURATION_SEC}s"
-log "🎯 Method: $USED_METHOD"
 log ""
 log "🧪 Test with:"
 log "   singularity run $OUTPUT_PATH --help"
