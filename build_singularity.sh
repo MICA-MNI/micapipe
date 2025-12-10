@@ -138,11 +138,13 @@ log "📍 Tar location: $TAR_FILE"
 ) &
 TAR_MONITOR_PID=$!
 
-docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
-# Create tar file - prefer skopeo when DockerRootDir is on /export01 (avoids daemon tmp)
+# Check Docker Root Dir
 DOCKER_ROOT_DIR=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)
+BUILD_METHOD="tar"
+
 if [[ -n "$DOCKER_ROOT_DIR" && "$DOCKER_ROOT_DIR" == /export01* ]]; then
     log "⚠️  Docker daemon root is on $DOCKER_ROOT_DIR which may be low on space"
+    
     if command -v skopeo >/dev/null 2>&1; then
         log "🔁 Using skopeo to copy image directly to docker-archive (no daemon temporary files)"
         if skopeo copy --override-os linux "docker://$FULL_DOCKER_IMAGE" "docker-archive:$TAR_FILE"; then
@@ -151,10 +153,41 @@ if [[ -n "$DOCKER_ROOT_DIR" && "$DOCKER_ROOT_DIR" == /export01* ]]; then
             DOCKER_EXIT=2
         fi
     else
-        log "❌ skopeo not found. Can't safely export image without using Docker daemon temp at $DOCKER_ROOT_DIR"
-        log "ℹ️  Options: 1) install skopeo, 2) reconfigure Docker to use /export03, or 3) free space on /export01"
+        log "❌ skopeo not found. Switching to Local Registry strategy (avoids temp space issues)..."
+        BUILD_METHOD="registry"
+        
+        # Stop tar monitor as we won't use it
+        kill $TAR_MONITOR_PID 2>/dev/null || true
         rm -f "$TAR_FILE"
-        exit 1
+        
+        # Start Registry
+        REG_PORT=5000
+        REG_NAME="micapipe-reg-$$"
+        log "🐳 Starting local registry on port $REG_PORT..."
+        docker run -d -p ${REG_PORT}:5000 --restart=always --name $REG_NAME \
+            -v "${BASE_DIR}/.tmp/registry":/var/lib/registry \
+            registry:2
+            
+        # Push
+        LOCAL_TAG="localhost:${REG_PORT}/micapipe:latest"
+        log "🏷️  Tagging image as $LOCAL_TAG..."
+        docker tag "$FULL_DOCKER_IMAGE" "$LOCAL_TAG"
+        
+        log "⬆️  Pushing to local registry..."
+        docker push "$LOCAL_TAG"
+        
+        # Build SIF
+        log "🔧 Building SIF from local registry..."
+        singularity build --force --no-https "$OUTPUT_PATH" "docker://$LOCAL_TAG"
+        SINGULARITY_EXIT=$?
+        
+        # Cleanup
+        log "🧹 Stopping local registry..."
+        docker rm -f $REG_NAME
+        docker rmi "$LOCAL_TAG"
+        rm -rf "${BASE_DIR}/.tmp/registry"
+        
+        DOCKER_EXIT=0
     fi
 else
     # Docker root dir is not on /export01 — use docker save to write tar directly
@@ -166,47 +199,49 @@ fi
 kill $TAR_MONITOR_PID 2>/dev/null || true
 wait $TAR_MONITOR_PID 2>/dev/null || true
 
-if [ $DOCKER_EXIT -ne 0 ]; then
-    log "❌ Docker save failed with exit code $DOCKER_EXIT"
+if [ "$BUILD_METHOD" == "tar" ]; then
+    if [ $DOCKER_EXIT -ne 0 ]; then
+        log "❌ Docker save failed with exit code $DOCKER_EXIT"
+        rm -f "$TAR_FILE"
+        exit 1
+    fi
+
+    TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
+    log "✅ Docker export complete: $TAR_SIZE"
+
+    log "🔧 Building SIF from tar..."
+
+    # Monitor SIF creation in background
+    (
+        sleep 10  # Give singularity time to start
+        while [ -f "$OUTPUT_PATH" ] || [ ! -f "$OUTPUT_PATH" ]; do
+            if [ -f "$OUTPUT_PATH" ]; then
+                SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
+                log "📈 SIF build progress: $SIZE"
+            else
+                log "⏳ SIF build in progress..."
+            fi
+            sleep 30
+            # Check if parent process is still running
+            if ! kill -0 $$ 2>/dev/null; then
+                break
+            fi
+        done
+    ) &
+    SIF_MONITOR_PID=$!
+
+    # Build SIF from tar
+    singularity build --force "$OUTPUT_PATH" "docker-archive://$TAR_FILE"
+    SINGULARITY_EXIT=$?
+
+    # Stop SIF monitor
+    kill $SIF_MONITOR_PID 2>/dev/null || true
+    wait $SIF_MONITOR_PID 2>/dev/null || true
+
+    # Clean up tar file
+    log "🧹 Cleaning up tar file..."
     rm -f "$TAR_FILE"
-    exit 1
 fi
-
-TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
-log "✅ Docker export complete: $TAR_SIZE"
-
-log "🔧 Building SIF from tar..."
-
-# Monitor SIF creation in background
-(
-    sleep 10  # Give singularity time to start
-    while [ -f "$OUTPUT_PATH" ] || [ ! -f "$OUTPUT_PATH" ]; do
-        if [ -f "$OUTPUT_PATH" ]; then
-            SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
-            log "📈 SIF build progress: $SIZE"
-        else
-            log "⏳ SIF build in progress..."
-        fi
-        sleep 30
-        # Check if parent process is still running
-        if ! kill -0 $$ 2>/dev/null; then
-            break
-        fi
-    done
-) &
-SIF_MONITOR_PID=$!
-
-# Build SIF from tar
-singularity build --force "$OUTPUT_PATH" "docker-archive://$TAR_FILE"
-SINGULARITY_EXIT=$?
-
-# Stop SIF monitor
-kill $SIF_MONITOR_PID 2>/dev/null || true
-wait $SIF_MONITOR_PID 2>/dev/null || true
-
-# Clean up tar file
-log "🧹 Cleaning up tar file..."
-rm -f "$TAR_FILE"
 
 if [ $SINGULARITY_EXIT -ne 0 ]; then
     log "❌ Singularity build failed with exit code $SINGULARITY_EXIT"
