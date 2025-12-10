@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Local-only fast Singularity build - no registry access needed
-# Optimized for local Docker images with 128GB RAM server
-# Uses TAR method to avoid Docker temp space issues
+# Singularity build from local Docker image
+# Uses docklog "🔧 Building SIF directly from Docker daemon..."r-daemon:// protocol - Singularity reads directly from Docker daemon
+# No intermediate tar files, no temp space issues
 #
 
 set -e
@@ -24,66 +24,10 @@ export TMP="${BASE_DIR}/.tmp"
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 
-# Function to check and kill stuck processes
-check_stuck_processes() {
-    log "🔍 Checking for stuck processes..."
-    
-    # Check for singularity processes
-    SING_PROCS=$(ps aux | grep singularity | grep -v grep | wc -l)
-    if [ "$SING_PROCS" -gt 0 ]; then
-        log "🔍 Found $SING_PROCS singularity processes:"
-        ps aux | grep singularity | grep -v grep
-    fi
-    
-    # Check for docker save processes  
-    DOCKER_PROCS=$(ps aux | grep "docker save" | grep -v grep | wc -l)
-    if [ "$DOCKER_PROCS" -gt 0 ]; then
-        log "🔍 Found $DOCKER_PROCS docker save processes:"
-        ps aux | grep "docker save" | grep -v grep
-    fi
-    
-    # Check temp directory usage
-    if [ -d "$SINGULARITY_TMPDIR" ]; then
-        TEMP_USAGE=$(du -sh "$SINGULARITY_TMPDIR" 2>/dev/null | cut -f1 || echo "0")
-        log "💾 Temp directory: $TEMP_USAGE"
-    fi
-    
-    # Check if output file exists and its size
-    if [ -f "$OUTPUT_PATH" ]; then
-        OUTPUT_SIZE=$(du -h "$OUTPUT_PATH" | cut -f1)
-        log "📁 Output file exists: $OUTPUT_SIZE"
-    else
-        log "❌ No output file yet"
-    fi
-}
-
-# Function to kill all related processes
-kill_stuck_build() {
-    log "🛑 Killing stuck build processes..."
-    
-    # Kill singularity processes
-    pkill -f singularity 2>/dev/null || true
-    
-    # Kill docker save processes
-    pkill -f "docker save" 2>/dev/null || true
-    
-    # Clean up temp files
-    if [ -d "$SINGULARITY_TMPDIR" ]; then
-        rm -rf "$SINGULARITY_TMPDIR"/* 2>/dev/null || true
-    fi
-    
-    # Remove partial output
-    if [ -f "$OUTPUT_PATH" ]; then
-        rm -f "$OUTPUT_PATH"
-    fi
-    
-    log "✅ Cleanup complete"
-}
-
 # ============================================================================
 # Pre-flight checks
 # ============================================================================
-log "🚀 LOCAL FAST SINGULARITY BUILD"
+log "🚀 SINGULARITY BUILD (docker-daemon:// method)"
 log "📦 Image: $FULL_DOCKER_IMAGE"
 log "📍 Output: $OUTPUT_PATH"
 
@@ -118,130 +62,40 @@ fi
 START_TIME=$(date +%s)
 
 # ============================================================================
-# TAR Method: Most reliable - avoids Docker temp directory issues
-# The streaming method uses Docker's internal temp (/export01/docker/tmp)
-# which is full. TAR method writes directly to our specified path.
+# Build using docker-daemon:// protocol
+# Singularity reads directly from Docker daemon - no intermediate files needed
+# This avoids all temp space issues on /export01
 # ============================================================================
-TAR_FILE="${BASE_DIR}/.tmp/micapipe_docker_$$.tar"
 
-log "📤 Exporting Docker image to tar file..."
-log "📍 Tar location: $TAR_FILE"
+log "� Building SIF directly from Docker daemon..."
+log "   Using: docker-daemon://${FULL_DOCKER_IMAGE}"
 
-# Monitor tar creation in background
+# Monitor SIF creation in background
 (
-    sleep 10  # Give docker save time to start
-    while [ -f "$TAR_FILE" ]; do
-        SIZE=$(du -h "$TAR_FILE" 2>/dev/null | cut -f1 || echo "0")
-        log "📈 Tar export progress: $SIZE"
+    sleep 10
+    while true; do
+        if [ -f "$OUTPUT_PATH" ]; then
+            SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
+            log "📈 SIF build progress: $SIZE"
+        else
+            log "⏳ SIF build in progress..."
+        fi
         sleep 30
+        # Check if parent process is still running
+        if ! kill -0 $$ 2>/dev/null; then
+            break
+        fi
     done
 ) &
-TAR_MONITOR_PID=$!
+MONITOR_PID=$!
 
-# Check Docker Root Dir
-DOCKER_ROOT_DIR=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)
-BUILD_METHOD="tar"
+# Build directly from Docker daemon - no tar, no temp files
+singularity build --force "$OUTPUT_PATH" "docker-daemon://${FULL_DOCKER_IMAGE}"
+SINGULARITY_EXIT=$?
 
-if [[ -n "$DOCKER_ROOT_DIR" && "$DOCKER_ROOT_DIR" == /export01* ]]; then
-    log "⚠️  Docker daemon root is on $DOCKER_ROOT_DIR which may be low on space"
-    
-    if command -v skopeo >/dev/null 2>&1; then
-        log "🔁 Using skopeo to copy image directly to docker-archive (no daemon temporary files)"
-        if skopeo copy --override-os linux "docker://$FULL_DOCKER_IMAGE" "docker-archive:$TAR_FILE"; then
-            DOCKER_EXIT=0
-        else
-            DOCKER_EXIT=2
-        fi
-    else
-        log "❌ skopeo not found. Switching to Local Registry strategy (avoids temp space issues)..."
-        BUILD_METHOD="registry"
-        
-        # Stop tar monitor as we won't use it
-        kill $TAR_MONITOR_PID 2>/dev/null || true
-        rm -f "$TAR_FILE"
-        
-        # Start Registry
-        REG_PORT=5000
-        REG_NAME="micapipe-reg-$$"
-        log "🐳 Starting local registry on port $REG_PORT..."
-        docker run -d -p ${REG_PORT}:5000 --restart=always --name $REG_NAME \
-            -v "${BASE_DIR}/.tmp/registry":/var/lib/registry \
-            registry:2
-            
-        # Push
-        LOCAL_TAG="localhost:${REG_PORT}/micapipe:latest"
-        log "🏷️  Tagging image as $LOCAL_TAG..."
-        docker tag "$FULL_DOCKER_IMAGE" "$LOCAL_TAG"
-        
-        log "⬆️  Pushing to local registry..."
-        docker push "$LOCAL_TAG"
-        
-        # Build SIF
-        log "🔧 Building SIF from local registry..."
-        singularity build --force --no-https "$OUTPUT_PATH" "docker://$LOCAL_TAG"
-        SINGULARITY_EXIT=$?
-        
-        # Cleanup
-        log "🧹 Stopping local registry..."
-        docker rm -f $REG_NAME
-        docker rmi "$LOCAL_TAG"
-        rm -rf "${BASE_DIR}/.tmp/registry"
-        
-        DOCKER_EXIT=0
-    fi
-else
-    # Docker root dir is not on /export01 — use docker save to write tar directly
-    docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
-    DOCKER_EXIT=$?
-fi
-
-# Stop tar monitor
-kill $TAR_MONITOR_PID 2>/dev/null || true
-wait $TAR_MONITOR_PID 2>/dev/null || true
-
-if [ "$BUILD_METHOD" == "tar" ]; then
-    if [ $DOCKER_EXIT -ne 0 ]; then
-        log "❌ Docker save failed with exit code $DOCKER_EXIT"
-        rm -f "$TAR_FILE"
-        exit 1
-    fi
-
-    TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
-    log "✅ Docker export complete: $TAR_SIZE"
-
-    log "🔧 Building SIF from tar..."
-
-    # Monitor SIF creation in background
-    (
-        sleep 10  # Give singularity time to start
-        while [ -f "$OUTPUT_PATH" ] || [ ! -f "$OUTPUT_PATH" ]; do
-            if [ -f "$OUTPUT_PATH" ]; then
-                SIZE=$(du -h "$OUTPUT_PATH" 2>/dev/null | cut -f1 || echo "0")
-                log "📈 SIF build progress: $SIZE"
-            else
-                log "⏳ SIF build in progress..."
-            fi
-            sleep 30
-            # Check if parent process is still running
-            if ! kill -0 $$ 2>/dev/null; then
-                break
-            fi
-        done
-    ) &
-    SIF_MONITOR_PID=$!
-
-    # Build SIF from tar
-    singularity build --force "$OUTPUT_PATH" "docker-archive://$TAR_FILE"
-    SINGULARITY_EXIT=$?
-
-    # Stop SIF monitor
-    kill $SIF_MONITOR_PID 2>/dev/null || true
-    wait $SIF_MONITOR_PID 2>/dev/null || true
-
-    # Clean up tar file
-    log "🧹 Cleaning up tar file..."
-    rm -f "$TAR_FILE"
-fi
+# Stop monitor
+kill $MONITOR_PID 2>/dev/null || true
+wait $MONITOR_PID 2>/dev/null || true
 
 if [ $SINGULARITY_EXIT -ne 0 ]; then
     log "❌ Singularity build failed with exit code $SINGULARITY_EXIT"
