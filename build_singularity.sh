@@ -138,9 +138,29 @@ log "📍 Tar location: $TAR_FILE"
 ) &
 TAR_MONITOR_PID=$!
 
-# Create tar file - writes directly to export03, bypassing Docker temp
 docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
-DOCKER_EXIT=$?
+# Create tar file - prefer skopeo when DockerRootDir is on /export01 (avoids daemon tmp)
+DOCKER_ROOT_DIR=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)
+if [[ -n "$DOCKER_ROOT_DIR" && "$DOCKER_ROOT_DIR" == /export01* ]]; then
+    log "⚠️  Docker daemon root is on $DOCKER_ROOT_DIR which may be low on space"
+    if command -v skopeo >/dev/null 2>&1; then
+        log "🔁 Using skopeo to copy image directly to docker-archive (no daemon temporary files)"
+        if skopeo copy --override-os linux "docker://$FULL_DOCKER_IMAGE" "docker-archive:$TAR_FILE"; then
+            DOCKER_EXIT=0
+        else
+            DOCKER_EXIT=2
+        fi
+    else
+        log "❌ skopeo not found. Can't safely export image without using Docker daemon temp at $DOCKER_ROOT_DIR"
+        log "ℹ️  Options: 1) install skopeo, 2) reconfigure Docker to use /export03, or 3) free space on /export01"
+        rm -f "$TAR_FILE"
+        exit 1
+    fi
+else
+    # Docker root dir is not on /export01 — use docker save to write tar directly
+    docker save "$FULL_DOCKER_IMAGE" -o "$TAR_FILE"
+    DOCKER_EXIT=$?
+fi
 
 # Stop tar monitor
 kill $TAR_MONITOR_PID 2>/dev/null || true
