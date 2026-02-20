@@ -56,5 +56,5 @@ dependencies:
     - cssselect2==0.7.0
     - pygeodesic==0.1.8
     - seaborn==0.11.2
-    - git+https://github.com/MICA-MNI/LAMAReg.git
+    - git+https://github.com/MICA-MNI/LAMAReg.git@v1.6.0
     - git+https://github.com/MICA-MNI/ENIGMA.git
