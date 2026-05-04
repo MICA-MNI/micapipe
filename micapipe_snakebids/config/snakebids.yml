@@ -149,7 +149,6 @@ parameters:
     GSR: "FALSE"                 # -GSR
     noFIX: "FALSE"               # -noFIX
     sesAnat: "FALSE"             # -sesAnat <str>
-    regAffine: "FALSE"           # -regAffine
     dropTR: "FALSE"              # -dropTR
     noFC: "FALSE"                # -noFC
 
