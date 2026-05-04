@@ -36,20 +36,18 @@ rule proc_dwi:
         dwi_rpe=process_multi_inputs(config["parameters"]["proc_dwi"]["dwi_rpe"]),
         dwi_processed=config["parameters"]["proc_dwi"]["dwi_processed"],
         rpe_all=config["parameters"]["proc_dwi"]["rpe_all"],
-        regAffine=config["parameters"]["proc_dwi"]["regAffine"],
         b0thr=config["parameters"]["proc_dwi"]["b0thr"],
         # the following are just flags
         dwi_acq=process_optional_flags(config["parameters"]["proc_dwi"]["dwi_acq"], "dwi_acq"),
         no_bvalue_scaling=process_flags(config["parameters"]["proc_dwi"]["no_bvalue_scaling"], "no_bvalue_scaling"),
-        regSynth=process_flags(config["parameters"]["proc_dwi"]["regSynth"], "regSynth"),
         dwi_upsample=process_flags(config["parameters"]["proc_dwi"]["dwi_upsample"], "dwi_upsample"),
     threads: config.get("threads", 4),
     shell:
         """
         {command} -sub sub-{wildcards.subject} -out {output_args} -bids {bids_args} -proc_dwi \
             -threads {threads} -ses {wildcards.session} -dwi_main {params.dwi_main} -dwi_rpe {params.dwi_rpe} \
-            -dwi_processed {params.dwi_processed} -rpe_all {params.rpe_all} -regAffine {params.regAffine} \
-            -b0thr {params.b0thr} {params.dwi_acq} {params.no_bvalue_scaling} {params.regSynth} {params.dwi_upsample}
+            -dwi_processed {params.dwi_processed} -rpe_all {params.rpe_all} \
+            -b0thr {params.b0thr} {params.dwi_acq} {params.no_bvalue_scaling} {params.dwi_upsample}
         """
 
 rule sc:

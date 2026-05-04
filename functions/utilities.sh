@@ -630,13 +630,14 @@ function post_struct_transformations() {
 }
 
 function proc_func_transformations() {
-  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
-  Info "Creating transformations file: func space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: func space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_func\",
     \"LastRun\": \"$(date)\",
-    \"Only affine\": \"${regAffine}\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro brain\": \"${T1nativepro_brain}\",
     \"func brain\": \"${fmri_brain}\",
     \"from-t1nativepro_to-func\": [
@@ -663,13 +664,15 @@ function proc_func_transformations() {
 }
 
 function proc_dwi_transformations() {
-  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
-  Info "Creating transformations file: DWI space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: DWI space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_dwi\",
     \"LastRun\": \"$(date)\",
     \"transform\": \"${Mode}\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro\": \"${T1nativepro}\",
     \"DWI b0\": \"${dwi_b0}\",
     \"from-t1nativepro_to-dwi\": [
@@ -775,7 +778,7 @@ function json_nativepro_flair() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"regSynth\": \"${synth_reg}\",
+    \"reg\": \"LAMAreg\",
     \"mode_wm\": \"${mode_wm}\",
     \"mode_gm\": \"${mode_gm}\",
     \"mode_brain\": \"${mode_brain}\",
@@ -946,11 +949,8 @@ function json_mpc() {
     \"Module\": \"Microstructural profile covariance\",
     \"acquisition\": \"${mpc_str}\",
     \"microstructural_img\": \"${1}\",
-    \"microstructural_reg\": \"${regImage}\",
     \"reference_mri\": \"${qMRI_reference}\",
     \"warped_qmri\": \"${qMRI_warped}\",
-    \"regSynth\": \"${synth_reg}\",
-    \"reg_nonlinear\": \"${reg_nonlinear}\",
     \"registration\": \"${reg}\",
     \"num_surfs\": \"${num_surfs}\",
     \"VoxelSize\": \"${res}\",
@@ -1001,10 +1001,8 @@ function json_dwipreproc() {
     \"Class\": \"DWI preprocessing\",
     \"rpe_all\": \"${rpe_all}\",
     \"dwi_acq\": \"${dwi_acq}\",
-    \"Only Affine\": \"${regAffine}\",
     \"B0 threshold\": \"${b0thr}\",
     \"Bvalue scaling\": \"${bvalscale}\",
-    \"regSynth\": \"${synth_reg}\",
     \"dwi_upsample\": \"${dwi_upsample}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
