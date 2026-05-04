@@ -6,6 +6,7 @@
 .gitignore
 .vscode
 micapipe_v*.sif
+.build-context/
 
 # Large directories not needed in container
 old/
@@ -29,4 +30,3 @@ dag.svg
 __pycache__/
 *.pyc
 *.pyo
-

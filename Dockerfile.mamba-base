@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM ubuntu:bionic-20201119
 
 USER root
@@ -12,46 +13,6 @@ ARG DEBIAN_FRONTEND="noninteractive"
 
 # Build arguments for server environment
 ARG CUSTOM_TMPDIR="/export03/data/enning"
-ARG DOWNLOADS_DIR="/downloads"
-
-# Copy pre-downloaded dependencies from build context (current directory)
-# This expects the build to be run from the directory containing pre-downloaded files
-COPY . /tmp/build_context/
-RUN mkdir -p /downloads && \
-    echo "🔍 Copying pre-downloaded files from server location..." && \
-    if [ -f "/tmp/build_context/fsl-6.0.2-centos6_64.tar.gz" ]; then \
-        echo "✅ Copying FSL..."; \
-        cp /tmp/build_context/fsl-6.0.2-centos6_64.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
-        echo "✅ Copying FreeSurfer..."; \
-        cp /tmp/build_context/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FreeSurfer not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/afni-linux_openmp_64.tgz" ]; then \
-        echo "✅ Copying AFNI..."; \
-        cp /tmp/build_context/afni-linux_openmp_64.tgz /downloads/; \
-    else \
-        echo "⚠️  AFNI not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/fix-1.068.tar.gz" ]; then \
-        echo "✅ Copying FSL FIX..."; \
-        cp /tmp/build_context/fix-1.068.tar.gz /downloads/; \
-    else \
-        echo "⚠️  FSL FIX not found, will download during build"; \
-    fi && \
-    if [ -f "/tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
-        echo "✅ Copying Miniconda..."; \
-        cp /tmp/build_context/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /downloads/; \
-    else \
-        echo "⚠️  Miniconda not found, will download during build"; \
-    fi && \
-    echo "📁 Removing build context to save space..." && \
-    rm -rf /tmp/build_context && \
-    echo "✅ Pre-downloaded files setup complete"
 
 # Install system packages in smaller chunks to prevent OOM
 # Essential packages
@@ -130,38 +91,49 @@ ENV LANG="en_US.UTF-8" \
 # CONDA/MAMBA INSTALLATION AND ENVIRONMENTS
 # ============================================================================
 
-# Install Miniconda with pre-download support
-ENV PATH="/opt/miniconda-latest/bin:$PATH"
+# Bootstrap the base prefix with micromamba, then keep using conda/mamba from
+# that prefix so the rest of the image and runtime scripts remain compatible.
+ENV PATH="/opt/miniconda-latest/bin:/usr/local/bin:$PATH"
+ENV MAMBA_ROOT_PREFIX="/opt/miniconda-latest"
 ENV MAMBA_NO_LOCK=1
 ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
 
-# Install Miniconda with Python 3.11 (compatible with Ubuntu 18.04 GLIBC 2.27)
-RUN if [ -f "/downloads/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh" ]; then \
-        echo "✅ Using pre-downloaded Miniconda installer"; \
-        cp /downloads/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh /tmp/miniconda.sh; \
+# Use micromamba to avoid the expensive `conda install mamba` bootstrap solve.
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    mkdir -p /tmp/micromamba-bin "${MAMBA_ROOT_PREFIX}" \
+    && echo "📥 Preparing micromamba bootstrap..." \
+    && if [ -f "/mnt/downloads/micromamba-linux-64.tar.bz2" ]; then \
+        echo "📦 Using pre-downloaded micromamba bootstrap"; \
+        cp /mnt/downloads/micromamba-linux-64.tar.bz2 /tmp/micromamba.tar.bz2; \
     else \
-        echo "📥 Downloading Miniconda installer..."; \
-        wget -q --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -O /tmp/miniconda.sh \
-            https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh; \
+        echo "📥 Downloading micromamba bootstrap from GitHub releases..."; \
+        curl -fL --retry 5 --retry-delay 2 --retry-connrefused \
+            -o /tmp/micromamba.tar.bz2 \
+            https://github.com/mamba-org/micromamba-releases/releases/download/2.5.0-2/micromamba-linux-64.tar.bz2; \
     fi \
-    && bash /tmp/miniconda.sh -b -p /opt/miniconda-latest \
-    && rm /tmp/miniconda.sh \
+    && tar -xjf /tmp/micromamba.tar.bz2 -C /tmp/micromamba-bin --strip-components=1 bin/micromamba \
+    && install -m 0755 /tmp/micromamba-bin/micromamba /usr/local/bin/micromamba \
+    && rm -rf /tmp/micromamba-bin /tmp/micromamba.tar.bz2 \
+    && echo "⚡ Bootstrapping base conda+mamba with micromamba..." \
+    && micromamba install -y -n base -c conda-forge \
+        python=3.11 conda mamba \
     && . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && conda config --set auto_update_conda false \
     && conda config --set show_channel_urls true \
     && conda config --set channel_priority strict \
-    && echo "🔧 Installing mamba with optimizations..." \
-    && conda install -y -n base -c conda-forge mamba \
     && echo "⚡ Configuring mamba for maximum speed..." \
     && conda config --set remote_read_timeout_secs 60 \
     && conda config --set remote_connect_timeout_secs 10 \
-    && conda config --set remote_max_retries 3
+    && conda config --set remote_max_retries 3 \
+    && micromamba clean --all --yes \
+    && conda clean -afy
 
 # Create optimized micapipe environment
 # Python 3.11 required for LAMAReg (>=3.10) and security support until Oct 2027
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Using mamba for ultra-fast environment creation..." \
-    && mamba create -y -n micapipe python=3.11
+    && mamba create -y -n micapipe python=3.11 \
+    && mamba clean -afy
 
 # Install core scientific packages in smaller chunks to prevent OOM
 # Note: Removed strict version pins to allow Python 3.11 compatibility
@@ -169,57 +141,67 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        numpy scipy pandas matplotlib
+        numpy scipy pandas matplotlib \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 2)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        seaborn plotly nibabel pillow packaging
+        seaborn plotly nibabel pillow packaging \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 3)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        scikit-learn scikit-image scikit-fmm nilearn astropy dipy
+        scikit-learn scikit-image scikit-fmm nilearn astropy dipy \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing core scientific packages (part 4)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        ipython jupyter tqdm joblib h5py hdf5 pytables
-
-# Install MRtrix3 separately
-RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
-    && echo "🔧 Installing MRtrix3..." \
-    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
-        --override-channels --strict-channel-priority \
-        mrtrix3==3.0.7
+        ipython jupyter tqdm joblib h5py hdf5 pytables \
+    && mamba clean -afy
 
 # Install utilities and networking packages in chunks
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 1)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        bzip2 ca-certificates curl git openssh aiohttp requests
+        bzip2 ca-certificates curl git openssh aiohttp requests \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 2)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        unzip wget xz zip cryptography attrs click pyyaml python-dateutil pytz
+        unzip wget xz zip cryptography attrs click pyyaml python-dateutil pytz \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 3)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        lxml paramiko pycryptodome urllib3
+        lxml paramiko pycryptodome urllib3 \
+    && mamba clean -afy
 
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🔧 Installing utilities and networking packages (part 4)..." \
     && mamba install -y -n micapipe -c conda-forge \
         --override-channels --strict-channel-priority \
-        cmake make gcc_linux-64 gxx_linux-64
+        cmake make gcc_linux-64 gxx_linux-64 \
+    && mamba clean -afy
+
+# Install MRtrix3 after the utility stack settles, otherwise later package
+# transactions can remove it while downgrading the Qt / Python graph.
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing MRtrix3..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+        --override-channels --strict-channel-priority \
+        mrtrix3==3.0.7 \
+    && mamba clean -afy
 
 # Create designer environment
 # Python 3.11 for consistency with micapipe environment and modern package support
@@ -227,7 +209,8 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
     && echo "🚀 Creating designer environment with mamba..." \
     && mamba create -y -n designer python=3.11 \
     && mamba install -y -n designer -c conda-forge \
-        numpy scipy matplotlib nibabel dipy
+        numpy scipy matplotlib nibabel dipy \
+    && mamba clean -afy
 
 # Install additional Python packages via pip
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
@@ -265,10 +248,11 @@ ENV FSLDIR="/opt/fsl-6.0.2" \
     FSLMACHINELIST="" \
     FSLREMOTECALL=""
 
-RUN echo "Installing FSL..." \
-    && if [ -f "/downloads/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FSL..." \
+    && if [ -f "/mnt/downloads/fsl-6.0.2-centos6_64.tar.gz" ]; then \
         echo "📦 Using pre-downloaded FSL"; \
-        cp /downloads/fsl-6.0.2-centos6_64.tar.gz /tmp/fsl.tar.gz; \
+        cp /mnt/downloads/fsl-6.0.2-centos6_64.tar.gz /tmp/fsl.tar.gz; \
     else \
         echo "📥 Downloading FSL from internet..."; \
         curl -fL https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz -o /tmp/fsl.tar.gz; \
@@ -290,10 +274,11 @@ ENV PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
     MNI_PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
     PATH="/opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:$PATH"
 
-RUN echo "Installing FreeSurfer..." \
-    && if [ -f "/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FreeSurfer..." \
+    && if [ -f "/mnt/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
         echo "📦 Using pre-downloaded FreeSurfer"; \
-        cp /downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /tmp/freesurfer.tar.gz; \
+        cp /mnt/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /tmp/freesurfer.tar.gz; \
     else \
         echo "📥 Downloading FreeSurfer from internet..."; \
         curl -fL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz -o /tmp/freesurfer.tar.gz; \
@@ -305,11 +290,12 @@ RUN echo "Installing FreeSurfer..." \
 ENV PATH="/opt/afni:$PATH" \
     AFNI_PLUGINPATH="/opt/afni"
 
-RUN echo "Installing AFNI..." \
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing AFNI..." \
     && mkdir -p /opt/afni \
-    && if [ -f "/downloads/afni-linux_openmp_64.tgz" ]; then \
+    && if [ -f "/mnt/downloads/afni-linux_openmp_64.tgz" ]; then \
         echo "📦 Using pre-downloaded AFNI"; \
-        cp /downloads/afni-linux_openmp_64.tgz /tmp/afni.tgz; \
+        cp /mnt/downloads/afni-linux_openmp_64.tgz /tmp/afni.tgz; \
     else \
         echo "📥 Downloading AFNI from internet..."; \
         curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz -o /tmp/afni.tgz; \
@@ -323,11 +309,12 @@ ENV ANTSPATH="/opt/ants-2.3.4/bin" \
     PATH="/opt/ants-2.3.4/bin:$PATH"
 
 # Install FSL FIX
-RUN echo "Installing FSL FIX..." \
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FSL FIX..." \
     && mkdir -p /opt/fix \
-    && if [ -f "/downloads/fix-1.068.tar.gz" ]; then \
+    && if [ -f "/mnt/downloads/fix-1.068.tar.gz" ]; then \
         echo "📦 Using pre-downloaded FSL FIX"; \
-        cp /downloads/fix-1.068.tar.gz /tmp/fix.tar.gz; \
+        cp /mnt/downloads/fix-1.068.tar.gz /tmp/fix.tar.gz; \
     else \
         echo "📥 Downloading FSL FIX from internet..."; \
         curl -fL https://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz -o /tmp/fix.tar.gz; \
@@ -346,7 +333,7 @@ RUN echo "Installing FastSurfer..." \
 
 # Install synb0-DISCO for DWI without reverse phase encoding
 RUN echo "Installing synb0-DISCO..." \
-    && git clone https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
+    && git clone --depth 1 https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
     && chmod -R a+rx /opt/Synb0-DISCO
 
 ENV SYNB0_DISCO_HOME="/opt/Synb0-DISCO"
@@ -354,25 +341,49 @@ ENV PATH="/opt/Synb0-DISCO:$PATH"
 
 # Install SynBOLD-DisCo for fMRI without reverse phase encoding
 RUN echo "Installing SynBOLD-DisCo..." \
-    && git clone https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
+    && git clone --depth 1 https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
     && chmod -R a+rx /opt/SynBOLD-DisCo
 
 ENV SYNBOLD_DISCO_HOME="/opt/SynBOLD-DisCo"
 ENV PATH="/opt/SynBOLD-DisCo:$PATH"
 
 # Install R and libraries
-# Fix: Use curl for GPG key instead of flaky keyserver
+# Keep the CRAN bootstrap and package installs in smaller chunks so the
+# builder does not have to resolve/configure the whole stack in one shot.
 RUN set -uex; \
-    LD_LIBRARY_PATH=/lib64/:${PATH}; \
     apt-get update; \
-    apt-get install -y software-properties-common apt-transport-https; \
+    apt-get install -y --no-install-recommends software-properties-common apt-transport-https; \
     curl -sL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xE298A3A825C0D65DFD57CBB651716619E084DAB9" | apt-key add - || \
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
     apt-get update; \
-    apt-get install -y r-base libblas-dev liblapack-dev gfortran g++ libgl1-mesa-glx; \
-    apt-get install -y r-base-dev; \
-    rm -rf /var/lib/apt/lists/*;
+    apt-get install -y --no-install-recommends \
+        gfortran \
+        libblas-dev \
+        liblapack-dev \
+        libpaper-utils \
+        libpaper1 \
+        libtcl8.6 \
+        libtk8.6 \
+        libxss1 \
+        tzdata \
+        xdg-utils; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        r-base-core \
+        r-recommended; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends r-base-dev; \
+    rm -rf /var/lib/apt/lists/*
 
 # Install c3d
 RUN set -uex; \
@@ -391,6 +402,23 @@ ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
 RUN echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> /etc/bash.bashrc \
     && echo "conda activate micapipe" >> /etc/bash.bashrc
 
+# Copy the static MICApipe data into the slow-changing base image so
+# code-only rebuilds do not have to recopy these assets.
+ENV MICAPIPE="/opt/micapipe"
+COPY parcellations/ /opt/micapipe/parcellations/
+COPY surfaces/ /opt/micapipe/surfaces/
+COPY MNI152Volumes/ /opt/micapipe/MNI152Volumes/
+COPY MICs60_T1-atlas/ /opt/micapipe/MICs60_T1-atlas/
+COPY fsl_conf/ /opt/micapipe/fsl_conf/
+COPY fix_settings.sh /opt/micapipe/fix_settings.sh
+COPY functions/MICAMTL_training_15HC_15PX.RData /opt/micapipe/functions/MICAMTL_training_15HC_15PX.RData
+
+RUN mkdir -p /opt/fix /opt/fsl-6.0.2/etc/flirtsch \
+    && cp /opt/micapipe/fix_settings.sh /opt/fix/settings.sh \
+    && cp /opt/micapipe/fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/ \
+    && cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer/subjects/ \
+    && chmod -R a+rX /opt/micapipe
+
 # Copy R configuration
 COPY R_config/ /opt/R_config/
 ENV R_LIBS="/opt/R_config"
@@ -403,7 +431,6 @@ RUN apt-get autoremove -y \
     && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/* \
-    && rm -rf /downloads/* \
     && find /opt -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # Metadata

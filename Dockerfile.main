@@ -24,34 +24,15 @@ LABEL maintainer="MICA Lab <mica.lab@mcgill.ca>" \
 # MICAPIPE CODE & CONFIGURATION
 # ============================================================================
 
-# Copy micapipe source code (selective to avoid large tarballs in build context)
-# This approach works regardless of what files are in the build directory
+# Copy only the fast-changing code layer. Large static assets now live in the
+# comprehensive base image so iterative rebuilds stay small.
 COPY micapipe /opt/micapipe/micapipe
 COPY micapipe.py /opt/micapipe/micapipe.py
 COPY functions /opt/micapipe/functions
-COPY parcellations /opt/micapipe/parcellations
-COPY surfaces /opt/micapipe/surfaces
-COPY MNI152Volumes /opt/micapipe/MNI152Volumes
-COPY MICs60_T1-atlas /opt/micapipe/MICs60_T1-atlas
-COPY fsl_conf /opt/micapipe/fsl_conf
-COPY R_config /opt/micapipe/R_config
-COPY fix_settings.sh /opt/micapipe/fix_settings.sh
 
 # Set permissions
 RUN chmod +x /opt/micapipe/micapipe \
-    && chmod -R a+rx /opt/micapipe
-
-# ============================================================================
-# INTEGRATE MICAPIPE WITH INSTALLED TOOLS
-# ============================================================================
-
-# Move fix settings and FSL configuration files
-RUN bash -c 'cd /opt/micapipe && \
-    mv fix_settings.sh /opt/fix/settings.sh && \
-    mv fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/'
-
-# Copy fsaverage5 surface to FreeSurfer
-RUN bash -c 'cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer/subjects'
+    && chmod -R a+rX /opt/micapipe
 
 # ============================================================================
 # ENVIRONMENT VARIABLES
