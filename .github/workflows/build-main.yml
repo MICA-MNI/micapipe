@@ -2,25 +2,26 @@ name: Build main image (fast code-only)
 
 # Fast code-iteration CI. The heavy comprehensive base image is treated
 # as a stable artifact — pulled from the registry, never rebuilt here.
-# Only the slim Dockerfile.main layer (which copies micapipe code) is
-# rebuilt, plus the Singularity SIF on top of it. Typical wall time: a
-# few seconds to ~2 minutes once the base is on the runner.
+# The slim Dockerfile.main rebuild + a `docker run --help` smoke test is
+# the entire fast path: total wall time ~10 seconds on a warm runner.
+#
+# Singularity SIF conversion is intentionally NOT in the fast path: it
+# takes 10-15 minutes for a 50GB image regardless of transport. SIF +
+# sample_test only runs when the `ci:build` label is on the PR (or via
+# manual dispatch), since that path is multi-hour.
 #
 # The slow base rebuild lives in build-base.yml and only fires when
 # Dockerfile.mamba-base or micapipe_environment.yml actually change.
-#
-# sample_test.sh is gated by the `ci:build` PR label since a full run is
-# multi-hour. Pull the label off again for routine code-only iteration.
 
 on:
   push:
     branches: [master, v1, "enning/**"]
-    # Skip when only docs / build-base / lint changed
     paths-ignore:
       - "**/*.md"
       - "docs/**"
       - "Dockerfile.mamba-base"
       - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
       - ".github/workflows/build-base.yml"
       - ".github/workflows/lint.yml"
   pull_request:
@@ -29,10 +30,18 @@ on:
       - "docs/**"
       - "Dockerfile.mamba-base"
       - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
       - ".github/workflows/build-base.yml"
       - ".github/workflows/lint.yml"
     types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
+    inputs:
+      run_sample_test:
+        description: "Build SIF and run sample_test (multi-hour)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
 
 concurrency:
   group: build-main-${{ github.ref }}
@@ -40,14 +49,16 @@ concurrency:
 
 jobs:
   build-main:
-    name: Build main image + SIF
+    name: Fast main rebuild + smoke test
     runs-on: self-hosted
     timeout-minutes: 30
     env:
       MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-comprehensive-base:latest
       MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:ci-${{ github.run_id }}
       MICAPIPE_MAIN_LATEST: ghcr.io/mica-mni/micapipe:latest
-      SIF_OUTPUT_PATH: /export03/data/enning/singularity/micapipe_ci_${{ github.run_id }}.sif
+
+    outputs:
+      sif_path: ${{ steps.sif.outputs.path }}
 
     steps:
       - name: Checkout
@@ -57,10 +68,9 @@ jobs:
         run: |
           set -e
           echo "Host: $(hostname)"
-          echo "Working dir: $(pwd)"
           docker version --format '{{.Server.Version}}' 2>&1 | tail -1
           singularity --version
-          df -h /export03
+          df -h /export03 /export01 || true
 
       - name: Ensure base image is present (pull, never build)
         run: |
@@ -76,7 +86,7 @@ jobs:
               exit 1
             fi
           fi
-          docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep micapipe-comprehensive-base
+          docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep micapipe-comprehensive-base | head -1
 
       - name: Build slim main image (code-only layer)
         run: |
@@ -87,58 +97,69 @@ jobs:
             -t "${MICAPIPE_MAIN_IMAGE}" \
             -t "${MICAPIPE_MAIN_LATEST}" \
             .
-          docker images --format '{{.Repository}}:{{.Tag}} {{.Size}} {{.CreatedAt}}' | grep "ghcr.io/mica-mni/micapipe " | head -3
 
-      - name: Build Singularity SIF from local Docker image
+      - name: Smoke-test via docker run (fast)
+        run: |
+          set -euo pipefail
+          # The wrapper auto-sources init.sh inside the container, so
+          # `-h` reaches printout iff init.sh + wrapper are intact.
+          time docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -h | head -5'
+          # Argument parser regression check — these errors should fire.
+          docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -sub 2>&1 | grep -q "requires a value"' \
+            && echo "Parser regression check: -sub bare → clear error ✓"
+          docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -sub -out /tmp 2>&1 | grep -q "got another flag"' \
+            && echo "Parser regression check: -sub -out → clear error ✓"
+
+      - name: Decide whether to build SIF + run sample_test
+        id: decide_full
+        shell: bash
+        run: |
+          run="false"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            labels='${{ toJson(github.event.pull_request.labels) }}'
+            echo "$labels" | grep -q '"name":\s*"ci:build"' && run="true"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            run="${{ github.event.inputs.run_sample_test }}"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "Full SIF + sample_test path: $run"
+
+      - name: Build Singularity SIF (only when full path requested)
+        id: sif
+        if: steps.decide_full.outputs.run == 'true'
         env:
           MICAPIPE_DOCKER_IMAGE: ghcr.io/mica-mni/micapipe
           MICAPIPE_DOCKER_TAG: ci-${{ github.run_id }}
-          MICAPIPE_SIF_OUTPUT_PATH: ${{ env.SIF_OUTPUT_PATH }}
+          MICAPIPE_SIF_OUTPUT_PATH: /export03/data/enning/singularity/micapipe_ci_${{ github.run_id }}.sif
         run: |
           set -euo pipefail
-          mkdir -p "$(dirname "${SIF_OUTPUT_PATH}")"
+          mkdir -p "$(dirname "${MICAPIPE_SIF_OUTPUT_PATH}")"
           time ./build_singularity.sh
-          ls -lh "${SIF_OUTPUT_PATH}"
-
-      - name: Smoke-test the SIF (--help only, fast)
-        run: |
-          set -euo pipefail
-          singularity exec "${SIF_OUTPUT_PATH}" /opt/micapipe/micapipe -h | head -5
-
-      - name: Decide whether to run sample_test
-        id: decide_test
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            labels='${{ toJson(github.event.pull_request.labels) }}'
-            if echo "$labels" | grep -q '"name":\s*"ci:build"'; then
-              echo "run=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "run=false" >> "$GITHUB_OUTPUT"
-            fi
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
+          ls -lh "${MICAPIPE_SIF_OUTPUT_PATH}"
+          echo "path=${MICAPIPE_SIF_OUTPUT_PATH}" >> "$GITHUB_OUTPUT"
 
       - name: Point sample_test at the freshly built SIF
-        if: steps.decide_test.outputs.run == 'true'
+        if: steps.decide_full.outputs.run == 'true'
         run: |
           set -euo pipefail
-          sed -i "s|^container_img=.*|container_img=${SIF_OUTPUT_PATH}|" tests/sample_test.sh
+          sed -i "s|^container_img=.*|container_img=${{ steps.sif.outputs.path }}|" tests/sample_test.sh
           grep '^container_img=' tests/sample_test.sh
 
       - name: Run sample_test (multi-hour; gated by ci:build label)
-        if: steps.decide_test.outputs.run == 'true'
+        if: steps.decide_full.outputs.run == 'true'
         timeout-minutes: 720
         run: |
           set -euo pipefail
           chmod +x ./tests/sample_test.sh
           ./tests/sample_test.sh
 
-      - name: Cleanup CI image tag (keep :latest)
+      - name: Cleanup CI artifacts (keep :latest tag, drop run-specific)
         if: always()
         run: |
           docker rmi "${MICAPIPE_MAIN_IMAGE}" 2>/dev/null || true
-          rm -f "${SIF_OUTPUT_PATH}" 2>/dev/null || true
+          if [[ -n "${{ steps.sif.outputs.path }}" ]]; then
+            rm -f "${{ steps.sif.outputs.path }}" 2>/dev/null || true
+          fi
