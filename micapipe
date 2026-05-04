@@ -205,9 +205,29 @@ source "${MICAPIPE}/functions/utilities.sh"
 #			ARGUMENTS
 # Create VARIABLES
 argCP="$@"
-for arg in "$@"
-do
-  case "$arg" in
+
+# Helper: validate that a value-taking flag has a non-flag value following it.
+# Issues a clear Error and exits when the user wrote, e.g., `-sub -out /foo`.
+require_value() {
+  local flag="$1"
+  local value="$2"
+  if [ -z "$value" ]; then
+    Error "Flag ${flag} requires a value but none was provided"
+    exit 1
+  fi
+  case "$value" in
+    -*)
+      Error "Flag ${flag} requires a value but got another flag: ${value}"
+      exit 1
+      ;;
+  esac
+}
+
+# Use a while loop on $1 (rather than `for arg in "$@"`) so that shift
+# semantics, value validation, and unknown-option detection behave correctly
+# even when callers chain flags or omit required values. See issue #162.
+while [ "$#" -gt 0 ]; do
+  case "$1" in
   -h|-help)
     help
     exit 1
@@ -217,18 +237,22 @@ do
     exit 1
   ;;
   -sub)
+    require_value "-sub" "$2"
     id=$2
     shift;shift
   ;;
   -out)
+    require_value "-out" "$2"
     out=$2
     shift;shift
   ;;
   -bids)
+    require_value "-bids" "$2"
     BIDS=$2
     shift;shift
   ;;
   -ses)
+    require_value "-ses" "$2"
     SES=$2
     shift;shift
   ;;
@@ -391,6 +415,7 @@ do
     shift;shift
   ;;
   -tmpDir)
+    require_value "-tmpDir" "$2"
     tmpDir=$2
     shift;shift;
   ;;
@@ -411,10 +436,12 @@ do
     shift
   ;;
   -fs_licence)
+    require_value "-fs_licence" "$2"
     fs_licence=$2
     shift;shift;
   ;;
   -T1)
+    require_value "-T1" "$2"
     t1="$2"
     shift;shift;
   ;;
@@ -467,6 +494,7 @@ do
     shift;shift
   ;;
   -threads)
+    require_value "-threads" "$2"
     threads=$2
     shift;shift
   ;;

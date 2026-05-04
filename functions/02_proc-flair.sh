@@ -79,12 +79,19 @@ N=0
 # Freesurfer SUBJECTs directory
 export SUBJECTS_DIR=${dir_surf}
 
-# Create script specific temp directory
-tmp="${tmpDir}/${RANDOM}_micapipe_flair_${idBIDS}"
+# Create script specific temp directory.
+# Include PID and a high-resolution timestamp alongside RANDOM so two
+# concurrent or rapidly-sequential FLAIR runs (e.g. ses-01 and ses-02)
+# never collide and one session's cleanup cannot stomp on another
+# session's working directory. See issue #162.
+tmp="${tmpDir}/$(date +%s%N)_$$_${RANDOM}_micapipe_flair_${idBIDS}"
 umask 000; mkdir -m 777 -p "$tmp"
 
-# TRAP in case the script fails
-trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
+# TRAP in case the script fails. Quote everything so paths with spaces
+# and trailing slashes don't break the cleanup call. The end-of-script
+# cleanup call below handles the success path; this trap only fires on
+# interrupt or termination.
+trap "cleanup '$tmp' '$nocleanup' '$here'" SIGINT SIGTERM
 
 # Make output directory
 outDir="${subject_dir}/maps"

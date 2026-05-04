@@ -263,7 +263,14 @@ bids_variables_unset() {
   unset bids_dwis
   unset bids_T1map
   unset bids_inv1
+  unset bids_flair
   unset dwi_reverse
+  # Session identifiers — unset so that sub-scripts that reuse a parent
+  # shell across sessions don't see stale ses-01 values when ses-02 runs.
+  # Safe to unset here because cleanup() only fires inside processing
+  # sub-scripts that are about to exit. See issue #162.
+  unset idBIDS
+  unset ses
 }
 
 micapipe_software() {
@@ -1118,21 +1125,24 @@ if [ -z "$TEST" ]; then $l_command; fi
 }
 
 function cleanup() {
-  # This script will clean the temporal directory
-  # and reset the old user path upon,
-  # interrupts, and termination.
-  tmp=$1
-  nocleanup=$2
-  here=$3
-  # Clean temporal directory and temporal fsaverage5
-  if [[ $nocleanup == "FALSE" ]]; then
-      rm -Rf "$tmp" 2>/dev/null
+  # Clean the temporal directory and reset the old user path upon
+  # interrupts, termination, or normal end-of-script. All inputs are
+  # quoted so paths containing spaces or trailing slashes are safe.
+  local tmp="$1"
+  local nocleanup="$2"
+  local here="$3"
+  # Refuse to delete suspicious paths (root, empty, or no separator) so a
+  # mis-set tmpDir cannot wipe the working tree.
+  if [[ "$nocleanup" == "FALSE" ]]; then
+      if [[ -n "$tmp" && "$tmp" != "/" && "$tmp" == */* ]]; then
+          rm -Rf "$tmp" 2>/dev/null
+      fi
   else
       echo -e "micapipe tmp directory was not erased: \n\t\t${tmp}";
   fi
-  cd "$here"
+  if [[ -n "$here" ]]; then cd "$here" || return; fi
   bids_variables_unset
-  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
+  if [[ -n "$OLD_PATH" ]]; then export PATH="$OLD_PATH"; unset OLD_PATH; fi
 }
 
 function missing_arg() {
