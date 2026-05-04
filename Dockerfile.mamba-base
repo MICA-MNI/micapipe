@@ -203,6 +203,16 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
         mrtrix3==3.0.7 \
     && mamba clean -afy
 
+# Install dcm2niix (required by `micapipe` and `mic2bids` for DICOM->NIfTI conversion).
+# Pinned to a recent upstream release; conda-forge package name is `dcm2niix`.
+# https://github.com/rordenlab/dcm2niix
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing dcm2niix..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        dcm2niix=1.0.20240202 \
+    && mamba clean -afy
+
 # Create designer environment
 # Python 3.11 for consistency with micapipe environment and modern package support
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
