@@ -30,9 +30,13 @@ COPY micapipe /opt/micapipe/micapipe
 COPY micapipe.py /opt/micapipe/micapipe.py
 COPY functions /opt/micapipe/functions
 
-# Set permissions
-RUN chmod +x /opt/micapipe/micapipe \
-    && chmod -R a+rX /opt/micapipe
+# Set permissions. The pipeline shells out to scripts under
+# /opt/micapipe/functions/*.sh and /opt/micapipe/micapipe.py, so we need
+# +x on every file (a+rx, lowercase). a+rX (capital X) would only
+# preserve +x on files that already had it on the host, which COPY does
+# not always carry through, and the wrapper would fail with
+# "Permission denied" on 01_proc-structural.sh etc.
+RUN chmod -R a+rx /opt/micapipe
 
 # ============================================================================
 # ENVIRONMENT VARIABLES
