@@ -84,6 +84,47 @@ docker image inspect "$FULL_DOCKER_IMAGE" >/dev/null 2>&1 || {
 
 rm -f "$OUTPUT_PATH"
 
-singularity build --force "$OUTPUT_PATH" "docker-daemon://${FULL_DOCKER_IMAGE}"
+# Pick a transport: prefer docker-daemon:// (fastest, streams layers
+# directly from the daemon) but fall back to docker-archive:// when the
+# Docker data root partition is tight, since docker-daemon:// writes
+# intermediate blobs to /var/lib/docker/tmp (or /export01/docker/tmp
+# on this server) and fails with 'no space left on device'.
+#
+# Override with MICAPIPE_SIF_TRANSPORT=docker-archive or =docker-daemon.
+TRANSPORT="${MICAPIPE_SIF_TRANSPORT:-auto}"
+
+if [[ "$TRANSPORT" == "auto" ]]; then
+    DOCKER_ROOT="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo "/var/lib/docker")"
+    AVAIL_GB="$(df -BG --output=avail "$DOCKER_ROOT" 2>/dev/null | tail -1 | tr -dc 0-9 || echo 0)"
+    IMAGE_GB="$(docker image inspect "$FULL_DOCKER_IMAGE" --format '{{.Size}}' | awk '{printf "%d", $1/1024/1024/1024 + 1}')"
+    NEEDED_GB=$((IMAGE_GB + 5))  # 5GB buffer
+    log "Docker root: $DOCKER_ROOT (${AVAIL_GB}G free); image: ~${IMAGE_GB}G"
+    if (( AVAIL_GB >= NEEDED_GB )); then
+        TRANSPORT="docker-daemon"
+    else
+        log "Docker root tight (need ~${NEEDED_GB}G, have ${AVAIL_GB}G) — switching to docker-archive"
+        TRANSPORT="docker-archive"
+    fi
+fi
+
+case "$TRANSPORT" in
+    docker-daemon)
+        log "Transport: docker-daemon:// (streaming)"
+        singularity build --force "$OUTPUT_PATH" "docker-daemon://${FULL_DOCKER_IMAGE}"
+        ;;
+    docker-archive)
+        TAR="${TMPDIR}/$(basename "$OUTPUT_PATH" .sif).tar"
+        log "Transport: docker-archive:// via $TAR"
+        rm -f "$TAR"
+        trap 'rm -f "$TAR"' EXIT
+        docker save -o "$TAR" "$FULL_DOCKER_IMAGE"
+        singularity build --force "$OUTPUT_PATH" "docker-archive://${TAR}"
+        rm -f "$TAR"
+        ;;
+    *)
+        log "Unknown MICAPIPE_SIF_TRANSPORT: $TRANSPORT (use auto, docker-daemon, or docker-archive)"
+        exit 1
+        ;;
+esac
 
 log "Done: $(du -h "$OUTPUT_PATH" | cut -f1)"

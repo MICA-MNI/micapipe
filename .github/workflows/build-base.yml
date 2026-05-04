@@ -1,0 +1,108 @@
+name: Build base image (slow, infrequent)
+
+# Builds the comprehensive base image. This is the slow, multi-hour
+# install of every neuroimaging tool — it is treated as a stable
+# artifact and rebuilt only when its inputs change:
+#   - Dockerfile.mamba-base
+#   - micapipe_environment.yml (the conda env spec)
+# or on manual dispatch.
+#
+# The fast code-iteration workflow (build-main.yml) PULLS the resulting
+# image from the registry and never rebuilds it, so day-to-day code
+# changes stay in the seconds-to-minutes range.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "Dockerfile.mamba-base"
+      - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
+      - ".github/workflows/build-base.yml"
+  pull_request:
+    paths:
+      - "Dockerfile.mamba-base"
+      - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
+      - ".github/workflows/build-base.yml"
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (default: latest)"
+        required: false
+        default: "latest"
+      push:
+        description: "Push to ghcr.io after build"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+concurrency:
+  group: build-base-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    # On PRs, only run when the `ci:build-base` label is set — base
+    # rebuilds are 45-60 min and we don't want to burn that on every
+    # push to a base-image PR.
+    name: Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            labels='${{ toJson(github.event.pull_request.labels) }}'
+            if echo "$labels" | grep -q '"name":\s*"ci:build-base"'; then
+              echo "run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "run=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-base:
+    needs: guard
+    if: needs.guard.outputs.run == 'true'
+    name: Build comprehensive base image
+    runs-on: self-hosted
+    timeout-minutes: 240
+    env:
+      BASE_TAG: ${{ github.event.inputs.tag || 'latest' }}
+      MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-comprehensive-base:${{ github.event.inputs.tag || 'latest' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stage build context (base only)
+        run: |
+          set -euo pipefail
+          ./prepare_build_context.sh --target base --print-path
+
+      - name: Build comprehensive base image
+        run: |
+          set -euo pipefail
+          time docker build \
+            -f Dockerfile.mamba-base \
+            -t "${MICAPIPE_BASE_IMAGE}" \
+            .
+          docker images "ghcr.io/mica-mni/micapipe-comprehensive-base" \
+            --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}'
+
+      - name: Push to ghcr.io
+        if: github.event.inputs.push == 'true' || github.event_name == 'push'
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+          docker push "${MICAPIPE_BASE_IMAGE}"
