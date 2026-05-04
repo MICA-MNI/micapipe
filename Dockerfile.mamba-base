@@ -213,6 +213,18 @@ RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
         dcm2niix=1.0.20240202 \
     && mamba clean -afy
 
+# Install Connectome Workbench (provides `wb_command`, required by every micapipe
+# module — init.sh aborts with "WorkBench was not found" otherwise). The bionic
+# apt repo does not ship `connectome-workbench`, so install from conda-forge.
+# Lands at /opt/miniconda-latest/envs/micapipe/bin/wb_command, which is the
+# first path probed by functions/init.sh.
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing connectome-workbench..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        connectome-workbench \
+    && mamba clean -afy
+
 # Create designer environment
 # Python 3.11 for consistency with micapipe environment and modern package support
 RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
