@@ -1,36 +1,36 @@
 # CI/Testing Scripts and Tools
 
-This folder contains scripts and documentation for Continuous Integration (CI) and testing workflows.
+Scripts that support our CI/testing infrastructure. These are separate
+from the main micapipe Docker build process; they exist to bootstrap
+self-hosted GitHub Actions runners on the BIC servers.
 
 ## Scripts
 
-### Action Runner Setup
-- `build_actions_runner.sh` - Build Docker image for GitHub Actions self-hosted runner
-- `build_actions_runner_ci.sh` - CI-specific action runner build script  
-- `prepare_action_runner.sh` - Prepare environment for action runner setup
-- `build_test_runner.sh` - Build Docker image for testing environment
-
-### Documentation
-- `ACTIONS_RUNNER_README.md` - Detailed guide for setting up GitHub Actions runners
-- `ACTION_RUNNER_BASE_SETUP.md` - Base setup instructions for action runners
+- `build_actions_runner.sh` — Build Docker image for the self-hosted GitHub
+  Actions runner with the micapipe SIF embedded.
+- `build_actions_runner_ci.sh` — CI-specific runner build (used in the
+  workflow).
+- `prepare_action_runner.sh` — Prepare the host environment before
+  building the runner image.
+- `build_test_runner.sh` — Build Docker image for ad-hoc testing.
 
 ## Usage
 
-These scripts are for setting up CI infrastructure and testing environments. They are separate from the main micapipe Docker build process but support automated testing and deployment workflows.
+For self-hosted GitHub Actions runners:
 
-### For GitHub Actions Self-Hosted Runners:
 ```bash
 cd ci-testing
 ./prepare_action_runner.sh
 ./build_actions_runner.sh
 ```
 
-### For Test Environment:
+For an ad-hoc test environment:
+
 ```bash
-cd ci-testing  
+cd ci-testing
 ./build_test_runner.sh
 ```
 
-## Note
-
-These scripts are organized separately from the main build process to avoid confusion with the core micapipe Docker build workflow.
+These scripts assume MICA workstation paths
+(`/data_/mica1/03_projects/actions-runner`,
+`/host/cassio/export03/data/enning/singularity/`); adjust per host.
