@@ -452,12 +452,18 @@ RUN echo "Installing FastSurfer..." \
 
 # Create the fastsurfer_cpu conda env that micapipe's proc_surf module
 # expects (`source activate fastsurfer_cpu`). FastSurfer ships its env
-# spec under env/fastsurfer.yml; we install it under the
-# `fastsurfer_cpu` name so micapipe finds it.
-RUN echo "Creating fastsurfer_cpu conda env..." && \
+# spec under env/fastsurfer.yml but pins CUDA-only torch builds
+# (torch==2.6.0+cu126), which won't resolve on a CPU-only install or
+# on PyPI's main index. Strip the +cu126 suffix and switch the
+# extra-index-url to the CPU pytorch wheels, then create the env
+# under the `fastsurfer_cpu` name micapipe expects.
+RUN echo "Creating fastsurfer_cpu conda env (CPU build)..." && \
     . /opt/miniconda-latest/etc/profile.d/conda.sh && \
-    mamba env create -n fastsurfer_cpu -f /opt/FastSurfer/env/fastsurfer.yml && \
+    cp /opt/FastSurfer/env/fastsurfer.yml /tmp/fastsurfer_cpu.yml && \
+    sed -i 's|whl/cu126|whl/cpu|g; s|+cu126||g' /tmp/fastsurfer_cpu.yml && \
+    mamba env create -n fastsurfer_cpu -f /tmp/fastsurfer_cpu.yml && \
     mamba clean -afy && \
+    rm -f /tmp/fastsurfer_cpu.yml && \
     /opt/miniconda-latest/envs/fastsurfer_cpu/bin/python -c "import torch; print('torch', torch.__version__)"
 
 # Install additional neuroimaging tools and dependencies
