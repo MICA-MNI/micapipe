@@ -450,6 +450,16 @@ ENV FASTSURFER_HOME="/opt/FastSurfer"
 RUN echo "Installing FastSurfer..." \
     && git clone --depth 1 --branch v2.4.2 https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer
 
+# Create the fastsurfer_cpu conda env that micapipe's proc_surf module
+# expects (`source activate fastsurfer_cpu`). FastSurfer ships its env
+# spec under env/fastsurfer.yml; we install it under the
+# `fastsurfer_cpu` name so micapipe finds it.
+RUN echo "Creating fastsurfer_cpu conda env..." && \
+    . /opt/miniconda-latest/etc/profile.d/conda.sh && \
+    mamba env create -n fastsurfer_cpu -f /opt/FastSurfer/env/fastsurfer.yml && \
+    mamba clean -afy && \
+    /opt/miniconda-latest/envs/fastsurfer_cpu/bin/python -c "import torch; print('torch', torch.__version__)"
+
 # Install additional neuroimaging tools and dependencies
 # Note: SWM and DESIGNER are installed via pip above
 
