@@ -67,16 +67,19 @@ RUN echo "Installing graphics libraries..." && \
 #     dynamically loads off-screen Mesa. Without it, every wb_command call
 #     fails with "cannot open shared object file".
 # libxp was dropped from Debian/Ubuntu and is not in bionic main; libosmesa6
-# is in bionic universe but not main. Pull both .debs from the Ubuntu universe
-# pool and install via dpkg + apt-get -f to resolve transitive deps.
+# is in bionic universe but not main. Both have also been pulled from
+# archive.ubuntu.com's pool/universe (404 as of 2026-05). Pull both .debs
+# from launchpad.net which keeps the historical bionic-universe artifacts,
+# and install via dpkg + apt-get -f to resolve transitive deps.
 RUN echo "Installing legacy X/Mesa libs (libxp6, libosmesa6) for AFNI + wb_command..." && \
     apt-get update && \
+    apt-get install -y --no-install-recommends wget ca-certificates && \
     cd /tmp && \
-    wget -q http://archive.ubuntu.com/ubuntu/pool/universe/libx/libxp/libxp6_1.0.2-2_amd64.deb && \
-    wget -q http://archive.ubuntu.com/ubuntu/pool/universe/m/mesa/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
-    (dpkg -i libxp6_1.0.2-2_amd64.deb libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb || \
+    wget -q -O libxp6.deb https://launchpad.net/ubuntu/+archive/primary/+files/libxp6_1.0.2-2_amd64.deb && \
+    wget -q -O libosmesa6.deb https://launchpad.net/ubuntu/+archive/primary/+files/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
+    (dpkg -i libxp6.deb libosmesa6.deb || \
         apt-get install -y --no-install-recommends -f) && \
-    rm -f /tmp/libxp6_1.0.2-2_amd64.deb /tmp/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
+    rm -f /tmp/libxp6.deb /tmp/libosmesa6.deb && \
     ldconfig && \
     test -e /usr/lib/x86_64-linux-gnu/libXp.so.6 && \
     test -e /usr/lib/x86_64-linux-gnu/libOSMesa.so.8 && \
