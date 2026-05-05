@@ -463,8 +463,25 @@ RUN echo "Creating fastsurfer_cpu conda env (CPU build)..." && \
     sed -i 's|whl/cu126|whl/cpu|g; s|+cu126||g' /tmp/fastsurfer_cpu.yml && \
     mamba env create -n fastsurfer_cpu -f /tmp/fastsurfer_cpu.yml && \
     mamba clean -afy && \
-    rm -f /tmp/fastsurfer_cpu.yml && \
-    /opt/miniconda-latest/envs/fastsurfer_cpu/bin/python -c "import torch; print('torch', torch.__version__)"
+    rm -f /tmp/fastsurfer_cpu.yml
+
+# Make the env's bundled libstdc++ take precedence over the bionic
+# system libstdc++ (which lacks GLIBCXX_3.4.26 that scipy 1.15+ needs).
+# Without this, scipy/scikit-image imports inside fastsurfer_cpu fail
+# at activation. Conda activation hooks prepend env lib dir to
+# LD_LIBRARY_PATH only when the env explicitly opts in.
+RUN mkdir -p /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d \
+             /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d && \
+    printf '#!/bin/sh\nexport _MICAPIPE_FS_LD_PREV="${LD_LIBRARY_PATH:-}"\nexport LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$_MICAPIPE_FS_LD_PREV"\n' \
+      > /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d/00_libstdcxx.sh && \
+    printf '#!/bin/sh\nexport LD_LIBRARY_PATH="${_MICAPIPE_FS_LD_PREV:-}"\nunset _MICAPIPE_FS_LD_PREV\n' \
+      > /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d/00_libstdcxx.sh && \
+    chmod a+rx /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d/00_libstdcxx.sh \
+               /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d/00_libstdcxx.sh && \
+    . /opt/miniconda-latest/etc/profile.d/conda.sh && \
+    conda activate fastsurfer_cpu && \
+    python -c "import torch, scipy; print('torch', torch.__version__, '/ scipy', scipy.__version__)" && \
+    conda deactivate
 
 # Install additional neuroimaging tools and dependencies
 # Note: SWM and DESIGNER are installed via pip above
