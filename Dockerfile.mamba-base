@@ -92,6 +92,72 @@ RUN echo "Installing legacy X/Mesa/PNG libs (libxp6, libosmesa6, libpng12-0) for
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Backfill missing FSL helper scripts. The bundled FSL 6.0.2 install is
+# incomplete: imcp, imglob, immv are not in /opt/fsl-6.0.2/bin/, but
+# fslswapdim (and a few other FSL scripts) call them directly. Without
+# them, proc_structural's fslreorient2std silently fails to produce
+# reo-* files and the pipeline aborts at "T1w_nativepro was not
+# generated". The replacements here are POSIX-shell drop-ins that
+# handle the .nii / .nii.gz / .hdr / .img extension matrix that FSL
+# images live in.
+RUN echo "Backfilling missing FSL helpers (imcp, imglob, immv)..." && \
+    cat > /opt/fsl-6.0.2/bin/imglob << 'IMGLOB' && \
+#!/bin/sh
+# Minimal FSL imglob. -extensions/-extension lists files that exist
+# with valid image extensions; otherwise return canonical basenames.
+mode=base
+out=""
+for arg in "$@"; do
+    case "$arg" in
+        -extensions|-extension) mode=ext; continue;;
+    esac
+    base="${arg%.nii.gz}"; base="${base%.nii}"; base="${base%.hdr}"; base="${base%.img}"
+    if [ "$mode" = ext ]; then
+        for ext in nii.gz nii hdr img; do
+            [ -f "${base}.${ext}" ] && out="${out} ${base}.${ext}"
+        done
+    else
+        # canonical basename if any matching file exists, else nothing
+        for ext in nii.gz nii hdr img; do
+            if [ -f "${base}.${ext}" ]; then out="${out} ${base}"; break; fi
+        done
+    fi
+done
+echo $out
+IMGLOB
+    cat > /opt/fsl-6.0.2/bin/imcp << 'IMCP' && \
+#!/bin/sh
+# Minimal FSL imcp. Copies all matching image files for a basename.
+[ $# -eq 2 ] || { echo "Usage: imcp src dst" >&2; exit 1; }
+src="${1%.nii.gz}"; src="${src%.nii}"; src="${src%.hdr}"; src="${src%.img}"
+dst="${2%.nii.gz}"; dst="${dst%.nii}"; dst="${dst%.hdr}"; dst="${dst%.img}"
+copied=0
+for ext in nii.gz nii hdr img; do
+    [ -f "${src}.${ext}" ] || continue
+    cp "${src}.${ext}" "${dst}.${ext}"
+    copied=$((copied + 1))
+done
+[ $copied -gt 0 ] || { echo "imcp: no image found at $src" >&2; exit 1; }
+exit 0
+IMCP
+    cat > /opt/fsl-6.0.2/bin/immv << 'IMMV' && \
+#!/bin/sh
+# Minimal FSL immv. Moves all matching image files for a basename.
+[ $# -eq 2 ] || { echo "Usage: immv src dst" >&2; exit 1; }
+src="${1%.nii.gz}"; src="${src%.nii}"; src="${src%.hdr}"; src="${src%.img}"
+dst="${2%.nii.gz}"; dst="${dst%.nii}"; dst="${dst%.hdr}"; dst="${dst%.img}"
+moved=0
+for ext in nii.gz nii hdr img; do
+    [ -f "${src}.${ext}" ] || continue
+    mv "${src}.${ext}" "${dst}.${ext}"
+    moved=$((moved + 1))
+done
+[ $moved -gt 0 ] || { echo "immv: no image found at $src" >&2; exit 1; }
+exit 0
+IMMV
+    chmod a+rx /opt/fsl-6.0.2/bin/imglob /opt/fsl-6.0.2/bin/imcp /opt/fsl-6.0.2/bin/immv && \
+    /opt/fsl-6.0.2/bin/imglob 2>/dev/null; echo helpers-installed
+
 # Scientific computing dependencies
 RUN echo "Installing scientific computing packages..." && \
     apt-get update && apt-get install -y --no-install-recommends \
