@@ -66,23 +66,29 @@ RUN echo "Installing graphics libraries..." && \
 #   - libOSMesa.so.8 (libosmesa6): wb_command from the conda micapipe env
 #     dynamically loads off-screen Mesa. Without it, every wb_command call
 #     fails with "cannot open shared object file".
-# libxp was dropped from Debian/Ubuntu and is not in bionic main; libosmesa6
-# is in bionic universe but not main. Both have also been pulled from
-# archive.ubuntu.com's pool/universe (404 as of 2026-05). Pull both .debs
-# from launchpad.net which keeps the historical bionic-universe artifacts,
-# and install via dpkg + apt-get -f to resolve transitive deps.
-RUN echo "Installing legacy X/Mesa libs (libxp6, libosmesa6) for AFNI + wb_command..." && \
+# Legacy X/Mesa/PNG libraries required by AFNI binaries and wb_command:
+#   - libXp.so.6   (libxp6)     — AFNI links against the Motif stack.
+#   - libOSMesa.so.8 (libosmesa6) — wb_command from the conda env.
+#   - libpng12.so.0 (libpng12-0) — AFNI's precompiled binaries link
+#     against the long-deprecated libpng 1.2 ABI.
+#
+# All three were dropped from Debian/Ubuntu and are not in bionic main;
+# they're also gone from archive.ubuntu.com's pool/universe (404 as of
+# 2026-05). launchpad.net keeps the historical bionic-universe artifacts.
+RUN echo "Installing legacy X/Mesa/PNG libs (libxp6, libosmesa6, libpng12-0) for AFNI + wb_command..." && \
     apt-get update && \
     apt-get install -y --no-install-recommends wget ca-certificates && \
     cd /tmp && \
-    wget -q -O libxp6.deb https://launchpad.net/ubuntu/+archive/primary/+files/libxp6_1.0.2-2_amd64.deb && \
-    wget -q -O libosmesa6.deb https://launchpad.net/ubuntu/+archive/primary/+files/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
-    (dpkg -i libxp6.deb libosmesa6.deb || \
+    wget -q -O libxp6.deb       https://launchpad.net/ubuntu/+archive/primary/+files/libxp6_1.0.2-2_amd64.deb && \
+    wget -q -O libosmesa6.deb   https://launchpad.net/ubuntu/+archive/primary/+files/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
+    wget -q -O libpng12-0.deb   https://launchpad.net/ubuntu/+archive/primary/+files/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && \
+    (dpkg -i libxp6.deb libosmesa6.deb libpng12-0.deb || \
         apt-get install -y --no-install-recommends -f) && \
-    rm -f /tmp/libxp6.deb /tmp/libosmesa6.deb && \
+    rm -f /tmp/libxp6.deb /tmp/libosmesa6.deb /tmp/libpng12-0.deb && \
     ldconfig && \
     test -e /usr/lib/x86_64-linux-gnu/libXp.so.6 && \
     test -e /usr/lib/x86_64-linux-gnu/libOSMesa.so.8 && \
+    test -e /usr/lib/x86_64-linux-gnu/libpng12.so.0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
