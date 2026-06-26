@@ -4,7 +4,7 @@
 
 version=0.2.3
 container=singularity
-container_img=/data_/mica1/01_programs/micapipe-v0.2.0/micapipe_v0.2.3.sif
+container_img=/data_/mica1/01_programs/singularity/micapipe_v1_beta.sif
 
 bids=/data/mica3/BIDS_CI/rawdata
 fs_lic=/data_/mica3/BIDS_CI/license_fc.txt
@@ -56,9 +56,8 @@ function run_test(){
       -dwi_rpe /bids/${sub}/${ses}/dwi/${sub}_${ses}_acq-b0_dir-PA_epi.nii.gz -dwi_upsample \
       -func_pe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-AP_epi.nii.gz \
       -func_rpe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-PA_epi.nii.gz \
-      -mpc_acq T1map -regSynth -tracts 10000 \
-      -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz \
-      -microstructural_reg /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-inv1_T1map.nii.gz ${recon}
+      -mpc_acq T1map -tracts 10000 \
+      -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz ${recon}
     done
 }
 

@@ -117,12 +117,10 @@ parameters:
     dwi_rpe: "DEFAULT" # multiple inputs
     dwi_processed: "FALSE"
     rpe_all: "FALSE"
-    regAffine: "FALSE"
     dwi_acq: "FALSE" 
     b0thr: 61
     # the following are just flags
     no_bvalue_scaling: "FALSE"
-    regSynth: "FALSE"
     dwi_upsample: "FALSE"
 
   SC:
@@ -151,19 +149,15 @@ parameters:
     GSR: "FALSE"                 # -GSR
     noFIX: "FALSE"               # -noFIX
     sesAnat: "FALSE"             # -sesAnat <str>
-    regAffine: "FALSE"           # -regAffine
     dropTR: "FALSE"              # -dropTR
     noFC: "FALSE"                # -noFC
 
   proc_mpc:
     # Optional parameters
     microstructural_img: "FALSE"
-    microstructural_reg: "FALSE"
     mpc_acq: "FALSE"
 
     # Boolean flags
-    regSynth: "FALSE"
-    reg_nonlinear: "FALSE"
 
   proc_flair:
     flairScanStr: "DEFAULT"
@@ -171,12 +165,9 @@ parameters:
   proc_mpc_swm:
     # Optional parameters
     microstructural_img: "FALSE"
-    microstructural_reg: "FALSE"
     mpc_acq: "FALSE"
 
     # Boolean flags
-    regSynth: "FALSE"
-    reg_nonlinear: "FALSE"
   
   qc_subj:
     tracts: "FALSE"

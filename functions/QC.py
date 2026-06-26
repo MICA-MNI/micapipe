@@ -1444,15 +1444,10 @@ def qc_mpc(mpc_json=''):
     with open( proc_mpc_json ) as f:
         mpc_description = json.load(f)
     microstructural_img = mpc_description["microstructural_img"]
-    microstructural_reg = mpc_description["microstructural_reg"]
 
     outPath = microstructural_img
     figPath = f"{tmpDir}/{acquisition}_microstructural_img.png"
     _static_block += nifti_check(outName="Microstructural image", outPath=outPath, figPath=figPath)
-
-    outPath = microstructural_reg
-    figPath = f"{tmpDir}/{acquisition}_microstructural_reg.png"
-    _static_block += nifti_check(outName="Microstructural registration", outPath=outPath, figPath=figPath)
 
     # Outputs
     _static_block += (

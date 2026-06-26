@@ -1,0 +1,64 @@
+# ============================================================================
+# MICAPIPE MAIN IMAGE - STAGE 2 (Fast, Frequently Changes)
+# ============================================================================
+# This Dockerfile creates the final micapipe image using the pre-built base
+# Build this EVERY TIME the micapipe code changes
+# Expected build time: 3-5 minutes (95% faster than full build!)
+# ============================================================================
+
+# Use the comprehensive base image we just built
+# Replace with your actual registry/tag once base is pushed
+ARG BASE_IMAGE=ghcr.io/mica-mni/micapipe-comprehensive-base:latest
+FROM ${BASE_IMAGE}
+
+USER root
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# Label the image
+LABEL maintainer="MICA Lab <mica.lab@mcgill.ca>" \
+      description="MICApipe - Micapipe for multimodal MRI processing and analysis" \
+      version="0.2.3"
+
+# ============================================================================
+# MICAPIPE CODE & CONFIGURATION
+# ============================================================================
+
+# Copy only the fast-changing code layer. Large static assets now live in the
+# comprehensive base image so iterative rebuilds stay small.
+COPY micapipe /opt/micapipe/micapipe
+COPY micapipe.py /opt/micapipe/micapipe.py
+COPY functions /opt/micapipe/functions
+
+# Set permissions. The pipeline shells out to scripts under
+# /opt/micapipe/functions/*.sh and /opt/micapipe/micapipe.py, so we need
+# +x on every file (a+rx, lowercase). a+rX (capital X) would only
+# preserve +x on files that already had it on the host, which COPY does
+# not always carry through, and the wrapper would fail with
+# "Permission denied" on 01_proc-structural.sh etc.
+RUN chmod -R a+rx /opt/micapipe
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+
+ENV MICAPIPE="/opt/micapipe"
+ENV PROC="container_micapipe-v0.2.3"
+ENV PATH="/opt/micapipe/:/opt/micapipe/functions:${PATH}"
+
+# ============================================================================
+# ENTRYPOINT
+# ============================================================================
+
+WORKDIR /home/mica
+
+# Set micapipe as the entrypoint
+# Note: Base image handles environment activation via BASH_ENV
+ENTRYPOINT ["/opt/micapipe/micapipe"]
+
+# ============================================================================
+# IMAGE BUILD COMPLETE
+# ============================================================================
+# This lightweight image contains only micapipe code on top of the base
+# Rebuilds are fast since all heavy tools are in the base layer
+# ============================================================================

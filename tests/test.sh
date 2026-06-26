@@ -51,7 +51,7 @@ function run_test(){
     -proc_structural -proc_surf -post_structural -proc_dwi -GD -proc_func -SC -SWM -QC_subj -proc_flair \
     -atlas economo,aparc -flairScanStr T2w -mainScanStr task-music_bold -NSR -noFIX \
     -dwi_main /bids/${sub}/dwi/${sub}_acq-b1000_dir-PA_dwi.nii.gz \
-    -regSynth -tracts ${tracts} ${recon}
+    -tracts ${tracts} ${recon}
 
     # Run fMRI additional acquisition
     ${command} \
@@ -71,9 +71,8 @@ function run_test(){
     -dwi_rpe /bids/${sub}/${ses}/dwi/${sub}_${ses}_acq-b0_dir-PA_epi.nii.gz -dwi_upsample \
     -func_pe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-AP_epi.nii.gz \
     -func_rpe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-PA_epi.nii.gz \
-    -mpc_acq T1map -regSynth -tracts ${tracts} \
-    -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz \
-    -microstructural_reg /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-inv1_T1map.nii.gz ${recon}
+    -mpc_acq T1map -tracts ${tracts} \
+    -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz ${recon}
 
     # 7T multi session one shot workflow
     sub=sub-mri7T
@@ -85,9 +84,8 @@ function run_test(){
     -mainScanStr task-rest_echo-1_bold,task-rest_echo-2_bold,task-rest_echo-3_bold \
     -func_pe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-AP_epi.nii.gz \
     -func_rpe /bids/${sub}/${ses}/fmap/${sub}_${ses}_acq-fmri_dir-PA_epi.nii.gz \
-    -mpc_acq T1map -regSynth -tracts ${tracts} \
-    -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz \
-    -microstructural_reg /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-inv1_T1map.nii.gz ${recon}
+    -mpc_acq T1map -tracts ${tracts} \
+    -microstructural_img /bids/${sub}/${ses}/anat/${sub}_${ses}_acq-T1_T1map.nii.gz ${recon}
 
     done
 

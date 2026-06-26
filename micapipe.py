@@ -43,7 +43,6 @@ def parse_arguments():
     parser.add_argument('-nocleanup', action='store_true', help='Prevent deletion of temporary directory')
     parser.add_argument('-threads', type=int, default=6, help='Number of threads (default=6)')
     parser.add_argument('-tmpDir', help='Custom location for temporary directory')
-    parser.add_argument('-regSynth', action='store_true', help='Perform registration based on synthseg')
 
     # Parse arguments
     args = parser.parse_args()

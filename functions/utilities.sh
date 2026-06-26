@@ -263,7 +263,14 @@ bids_variables_unset() {
   unset bids_dwis
   unset bids_T1map
   unset bids_inv1
+  unset bids_flair
   unset dwi_reverse
+  # Session identifiers — unset so that sub-scripts that reuse a parent
+  # shell across sessions don't see stale ses-01 values when ses-02 runs.
+  # Safe to unset here because cleanup() only fires inside processing
+  # sub-scripts that are about to exit. See issue #162.
+  unset idBIDS
+  unset ses
 }
 
 micapipe_software() {
@@ -630,13 +637,14 @@ function post_struct_transformations() {
 }
 
 function proc_func_transformations() {
-  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
-  Info "Creating transformations file: func space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: func space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_func\",
     \"LastRun\": \"$(date)\",
-    \"Only affine\": \"${regAffine}\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro brain\": \"${T1nativepro_brain}\",
     \"func brain\": \"${fmri_brain}\",
     \"from-t1nativepro_to-func\": [
@@ -663,13 +671,15 @@ function proc_func_transformations() {
 }
 
 function proc_dwi_transformations() {
-  if [[ ${regAffine}  == "FALSE" ]]; then Mode="SyN"; else Mode="affine"; fi
-  Info "Creating transformations file: DWI space <<>> T1nativepro"
+  # Use LAMAReg as the registration method (replaced regSynth/ANTs)
+  Mode="${reg:-LAMAReg}"  # Use exported $reg or default to LAMAReg
+  Info "Creating transformations file: DWI space <<>> T1nativepro (Method: ${Mode})"
   echo -e "{
     \"micapipeVersion\": \"${Version}\",
     \"Module\": \"proc_dwi\",
     \"LastRun\": \"$(date)\",
     \"transform\": \"${Mode}\",
+    \"registrationMethod\": \"${Mode}\",
     \"T1nativepro\": \"${T1nativepro}\",
     \"DWI b0\": \"${dwi_b0}\",
     \"from-t1nativepro_to-dwi\": [
@@ -775,7 +785,7 @@ function json_nativepro_flair() {
     \"Strides\": \"${Strides}\",
     \"Offset\": \"${Offset}\",
     \"Multiplier\": \"${Multiplier}\",
-    \"regSynth\": \"${synth_reg}\",
+    \"reg\": \"LAMAreg\",
     \"mode_wm\": \"${mode_wm}\",
     \"mode_gm\": \"${mode_gm}\",
     \"mode_brain\": \"${mode_brain}\",
@@ -946,11 +956,8 @@ function json_mpc() {
     \"Module\": \"Microstructural profile covariance\",
     \"acquisition\": \"${mpc_str}\",
     \"microstructural_img\": \"${1}\",
-    \"microstructural_reg\": \"${regImage}\",
     \"reference_mri\": \"${qMRI_reference}\",
     \"warped_qmri\": \"${qMRI_warped}\",
-    \"regSynth\": \"${synth_reg}\",
-    \"reg_nonlinear\": \"${reg_nonlinear}\",
     \"registration\": \"${reg}\",
     \"num_surfs\": \"${num_surfs}\",
     \"VoxelSize\": \"${res}\",
@@ -1001,10 +1008,8 @@ function json_dwipreproc() {
     \"Class\": \"DWI preprocessing\",
     \"rpe_all\": \"${rpe_all}\",
     \"dwi_acq\": \"${dwi_acq}\",
-    \"Only Affine\": \"${regAffine}\",
     \"B0 threshold\": \"${b0thr}\",
     \"Bvalue scaling\": \"${bvalscale}\",
-    \"regSynth\": \"${synth_reg}\",
     \"dwi_upsample\": \"${dwi_upsample}\",
     \"DWIpe\": {
         \"fileName\": \"${bids_dwis[*]}\",
@@ -1120,21 +1125,24 @@ if [ -z "$TEST" ]; then $l_command; fi
 }
 
 function cleanup() {
-  # This script will clean the temporal directory
-  # and reset the old user path upon,
-  # interrupts, and termination.
-  tmp=$1
-  nocleanup=$2
-  here=$3
-  # Clean temporal directory and temporal fsaverage5
-  if [[ $nocleanup == "FALSE" ]]; then
-      rm -Rf "$tmp" 2>/dev/null
+  # Clean the temporal directory and reset the old user path upon
+  # interrupts, termination, or normal end-of-script. All inputs are
+  # quoted so paths containing spaces or trailing slashes are safe.
+  local tmp="$1"
+  local nocleanup="$2"
+  local here="$3"
+  # Refuse to delete suspicious paths (root, empty, or no separator) so a
+  # mis-set tmpDir cannot wipe the working tree.
+  if [[ "$nocleanup" == "FALSE" ]]; then
+      if [[ -n "$tmp" && "$tmp" != "/" && "$tmp" == */* ]]; then
+          rm -Rf "$tmp" 2>/dev/null
+      fi
   else
       echo -e "micapipe tmp directory was not erased: \n\t\t${tmp}";
   fi
-  cd "$here"
+  if [[ -n "$here" ]]; then cd "$here" || return; fi
   bids_variables_unset
-  if [[ ! -z "$OLD_PATH" ]]; then  export PATH=$OLD_PATH; unset OLD_PATH; fi
+  if [[ -n "$OLD_PATH" ]]; then export PATH="$OLD_PATH"; unset OLD_PATH; fi
 }
 
 function missing_arg() {

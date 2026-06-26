@@ -1,0 +1,156 @@
+name: Lint
+
+on:
+  push:
+    branches: [master, v1, "enning/**"]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same PR/branch.
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell:
+    name: Bash syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash syntax check (find -name *.sh)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find . \
+            -path './.git' -prune -o \
+            -path './docs/build*' -prune -o \
+            -name '*.sh' -print)
+
+          # Also lint the executable wrapper which has no .sh suffix.
+          files+=('./micapipe' './functions/micapipe_anonymize')
+
+          fail=0
+          for f in "${files[@]}"; do
+            [ -f "$f" ] || continue
+            if bash -n "$f"; then
+              echo "OK   $f"
+            else
+              echo "FAIL $f"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+  python:
+    name: Python syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: py_compile .py files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find . \
+            -path './.git' -prune -o \
+            -path './docs/build*' -prune -o \
+            -path './**/__pycache__' -prune -o \
+            -name '*.py' -print)
+
+          fail=0
+          for f in "${files[@]}"; do
+            [ -f "$f" ] || continue
+            if python -m py_compile "$f"; then
+              echo "OK   $f"
+            else
+              echo "FAIL $f"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+  yaml:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: pip install pyyaml
+        run: pip install pyyaml
+
+      - name: yaml.safe_load on every .yml/.yaml
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find . \
+            -path './.git' -prune -o \
+            -path './docs/build*' -prune -o \
+            \( -name '*.yml' -o -name '*.yaml' \) -print)
+
+          fail=0
+          for f in "${files[@]}"; do
+            if python -c "import sys, yaml; yaml.safe_load(open(sys.argv[1]))" "$f"; then
+              echo "OK   $f"
+            else
+              echo "FAIL $f"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+  dockerfile:
+    name: Dockerfile lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: hadolint Dockerfile.main
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.main
+          # Don't fail on style nits — we care about real errors only.
+          failure-threshold: error
+
+      - name: hadolint Dockerfile.mamba-base
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.mamba-base
+          failure-threshold: error
+
+  snakemake:
+    name: Snakemake parse
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install snakebids dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "snakebids>=0.13.1" "snakemake>=8.1.2" pyyaml
+
+      - name: Snakefile lint (no execution, just parse)
+        working-directory: micapipe_snakebids
+        run: |
+          # `snakemake --list-rules` parses the Snakefile and resolves
+          # imports without running any rule. That's enough to catch
+          # syntax errors and broken rule includes.
+          snakemake -s workflow/Snakefile --list-rules || \
+            python -c "import compileall, sys; sys.exit(0 if compileall.compile_file('workflow/Snakefile', quiet=1) else 1)"

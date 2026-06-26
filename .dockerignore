@@ -1,3 +1,4 @@
+# Standard excludes
 ./docs
 .circleci
 .git
@@ -5,3 +6,27 @@
 .gitignore
 .vscode
 micapipe_v*.sif
+.build-context/
+
+# Large directories not needed in container
+old/
+test_data/
+tests/
+micapipe_snakebids/
+.snakemake/
+build_logs/
+*.log
+
+# Temporary files
+temp_downloads/
+conda-lock-output.log
+
+# Documentation that's not needed in build
+*.md
+!README.md
+dag.svg
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

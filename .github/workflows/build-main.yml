@@ -1,0 +1,165 @@
+name: Build main image (fast code-only)
+
+# Fast code-iteration CI. The heavy comprehensive base image is treated
+# as a stable artifact — pulled from the registry, never rebuilt here.
+# The slim Dockerfile.main rebuild + a `docker run --help` smoke test is
+# the entire fast path: total wall time ~10 seconds on a warm runner.
+#
+# Singularity SIF conversion is intentionally NOT in the fast path: it
+# takes 10-15 minutes for a 50GB image regardless of transport. SIF +
+# sample_test only runs when the `ci:build` label is on the PR (or via
+# manual dispatch), since that path is multi-hour.
+#
+# The slow base rebuild lives in build-base.yml and only fires when
+# Dockerfile.mamba-base or micapipe_environment.yml actually change.
+
+on:
+  push:
+    branches: [master, v1, "enning/**"]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "Dockerfile.mamba-base"
+      - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
+      - ".github/workflows/build-base.yml"
+      - ".github/workflows/lint.yml"
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "Dockerfile.mamba-base"
+      - "micapipe_environment.yml"
+      - "micapipe_environment_base.yml"
+      - ".github/workflows/build-base.yml"
+      - ".github/workflows/lint.yml"
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      run_sample_test:
+        description: "Build SIF and run sample_test (multi-hour)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+concurrency:
+  group: build-main-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-main:
+    name: Fast main rebuild + smoke test
+    runs-on: self-hosted
+    timeout-minutes: 30
+    env:
+      MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-comprehensive-base:latest
+      MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:ci-${{ github.run_id }}
+      MICAPIPE_MAIN_LATEST: ghcr.io/mica-mni/micapipe:latest
+
+    outputs:
+      sif_path: ${{ steps.sif.outputs.path }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show host context
+        run: |
+          set -e
+          echo "Host: $(hostname)"
+          docker version --format '{{.Server.Version}}' 2>&1 | tail -1
+          singularity --version
+          df -h /export03 /export01 || true
+
+      - name: Ensure base image is present (pull, never build)
+        run: |
+          set -euo pipefail
+          if docker image inspect "${MICAPIPE_BASE_IMAGE}" >/dev/null 2>&1; then
+            echo "Base image already cached on this runner."
+          else
+            echo "Pulling ${MICAPIPE_BASE_IMAGE} from registry..."
+            if ! docker pull "${MICAPIPE_BASE_IMAGE}"; then
+              echo "::error::Base image not present locally and pull failed."
+              echo "::error::This workflow does not rebuild the base image."
+              echo "::error::Run the 'Build base image' workflow first, or push the base to the registry."
+              exit 1
+            fi
+          fi
+          docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep micapipe-comprehensive-base | head -1
+
+      - name: Build slim main image (code-only layer)
+        run: |
+          set -euo pipefail
+          time docker build \
+            -f Dockerfile.main \
+            --build-arg "BASE_IMAGE=${MICAPIPE_BASE_IMAGE}" \
+            -t "${MICAPIPE_MAIN_IMAGE}" \
+            -t "${MICAPIPE_MAIN_LATEST}" \
+            .
+
+      - name: Smoke-test via docker run (fast)
+        run: |
+          set -euo pipefail
+          # The wrapper auto-sources init.sh inside the container, so
+          # `-h` reaches printout iff init.sh + wrapper are intact.
+          time docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -h | head -5'
+          # Argument parser regression check — these errors should fire.
+          docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -sub 2>&1 | grep -q "requires a value"' \
+            && echo "Parser regression check: -sub bare → clear error ✓"
+          docker run --rm --entrypoint bash "${MICAPIPE_MAIN_IMAGE}" \
+            -c '/opt/micapipe/micapipe -sub -out /tmp 2>&1 | grep -q "got another flag"' \
+            && echo "Parser regression check: -sub -out → clear error ✓"
+
+      - name: Decide whether to build SIF + run sample_test
+        id: decide_full
+        shell: bash
+        run: |
+          run="false"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            labels='${{ toJson(github.event.pull_request.labels) }}'
+            echo "$labels" | grep -q '"name":\s*"ci:build"' && run="true"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            run="${{ github.event.inputs.run_sample_test }}"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "Full SIF + sample_test path: $run"
+
+      - name: Build Singularity SIF (only when full path requested)
+        id: sif
+        if: steps.decide_full.outputs.run == 'true'
+        env:
+          MICAPIPE_DOCKER_IMAGE: ghcr.io/mica-mni/micapipe
+          MICAPIPE_DOCKER_TAG: ci-${{ github.run_id }}
+          MICAPIPE_SIF_OUTPUT_PATH: /export03/data/enning/singularity/micapipe_ci_${{ github.run_id }}.sif
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "${MICAPIPE_SIF_OUTPUT_PATH}")"
+          time ./build_singularity.sh
+          ls -lh "${MICAPIPE_SIF_OUTPUT_PATH}"
+          echo "path=${MICAPIPE_SIF_OUTPUT_PATH}" >> "$GITHUB_OUTPUT"
+
+      - name: Point sample_test at the freshly built SIF
+        if: steps.decide_full.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          sed -i "s|^container_img=.*|container_img=${{ steps.sif.outputs.path }}|" tests/sample_test.sh
+          grep '^container_img=' tests/sample_test.sh
+
+      - name: Run sample_test (multi-hour; gated by ci:build label)
+        if: steps.decide_full.outputs.run == 'true'
+        timeout-minutes: 720
+        run: |
+          set -euo pipefail
+          chmod +x ./tests/sample_test.sh
+          ./tests/sample_test.sh
+
+      - name: Cleanup CI artifacts (keep :latest tag, drop run-specific)
+        if: always()
+        run: |
+          docker rmi "${MICAPIPE_MAIN_IMAGE}" 2>/dev/null || true
+          if [[ -n "${{ steps.sif.outputs.path }}" ]]; then
+            rm -f "${{ steps.sif.outputs.path }}" 2>/dev/null || true
+          fi

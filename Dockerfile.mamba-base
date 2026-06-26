@@ -1,0 +1,550 @@
+# syntax=docker/dockerfile:1.7
+FROM ubuntu:bionic-20201119
+
+USER root
+ARG DEBIAN_FRONTEND="noninteractive"
+
+# ============================================================================
+# COMPREHENSIVE MICAPIPE BASE IMAGE (SERVER VERSION)
+# Includes: System packages + Conda/Mamba + FSL + FreeSurfer + AFNI + ANTs + R
+# Purpose: All neuroimaging tools except MICApipe code for ultra-fast CI builds
+# Compatible with server environment: /export03/data/enning
+# ============================================================================
+
+# Build arguments for server environment
+ARG CUSTOM_TMPDIR="/export03/data/enning"
+
+# Install system packages in smaller chunks to prevent OOM
+# Essential packages
+RUN echo "Installing essential system packages..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        apt-utils \
+        build-essential \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release \
+        software-properties-common \
+        wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Development tools
+RUN echo "Installing development tools..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        cmake \
+        git \
+        make \
+        pkg-config \
+        unzip \
+        zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Graphics and multimedia libraries
+RUN echo "Installing graphics libraries..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libgomp1 \
+        libglu1-mesa \
+        libgtk-3-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        libxt6 \
+        x11-apps \
+        xvfb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Legacy X/Mesa libraries required by AFNI and Connectome Workbench:
+#   - libXp.so.6 (libxp6): AFNI binaries (afni, 3dWarp, ...) link against the
+#     Motif stack. Without it, proc_structural's oblique-correction step
+#     produces no output and the pipeline aborts at "T1w_nativepro was not
+#     generated".
+#   - libOSMesa.so.8 (libosmesa6): wb_command from the conda micapipe env
+#     dynamically loads off-screen Mesa. Without it, every wb_command call
+#     fails with "cannot open shared object file".
+# Legacy X/Mesa/PNG libraries required by AFNI binaries and wb_command:
+#   - libXp.so.6   (libxp6)     — AFNI links against the Motif stack.
+#   - libOSMesa.so.8 (libosmesa6) — wb_command from the conda env.
+#   - libpng12.so.0 (libpng12-0) — AFNI's precompiled binaries link
+#     against the long-deprecated libpng 1.2 ABI.
+#
+# All three were dropped from Debian/Ubuntu and are not in bionic main;
+# they're also gone from archive.ubuntu.com's pool/universe (404 as of
+# 2026-05). launchpad.net keeps the historical bionic-universe artifacts.
+RUN echo "Installing legacy X/Mesa/PNG libs (libxp6, libosmesa6, libpng12-0) for AFNI + wb_command..." && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends wget ca-certificates && \
+    cd /tmp && \
+    wget -q -O libxp6.deb       https://launchpad.net/ubuntu/+archive/primary/+files/libxp6_1.0.2-2_amd64.deb && \
+    wget -q -O libosmesa6.deb   https://launchpad.net/ubuntu/+archive/primary/+files/libosmesa6_18.2.8-0ubuntu0~18.04.2_amd64.deb && \
+    wget -q -O libpng12-0.deb   https://launchpad.net/ubuntu/+archive/primary/+files/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && \
+    (dpkg -i libxp6.deb libosmesa6.deb libpng12-0.deb || \
+        apt-get install -y --no-install-recommends -f) && \
+    rm -f /tmp/libxp6.deb /tmp/libosmesa6.deb /tmp/libpng12-0.deb && \
+    ldconfig && \
+    test -e /usr/lib/x86_64-linux-gnu/libXp.so.6 && \
+    test -e /usr/lib/x86_64-linux-gnu/libOSMesa.so.8 && \
+    test -e /usr/lib/x86_64-linux-gnu/libpng12.so.0 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Backfill missing FSL helper scripts. The bundled FSL 6.0.2 install is
+# incomplete: imcp, imglob, immv are not in /opt/fsl-6.0.2/bin/, but
+# fslswapdim (and a few other FSL scripts) call them directly. Without
+# them, proc_structural's fslreorient2std silently fails to produce
+# reo-* files and the pipeline aborts at "T1w_nativepro was not
+# generated". The drop-ins live under docker/fsl-helpers/.
+COPY docker/fsl-helpers/imglob /opt/fsl-6.0.2/bin/imglob
+COPY docker/fsl-helpers/imcp /opt/fsl-6.0.2/bin/imcp
+COPY docker/fsl-helpers/immv /opt/fsl-6.0.2/bin/immv
+RUN chmod a+rx /opt/fsl-6.0.2/bin/imglob \
+                /opt/fsl-6.0.2/bin/imcp \
+                /opt/fsl-6.0.2/bin/immv
+
+# Scientific computing dependencies
+RUN echo "Installing scientific computing packages..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        bc \
+        dc \
+        file \
+        libgfortran3 \
+        liblapack3 \
+        libopenblas-base \
+        libquadmath0 \
+        python3 \
+        python3-pip \
+        tcsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Additional dependencies
+RUN echo "Installing additional dependencies..." && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        bzip2 \
+        locales \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale
+RUN locale-gen en_US.UTF-8
+ENV LANG="en_US.UTF-8" \
+    LC_ALL="en_US.UTF-8"
+
+# ============================================================================
+# CONDA/MAMBA INSTALLATION AND ENVIRONMENTS
+# ============================================================================
+
+# Bootstrap the base prefix with micromamba, then keep using conda/mamba from
+# that prefix so the rest of the image and runtime scripts remain compatible.
+ENV PATH="/opt/miniconda-latest/bin:/usr/local/bin:$PATH"
+ENV MAMBA_ROOT_PREFIX="/opt/miniconda-latest"
+ENV MAMBA_NO_LOCK=1
+ENV CONDA_PKGS_DIRS="/opt/miniconda-latest/pkgs"
+
+# Use micromamba to avoid the expensive `conda install mamba` bootstrap solve.
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    mkdir -p /tmp/micromamba-bin "${MAMBA_ROOT_PREFIX}" \
+    && echo "📥 Preparing micromamba bootstrap..." \
+    && if [ -f "/mnt/downloads/micromamba-linux-64.tar.bz2" ]; then \
+        echo "📦 Using pre-downloaded micromamba bootstrap"; \
+        cp /mnt/downloads/micromamba-linux-64.tar.bz2 /tmp/micromamba.tar.bz2; \
+    else \
+        echo "📥 Downloading micromamba bootstrap from GitHub releases..."; \
+        curl -fL --retry 5 --retry-delay 2 --retry-connrefused \
+            -o /tmp/micromamba.tar.bz2 \
+            https://github.com/mamba-org/micromamba-releases/releases/download/2.5.0-2/micromamba-linux-64.tar.bz2; \
+    fi \
+    && tar -xjf /tmp/micromamba.tar.bz2 -C /tmp/micromamba-bin --strip-components=1 bin/micromamba \
+    && install -m 0755 /tmp/micromamba-bin/micromamba /usr/local/bin/micromamba \
+    && rm -rf /tmp/micromamba-bin /tmp/micromamba.tar.bz2 \
+    && echo "⚡ Bootstrapping base conda+mamba with micromamba..." \
+    && micromamba install -y -n base -c conda-forge \
+        python=3.11 conda mamba \
+    && . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda config --set auto_update_conda false \
+    && conda config --set show_channel_urls true \
+    && conda config --set channel_priority strict \
+    && echo "⚡ Configuring mamba for maximum speed..." \
+    && conda config --set remote_read_timeout_secs 60 \
+    && conda config --set remote_connect_timeout_secs 10 \
+    && conda config --set remote_max_retries 3 \
+    && micromamba clean --all --yes \
+    && conda clean -afy
+
+# Create optimized micapipe environment
+# Python 3.11 required for LAMAReg (>=3.10) and security support until Oct 2027
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🚀 Using mamba for ultra-fast environment creation..." \
+    && mamba create -y -n micapipe python=3.11 \
+    && mamba clean -afy
+
+# Install core scientific packages in smaller chunks to prevent OOM
+# Note: Removed strict version pins to allow Python 3.11 compatibility
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 1)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        numpy scipy pandas matplotlib \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 2)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        seaborn plotly nibabel pillow packaging \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 3)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        scikit-learn scikit-image scikit-fmm nilearn astropy dipy \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing core scientific packages (part 4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        ipython jupyter tqdm joblib h5py hdf5 pytables \
+    && mamba clean -afy
+
+# Install utilities and networking packages in chunks
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 1)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        bzip2 ca-certificates curl git openssh aiohttp requests \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 2)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        unzip wget xz zip cryptography attrs click pyyaml python-dateutil pytz \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 3)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        lxml paramiko pycryptodome urllib3 \
+    && mamba clean -afy
+
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing utilities and networking packages (part 4)..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        cmake make gcc_linux-64 gxx_linux-64 \
+    && mamba clean -afy
+
+# Install MRtrix3 after the utility stack settles, otherwise later package
+# transactions can remove it while downgrading the Qt / Python graph.
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing MRtrix3..." \
+    && mamba install -y -n micapipe -c conda-forge -c mrtrix3 \
+        --override-channels --strict-channel-priority \
+        mrtrix3==3.0.7 \
+    && mamba clean -afy
+
+# Install dcm2niix (required by `micapipe` and `mic2bids` for DICOM->NIfTI conversion).
+# Pinned to a recent upstream release; conda-forge package name is `dcm2niix`.
+# https://github.com/rordenlab/dcm2niix
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing dcm2niix..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        dcm2niix=1.0.20240202 \
+    && mamba clean -afy
+
+# Install Connectome Workbench (provides `wb_command`, required by every micapipe
+# module — init.sh aborts with "WorkBench was not found" otherwise). The bionic
+# apt repo does not ship `connectome-workbench`, so install from conda-forge.
+# Lands at /opt/miniconda-latest/envs/micapipe/bin/wb_command, which is the
+# first path probed by functions/init.sh.
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🔧 Installing connectome-workbench..." \
+    && mamba install -y -n micapipe -c conda-forge \
+        --override-channels --strict-channel-priority \
+        connectome-workbench \
+    && mamba clean -afy
+
+# Create designer environment
+# Python 3.11 for consistency with micapipe environment and modern package support
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && echo "🚀 Creating designer environment with mamba..." \
+    && mamba create -y -n designer python=3.11 \
+    && mamba install -y -n designer -c conda-forge \
+        numpy scipy matplotlib nibabel dipy \
+    && mamba clean -afy
+
+# Install additional Python packages via pip
+RUN . /opt/miniconda-latest/etc/profile.d/conda.sh \
+    && conda activate micapipe \
+    && pip install --no-cache-dir \
+        fslpy \
+        vtk==9.2.6 \
+        pyvista \
+        fury==0.8.0 \
+        antspyx \
+        brainspace==0.1.10 \
+        tedana==0.0.12 \
+        duecredit \
+        git+https://github.com/MICA-MNI/LAMAReg.git \
+        git+https://github.com/MICA-MNI/ENIGMA.git \
+        git+https://github.com/jordandekraker/superficial-white-matter.git \
+        git+https://github.com/NYU-DiffusionMRI/DESIGNER-v2.git
+
+# Clean up conda/mamba caches to reduce image size
+RUN conda clean -ya \
+    && find /opt/miniconda-latest -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# ============================================================================ 
+# NEUROIMAGING TOOLS INSTALLATION
+# ============================================================================
+
+# Install FSL
+ENV FSLDIR="/opt/fsl-6.0.2" \
+    PATH="/opt/fsl-6.0.2/bin:$PATH" \
+    FSLOUTPUTTYPE="NIFTI_GZ" \
+    FSLMULTIFILEQUIT="TRUE" \
+    FSLTCLSH="/opt/fsl-6.0.2/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.2/bin/fslwish" \
+    FSLLOCKDIR="" \
+    FSLMACHINELIST="" \
+    FSLREMOTECALL=""
+
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FSL..." \
+    && if [ -f "/mnt/downloads/fsl-6.0.2-centos6_64.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FSL"; \
+        cp /mnt/downloads/fsl-6.0.2-centos6_64.tar.gz /tmp/fsl.tar.gz; \
+    else \
+        echo "📥 Downloading FSL from internet..."; \
+        curl -fL https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.2-centos6_64.tar.gz -o /tmp/fsl.tar.gz; \
+    fi \
+    && tar -xf /tmp/fsl.tar.gz -C /opt \
+    && rm /tmp/fsl.tar.gz \
+    && mv /opt/fsl /opt/fsl-6.0.2
+
+# Install FreeSurfer
+ENV FREESURFER_HOME="/opt/freesurfer" \
+    SUBJECTS_DIR="/opt/freesurfer/subjects" \
+    FUNCTIONALS_DIR="/opt/freesurfer/sessions" \
+    MNI_DIR="/opt/freesurfer/mni" \
+    LOCAL_DIR="/opt/freesurfer/local" \
+    MINC_BIN_DIR="/opt/freesurfer/mni/bin" \
+    MINC_LIB_DIR="/opt/freesurfer/mni/lib" \
+    MNI_DATAPATH="/opt/freesurfer/mni/data"
+ENV PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
+    MNI_PERL5LIB="/opt/freesurfer/mni/lib/perl5/5.8.5" \
+    PATH="/opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:$PATH"
+
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FreeSurfer..." \
+    && if [ -f "/mnt/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FreeSurfer"; \
+        cp /mnt/downloads/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz /tmp/freesurfer.tar.gz; \
+    else \
+        echo "📥 Downloading FreeSurfer from internet..."; \
+        curl -fL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu18_amd64-7.4.1.tar.gz -o /tmp/freesurfer.tar.gz; \
+    fi \
+    && tar -xf /tmp/freesurfer.tar.gz -C /opt \
+    && rm /tmp/freesurfer.tar.gz
+
+# Install AFNI
+ENV PATH="/opt/afni:$PATH" \
+    AFNI_PLUGINPATH="/opt/afni"
+
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing AFNI..." \
+    && mkdir -p /opt/afni \
+    && if [ -f "/mnt/downloads/afni-linux_openmp_64.tgz" ]; then \
+        echo "📦 Using pre-downloaded AFNI"; \
+        cp /mnt/downloads/afni-linux_openmp_64.tgz /tmp/afni.tgz; \
+    else \
+        echo "📥 Downloading AFNI from internet..."; \
+        curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz -o /tmp/afni.tgz; \
+    fi \
+    && tar -xf /tmp/afni.tgz -C /opt/afni --strip-components=1 \
+    && rm /tmp/afni.tgz
+
+# Copy ANTs v2.3.4 binaries from kaczmarj/ants:2.3.4
+COPY --from=kaczmarj/ants:2.3.4 /opt/ants /opt/ants-2.3.4
+ENV ANTSPATH="/opt/ants-2.3.4/bin" \
+    PATH="/opt/ants-2.3.4/bin:$PATH"
+
+# Install FSL FIX
+RUN --mount=type=bind,from=downloads,source=.,target=/mnt/downloads,ro \
+    echo "Installing FSL FIX..." \
+    && mkdir -p /opt/fix \
+    && if [ -f "/mnt/downloads/fix-1.068.tar.gz" ]; then \
+        echo "📦 Using pre-downloaded FSL FIX"; \
+        cp /mnt/downloads/fix-1.068.tar.gz /tmp/fix.tar.gz; \
+    else \
+        echo "📥 Downloading FSL FIX from internet..."; \
+        curl -fL https://www.fmrib.ox.ac.uk/~steve/ftp/fix.tar.gz -o /tmp/fix.tar.gz; \
+    fi \
+    && tar -xf /tmp/fix.tar.gz -C /opt/fix --strip-components=1 \
+    && rm /tmp/fix.tar.gz
+ENV PATH="/opt/fix:$PATH"
+
+# Install FastSurfer
+ENV FASTSURFER_HOME="/opt/FastSurfer"
+RUN echo "Installing FastSurfer..." \
+    && git clone --depth 1 --branch v2.4.2 https://github.com/Deep-MI/FastSurfer.git /opt/FastSurfer
+
+# Create the fastsurfer_cpu conda env that micapipe's proc_surf module
+# expects (`source activate fastsurfer_cpu`). FastSurfer ships its env
+# spec under env/fastsurfer.yml but pins CUDA-only torch builds
+# (torch==2.6.0+cu126), which won't resolve on a CPU-only install or
+# on PyPI's main index. Strip the +cu126 suffix and switch the
+# extra-index-url to the CPU pytorch wheels, then create the env
+# under the `fastsurfer_cpu` name micapipe expects.
+RUN echo "Creating fastsurfer_cpu conda env (CPU build)..." && \
+    . /opt/miniconda-latest/etc/profile.d/conda.sh && \
+    cp /opt/FastSurfer/env/fastsurfer.yml /tmp/fastsurfer_cpu.yml && \
+    sed -i 's|whl/cu126|whl/cpu|g; s|+cu126||g' /tmp/fastsurfer_cpu.yml && \
+    mamba env create -n fastsurfer_cpu -f /tmp/fastsurfer_cpu.yml && \
+    mamba clean -afy && \
+    rm -f /tmp/fastsurfer_cpu.yml
+
+# Make the env's bundled libstdc++ take precedence over the bionic
+# system libstdc++ (which lacks GLIBCXX_3.4.26 that scipy 1.15+ needs).
+# Without this, scipy/scikit-image imports inside fastsurfer_cpu fail
+# at activation. Conda activation hooks prepend env lib dir to
+# LD_LIBRARY_PATH only when the env explicitly opts in.
+RUN mkdir -p /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d \
+             /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d && \
+    printf '#!/bin/sh\nexport _MICAPIPE_FS_LD_PREV="${LD_LIBRARY_PATH:-}"\nexport LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$_MICAPIPE_FS_LD_PREV"\n' \
+      > /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d/00_libstdcxx.sh && \
+    printf '#!/bin/sh\nexport LD_LIBRARY_PATH="${_MICAPIPE_FS_LD_PREV:-}"\nunset _MICAPIPE_FS_LD_PREV\n' \
+      > /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d/00_libstdcxx.sh && \
+    chmod a+rx /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/activate.d/00_libstdcxx.sh \
+               /opt/miniconda-latest/envs/fastsurfer_cpu/etc/conda/deactivate.d/00_libstdcxx.sh && \
+    . /opt/miniconda-latest/etc/profile.d/conda.sh && \
+    conda activate fastsurfer_cpu && \
+    python -c "import torch, scipy; print('torch', torch.__version__, '/ scipy', scipy.__version__)" && \
+    conda deactivate
+
+# Install additional neuroimaging tools and dependencies
+# Note: SWM and DESIGNER are installed via pip above
+
+# Install synb0-DISCO for DWI without reverse phase encoding
+RUN echo "Installing synb0-DISCO..." \
+    && git clone --depth 1 https://github.com/MASILab/Synb0-DISCO.git /opt/Synb0-DISCO \
+    && chmod -R a+rx /opt/Synb0-DISCO
+
+ENV SYNB0_DISCO_HOME="/opt/Synb0-DISCO"
+ENV PATH="/opt/Synb0-DISCO:$PATH"
+
+# Install SynBOLD-DisCo for fMRI without reverse phase encoding
+RUN echo "Installing SynBOLD-DisCo..." \
+    && git clone --depth 1 https://github.com/MASILab/SynBOLD-DisCo.git /opt/SynBOLD-DisCo \
+    && chmod -R a+rx /opt/SynBOLD-DisCo
+
+ENV SYNBOLD_DISCO_HOME="/opt/SynBOLD-DisCo"
+ENV PATH="/opt/SynBOLD-DisCo:$PATH"
+
+# Install R and libraries
+# Keep the CRAN bootstrap and package installs in smaller chunks so the
+# builder does not have to resolve/configure the whole stack in one shot.
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends software-properties-common apt-transport-https; \
+    curl -sL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xE298A3A825C0D65DFD57CBB651716619E084DAB9" | apt-key add - || \
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9; \
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        gfortran \
+        libblas-dev \
+        liblapack-dev \
+        libpaper-utils \
+        libpaper1 \
+        libtcl8.6 \
+        libtk8.6 \
+        libxss1 \
+        tzdata \
+        xdg-utils; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        r-base-core \
+        r-recommended; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -uex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends r-base-dev; \
+    rm -rf /var/lib/apt/lists/*
+
+# Install c3d
+RUN set -uex; \
+    cd /opt/ && \
+    wget -O itksnap.tar.gz https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download && \
+    tar -xf itksnap.tar.gz -C /opt/ && \
+    rm itksnap.tar.gz
+ENV PATH="/opt/c3d-1.0.0-Linux-x86_64/bin:${PATH}"
+
+# ============================================================================
+# FINAL ENVIRONMENT SETUP
+# ============================================================================
+
+# Set up conda environment activation for interactive shells
+# BASH_ENV ensures conda is activated for non-interactive shells too
+RUN echo ". /opt/miniconda-latest/etc/profile.d/conda.sh" >> /etc/bash.bashrc \
+    && echo "conda activate micapipe" >> /etc/bash.bashrc
+
+# Copy the static MICApipe data into the slow-changing base image so
+# code-only rebuilds do not have to recopy these assets.
+ENV MICAPIPE="/opt/micapipe"
+COPY parcellations/ /opt/micapipe/parcellations/
+COPY surfaces/ /opt/micapipe/surfaces/
+COPY MNI152Volumes/ /opt/micapipe/MNI152Volumes/
+COPY MICs60_T1-atlas/ /opt/micapipe/MICs60_T1-atlas/
+COPY fsl_conf/ /opt/micapipe/fsl_conf/
+COPY fix_settings.sh /opt/micapipe/fix_settings.sh
+COPY functions/MICAMTL_training_15HC_15PX.RData /opt/micapipe/functions/MICAMTL_training_15HC_15PX.RData
+
+RUN mkdir -p /opt/fix /opt/fsl-6.0.2/etc/flirtsch \
+    && cp /opt/micapipe/fix_settings.sh /opt/fix/settings.sh \
+    && cp /opt/micapipe/fsl_conf/* /opt/fsl-6.0.2/etc/flirtsch/ \
+    && cp -r /opt/micapipe/surfaces/fsaverage5 /opt/freesurfer/subjects/ \
+    && chmod -R a+rX /opt/micapipe
+
+# Copy R configuration
+COPY R_config/ /opt/R_config/
+ENV R_LIBS="/opt/R_config"
+
+# BASH_ENV activates conda for non-interactive scripts
+ENV BASH_ENV="/etc/bash.bashrc"
+
+# Final cleanup to reduce image size
+RUN apt-get autoremove -y \
+    && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && find /opt -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Metadata
+LABEL org.opencontainers.image.title="MICApipe Comprehensive Base"
+LABEL org.opencontainers.image.description="Complete neuroimaging environment with FSL, FreeSurfer, AFNI, ANTs, and optimized Python environments for MICApipe"
+LABEL org.opencontainers.image.version="2.0"
+LABEL org.opencontainers.image.source="https://github.com/MICA-MNI/micapipe"
+LABEL org.opencontainers.image.documentation="https://micapipe.readthedocs.io/"
+
+# Set working directory
+WORKDIR /home/mica
+
+# Default shell command (no custom entrypoint needed - Docker handles this natively)
+# Using shell form allows BASH_ENV to activate conda automatically
+CMD ["/bin/bash"]

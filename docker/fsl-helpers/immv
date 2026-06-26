@@ -1,0 +1,13 @@
+#!/bin/sh
+# Minimal drop-in FSL immv. Moves all matching image files for a basename.
+[ $# -eq 2 ] || { echo "Usage: immv src dst" >&2; exit 1; }
+src="${1%.nii.gz}"; src="${src%.nii}"; src="${src%.hdr}"; src="${src%.img}"
+dst="${2%.nii.gz}"; dst="${dst%.nii}"; dst="${dst%.hdr}"; dst="${dst%.img}"
+moved=0
+for ext in nii.gz nii hdr img; do
+    [ -f "${src}.${ext}" ] || continue
+    mv "${src}.${ext}" "${dst}.${ext}"
+    moved=$((moved + 1))
+done
+[ $moved -gt 0 ] || { echo "immv: no image found at $src" >&2; exit 1; }
+exit 0
