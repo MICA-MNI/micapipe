@@ -138,18 +138,58 @@ here=$(pwd)
 
 # -----------------------------------------------------------------------------------------------
 # CHANGE THIS regex (regular expressions) ACCORDING TO YOUR DICOMS NAMING
-orig=("*mprage-0.8iso*" "*_INV1" "*_INV2" "*_T1_Images" "*UNI_Images" "*FLAIR*"\
-    "*rsfmri-3mm-bold_AP" "*rsfmri-3mm_se_AP*" "*rsfmri-3mm_se_PA*"\
-    "*encoding*" '*retrieval*' "*patternsep-phase1*" "*patternsep-phase2*" "*semantic*" "*spatial*"\
-    "*ASL-pcasl-low" "*ASL-pcasl-low_M0")
-origDWI=("*dwi_b700_40" "*dwi_b300_10" "*dwi_b0_5PA" "*_dwi_b2000*")
+orig=(
+  "*mprage-0.8iso*" 
+  "*_INV1" 
+  "*_INV2" 
+  "*_T1_Images" 
+  "*UNI_Images" 
+  "*FLAIR*"
+  "*rsfmri-3mm-bold_AP"
+  "*rsfmri-3mm_se_AP*"
+  "*rsfmri-3mm_se_PA*"
+  "*encoding*"
+  '*retrieval*'
+  "*patternsep-phase1*"
+  "*patternsep-phase2*"
+  "*semantic*"
+  "*spatial*"
+  "*ASL-pcasl-low" 
+  "*ASL-pcasl-low_M0"
+  )
+origDWI=(
+  "*dwi_b700_40" 
+  "*dwi_b300_10" 
+  "*dwi_b0_5PA" 
+  "*_dwi_b2000*")
 
 # New BIDS-naming, follow the BIDS specification:
 # https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html
-bids=(T1w acq-inv1_T1map acq-inv2_T1map acq-mp2rage_T1map acq-uni_T1map FLAIR \
-    task-rest_acq-AP_bold task-rest_acq-APse_bold task-rest_acq-PAse_bold \
-    task-encoding_acq-AP_bold task-retrieval_acq-AP_bold task-MST1_acq-AP_bold task-MST2_acq-AP_bold task-semantic_acq-AP_bold task-spatial_acq-AP_bold asl m0scan)
-bidsDWI=(acq-b700-NUM_dir-AP_dwi acq-b300-NUM_dir-AP_dwi dir-PA_dwi acq-b2000-NUM_dir-AP_dwi)
+bids=(
+  T1w
+  inv-1_MP2RAGE
+  inv-2_MP2RAGE
+  T1map
+  UNIT1
+  FLAIR
+  task-rest_acq-AP_bold
+  task-rest_acq-APse_bold
+  task-rest_acq-PAse_bold
+  task-encoding_acq-AP_bold
+  task-retrieval_acq-AP_bold
+  task-MST1_acq-AP_bold
+  task-MST2_acq-AP_bold
+  task-semantic_acq-AP_bold
+  task-spatial_acq-AP_bold
+  asl
+  m0scan
+  )
+
+bidsDWI=(
+  acq-b700-NUM_dir-AP_dwi
+  acq-b300-NUM_dir-AP_dwi 
+  dir-PA_dwi 
+  acq-b2000-NUM_dir-AP_dwi)
 
 # -----------------------------------------------------------------------------------------------
 # Create BIDS/subj_dir
@@ -182,7 +222,9 @@ for k in ${!orig[@]}; do # iterate over acquisition names by index=k
   fi
 done
 # move files to their corresponding directory
-Do_cmd mv -v "$BIDS"/*mp2rage* "$BIDS"/anat
+Do_cmd mv -v "$BIDS"/*MP2RAGE* "$BIDS"/anat
+Do_cmd mv -v "$BIDS"/*T1map* "$BIDS"/anat
+Do_cmd mv -v "$BIDS"/*UNIT1* "$BIDS"/anat
 Do_cmd mv -v "$BIDS"/*bold* "$BIDS"/func
 Do_cmd mv -v "$BIDS"/*T1* "$BIDS"/anat
 Do_cmd mv -v "$BIDS"/*FLAIR* "$BIDS"/anat
@@ -226,6 +268,8 @@ echo "${Subj}, ${SES/ses-/}, $(date +%d-%m-%Y), $(whoami), $(uname -n), ${N}, ${
 # Go back to initial directory
 Do_cmd cd "$here"
 
-Info "Remember to validate your BIDS directory:
-                http://bids-standard.github.io/bids-validator/"
+Info "Remember to validate your BIDS directory e.g.:
+
+  deno run --allow-env --allow-read --allow-write jsr:@bids/validator ${BIDS_DIR} --ignoreWarnings --outfile ${BIDS_DIR}/bids_validator.txt
+  http://bids-standard.github.io/bids-validator/"
 bids_variables_unset
