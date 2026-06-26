@@ -24,6 +24,14 @@ You can find the documentation in [micapipe.readthedocs.io](http://micapipe.read
 ## Container ##
 You can find the latest version of the container in [Docker](https://hub.docker.com/r/micalab/micapipe/)
 
+The image is built in two stages — a stable **comprehensive base** (all
+neuroimaging dependencies) and a thin **main** layer with the micapipe code on
+top — so code changes rebuild in seconds. For the full build/CI design (the
+two-stage architecture, the `lint` / `build-base` / `build-main` workflows, the
+`ci:build` and `ci:build-base` labels, the fast-vs-full CI path, and how the
+self-hosted runner is operated), see
+[`.github/workflows/README.md`](.github/workflows/README.md).
+
 ## Reference ##
 > Raúl R. Cruces, Jessica Royer, Peer Herholz, Sara Larivière, Reinder Vos de Wael, Casey Paquola, Oualid Benkarim, Bo-yong Park, Janie Degré-Pelletier, Mark Nelson, Jordan DeKraker, Ilana Leppert, Christine Tardif, Jean-Baptiste Poline, Luis Concha, Boris C. Bernhardt. (2022). *Micapipe: a pipeline for multimodal neuroimaging and connectome analysis.* NeuroImage, 2022, 119612, ISSN 1053-8119. doi: https://doi.org/10.1016/j.neuroimage.2022.119612
 
