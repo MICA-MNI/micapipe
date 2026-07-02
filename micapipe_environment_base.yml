@@ -11,6 +11,7 @@ dependencies:
   - pandas=1.4.4
   - matplotlib=3.4.3
   - nibabel=4.0.2
+  - dipy=1.7.0  # Coupé ONLM denoising (functions/nlm_denoise.py, mincnlm port)
   - pillow
   - packaging
   - scikit-learn
