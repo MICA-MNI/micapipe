@@ -118,7 +118,7 @@ do
   ;;
   -T1)
     T1w="$2"
-    shift;shift;
+    shift;shift;s
   ;;
   -threads)
     threads=$2
@@ -165,74 +165,129 @@ bids_variables $BIDS $id $out $SES
 # Check BIDS directory
 if [ ! -d ${subject_bids} ]; then Error "$id was not found on the BIDS directory\n\t     ${subject_bids}"; exit 0; fi
 
-Warning "This script ANONYMIZEs the anatomical images from the BIDS directory
-         The anonimized images will be saved in the OUT directory
-         Is up to the user to replace the BIDS anatomical by the outputs of this script
-         If OUT directory is the same as BIDS the user should move the non-deface data elsewhere"
-
 # -----------------------------------------------------------------------------------------------#
-# Assign variables
+# Assign variables from template directory
 mics_t1=$util_mics/MICs60_T1_0.8mm.nii.gz
 mics_t1_ROI=$util_mics/MICs60_T1_0.8mm_mask-defaceROI.nii.gz
 mics_t1_face=$util_mics/MICs60_T1_0.8mm_face.nii.gz
 mics_t1_brainNeck=$util_mics/MICs60_T1_0.8mm_mask-brainNeck.nii.gz
+mics_t1_synth=$util_mics/MICs60_T1_0.8mm_synthseg.nii.gz
 here=$(pwd)
 
+# -----------------------------------------------------------------------------------------------#
+# Assign variables from BIDS directory
+bids_T1ws=($(ls "$subject_bids"/anat/*T1w.nii* 2>/dev/null))
+
 # Get the T1w_run-1 name (no path). Note bids_T1ws come from bids_variables
-T1w_run1=$(echo ${bids_T1ws[0]} | awk -F 'anat/' '{print $2}')
-for i in ${bids_T1ws[*]}; do echo -e "\t\t$i"; done
+T1w_run1="${bids_T1ws[0]#*anat/}"
 
 # Go to BIDS/anat to create a list of all the Volumes
-cd ${subject_bids}/anat
-# Create a list with all anat volumes
-anat=($(ls *gz))
-anatT1map=$(find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz")
-T1map_inv1=$(find . -name "*inv1_T1map.nii.gz"); T1map_inv1=${T1map_inv1/.\//}
+cd "${subject_bids}/anat" || exit 1
 
-Info "T1w to register: $T1w_run1\n\t\tOther anatomical volumes:"
-for i in ${anat[*]}; do echo -e "\t\t$i"; done
+# Collect anatomical volumes and specific T1map-related files
+shopt -s nullglob
+anat=(*.nii.gz)
+mapfile -t anatT1map < <(find . -name "*T1map.nii.gz" ! -name "T1map.nii.gz")
+mapfile -t T1map_inv1 < <(find . -name "*inv1_T1map.nii.gz")
+T1map_inv1=("${T1map_inv1[@]#./}")
+
+# Filter deface/reface/warpface BEFORE any logic that depends on these arrays
 if [ "${#anatT1map[@]}" -gt 0 ]; then
-  Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
-  for i in ${anatT1map[*]}; do echo -e "\t\t$i"; done
-fi
-
-# T1w for registrations
-# Manage the T1 in case is not found automatically
-if [ -z ${T1w} ]; then
-	T1_orig=${subject_bids}/anat/${T1w_run1}
+  mapfile -t anatT1map < <( printf '%s\n' "${anatT1map[@]}" | grep -Ev 'rec-(deface|reface|warpface)')
 else
-	T1_orig=$(realpath ${T1w})
-	T1w_run1=$(echo ${T1_orig} | awk -F 'anat/' '{print $2}')
+  anatT1map=()
+fi
+if [ "${#anat[@]}" -gt 0 ]; then
+  mapfile -t anat < <( printf '%s\n' "${anat[@]}" | grep -Ev 'rec-(deface|reface|warpface)')
+else
+  anat=()
 fi
 
-# T1w for registrations: exit if file is not found
-if [ ! -f ${T1_orig} ]; then
-	Error "T1w image for registrations DO NOT exist: try using -T1"
-	ls "${subject_bids}/anat/"*nii* | awk -F '/' '{print $(NF)}'; Do_cmd exit 0
+# If ALL niftis were de-identified, nothing remains to process: exit early
+all_niftis=(*.nii.gz)
+if [ "${#all_niftis[@]}" -gt 0 ] && [ "${#anat[@]}" -eq 0 ] && [ "${#anatT1map[@]}" -eq 0 ]; then
+  Info "sub-${subject} | All the files seem to have been de-identified:"
+  for file in "${subject_bids}/anat/"*nii*; do f=$(basename "${file}"); echo -e "\t\t${f}"; done
+  exit 0
 fi
 
-#------------------------------------------------------------------------------#
-Title "Running MICA-anonymize by $METHOD method(s)"
-Info "micapipe will use $threads threads for multicore processing"
-# Timer & Beginning
-aloita=$(date +%s)
+# Derive T1w_run1: user-provided > run-1 > any T1w > MP2RAGE inv-1
+if [ -n "${T1w}" ]; then
+  T1_orig=$(realpath "${T1w}")
+else
+  T1_orig=$(printf '%s\n' "${anat[@]}" | grep 'run-1_T1w\|T1w' | head -1)
+  T1_orig="${subject_bids}/anat/${T1_orig}"
+fi
 
-# if temporary directory is empty
-if [ -z ${tmp} ]; then tmp=/tmp; fi
-# Create temporal directory
-tmp=${tmp}/${RANDOM}_micapipe_anonymize_${id}
-if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
+# Fallback to MP2RAGE inv-1 if still missing
+if [ ! -f "${T1_orig}" ]; then
+  Warning "T1w image not found, trying to use MP2RAGE as reference"
+  T1_orig=$(ls "${subject_bids}/anat/"*_inv-1_MP2RAGE.nii.gz 2>/dev/null | head -1)
+fi
+
+# Abort if no reference found
+if [ ! -f "${T1_orig}" ]; then
+  Error "T1w image not found and no MP2RAGE inv-1 available: try -T1" " 2"
+  for file in "${subject_bids}/anat/"*nii*; do echo -e "\t\t$(basename "${file}")"; done
+  exit 2
+fi
+
+# Derive T1w_run1 and T1w_run1_str from final T1_orig
+T1w_run1=$(basename "${T1_orig}")
+T1w_run1_str="${T1w_run1%.nii.gz}"
+Info "T1w reference: ${T1w_run1}"
 
 # Creates OUT directory if it doesn't exist
 out_warps=${out}/${subject}/${SES}/anat
-Info "Output directory: $out_warps"
 if [ ! -d ${out_warps} ]; then Do_cmd mkdir -p ${out_warps}; fi
+
+#------------------------------------------------------------------------------#
+Title "Running MICA-anonymize"
+
+# if temporary directory is empty
+if [ -z ${TMPDIR} ]; then TMPDIR=/tmp; fi
+
+Note "Reference MRI:" "${T1w_run1_str}"
+Note "Method:" "\t${METHOD}"
+Note "Threads:" "${threads}"
+Note "RegSynth:" "${synth_reg}"
+Note "Output:" "$out_warps"
+Note "TMPDIR:" "${TMPDIR}"
+
+
+Info "T1w to register: $T1w_run1\n\t\tOther anatomical volumes:"
+for i in ${anat[@]}; do echo -e "\t\t$i"; done
+if [ "${#anatT1map[@]}" -gt 0 ] && [ -n "${anatT1map[*]}" ]; then
+  Info "T1map to register: $T1map_inv1\n\t\tOther T1map volumes:"
+  for i in ${anatT1map[@]}; do echo -e "\t\t$i"; done
+fi
+
+Warning "This script de-identifies anatomical images from a BIDS directory.
+\t\tThe processed images are written to the OUT directory and include
+\t\tthe tag: rec-<method:{deface,reface,warpface}> in their filenames.
+
+\t\tThe user is responsible for replacing the original BIDS anatomical
+\t\timages with the de-identified versions if desired.
+
+\t\tIf the OUT directory is the same as the BIDS directory, the user
+\t\tmust move or back up the original non-de-identified data before
+\t\tsharing to avoid accidental disclosure."
+
+# Timer & Beginning
+aloita=$(date +%s)
+
+# Create temporal directory
+tmp=${TMPDIR}/${RANDOM}_micapipe_anonymize_${id}
+if [ ! -d $tmp ]; then Do_cmd mkdir -p $tmp; fi
 
 # move to tmp directory
 Do_cmd cd $tmp
 
+# TRAP in case the script fails
+trap 'cleanup $tmp $nocleanup $here' SIGINT SIGTERM
+
 # -----------------------------------------------------------------------------------------------
-# Affine registration to MICs60_T1w-atlas
+# Affine registration from NATIVE REFERENCE to MICs60_T1w-atlas
 T1w_run1_str=${T1w_run1/.nii.gz/}
 T1w_2_MICs=${tmp}/T1w_2_MICs60
 T1w_2_mics_mat=${T1w_2_MICs}_0GenericAffine.mat
@@ -243,8 +298,7 @@ if [[ "${synth_reg}" == "TRUE" ]]; then
   Do_cmd mri_synthseg --i "${T1_orig}" --o "${tmp}/T1w_synthseg.nii.gz" --robust --threads $threads --cpu
   Do_cmd fslmaths "${tmp}/T1w_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1w_synthseg.nii.gz" "${T1_synth}"
 
-  Do_cmd mri_synthseg --i "$mics_t1" --o "${tmp}/micst1_synthseg.nii.gz" --robust --threads $threads --cpu
-  Do_cmd fslmaths "${tmp}/micst1_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/micst1_synthseg.nii.gz" "${micst1_synth}"
+  Do_cmd fslmaths "${mics_t1_synth}" -uthr 42 -thr 42 -bin -mul -39 -add "${mics_t1_synth}" "${micst1_synth}"
 
   # Affine from func to t1-nativepro
   Do_cmd antsRegistrationSyN.sh -d 3 -f $micst1_synth -m $T1_synth -o ${T1w_2_MICs}_ -t a -n $threads -p f
@@ -256,11 +310,51 @@ fi
 if [ ! -f ${T1w_2_mics_mat} ]; then Error "Affine registration failed"; cd $here;  Do_cmd exit 0; fi
 
 # -----------------------------------------------------------------------------------------------
+# DE-IDENTIFIES NAMING
+# Based on neurostars discussion: 
+#  > https://neurostars.org/t/use-of-defaced-t1w-in-fmriprep-how-to-organise-data/32333/2
+# Use rec-${method} to identify the algorithm used in the de-identification. It should follow the BIDS hierarchy:
+# sub-<label>[_ses-<label>][_task-<label>][_acq-<label>][_ce-<label>][_rec-<label>][_run-<index>][_chunk-<index>]_<SUFFIX>.nii[.gz]
+
+# -----------------------------------------------------------------------------------------------
+# JSON de-identified
+# remove keys:  ProcedureStepDescription
+# ADD: "RawImage": false, "DeIdentified": $METHOD
+json_deidentify() {
+    local json_orig="$1"
+    local json_deid="$2"
+    local json_method="$3"
+
+    # Guard: skip if source json does not exist
+    if [ ! -f "${json_orig}" ]; then
+      Warning "JSON not found, skipping: ${json_orig}"
+      return 0
+    fi
+
+    cp "${json_orig}" "${json_deid}"
+    jq --arg method "${json_method}" \
+      'del(
+        .AcquisitionComments,
+        .AcquisitionContextSequence,
+        .AcquisitionDate,
+        .AcquisitionDateTime,
+        .AcquisitionDeviceProcessingDescription,
+        .AcquisitionProtocolDescription
+      )
+      + {
+        "RawImage": false,
+        "DeidentificationMethod": [$method]
+      }' \
+      "${json_deid}" > "${json_deid}.tmp" && mv "${json_deid}.tmp" "${json_deid}"
+}
+
+# -----------------------------------------------------------------------------------------------
 # DEFACE
 if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
-    Info "DEFACING $T1w_run1"
+
+    Note "Calculating parameters:" "deface"
     roi_deface_T1w=${T1w_2_MICs}_defaceROI.nii.gz
-    defaced=${out_warps}/${T1w_run1_str}_defaced.nii.gz
+    defaced=$(bids_add_rec ${out_warps}/${T1w_run1_str}.nii.gz $METHOD)
 
     # Apply face ROI to native T1w volume
     Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_ROI -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $roi_deface_T1w
@@ -270,11 +364,11 @@ fi
 # -----------------------------------------------------------------------------------------------
 # REFACE
 if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all" ]; then
-    Info "REFACING $T1w_run1"
+    Note "Calculating parameters:" "reface"
     # Apply NEW face to native T1w volume
     T1w_mask_brain=${tmp}/mask-brainNeck.nii.gz
     face=${tmp}/face.nii.gz
-    refaced=${out_warps}/${T1w_run1_str}_refaced.nii.gz
+    refaced=$(bids_add_rec ${out_warps}/${T1w_run1_str}.nii.gz reface)
 
     Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_brainNeck -r $T1_orig -n GenericLabel -t [${T1w_2_mics_mat},1] -o $T1w_mask_brain
     Do_cmd antsApplyTransforms -d 3 -u int -i $mics_t1_face -r $T1_orig -n linear -t [${T1w_2_mics_mat},1] -o $face
@@ -290,7 +384,7 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all
     # # -----------------------------------------------------------------------------------------------
     # # WARPFACE
     if [ "$METHOD" == "warpface" ] || [ "$METHOD" = "all" ]; then
-        Info "WARP-FACING $T1w_run1"
+        Note "Calculating parameters:" "warpface"
         # Binary mask over original T1w_run
         T1w_mask_dil=${tmp}/mask_dil.nii.gz
         T1w_mask_inv=${tmp}/mask_inv.nii.gz
@@ -324,56 +418,91 @@ if [ "$METHOD" == "reface" ] || [ "$METHOD" = "warpface" ] || [ "$METHOD" = "all
 fi
 
 # -----------------------------------------------------------------------------------------------
-# ONLY for T1map will generate a SINGLE registration matrix
-niiT1map_pwd=${subject_bids}/anat/${T1map_inv1}
-if [ -f $niiT1map_pwd ]; then
-    Info "REGISTERING $T1map_inv1 to $T1w_run1_str"
-    niiT1map_out=${T1map_inv1/.nii.gz/_}
-    niiT1map_2_T1_mat=${niiT1map_out}0GenericAffine.mat
-    Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $niiT1map_pwd -o $niiT1map_out -t a -n $threads -p d
-fi
+get_bids_parts() {
+    local f="$1"
+    local name="${f##*/}"
+    name="${name%%.*}"   # strip all extensions
+
+    if [[ "$name" =~ ^(.*)_([^_]+)$ ]]; then
+        echo "${BASH_REMATCH[1]}|${BASH_REMATCH[2]}"
+    fi
+}
+
+get_group_key() {
+    local f="$1"
+    local prefix suffix
+
+    IFS="|" read -r prefix suffix <<< "$(get_bids_parts "$f")"
+
+    case "$suffix" in
+        MP2RAGE|UNIT1|T1map)
+            echo "${prefix}_MP2RAGE"
+            ;;
+        *)
+            echo "${prefix}_${suffix}"
+            ;;
+    esac
+}
+
+# --- build group transforms (anchor on inv-1 MP2RAGE) ---
+declare -A group_mat
 
 # Loop over all the other structural images (including non T1w volumes)
-for nii in ${anat[*]}; do nii=${nii/.\//}
-  # path to volume
-  nii_pwd=${subject_bids}/anat/${nii}
-  # rigid + affine registration 2 steps
-  if [[ $nii == *"_T1map.nii.gz"* ]]; then
-      Info "REGISTRATION matrix was calculated using ${T1map_inv1}"
-      nii_out=$niiT1map_out
-      nii_2_T1_mat=$niiT1map_2_T1_mat
-  else
-      Info "REGISTERING $nii_pwd to $T1w_run1_str"
-      nii_out=${tmp}/${nii/.nii.gz/_}
-      nii_2_T1_mat=${nii_out}0GenericAffine.mat
-      if [[ "${synth_reg}" == "TRUE" ]]; then
-        Info "Running label based affine registrations"
-        nii_synth="${tmp}/nii_synthsegGM.nii.gz"
-        Do_cmd mri_synthseg --i "$nii_pwd" --o "${tmp}/nii_synthseg.nii.gz" --robust --threads $threads --cpu
-        Do_cmd fslmaths "${tmp}/nii_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/nii_synthseg.nii.gz" "${nii_synth}"
+for nii in "${anat[@]}"; do
+  nii=${nii#./}
+  nii_pwd="${subject_bids}/anat/${nii}"
+  json_file="${nii_pwd%.nii.gz}"
+  json_file="${json_file%.nii}.json"
 
-        # Affine from func to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
+  group=$(get_group_key "$nii")
+
+  if [[ -n "$group" && -n "${group_mat[$group]+_}" ]]; then
+      # Group member (e.g. MP2RAGE family) — reuse transform
+      Info "REGISTRATION: reusing group mat for $nii"
+      Note "De-Identifiying:" "$METHOD"
+      Note "Applying to:" "$nii"
+      Note "Out string:" "$(bids_add_rec ${nii} $METHOD)"
+      nii_out="${tmp}/$(basename "${nii%%.*}")_"
+      nii_2_T1_mat="${group_mat[$group]}"
+  else
+      # Everything else (including T1w, T2w, etc.) — compute its own registration
+      Info "REGISTERING | from: $nii | to: $T1w_run1_str"
+      Note "De-Identifiying:" "$METHOD"
+      Note "Applying to:" "$nii"
+      Note "Out string:" "$(bids_add_rec ${nii} $METHOD)"
+
+      nii_out="${tmp}/$(basename "${nii%%.*}")_"
+      nii_2_T1_mat="${nii_out}0GenericAffine.mat"
+
+      if [[ "$synth_reg" == "TRUE" ]]; then
+          Note "Registration:" "Label based affine registrations"
+          nii_synth="${tmp}/nii_synthsegGM.nii.gz"
+
+          Do_cmd mri_synthseg --i "$nii_pwd" --o "${tmp}/nii_synthseg.nii.gz" --threads "$threads" --cpu
+          Do_cmd fslmaths "${tmp}/nii_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/nii_synthseg.nii.gz" "$nii_synth"
+
+          Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_synth -m $nii_synth -o $nii_out -t a -n $threads -p d
       else
-        Info "Running volume based affine registrations"
-        Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
+          Note "Registration:" "volume based affine registrations"
+
+          Do_cmd antsRegistrationSyN.sh -d 3 -f $T1_orig -m $nii_pwd -o $nii_out -t a -n $threads -p d
       fi
   fi
 
   # -----------------------------------------------------------------------------------------------
   if [ "$METHOD" == "deface" ] || [ "$METHOD" = "all" ]; then
-      Info "Applying DEFACING method to $nii"
           roi_deface_anat=${tmp}/${nii/.nii.gz/_}defaceROI.nii.gz
-          nii_defaced=${out_warps}/${nii/.nii.gz/_}defaced.nii.gz
+          nii_defaced=${out_warps}/$(bids_add_rec ${nii} deface)
           # Apply face ROI to native T1w volume
           Do_cmd antsApplyTransforms -d 3 -u int -i $roi_deface_T1w -r $nii_pwd -n GenericLabel -t [${nii_2_T1_mat},1] -o $roi_deface_anat
           Do_cmd fslmaths $roi_deface_anat -binv -mul $nii_pwd $nii_defaced
+          # Create json
+          Do_cmd json_deidentify ${json_file} ${nii_defaced/nii*/json} "deface"
   fi
 
   # -----------------------------------------------------------------------------------------------
   if [ "$METHOD" == "reface" ] || [ "$METHOD" = "all" ]; then
-      Info "Applying REFACING method to $nii"
-          nii_refaced=${out_warps}/${nii/.nii.gz/_}refaced.nii.gz
+          nii_refaced=${out_warps}/$(bids_add_rec ${nii} reface)
           nii_face=${tmp}/${nii/.nii.gz/_}face.nii.gz
           nii_mask=${tmp}/${nii/.nii.gz/_}mask-brainNeck.nii.gz
 
@@ -387,16 +516,20 @@ for nii in ${anat[*]}; do nii=${nii/.\//}
 
           # Apply face to native T1w volume
           Do_cmd fslmaths ${nii_mask} -mul $nii_pwd -add $nii_face $nii_refaced
+          # Create json
+          Do_cmd json_deidentify ${json_file} ${nii_refaced/nii.gz/json} "reface"
   fi
 
   # -----------------------------------------------------------------------------------------------
   if [ "$METHOD" == "warpface" ] || [ "$METHOD" = "all" ]; then
-      Info "Applying Warp-Facing method to $nii"
-      nii_warped=${out_warps}/${nii/.nii.gz/_}warpfaced.nii.gz
+      nii_warped=${out_warps}/$(bids_add_rec ${nii} warpface)
 
       # Apply the warpflied
       Do_cmd antsApplyTransforms -d 3 -u int -i $nii_pwd -r $nii_pwd -n NearestNeighbor \
               -t [${nii_2_T1_mat},1] -t [${face_mat},1] -t ${face_warp} -t $face_mat -t ${nii_2_T1_mat} -o $nii_warped
+      
+      # Create json
+      Do_cmd json_deidentify ${json_file} ${nii_warped/nii.gz/json} "warpface"
   fi
 done
 
