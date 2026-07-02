@@ -134,6 +134,26 @@ tree, or set `MICAPIPE_CI_BIDS` / `MICAPIPE_CI_LICENSE` / `MICAPIPE_CI_SIF` /
 `tests/sample_test.sh`). Outputs are timestamped, so runs never overwrite each
 other.
 
+`rawdata`, `license_fc.txt` and `micapipe_v1_beta.sif` are **symlinks** to the
+existing shared copies (`/data/mica3/BIDS_CI/...`, `/data_/mica1/...`), so no
+data is duplicated. For convenience there is also a shortcut next to the input
+dataset:
+
+```
+/data/mica3/BIDS_CI/ci_output -> /export03/data/action-runner/output
+```
+
+**Access / permissions.** The tree is group `mica` with setgid **and** default
+ACLs (`g:mica:rwx`), so every artifact the runner writes is readable, editable
+and deletable by anyone in the group — not just whoever the runner ran as. To
+grant a new person access, add them to the `mica` group; no per-run `chmod` is
+needed. If you ever recreate the tree, re-apply the ACLs:
+
+```bash
+setfacl -R -m g:mica:rwx    /export03/data/action-runner
+setfacl -R -d -m g:mica:rwx /export03/data/action-runner   # default for new files
+```
+
 ### Registering a new runner
 Requires repo **Admin** (Maintainer is not enough). Generate a token at
 *Settings → Actions → Runners → New self-hosted runner*, then on the host:
