@@ -111,6 +111,29 @@ sudo ./svc.sh install <user> && sudo ./svc.sh start && sudo ./svc.sh status
 If jobs sit **queued** for a long time, the runner is offline — restart it as
 above. Every self-hosted job will queue (not fail) until a runner picks it up.
 
+### CI input/output paths
+
+All `sample_test` I/O lives under one **shared, non-personal** root on the
+runner's scratch volume (no more `.../enning/...` home paths):
+
+```
+/export03/data/action-runner/           # MICAPIPE_CI_ROOT
+├── micapipe_v1_beta.sif                 # default SIF (CI overrides with the fresh build)
+├── rawdata/                             # input BIDS dataset
+├── license_fc.txt                       # FreeSurfer licence
+├── tmp/                                 # scratch
+├── sif/micapipe_ci_<run_id>.sif         # run-specific SIF (deleted on cleanup)
+└── output/                              # subject outputs, one timestamped dir per run
+    ├── singularity_0.2.3_<timestamp>/
+    └── singularity_0.2.3_<timestamp>_freesurfer/
+```
+
+Every path is overridable via env var — `MICAPIPE_CI_ROOT` moves the whole
+tree, or set `MICAPIPE_CI_BIDS` / `MICAPIPE_CI_LICENSE` / `MICAPIPE_CI_SIF` /
+`MICAPIPE_CI_TMP` / `MICAPIPE_CI_OUTDIR` individually (see the top of
+`tests/sample_test.sh`). Outputs are timestamped, so runs never overwrite each
+other.
+
 ### Registering a new runner
 Requires repo **Admin** (Maintainer is not enough). Generate a token at
 *Settings → Actions → Runners → New self-hosted runner*, then on the host:

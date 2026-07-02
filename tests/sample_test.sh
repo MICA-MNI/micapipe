@@ -4,19 +4,27 @@
 
 version=0.2.3
 container=singularity
-container_img=/data_/mica1/01_programs/singularity/micapipe_v1_beta.sif
 
-bids=/data/mica3/BIDS_CI/rawdata
-fs_lic=/data_/mica3/BIDS_CI/license_fc.txt
-tmp=/tmp
+# ---------------------------------------------------------------------------
+# CI I/O root — one shared, non-personal location on the runner's scratch
+# volume. Everything the CI run reads and writes lives under here (SIF, input
+# BIDS, FreeSurfer licence, scratch, outputs), so nothing is tied to a
+# personal home dir. Override the root, or any individual path, via the env
+# vars below.
+# ---------------------------------------------------------------------------
+CI_ROOT="${MICAPIPE_CI_ROOT:-/export03/data/action-runner}"
 
-# Define a primary output directory
-outdir_base="/data/mica1/03_projects/enning/BIDS_CI/${container}_${version}"
+container_img="${MICAPIPE_CI_SIF:-${CI_ROOT}/micapipe_v1_beta.sif}"
+bids="${MICAPIPE_CI_BIDS:-${CI_ROOT}/rawdata}"
+fs_lic="${MICAPIPE_CI_LICENSE:-${CI_ROOT}/license_fc.txt}"
+tmp="${MICAPIPE_CI_TMP:-${CI_ROOT}/tmp}"
+mkdir -p "${tmp}" 2>/dev/null || true
 
-# Test if outdir_base is writable; if not, fall back to /tmp
+# Timestamped output root (never overwrites a previous run).
+outdir_base="${MICAPIPE_CI_OUTDIR:-${CI_ROOT}/output}/${container}_${version}"
 if ! mkdir -p "${outdir_base}" 2>/dev/null; then
     echo "Warning: ${outdir_base} is not writable. Falling back to /tmp."
-    outdir_base="/export02/local/singularity_tmp/${container}_${version}"
+    outdir_base="/tmp/micapipe_ci/${container}_${version}"
     mkdir -p "${outdir_base}" || { echo "Failed to create fallback directory"; exit 1; }
 fi
 
