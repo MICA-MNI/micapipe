@@ -93,7 +93,9 @@ rm -f "$OUTPUT_PATH"
 # tight we reclaim what we safely can and, if still short, fail fast with an
 # actionable message rather than crashing minutes into a doomed export.
 #
-# Override with MICAPIPE_SIF_TRANSPORT=docker-archive or =docker-daemon.
+# Override with MICAPIPE_SIF_TRANSPORT=registry|docker-daemon|docker-archive.
+# 'registry' builds from docker://<image> (image must be pushed first) and is
+# the only transport that avoids the Docker data-root entirely.
 TRANSPORT="${MICAPIPE_SIF_TRANSPORT:-auto}"
 free_gb() { df -BG --output=avail "$1" 2>/dev/null | tail -1 | tr -dc 0-9 || echo 0; }
 
@@ -121,14 +123,33 @@ if [[ "$TRANSPORT" == "auto" ]]; then
         TRANSPORT="docker-daemon"
     else
         log "ERROR: $DOCKER_ROOT has ${AVAIL_GB}G free but the SIF build needs ~${NEEDED_GB}G there."
-        log "Both transports stage layers in \$DOCKER_ROOT/tmp, so this cannot succeed as-is."
-        log "Fix: free that partition (e.g. 'docker image prune -a', or remove old image tags)"
-        log "     or move Docker's data-root to a larger volume, then retry."
+        log "docker-daemon/docker-archive both stage layers in \$DOCKER_ROOT/tmp, so this cannot succeed as-is."
+        log "Fix options:"
+        log "  - MICAPIPE_SIF_TRANSPORT=registry : push the image to a registry and build from docker://"
+        log "    (pulls into SINGULARITY_TMPDIR, never touches the Docker data root) — used by CI."
+        log "  - free the partition ('docker image prune -a' / remove old tags), or move Docker's data-root."
         exit 1
     fi
 fi
 
 case "$TRANSPORT" in
+    registry)
+        # Build straight from the registry. Layers are pulled into
+        # SINGULARITY_TMPDIR (on a big volume), so the Docker daemon and its
+        # data-root partition are never involved — this is the CI path when the
+        # data root is too small for a ~52G export. The image must already be
+        # pushed to the registry (the caller does that).
+        #
+        # The image is private, so singularity needs registry credentials. It
+        # reads SINGULARITY_DOCKER_USERNAME/PASSWORD; map them from the GHCR_*
+        # vars the caller already exports for `docker login`.
+        if [[ -n "${GHCR_USER:-}" && -z "${SINGULARITY_DOCKER_USERNAME:-}" ]]; then
+            export SINGULARITY_DOCKER_USERNAME="$GHCR_USER"
+            export SINGULARITY_DOCKER_PASSWORD="${GHCR_TOKEN:-}"
+        fi
+        log "Transport: docker://${FULL_DOCKER_IMAGE} (registry pull; stages in SINGULARITY_TMPDIR)"
+        singularity build --force "$OUTPUT_PATH" "docker://${FULL_DOCKER_IMAGE}"
+        ;;
     docker-daemon)
         log "Transport: docker-daemon:// (streaming)"
         singularity build --force "$OUTPUT_PATH" "docker-daemon://${FULL_DOCKER_IMAGE}"
@@ -143,7 +164,7 @@ case "$TRANSPORT" in
         rm -f "$TAR"
         ;;
     *)
-        log "Unknown MICAPIPE_SIF_TRANSPORT: $TRANSPORT (use auto, docker-daemon, or docker-archive)"
+        log "Unknown MICAPIPE_SIF_TRANSPORT: $TRANSPORT (use auto, registry, docker-daemon, or docker-archive)"
         exit 1
         ;;
 esac
