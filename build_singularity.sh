@@ -84,26 +84,47 @@ docker image inspect "$FULL_DOCKER_IMAGE" >/dev/null 2>&1 || {
 
 rm -f "$OUTPUT_PATH"
 
-# Pick a transport: prefer docker-daemon:// (fastest, streams layers
-# directly from the daemon) but fall back to docker-archive:// when the
-# Docker data root partition is tight, since docker-daemon:// writes
-# intermediate blobs to /var/lib/docker/tmp (or /export01/docker/tmp
-# on this server) and fails with 'no space left on device'.
+# Pick a transport. Both docker-daemon:// and docker-archive:// stage the
+# image's layers in the Docker daemon's data-root tmp ($DOCKER_ROOT/tmp, e.g.
+# /export01/docker/tmp on this server) before writing the SIF/tar, so a tight
+# data-root partition fails EITHER way with 'no space left on device'. There is
+# no transport that sidesteps this — the only cures are freeing space on that
+# partition or moving Docker's data-root to a larger volume. So when the root is
+# tight we reclaim what we safely can and, if still short, fail fast with an
+# actionable message rather than crashing minutes into a doomed export.
 #
 # Override with MICAPIPE_SIF_TRANSPORT=docker-archive or =docker-daemon.
 TRANSPORT="${MICAPIPE_SIF_TRANSPORT:-auto}"
+free_gb() { df -BG --output=avail "$1" 2>/dev/null | tail -1 | tr -dc 0-9 || echo 0; }
 
 if [[ "$TRANSPORT" == "auto" ]]; then
     DOCKER_ROOT="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo "/var/lib/docker")"
-    AVAIL_GB="$(df -BG --output=avail "$DOCKER_ROOT" 2>/dev/null | tail -1 | tr -dc 0-9 || echo 0)"
+    AVAIL_GB="$(free_gb "$DOCKER_ROOT")"
     IMAGE_GB="$(docker image inspect "$FULL_DOCKER_IMAGE" --format '{{.Size}}' | awk '{printf "%d", $1/1024/1024/1024 + 1}')"
     NEEDED_GB=$((IMAGE_GB + 5))  # 5GB buffer
     log "Docker root: $DOCKER_ROOT (${AVAIL_GB}G free); image: ~${IMAGE_GB}G"
+
+    if (( AVAIL_GB < NEEDED_GB )); then
+        log "Docker root tight (need ~${NEEDED_GB}G, have ${AVAIL_GB}G) — reclaiming safe space"
+        # Safe to drop: build cache, dangling (untagged) images, and stale CI
+        # images from previous runs (ci-* tags other than this build's).
+        docker builder prune -f >/dev/null 2>&1 || true
+        docker image prune -f   >/dev/null 2>&1 || true
+        docker images "$DOCKER_IMAGE" --format '{{.Repository}}:{{.Tag}}' 2>/dev/null \
+            | grep ':ci-' | grep -v ":${DOCKER_TAG}\$" \
+            | xargs -r docker rmi >/dev/null 2>&1 || true
+        AVAIL_GB="$(free_gb "$DOCKER_ROOT")"
+        log "After reclaim: ${AVAIL_GB}G free"
+    fi
+
     if (( AVAIL_GB >= NEEDED_GB )); then
         TRANSPORT="docker-daemon"
     else
-        log "Docker root tight (need ~${NEEDED_GB}G, have ${AVAIL_GB}G) — switching to docker-archive"
-        TRANSPORT="docker-archive"
+        log "ERROR: $DOCKER_ROOT has ${AVAIL_GB}G free but the SIF build needs ~${NEEDED_GB}G there."
+        log "Both transports stage layers in \$DOCKER_ROOT/tmp, so this cannot succeed as-is."
+        log "Fix: free that partition (e.g. 'docker image prune -a', or remove old image tags)"
+        log "     or move Docker's data-root to a larger volume, then retry."
+        exit 1
     fi
 fi
 
