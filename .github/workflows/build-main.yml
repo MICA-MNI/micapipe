@@ -51,7 +51,10 @@ jobs:
   build-main:
     name: Fast main rebuild + smoke test
     runs-on: self-hosted
-    timeout-minutes: 30
+    # Covers the full path (SIF build + the 720-min sample_test step). The fast
+    # path still finishes in ~1 min; this ceiling only matters for the gated
+    # full run, which the old 30-min cap was silently killing mid-SIF.
+    timeout-minutes: 780
     env:
       MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-comprehensive-base:latest
       MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:ci-${{ github.run_id }}
@@ -134,9 +137,21 @@ jobs:
           MICAPIPE_DOCKER_IMAGE: ghcr.io/mica-mni/micapipe
           MICAPIPE_DOCKER_TAG: ci-${{ github.run_id }}
           MICAPIPE_SIF_OUTPUT_PATH: /export03/data/action-runner/sif/micapipe_ci_${{ github.run_id }}.sif
+          MICAPIPE_SIF_BASE_DIR: /export03/data/action-runner
+          MICAPIPE_SIF_TRANSPORT: registry
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           mkdir -p "$(dirname "${MICAPIPE_SIF_OUTPUT_PATH}")"
+          # The runner's Docker data-root (/export01) is too small to stage a
+          # ~52G image for a docker-daemon/-archive export. Instead push the
+          # freshly built image to ghcr and build the SIF from docker://, which
+          # pulls layers into SINGULARITY_TMPDIR on /export03 (big volume) and
+          # never touches the Docker data-root. ghcr dedups shared base layers,
+          # so only the thin code layer is actually uploaded.
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+          docker push "${MICAPIPE_DOCKER_IMAGE}:${MICAPIPE_DOCKER_TAG}"
           time ./build_singularity.sh
           ls -lh "${MICAPIPE_SIF_OUTPUT_PATH}"
           echo "path=${MICAPIPE_SIF_OUTPUT_PATH}" >> "$GITHUB_OUTPUT"
@@ -158,8 +173,21 @@ jobs:
 
       - name: Cleanup CI artifacts (keep :latest tag, drop run-specific)
         if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker rmi "${MICAPIPE_MAIN_IMAGE}" 2>/dev/null || true
           if [[ -n "${{ steps.sif.outputs.path }}" ]]; then
             rm -f "${{ steps.sif.outputs.path }}" 2>/dev/null || true
           fi
+          # Best-effort: drop the run-specific ci-* image version pushed to ghcr
+          # (shared base layers stay, deduped). Never fail the job over this.
+          if command -v gh >/dev/null 2>&1; then
+            ver="$(gh api --paginate /orgs/MICA-MNI/packages/container/micapipe/versions \
+                     --jq ".[] | select(.metadata.container.tags[]? == \"ci-${{ github.run_id }}\") | .id" 2>/dev/null | head -1 || true)"
+            if [[ -n "${ver:-}" ]]; then
+              gh api --method DELETE "/orgs/MICA-MNI/packages/container/micapipe/versions/${ver}" >/dev/null 2>&1 \
+                && echo "dropped ghcr ci-${{ github.run_id }}" || echo "note: could not delete ghcr ci tag (perms?)"
+            fi
+          fi
+          docker logout ghcr.io 2>/dev/null || true
