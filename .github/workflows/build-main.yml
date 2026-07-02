@@ -51,7 +51,10 @@ jobs:
   build-main:
     name: Fast main rebuild + smoke test
     runs-on: self-hosted
-    timeout-minutes: 30
+    # Covers the full path (SIF build + the 720-min sample_test step). The fast
+    # path still finishes in ~1 min; this ceiling only matters for the gated
+    # full run, which the old 30-min cap was silently killing mid-SIF.
+    timeout-minutes: 780
     env:
       MICAPIPE_BASE_IMAGE: ghcr.io/mica-mni/micapipe-comprehensive-base:latest
       MICAPIPE_MAIN_IMAGE: ghcr.io/mica-mni/micapipe:ci-${{ github.run_id }}
