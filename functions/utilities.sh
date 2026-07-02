@@ -1061,7 +1061,7 @@ function json_dwipreproc() {
 #     Warn messages
 #     Title messages
 Error() {
-echo -e "\033[38;5;9m\n-------------------------------------------------------------\n\n[ ERROR ]..... $1\n
+echo -e "\033[38;5;9m\n-------------------------------------------------------------\n\n[ ERROR$2 ]..... $1\n
 -------------------------------------------------------------\033[0m\n"
 }
 Note(){
@@ -1185,4 +1185,52 @@ function map_to-surfaces(){
 function steps() {
   Note "N     :" "${N}"
   Note "Nsteps:" "${Nsteps}"
+}
+
+bids_add_rec() {
+    local f="$1"
+    local METHOD="$2"
+
+    # split into: prefix + suffix+extension
+    # prefix = everything before last "_<suffix>"
+    # tail   = "<suffix>" + extension (whatever it is)
+    local prefix tail
+
+    if [[ "$f" =~ ^(.*)_([^_]+(\..+)?)$ ]]; then
+        prefix="${BASH_REMATCH[1]}"
+        tail="${BASH_REMATCH[2]}"
+    else
+        # no underscore case, just return safely
+        echo "$f"
+        return
+    fi
+
+    # now insert rec in correct entity order
+    IFS='_' read -ra parts <<< "$prefix"
+
+    local order=(
+        sub ses sample task tracksys
+        acq ce trc stain nuc voi
+        rec dir run mod
+        echo flip inv mt part
+        proc space split recording chunk
+    )
+
+    declare -A kv
+    for p in "${parts[@]}"; do
+        key="${p%%-*}"
+        kv["$key"]="$p"
+    done
+
+    kv["rec"]="rec-${METHOD}"
+
+    local out=()
+    for key in "${order[@]}"; do
+        [[ -n "${kv[$key]}" ]] && out+=("${kv[$key]}")
+    done
+
+    local rebuilt
+    rebuilt=$(IFS=_; echo "${out[*]}")
+
+    echo "${rebuilt}_${tail}"
 }
