@@ -1,0 +1,13 @@
+#!/bin/sh
+# Minimal drop-in FSL imcp. Copies all matching image files for a basename.
+[ $# -eq 2 ] || { echo "Usage: imcp src dst" >&2; exit 1; }
+src="${1%.nii.gz}"; src="${src%.nii}"; src="${src%.hdr}"; src="${src%.img}"
+dst="${2%.nii.gz}"; dst="${dst%.nii}"; dst="${dst%.hdr}"; dst="${dst%.img}"
+copied=0
+for ext in nii.gz nii hdr img; do
+    [ -f "${src}.${ext}" ] || continue
+    cp "${src}.${ext}" "${dst}.${ext}"
+    copied=$((copied + 1))
+done
+[ $copied -gt 0 ] || { echo "imcp: no image found at $src" >&2; exit 1; }
+exit 0

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Minimal drop-in FSL imglob.
+# `-extensions` / `-extension`: list files that exist with valid image
+# extensions; otherwise return canonical basenames.
+mode=base
+out=""
+for arg in "$@"; do
+    case "$arg" in
+        -extensions|-extension) mode=ext; continue;;
+    esac
+    base="${arg%.nii.gz}"; base="${base%.nii}"; base="${base%.hdr}"; base="${base%.img}"
+    if [ "$mode" = ext ]; then
+        for ext in nii.gz nii hdr img; do
+            [ -f "${base}.${ext}" ] && out="${out} ${base}.${ext}"
+        done
+    else
+        for ext in nii.gz nii hdr img; do
+            if [ -f "${base}.${ext}" ]; then out="${out} ${base}"; break; fi
+        done
+    fi
+done
+echo $out

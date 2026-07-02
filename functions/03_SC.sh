@@ -84,7 +84,6 @@ fi
 if [ "${tck_file}" != "FALSE" ]; then
   if [ ! -f "$tck_file" ]; then Error "The provided tractography (tck) does NOT exist: ${tck_file}"; exit 1; fi
 fi
-if [ ! -f "$dwi_SyN_affine" ]; then Warning "Subject $id doesn't have an SyN registration, only AFFINE will be apply"; regAffine="TRUE"; else regAffine="FALSE"; fi
 
 # -----------------------------------------------------------------------------------------------
 # End if module has been processed
@@ -141,11 +140,7 @@ Do_cmd fslmaths "${tmp}/${idBIDS}_fsLR-5k_hemi-L_rois.nii.gz" -add "${tmp}/${idB
 # Prepare the segmentatons
 parcellations=($(find "${dir_volum}" -name "*atlas*" ! -name "*cerebellum*" ! -name "*subcortical*"))
 # Transformations from T1nativepro to DWI
-if [[ ${regAffine}  == "FALSE" ]]; then
-    trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
-elif [[ ${regAffine}  == "TRUE" ]]; then
-    trans_T12dwi="-t [${mat_dwi_affine},1]"
-fi
+trans_T12dwi="-t ${dwi_SyN_warp} -t ${dwi_SyN_affine} -t [${mat_dwi_affine},1]"
 # get wmFOD for registration
 fod="${tmp}/${idBIDS}_space-dwi_model-CSD_map-FOD_desc-wmNorm.nii.gz"
 Do_cmd mrconvert -coord 3 0 "$fod_wmN" "$fod"

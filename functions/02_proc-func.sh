@@ -554,19 +554,11 @@ str_func_SyN="${dir_warp}/${idBIDS}_from-nativepro_func_to-${tagMRI}_mode-image_
 SyN_func_affine="${str_func_SyN}0GenericAffine.mat"
 SyN_func_warp="${str_func_SyN}1Warp.nii.gz"
 SyN_func_Invwarp="${str_func_SyN}1InverseWarp.nii.gz"
-regAffine="FALSE"
-if [[ ${regAffine}  == "FALSE" ]]; then
-    # SyN from T1_nativepro to t1-nativepro
-    export reg="Affine+SyN"
-    transformsInv="-t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
-    transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp}"  # func to T1nativepro
-    xfmat="-t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
-elif [[ ${regAffine}  == "TRUE" ]]; then
-    export reg="Affine"
-    transformsInv="-t [${mat_func_affine},1]"  # T1nativepro to func
-    transform="-t ${mat_func_affine}"   # func to T1nativepro
-    xfmat="-t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
-fi
+# Always use nonlinear registration with LAMAReg
+export reg="LAMAreg"
+transformsInv="-t ${SyN_func_warp2} -t ${SyN_func_warp} -t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func
+transform="-t ${mat_func_affine} -t [${SyN_func_affine},1] -t ${SyN_func_Invwarp} -t ${SyN_func_Invwarp2}"  # func to T1nativepro
+xfmat="-t ${SyN_func_affine} -t [${mat_func_affine},1]" # T1nativepro to func only lineal for FIX
 
 # Registration to native pro
 Nreg=$(ls "$mat_func_affine" "$fmri_in_T1nativepro" "$T1nativepro_in_func" 2>/dev/null | wc -l )
@@ -575,24 +567,33 @@ if [[ "$Nreg" -lt 3 ]]; then ((N++))
     voxels=$(mrinfo "${fmri_mean}" -spacing); voxels="${voxels// /,}"
     Do_cmd flirt -applyisoxfm "${voxels}" -in "${T1nativepro_brain}" -ref "${T1nativepro_brain}" -out "${t1bold}"
 
-    Info "Registering func MRI to nativepro"
-    bold_synth="${tmp}/func_brain_synthsegGM.nii.gz"
-    t1_synth="${tmp}/T1bold_synthsegGM.nii.gz"
-    Do_cmd mri_synthseg --i "${t1bold}" --o "${tmp}/T1bold_synthseg.nii.gz" --robust --threads "$threads" --cpu
-    Do_cmd fslmaths "${tmp}/T1bold_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/T1bold_synthseg.nii.gz" "${t1_synth}"
-
-    Do_cmd mri_synthseg --i "$fmri_brain" --o "${tmp}/func_brain_synthseg.nii.gz" --robust --threads "$threads" --cpu
-    Do_cmd fslmaths "${tmp}/func_brain_synthseg.nii.gz" -uthr 42 -thr 42 -bin -mul -39 -add "${tmp}/func_brain_synthseg.nii.gz" "${bold_synth}"
-
-    # Affine from func to t1-nativepro
-    centeralign="[${t1_synth},${bold_synth},0]"
-    Do_cmd antsRegistrationSyN.sh -d 3 -f "$t1_synth" -m "$bold_synth" -o "$str_func_affine" -t a -n "$threads" -p d -i ${centeralign}
-    Do_cmd antsApplyTransforms -d 3 -i "$t1_synth" -r "$bold_synth" -t ["$mat_func_affine",1] -o "${tmp}/T1bold_in_func.nii.gz" -v -u int
-
-    if [[ ${regAffine}  == "FALSE" ]]; then
-        # SyN from T1_nativepro to t1-nativepro
-        Do_cmd antsRegistrationSyN.sh -d 3 -m "${tmp}/T1bold_in_func.nii.gz" -f "${bold_synth}" -o "$str_func_SyN" -t s -n "$threads" -p d #-i "$mat_func_affine"
-    fi
+    Info "Registering func MRI to nativepro with LAMAReg"
+    
+    # LAMAReg registration with robust two-stage approach
+    func_SyN_output="${str_func_affine}Warped.nii.gz"
+    func_fixed_parc="${str_func_affine}_fixed_parc.nii.gz"
+    func_moving_parc="${str_func_affine}_moving_parc.nii.gz"
+    func_registered_parc="${str_func_affine}_registered_parc.nii.gz"
+    func_qc_csv="${str_func_affine}_dice_scores.csv"
+    SyN_func_warp2="${str_func_affine}2Warp.nii.gz"
+    SyN_func_Invwarp2="${str_func_affine}2InverseWarp.nii.gz"
+    
+    Do_cmd lamareg register \
+      --moving "${fmri_brain}" \
+      --fixed "${t1bold}" \
+      --output "$func_SyN_output" \
+      --moving-parc "$func_moving_parc" \
+      --fixed-parc "$func_fixed_parc" \
+      --registered-parc "$func_registered_parc" \
+      --affine "${SyN_func_affine}" \
+      --warpfield "${SyN_func_warp}" \
+      --inverse-warpfield "${SyN_func_Invwarp}" \
+      --secondary-warpfield "${SyN_func_warp2}" \
+      --inverse-secondary-warpfield "${SyN_func_Invwarp2}" \
+      --qc-csv "$func_qc_csv" \
+      --synthseg-threads "$threads" \
+      --ants-threads "$threads"
+    
     Do_cmd rm -rf "${dir_warp}"/*Warped.nii.gz 2>/dev/null
     # func to t1-nativepro
     Do_cmd antsApplyTransforms -d 3 -i "$fmri_brain" -r "$t1bold" "${transform}" -o "$fmri_in_T1nativepro" -v -u int
@@ -726,26 +727,22 @@ if [[ ! -f "${func_surf}/${idBIDS}_hemi-R_surf-fsnative.func.gii" ]]; then
     # convert affines
     Do_cmd c3d_affine_tool -itk "${mat_func_affine}" -o "$tmp/affine1.mat"
     mat_func_affine=$tmp/affine1.mat
-    if [[ ${regAffine}  == "FALSE" ]]; then
-        Do_cmd c3d_affine_tool -itk "${SyN_func_affine}" -o "$tmp/affine2.mat" -inv
-        SyN_func_affine="$tmp/affine2.mat"
-    fi
+    Do_cmd c3d_affine_tool -itk "${SyN_func_affine}" -o "$tmp/affine2.mat" -inv
+    SyN_func_affine="$tmp/affine2.mat"
     # apply registrations to surface
     for HEMICAP in L R; do
         Do_cmd wb_command -surface-apply-affine \
             "${surf_dir}/${idBIDS}_hemi-${HEMICAP}"_space-nativepro_surf-fsnative_label-midthickness.surf.gii \
             "${mat_func_affine}" \
             "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
-        if [[ ${regAffine}  == "FALSE" ]]; then
-            Do_cmd wb_command -surface-apply-affine \
-                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
-                "${SyN_func_affine}" \
-                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
-            Do_cmd wb_command -surface-apply-warpfield \
-                "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+        Do_cmd wb_command -surface-apply-affine \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
+            "${SyN_func_affine}" \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
+        Do_cmd wb_command -surface-apply-warpfield \
+            "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \
                 "${SyN_func_warp}" \
                 "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii
-        fi
         Do_cmd wb_command -volume-to-surface-mapping \
             "${func_processed}" \
             "${func_surf}/${idBIDS}_hemi-${HEMICAP}"_space-func_surf-fsnative_label-midthickness.surf.gii \

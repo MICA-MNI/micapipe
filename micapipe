@@ -89,15 +89,12 @@ echo -e "
 \t\t\t            MUST be a mif (MRtrix image format) with bvecs, bvals, PhaseEncodingDirection and ReadoutTime encoded
 \t   \033[38;5;120m-rpe_all\033[0m             : If all DWI directions & b-values are acquired twice this option can be used.
 \t\t\t            This option requires that both encoding contains the same number of volumes
-\t   \033[38;5;120m-regAffine\033[0m           : Specify this option to perform an Affine registration ONLY from dwi to T1w.
-\t\t\t            Default is non linear registration SyN
 \t   \033[38;5;120m-dwi_acq\033[0m             : Provide a string with this this flag to process new DWI acquisition.
 \t\t\t            This will create a new directory here: dwi/acq-<dwi_acq>
 \t   \033[38;5;120m-b0thr\033[0m               : Specifies the b-value threshold for determining those image volumes that correspond to b=0.
 \t\t\t            Default = 61 . This value will vary from DWI acquisition and from scanner to scanner (3T or 7T)
 \t   \033[38;5;120m-no_bvalue_scaling\033[0m   : Disable scaling of diffusion b-values by the square of the corresponding DW gradient norm.
 \t\t\t            Default is scaling. See more on MRtrix3 documentation
-\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
 \t   \033[38;5;120m-dwi_upsample\033[0m        : Use this flag to upsample the DWI to 1.25x1.25x1.25 to increase anatomical contrast (e.g. Low resolution DWI datasets).
 
 \t\033[38;5;197m-proc_func\033[0m
@@ -142,14 +139,8 @@ echo -e "
 \t\033[38;5;197m-MPC\033[0m  and \033[38;5;197m-MPC_SWM\033[0m
 \t   \033[38;5;120m-microstructural_img\033[0m : Path to scan on which MPC will be performed ( ./img.nii.gz )
 \t\t\t            If left blank or omitted, defaults to using qT1 identified through BIDS directory structure
-\t   \033[38;5;120m-microstructural_reg\033[0m : Path to scan which will be register to the surface ( ./img_2reg.nii.gz )
-\t\t\t            It MUST be on the same space as the main microstructural image!!
-\t\t\t            If it is EMPTY will try to find a T1map from here: anat/*mp2rage*T1map.nii*
-\t\t\t            Set to 'FALSE' to use microstructural_img for registrations
 \t   \033[38;5;120m-mpc_acq\033[0m             : Provide a string with this this flag to process new quantitative map.
 \t\t\t            ( this will create a new directory here: anat/surf/micro_profiles/acq-<mpc_acq> )
-\t   \033[38;5;120m-regSynth\033[0m            : Specify this option to perform the registration based on synthseg.
-\t   \033[38;5;120m-reg_nonlinear\033[0m       : Specify this option to perform the NON-Linear registration (e.g. MRI with strong geometric distortions).
 
 \t\033[38;5;197m-proc_asl\033[0m
 \t   \033[38;5;120m-aslScanStr\033[0m          : String to manually identify the ASL scan for processing (eg. perf/sub-001_<aslScanStr>.nii[.gz])
@@ -214,9 +205,29 @@ source "${MICAPIPE}/functions/utilities.sh"
 #			ARGUMENTS
 # Create VARIABLES
 argCP="$@"
-for arg in "$@"
-do
-  case "$arg" in
+
+# Helper: validate that a value-taking flag has a non-flag value following it.
+# Issues a clear Error and exits when the user wrote, e.g., `-sub -out /foo`.
+require_value() {
+  local flag="$1"
+  local value="$2"
+  if [ -z "$value" ]; then
+    Error "Flag ${flag} requires a value but none was provided"
+    exit 1
+  fi
+  case "$value" in
+    -*)
+      Error "Flag ${flag} requires a value but got another flag: ${value}"
+      exit 1
+      ;;
+  esac
+}
+
+# Use a while loop on $1 (rather than `for arg in "$@"`) so that shift
+# semantics, value validation, and unknown-option detection behave correctly
+# even when callers chain flags or omit required values. See issue #162.
+while [ "$#" -gt 0 ]; do
+  case "$1" in
   -h|-help)
     help
     exit 1
@@ -226,18 +237,22 @@ do
     exit 1
   ;;
   -sub)
+    require_value "-sub" "$2"
     id=$2
     shift;shift
   ;;
   -out)
+    require_value "-out" "$2"
     out=$2
     shift;shift
   ;;
   -bids)
+    require_value "-bids" "$2"
     BIDS=$2
     shift;shift
   ;;
   -ses)
+    require_value "-ses" "$2"
     SES=$2
     shift;shift
   ;;
@@ -318,10 +333,6 @@ do
     GSReg=TRUE
     shift
   ;;
-  -regAffine)
-    regAffine=TRUE
-    shift
-  ;;
   -noFIX)
     skipFIX=TRUE
     shift
@@ -362,26 +373,14 @@ do
     MPC_SWM=TRUE
     shift
   ;;
-  -reg_nonlinear)
-    reg_nonlinear=TRUE
-    shift
-  ;;
   -microstructural_img)
     input_im=$2
-    shift;shift
-  ;;
-  -microstructural_reg)
-    mpc_reg=$2
     shift;shift
   ;;
   -mpc_acq)
     mpc_acq=TRUE
     mpc_str=$2
     shift;shift
-  ;;
-  -regSynth)
-    synth_reg=TRUE
-    shift
   ;;
   -QC)
     QCgroup=TRUE
@@ -416,6 +415,7 @@ do
     shift;shift
   ;;
   -tmpDir)
+    require_value "-tmpDir" "$2"
     tmpDir=$2
     shift;shift;
   ;;
@@ -436,10 +436,12 @@ do
     shift
   ;;
   -fs_licence)
+    require_value "-fs_licence" "$2"
     fs_licence=$2
     shift;shift;
   ;;
   -T1)
+    require_value "-T1" "$2"
     t1="$2"
     shift;shift;
   ;;
@@ -492,6 +494,7 @@ do
     shift;shift
   ;;
   -threads)
+    require_value "-threads" "$2"
     threads=$2
     shift;shift
   ;;
@@ -576,21 +579,13 @@ if [ -z "$mainScanStr" ]; then mainScanStr=DEFAULT; fi
 if [ -z "$func_pe" ]; then func_pe=DEFAULT; else func_pe=$(realpath $func_pe); fi
 if [ -z "$func_rpe" ]; then func_rpe=DEFAULT; else func_rpe=$(realpath $func_rpe); fi
 if [ -z "$sesAnat" ]; then sesAnat=FALSE; fi
-if [ -z "${regAffine}" ]; then regAffine=FALSE; else regAffine=TRUE; fi
 if [ -z "${noFC}" ]; then noFC=FALSE; else noFC=TRUE; fi
 
 # Optional arguments mpc
 if [[ ${mpc_acq} == "TRUE" ]]; then mpc_str=${mpc_str}; else mpc_str=DEFAULT; fi
 if [ -z ${input_im} ]; then input_im=DEFAULT; else input_im=$(realpath $input_im); fi
-if [ -z ${mpc_reg} ]; then
-    mpc_reg=DEFAULT
-elif [ ${mpc_reg} == "FALSE" ]; then
-    mpc_reg=$(realpath $input_im)
-else
-    mpc_reg=$(realpath $mpc_reg)
-fi
-if [[ ${synth_reg} == "TRUE" ]]; then synth_reg=${synth_reg}; else synth_reg="FALSE"; fi
-if [[ ${reg_nonlinear} == "TRUE" ]]; then reg_nonlinear=${reg_nonlinear}; else reg_nonlinear="FALSE"; fi
+synth_reg="FALSE"  # regSynth flag removed, always FALSE
+reg_nonlinear="TRUE"  # Always nonlinear registration
 
 # Optional arguments SC
 if [ -z ${tracts} ]; then tracts=40M; else tracts=$tracts; fi
@@ -672,10 +667,19 @@ if [ -z ${dwi_processed} ]; then dwi_processed="FALSE"; else  dwi_processed=$(re
 Title "MICA pipeline - (Version $Version) \n\t\tSubject: $id Session: $SES"
 
 # -----------------------------------------------------------------------------------------------#
-# Launch the init file for local processing at MICA lab
-if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ]; then
+# Launch the init file for local processing at MICA lab, or whenever
+# we're running inside the micapipe Docker/Singularity container — the
+# slim Dockerfile.main doesn't set per-tool ENV vars, init.sh does.
+# The /opt/micapipe + /opt/freesurfer pair is a reliable container marker
+# (matches the same probe used inside init.sh).
+in_container=FALSE
+if [ -d "/opt/micapipe" ] && [ -d "/opt/freesurfer" ]; then in_container=TRUE; fi
+
+if [ "$micaq" = "TRUE" ] || [ "$qall" = "TRUE" ] || [ "$mica" = "TRUE" ] || [ "$in_container" = "TRUE" ]; then
     source "${MICAPIPE}/functions/init.sh" "$threads"
-else
+fi
+
+if [ "$micaq" != "TRUE" ] && [ "$qall" != "TRUE" ] && [ "$mica" != "TRUE" ]; then
 
     # -----------------------------------------------------------------------------------------------#
     #   CHECK PACKAGES DEPENDENCIES
@@ -832,7 +836,7 @@ fi
 if [ "$procDWI" = "TRUE" ]; then
     if [[ ${dwi_str} != "DEFAULT" ]]; then log_str=_${dwi_str}; else log_str=""; fi
     log_file_str=$dir_logs/proc_dwi_$(date +'%Y-%m-%d_%H.%M.%S')${log_str}
-    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $regAffine $dwi_str $b0thr $bvalscale $synth_reg $dwi_upsample"
+    COMMAND="${scriptDir}/02_proc-dwi.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $dwi_main $dwi_rpe $dwi_processed $rpe_all $dwi_str $b0thr $bvalscale $dwi_upsample"
     # mica.q - Diffusion processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Diffusion processing"
@@ -919,7 +923,7 @@ fi
 if [ "$postMPC" = "TRUE" ]; then
     rand=${RANDOM}
     log_file_str="$dir_logs/MPC_$(date +'%d-%m-%Y')-${rand}"
-    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
+    COMMAND="${scriptDir}/03_MPC.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_str} ${synth_reg}"
     jobName="q${rand}_mpc"
     # mica.q - Microstructural profile covariance
     if [[ $micaq == "TRUE" ]]; then
@@ -996,7 +1000,7 @@ fi
 if [ "$MPC_SWM" = "TRUE" ]; then
     rand=${RANDOM}
     log_file_str="$dir_logs/MPC-SWM_$(date +'%Y-%m-%d_%H.%M.%S')-${rand}"
-    COMMAND="${scriptDir}/03_MPC-SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_reg} ${mpc_str} ${synth_reg} ${reg_nonlinear}"
+    COMMAND="${scriptDir}/03_MPC-SWM.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir ${input_im} ${mpc_str} ${synth_reg}"
     # Command running
     $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
     "${scriptDir}"/rename_log.sh "${log_file_str}" "acqMRI" "${rand}"
