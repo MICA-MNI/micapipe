@@ -129,18 +129,22 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     if [[ "$recon" == "fastsurfer" ]]; then
         Do_cmd mkdir -m 777 -p "${dir_surf}/${idBIDS}"
           Info "FastSurfer: running fastsurfer_cpu environment"
-          source activate fastsurfer_cpu
-          Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
-          run_fastsurfer.sh --allow_root \
+          if [[ -d "/opt/environments/fastsurfer_cpu" ]]; then
+              fastsurfer_runner=(micapipe_env fastsurfer_cpu)
+          else
+              source activate fastsurfer_cpu
+              fastsurfer_runner=()
+          fi
+          "${fastsurfer_runner[@]}" run_fastsurfer.sh --allow_root \
            --fs_license "${fs_licence}" \
            --t1 "${t1_2proc}" \
            --sid "${idBIDS}" --sd "${dir_surf}" \
            --parallel --threads "${threads}"
-          source activate micapipe
-          sudo chmod aug+wr -R "${dir_surf}/${idBIDS}"
+          if [[ ! -d "/opt/environments/fastsurfer_cpu" ]]; then source activate micapipe; fi
+          chmod aug+wr -R "${dir_surf}/${idBIDS}"
           Do_cmd cp "${dir_surf}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
     else
-        Info "Running Freesurfer 7.3.2 comform volume to minimum"
+        Info "Running FreeSurfer: conform volume to minimum"
 
         # FIX FOV greater than 256
         t1nii="${t1_2proc}"

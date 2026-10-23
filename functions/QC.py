@@ -38,6 +38,9 @@ Generates a pdf file for QC of the processing
 
 from xhtml2pdf import pisa
 import os
+import subprocess
+import sys
+import traceback
 import argparse
 import json
 import glob
@@ -257,7 +260,7 @@ def report_module_output_template(outName='', outPath='', figPath=''):
         '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin:0px">'
         'Filepath: <wbr>{outPath}</wbr> </p>'
 
-        '<center> <img style="width:500px%;margin-top:0px" src="{figPath}"> </center>'
+        '<center> <img style="width:500px;margin-top:0px" src="{figPath}"> </center>'
     )
     return report_module_output.format(outName=outName, outPath=outPath, figPath=figPath)
 
@@ -266,11 +269,15 @@ def report_module_output_template(outName='', outPath='', figPath=''):
 def nifti_check(outName='', outPath='', refPath='', roi=False, figPath=''):
 
     if os.path.exists(outPath):
-        if os.path.exists(refPath):
-            ROI = '-roi' if roi else ''
-            os.system("%s/functions/nifti_capture.py -img %s %s %s -out %s"%(MICAPIPE, refPath, outPath, ROI, figPath))
-        else:
-            os.system("%s/functions/nifti_capture.py -img %s -out %s"%(MICAPIPE, outPath, figPath))
+        # Use the selected QC interpreter; never silently omit a failed image.
+        command = [sys.executable, os.path.join(MICAPIPE, "functions", "nifti_capture.py"), "-img"]
+        command.extend([refPath, outPath] if os.path.exists(refPath) else [outPath])
+        if os.path.exists(refPath) and roi:
+            command.append("-roi")
+        command.extend(["-out", figPath])
+        subprocess.run(command, check=True)
+        if not os.path.isfile(figPath) or os.path.getsize(figPath) == 0:
+            raise RuntimeError("QC image was not generated: " + figPath)
 
         _static_block = report_module_output_template(outName=outName, outPath=outPath, figPath=figPath)
     else:
@@ -1106,7 +1113,7 @@ def qc_proc_func(proc_func_json=''):
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
-            '<center> <img style="width:500px%;margin-top:0px" src="{snr_fig}"> </center>'
+            '<center> <img style="width:500px;margin-top:0px" src="{snr_fig}"> </center>'
     ).format(snr_fig=snr_fig)
 
     _static_block += (
@@ -1132,7 +1139,7 @@ def qc_proc_func(proc_func_json=''):
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
-            '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
+            '<center> <img style="width:500px;margin-top:0px" src="{deg_fig}"> </center>'
     ).format(deg_fig=deg_fig)
 
     _static_block += (
@@ -1329,7 +1336,7 @@ def qc_sc(sc_json=''):
                          nan_color=(0, 0, 0, 1), cmap='BuPu', color_range=(np.quantile(deg,0.25), np.quantile(deg,0.99)), transparent_bg=False, screenshot = True, offscreen=True, filename = deg_fig)
         display.stop()
         vertex_wise = (
-            '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
+            '<center> <img style="width:500px;margin-top:0px" src="{deg_fig}"> </center>'
         ).format(deg_fig=deg_fig)
 
         connectome_table = (
@@ -1487,7 +1494,7 @@ def qc_mpc(mpc_json=''):
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
-            '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
+            '<center> <img style="width:500px;margin-top:0px" src="{deg_fig}"> </center>'
     ).format(deg_fig=deg_fig)
 
     _static_block += (
@@ -1604,7 +1611,7 @@ def qc_gd(gd_json=''):
     _static_block += (
             '<p style="font-family:Helvetica, sans-serif;font-size:10px;text-align:Left;margin-bottom:0px">'
             '<b> Vertex-wise (fsLR-5k) </b> </p>'
-            '<center> <img style="width:500px%;margin-top:0px" src="{deg_fig}"> </center>'
+            '<center> <img style="width:500px;margin-top:0px" src="{deg_fig}"> </center>'
     ).format(deg_fig=deg_fig)
 
     _static_block += (
@@ -1803,6 +1810,7 @@ qc_module_function = {
    'functions': [qc_swm, qc_proc_structural, qc_proc_surf, qc_post_structural, qc_proc_dwi, qc_proc_func, qc_proc_flair, qc_sc, qc_mpc, qc_gd]
 }
 
+failed_modules = []
 for i, m in enumerate(qc_module_function['modules']):
     module_qc_json = glob.glob("%s/QC/%s_module-%s*.json"%(subj_dir,sbids,m))
     for j in module_qc_json:
@@ -1812,6 +1820,12 @@ for i, m in enumerate(qc_module_function['modules']):
             try:
                 static_report = qc_module_function['functions'][i](j)
                 file_pdf=j.replace('.json','_qc-report.pdf')
-                convert_html_to_pdf(static_report, file_pdf)
-            except:
-                print(f"Module QC failed: {m}")
+                if convert_html_to_pdf(static_report, file_pdf):
+                    raise RuntimeError("PDF generation reported an error: " + file_pdf)
+            except Exception:
+                failed_modules.append(m)
+                print(f"Module QC failed: {m}", file=sys.stderr)
+                traceback.print_exc()
+
+if failed_modules:
+    sys.exit(1)

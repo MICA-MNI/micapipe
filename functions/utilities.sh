@@ -87,7 +87,12 @@ export idBIDS="${subject}${ses}"
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
-  export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
+  if [[ "${MICAPIPE_FIX_BACKEND:-legacy}" == "python" ]]; then
+      export icafixTraining="${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.pyfix_model"
+  else
+      export icafixTraining="${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData"
+  fi
+  #                 # ICA-FIX training file default
 
   # BIDS files: arterial spin labelling (ASL)
   bids_asl=($(ls "$subject_bids/perf/${subject}${ses}"_*asl.nii* 2>/dev/null))

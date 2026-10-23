@@ -1,0 +1,26 @@
+# Pipeline processing and QC; heavyweight tools use separate environments.
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.3
+matplotlib==3.9.4
+nibabel==5.3.2
+nilearn==0.10.4
+scikit-learn==1.5.2
+scikit-image==0.24.0
+scikit-fmm
+astropy==6.1.7
+brainspace==0.2.1
+vtk==9.3.1
+pyvirtualdisplay==3.0
+pygeodesic==0.1.9
+xhtml2pdf==0.2.17
+seaborn==0.13.2
+pillow
+packaging
+pyyaml
+requests
+pytest
+Cython==3.0.12
+setuptools==80.9.0
+wheel==0.45.1
+pyonlm @ git+https://github.com/zihuaihuai/pyonlm.git@c7d305300a4ae262c9ca9cdd9db2904432fa0f84

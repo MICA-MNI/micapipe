@@ -23,29 +23,20 @@ if [ -d "/opt/micapipe" ] && [ -d "/opt/freesurfer" ]; then
     # Dockerfile.mamba-base.
     echo "Detected Docker environment - using container paths"
     export AFNIDIR="/opt/afni"
-    export ANTSPATH="/opt/ants-2.3.4/bin"
+    export ANTSPATH="/opt/ants-2.6.5/bin"
     # MRtrix3 ships in the micapipe conda env, not as a standalone /opt dir.
-    export mrtrixDir="/opt/miniconda-latest/envs/micapipe"
-    # connectome-workbench: present in the conda env if installed there;
-    # otherwise expected on PATH via apt's connectome-workbench package.
-    if [ -x "/opt/miniconda-latest/envs/micapipe/bin/wb_command" ]; then
-        export workbench_path="/opt/miniconda-latest/envs/micapipe/bin"
-    else
-        export workbench_path="/usr/bin"
-    fi
-    export FIXPATH="/opt/fix"
+    export mrtrixDir="/opt/mrtrix3"
+    export workbench_path="/opt/environments/mrtrix3/bin"
+    export FIXPATH="/opt/micapipe/bin"
     export FREESURFER_HOME="/opt/freesurfer"
     export FASTSURFER_HOME="/opt/FastSurfer"
-    export fs_licence="/opt/licence.txt"
-    export FSLDIR="/opt/fsl-6.0.2"
-    export FSL_DIR="/opt/fsl-6.0.2"
+    export fs_licence="${fs_licence:-/opt/licence.txt}"
+    export FSLDIR="/opt/fsl-6.0.7.8"
+    export FSL_DIR="/opt/fsl-6.0.7.8"
     export FSL_BIN="${FSLDIR}/bin"
     export itk_dir="/opt/c3d-1.0.0-Linux-x86_64/bin"
-    # Activate the micapipe conda env so mrconvert/mrinfo/etc. resolve.
-    if [ -f "/opt/miniconda-latest/etc/profile.d/conda.sh" ]; then
-        source /opt/miniconda-latest/etc/profile.d/conda.sh
-        conda activate micapipe 2>/dev/null || true
-    fi
+    source "${MICAPIPE}/functions/micapipe_env.sh"
+    export PATH="/opt/environments/micapipe/bin:${PATH}"
     export fastsurfer_img=""  # No bundled SIF in Docker; use FastSurfer dir directly
 else
     # Local MICA cluster paths
@@ -119,14 +110,16 @@ fi
 
 #------------------------------------------------------------------------------#
 # Set the libraries paths for mrtrx and fsl
-export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib:${LD_LIBRARY_PATH:-}"
+if [ ! -d "/opt/environments/micapipe" ]; then
+    export LD_LIBRARY_PATH="${FSLDIR}/lib:${FSL_BIN}:${mrtrixDir}/lib:${LD_LIBRARY_PATH:-}"
+fi
 
 #-----------------------------------------------------------------------------------#
 # Export new PATH with all the necessary binaries
 if [ -d "/opt/micapipe" ]; then
     # Docker environment — mrtrixDir is the conda env root, so its bin is
     # ${mrtrixDir}/bin (already on PATH after `conda activate micapipe`).
-    export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
+    export PATH="${FIXPATH}:/opt/environments/micapipe/bin:${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${PATH}"
 else
     # Local environment
     export PATH="${AFNIDIR}:${ANTSPATH}:${workbench_path}:${FIXPATH}:${FREESURFER_HOME}/bin/:${mrtrixDir}/bin:${mrtrixDir}/lib:${FSLDIR}:${FSL_BIN}:${FASTSURFER_HOME}:${itk_dir}:${conda3_bin}:${PATH}"

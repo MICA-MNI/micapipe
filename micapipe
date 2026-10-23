@@ -1090,7 +1090,16 @@ if [ "$qcsubj" = "TRUE" ]; then
            $COMMAND $PROC
   else
       # LOCAL - Subject QC
-      $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+      $COMMAND $PROC 2>&1 | tee -a "${log_file_str}.txt"
+      qc_pipeline_status=("${PIPESTATUS[@]}")
+      if (( qc_pipeline_status[0] != 0 )); then
+          Error "Subject QC failed; see ${log_file_str}.txt"
+          exit "${qc_pipeline_status[0]}"
+      fi
+      if (( qc_pipeline_status[1] != 0 )); then
+          Error "Subject QC log could not be written"
+          exit "${qc_pipeline_status[1]}"
+      fi
   fi
 fi
 

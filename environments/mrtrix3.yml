@@ -1,0 +1,7 @@
+name: mrtrix3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - connectome-workbench=2.0.1
+  - dcm2niix=1.0.20240202

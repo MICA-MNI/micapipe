@@ -1,0 +1,4 @@
+# Existing SnakeBIDS entry point, isolated from image-processing dependencies.
+snakebids==0.13.1
+snakemake==8.30.0
+pulp==2.9.0

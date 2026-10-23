@@ -1,0 +1,15 @@
+#!/bin/bash
+# Run a command inside one pinned tool environment, scoped to a subshell.
+micapipe_env() (
+    local name="$1"; shift
+    local prefix="${MICAPIPE_ENV_ROOT:-/opt/environments}/${name}"
+    if [[ ! -x "${prefix}/bin/python" ]]; then
+        echo "Missing MICAPIPE environment: ${prefix}" >&2
+        exit 127
+    fi
+    unset PYTHONHOME PYTHONPATH
+    export PATH="${prefix}/bin:${PATH}"
+    export VIRTUAL_ENV="${prefix}"
+    export LD_LIBRARY_PATH="${prefix}/lib"
+    exec "$@"
+)
