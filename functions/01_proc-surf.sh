@@ -80,7 +80,9 @@ fi
 # FastSurfer runs in its own environment: CUDA in the micapipe CUDA container, CPU otherwise
 fastsurfer_env=fastsurfer_cpu
 if [[ -d "/opt/environments/fastsurfer_cuda" ]]; then fastsurfer_env=fastsurfer_cuda; fi
-function run_fastsurfer() {
+# Runs in a subshell: the GPUs and the environment are only changed for FastSurfer
+function run_fastsurfer() (
+  restore_gpus
   if [[ -d "/opt/environments/${fastsurfer_env}" ]]; then
       # init.sh defines micapipe_env in the parent micapipe shell only
       source "${MICAPIPE}/functions/micapipe_env.sh"
@@ -93,10 +95,7 @@ function run_fastsurfer() {
    --fs_license "${fs_licence}" \
    --sid "${idBIDS}" --sd "${dir_surf}" \
    --parallel --threads "${threads}" "$@"
-  local status=$?
-  if [[ ! -d "/opt/environments/${fastsurfer_env}" ]]; then source activate micapipe; fi
-  return $status
-}
+)
 
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir -m 777 "${dir_surf}"; fi
@@ -209,7 +208,7 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
     Info "FastScrubber: predicting the brain mask from FastSurfer's orig.mgz"
     scrub_opts=(--device auto --num_cpus "${threads}")
     if [[ "$AltFS_TTA" != "TRUE" ]]; then scrub_opts+=(--disable_tta); fi
-    Do_cmd "${fastscrubber_cmd[@]}" "${mri_dir}/orig.mgz" "${tmp}/fastscrubber_mask.mgz" "${scrub_opts[@]}"
+    (restore_gpus; Do_cmd "${fastscrubber_cmd[@]}" "${mri_dir}/orig.mgz" "${tmp}/fastscrubber_mask.mgz" "${scrub_opts[@]}")
     if [[ ! -f "${tmp}/fastscrubber_mask.mgz" ]]; then
         Error "FastScrubber did not write a mask"; cleanup "$tmp" "$nocleanup" "$here"; exit
     fi

@@ -5,7 +5,14 @@
 # Utilities
 export Version="v0.2.3 'Northern flicker'"
 export MRTRIX_QUIET=TRUE
+# GPUs are hidden from the pipeline (BIC-SGE failure in proc_dwi). The caller's
+# setting is kept so FastSurfer and FastScrubber can use the GPUs (restore_gpus).
+if [[ -z "${MICAPIPE_CALLER_GPUS+x}" ]]; then export MICAPIPE_CALLER_GPUS="${CUDA_VISIBLE_DEVICES-all}"; fi
 export CUDA_VISIBLE_DEVICES=''
+function restore_gpus() {
+  if [[ "${MICAPIPE_CALLER_GPUS:-all}" == all ]]; then unset CUDA_VISIBLE_DEVICES
+  else export CUDA_VISIBLE_DEVICES="${MICAPIPE_CALLER_GPUS}"; fi
+}
 bids_variables() {
   # This functions assignes variables names acording to:
   #     BIDS directory = $1
