@@ -1,6 +1,9 @@
 # V1 beta environments
 
-Build and test on Linux servers. v1.0.0-beta.2 identifies the container candidate.
+Build and test on Linux servers. The container comes in two variants named
+v1-beta-nocuda-DATE and v1-beta-cuda-DATE (date in containers/versions.json);
+they differ only in the PyTorch build of FastSurfer and FastScrubber. The
+previous candidate was v1.0.0-beta.2.
 Pipeline source starts at upstream v1 commit 6df741b7a2f6ddb03b302350ca6539422c9669ad.
 
 | Environment | Purpose |
@@ -9,7 +12,9 @@ Pipeline source starts at upstream v1 commit 6df741b7a2f6ddb03b302350ca6539422c9
 | lamareg | Python 3.11.14, TensorFlow 2.15.1/Keras 2.15 and ANTsPy |
 | designer | Python 3.11.14, DESIGNER's independently pinned dependencies |
 | tedana | Python 3.11.14, existing tedana 0.0.12 algorithm |
-| fastsurfer_cpu | Python 3.14.0, FastSurfer 2.6.0 / PyTorch 2.14 CPU |
+| fastsurfer_cpu | Python 3.14.0, FastSurfer 2.6.0 / PyTorch 2.14 CPU (nocuda variant) |
+| fastsurfer_cuda | Python 3.14.0, FastSurfer 2.6.0 / PyTorch 2.14 CUDA 12.6 (cuda variant) |
+| fastscrubber | Python 3.9.20, FastScrubber (nnU-Net 2.5.1) / PyTorch 2.4.1 CPU or CUDA 12.4, for -alt_fs |
 | mrtrix3 | Workbench and dcm2niix; MRtrix3 3.0.8 built from its tag |
 | workflow | Python 3.11.14, SnakeBIDS 0.13.1 and Snakemake 8.30.0 |
 | FSL | Official FSL 6.0.7.8 packages, Python FIX 0.6.0 |
@@ -31,10 +36,26 @@ dependencies and versions belong in containers/os/Dockerfile.
 ## Build
 
 Stage pinned downloads described by containers/versions.json under a dedicated
-workspace containing source/, downloads/, and tools/. Verify
-containers/SOURCES.sha256 from that workspace. Then run:
+workspace containing source/, downloads/, and tools/. FastScrubber is staged as
+downloads/fast_scrubber (a `git archive` of the pinned commit) and, optionally,
+downloads/fast_scrubber-weights/fast_scrubber/nnUNet_results; the build checks
+the weights' SHA-256 and downloads any that are missing from OSF. Verify
+containers/SOURCES.sha256 from that workspace. Then run, once per variant and
+in separate workspaces:
 
-    bash source/containers/build_beta_server.sh /path/to/workspace
+    bash source/containers/build_beta_server.sh /path/to/workspace nocuda
+    bash source/containers/build_beta_server.sh /path/to/workspace cuda
+
+Each build writes artifacts/micapipe-VERSION.sif and
+artifacts/micapipe-VERSION.docker.tar.gz, a Docker image archive packed without
+a Docker daemon (`docker load -i` it). The cuda variant needs an NVIDIA driver
+on the host (`singularity run --nv` or `docker run --gpus all`) and falls back to
+the CPU without one.
+
+The CUDA FastSurfer lock keeps every version of the CPU lock and changes only
+the PyTorch builds: it was resolved with the CPU lock (minus torch and
+torchvision) as a constraint file and `--torch-backend cu126`. PyTorch 2.14.1
+has no CUDA 12.8 build.
 
 The script uses ordinary Docker containers with a workspace mount and a
 separate /opt mount on the data disk. It exports the small OS filesystem and

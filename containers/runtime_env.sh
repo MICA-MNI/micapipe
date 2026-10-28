@@ -3,7 +3,8 @@ if [ "${MICAPIPE_RUNTIME_INITIALIZED:-}" = 1 ]; then return 0; fi
 export MICAPIPE_RUNTIME_INITIALIZED=1
 export MICAPIPE=/opt/micapipe MICAPIPE_ENV_ROOT=/opt/environments
 export MICAPIPE_FIX_BACKEND="${MICAPIPE_FIX_BACKEND:-legacy}"
-export PROC=container_micapipe-v1.0.0-beta.2
+read -r MICAPIPE_CONTAINER_VERSION < /opt/micapipe/CONTAINER_VERSION || MICAPIPE_CONTAINER_VERSION=unknown
+export MICAPIPE_CONTAINER_VERSION PROC="container_micapipe-${MICAPIPE_CONTAINER_VERSION}"
 export FREESURFER_HOME=/opt/freesurfer FASTSURFER_HOME=/opt/FastSurfer
 export FSLDIR=/opt/fsl-6.0.7.8 FSL_DIR=/opt/fsl-6.0.7.8
 export FSLOUTPUTTYPE=NIFTI_GZ FSLMULTIFILEQUIT=TRUE

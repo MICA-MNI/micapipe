@@ -4,3 +4,5 @@
 9a8e72b46fd9b184056f0c5c2e341544226a1b1baca858fd879f93d3e801e870  downloads/fix-1.068.tar.gz
 b9980552309f09c15172b8be828555e375097f16deb459795ce7bfd200380f0b  downloads/uv.tar.gz
 cec496f2299f9ceb5f5e23fc2ccf081fffda0c4bc87a6fdab575bf1e04f103b6  downloads/micromamba-2.5.0-2.tar.bz2
+dfd44f0de2e428a369b6f862e77b998673bd469d14f59171599d47498e720d55  downloads/fast_scrubber/fastscrubber.py
+a3b9acf5455210223cefe31bf3958576ebb55a97bfb99875c211f45721826431  downloads/fast_scrubber/download_weights.py

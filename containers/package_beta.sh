@@ -2,8 +2,8 @@
 # Pack the prepared filesystem directly; avoid a second full tool-tree copy.
 set -euo pipefail
 root="${1:?workspace}"
+version="${2:?container version}"
 root=$(cd "$root" && pwd)
-version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["candidate"])' "$root/source/containers/versions.json")
 target="$root/artifacts/micapipe-${version}.sif"
 [[ ! -e "$target" ]] || { echo "Refusing to overwrite $target" >&2; exit 1; }
 mkdir -p "$root/artifacts" "$root/tmp"

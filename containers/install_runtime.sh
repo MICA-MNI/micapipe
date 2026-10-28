@@ -1,18 +1,31 @@
 #!/bin/bash
 # Run as the calling user in containers/os/Dockerfile with /opt on a data disk.
+# MICAPIPE_VARIANT picks the PyTorch build of FastSurfer and FastScrubber:
+# nocuda (CPU only) or cuda (NVIDIA GPUs; also runs on the CPU).
 set -euo pipefail
 cd /build
+variant="${MICAPIPE_VARIANT:?Set MICAPIPE_VARIANT to nocuda or cuda}"
+case "$variant" in
+    nocuda) fastsurfer_env=fastsurfer_cpu ;;
+    cuda) fastsurfer_env=fastsurfer_cuda ;;
+    *) echo "Unknown MICAPIPE_VARIANT: $variant" >&2; exit 1 ;;
+esac
 export UV_CACHE_DIR=/build/cache/uv-runtime UV_LINK_MODE=copy
 export UV_PYTHON_INSTALL_DIR=/opt/python UV_PYTHON_DOWNLOADS=automatic
 install -m 755 tools/uv /opt/uv
-/opt/uv python install 3.11.14 3.14.0
+/opt/uv python install 3.9.20 3.11.14 3.14.0
 mkdir -p /opt/environments
-for env in micapipe tedana lamareg designer fastsurfer_cpu workflow; do
-    py=3.11.14; lock="$env"
-    if [[ "$env" == fastsurfer_cpu ]]; then py=3.14.0; lock=fastsurfer-cpu; fi
+for env in micapipe tedana lamareg designer "$fastsurfer_env" fastscrubber workflow; do
+    py=3.11.14; lock="$env"; args=()
+    case "$env" in
+        fastsurfer_cpu) py=3.14.0; lock=fastsurfer-cpu; args+=(--torch-backend cpu) ;;
+        fastsurfer_cuda) py=3.14.0; lock=fastsurfer-cuda; args+=(--torch-backend cu126) ;;
+        fastscrubber)
+            py=3.9.20
+            if [[ "$variant" == cuda ]]; then lock=fastscrubber-cuda; args+=(--torch-backend cu124)
+            else lock=fastscrubber-cpu; args+=(--torch-backend cpu); fi ;;
+    esac
     if [[ ! -x "/opt/environments/$env/bin/python" ]]; then /opt/uv venv --python "$py" "/opt/environments/$env"; fi
-    args=()
-    if [[ "$env" == fastsurfer_cpu ]]; then args+=(--torch-backend cpu); fi
     /opt/uv pip sync --python "/opt/environments/$env/bin/python" "${args[@]}" \
         "source/environments/locks/$lock-linux-64.txt"
     /opt/uv pip check --python "/opt/environments/$env/bin/python"
@@ -30,6 +43,7 @@ if [[ ! -f /opt/environments/mrtrix3/.micapipe-ready ]]; then
     touch /opt/environments/mrtrix3/.micapipe-ready
 fi
 [[ -d /opt/FastSurfer ]] || cp -a downloads/FastSurfer /opt/FastSurfer
+[[ -d /opt/fast_scrubber ]] || cp -a downloads/fast_scrubber /opt/fast_scrubber
 [[ -d /opt/mrtrix3 ]] || cp -a downloads/mrtrix3 /opt/mrtrix3
 export PATH="/opt/environments/mrtrix3/bin:$PATH"
 if [[ ! -f /opt/mrtrix3/.micapipe-ready ]]; then
@@ -79,6 +93,12 @@ for spec in 'lamareg lamareg' 'tedana tedana' 'designer designer' 'designer tmi'
     printf '#!/bin/bash\nsource /opt/micapipe/functions/micapipe_env.sh\nmicapipe_env %q %q "$@"\n' \
         "$env" "$command" > "/opt/micapipe/bin/$command"
 done
+cat > /opt/micapipe/bin/fastscrubber <<'WRAPPER'
+#!/bin/bash
+source /opt/micapipe/functions/micapipe_env.sh
+export PYTHONNOUSERSITE=1
+micapipe_env fastscrubber python /opt/fast_scrubber/fastscrubber.py "$@"
+WRAPPER
 cp source/containers/fix_wrapper.sh /opt/micapipe/bin/fix
 cat > /opt/micapipe/bin/micapipe-niivue <<'WRAPPER'
 #!/bin/bash
@@ -89,6 +109,11 @@ chmod +x /opt/micapipe/bin/* /opt/micapipe/micapipe /opt/micapipe/functions/*.sh
 printf '/opt/mrtrix3/lib\n' > /opt/environments/designer/lib/python3.11/site-packages/mrtrix3.pth
 mkdir -p /opt/environments/lamareg/lib/python3.11/site-packages/lamareg/scripts/models
 cp -a /build/downloads/lamareg-models/. /opt/environments/lamareg/lib/python3.11/site-packages/lamareg/scripts/models/
+# FastScrubber weights: staged copy, checked (and completed if needed) by its own SHA-256 downloader.
+mkdir -p /opt/fast_scrubber/weights
+if [[ -d downloads/fast_scrubber-weights ]]; then cp -a downloads/fast_scrubber-weights/. /opt/fast_scrubber/weights/; fi
+/opt/environments/fastscrubber/bin/python /opt/fast_scrubber/download_weights.py --dest /opt/fast_scrubber/weights
+/opt/micapipe/bin/fastscrubber --help > /dev/null
 # Fetch the FastSurfer checkpoints at build time, using its released downloader.
 cd /opt/FastSurfer
-/opt/environments/fastsurfer_cpu/bin/python -m FastSurferCNN.download_checkpoints --all
+"/opt/environments/$fastsurfer_env/bin/python" -m FastSurferCNN.download_checkpoints --all

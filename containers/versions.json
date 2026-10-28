@@ -1,11 +1,26 @@
 {
-  "candidate": "v1.0.0-beta.2",
+  "release": "v1-beta",
+  "date": "20261028",
+  "previous_candidate": "v1.0.0-beta.2",
   "upstream_v1": "6df741b7a2f6ddb03b302350ca6539422c9669ad",
+  "variants": {
+    "nocuda": {"fastsurfer": "cpu", "fastscrubber": "cpu"},
+    "cuda": {"fastsurfer": "cu126", "fastscrubber": "cu124"}
+  },
   "fastsurfer": {
     "version": "2.6.0",
     "commit": "1dc024735371f65bc4b94a272cf596be6ddf4f21",
     "python": "3.14.0",
-    "torch_backend": "cpu"
+    "torch_backend": "see variants"
+  },
+  "fast_scrubber": {
+    "commit": "cec34a1b50caacabcfb9ee400723ef002a769358",
+    "repository": "https://github.com/zihuaihuai/fast_scrubber",
+    "python": "3.9.20",
+    "torch": "2.4.1",
+    "nnunetv2": "2.5.1",
+    "weights": "https://osf.io/x95g7",
+    "micapipe_default": "all 5 folds, no test-time augmentation"
   },
   "freesurfer": {
     "version": "8.2.0",

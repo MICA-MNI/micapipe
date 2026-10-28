@@ -2,6 +2,9 @@
 set -euo pipefail
 source /opt/micapipe/containers/runtime_env.sh
 source /opt/micapipe/functions/micapipe_env.sh
+# The nocuda container has fastsurfer_cpu, the cuda container fastsurfer_cuda
+fastsurfer_env=fastsurfer_cpu
+if [[ -d /opt/environments/fastsurfer_cuda ]]; then fastsurfer_env=fastsurfer_cuda; fi
 micapipe -h >/tmp/micapipe-help.txt || [ "$?" -eq 1 ]
 grep -q proc_structural /tmp/micapipe-help.txt
 mrconvert --version
@@ -13,7 +16,10 @@ afni -ver
 wb_command -version
 dcm2niix --version || [ "$?" -eq 3 ]
 /opt/fsl-6.0.7.8/bin/python -c 'from pyfix import fix; print("Python FIX imports passed")'
-micapipe_env fastsurfer_cpu python -c 'import torch, scipy, nibabel; print("FastSurfer Python:", torch.__version__)'
+micapipe_env "$fastsurfer_env" python -c 'import torch, scipy, nibabel; print("FastSurfer Python:", torch.__version__, "CUDA:", torch.cuda.is_available())'
+micapipe_env fastscrubber python -c 'import torch, nnunetv2; print("FastScrubber Python:", torch.__version__, "CUDA:", torch.cuda.is_available())'
+fastscrubber --help >/tmp/fastscrubber-help.txt
+test -s /opt/fast_scrubber/weights/fast_scrubber/nnUNet_results/Dataset500_Segmentation/nnUNetTrainer__nnUNetPlans__3d_fullres/fold_4/checkpoint_final.pth
 micapipe_env lamareg lamareg --help >/tmp/lamareg-help.txt
 micapipe_env designer designer -help >/tmp/designer-help.txt
 micapipe_env tedana tedana --help >/tmp/tedana-help.txt
@@ -36,7 +42,7 @@ PY
  [[ "$init_status" == 0 ]]
  python -c 'import sys,nibabel,brainspace; assert sys.prefix == "/opt/environments/micapipe", sys.prefix; print("Pipeline Python isolation passed")'
  before=$(command -v python)
- micapipe_env fastsurfer_cpu python -c 'import sys; assert sys.version_info[:2] == (3,14)'
+ micapipe_env "$fastsurfer_env" python -c 'import sys; assert sys.version_info[:2] == (3,14)'
  [[ "$before" == "$(command -v python)" ]]
 )
 

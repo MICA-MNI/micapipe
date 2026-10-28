@@ -29,7 +29,9 @@ surfdir=$8
 FreeSurfer=$9
 fs_licence=${10}
 t1=${11}
-PROC=${12}
+AltFS=${12}
+AltFS_TTA=${13}
+PROC=${14}
 here=$(pwd)
 export OMP_NUM_THREADS=$threads
 
@@ -61,6 +63,38 @@ fi
 if [[ "$FreeSurfer" == "FALSE" ]]; then recon="fastsurfer"; else recon="freesurfer"; fi
 set_surface_directory "${recon}"
 Note "Surface software" "${recon}"
+
+# -alt_fs: FastSurfer -> FastScrubber brain mask -> FastSurfer surfaces (experimental)
+if [[ "$AltFS" == "TRUE" ]]; then
+  Note "Alternative FastSurfer:" "FastScrubber brain mask (experimental), TTA: ${AltFS_TTA}"
+  # MICAPIPE_FASTSCRUBBER overrides the command, e.g. for an installation outside the container
+  read -r -a fastscrubber_cmd <<< "${MICAPIPE_FASTSCRUBBER:-fastscrubber}"
+  if ! command -v "${fastscrubber_cmd[0]}" > /dev/null; then
+    Error "-alt_fs needs FastScrubber: '${fastscrubber_cmd[0]}' was not found"; exit 1
+  fi
+  if [[ -L "${dir_subjsurf}" ]]; then
+    Error "-alt_fs rebuilds the surfaces in place, but ${dir_subjsurf} links to another directory.\n\t\tRemove the link and pass that directory with -surf_dir: it will be copied, not modified"; exit 1
+  fi
+fi
+
+# FastSurfer runs in its own environment: CUDA in the micapipe CUDA container, CPU otherwise
+fastsurfer_env=fastsurfer_cpu
+if [[ -d "/opt/environments/fastsurfer_cuda" ]]; then fastsurfer_env=fastsurfer_cuda; fi
+function run_fastsurfer() {
+  if [[ -d "/opt/environments/${fastsurfer_env}" ]]; then
+      fastsurfer_runner=(micapipe_env "${fastsurfer_env}")
+  else
+      source activate "${fastsurfer_env}"
+      fastsurfer_runner=()
+  fi
+  "${fastsurfer_runner[@]}" run_fastsurfer.sh --allow_root \
+   --fs_license "${fs_licence}" \
+   --sid "${idBIDS}" --sd "${dir_surf}" \
+   --parallel --threads "${threads}" "$@"
+  local status=$?
+  if [[ ! -d "/opt/environments/${fastsurfer_env}" ]]; then source activate micapipe; fi
+  return $status
+}
 
 # Surface Directories
 if [ ! -d "${dir_surf}" ]; then mkdir -m 777 "${dir_surf}"; fi
@@ -104,6 +138,14 @@ if [[ "$surfdir" != "FALSE" ]]; then ((N++))
         if [[ -d "$dir_subjsurf" ]]; then
             # dir_subjsurf IS under ${out}/fastsurfer
             Info "Current surface directory has a compatible naming and structure with micapipe"
+        elif [[ "$AltFS" == "TRUE" ]]; then
+            # -alt_fs rebuilds the surfaces, so work on a copy and leave the provided directory untouched
+            if [[ ! -f "${surfdir}/mri/aparc.DKTatlas+aseg.deep.mgz" ]]; then
+                Error "-alt_fs needs a FastSurfer directory, but ${surfdir} has no mri/aparc.DKTatlas+aseg.deep.mgz"
+                cleanup "$tmp" "$nocleanup" "$here"; exit
+            fi
+            Info "Copying the provided FastSurfer directory for -alt_fs"
+            Do_cmd cp -a "$surfdir" "$dir_subjsurf"
         else
             Info "Creating links for micapipe compatibility"
             # dir_subjsurf IS NOT at ${out}/fastsurfer
@@ -128,19 +170,8 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     Note "PROC" "$PROC"
     if [[ "$recon" == "fastsurfer" ]]; then
         Do_cmd mkdir -m 777 -p "${dir_surf}/${idBIDS}"
-          Info "FastSurfer: running fastsurfer_cpu environment"
-          if [[ -d "/opt/environments/fastsurfer_cpu" ]]; then
-              fastsurfer_runner=(micapipe_env fastsurfer_cpu)
-          else
-              source activate fastsurfer_cpu
-              fastsurfer_runner=()
-          fi
-          "${fastsurfer_runner[@]}" run_fastsurfer.sh --allow_root \
-           --fs_license "${fs_licence}" \
-           --t1 "${t1_2proc}" \
-           --sid "${idBIDS}" --sd "${dir_surf}" \
-           --parallel --threads "${threads}"
-          if [[ ! -d "/opt/environments/fastsurfer_cpu" ]]; then source activate micapipe; fi
+          Info "FastSurfer: running ${fastsurfer_env} environment"
+          run_fastsurfer --t1 "${t1_2proc}"
           chmod aug+wr -R "${dir_surf}/${idBIDS}"
           Do_cmd cp "${dir_surf}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
     else
@@ -167,6 +198,42 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
         # Copy results from TMP to deviratives/SUBJECTS_DIR directory
         Do_cmd cp -r "${SUBJECTS_DIR}/${idBIDS}" "${dir_surf}"
     fi
+fi
+
+# -alt_fs: replace FastSurfer's brain mask with FastScrubber's and rebuild the surfaces from it
+if [[ "$AltFS" == "TRUE" ]]; then ((N++))
+    mri_dir="${dir_subjsurf}/mri"
+    scripts_dir="${dir_subjsurf}/scripts"
+    Info "FastScrubber: predicting the brain mask from FastSurfer's orig.mgz"
+    scrub_opts=(--device auto --num_cpus "${threads}")
+    if [[ "$AltFS_TTA" != "TRUE" ]]; then scrub_opts+=(--disable_tta); fi
+    Do_cmd "${fastscrubber_cmd[@]}" "${mri_dir}/orig.mgz" "${tmp}/fastscrubber_mask.mgz" "${scrub_opts[@]}"
+    if [[ ! -f "${tmp}/fastscrubber_mask.mgz" ]]; then
+        Error "FastScrubber did not write a mask"; cleanup "$tmp" "$nocleanup" "$here"; exit
+    fi
+    # Keep FastSurfer's own mask and logs beside the rebuilt ones
+    if [[ ! -f "${mri_dir}/mask.fastsurfer.mgz" ]]; then Do_cmd cp "${mri_dir}/mask.mgz" "${mri_dir}/mask.fastsurfer.mgz"; fi
+    Do_cmd cp "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" && ((Nsteps++))
+    # Only the rebuild's log may mark this module as finished
+    for log in recon-all recon-surf; do
+        if [[ -f "${scripts_dir}/${log}.log" ]]; then Do_cmd mv "${scripts_dir}/${log}.log" "${scripts_dir}/${log}.fastsurfer.log"; fi
+    done
+    Do_cmd rm -f "${dir_logs}/recon-all.log"
+    # recon-surf.sh refuses to run over a previous surface run while these exist
+    Do_cmd rm -f "${mri_dir}/wm.mgz" "${mri_dir}/aparc.DKTatlas+aseg.orig.mgz"
+    Info "FastSurfer: rebuilding the surfaces from the FastScrubber mask"
+    run_fastsurfer --surf_only
+    chmod aug+wr -R "${dir_subjsurf}"
+    Do_cmd cp "${scripts_dir}/recon-all.log" "${dir_logs}/recon-all.log"
+    echo -e "{
+  \"micapipeVersion\": \"${Version}\",
+  \"LastRun\": \"$(date)\",
+  \"Workflow\": \"FastSurfer, FastScrubber brain mask, FastSurfer surfaces (-alt_fs, experimental)\",
+  \"FastScrubberOptions\": \"${scrub_opts[*]}\",
+  \"TestTimeAugmentation\": \"${AltFS_TTA}\",
+  \"FastSurferMask\": \"mri/mask.fastsurfer.mgz\",
+  \"FastScrubberMask\": \"mri/mask.mgz\"
+}" > "${scripts_dir}/micapipe_alt_fs.json"
 fi
 Note "Check log file:" "${dir_logs}/recon-all.log"
 
