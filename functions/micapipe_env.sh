@@ -10,6 +10,9 @@ micapipe_env() (
     unset PYTHONHOME PYTHONPATH
     export PATH="${prefix}/bin:${PATH}"
     export VIRTUAL_ENV="${prefix}"
-    export LD_LIBRARY_PATH="${prefix}/lib"
+    local libs="${prefix}/lib"
+    # Keep the host NVIDIA driver libraries that singularity --nv provides
+    if [[ -d /.singularity.d/libs ]]; then libs="${libs}:/.singularity.d/libs"; fi
+    export LD_LIBRARY_PATH="${libs}"
     exec "$@"
 )

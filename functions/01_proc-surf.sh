@@ -82,6 +82,8 @@ fastsurfer_env=fastsurfer_cpu
 if [[ -d "/opt/environments/fastsurfer_cuda" ]]; then fastsurfer_env=fastsurfer_cuda; fi
 function run_fastsurfer() {
   if [[ -d "/opt/environments/${fastsurfer_env}" ]]; then
+      # init.sh defines micapipe_env in the parent micapipe shell only
+      source "${MICAPIPE}/functions/micapipe_env.sh"
       fastsurfer_runner=(micapipe_env "${fastsurfer_env}")
   else
       source activate "${fastsurfer_env}"
@@ -211,9 +213,11 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
     if [[ ! -f "${tmp}/fastscrubber_mask.mgz" ]]; then
         Error "FastScrubber did not write a mask"; cleanup "$tmp" "$nocleanup" "$here"; exit
     fi
-    # Keep FastSurfer's own mask and logs beside the rebuilt ones
+    # Keep FastSurfer's own mask and logs, and FastScrubber's raw prediction, beside the rebuilt ones
     if [[ ! -f "${mri_dir}/mask.fastsurfer.mgz" ]]; then Do_cmd cp "${mri_dir}/mask.mgz" "${mri_dir}/mask.fastsurfer.mgz"; fi
-    Do_cmd cp "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" && ((Nsteps++))
+    Do_cmd cp "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.fastscrubber.mgz"
+    # Detached pieces make mri_normalize fail; ventricle holes would cut CSF out of norm.mgz
+    Do_cmd "${MICAPIPE}/functions/clean_brain_mask.py" "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" && ((Nsteps++))
     # Only the rebuild's log may mark this module as finished
     for log in recon-all recon-surf; do
         if [[ -f "${scripts_dir}/${log}.log" ]]; then Do_cmd mv "${scripts_dir}/${log}.log" "${scripts_dir}/${log}.fastsurfer.log"; fi
@@ -232,7 +236,8 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
   \"FastScrubberOptions\": \"${scrub_opts[*]}\",
   \"TestTimeAugmentation\": \"${AltFS_TTA}\",
   \"FastSurferMask\": \"mri/mask.fastsurfer.mgz\",
-  \"FastScrubberMask\": \"mri/mask.mgz\"
+  \"FastScrubberPrediction\": \"mri/mask.fastscrubber.mgz\",
+  \"MaskUsed\": \"mri/mask.mgz: FastScrubber prediction, largest connected piece, interior holes filled\"
 }" > "${scripts_dir}/micapipe_alt_fs.json"
 fi
 Note "Check log file:" "${dir_logs}/recon-all.log"

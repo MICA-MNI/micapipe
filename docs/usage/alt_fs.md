@@ -17,8 +17,12 @@ micapipe -sub SUB -ses SES -bids BIDS -out OUT -fs_licence LICENSE \
    trained on 200 manually corrected 7T MP2RAGE brain masks, predicts a new
    brain mask from FastSurfer's `mri/orig.mgz`, excluding the meninges,
    vessels, tentorium and sinuses that FastSurfer's mask often keeps at 7T.
-3. That mask replaces `mri/mask.mgz`. FastSurfer's own mask is kept as
-   `mri/mask.fastsurfer.mgz` and its first surface logs as
+3. micapipe keeps the largest connected piece of that mask and fills its
+   interior holes, then uses it as `mri/mask.mgz`. On a 3T scan FastScrubber
+   left a detached 75 mL non-brain piece, which makes FreeSurfer's
+   `mri_normalize` fail, and its masks can cut holes in the ventricles.
+   FastSurfer's own mask is kept as `mri/mask.fastsurfer.mgz`, FastScrubber's
+   raw prediction as `mri/mask.fastscrubber.mgz`, and the first surface logs as
    `scripts/recon-surf.fastsurfer.log` and `scripts/recon-all.fastsurfer.log`.
 4. FastSurfer rebuilds the surfaces (`run_fastsurfer.sh --surf_only`), which
    recreates `norm.mgz` and `brainmask.mgz` from the new mask.
@@ -54,9 +58,11 @@ example `"python /path/to/fastscrubber.py"`.
 
 ## Known caveats
 
-- FastScrubber masks can have interior holes. In 10 MICs 3T sessions the
-  ventricles shrank by about 2%, and pericalcarine/lingual topology defects
-  appeared in about 3 of 10 sessions, while cortical thickness error improved.
+- FastScrubber masks can have interior holes. In 10 MICs 3T sessions processed
+  with the raw masks, the ventricles shrank by about 2% and pericalcarine/lingual
+  topology defects appeared in about 3 of 10 sessions, while cortical thickness
+  error improved. micapipe now fills interior holes, which has not yet been
+  re-evaluated on that cohort.
 - The model was trained on 7T MP2RAGE UNI images only. 3T results are not
   validated against manual masks.
 - Review the surfaces visually before using them.
