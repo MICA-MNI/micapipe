@@ -21,11 +21,16 @@ micapipe -sub SUB -ses SES -bids BIDS -out OUT -fs_licence LICENSE \
    back every voxel FastSurfer's segmentation (`mri/aseg.auto.mgz`) labels as
    deep brain (all labels except cerebral and cerebellar cortex and CSF),
    keeps the largest connected piece and fills interior holes, then uses the
-   result as `mri/mask.mgz`. A few white matter voxels left outside the mask
-   make FreeSurfer's `mri_normalize` find a NaN white matter peak, and the
-   surfaces collapse (BIDS_CI sub-mri7T: 1280 voxels, mean thickness
-   2.15 -> 0.76 mm). On a 3T scan FastScrubber also left a detached 75 mL
+   result as `mri/mask.mgz`. On a 3T scan FastScrubber left a detached 75 mL
    non-brain piece, which makes `mri_normalize` fail outright.
+   It then clears every label outside the new mask in `mri/aseg.auto.mgz` and
+   `mri/aseg.presurf.mgz`, as FreeSurfer's aseg never leaves the brain mask.
+   `mri_normalize` uses the aseg white matter as control points: a few hundred
+   white matter voxels outside the mask give it a NaN white matter peak and
+   the surfaces collapse (BIDS_CI sub-mri7T: mean thickness 2.15 -> 0.77 mm
+   with 252 such voxels). FastSurfer 2.6.0 also labels a detached piece about
+   110 mm below the brain as white matter on BIDS_CI sub-mri3T. FastSurfer's
+   segmentation stays unchanged in `mri/aparc.DKTatlas+aseg.deep.mgz`.
    FastSurfer's own mask is kept as `mri/mask.fastsurfer.mgz`, FastScrubber's
    raw prediction as `mri/mask.fastscrubber.mgz`, and the first surface logs as
    `scripts/recon-surf.fastsurfer.log` and `scripts/recon-all.fastsurfer.log`.
