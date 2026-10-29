@@ -17,10 +17,15 @@ micapipe -sub SUB -ses SES -bids BIDS -out OUT -fs_licence LICENSE \
    trained on 200 manually corrected 7T MP2RAGE brain masks, predicts a new
    brain mask from FastSurfer's `mri/orig.mgz`, excluding the meninges,
    vessels, tentorium and sinuses that FastSurfer's mask often keeps at 7T.
-3. micapipe keeps the largest connected piece of that mask and fills its
-   interior holes, then uses it as `mri/mask.mgz`. On a 3T scan FastScrubber
-   left a detached 75 mL non-brain piece, which makes FreeSurfer's
-   `mri_normalize` fail, and its masks can cut holes in the ventricles.
+3. FastScrubber only decides the outer boundary of the brain. micapipe adds
+   back every voxel FastSurfer's segmentation (`mri/aseg.auto.mgz`) labels as
+   deep brain (all labels except cerebral and cerebellar cortex and CSF),
+   keeps the largest connected piece and fills interior holes, then uses the
+   result as `mri/mask.mgz`. A few white matter voxels left outside the mask
+   make FreeSurfer's `mri_normalize` find a NaN white matter peak, and the
+   surfaces collapse (BIDS_CI sub-mri7T: 1280 voxels, mean thickness
+   2.15 -> 0.76 mm). On a 3T scan FastScrubber also left a detached 75 mL
+   non-brain piece, which makes `mri_normalize` fail outright.
    FastSurfer's own mask is kept as `mri/mask.fastsurfer.mgz`, FastScrubber's
    raw prediction as `mri/mask.fastscrubber.mgz`, and the first surface logs as
    `scripts/recon-surf.fastsurfer.log` and `scripts/recon-all.fastsurfer.log`.
@@ -61,8 +66,8 @@ example `"python /path/to/fastscrubber.py"`.
 - FastScrubber masks can have interior holes. In 10 MICs 3T sessions processed
   with the raw masks, the ventricles shrank by about 2% and pericalcarine/lingual
   topology defects appeared in about 3 of 10 sessions, while cortical thickness
-  error improved. micapipe now fills interior holes, which has not yet been
-  re-evaluated on that cohort.
+  error improved. micapipe now restores deep brain labels and fills interior
+  holes, which has not yet been re-evaluated on that cohort.
 - The model was trained on 7T MP2RAGE UNI images only. 3T results are not
   validated against manual masks.
 - Review the surfaces visually before using them.

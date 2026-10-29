@@ -215,8 +215,9 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
     # Keep FastSurfer's own mask and logs, and FastScrubber's raw prediction, beside the rebuilt ones
     if [[ ! -f "${mri_dir}/mask.fastsurfer.mgz" ]]; then Do_cmd cp "${mri_dir}/mask.mgz" "${mri_dir}/mask.fastsurfer.mgz"; fi
     Do_cmd cp "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.fastscrubber.mgz"
-    # Detached pieces make mri_normalize fail; ventricle holes would cut CSF out of norm.mgz
-    Do_cmd "${MICAPIPE}/functions/clean_brain_mask.py" "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" && ((Nsteps++))
+    # FastScrubber trims the outer boundary only: deep brain labels stay, detached pieces go, holes are filled
+    Do_cmd "${MICAPIPE}/functions/clean_brain_mask.py" "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" \
+        --keep "${mri_dir}/aseg.auto.mgz" && ((Nsteps++))
     # Only the rebuild's log may mark this module as finished
     for log in recon-all recon-surf; do
         if [[ -f "${scripts_dir}/${log}.log" ]]; then Do_cmd mv "${scripts_dir}/${log}.log" "${scripts_dir}/${log}.fastsurfer.log"; fi
@@ -236,7 +237,7 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
   \"TestTimeAugmentation\": \"${AltFS_TTA}\",
   \"FastSurferMask\": \"mri/mask.fastsurfer.mgz\",
   \"FastScrubberPrediction\": \"mri/mask.fastscrubber.mgz\",
-  \"MaskUsed\": \"mri/mask.mgz: FastScrubber prediction, largest connected piece, interior holes filled\"
+  \"MaskUsed\": \"mri/mask.mgz: FastScrubber prediction plus aseg.auto deep brain labels, largest connected piece, interior holes filled\"
 }" > "${scripts_dir}/micapipe_alt_fs.json"
 fi
 Note "Check log file:" "${dir_logs}/recon-all.log"
