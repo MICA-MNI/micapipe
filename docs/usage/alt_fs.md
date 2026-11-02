@@ -29,7 +29,10 @@ micapipe -sub SUB -ses SES -bids BIDS -out OUT -fs_licence LICENSE \
    white matter voxels outside the mask give it a NaN white matter peak and
    the surfaces collapse (BIDS_CI sub-mri7T: mean thickness 2.15 -> 0.77 mm
    with 252 such voxels). FastSurfer 2.6.0 also labels a detached piece about
-   110 mm below the brain as white matter on BIDS_CI sub-mri3T. FastSurfer's
+   110 mm below the brain as white matter on BIDS_CI sub-mri3T, which collapses
+   the surfaces on the default path as well; reported upstream as
+   [Deep-MI/FastSurfer#956](https://github.com/Deep-MI/FastSurfer/issues/956),
+   where 2.5.4 behaves the same way and 2.4.2 does not. FastSurfer's
    segmentation stays unchanged in `mri/aparc.DKTatlas+aseg.deep.mgz`.
    FastSurfer's own mask is kept as `mri/mask.fastsurfer.mgz`, FastScrubber's
    raw prediction as `mri/mask.fastscrubber.mgz`, and the first surface logs as
