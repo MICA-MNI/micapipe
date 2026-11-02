@@ -65,8 +65,12 @@ echo -e "
 \t\033[38;5;197m-proc_surf\033[0m
 \t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link for compatibility
 \t\t\t            Prove full path to the subject's directory: e.g. <path_to>/freesurfer/sub-001_ses-01
-\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
-\t\t\t            Default surface reconstruction uses 'FastSurfer'
+\t   \033[38;5;120m-freesurfer\033[0m          : Reconstruct the cortical surface with FreeSurfer 8.2.0.
+\t\t\t            Default surface reconstruction uses FastSurfer 2.6.0
+\t   \033[38;5;120m-alt_fs\033[0m              : EXPERIMENTAL, mainly for 7T. FastSurfer, then FastScrubber replaces FastSurfer's brain mask
+\t\t\t            (removing meninges, vessels and sinuses) and FastSurfer rebuilds the surfaces from it.
+\t\t\t            FastScrubber runs all 5 folds without test-time augmentation. Cannot be used with -freesurfer.
+\t   \033[38;5;120m-alt_fs_tta\033[0m          : With -alt_fs, add FastScrubber's test-time augmentation: ~5-8x slower, nearly identical masks.
 \t   \033[38;5;120m-fs_licence\033[0m          : Provide the full path to the freesurface licence.
 \t\t\t            e.g. /home/documents/licence.txt'. If you don't have a licence you can get one here: https://surfer.nmr.mgh.harvard.edu/registration.html
 \t   \033[38;5;120m-T1\033[0m                  : Overwrite the t1 input, MUST be 'nii.gz'. Use the full path to a T1w image to be processed.
@@ -76,8 +80,8 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t            Default is the 18 parcellations provided in the pipeline
-\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
-\t\t\t            Default surface reconstruction uses 'FastSurfer'
+\t   \033[38;5;120m-freesurfer\033[0m          : Use the FreeSurfer surfaces when both FreeSurfer and FastSurfer reconstructions exist.
+\t\t\t            Default is FastSurfer
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
@@ -435,6 +439,14 @@ while [ "$#" -gt 0 ]; do
     FreeSurfer=TRUE
     shift
   ;;
+  -alt_fs)
+    AltFS=TRUE
+    shift
+  ;;
+  -alt_fs_tta)
+    AltFS_TTA=TRUE
+    shift
+  ;;
   -fs_licence)
     require_value "-fs_licence" "$2"
     fs_licence=$2
@@ -652,6 +664,12 @@ if [ -z ${surfdir} ]; then surfdir="FALSE"; else  surfdir=$(realpath $surfdir); 
 if [ -z ${FreeSurfer} ]; then FreeSurfer="FALSE"; else  FreeSurfer="TRUE"; fi
 if [ -z ${t1} ]; then t1=DEFAULT; else t1=$(realpath $t1); fi
 
+# Alternative FastSurfer workflow with FastScrubber (experimental)
+if [ -z ${AltFS} ]; then AltFS="FALSE"; fi
+if [ -z ${AltFS_TTA} ]; then AltFS_TTA="FALSE"; fi
+if [[ "$AltFS" == "TRUE" ]] && [[ "$FreeSurfer" == "TRUE" ]]; then Error "-alt_fs rebuilds FastSurfer surfaces and cannot be used with -freesurfer"; exit 1; fi
+if [[ "$AltFS_TTA" == "TRUE" ]] && [[ "$AltFS" != "TRUE" ]]; then Error "-alt_fs_tta requires -alt_fs"; exit 1; fi
+
 # Altas selection (DEFAULT is the 18 of micapipe)
 if [ -z ${atlas} ]; then atlas=DEFAULT; else atlas="$atlas"; fi
 
@@ -778,7 +796,7 @@ fi
 # # #        Surface processing: Freesurfer | FastSurfer
 if [ "$procSurf" = "TRUE" ]; then
     log_file_str=$dir_logs/proc_surf_$(date +'%Y-%m-%d_%H.%M.%S')
-    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FreeSurfer $fs_licence $t1"
+    COMMAND="${scriptDir}/01_proc-surf.sh $BIDS $id $out $SES $nocleanup $threads $tmpDir $surfdir $FreeSurfer $fs_licence $t1 $AltFS $AltFS_TTA"
     # mica.q - Surface processing
     if [[ $micaq == "TRUE" ]]; then
         Info "MICA qsub - Surface processing"
@@ -1090,7 +1108,16 @@ if [ "$qcsubj" = "TRUE" ]; then
            $COMMAND $PROC
   else
       # LOCAL - Subject QC
-      $COMMAND $PROC 2>&1 | tee -a ${log_file_str}.txt
+      $COMMAND $PROC 2>&1 | tee -a "${log_file_str}.txt"
+      qc_pipeline_status=("${PIPESTATUS[@]}")
+      if (( qc_pipeline_status[0] != 0 )); then
+          Error "Subject QC failed; see ${log_file_str}.txt"
+          exit "${qc_pipeline_status[0]}"
+      fi
+      if (( qc_pipeline_status[1] != 0 )); then
+          Error "Subject QC log could not be written"
+          exit "${qc_pipeline_status[1]}"
+      fi
   fi
 fi
 

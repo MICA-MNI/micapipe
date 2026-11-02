@@ -5,7 +5,14 @@
 # Utilities
 export Version="v0.2.3 'Northern flicker'"
 export MRTRIX_QUIET=TRUE
+# GPUs are hidden from the pipeline (BIC-SGE failure in proc_dwi). The caller's
+# setting is kept so FastSurfer and FastScrubber can use the GPUs (restore_gpus).
+if [[ -z "${MICAPIPE_CALLER_GPUS+x}" ]]; then export MICAPIPE_CALLER_GPUS="${CUDA_VISIBLE_DEVICES-all}"; fi
 export CUDA_VISIBLE_DEVICES=''
+function restore_gpus() {
+  if [[ "${MICAPIPE_CALLER_GPUS:-all}" == all ]]; then unset CUDA_VISIBLE_DEVICES
+  else export CUDA_VISIBLE_DEVICES="${MICAPIPE_CALLER_GPUS}"; fi
+}
 bids_variables() {
   # This functions assignes variables names acording to:
   #     BIDS directory = $1
@@ -87,7 +94,12 @@ export idBIDS="${subject}${ses}"
 
   # Resting state proc files
   export topupConfigFile=${FSLDIR}/etc/flirtsch/b02b0_1.cnf                                    # TOPUP config file default
-  export icafixTraining=${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData                 # ICA-FIX training file default
+  if [[ "${MICAPIPE_FIX_BACKEND:-legacy}" == "python" ]]; then
+      export icafixTraining="${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.pyfix_model"
+  else
+      export icafixTraining="${MICAPIPE}/functions/MICAMTL_training_15HC_15PX.RData"
+  fi
+  #                 # ICA-FIX training file default
 
   # BIDS files: arterial spin labelling (ASL)
   bids_asl=($(ls "$subject_bids/perf/${subject}${ses}"_*asl.nii* 2>/dev/null))

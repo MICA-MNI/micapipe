@@ -24,4 +24,5 @@ getting_started/installation
 
 usage/app_cli
 usage/snakemake_cli
+usage/alt_fs
 ```

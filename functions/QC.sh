@@ -169,7 +169,7 @@ Note "bids:" "$BIDS"
 Note "ses:" "$SES"
 Note "PROC:" "${PROC}"
 Note "MICAPIPE:" "${MICAPIPE}"
-Note "conda" "$(conda info --env | grep '*' | awk -F '*' '{print $2}')"
+Note "Python" "$(command -v python)"
 Note "tmpDir" "${tmpDir}"
 #	Timer
 aloita=$(date +%s)
@@ -293,7 +293,11 @@ done
 # -----------------------------------------------------------------------------------------------
 Title "Generating QC report"
 
-Do_cmd python "${MICAPIPE}"/functions/QC.py -sub "${subject}" -out "${out}" -bids "${BIDS}" -ses "${SES/ses-/}" -tmpDir "${tmpDir}" -micapipe "${MICAPIPE}"
+if ! Do_cmd python "${MICAPIPE}"/functions/QC.py -sub "${subject}" -out "${out}" -bids "${BIDS}" -ses "${SES/ses-/}" -tmpDir "${tmpDir}" -micapipe "${MICAPIPE}"; then
+    Error "QC report generation failed; see the image-capture error above"
+    cleanup "$tmpDir" "$nocleanup" "$here"
+    exit 1
+fi
 
 Info "Outputs: \n $(ls "${subject_dir}"/QC/*pdf)"
 # -----------------------------------------------------------------------------------------------

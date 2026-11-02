@@ -1,0 +1,7 @@
+# Preserve the existing multi-echo algorithm while isolating its older stack.
+tedana==0.0.12
+numpy==1.26.4
+scipy==1.13.1
+nibabel==5.3.2
+nilearn==0.10.4
+scikit-learn==1.5.2

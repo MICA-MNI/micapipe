@@ -1,0 +1,6 @@
+LAMAReg @ git+https://github.com/MICA-MNI/LAMAReg.git@3308021ac2e911c7229f2394f1e50cf690ef02ab
+tensorflow==2.15.1
+keras==2.15.0
+numpy==1.26.4
+scipy==1.13.1
+antspyx==0.6.1

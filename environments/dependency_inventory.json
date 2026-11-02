@@ -1,0 +1,132 @@
+{
+  "functions/03_FC.py": [
+    "glob",
+    "matplotlib",
+    "nibabel",
+    "numpy",
+    "os",
+    "sklearn",
+    "sys",
+    "warnings"
+  ],
+  "functions/QC.py": [
+    "argparse",
+    "brainspace",
+    "glob",
+    "json",
+    "matplotlib",
+    "nibabel",
+    "numpy",
+    "os",
+    "pyvirtualdisplay",
+    "seaborn",
+    "vtk",
+    "xhtml2pdf"
+  ],
+  "functions/QC_group.py": [
+    "argparse",
+    "brainspace",
+    "glob",
+    "json",
+    "math",
+    "matplotlib",
+    "nibabel",
+    "numpy",
+    "os",
+    "pandas",
+    "pyvirtualdisplay",
+    "seaborn",
+    "xhtml2pdf"
+  ],
+  "functions/build_mpc-vertex.py": [
+    "glob",
+    "nibabel",
+    "numpy",
+    "os",
+    "scipy",
+    "sys"
+  ],
+  "functions/build_mpc.py": [
+    "numpy",
+    "scipy"
+  ],
+  "functions/connectome_slicer.py": [
+    "argparse",
+    "nibabel",
+    "numpy",
+    "os",
+    "pandas"
+  ],
+  "functions/generate_equivolumetric_surfaces.py": [
+    "argparse",
+    "copy",
+    "io_mesh",
+    "numpy",
+    "os",
+    "subprocess"
+  ],
+  "functions/geoDistMapper.py": [
+    "argparse",
+    "nibabel",
+    "numpy",
+    "os",
+    "pygeodesic",
+    "scipy",
+    "subprocess",
+    "sys"
+  ],
+  "functions/io_mesh.py": [
+    "csv",
+    "nibabel",
+    "numpy",
+    "pandas"
+  ],
+  "functions/laplace_solver.py": [
+    "astropy",
+    "nibabel",
+    "numpy",
+    "scipy",
+    "skfmm",
+    "sys"
+  ],
+  "functions/mp2rage_denoise.py": [
+    "argparse",
+    "copy",
+    "nibabel",
+    "numpy",
+    "sys",
+    "time"
+  ],
+  "functions/nifti_capture.py": [
+    "argparse",
+    "matplotlib",
+    "nilearn",
+    "os"
+  ],
+  "functions/niivue_report.py": [
+    "argparse",
+    "html",
+    "json",
+    "pathlib",
+    "shutil"
+  ],
+  "functions/removeFSoffset.py": [
+    "nibabel",
+    "numpy",
+    "os",
+    "sys"
+  ],
+  "functions/surf2mpc.py": [
+    "build_mpc",
+    "nibabel",
+    "numpy",
+    "os",
+    "sys"
+  ],
+  "functions/surface_generator.py": [
+    "copy",
+    "nibabel",
+    "numpy",
+    "sys"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "release": "v1-beta",
+  "date": "20261028",
+  "previous_candidate": "v1.0.0-beta.2",
+  "upstream_v1": "6df741b7a2f6ddb03b302350ca6539422c9669ad",
+  "variants": {
+    "nocuda": {"fastsurfer": "cpu", "fastscrubber": "cpu"},
+    "cuda": {"fastsurfer": "cu126", "fastscrubber": "cu124"}
+  },
+  "fastsurfer": {
+    "version": "2.6.0",
+    "commit": "1dc024735371f65bc4b94a272cf596be6ddf4f21",
+    "python": "3.14.0",
+    "torch_backend": "see variants"
+  },
+  "fast_scrubber": {
+    "commit": "cec34a1b50caacabcfb9ee400723ef002a769358",
+    "repository": "https://github.com/zihuaihuai/fast_scrubber",
+    "python": "3.9.20",
+    "torch": "2.4.1",
+    "nnunetv2": "2.5.1",
+    "weights": "https://osf.io/x95g7",
+    "micapipe_default": "all 5 folds, no test-time augmentation"
+  },
+  "freesurfer": {
+    "version": "8.2.0",
+    "archive": "freesurfer_ubuntu22-8.2.0_amd64.deb",
+    "sha256": "0c17edb0e738a41faad76ed1435aced157a2bbf6151472d4bd9891b6a9fa1013"
+  },
+  "mrtrix3": {
+    "version": "3.0.8",
+    "commit": "464173c5294e021b2d508e557085d90c09d642fd"
+  },
+  "ants": {
+    "version": "2.6.5",
+    "sha256": "504b6ab94dc09fa414874fdb847f6fced03f143763501e60cd51d247344641cd"
+  },
+  "fsl": {
+    "version": "6.0.7.23",
+    "setuptools": "84.2.1",
+    "pyfix": "0.10.0",
+    "eddy_cuda": "fsl-eddy-cuda 2602.0",
+    "lock": "environments/locks/fsl-6.0.7.23-linux-64.txt"
+  },
+  "pyonlm": {
+    "commit": "c7d305300a4ae262c9ca9cdd9db2904432fa0f84"
+  },
+  "niivue": {
+    "version": "0.69.0",
+    "bundle": "assets/niivue/index.js"
+  },
+  "uv": "0.12.22",
+  "micromamba": "2.5.0-2",
+  "legacy_fix_retained": true
+}

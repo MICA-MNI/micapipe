@@ -1,0 +1,28 @@
+# FastScrubber (fast_scrubber) inference for -alt_fs, Python 3.9.20.
+# Pins follow fast_scrubber's environment.yml, the environment its masks were
+# validated in. The torch build (CPU or CUDA 12.4) comes from --torch-backend.
+torch==2.4.1
+nnunetv2==2.5.1
+acvl-utils==0.2
+dynamic-network-architectures==0.3.1
+batchgenerators==0.25
+batchgeneratorsv2==0.2.1
+dicom2nifti==2.5.0
+python-gdcm==3.0.24.1
+pydicom==2.4.4
+fft-conv-pytorch==1.2.0
+numpy==1.26.4
+nibabel==5.3.0
+scipy==1.13.1
+simpleitk==2.4.0
+scikit-image==0.24.0
+scikit-learn==1.5.2
+pandas==2.3.3
+matplotlib==3.9.2
+seaborn==0.13.2
+imagecodecs==2024.9.22
+tifffile==2024.8.30
+einops==0.8.0
+yacs==0.1.8
+graphviz==0.20.3
+tqdm==4.66.5

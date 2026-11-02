@@ -111,3 +111,9 @@ self-hosted runner is operated), see
 | MASS         | 7.3-51.5 |
 | libcoin      | libcoin  |
 | Matrix       | 1.2-18   |
+
+## V1 beta environment build
+
+The environment-v1-beta branch uses the isolated Linux server build in
+[environments/README.md](environments/README.md). The existing two-stage
+Dockerfiles describe the previous container and should not be used for this beta.

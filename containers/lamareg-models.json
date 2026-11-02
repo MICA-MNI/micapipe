@@ -1,0 +1,9 @@
+{
+  "revision": "5f43003b01e56d2754b4c0e23a98f38d1d134de3",
+  "sha256": {
+    "synthseg_robust_2.0.h5": "7bc30bf5c3d204f20c4a6cb5a283aedbcab6af1de927cda783f59b67d19cb01c",
+    "synthseg_2.0.h5": "f190bfd742f450ef3ca2c9df9ed4d2e0232b3a74471da5e51b7770bacdf80c3e",
+    "synthseg_parc_2.0.h5": "83bb1de76fb6f173c6dacacd433f81209fc6abb1dbc179a930ec06ecabbeb684",
+    "synthseg_qc_2.0.h5": "fb92e37daa0842bdd8a03bc06a3b36b0d38810e31c714659cedd09119c0abfb7"
+  }
+}

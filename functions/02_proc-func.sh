@@ -231,6 +231,11 @@ else
     fi
 fi
 
+if [[ "$noFIX" -eq 0 && "${MICAPIPE_FIX_BACKEND:-legacy}" == "python" && "${icafixTraining}" != *.pyfix_model ]]; then
+    Error "Python FIX requires a .pyfix_model; convert the .RData model with convert_fix_model first."
+    exit 1
+fi
+
 # Check nuisance signal regression
 if [[ $performNSR == 1 ]]; then
     Info "White matter and CSF signals will be regressed from processed timeseries"
@@ -664,8 +669,7 @@ if [[ "$noFIX" -eq 0 ]]; then
               fi
           else
               Warning "!!!!  Melodic Failed and/or FIX was not found, check the software installation !!!!
-                             If you've installed FIX try to install required R packages and re-run:
-                             'kernlab','ROCR','class','party','e1071','randomForest'"
+                             Check the selected FIX backend and its pinned environment."
               Do_cmd cp -rf "$fmri_HP" "$func_processed"
               export statusFIX="NO"
           fi
