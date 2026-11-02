@@ -65,8 +65,8 @@ echo -e "
 \t\033[38;5;197m-proc_surf\033[0m
 \t   \033[38;5;120m-surf_dir\033[0m            : If freesurfer/FastSurfer has been performed, it will create a symbolic link for compatibility
 \t\t\t            Prove full path to the subject's directory: e.g. <path_to>/freesurfer/sub-001_ses-01
-\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
-\t\t\t            Default surface reconstruction uses 'FastSurfer'
+\t   \033[38;5;120m-freesurfer\033[0m          : Reconstruct the cortical surface with FreeSurfer 8.2.0.
+\t\t\t            Default surface reconstruction uses FastSurfer 2.6.0
 \t   \033[38;5;120m-alt_fs\033[0m              : EXPERIMENTAL, mainly for 7T. FastSurfer, then FastScrubber replaces FastSurfer's brain mask
 \t\t\t            (removing meninges, vessels and sinuses) and FastSurfer rebuilds the surfaces from it.
 \t\t\t            FastScrubber runs all 5 folds without test-time augmentation. Cannot be used with -freesurfer.
@@ -80,8 +80,8 @@ echo -e "
 \t\033[38;5;197m-post_structural\033[0m
 \t   \033[38;5;120m-atlas\033[0m               : Registers only the selected the parcellations separated by a comma, no blank spaces (eg. economo,aparc).
 \t\t\t            Default is the 18 parcellations provided in the pipeline
-\t   \033[38;5;120m-freesurfer\033[0m          : Use this option to reconstruct the cortical surface with Freesurfer 7.
-\t\t\t            Default surface reconstruction uses 'FastSurfer'
+\t   \033[38;5;120m-freesurfer\033[0m          : Use the FreeSurfer surfaces when both FreeSurfer and FastSurfer reconstructions exist.
+\t\t\t            Default is FastSurfer
 
 \t\033[38;5;197m-proc_dwi\033[0m
 \t   \033[38;5;120m-dwi_main\033[0m            : Full path to DWI with N number of directions and b0. If used, it will overwrite the defaults.
