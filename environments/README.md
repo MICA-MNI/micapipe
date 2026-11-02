@@ -17,7 +17,7 @@ Pipeline source starts at upstream v1 commit 6df741b7a2f6ddb03b302350ca6539422c9
 | fastscrubber | Python 3.9.20, FastScrubber (nnU-Net 2.5.1) / PyTorch 2.4.1 CPU or CUDA 12.4, for -alt_fs |
 | mrtrix3 | Workbench and dcm2niix; MRtrix3 3.0.8 built from its tag |
 | workflow | Python 3.11.14, SnakeBIDS 0.13.1 and Snakemake 8.30.0 |
-| FSL | Official FSL 6.0.7.8 packages, Python FIX 0.6.0 |
+| FSL | Official FSL 6.0.7.23 packages, Python FIX 0.10.0 |
 
 locks/ contains resolved Python dependencies or explicit conda package URLs
 with checksums. Git dependencies use full commit IDs. FSL needs

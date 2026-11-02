@@ -36,9 +36,11 @@
     "sha256": "504b6ab94dc09fa414874fdb847f6fced03f143763501e60cd51d247344641cd"
   },
   "fsl": {
-    "version": "6.0.7.8",
-    "setuptools": "80.9.0",
-    "lock": "environments/locks/fsl-6.0.7.8-linux-64.txt"
+    "version": "6.0.7.23",
+    "setuptools": "84.2.1",
+    "pyfix": "0.10.0",
+    "eddy_cuda": "fsl-eddy-cuda 2602.0",
+    "lock": "environments/locks/fsl-6.0.7.23-linux-64.txt"
   },
   "pyonlm": {
     "commit": "c7d305300a4ae262c9ca9cdd9db2904432fa0f84"
