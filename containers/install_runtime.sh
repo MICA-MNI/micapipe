@@ -33,11 +33,11 @@ done
 MAMBA=/build/tools/micromamba
 export MAMBA_ROOT_PREFIX=/build/cache/mamba-runtime
 export CONDA_PKGS_DIRS=/build/cache/conda-runtime
-if [[ ! -f /opt/fsl-6.0.7.8/.micapipe-ready ]]; then
-    "$MAMBA" --no-rc create -y -p /opt/fsl-6.0.7.8 -f source/environments/locks/fsl-6.0.7.8-linux-64.txt
-    touch /opt/fsl-6.0.7.8/.micapipe-ready
+if [[ ! -f /opt/fsl-6.0.7.23/.micapipe-ready ]]; then
+    "$MAMBA" --no-rc create -y -p /opt/fsl-6.0.7.23 -f source/environments/locks/fsl-6.0.7.23-linux-64.txt
+    touch /opt/fsl-6.0.7.23/.micapipe-ready
 fi
-printf '6.0.7.8' > /opt/fsl-6.0.7.8/etc/fslversion
+printf '6.0.7.23' > /opt/fsl-6.0.7.23/etc/fslversion
 if [[ ! -f /opt/environments/mrtrix3/.micapipe-ready ]]; then
     "$MAMBA" --no-rc create -y -p /opt/environments/mrtrix3 -f source/environments/locks/mrtrix3-linux-64.txt
     touch /opt/environments/mrtrix3/.micapipe-ready
@@ -83,7 +83,7 @@ export FSL_FIX_OCOPTS="--traditional -q --no-window-system"
 export FSL_FIX_R_CMD=/usr/bin/R
 export FSL_FIX_R_LIBS=/usr/lib/R/site-library
 SETTINGS
-cp -a source/fsl_conf/. /opt/fsl-6.0.7.8/etc/flirtsch/
+cp -a source/fsl_conf/. /opt/fsl-6.0.7.23/etc/flirtsch/
 cp -a source/surfaces/fsaverage5 /opt/freesurfer/subjects/
 cp source/containers/legacy_octave.sh /opt/fix-legacy/octave-wrapper
 chmod +x /opt/fix-legacy/octave-wrapper

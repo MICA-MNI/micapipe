@@ -15,7 +15,7 @@ mri_convert --version
 afni -ver
 wb_command -version
 dcm2niix --version || [ "$?" -eq 3 ]
-/opt/fsl-6.0.7.8/bin/python -c 'from pyfix import fix; print("Python FIX imports passed")'
+/opt/fsl-6.0.7.23/bin/python -c 'from pyfix import fix; print("Python FIX imports passed")'
 micapipe_env "$fastsurfer_env" python -c 'import torch, scipy, nibabel; print("FastSurfer Python:", torch.__version__, "CUDA:", torch.cuda.is_available())'
 micapipe_env fastscrubber python -c 'import torch, nnunetv2; print("FastScrubber Python:", torch.__version__, "CUDA:", torch.cuda.is_available())'
 fastscrubber --help >/tmp/fastscrubber-help.txt

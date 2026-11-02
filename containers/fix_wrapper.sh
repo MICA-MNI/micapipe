@@ -16,4 +16,4 @@ extra=()
 if [[ "$has_log" == 0 ]]; then extra=(-lf "$logdir/pyfix.log"); fi
 if [[ "$has_jobs" == 0 ]]; then extra+=(-nj "${MICAPIPE_FIX_JOBS:-${threads:-1}}"); fi
 # pyFIX 0.6 treats its first argument as a stage selector: keep it first.
-exec /opt/fsl-6.0.7.8/bin/fix "$@" "${extra[@]}"
+exec /opt/fsl-6.0.7.23/bin/fix "$@" "${extra[@]}"
