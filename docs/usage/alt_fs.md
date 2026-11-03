@@ -69,6 +69,12 @@ NVIDIA GPU when one is available (`singularity run --nv`,
 the containers, set `MICAPIPE_FASTSCRUBBER` to the FastScrubber command, for
 example `"python /path/to/fastscrubber.py"`.
 
+FastSurfer is given a single GPU: it wraps its model in PyTorch DataParallel
+as soon as it sees more than one, which hangs in the first inference batch and
+then fails with an NCCL error on a multi-GPU host. One GPU segments a scan in
+about a minute, so nothing is lost. micapipe keeps the first GPU the caller
+offered, so set `CUDA_VISIBLE_DEVICES` to choose which one it uses.
+
 ## Known caveats
 
 - FastScrubber masks can have interior holes. In 10 MICs 3T sessions processed
