@@ -10,7 +10,8 @@ grep -q proc_structural /tmp/micapipe-help.txt
 mrconvert --version
 antsRegistration --version
 flirt -version
-command -v topup eddy_cpu
+command -v topup eddy_cpu eddy_cuda
+[[ "$(cat /opt/fsl-6.0.7.23/etc/fslversion)" == 6.0.7.23 ]]
 mri_convert --version
 afni -ver
 wb_command -version
