@@ -6,12 +6,18 @@
 export Version="v0.2.3 'Northern flicker'"
 export MRTRIX_QUIET=TRUE
 # GPUs are hidden from the pipeline (BIC-SGE failure in proc_dwi). The caller's
-# setting is kept so FastSurfer and FastScrubber can use the GPUs (restore_gpus).
+# setting is kept so the steps that can use a GPU take it back (restore_gpus).
 if [[ -z "${MICAPIPE_CALLER_GPUS+x}" ]]; then export MICAPIPE_CALLER_GPUS="${CUDA_VISIBLE_DEVICES-all}"; fi
 export CUDA_VISIBLE_DEVICES=''
 function restore_gpus() {
   if [[ "${MICAPIPE_CALLER_GPUS:-all}" == all ]]; then unset CUDA_VISIBLE_DEVICES
   else export CUDA_VISIBLE_DEVICES="${MICAPIPE_CALLER_GPUS}"; fi
+}
+# True only where the host really has an NVIDIA GPU to offer. On a node without
+# one, restore_gpus buys nothing but a CUDA error, so a step that would rather
+# fall back quietly asks this first.
+function has_gpu() {
+  command -v nvidia-smi > /dev/null 2>&1 && nvidia-smi -L 2>/dev/null | grep -q '^GPU 0:'
 }
 bids_variables() {
   # This functions assignes variables names acording to:

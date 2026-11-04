@@ -75,6 +75,13 @@ then fails with an NCCL error on a multi-GPU host. One GPU segments a scan in
 about a minute, so nothing is lost. micapipe keeps the first GPU the caller
 offered, so set `CUDA_VISIBLE_DEVICES` to choose which one it uses.
 
+micapipe otherwise hides the GPUs from itself, which is why `-proc_dwi` has to
+ask for them back: `dwifslpreproc` tries `eddy_cuda` before `eddy_cpu`, and
+with the GPUs hidden the CUDA eddy failed with `cudaErrorNoDevice` on every
+host and the run fell back to the CPU without saying so. `-proc_dwi` now hands
+the GPUs back for that one step when the host actually has one, so the CUDA
+eddy runs where it can. A host without a GPU keeps the CPU path unchanged.
+
 ## Known caveats
 
 - FastScrubber masks can have interior holes. In 10 MICs 3T sessions processed
