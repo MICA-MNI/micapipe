@@ -26,6 +26,9 @@ FastSurfer 2.6.0 (FreeSurfer 8.2.0), FreeSurfer 8.2.0, MRtrix3 3.0.8,
 ANTs 2.6.5, **FSL 6.0.7.23** (`fsl-eddy-cuda 2602.0`, Python FIX 0.10.0),
 pyonlm, NiiVue 0.69.0.
 
+Where the published images live, and how to rebuild them, is in
+[`containers/README.md`](../../containers/README.md).
+
 ### This was an incremental rebuild
 
 The `/opt` trees from the 20261028 build were reused. `/opt/fsl-6.0.7.8` and
