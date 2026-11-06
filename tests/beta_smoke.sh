@@ -10,7 +10,29 @@ grep -q proc_structural /tmp/micapipe-help.txt
 mrconvert --version
 antsRegistration --version
 flirt -version
-command -v topup eddy_cpu
+command -v topup eddy_cpu eddy_cuda
+[[ "$(cat /opt/fsl-6.0.7.23/etc/fslversion)" == 6.0.7.23 ]]
+# The pipeline hides the GPUs and proc_dwi hands them back for eddy. Check that
+# mechanism here: with the GPUs hidden, eddy_cuda reports no CUDA device and
+# dwifslpreproc spends hours on the CPU instead of minutes, which is exactly
+# what shipped unnoticed before.
+(
+ source /opt/micapipe/functions/utilities.sh
+ [[ -z "${CUDA_VISIBLE_DEVICES}" ]] || { echo "the pipeline no longer hides the GPUs"; exit 1; }
+ if has_gpu; then
+     restore_gpus
+     [[ "${CUDA_VISIBLE_DEVICES-unset}" != "" ]] || { echo "restore_gpus left the GPUs hidden"; exit 1; }
+     eddy_cuda --imain=/nonexistent.nii --mask=/nonexistent --acqp=/nonexistent \
+         --index=/nonexistent --bvecs=/nonexistent --bvals=/nonexistent --out=/tmp/eddy-smoke \
+         > /tmp/eddy-cuda-smoke.log 2>&1 || true
+     if grep -q cudaErrorNoDevice /tmp/eddy-cuda-smoke.log; then
+         echo "eddy_cuda still sees no CUDA device after restore_gpus"; exit 1
+     fi
+     echo "GPU eddy is reachable on this host"
+ else
+     echo "No GPU here, so eddy_cpu is the expected path"
+ fi
+)
 mri_convert --version
 afni -ver
 wb_command -version

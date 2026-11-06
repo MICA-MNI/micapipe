@@ -366,7 +366,13 @@ if [[ ! -f "$dwi_corr" ]]; then ((N++))
       # DWIs all acquired with a single fixed phase encoding; but additionally a
       # pair of b=0 images with reversed phase encoding to estimate the inhomogeneity field:
       echo -e "COMMAND --> dwifslpreproc $dwi_4proc $dwi_corr $opt -pe_dir $pe_dir -readout_time $ReadoutTime -eddy_options \" --data_is_shelled --slm=linear --repol\" -nthreads $threads -nocleanup -scratch $tmp -force"
-      dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear --repol" -nthreads "$threads" -nocleanup -scratch "$tmp" -force
+      # dwifslpreproc runs eddy_cuda first and falls back to eddy_cpu if it fails.
+      # The pipeline hides the GPUs, which left eddy_cuda failing with
+      # cudaErrorNoDevice on every host and the fallback taking hours of CPU
+      # instead of minutes, so hand them back for this step. A host with no GPU
+      # keeps the quiet CPU path it already had.
+      ( if has_gpu; then restore_gpus; Info "dwifslpreproc may use eddy_cuda on this host"; fi
+        dwifslpreproc "$dwi_4proc" "$dwi_corr" $opt -pe_dir "$pe_dir" -readout_time "$ReadoutTime" -eddy_options " --data_is_shelled --slm=linear --repol" -nthreads "$threads" -nocleanup -scratch "$tmp" -force )
       # Step QC
       if [[ ! -f "$dwi_corr" ]]; then Error "dwifslpreproc failed, check the logs"; exit;
       else

@@ -117,3 +117,11 @@ if [[ -d downloads/fast_scrubber-weights ]]; then cp -a downloads/fast_scrubber-
 # Fetch the FastSurfer checkpoints at build time, using its released downloader.
 cd /opt/FastSurfer
 "/opt/environments/$fastsurfer_env/bin/python" -m FastSurferCNN.download_checkpoints --all
+# run_fastsurfer.sh reads its version from BUILD.info when it exists, and falls back
+# to git otherwise. /opt/FastSurfer belongs to the build user, not the caller, so at
+# run time git refuses it: every FastSurfer call printed four "dubious ownership"
+# errors and logged an empty version. Write the cache here, where git can read it.
+git config --global --add safe.directory /opt/FastSurfer
+"/opt/environments/$fastsurfer_env/bin/python" -m FastSurferCNN.version \
+    --sections +git+checkpoints -o /opt/FastSurfer/BUILD.info
+grep -q . /opt/FastSurfer/BUILD.info

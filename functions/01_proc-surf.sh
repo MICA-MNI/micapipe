@@ -83,6 +83,12 @@ if [[ -d "/opt/environments/fastsurfer_cuda" ]]; then fastsurfer_env=fastsurfer_
 # Runs in a subshell: the GPUs and the environment are only changed for FastSurfer
 function run_fastsurfer() (
   restore_gpus
+  # FastSurfer wraps its model in torch DataParallel as soon as more than one GPU is
+  # visible, which hangs in the first inference batch and then fails with an NCCL
+  # error on a multi-GPU host. One GPU segments a scan in about a minute, so keep
+  # only the first one the caller offered (set CUDA_VISIBLE_DEVICES to choose it).
+  local gpus="${CUDA_VISIBLE_DEVICES-0}"
+  export CUDA_VISIBLE_DEVICES="${gpus%%,*}"
   if [[ -d "/opt/environments/${fastsurfer_env}" ]]; then
       # init.sh defines micapipe_env in the parent micapipe shell only
       source "${MICAPIPE}/functions/micapipe_env.sh"
@@ -174,8 +180,12 @@ elif [[ "$surfdir" == "FALSE" ]]; then ((N++))
     if [[ "$recon" == "fastsurfer" ]]; then
         Do_cmd mkdir -m 777 -p "${dir_surf}/${idBIDS}"
           Info "FastSurfer: running ${fastsurfer_env} environment"
-          run_fastsurfer --t1 "${t1_2proc}"
+          run_fastsurfer --t1 "${t1_2proc}"; fs_rc=$?
           chmod aug+wr -R "${dir_surf}/${idBIDS}"
+          if [[ ${fs_rc} != 0 ]]; then
+              Error "FastSurfer failed (exit ${fs_rc}), check ${dir_surf}/${idBIDS}/scripts"
+              cleanup "$tmp" "$nocleanup" "$here"; exit 1
+          fi
           Do_cmd cp "${dir_surf}/${idBIDS}/scripts/recon-all.log" "${dir_logs}/recon-all.log"
     else
         Info "Running FreeSurfer: conform volume to minimum"
@@ -219,8 +229,11 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
     Do_cmd cp "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.fastscrubber.mgz"
     # FastScrubber trims the outer boundary only: deep brain labels stay, detached pieces go, holes are filled.
     # The aseg is then cleared outside the mask: mri_normalize fails on white matter labels outside it
-    Do_cmd "${MICAPIPE}/functions/clean_brain_mask.py" "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" \
-        --keep "${mri_dir}/aseg.auto.mgz" --trim "${mri_dir}/aseg.auto.mgz" "${mri_dir}/aseg.presurf.mgz" && ((Nsteps++))
+    if ! Do_cmd "${MICAPIPE}/functions/clean_brain_mask.py" "${tmp}/fastscrubber_mask.mgz" "${mri_dir}/mask.mgz" \
+        --keep "${mri_dir}/aseg.auto.mgz" --trim "${mri_dir}/aseg.auto.mgz" "${mri_dir}/aseg.presurf.mgz"; then
+        Error "clean_brain_mask.py did not write ${mri_dir}/mask.mgz"; cleanup "$tmp" "$nocleanup" "$here"; exit 1
+    fi
+    ((Nsteps++))
     # Only the rebuild's log may mark this module as finished
     for log in recon-all recon-surf; do
         if [[ -f "${scripts_dir}/${log}.log" ]]; then Do_cmd mv "${scripts_dir}/${log}.log" "${scripts_dir}/${log}.fastsurfer.log"; fi
@@ -229,8 +242,12 @@ if [[ "$AltFS" == "TRUE" ]]; then ((N++))
     # recon-surf.sh refuses to run over a previous surface run while these exist
     Do_cmd rm -f "${mri_dir}/wm.mgz" "${mri_dir}/aparc.DKTatlas+aseg.orig.mgz"
     Info "FastSurfer: rebuilding the surfaces from the FastScrubber mask"
-    run_fastsurfer --surf_only
+    run_fastsurfer --surf_only; fs_rc=$?
     chmod aug+wr -R "${dir_subjsurf}"
+    if [[ ${fs_rc} != 0 ]]; then
+        Error "FastSurfer did not rebuild the surfaces (exit ${fs_rc}), check ${scripts_dir}"
+        cleanup "$tmp" "$nocleanup" "$here"; exit 1
+    fi
     Do_cmd cp "${scripts_dir}/recon-all.log" "${dir_logs}/recon-all.log"
     echo -e "{
   \"micapipeVersion\": \"${Version}\",

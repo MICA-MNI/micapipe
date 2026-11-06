@@ -1,8 +1,8 @@
 {
-  "release": "v1-beta",
-  "date": "20261028",
+  "release": "v1.0.0-beta.3",
+  "date": "20261103",
   "previous_candidate": "v1.0.0-beta.2",
-  "upstream_v1": "6df741b7a2f6ddb03b302350ca6539422c9669ad",
+  "upstream_v1": "7aa9eb2d1d84533033eff8bafd501186dac7fbad",
   "variants": {
     "nocuda": {"fastsurfer": "cpu", "fastscrubber": "cpu"},
     "cuda": {"fastsurfer": "cu126", "fastscrubber": "cu124"}
