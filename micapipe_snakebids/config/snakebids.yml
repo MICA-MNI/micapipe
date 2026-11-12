@@ -1,175 +1,294 @@
-#list of analysis levels in the bids app
+# micapipe Snakemake (SnakeBIDS) app
+#
+# Every option below is also a command-line flag of run.py. A value left null
+# is never passed to micapipe, so micapipe keeps its own default; booleans are
+# true/false, never the strings "TRUE"/"FALSE".
+
 analysis_levels:
   - participant
 
-# mapping from analysis_level to set of target rules or files
 targets_by_analysis_level:
   participant:
-    - "all" # if '', then the first rule is run
+    - all
 
-# Configure components:
-# Each entry creates a new component that can be retreived within the workflow
-# via `generate_inputs`.
-# Filters are used to select paths: each filter has an `entity` key and a
-# single value or list of values to select.
-# Wildcards are used to mark variable parts of paths. Each wildcard is an
-# entity, such as `subject` or `session`, that may vary across component paths.
-pybids_inputs:
-  t1w:
-    filters:
-      suffix: T1w
-      extension: nii.gz
+# Sessions are found by the workflow itself (any sub-*/ses-*/anat with a T1w or
+# UNIT1 image), so no PyBIDS components are declared here.
+pybids_inputs: {}
 
-    wildcards:
-      - subject
-      - session
-      - run
-
-  func:
-    filters:
-      suffix: bold
-      extension: nii.gz
-
-    wildcards:
-      - subject
-      - session
-      - task
-      - acquisition
-
-  dwi:
-    filters:
-      suffix: dwi
-      extension: nii.gz
-
-    wildcards:
-      - subject
-      - session
-      - acquisition
-      - dir
-  # bold:
-  #   filters:
-  #     suffix: bold
-  #     extension: nii.gz
-  #   wildcards:
-  #     - subject
-  #     - run
-  #     - session
-  #     - acquisition
-
-# configuration for the command-line parameters to make available
-# passed on the argparse add_argument()
 parse_args:
   --skip-bids-validation:
+    help: Skip validation of the BIDS dataset.
+    dest: plugins.validator.skip
+    action: store_true
+    default: false
+
+  # --- what to run -----------------------------------------------------------
+  --modules:
     help: |
-      Skip validation of BIDS dataset. BIDS validation is performed by default
-      using the bids-validator plugin (if installed/enabled) or with the pybids
-      validator implementation (if bids-validator is not installed/enabled).
-    dest: "plugins.validator.skip"
-    action: "store_true"
-    default: False
+      micapipe modules to run, in any order. Each pulls in the modules it depends
+      on (sc needs dwi, which needs post_structural, ...), and every module of a
+      session runs one at a time in micapipe's order. A module whose QC record
+      already says COMPLETED is not re-run. Default: structural.
+    dest: modules
+    nargs: "+"
+    choices: [structural, surface, post_structural, flair, dwi, sc, mpc, mpc_swm, gd, asl, func, swm, qc_subj]
+    default: [structural]
+  --session-label:
+    help: Only process these sessions (labels without "ses-").
+    dest: session_label
+    nargs: "+"
+    default: null
 
-  --module:
+  # --- resources and execution ----------------------------------------------
+  --threads:
+    help: Threads per micapipe call (capped by Snakemake's --cores). Default 4.
+    dest: threads
+    type: int
+    default: 4
+  --fs-licence:
+    help: FreeSurfer licence file. Needed whenever structural, surface or post_structural run.
+    dest: fs_licence
+    type: Path
+    default: null
+  --tmp-dir:
+    help: Scratch directory for micapipe (-tmpDir). Default is micapipe's (/tmp).
+    dest: tmp_dir
+    type: Path
+    default: null
+  --nocleanup:
+    help: Keep micapipe's scratch directories (-nocleanup).
+    dest: nocleanup
+    action: store_true
+    default: null
+  --container-image:
     help: |
-      The module to run. The module is a python script that contains the main
-      function to run the analysis. The module should be in the same directory
-      as the snakefile.
-    dest: "module"
-    required: True
-    default: "structural"
-    choices:
-      - "structural"
-      - "surface"
-      - "dwi"
-      - "SC"
-      - "func"
-      - "mpc"
-      - "flair"
-      - "mpc_swm"
-      - "qc"
-      - "test"
+      Run every micapipe call in this Singularity/Apptainer image. Leave unset when
+      this app already runs inside the micapipe image (micapipe is then on PATH).
+    dest: container_image
+    type: Path
+    default: null
+  --container-exe:
+    help: Container runtime used with --container-image. Default singularity.
+    dest: container_exe
+    default: null
+  --container-binds:
+    help: Extra binds for --container-image, as host[:container[:ro]].
+    dest: container_binds
+    nargs: "+"
+    default: null
+  --container-gpu:
+    help: Pass --nv to the container runtime (use with the cuda image).
+    dest: container_gpu
+    action: store_true
+    default: null
 
-# Docker and singularity containers may be defined here
-container:
-  mode: "singularity"
-  image: "/data_/mica1/01_programs/micapipe-v0.2.0/micapipe_v0.2.3.sif"
+  # --- proc_structural ------------------------------------------------------------
+  --t1w-str:
+    help: -T1wStr, the anatomical image(s) to use (e.g. run-1_T1w or UNIT1,inv-1_MP2RAGE,inv-2_MP2RAGE).
+    dest: t1w_str
+    nargs: "+"
+    default: null
+  --uni:
+    help: -uni, the anatomical image is an MP2RAGE UNIT1.
+    dest: uni
+    action: store_true
+    default: null
+  --mf:
+    help: -mf, background-denoising factor for -uni.
+    dest: mf
+    type: float
+    default: null
 
-tmp_dir: "/data_/mica1/03_projects/enning/micapipe/tmp"
+  # --- proc_surf --------------------------------------------------------------------
+  --freesurfer:
+    help: -freesurfer, reconstruct surfaces with FreeSurfer instead of FastSurfer.
+    dest: freesurfer
+    action: store_true
+    default: null
+  --alt-fs:
+    help: -alt_fs, FastSurfer surfaces from a FastScrubber brain mask (experimental).
+    dest: alt_fs
+    action: store_true
+    default: null
+  --alt-fs-tta:
+    help: -alt_fs_tta, test-time augmentation for -alt_fs.
+    dest: alt_fs_tta
+    action: store_true
+    default: null
+  --surf-dir:
+    help: -surf_dir, an existing FreeSurfer/FastSurfer subject directory to import.
+    dest: surf_dir
+    type: Path
+    default: null
+  --surf-t1:
+    help: -T1, the image proc_surf reconstructs from, as a path or a name in the session's anat/ (default the nativepro T1w).
+    dest: surf_t1
+    default: null
 
-parameters:
-  fs_license: "$FREESURFER_HOME/license.txt" #this is mandatory
+  # --- post_structural ------------------------------------------------------------
+  --atlas:
+    help: -atlas, parcellations to build (default all).
+    dest: atlas
+    nargs: "+"
+    default: null
 
-  proc_structural:
-    T1wStr: "DEFAULT"
-    UNI: "FALSE"
-    MF: 3
+  # --- proc_flair -------------------------------------------------------------------
+  --flair-scan-str:
+    help: -flairScanStr, the FLAIR image to use.
+    dest: flair_scan_str
+    default: null
 
-  proc_surface:
-    T1: "DEFAULT"
-    freesurfer: "FALSE"
-    surf_dir: "FALSE"
-    T1wStr: "DEFAULT"
+  # --- proc_dwi / SC ----------------------------------------------------------------
+  --dwi-main:
+    help: |
+      -dwi_main, the main-phase DWI image(s): paths, or names relative to the
+      session (acq-b2000-91_dir-AP_dwi -> dwi/sub-X_ses-Y_acq-b2000-91_dir-AP_dwi.nii.gz).
+    dest: dwi_main
+    nargs: "+"
+    default: null
+  --dwi-rpe:
+    help: -dwi_rpe, the reverse-phase DWI image(s), given like --dwi-main.
+    dest: dwi_rpe
+    nargs: "+"
+    default: null
+  --dwi-processed:
+    help: -dwi_processed, an already processed DWI (.mif) to start from.
+    dest: dwi_processed
+    type: Path
+    default: null
+  --rpe-all:
+    help: -rpe_all, the reverse-phase image has all directions.
+    dest: rpe_all
+    action: store_true
+    default: null
+  --b0thr:
+    help: -b0thr, b-value threshold for b0 volumes.
+    dest: b0thr
+    type: int
+    default: null
+  --no-bvalue-scaling:
+    help: -no_bvalue_scaling.
+    dest: no_bvalue_scaling
+    action: store_true
+    default: null
+  --dwi-upsample:
+    help: -dwi_upsample, upsample the DWI to 1.25 mm isotropic.
+    dest: dwi_upsample
+    action: store_true
+    default: null
+  --dwi-acq:
+    help: -dwi_acq, name this DWI acquisition (proc_dwi and SC).
+    dest: dwi_acq
+    default: null
+  --tracts:
+    help: -tracts, number of streamlines for SC (default 40M).
+    dest: tracts
+    default: null
+  --keep-tck:
+    help: -keep_tck, keep the tractogram.
+    dest: keep_tck
+    action: store_true
+    default: null
+  --auto-tract:
+    help: -autoTract, run automatic tract segmentation.
+    dest: auto_tract
+    action: store_true
+    default: null
+  --weighted-sc:
+    help: -weighted_SC, a volume to weight the connectomes by.
+    dest: weighted_sc
+    type: Path
+    default: null
+  --tck:
+    help: -tck, an existing tractogram to use.
+    dest: tck
+    type: Path
+    default: null
 
-  post_structural:
-    atlas: "DEFAULT"
+  # --- MPC / MPC_SWM ------------------------------------------------------------
+  --microstructural-img:
+    help: -microstructural_img, a path or a name in the session's anat/ (e.g. T1map).
+    dest: microstructural_img
+    default: null
+  --mpc-acq:
+    help: -mpc_acq, name of the MPC acquisition (default qMRI).
+    dest: mpc_acq
+    default: null
 
-  proc_dwi:
-    dwi_main: "DEFAULT" # multiple inputs
-    dwi_rpe: "DEFAULT" # multiple inputs
-    dwi_processed: "FALSE"
-    rpe_all: "FALSE"
-    dwi_acq: "FALSE" 
-    b0thr: 61
-    # the following are just flags
-    no_bvalue_scaling: "FALSE"
-    dwi_upsample: "FALSE"
+  # --- proc_asl ---------------------------------------------------------------------
+  --asl-scan-str:
+    help: -aslScanStr, the ASL image to use.
+    dest: asl_scan_str
+    default: null
+  --m0-scan-str:
+    help: -m0ScanStr, the M0 calibration image to use.
+    dest: m0_scan_str
+    default: null
 
-  SC:
-    tracts: "40M"
-    keep_tck: "FALSE"
-    autoTract: "FALSE"
-    dwi_acq: "FALSE"
-    weighted_SC: "FALSE"
-    tck: "FALSE" #tricky
-  
-  proc_func:
-    # Use "DEFAULT" to let your script apply its internal defaults if nothing is provided
-    mainScanStr: "DEFAULT"       # -mainScanStr <str>
-    func_pe: "DEFAULT"           # -func_pe <path>
-    func_rpe: "DEFAULT"          # -func_rpe <path>
-
-    # Optional parameters
-    mainScanRun: "FALSE"         # -mainScanRun <num>
-    phaseReversalRun: "FALSE"    # -phaseReversalRun <num>
-    topupConfig: "FALSE"         # -topupConfig <str>
-    icafixTraining: "FALSE"      # -icafixTraining <str>
-
-    # Boolean flags
-    smoothWithWB: "FALSE"        # -smoothWithWB TODO: dont exist in the script
-    NSR: "FALSE"                 # -NSR
-    GSR: "FALSE"                 # -GSR
-    noFIX: "FALSE"               # -noFIX
-    sesAnat: "FALSE"             # -sesAnat <str>
-    dropTR: "FALSE"              # -dropTR
-    noFC: "FALSE"                # -noFC
-
-  proc_mpc:
-    # Optional parameters
-    microstructural_img: "FALSE"
-    mpc_acq: "FALSE"
-
-    # Boolean flags
-
-  proc_flair:
-    flairScanStr: "DEFAULT"
-
-  proc_mpc_swm:
-    # Optional parameters
-    microstructural_img: "FALSE"
-    mpc_acq: "FALSE"
-
-    # Boolean flags
-  
-  qc_subj:
-    tracts: "FALSE"
-    tmpDir: "FALSE"
-
+  # --- proc_func ----------------------------------------------------------------
+  --func-scans:
+    help: |
+      Functional scans to process, one micapipe -proc_func call (and job) each,
+      by name after sub-X_ses-Y_ (task-rest_acq-AP_bold). Join the echoes of a
+      multi-echo scan with commas. Default: the rest scan micapipe picks itself
+      (task-rest_acq-AP_*bold).
+    dest: func_scans
+    nargs: "+"
+    default: null
+  --func-pe:
+    help: -func_pe, the phase-encoding reference, as a path or a name in func/.
+    dest: func_pe
+    default: null
+  --func-rpe:
+    help: -func_rpe, the reverse-phase reference, as a path or a name in func/.
+    dest: func_rpe
+    default: null
+  --main-scan-run:
+    help: -mainScanRun, which of several default rest scans to use (1-based).
+    dest: main_scan_run
+    type: int
+    default: null
+  --phase-reversal-run:
+    help: -phaseReversalRun.
+    dest: phase_reversal_run
+    type: int
+    default: null
+  --topup-config:
+    help: -topupConfig.
+    dest: topup_config
+    type: Path
+    default: null
+  --icafix-training:
+    help: -icafixTraining, an ICA-FIX training file.
+    dest: icafix_training
+    type: Path
+    default: null
+  --ses-anat:
+    help: -sesAnat, take the anatomy from this session (longitudinal).
+    dest: ses_anat
+    default: null
+  --nsr:
+    help: -NSR, regress white matter and CSF signals.
+    dest: nsr
+    action: store_true
+    default: null
+  --gsr:
+    help: -GSR, regress global, white matter and CSF signals.
+    dest: gsr
+    action: store_true
+    default: null
+  --no-fix:
+    help: -noFIX, skip ICA-FIX.
+    dest: no_fix
+    action: store_true
+    default: null
+  --drop-tr:
+    help: -dropTR, drop the first five TRs.
+    dest: drop_tr
+    action: store_true
+    default: null
+  --no-fc:
+    help: -noFC, skip functional connectomes.
+    dest: no_fc
+    action: store_true
+    default: null
