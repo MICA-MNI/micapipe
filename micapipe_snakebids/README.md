@@ -13,13 +13,17 @@ image, where `micapipe` is on `PATH`:
 
 ```bash
 singularity exec --cleanenv --containall \
-  --bind /path/to/bids:/bids:ro,/path/to/derivatives:/out,/path/to/scratch:/scratch,/path/to/license.txt:/opt/licence.txt:ro \
+  --bind /path/to/bids:/bids:ro,/path/to/derivatives:/out,/path/to/scratch:/tmp,/path/to/license.txt:/opt/licence.txt:ro \
   --pwd /out micapipe-v1.0.0-beta.3-nocuda-20261103.sif \
   /opt/environments/workflow/bin/python /opt/micapipe/micapipe_snakebids/run.py \
   /bids /out participant \
   --participant-label HC001 --modules structural surface post_structural \
-  --fs-licence /opt/licence.txt --tmp-dir /scratch --threads 8 --cores 16
+  --fs-licence /opt/licence.txt --tmp-dir /tmp --threads 8 --cores 16
 ```
+
+Bind real disk over `/tmp`: under `--containall` the container's own `/tmp` is a
+64 MB tmpfs, and micapipe's tools (MRtrix among them) fill it within minutes.
+The app refuses to start inside such a `/tmp` without `--tmp-dir`.
 
 Or run it from a host Python that has Snakemake and SnakeBIDS, and let every
 micapipe call go through the image:
@@ -30,6 +34,9 @@ python micapipe_snakebids/run.py /path/to/bids /path/to/derivatives participant 
   --fs-licence /path/to/license.txt --tmp-dir /path/to/scratch \
   --modules dwi sc --threads 8 --cores 16
 ```
+
+With `--container-image` the scratch (`--tmp-dir`, default `<derivatives>/tmp`)
+is bound as the container's `/tmp`.
 
 The derivatives directory is micapipe's `-out`: micapipe writes
 `micapipe_v0.2.0/` there, and the app adds `logs/micapipe_snakebids/` (one log

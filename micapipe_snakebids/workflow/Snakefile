@@ -155,12 +155,18 @@ THREAD_VARIABLES = (
 # thousands of threads. Two render threads are plenty.
 FIXED_ENVIRONMENT = ("LP_NUM_THREADS=2", "MALLOC_ARENA_MAX=4")
 
+# micapipe and the tools it calls need gigabytes of scratch. MRtrix writes its
+# piped intermediates to MRTRIX_TMPFILE_DIR (else /tmp), and under singularity
+# --containall /tmp is a 64 MB tmpfs: mrmath died there with SIGBUS on the
+# first structural pilot of this workflow. So the scratch is always real disk.
+MIN_TMP_BYTES = 8 * 1024**3
+
 if container_image:
     container_image = os.path.abspath(str(container_image))
     container_exe = str(_setting("container_exe") or "singularity")
-    binds = [(bids_dir, "/bids", "ro"), (output_dir, "/out", "rw")]
-    if tmp_dir:
-        binds.append((tmp_dir, "/tmp", "rw"))
+    if not tmp_dir:
+        tmp_dir = output_dir + "/tmp"
+    binds = [(bids_dir, "/bids", "ro"), (output_dir, "/out", "rw"), (tmp_dir, "/tmp", "rw")]
     if licence:
         binds.append((licence, "/opt/licence.txt", "ro"))
     for spec in mw.as_list(config.get("container_binds")):
@@ -170,8 +176,7 @@ if container_image:
         mode = parts[2] if len(parts) > 2 else "rw"
         binds.append((host, inner, mode))
     to_container = mw.PathMap([(host, inner) for host, inner, _ in binds])
-    bids_root, out_root = "/bids", "/out"
-    tmp_root = "/tmp" if tmp_dir else None
+    bids_root, out_root, tmp_root = "/bids", "/out", "/tmp"
     licence_arg = "/opt/licence.txt" if licence else None
 else:
     to_container = mw.PathMap()
@@ -181,6 +186,26 @@ else:
             "micapipe is not on PATH: run this app inside the micapipe image, "
             "or pass --container-image with the image to run micapipe in"
         )
+    if not tmp_dir and shutil.disk_usage("/tmp").total < MIN_TMP_BYTES:
+        raise mw.WorkflowConfigError(
+            "/tmp here holds only "
+            f"{shutil.disk_usage('/tmp').total // 1024**2} MB (singularity --containall?); "
+            "pass --tmp-dir with a directory on real disk"
+        )
+
+if tmp_dir and workflow.is_main_process:
+    os.makedirs(tmp_dir, exist_ok=True)
+
+# micapipe creates a session's folders only when the session folder itself is
+# missing, and Snakemake creates it first (it makes the parent of every output,
+# here QC/). Left alone, proc_structural then could not write logs/, xfm/ or
+# parc/. Every job creates them, as micapipe would have.
+SESSION_DIRS = ("logs", "xfm", "dwi", "func", "anat", "QC", "parc", "surf", "maps")
+
+
+def session_dirs(wildcards):
+    root = mw.session_root(output_dir, wildcards.subject, wildcards.session)
+    return mw.shell_join(f"{root}/{name}" for name in SESSION_DIRS)
 
 # Refuse a run that would need the FreeSurfer licence before scheduling it.
 _needs_licence = sorted(
@@ -215,6 +240,8 @@ def micapipe_command(stage, wildcards, threads):
     )
     mw.check_arguments(args)
     environment = [f"{name}={threads}" for name in THREAD_VARIABLES] + list(FIXED_ENVIRONMENT)
+    if tmp_root:
+        environment.append(f"MRTRIX_TMPFILE_DIR={tmp_root}")
     if container_image:
         prefix = [container_exe, "run", "--cleanenv", "--containall", "--writable-tmpfs"]
         if mw.as_bool(config.get("container_gpu"), "container_gpu"):
@@ -247,7 +274,7 @@ CHECK_RECORD = shlex.quote(sys.executable) + " " + shlex.quote(
 # Snakemake runs this with bash strict mode, so a failing micapipe call stops
 # the job before the check.
 MICAPIPE_SHELL = (
-    "mkdir -p \"$(dirname {log:q})\"\n"
+    "mkdir -p \"$(dirname {log:q})\" {params.session_dirs}\n"
     "printf '%s\\n' {params.banner} > {log:q}\n"
     "{params.command} >> {log:q} 2>&1\n"
     + CHECK_RECORD
@@ -310,6 +337,7 @@ for _stage in mw.MODULE_ORDER:
             expected="" if _stage == "qc_subj" else mw.module_name(_stage, config),
             command=command_for(_stage),
             banner=banner_for(_stage),
+            session_dirs=session_dirs,
         shell:
             MICAPIPE_SHELL
 
@@ -333,5 +361,6 @@ rule micapipe_func:
         expected=lambda wildcards: "proc_func-" + wildcards.func_tag,
         command=command_for("func"),
         banner=banner_for("func"),
+        session_dirs=session_dirs,
     shell:
         MICAPIPE_SHELL
