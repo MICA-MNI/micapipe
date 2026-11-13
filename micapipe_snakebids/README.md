@@ -1,60 +1,154 @@
 # micapipe_snakebids
 
-**micapipe_snakebids** is an extension of [Snakebids](https://github.com/khanlab/snakebids) integrated within [micapipe](https://github.com/MIClabUNIGE/micapipe). It enables users to parse and process a BIDS dataset through a customizable workflow, leveraging both **Snakebids** and **micapipe** features.
+Runs micapipe as a [Snakemake](https://snakemake.github.io) workflow through a
+[SnakeBIDS](https://github.com/khanlab/snakebids) app: one job per micapipe
+module and session, sessions in parallel, and a job counted as done only when
+micapipe itself recorded the module as `COMPLETED`.
 
-## Features
+## Running it
 
-- **Seamless BIDS Parsing**: Uses Snakebids functionality to automatically detect and parse available modalities in a BIDS dataset.
-- **micapipe Integration**: Leverages micapipe’s neuroimaging processing modules (structural, DWI, fMRI, etc.) in a unified Snakemake workflow.
-- **Customizable Configurations**: A YAML-based configuration (`snakebids.yml`) controls your input/output paths, enabled micapipe modules, and parameter settings.
-- **Scalable & Portable**: Built on top of Snakemake for parallel execution, reproducibility, and straightforward deployment on different systems (local or HPC).
-- **Command Line Interface**: Provides a `run.py` script for command-line invocation, allowing flexible configuration and execution of the pipeline.
-
-## Setup within micapipe
-
-Since **micapipe_snakebids** is part of the larger [micapipe](https://github.com/MIClabUNIGE/micapipe) project, you do not need to install it separately. Simply ensure that both micapipe and its dependencies (including [Snakebids](https://github.com/khanlab/snakebids)) are available in your environment. If Snakemake and Snakebids are not yet installed, you can install them with:
+The micapipe image already carries Snakemake 8.30 and SnakeBIDS 0.13 in
+`/opt/environments/workflow`, so the simplest way is to run the app inside the
+image, where `micapipe` is on `PATH`:
 
 ```bash
-pip install snakemake snakebids
+singularity exec --cleanenv --containall \
+  --bind /path/to/bids:/bids:ro,/path/to/derivatives:/out,/path/to/scratch:/tmp,/path/to/license.txt:/opt/licence.txt:ro \
+  --pwd /out micapipe-v1.0.0-beta.3-nocuda-20261103.sif \
+  /opt/environments/workflow/bin/python /opt/micapipe/micapipe_snakebids/run.py \
+  /bids /out participant \
+  --participant-label HC001 --modules structural surface post_structural \
+  --fs-licence /opt/licence.txt --tmp-dir /tmp --threads 8 --cores 16
 ```
 
-For additional details, refer to the main micapipe documentation regarding environment setup and dependencies.
+Bind real disk over `/tmp`: under `--containall` the container's own `/tmp` is a
+64 MB tmpfs, and micapipe's tools (MRtrix among them) fill it within minutes.
+The app refuses to start inside such a `/tmp` without `--tmp-dir`.
 
-## Usage
+Or run it from a host Python that has Snakemake and SnakeBIDS, and let every
+micapipe call go through the image:
 
-1. **Configure the Pipeline**  
-   Edit the `config/snakebids.yml` file to specify:
+```bash
+python micapipe_snakebids/run.py /path/to/bids /path/to/derivatives participant \
+  --container-image /path/to/micapipe-v1.0.0-beta.3-nocuda-20261103.sif \
+  --fs-licence /path/to/license.txt --tmp-dir /path/to/scratch \
+  --modules dwi sc --threads 8 --cores 16
+```
 
-   - Input/Output directories
-   - micapipe modules to enable or disable (e.g., structural, dwi, func)
-   - Relevant analysis parameters
+With `--container-image` the scratch (`--tmp-dir`, default `<derivatives>/tmp`)
+is bound as the container's `/tmp`.
 
-2. **Run the Pipeline**  
-   Use the `run.py` script to parse your BIDS dataset and execute the Snakebids workflow:
+The derivatives directory is micapipe's `-out`: micapipe writes
+`micapipe_v0.2.0/` there, and the app adds `logs/micapipe_snakebids/` (one log
+and one benchmark per job), `config/` and `.snakemake/`. Add `-n -p` for a dry
+run that prints every micapipe call it would make. Any other Snakemake option
+(`--cores`, `--keep-going`, `--profile`, ...) is passed through.
 
-   ```bash
-   python run.py \
-     --bids-dir /path/to/bids_dataset \
-     --output-dir /path/to/outputs \
-     [other options...]
-   ```
+## Modules
 
-## Contributing
+`--modules` takes any of
 
-Contributions to **micapipe_snakebids** are welcome! If you encounter bugs or have feature suggestions, please open an issue or submit a pull request within the main micapipe repository. We recommend the following workflow:
+| module | micapipe | waits for |
+| --- | --- | --- |
+| `structural` | `-proc_structural` | |
+| `surface` | `-proc_surf` | structural |
+| `post_structural` | `-post_structural` | surface |
+| `flair` | `-proc_flair` | post_structural |
+| `dwi` | `-proc_dwi` | post_structural |
+| `sc` | `-SC` | dwi |
+| `mpc` | `-MPC` | post_structural |
+| `mpc_swm` | `-MPC_SWM` | post_structural |
+| `gd` | `-GD` | post_structural |
+| `asl` | `-proc_asl` | post_structural |
+| `func` | `-proc_func`, one job per scan | post_structural |
+| `swm` | `-SWM` | post_structural |
+| `qc_subj` | `-QC_subj` | structural |
 
-1. **Fork** or clone the micapipe repository.
-2. Make a new branch for your changes.
-3. Modify the code/tests as needed.
-4. Submit a pull request once your work is ready for review.
+A requested module brings in the modules it waits for, so `--modules sc` alone
+runs structural, surface, post_structural, dwi and SC. A module whose record
+already says `COMPLETED` is not run again.
 
-## License
+Within one session the modules run one at a time, in the order of the table:
+micapipe rewrites session-level files as it goes, and two modules writing them
+at once can corrupt them. Different sessions run in parallel, up to `--cores`.
 
-This project is distributed under the [MIT License](https://opensource.org/licenses/MIT). Please see the [LICENSE](LICENSE) file in the micapipe repository for more details.
+## How a job is judged
 
-## Acknowledgments
+Each job runs one micapipe call and then requires micapipe's record for that
+module, `micapipe_v0.2.0/sub-X/ses-Y/QC/sub-X_ses-Y_module-<name>.json`, to say
+`"Status": "COMPLETED"` for that subject, session and module. micapipe runs every
+module as `$COMMAND | tee`, so it exits 0 even when the module failed; the
+record is what tells. A job whose record is missing or `INCOMPLETE` fails, with
+the reason at the end of its log. `qc_subj` is judged by its structural report.
 
-- **Snakebids**: This workflow is built upon [Snakebids](https://github.com/khanlab/snakebids), which extends [Snakemake](https://snakemake.github.io).
-- **micapipe**: The processing modules come from the [micapipe project](https://github.com/MIClabUNIGE/micapipe).
-- **BIDS**: We adhere to the [BIDS specification](https://bids.neuroimaging.io) for organizing and describing the data.
-- **Snakemake**: The workflow engine that orchestrates the pipeline.
+The record names follow micapipe: `proc_surf-fastsurfer` (or `-freesurfer`),
+`proc_dwi[_acq-X]`, `SC-<tracts>[_acq-X]`, `MPC-<acq>`, `MPC-SWM-<acq>`,
+`proc_func-desc-se_<scan>` (`desc-me_` for multi-echo).
+
+## Options
+
+Every micapipe option has a flag; `run.py --help` lists them all. A flag left
+out is not passed, so micapipe keeps its own default.
+
+| flag | micapipe |
+| --- | --- |
+| `--threads N` | `-threads` (capped by `--cores`) |
+| `--fs-licence FILE` | `-fs_licence` (needed whenever structural, surface or post_structural run) |
+| `--tmp-dir DIR`, `--nocleanup` | `-tmpDir`, `-nocleanup` |
+| `--t1w-str`, `--uni`, `--mf` | `-T1wStr`, `-uni`, `-mf` |
+| `--freesurfer`, `--alt-fs`, `--alt-fs-tta`, `--surf-dir`, `--surf-t1` | `-freesurfer`, `-alt_fs`, `-alt_fs_tta`, `-surf_dir`, `-T1` |
+| `--atlas A B ...` | `-atlas A,B` |
+| `--flair-scan-str` | `-flairScanStr` |
+| `--dwi-main`, `--dwi-rpe`, `--dwi-processed`, `--rpe-all`, `--b0thr`, `--no-bvalue-scaling`, `--dwi-upsample`, `--dwi-acq` | the `-proc_dwi` options |
+| `--tracts`, `--keep-tck`, `--auto-tract`, `--weighted-sc`, `--tck` | the `-SC` options |
+| `--microstructural-img`, `--mpc-acq` | `-MPC` and `-MPC_SWM` options |
+| `--asl-scan-str`, `--m0-scan-str` | `-aslScanStr`, `-m0ScanStr` |
+| `--func-scans`, `--func-pe`, `--func-rpe`, `--main-scan-run`, `--phase-reversal-run`, `--topup-config`, `--icafix-training`, `--ses-anat`, `--nsr`, `--gsr`, `--no-fix`, `--drop-tr`, `--no-fc` | the `-proc_func` options |
+| `--session-label` | only these sessions |
+| `--container-image`, `--container-exe`, `--container-binds`, `--container-gpu` | run micapipe through singularity/apptainer (`--nv` with `--container-gpu`) |
+
+Images of a session can be named instead of spelled out: `--dwi-main
+acq-b2000-91_dir-AP_dwi`, `--func-pe task-rest_acq-APse_bold`,
+`--microstructural-img T1map` and `--surf-t1 T1w` each become that session's
+`sub-X_ses-Y_<name>.nii.gz` in the right folder. A value with a `/` is used as a
+path.
+
+`--func-scans` names the scans to process, one job each
+(`task-rest_acq-AP_bold`; join the echoes of a multi-echo scan with commas).
+Without it, each session processes the rest scan micapipe would pick itself
+(`task-rest_acq-AP_*bold`), and the app refuses to guess between several.
+
+`--ses-anat 01` with `--modules func` processes a later session's func against
+session 01's anatomy, and waits for session 01's structural chain.
+
+Options can also be set in a YAML file passed with `--configfile`, under the
+same names as the flags (`fs_licence`, `dwi_acq`, ...). Booleans are `true` /
+`false`.
+
+## Sessions
+
+The app processes every `sub-*/ses-*` whose `anat/` holds a `*_T1w` or `*_UNIT1`
+image, whatever other entities it has (`run-`, `acq-`); `--participant-label`,
+`--exclude-participant-label` and `--session-label` narrow that. micapipe picks
+the image itself (see `--t1w-str`). Datasets without `ses-` directories are not
+supported yet.
+
+## Not handled here
+
+- micapipe's group QC (`-QC`) has no rule.
+- `micapipe_v0.2.0/micapipe_processed_sub.csv` is rewritten by every module of
+  every session, without a lock, so sessions running at once can drop each
+  other's lines from it. The per-module QC records are not affected, and they
+  are what this workflow reads.
+- A module re-run because something before it changed resumes from whatever
+  micapipe left on disk; micapipe has no notion of upstream changes.
+
+## Tests
+
+```bash
+python micapipe_snakebids/tests/test_micapipe_workflow.py
+```
+
+covers module ordering, record names, flag rendering (including that nothing is
+ever rendered that micapipe's parser would loop on), session discovery and the
+record check.

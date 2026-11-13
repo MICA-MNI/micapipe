@@ -76,6 +76,9 @@ jobs:
           done
           exit "$fail"
 
+      - name: Snakemake app helper tests (stdlib only)
+        run: python micapipe_snakebids/tests/test_micapipe_workflow.py
+
   yaml:
     name: YAML lint
     runs-on: ubuntu-latest

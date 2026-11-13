@@ -1,99 +1,366 @@
-from snakebids import bids, generate_inputs, get_wildcard_constraints
+"""micapipe as a Snakemake workflow.
 
-configfile: 'config/snakebids.yml'
+One job per micapipe module and session. A job runs one ``micapipe`` call and
+succeeds only when micapipe's own record for that module,
+``QC/sub-X_ses-Y_module-<name>.json``, says ``COMPLETED`` for that subject and
+session: micapipe runs each module as ``$COMMAND | tee``, so its exit status
+alone does not show whether the module worked.
+
+A session's modules run one at a time, in micapipe's order (lib/
+micapipe_workflow.py MODULE_ORDER), because micapipe rewrites session-level
+files as it goes. Different sessions run in parallel. A requested module pulls
+in what it depends on, and a module whose record already says COMPLETED is not
+run again.
+
+Run it through ../run.py (the SnakeBIDS app); see ../README.md.
+"""
+
+import functools
+import os
+import shlex
+import shutil
+import sys
+
+sys.path.insert(0, os.path.join(workflow.basedir, "lib"))
+import micapipe_workflow as mw  # noqa: E402
+
+configfile: os.path.join(workflow.basedir, "..", "config", "snakebids.yml")
+
+wildcard_constraints:
+    subject=r"[A-Za-z0-9]+",
+    session=r"[A-Za-z0-9]+",
 
 
-# Global variables from the config file
-bids_dir = config['bids_dir']
-output_dir = config['output_dir']
-tmp_dir = config['tmp_dir']
+def _setting(key):
+    value = config.get(key)
+    return None if mw.is_unset(value) else value
 
-container_mode = config.get("container", {}).get("mode", "original")
-container_image = config.get("container", {}).get("image", "")
 
-if container_mode == "docker":
-    command = (
-        f"docker run -ti --rm "
-        f"-v {bids_dir}:/bids -v {output_dir}:/out -v {tmp_dir}:/tmp "
-        f"-v {config['parameters']['fs_license']}:/opt/licence.txt "
-        f"{container_image}"
-    )
-elif container_mode == "singularity":
-    command = (
-        f"singularity run --writable-tmpfs --containall "
-        f"-B {bids_dir}:/bids -B {output_dir}:/out -B {tmp_dir}:/tmp "
-        f"-B {config['parameters']['fs_license']}:/opt/licence.txt "
-        f"{container_image}"
-    )
+bids_dir = os.path.abspath(str(config["bids_dir"])).rstrip("/")
+output_dir = os.path.abspath(str(config["output_dir"])).rstrip("/")
+threads_per_call = int(config.get("threads") or 4)
+
+modules = mw.requested_modules(config.get("modules") or config.get("module") or "structural")
+sessions = mw.discover_sessions(
+    bids_dir,
+    participant_label=config.get("participant_label"),
+    exclude_participant_label=config.get("exclude_participant_label"),
+    session_label=config.get("session_label"),
+)
+session_set = set(sessions)
+
+# -sesAnat: a func-only run of a later session borrows another session's
+# anatomy, so that session's structural chain is what func waits for.
+ses_anat = _setting("ses_anat")
+ses_anat = mw.strip_prefix(str(ses_anat), "ses-") if ses_anat else None
+ANATOMY = ("structural", "surface", "post_structural")
+
+
+def borrows_anatomy(session):
+    return bool(ses_anat) and session != ses_anat and set(modules) == {"func"}
+
+
+@functools.lru_cache(maxsize=None)
+def chain_for(subject, session):
+    """The modules this session runs, in order."""
+    if (subject, session) not in session_set:
+        # A session reached only as another one's -sesAnat.
+        return mw.module_closure(("post_structural",))
+    skip = ANATOMY if borrows_anatomy(session) else ()
+    return mw.module_closure(modules, skip)
+
+
+@functools.lru_cache(maxsize=None)
+def func_scans_for(subject, session):
+    given = config.get("func_scans")
+    if not mw.is_unset(given):
+        scans = [given] if isinstance(given, str) else [str(scan) for scan in given]
+    else:
+        scans = mw.default_func_scans(bids_dir, subject, session, config.get("main_scan_run"))
+    if not scans:
+        raise mw.WorkflowConfigError(
+            f"sub-{subject} ses-{session} has no task-rest_acq-AP_*bold scan for micapipe "
+            "to pick; name the scans with --func-scans"
+        )
+    return tuple(scans)
+
+
+def scan_for_tag(subject, session, tag):
+    for scan in func_scans_for(subject, session):
+        if mw.func_tag(scan) == tag:
+            return scan
+    raise mw.WorkflowConfigError(f"sub-{subject} ses-{session} has no func scan for {tag}")
+
+
+@functools.lru_cache(maxsize=None)
+def steps_for(subject, session):
+    """(module, func tag) per job of this session, in the order they run."""
+    steps = []
+    for stage in chain_for(subject, session):
+        if stage == "func":
+            steps += [("func", mw.func_tag(scan)) for scan in func_scans_for(subject, session)]
+        else:
+            steps.append((stage, None))
+    return tuple(steps)
+
+
+def record(stage, subject, session, tag=None):
+    """The file that proves ``stage`` finished for this session."""
+    stem = f"sub-{subject}_ses-{session}"
+    if stage == "func":
+        name = f"{stem}_module-proc_func-{tag}.json"
+    else:
+        name = mw.module_record_name(stage, config).format(stem=stem)
+    return f"{mw.session_root(output_dir, subject, session)}/QC/{name}"
+
+
+def previous_record(stage):
+    """Input function: the record of the job that runs before this one."""
+
+    def _previous(wildcards):
+        subject, session = wildcards.subject, wildcards.session
+        tag = getattr(wildcards, "func_tag", None)
+        steps = steps_for(subject, session)
+        if (stage, tag) in steps:
+            index = steps.index((stage, tag))
+            previous = [record(s, subject, session, t) for s, t in steps[index - 1:index]] if index else []
+        else:
+            previous = [record(dep, subject, session) for dep in mw.MODULE_DEPENDENCIES[stage]]
+        if stage == "func" and borrows_anatomy(session):
+            previous.append(record("post_structural", subject, ses_anat))
+        return previous
+
+    return _previous
+
+
+# ---------------------------------------------------------------------------
+#  How micapipe is called: on PATH (this app running inside the micapipe
+#  image), or through singularity with --container-image.
+# ---------------------------------------------------------------------------
+container_image = _setting("container_image")
+tmp_dir = _setting("tmp_dir")
+licence = _setting("fs_licence")
+tmp_dir = os.path.abspath(str(tmp_dir)) if tmp_dir else None
+licence = os.path.abspath(str(licence)) if licence else None
+
+THREAD_VARIABLES = (
+    "OMP_NUM_THREADS",
+    "ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS",
+    "MRTRIX_NTHREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+)
+# QC_subj renders its views through Mesa's llvmpipe, which starts a thread per
+# CPU per window and never frees them; on a 128-core node one report reached
+# thousands of threads. Two render threads are plenty.
+FIXED_ENVIRONMENT = ("LP_NUM_THREADS=2", "MALLOC_ARENA_MAX=4")
+
+# micapipe and the tools it calls need gigabytes of scratch. MRtrix writes its
+# piped intermediates to MRTRIX_TMPFILE_DIR (else /tmp), and under singularity
+# --containall /tmp is a 64 MB tmpfs: mrmath died there with SIGBUS on the
+# first structural pilot of this workflow. So the scratch is always real disk.
+MIN_TMP_BYTES = 8 * 1024**3
+
+if container_image:
+    container_image = os.path.abspath(str(container_image))
+    container_exe = str(_setting("container_exe") or "singularity")
+    if not tmp_dir:
+        tmp_dir = output_dir + "/tmp"
+    binds = [(bids_dir, "/bids", "ro"), (output_dir, "/out", "rw"), (tmp_dir, "/tmp", "rw")]
+    if licence:
+        binds.append((licence, "/opt/licence.txt", "ro"))
+    for spec in mw.as_list(config.get("container_binds")):
+        parts = spec.split(":")
+        host = os.path.abspath(parts[0])
+        inner = parts[1] if len(parts) > 1 and parts[1] else host
+        mode = parts[2] if len(parts) > 2 else "rw"
+        binds.append((host, inner, mode))
+    to_container = mw.PathMap([(host, inner) for host, inner, _ in binds])
+    bids_root, out_root, tmp_root = "/bids", "/out", "/tmp"
+    licence_arg = "/opt/licence.txt" if licence else None
 else:
-    command = "micapipe"
+    to_container = mw.PathMap()
+    bids_root, out_root, tmp_root, licence_arg = bids_dir, output_dir, tmp_dir, licence
+    if shutil.which("micapipe") is None:
+        raise mw.WorkflowConfigError(
+            "micapipe is not on PATH: run this app inside the micapipe image, "
+            "or pass --container-image with the image to run micapipe in"
+        )
+    if not tmp_dir and shutil.disk_usage("/tmp").total < MIN_TMP_BYTES:
+        raise mw.WorkflowConfigError(
+            "/tmp here holds only "
+            f"{shutil.disk_usage('/tmp').total // 1024**2} MB (singularity --containall?); "
+            "pass --tmp-dir with a directory on real disk"
+        )
 
-if container_mode in ["docker", "singularity"]:
-    bids_args = "/bids"
-    output_args = "/out"
-    fs_licence_args = "/opt/licence.txt"
-else:
-    bids_args = bids_dir
-    output_args = output_dir
-    fs_licence_args = config["parameters"]["fs_license"]
+if tmp_dir and workflow.is_main_process:
+    os.makedirs(tmp_dir, exist_ok=True)
+
+# micapipe creates a session's folders only when the session folder itself is
+# missing, and Snakemake creates it first (it makes the parent of every output,
+# here QC/). Left alone, proc_structural then could not write logs/, xfm/ or
+# parc/. Every job creates them, as micapipe would have.
+SESSION_DIRS = ("logs", "xfm", "dwi", "func", "anat", "QC", "parc", "surf", "maps")
 
 
-inputs = generate_inputs(
-    bids_dir=config["bids_dir"],
-    pybids_inputs=config["pybids_inputs"],
-    pybidsdb_dir=config.get("pybidsdb_dir"),
-    pybidsdb_reset=config.get("pybidsdb_reset"),
-    derivatives=config.get("derivatives", None),
-    participant_label=config.get("participant_label", None),
-    exclude_participant_label=config.get("exclude_participant_label", None),
-    validate=not config.get("plugins.validator.skip", False)
+def session_dirs(wildcards):
+    root = mw.session_root(output_dir, wildcards.subject, wildcards.session)
+    return mw.shell_join(f"{root}/{name}" for name in SESSION_DIRS)
+
+# Refuse a run that would need the FreeSurfer licence before scheduling it.
+_needs_licence = sorted(
+    f"sub-{subject} ses-{session} {stage}"
+    for subject, session in sessions
+    for stage, tag in steps_for(subject, session)
+    if stage in mw.LICENCE_MODULES and not os.path.exists(record(stage, subject, session, tag))
+)
+if _needs_licence and not licence:
+    raise mw.WorkflowConfigError(
+        "--fs-licence is required to run " + ", ".join(_needs_licence[:5])
+        + (" ..." if len(_needs_licence) > 5 else "")
+    )
+if licence and not os.path.isfile(licence):
+    raise mw.WorkflowConfigError(f"--fs-licence {licence} is not a file")
+
+
+def micapipe_command(stage, wildcards, threads):
+    scan = scan_for_tag(wildcards.subject, wildcards.session, wildcards.func_tag) if stage == "func" else None
+    args = mw.micapipe_arguments(
+        stage,
+        config,
+        subject=wildcards.subject,
+        session=wildcards.session,
+        bids_root=bids_root,
+        out_root=out_root,
+        threads=threads,
+        licence=licence_arg,
+        tmp_root=tmp_root,
+        to_container=to_container,
+        scan=scan,
+    )
+    mw.check_arguments(args)
+    environment = [f"{name}={threads}" for name in THREAD_VARIABLES] + list(FIXED_ENVIRONMENT)
+    if tmp_root:
+        environment.append(f"MRTRIX_TMPFILE_DIR={tmp_root}")
+    if container_image:
+        prefix = [container_exe, "run", "--cleanenv", "--containall", "--writable-tmpfs"]
+        if mw.as_bool(config.get("container_gpu"), "container_gpu"):
+            prefix.append("--nv")
+        for host, inner, mode in binds:
+            prefix += ["-B", f"{host}:{inner}" + (":ro" if mode == "ro" else "")]
+        for item in environment:
+            prefix += ["--env", item]
+        prefix.append(container_image)
+    else:
+        prefix = ["env", *environment, "micapipe"]
+    return mw.shell_join(prefix + args)
+
+
+def command_for(stage):
+    return lambda wildcards, threads: micapipe_command(stage, wildcards, threads)
+
+
+def banner_for(stage):
+    return lambda wildcards, threads: shlex.quote("$ " + micapipe_command(stage, wildcards, threads))
+
+
+# The interpreter running Snakemake also runs the record check, so the check
+# works on a host as well as inside the image.
+CHECK_RECORD = shlex.quote(sys.executable) + " " + shlex.quote(
+    os.path.join(workflow.basedir, "scripts", "check_module_record.py")
 )
 
-# print("FUNC:", inputs['func'])
-# print("DWI:", inputs['dwi'])
-
-del inputs['t1w'].wildcards['run']
-
-include: 'common.smk'
-include: 'rules/structural.smk'
-include: 'rules/dwi.smk'
-include: 'rules/func.smk'
-include: 'rules/mpc.smk'
-include: 'rules/flair.smk'
-include: 'rules/swm.smk'
-include: 'rules/mpc_swm.smk'
-include: 'rules/qc.smk'
-
-modules = config.get("module", [])
-if not isinstance(modules, list):
-    modules = [modules]
-print("MODULES:", modules)
+# Each job: log the exact micapipe call, run it, then require micapipe's record.
+# Snakemake runs this with bash strict mode, so a failing micapipe call stops
+# the job before the check.
+MICAPIPE_SHELL = (
+    "mkdir -p \"$(dirname {log:q})\" {params.session_dirs}\n"
+    "printf '%s\\n' {params.banner} > {log:q}\n"
+    "{params.command} >> {log:q} 2>&1\n"
+    + CHECK_RECORD
+    + " --record {output.record:q} --module {params.expected:q}"
+    " --subject {wildcards.subject} --session {wildcards.session} --log {log:q}"
+)
 
 
-def get_final_outputs(inputs, output_dir, modules):
-    input_list = []
-    if "structural" in modules:
-        print("STRUCTURAL")
-        input_list += get_all_structural_outputs(inputs, output_dir)
-    if "dwi" in modules:
-        input_list += get_sc_outputs(inputs, output_dir)
-    if "func" in modules:
-        input_list +=get_func_outputs(inputs, output_dir)
-    if "mpc" in modules:
-        input_list += get_mpc_outputs(inputs, output_dir)
-    if "flair" in modules:
-        input_list += get_flair_outputs(inputs, output_dir)
-    if "swm" in modules:
-        input_list += get_swm_outputs(inputs, output_dir)
-    if "mpc_swm" in modules:
-        input_list += get_mpc_swm_outputs(inputs, output_dir)
-    if "qc" in modules:
-        input_list += get_qc_outputs(inputs, output_dir)
-    print("INPUT LIST:", input_list)
-    return input_list
+def log_path(stage):
+    return f"{output_dir}/logs/micapipe_snakebids/sub-{{subject}}_ses-{{session}}_{stage}.log"
 
-print("GD output path:", get_geodesic_distance_outputs(inputs, output_dir))
+
+def benchmark_path(stage):
+    return f"{output_dir}/logs/micapipe_snakebids/sub-{{subject}}_ses-{{session}}_{stage}.benchmark.tsv"
+
+
+# ---------------------------------------------------------------------------
+#  Targets
+# ---------------------------------------------------------------------------
+def requested_records():
+    targets = []
+    for subject, session in sessions:
+        for stage in modules:
+            if stage == "func":
+                targets += [
+                    record("func", subject, session, mw.func_tag(scan))
+                    for scan in func_scans_for(subject, session)
+                ]
+            else:
+                targets.append(record(stage, subject, session))
+    return targets
+
 
 rule all:
+    default_target: True
     input:
-        get_final_outputs(inputs, output_dir, modules)
+        requested_records(),
+
+
+# ---------------------------------------------------------------------------
+#  One rule per micapipe module
+# ---------------------------------------------------------------------------
+for _stage in mw.MODULE_ORDER:
+    if _stage == "func":
+        continue
+
+    rule:
+        name:
+            f"micapipe_{_stage}"
+        input:
+            previous_record(_stage),
+        output:
+            record=record(_stage, "{subject}", "{session}"),
+        log:
+            log_path(_stage),
+        benchmark:
+            benchmark_path(_stage)
+        threads: threads_per_call
+        params:
+            expected="" if _stage == "qc_subj" else mw.module_name(_stage, config),
+            command=command_for(_stage),
+            banner=banner_for(_stage),
+            session_dirs=session_dirs,
+        shell:
+            MICAPIPE_SHELL
+
+
+rule micapipe_func:
+    input:
+        previous_record("func"),
+    output:
+        record=(
+            output_dir + "/" + mw.OUTPUT_DIRNAME
+            + "/sub-{subject}/ses-{session}/QC/sub-{subject}_ses-{session}_module-proc_func-{func_tag}.json"
+        ),
+    wildcard_constraints:
+        func_tag=r"desc-(se|me)_[^/]+",
+    log:
+        log_path("func_{func_tag}"),
+    benchmark:
+        benchmark_path("func_{func_tag}")
+    threads: threads_per_call
+    params:
+        expected=lambda wildcards: "proc_func-" + wildcards.func_tag,
+        command=command_for("func"),
+        banner=banner_for("func"),
+        session_dirs=session_dirs,
+    shell:
+        MICAPIPE_SHELL
